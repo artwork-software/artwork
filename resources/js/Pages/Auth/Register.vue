@@ -92,7 +92,7 @@
 
         methods: {
             submit() {
-                this.form.post(this.route('register'), {
+                this.form.post(this.route('setup.create'), {
                     onFinish: () => this.form.reset('password', 'password_confirmation'),
                 })
             }

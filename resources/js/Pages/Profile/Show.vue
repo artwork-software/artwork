@@ -1,63 +1,206 @@
 <template>
     <app-layout title="Profile">
-        <template #header>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Profile
-            </h2>
-        </template>
-
         <div>
-            <div class="max-w-7xl mx-auto py-10 sm:px-6 lg:px-8">
+            <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-5">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-                    <update-profile-information-form :user="$page.props.user" />
+                    <form>
+                        <div class="space-y-8 divide-y divide-gray-200">
+                            <div>
+                                <div class="sm:col-span-6">
+                                    <div class="mt-4 flex items-center">
+              <span class="h-36 w-36 rounded-full overflow-hidden bg-gray-100">
+                <svg class="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path
+                      d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+              </span>
+                                        <button type="button"
+                                                class="ml-12 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Profilbild wechseln
+                                        </button>
+                                    </div>
+                                </div>
+                                <h2 class="font-bold mt-10 text-2xl">Jannik Müller</h2>
+                            </div>
+                            <div class="pt-8">
+                                <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            Unternehmen </label>
+                                        <div class="mt-1">
+                                            <input type="text"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                        </div>
+                                    </div>
 
-                    <jet-section-border />
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            Position </label>
+                                        <div class="mt-1">
+                                            <input type="text"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="sm:col-span-6">
+                                        <label for="department" class="block text-medium font-medium text-gray-700">
+                                            Abteilung </label>
+                                        <div class="mt-1">
+                                            <select id="department"
+                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                <option>A</option>
+                                                <option>B</option>
+                                                <option>C</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            Telefonnummer </label>
+                                        <div class="mt-1">
+                                            <input type="text"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                        </div>
+                                    </div>
+
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            E-Mail-Adresse </label>
+                                        <div class="mt-1">
+                                            <input type="text" name="last-name" autocomplete="family-name"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                        </div>
+                                    </div>
+                                    <div class="sm:col-span-6">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            Beschreibung </label>
+                                        <div class="mt-1">
+                                            <textarea rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
+                                        </div>
+                                        <p class="mt-2 text-sm text-gray-500">Nähere Infos für die Kolleg:innen.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-5">
+                            <div class="flex justify-end">
+                                <button type="button"
+                                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Abbrechen
+                                </button>
+                                <button type="submit"
+                                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Speichern
+                                </button>
+                            </div>
+                        </div>
+                    </form>
                 </div>
 
                 <div v-if="$page.props.jetstream.canUpdatePassword">
-                    <update-password-form class="mt-10 sm:mt-0" />
+                    <h2 class="font-bold text-2xl my-6">Passwort ändern</h2>
+                    <div class="col-span-6 sm:col-span-4 my-4">
+                        <label for="current_password" class="font-medium"> Aktuelles Passwort</label>
+                        <jet-input id="current_password" type="password" class="mt-1 block w-full"
+                                   v-model="form.current_password" ref="current_password"
+                                   autocomplete="current-password"/>
+                        <jet-input-error :message="form.errors.current_password" class="mt-2"/>
+                    </div>
 
-                    <jet-section-border />
+                    <div class="col-span-6 sm:col-span-4 my-4">
+                        <label for="password" class="font-medium"> Neues Passwort</label>
+                        <jet-input id="password" type="password" class="mt-1 block w-full" v-model="form.password"
+                                   ref="password" autocomplete="new-password"/>
+                        <jet-input-error :message="form.errors.password" class="mt-2"/>
+                        <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 8 Zeichen lang sein und mind. 1 Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
+                    </div>
+
+                    <div class="col-span-6 sm:col-span-4 my-4">
+                        <label for="password_confirmation" class="font-medium"> Neues Passwort bestätigen</label>
+                        <jet-input id="password_confirmation" type="password" class="mt-1 block w-full"
+                                   v-model="form.password_confirmation" autocomplete="new-password"/>
+                        <jet-input-error :message="form.errors.password_confirmation" class="mt-2"/>
+                    </div>
+
+                    <jet-action-message :on="form.recentlySuccessful" class="mr-3">
+                        Saved.
+                    </jet-action-message>
+
+                    <button class="ml-3 mb-6 py-2 px-4 float-right border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    :class="{ 'opacity-25': form.processing }"
+                                :disabled="form.processing">
+                        Passwort ändern
+                    </button>
+
                 </div>
-
-                <div v-if="$page.props.jetstream.canManageTwoFactorAuthentication">
-                    <two-factor-authentication-form class="mt-10 sm:mt-0" />
-
-                    <jet-section-border />
-                </div>
-
-                <logout-other-browser-sessions-form :sessions="sessions" class="mt-10 sm:mt-0" />
-
-                <template v-if="$page.props.jetstream.hasAccountDeletionFeatures">
-                    <jet-section-border />
-
-                    <delete-user-form class="mt-10 sm:mt-0" />
-                </template>
             </div>
         </div>
     </app-layout>
 </template>
 
 <script>
-    import { defineComponent } from 'vue'
-    import AppLayout from '@/Layouts/AppLayout.vue'
-    import DeleteUserForm from '@/Pages/Profile/Partials/DeleteUserForm.vue'
-    import JetSectionBorder from '@/Jetstream/SectionBorder.vue'
-    import LogoutOtherBrowserSessionsForm from '@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm.vue'
-    import TwoFactorAuthenticationForm from '@/Pages/Profile/Partials/TwoFactorAuthenticationForm.vue'
-    import UpdatePasswordForm from '@/Pages/Profile/Partials/UpdatePasswordForm.vue'
-    import UpdateProfileInformationForm from '@/Pages/Profile/Partials/UpdateProfileInformationForm.vue'
+import {defineComponent} from 'vue'
+import JetActionMessage from '@/Jetstream/ActionMessage.vue'
+import JetButton from '@/Jetstream/Button.vue'
+import JetFormSection from '@/Jetstream/FormSection.vue'
+import JetInput from '@/Jetstream/Input.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
+import JetLabel from '@/Jetstream/Label.vue'
+import AppLayout from "@/Layouts/AppLayout";
+import DeleteUserForm from "@/Pages/Profile/Partials/DeleteUserForm";
+import JetSectionBorder from "@/Jetstream/SectionBorder";
+import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOtherBrowserSessionsForm";
+import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthenticationForm";
+import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
+import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
 
-    export default defineComponent({
-        props: ['sessions'],
-        components: {
-            AppLayout,
-            DeleteUserForm,
-            JetSectionBorder,
-            LogoutOtherBrowserSessionsForm,
-            TwoFactorAuthenticationForm,
-            UpdatePasswordForm,
-            UpdateProfileInformationForm,
+export default defineComponent({
+    components: {
+        JetActionMessage,
+        JetButton,
+        JetFormSection,
+        JetInput,
+        JetInputError,
+        JetLabel,
+        AppLayout,
+        DeleteUserForm,
+        JetSectionBorder,
+        LogoutOtherBrowserSessionsForm,
+        TwoFactorAuthenticationForm,
+        UpdatePasswordForm,
+        UpdateProfileInformationForm,
+    },
+
+    data() {
+        return {
+            form: this.$inertia.form({
+                current_password: '',
+                password: '',
+                password_confirmation: '',
+            }),
+        }
+    },
+
+    methods: {
+        updatePassword() {
+            this.form.put(route('user-password.update'), {
+                errorBag: 'updatePassword',
+                preserveScroll: true,
+                onSuccess: () => this.form.reset(),
+                onError: () => {
+                    if (this.form.errors.password) {
+                        this.form.reset('password', 'password_confirmation')
+                        this.$refs.password.focus()
+                    }
+
+                    if (this.form.errors.current_password) {
+                        this.form.reset('current_password')
+                        this.$refs.current_password.focus()
+                    }
+                }
+            })
         },
-    })
+    },
+})
 </script>

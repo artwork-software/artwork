@@ -88,6 +88,12 @@
                                         </Link>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
+                                        <Link :href="route('profile.show')"
+                                              :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">
+                                            Benachrichtigungseinst.
+                                        </Link>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
                                         <a @click="logout" :class="[active ? 'bg-gray-100' : '', 'block px-4 py-2 text-sm text-gray-700']">Ausloggen</a>
                                     </MenuItem>
                                 </MenuItems>

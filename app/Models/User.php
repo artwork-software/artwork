@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -63,5 +64,31 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'logo',
+        'banner'
     ];
+
+    public function getBannerAttribute(): ?string
+    {
+        $path = app(GeneralSettings::class)->banner_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
+
+    public function getLogoAttribute(): ?string
+    {
+        $path = app(GeneralSettings::class)->logo_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
 }

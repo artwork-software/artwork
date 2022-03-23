@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 
 class AppController extends Controller
@@ -49,6 +50,17 @@ class AppController extends Controller
 
     public function create_admin(Request $request, GeneralSettings $settings) {
 
+        $logo = $request->file('logo');
+        $banner = $request->file('banner');
+
+        if($logo) {
+            $settings->logo_path = $logo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($banner) {
+            $settings->banner_path = $logo->storePublicly('banner', ['disk' => 'public']);
+        }
+
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -56,7 +68,7 @@ class AppController extends Controller
             'password' => $this->passwordRules(),
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:5000'],
+            'description' => ['string', 'max:5000'],
         ]);
 
         $user = User::create([
@@ -71,7 +83,10 @@ class AppController extends Controller
 
         $this->guard->login($user);
 
+        $user->assignRole('admin');
+
         $settings->setup_finished = true;
+        $settings->company_name = $request['business'];
         $settings->save();
         return redirect(RouteServiceProvider::HOME);
     }

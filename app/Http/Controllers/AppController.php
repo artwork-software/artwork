@@ -68,7 +68,7 @@ class AppController extends Controller
             'password' => $this->passwordRules(),
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string', 'max:5000'],
+            'description' => ['string', 'max:5000'],
         ]);
 
         $user = User::create([

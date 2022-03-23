@@ -10,7 +10,7 @@ class CreateGeneralSettings extends SettingsMigration
      */
     public function up(): void
     {
-        $this->migrator->add('general.company_name', 'DTH');
+        $this->migrator->add('general.company_name', "DTH");
         $this->migrator->add('general.setup_finished', false);
         $this->migrator->add('general.logo_path', "");
         $this->migrator->add('general.banner_path', "");

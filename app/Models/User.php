@@ -68,20 +68,24 @@ class User extends Authenticatable
         'banner'
     ];
 
-    public function getBannerAttribute(GeneralSettings $settings): ?string
+    public function getBannerAttribute(): ?string
     {
-        if($settings->banner_path) {
-            return Storage::disk('public')->url($settings->banner_path);
+        $path = app(GeneralSettings::class)->banner_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
         } else {
             return null;
         }
 
     }
 
-    public function getLogoAttribute(GeneralSettings $settings): ?string
+    public function getLogoAttribute(): ?string
     {
-        if($settings->logo_path) {
-            return Storage::disk('public')->url($settings->logo_path);
+        $path = app(GeneralSettings::class)->logo_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
         } else {
             return null;
         }

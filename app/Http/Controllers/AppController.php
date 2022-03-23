@@ -10,6 +10,7 @@ use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
 
 
 class AppController extends Controller
@@ -48,6 +49,17 @@ class AppController extends Controller
     }
 
     public function create_admin(Request $request, GeneralSettings $settings) {
+
+        $logo = $request->file('logo');
+        $banner = $request->file('banner');
+
+        if($logo) {
+            $settings->logo_path = $logo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($banner) {
+            $settings->banner_path = $logo->storePublicly('banner', ['disk' => 'public']);
+        }
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],

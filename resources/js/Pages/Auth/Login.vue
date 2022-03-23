@@ -1,43 +1,60 @@
 <template>
     <div class="min-h-full flex">
-        <div class="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-            <div class="mx-auto w-full max-w-sm lg:w-96">
+        <div class="flex-1 flex min-h-screen flex-col align-items-center justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+            <div class="mx-auto  w-full max-w-sm lg:w-96">
                 <div>
-                    <img class="h-12 w-auto" src="https://tailwindui.com/img/logos/workflow-mark-indigo-600.svg" alt="Workflow" />
-                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+                    <div class="text-2xl font-bold text-black">
+                        <p>ArtWork.tools</p>
+                    </div>
+                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Login</h2>
                 </div>
 
                 <div class="mt-8">
-
                     <div class="mt-6">
-                        <form action="#" method="POST" class="space-y-6">
+                        <form class="space-y-6" @submit.prevent="submit">
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700"> Email address </label>
+                                <label for="email" class="block text-sm font-bold text-gray-700">
+                                    E-Mail-Adresse
+                                </label>
                                 <div class="mt-1">
-                                    <input id="email" name="email" type="email" autocomplete="email" required="" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                    <input
+                                        v-model="form.email"
+                                        id="email" name="email" type="email" autocomplete="email" required
+                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                                 </div>
                             </div>
 
-                            <div class="space-y-1">
-                                <label for="password" class="block text-sm font-medium text-gray-700"> Password </label>
+                            <div>
+                                <label for="password" class="block text-sm font-bold text-gray-700">
+                                    Passwort
+                                </label>
                                 <div class="mt-1">
-                                    <input id="password" name="password" type="password" autocomplete="current-password" required="" class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                                    <input
+                                        v-model="form.password"
+                                        id="password" name="password" type="password" autocomplete="current-password" required
+                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <input id="remember-me" name="remember-me" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-                                    <label for="remember-me" class="ml-2 block text-sm text-gray-900"> Remember me </label>
+                                    <jet-checkbox name="remember" v-model:checked="form.remember"/>
+                                    <span class="ml-2 text-sm font-bold text-gray-600">Angemeldet bleiben</span>
                                 </div>
 
                                 <div class="text-sm">
-                                    <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500"> Forgot your password? </a>
+
+                                    <Link v-if="canResetPassword" :href="route('password.request')"
+                                          class="text-sm font-bold text-primary hover:text-primary">
+                                        Passwort vergessen
+                                    </Link>
+
                                 </div>
                             </div>
 
                             <div>
-                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Sign in</button>
+                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" :disabled="form.processing"
+                                        :class="{ 'opacity-25': form.processing }">Einloggen</button>
                             </div>
                         </form>
                     </div>
@@ -49,3 +66,57 @@
         </div>
     </div>
 </template>
+
+<script>
+import {defineComponent} from 'vue'
+import JetAuthenticationCard from '@/Jetstream/AuthenticationCard.vue'
+import JetAuthenticationCardLogo from '@/Jetstream/AuthenticationCardLogo.vue'
+import JetButton from '@/Jetstream/Button.vue'
+import JetInput from '@/Jetstream/Input.vue'
+import JetCheckbox from '@/Jetstream/Checkbox.vue'
+import JetLabel from '@/Jetstream/Label.vue'
+import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
+import {Head, Link} from '@inertiajs/inertia-vue3';
+
+
+export default defineComponent({
+    components: {
+        Head,
+        JetAuthenticationCard,
+        JetAuthenticationCardLogo,
+        JetButton,
+        JetInput,
+        JetCheckbox,
+        JetLabel,
+        JetValidationErrors,
+        Link,
+    },
+    props: {
+        canResetPassword: Boolean,
+        status: String
+    },
+
+    data() {
+        return {
+            form: this.$inertia.form({
+                email: '',
+                password: '',
+                remember: false
+            })
+        }
+    },
+
+    methods: {
+        submit() {
+            this.form
+                .transform(data => ({
+                    ...data,
+                    remember: this.form.remember ? 'on' : ''
+                }))
+                .post(this.route('login'), {
+                    onFinish: () => this.form.reset('password'),
+                })
+        }
+    }
+})
+</script>

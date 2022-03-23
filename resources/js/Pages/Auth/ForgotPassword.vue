@@ -2,12 +2,14 @@
     <Head title="Forgot Password" />
 
     <jet-authentication-card>
-        <template #logo>
-            <jet-authentication-card-logo />
-        </template>
-
-        <div class="mb-4 text-sm text-gray-600">
-            Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.
+        <div class="text-4xl my-6 flex justify-center font-bold text-black">
+            <h2>ArtWork.tools LOGO</h2>
+        </div>
+        <h2 class="my-6 text-2xl text-center font-bold text-gray-900">
+        Passwort vergessen
+        </h2>
+        <div class="mb-4 text-md font-semibold text-gray-600">
+            Passwort vergessen? Kein Problem, gib einfach deine E-Mail-Adresse ein und wir senden dir einen Passwort Reset-Link um ein neues festzulegen.
         </div>
 
         <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
@@ -18,13 +20,13 @@
 
         <form @submit.prevent="submit">
             <div>
-                <jet-label for="email" value="Email" />
+                <jet-label for="email" value="E-Mail-Adresse" class="font-bold" />
                 <jet-input id="email" type="email" class="mt-1 block w-full" v-model="form.email" required autofocus />
             </div>
 
             <div class="flex items-center justify-end mt-4">
                 <jet-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Email Password Reset Link
+                    Reset-Link versenden
                 </jet-button>
             </div>
         </form>

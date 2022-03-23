@@ -71,7 +71,10 @@ class AppController extends Controller
 
         $this->guard->login($user);
 
+        $user->assignRole('admin');
+
         $settings->setup_finished = true;
+        $settings->company_name = $request['business'];
         $settings->save();
         return redirect(RouteServiceProvider::HOME);
     }

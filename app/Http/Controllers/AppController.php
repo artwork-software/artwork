@@ -3,15 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use App\Models\ClientInvitation;
+use App\Models\GeneralSettings;
 use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Validator;
-use Laravel\Jetstream\Jetstream;
+
 
 class AppController extends Controller
 {
@@ -24,10 +23,11 @@ class AppController extends Controller
         $this->guard = $guard;
     }
 
-    public function index() {
+    public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
+    {
 
         //setup process finished
-        if(true) {
+        if($settings->setup_finished) {
             return Redirect::route('login');
         } else {
             return Redirect::route('setup');
@@ -35,17 +35,19 @@ class AppController extends Controller
 
     }
 
-    public function setup_company() {
+    public function setup_company(GeneralSettings $settings): \Illuminate\Http\RedirectResponse|\Inertia\Response|\Inertia\ResponseFactory
+    {
 
         //setup process finished
-        if(true) {
+        if($settings->setup_finished) {
             return Redirect::route('login');
+        } else {
+            return inertia('Auth/Register');
         }
 
-        return inertia('Auth/Register');
     }
 
-    public function create_admin(Request $request) {
+    public function create_admin(Request $request, GeneralSettings $settings) {
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -61,6 +63,8 @@ class AppController extends Controller
 
         $this->guard->login($user);
 
+        $settings->setup_finished = true;
+        $settings->save();
         return redirect(RouteServiceProvider::HOME);
     }
   }

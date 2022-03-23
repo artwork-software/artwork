@@ -52,13 +52,21 @@ class AppController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'phone_number' => ['required', 'string', 'max:15'],
             'password' => $this->passwordRules(),
+            'position' => ['required', 'string', 'max:255'],
+            'business' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:5000'],
         ]);
 
         $user = User::create([
             'name' => $request['name'],
             'email' => $request['email'],
+            'phone_number' => $request['phone_number'],
             'password' => Hash::make($request['password']),
+            'position' => $request['position'],
+            'business' => $request['business'],
+            'description' => $request['description'],
         ]);
 
         $this->guard->login($user);

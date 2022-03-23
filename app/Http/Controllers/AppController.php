@@ -55,7 +55,6 @@ class AppController extends Controller
             'phone_number' => ['required', 'string', 'max:15'],
             'password' => $this->passwordRules(),
             'position' => ['required', 'string', 'max:255'],
-            'business' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:5000'],
         ]);
 
@@ -65,7 +64,6 @@ class AppController extends Controller
             'phone_number' => $request['phone_number'],
             'password' => Hash::make($request['password']),
             'position' => $request['position'],
-            'business' => $request['business'],
             'description' => $request['description'],
         ]);
 

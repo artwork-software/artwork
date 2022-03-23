@@ -31,7 +31,6 @@ class User extends Authenticatable
         'phone_number',
         'password',
         'position',
-        'business',
         'description'
     ];
 

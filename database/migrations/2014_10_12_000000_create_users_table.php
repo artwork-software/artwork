@@ -21,7 +21,6 @@ return new class extends Migration
             $table->string('phone_number');
             $table->string('password');
             $table->string('position');
-            $table->string('business');
             $table->string('description')->nullable();
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();

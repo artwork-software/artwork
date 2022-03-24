@@ -36,6 +36,10 @@ class User extends Authenticatable
         'description'
     ];
 
+    public function invitations() {
+        return $this->hasMany(Invitation::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

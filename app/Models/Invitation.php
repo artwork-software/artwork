@@ -14,4 +14,8 @@ class Invitation extends Model
         'email',
         'token'
     ];
+
+    public function user() {
+        return $this->belongsTo(User::class);
+    }
 }

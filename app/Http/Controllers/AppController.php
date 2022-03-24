@@ -64,7 +64,7 @@ class AppController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone_number' => ['required', 'string', 'max:15'],
+            'phone_number' => ['string', 'max:15'],
             'password' => $this->passwordRules(),
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],

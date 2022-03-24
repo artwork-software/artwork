@@ -181,7 +181,6 @@
 <script>
     import { defineComponent } from 'vue'
     import AppLayout from '@/Layouts/AppLayout.vue'
-    import Welcome from '@/Jetstream/Welcome.vue'
     import { CalendarIcon, ChevronRightIcon } from '@heroicons/vue/solid'
 
     const positions = [
@@ -276,7 +275,6 @@
     export default defineComponent({
         components: {
             AppLayout,
-            Welcome,
             CalendarIcon,
             ChevronRightIcon
         },

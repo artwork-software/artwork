@@ -6,20 +6,41 @@
                     <form>
                         <div class="space-y-8 divide-y divide-gray-200">
                             <div>
-                                <div class="sm:col-span-6">
-                                    <div class="mt-4 flex items-center">
-              <span class="h-36 w-36 rounded-full overflow-hidden bg-gray-100">
-                <svg class="h-full w-full text-gray-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path
-                      d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-              </span>
-                                        <button type="button"
-                                                class="ml-12 bg-white py-2 px-3 border border-gray-300 rounded-md shadow-sm text-sm leading-4 font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                            Profilbild wechseln
-                                        </button>
+                                    <!-- Profile Photo -->
+                                    <div class="col-span-6 sm:col-span-4">
+                                        <!-- Profile Photo File Input -->
+                                        <input type="file" class="hidden"
+                                               ref="photo"
+                                               @change="updatePhotoPreview">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            Profilbild
+                                        </label>
+
+                                        <div class="mt-1 flex items-center">
+                                            <!-- Current Profile Photo -->
+                                            <div class="mt-2" v-show="! photoPreview">
+                                                <img :src="user.profile_photo_url" :alt="user.name" class="rounded-full h-20 w-20 object-cover">
+                                            </div>
+
+                                            <!-- New Profile Photo Preview -->
+                                            <div class="mt-1 flex items-center">
+                                                <div class="mt-2" v-show="photoPreview">
+                            <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
+                                  :style="'background-image: url(\'' + photoPreview + '\');'">
+                            </span>
+                                                </div>
+                                            </div>
+                                            <jet-secondary-button class="mt-2 mr-2 ml-3" type="button" @click.prevent="selectNewPhoto">
+                                                Profilbild ändern
+                                            </jet-secondary-button>
+                                            <jet-secondary-button type="button" class="mt-2" @click.prevent="deletePhoto"
+                                                                  v-if="user.profile_photo_path">
+                                                Profilbild löschen
+                                            </jet-secondary-button>
+
+                                            <jet-input-error :message="form.errors.photo" class="mt-2"/>
+                                        </div>
                                     </div>
-                                </div>
                                 <h2 class="font-bold mt-10 text-2xl">Jannik Müller</h2>
                             </div>
                             <div class="pt-8">
@@ -154,6 +175,7 @@ import LogoutOtherBrowserSessionsForm from "@/Pages/Profile/Partials/LogoutOther
 import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthenticationForm";
 import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
+import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 
 export default defineComponent({
     components: {
@@ -170,19 +192,67 @@ export default defineComponent({
         TwoFactorAuthenticationForm,
         UpdatePasswordForm,
         UpdateProfileInformationForm,
+        JetSecondaryButton,
     },
-
+    props: ['user'],
     data() {
         return {
             form: this.$inertia.form({
                 current_password: '',
                 password: '',
                 password_confirmation: '',
+                photo: null,
             }),
+            photoPreview: null,
         }
     },
 
     methods: {
+        updateProfileInformation() {
+            if (this.$refs.photo) {
+                this.form.photo = this.$refs.photo.files[0]
+            }
+
+            this.form.post(route('user-profile-information.update'), {
+                errorBag: 'updateProfileInformation',
+                preserveScroll: true,
+                onSuccess: () => (this.clearPhotoFileInput()),
+            });
+        },
+
+        selectNewPhoto() {
+            this.$refs.photo.click();
+        },
+
+        updatePhotoPreview() {
+            const photo = this.$refs.photo.files[0];
+
+            if (!photo) return;
+
+            const reader = new FileReader();
+
+            reader.onload = (e) => {
+                this.photoPreview = e.target.result;
+            };
+
+            reader.readAsDataURL(photo);
+        },
+
+        deletePhoto() {
+            this.$inertia.delete(route('current-user-photo.destroy'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.photoPreview = null;
+                    this.clearPhotoFileInput();
+                },
+            });
+        },
+
+        clearPhotoFileInput() {
+            if (this.$refs.photo?.value) {
+                this.$refs.photo.value = null;
+            }
+        },
         updatePassword() {
             this.form.put(route('user-password.update'), {
                 errorBag: 'updatePassword',

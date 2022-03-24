@@ -28,8 +28,13 @@
                         </div>
                         <div class="mt-5 flex-1 h-0 overflow-y-auto">
                             <nav class="px-2 space-y-1">
-                                <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[item.current ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
+                                <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
                                     <component :is="item.icon" class="mr-4 flex-shrink-0 h-6 w-6 text-indigo-300" aria-hidden="true" />
+                                    {{ item.name }}
+                                </a>
+                                <h2 class="text-lg pt-12 pb-2 ml-4 font-bold text-white">Systemverwaltung</h2>
+                                <a v-for="item in managementNavigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                                    <component :is="item.icon" class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" aria-hidden="true" />
                                     {{ item.name }}
                                 </a>
                             </nav>
@@ -51,12 +56,18 @@
                 </div>
                 <div class="mt-5 flex-1 flex flex-col">
                     <nav class="flex-1 px-2 pb-4 space-y-1">
-                        <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[item.current ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                        <a v-for="item in navigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
+                            <component :is="item.icon" class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" aria-hidden="true" />
+                            {{ item.name }}
+                        </a>
+                        <h2 class="text-lg pt-12 pb-2 ml-4 font-bold text-white">Systemverwaltung</h2>
+                        <a v-for="item in managementNavigation" :key="item.name" :href="item.href" :class="[isCurrent(item.route) ? 'bg-indigo-800 text-white' : 'text-indigo-100 hover:bg-indigo-600', 'group flex items-center px-2 py-2 text-sm font-medium rounded-md']">
                             <component :is="item.icon" class="mr-3 flex-shrink-0 h-6 w-6 text-indigo-300" aria-hidden="true" />
                             {{ item.name }}
                         </a>
                     </nav>
                 </div>
+
             </div>
         </div>
         <div class="md:pl-64 flex flex-col flex-1">
@@ -123,11 +134,8 @@ import {
 } from '@headlessui/vue'
 import {
     BellIcon,
-    FolderIcon,
     HomeIcon,
-    InboxIcon,
     MenuAlt2Icon,
-    UsersIcon,
     CalendarIcon,
     XIcon,
     ArrowCircleRightIcon,
@@ -137,11 +145,14 @@ import { SearchIcon } from '@heroicons/vue/solid'
 import {Link} from "@inertiajs/inertia-vue3";
 
 const navigation = [
-    { name: 'Dashboard', href: route('dashboard'), icon: HomeIcon, current: true },
-    { name: 'Projekte', href: '#', icon: ArrowCircleRightIcon, current: false },
-    { name: 'Raumbelegung', href: '#', icon: CalendarIcon, current: false },
-    { name: 'Notes', href: '#', icon: BellIcon, current: false },
-    { name: 'Aufgaben', href: '#', icon: ClipboardCheckIcon, current: false },
+    {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
+    {name: 'Projekte', href: '#', route: [], icon: ArrowCircleRightIcon},
+    {name: 'Raumbelegung', href: '#', route: [], icon: CalendarIcon,},
+    {name: 'Notes', href: '#', route: [], icon: BellIcon,},
+    {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
+]
+const managementNavigation = [
+    { name: 'Nutzerverwaltung', href: route('userManagement'),route: ['/userManagement'], icon: ArrowCircleRightIcon},
 ]
 const userNavigation = [
     { name: 'Your Profile', href: '#' },
@@ -165,6 +176,13 @@ export default {
         Link
     },
     methods:{
+        isCurrent(routes) {
+            for (let url of routes) {
+                if (this.$page.url === url) {
+                    return true
+                }
+            }
+        },
         logout() {
             this.$inertia.post(route('logout'))
         }
@@ -175,6 +193,7 @@ export default {
         return {
             navigation,
             userNavigation,
+            managementNavigation,
             sidebarOpen,
         }
     },

@@ -1,8 +1,10 @@
 <?php
 
+use App\Mail\InvitationCreated;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Testing\Assert;
 use function Pest\Faker\faker;
 
@@ -57,7 +59,7 @@ test('users can accept the invitation', function () {
 
     $validPlainToken = 'validToken0123456789';
 
-    $invitation = Invitation::factory()->create(['user_id' => $user->id, 'email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
+    $invitation = Invitation::factory()->create(['user_id' => $user->id, 'name' => 'testName', 'email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
 
     $password = "TesterTest_123?";
 
@@ -65,7 +67,11 @@ test('users can accept the invitation', function () {
         'email' => 'user@example.com',
         'token' => $validPlainToken,
         'password' => $password,
-        'password_confirmation' => $password
+        'password_confirmation' => $password,
+        'phone_number' => '123456789123',
+        'position' => 'Chef',
+        'business' => 'DTH',
+        'description' => 'Ich bin Chef'
     ]);
 
     $this->assertDatabaseHas('users', [
@@ -108,5 +114,149 @@ test('invitations requests are validated', function () {
     $this->post('/users/invitations', [
         'name' => null
     ])->assertInvalid();
+
+});
+
+test('admins can invite users', function () {
+
+    Mail::fake();
+
+    $admin_user = User::factory()->create();
+
+    $admin_user->assignRole('admin');
+
+    $this->actingAs($admin_user);
+
+    $response = $this->post('/users/invitations', [
+        'name' => 'Test',
+        'email' => 'user@example.de',
+    ]);
+
+    Mail::assertSent(InvitationCreated::class);
+
+    $this->assertDatabaseHas('invitations', [
+        "name" => "Test",
+        "email" => "user@example.de",
+    ]);
+
+    $created_invitation = Invitation::first();
+
+    expect($created_invitation->token)->toHaveLength(60);
+    expect($created_invitation->token)->toMatch('/^\$2y\$/');
+    $response->assertValid();
+    $response->assertStatus(302);
+    $response->assertSessionHasNoErrors();
+});
+
+test('non admins cannot invite users', function () {
+
+    Mail::fake();
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    $response = $this->post('/users/invitations', [
+        'name' => 'Test',
+        'email' => 'user@example.de',
+    ]);
+
+    $this->assertDatabaseMissing('invitations', [
+        "name" => "Test",
+        "email" => "user@example.de",
+        "token" => "test",
+    ]);
+
+    Mail::assertNothingSent();
+    $response->assertStatus(403);
+});
+
+test('admins can view invitations', function () {
+
+    $admin_user = User::factory()->create();
+
+    for ($i = 0; $i < 10; $i++) {
+        Invitation::factory()->create(['user_id' => $admin_user->id]);
+    }
+
+    $admin_user->assignRole('admin');
+
+    $this->actingAs($admin_user);
+
+    $response = $this->get('/users/invitations')
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Invitations/Invitations')
+            ->has('invitations.data', 10)
+            ->has('invitations.data.0', fn(Assert $page) => $page
+                ->hasAll(['id','name', 'email'])
+            )
+            ->where('invitations.per_page', 10)
+        );
+
+    $response->assertStatus(200);
+});
+
+test('admins and can update invitations', function () {
+
+    $admin_user = User::factory()->create();
+
+    $admin_user->assignRole('admin');
+
+    $this->actingAs($admin_user);
+
+    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+
+    $response = $this->patch("/users/invitations/{$invitation->id}", [
+        'name' => 'Test',
+        'email' => 'user@example.de',
+    ]);
+
+    $response->assertStatus(302);
+
+    $this->assertDatabaseHas('invitations', [
+        "name" => "Test",
+        "email" => "user@example.de",
+    ]);
+});
+
+test('admins can edit invitations', function () {
+
+    $admin_user = User::factory()->create();
+
+    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+
+    $admin_user->assignRole('admin');
+
+    $this->actingAs($admin_user);
+
+    $response = $this->get("/users/invitations/{$invitation->id}/edit")
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Invitations/InvitationEdit')
+            ->has('invitation', fn(Assert $invitation) => $invitation
+                ->hasAll(['id','name','email'])
+            )
+        );
+
+    $response->assertStatus(200);
+
+});
+
+test('admins can delete invitations', function () {
+
+    $admin_user = User::factory()->create();
+
+    $admin_user->assignRole('admin');
+
+    $this->actingAs($admin_user);
+
+    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+
+    $this->delete("/users/invitations/{$invitation->id}")->assertStatus(302);
+
+    $this->assertDatabaseMissing('invitations', [
+        "name" => $invitation->name,
+        "email" => $invitation->email,
+        "token" => $invitation->token,
+    ]);
 
 });

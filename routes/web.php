@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
@@ -29,10 +30,14 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
-    Route::get('/userManagement', function () { return Inertia::render('UserManagement'); })->name('userManagement');
     Route::get('/departmentManagement', function () { return Inertia::render('DepartmentManagement'); })->name('departmentManagement');
 
-    //Invitations
+    //Users
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::patch('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
     Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])->name('user.invitations.edit');

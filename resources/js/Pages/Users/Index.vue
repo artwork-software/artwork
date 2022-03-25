@@ -80,9 +80,10 @@ export default defineComponent({
         PlusSmIcon,
         SearchIcon
     },
+    props: ['users'],
     setup() {
         return {
-            people
+            people,
         }
     }
 })

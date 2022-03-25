@@ -20,6 +20,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Permission::create(['name' => 'invite users']);
 
+        Permission::create(['name' => 'view users']);
+        Permission::create(['name' => 'update users']);
+        Permission::create(['name' => 'delete users']);
+
         //Has every permission because of the gate in AuthServiceProvider
         Role::create(['name' => 'admin']);
     }

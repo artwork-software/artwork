@@ -152,7 +152,7 @@ const navigation = [
     {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
 ]
 const managementNavigation = [
-    { name: 'Nutzerverwaltung', href: route('userManagement'),route: ['/userManagement'], icon: ArrowCircleRightIcon},
+    { name: 'Nutzerverwaltung', href: route('users'),route: ['/users'], icon: ArrowCircleRightIcon},
     { name: 'Abteilungsverwaltung', href: route('departmentManagement'),route: ['/departmentManagement'], icon: ArrowCircleRightIcon},
 ]
 const userNavigation = [

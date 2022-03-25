@@ -44,7 +44,7 @@ class InvitationController extends Controller
             $query->orderBy(Str::of('invitations.')->append(request('field')), request('direction'));
         }
 
-        return inertia('Invitations/Invitations', [
+        return inertia('Users/Users', [
             'invitations' => $query->paginate(10)->through(fn($invitation) => [
                 'id' => $invitation->invitable_id,
                 'name' => $invitation->name,
@@ -55,7 +55,7 @@ class InvitationController extends Controller
     }
 
     public function invite() {
-        return inertia('Invitations/Invite');
+        return inertia('Users/Invite');
     }
 
     /**
@@ -89,7 +89,7 @@ class InvitationController extends Controller
      */
     public function edit(Invitation $invitation)
     {
-        return inertia('Invitations/InvitationEdit', [
+        return inertia('Users/InvitationEdit', [
             'invitation' => [
                 'id' => $invitation->id,
                 'name' => $invitation->invitation->name,
@@ -134,7 +134,7 @@ class InvitationController extends Controller
     }
 
     public function accept(Request $request) {
-        return inertia('Invitations/Accept', [
+        return inertia('Users/Accept', [
             'token' => $request->query('token'),
             'email' => $request->query('email'),
         ]);

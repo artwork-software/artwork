@@ -96,7 +96,7 @@ test('accept invitation renders', function () {
 
     $response = $this->get("/users/invitations/accept?token=$invitation->token?email=$invitation->email")
         ->assertInertia(fn(Assert $page) => $page
-            ->component('Invitations/Accept')
+            ->component('Users/Accept')
             ->has('token')
             ->has('email'));
 
@@ -185,7 +185,7 @@ test('admins can view invitations', function () {
 
     $response = $this->get('/users/invitations')
         ->assertInertia(fn(Assert $page) => $page
-            ->component('Invitations/Invitations')
+            ->component('Users/Invitations')
             ->has('invitations.data', 10)
             ->has('invitations.data.0', fn(Assert $page) => $page
                 ->hasAll(['id','name', 'email'])
@@ -231,7 +231,7 @@ test('admins can edit invitations', function () {
 
     $response = $this->get("/users/invitations/{$invitation->id}/edit")
         ->assertInertia(fn(Assert $page) => $page
-            ->component('Invitations/InvitationEdit')
+            ->component('Users/InvitationEdit')
             ->has('invitation', fn(Assert $invitation) => $invitation
                 ->hasAll(['id','name','email'])
             )

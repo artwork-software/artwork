@@ -30,6 +30,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::get('/userManagement', function () { return Inertia::render('UserManagement'); })->name('userManagement');
+    Route::get('/departmentManagement', function () { return Inertia::render('DepartmentManagement'); })->name('departmentManagement');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

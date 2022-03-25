@@ -38,7 +38,7 @@
                                                 Profilbild löschen
                                             </jet-secondary-button>
 
-                                            <jet-input-error :message="form.errors.photo" class="mt-2"/>
+                                            <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                                         </div>
                                     </div>
                                 <h2 class="font-bold mt-10 text-2xl">Jannik Müller</h2>
@@ -49,7 +49,7 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Unternehmen </label>
                                         <div class="mt-1">
-                                            <input type="text"
+                                            <input type="text" v-model="userForm.business"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
                                         </div>
                                     </div>
@@ -58,7 +58,7 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Position </label>
                                         <div class="mt-1">
-                                            <input type="text"
+                                            <input type="text" v-model="userForm.position"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
                                         </div>
                                     </div>
@@ -67,7 +67,7 @@
                                         <label for="department" class="block text-medium font-medium text-gray-700">
                                             Abteilung </label>
                                         <div class="mt-1">
-                                            <select id="department"
+                                            <select id="department" v-model="userForm.department"
                                                     class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
                                                 <option>A</option>
                                                 <option>B</option>
@@ -79,7 +79,7 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Telefonnummer </label>
                                         <div class="mt-1">
-                                            <input type="text"
+                                            <input type="text" v-model="userForm.phone_number"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
                                         </div>
                                     </div>
@@ -88,7 +88,7 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             E-Mail-Adresse </label>
                                         <div class="mt-1">
-                                            <input type="text" name="last-name" autocomplete="family-name"
+                                            <input type="text" v-model="userForm.email"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
                                         </div>
                                     </div>
@@ -96,7 +96,7 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Beschreibung </label>
                                         <div class="mt-1">
-                                            <textarea rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
+                                            <textarea v-model="userForm.description" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
                                         </div>
                                         <p class="mt-2 text-sm text-gray-500">Nähere Infos für die Kolleg:innen.</p>
                                     </div>
@@ -124,33 +124,33 @@
                     <div class="col-span-6 sm:col-span-4 my-4">
                         <label for="current_password" class="font-medium"> Aktuelles Passwort</label>
                         <jet-input id="current_password" type="password" class="mt-1 block w-full"
-                                   v-model="form.current_password" ref="current_password"
+                                   v-model="passwordForm.current_password" ref="current_password"
                                    autocomplete="current-password"/>
-                        <jet-input-error :message="form.errors.current_password" class="mt-2"/>
+                        <jet-input-error :message="passwordForm.errors.current_password" class="mt-2"/>
                     </div>
 
                     <div class="col-span-6 sm:col-span-4 my-4">
                         <label for="password" class="font-medium"> Neues Passwort</label>
-                        <jet-input id="password" type="password" class="mt-1 block w-full" v-model="form.password"
+                        <jet-input id="password" type="password" class="mt-1 block w-full" v-model="passwordForm.password"
                                    ref="password" autocomplete="new-password"/>
-                        <jet-input-error :message="form.errors.password" class="mt-2"/>
+                        <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
                         <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 8 Zeichen lang sein und mind. 1 Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
                     </div>
 
                     <div class="col-span-6 sm:col-span-4 my-4">
                         <label for="password_confirmation" class="font-medium"> Neues Passwort bestätigen</label>
                         <jet-input id="password_confirmation" type="password" class="mt-1 block w-full"
-                                   v-model="form.password_confirmation" autocomplete="new-password"/>
-                        <jet-input-error :message="form.errors.password_confirmation" class="mt-2"/>
+                                   v-model="passwordForm.password_confirmation" autocomplete="new-password"/>
+                        <jet-input-error :message="passwordForm.errors.password_confirmation" class="mt-2"/>
                     </div>
 
-                    <jet-action-message :on="form.recentlySuccessful" class="mr-3">
+                    <jet-action-message :on="passwordForm.recentlySuccessful" class="mr-3">
                         Saved.
                     </jet-action-message>
 
                     <button class="ml-3 mb-6 py-2 px-4 float-right border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    :class="{ 'opacity-25': form.processing }"
-                                :disabled="form.processing">
+                    :class="{ 'opacity-25': passwordForm.processing }"
+                                :disabled="passwordForm.processing">
                         Passwort ändern
                     </button>
 
@@ -197,7 +197,15 @@ export default defineComponent({
     props: ['user'],
     data() {
         return {
-            form: this.$inertia.form({
+            userForm: this.$inertia.form({
+                business:'',
+                position:'',
+                department:'',
+                phone_number:'',
+                email:'',
+                description:''
+            }),
+            passwordForm: this.$inertia.form({
                 current_password: '',
                 password: '',
                 password_confirmation: '',
@@ -254,18 +262,18 @@ export default defineComponent({
             }
         },
         updatePassword() {
-            this.form.put(route('user-password.update'), {
+            this.passwordForm.put(route('user-password.update'), {
                 errorBag: 'updatePassword',
                 preserveScroll: true,
-                onSuccess: () => this.form.reset(),
+                onSuccess: () => this.passwordForm.reset(),
                 onError: () => {
-                    if (this.form.errors.password) {
-                        this.form.reset('password', 'password_confirmation')
+                    if (this.passwordForm.errors.password) {
+                        this.passwordForm.reset('password', 'password_confirmation')
                         this.$refs.password.focus()
                     }
 
-                    if (this.form.errors.current_password) {
-                        this.form.reset('current_password')
+                    if (this.passwordForm.errors.current_password) {
+                        this.passwordForm.reset('current_password')
                         this.$refs.current_password.focus()
                     }
                 }

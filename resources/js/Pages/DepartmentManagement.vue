@@ -2,35 +2,38 @@
     <app-layout title="Dashboard">
         <div class="py-12">
             <div class="max-w-screen-2xl my-12 flex flex-row mx-auto sm:px-6 lg:px-8">
-                <div class="flex flex-1 flex-wrap justify-between">
-                    <div class="flex">
-                    <div class="w-full flex my-auto">
-                    <h2 class="text-2xl">Alle User</h2>
-                        <button type="button" class="flex my-auto ml-6 pr-2 items-center font-bold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            <PlusSmIcon class="h-5 w-5 " aria-hidden="true" /> User hinzufügen
-                        </button>
+                <div class="flex flex-1 flex-wrap">
+                    <div class="w-full flex my-auto justify-between">
+                        <div class="flex">
+                            <h2 class="text-2xl flex">Alle Abteilungen</h2>
+                            <button type="button" class="flex my-auto ml-4 pr-2 items-center font-semibold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <PlusSmIcon class="h-4 w-4 " aria-hidden="true" /> Abteilung hinzufügen
+                            </button>
+                        </div>
+                        <div class="flex items-center">
+
+                                    <div class="inset-y-0 mr-3 pointer-events-none">
+                                        <SearchIcon class="h-5 w-5" aria-hidden="true" />
+                                    </div>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center">
-                    <div class="inset-y-0 mr-3 pointer-events-none">
-                        <SearchIcon class="h-5 w-5" aria-hidden="true" />
-                    </div>
-                </div>
                     <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
                         <li v-for="person in people" :key="person.email" class="py-4 flex justify-between">
                             <img class="h-14 w-14 rounded-full flex justify-start" :src="person.image" alt="" />
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
-                                <p class="text-md font-medium text-gray-900">{{ person.name }},</p><p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{person.business}}, {{person.position}}</p>
+                                    <p class="text-md font-medium text-gray-900">{{ person.name }},</p><p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{person.business}}, {{person.position}}</p>
                                 </div>
                                 <div class="flex">
-                                <p class="text-sm text-gray-500">{{person.phone_number}}, </p><p class="ml-2 text-sm text-gray-500">{{ person.email }}</p>
+                                    <p class="text-sm text-gray-500">{{person.phone_number}}, </p><p class="ml-2 text-sm text-gray-500">{{ person.email }}</p>
                                 </div>
                             </div>
                             <DotsVerticalIcon class="mr-3 justify-end flex-shrink-0 h-6 w-6 text-gray-600 my-auto" aria-hidden="true"/>
                         </li>
                     </ul>
                 </div>
+
+
             </div>
         </div>
     </app-layout>

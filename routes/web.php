@@ -30,7 +30,7 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
-    Route::get('/departmentManagement', function () { return Inertia::render('DepartmentManagement'); })->name('departmentManagement');
+    Route::get('/departments/management', function () { return Inertia::render('DepartmentManagement'); })->name('department.management');
 
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');

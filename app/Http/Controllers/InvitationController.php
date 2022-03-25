@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\AcceptInvitationRequest;
 use App\Mail\InvitationCreated;
 use App\Models\Invitation;
 use App\Models\User;
@@ -139,7 +140,7 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function handle_accept(Request $request) {
+    public function handle_accept(AcceptInvitationRequest $request) {
 
         $invitation = Invitation::where('email', $request->email)->first();
 

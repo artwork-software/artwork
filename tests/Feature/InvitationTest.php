@@ -83,7 +83,7 @@ test('users can accept the invitation', function () {
 
     $this->assertTrue(Hash::check($password,$user->password));
 
-    $this->assertDeleted($invitation);
+    $this->assertModelMissing($invitation);
 
     $this->assertAuthenticated();
 });

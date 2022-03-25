@@ -6,7 +6,7 @@
                     <div class="flex">
                     <div class="w-full flex my-auto">
                     <h2 class="text-2xl">Alle User</h2>
-                        <button type="button" class="flex my-auto ml-6 pr-2 items-center font-bold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <button  @click="addUser" type="button" class="flex my-auto ml-6 pr-2 items-center font-bold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                             <PlusSmIcon class="h-5 w-5 " aria-hidden="true" /> User hinzufügen
                         </button>
                     </div>
@@ -17,7 +17,7 @@
                     </div>
                 </div>
                     <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
-                        <li v-for="person in people" :key="person.email" class="py-4 flex justify-between">
+                        <li v-for="person in users.data" :key="person.email" class="py-4 flex justify-between">
                             <img class="h-14 w-14 rounded-full flex justify-start" :src="person.image" alt="" />
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
@@ -27,7 +27,28 @@
                                 <p class="text-sm text-gray-500">{{person.phone_number}}, </p><p class="ml-2 text-sm text-gray-500">{{ person.email }}</p>
                                 </div>
                             </div>
-                            <DotsVerticalIcon class="mr-3 justify-end flex-shrink-0 h-6 w-6 text-gray-600 my-auto" aria-hidden="true"/>
+                            <Menu as="div" class="relative inline-block text-left">
+                                <div>
+                                    <MenuButton class=" mr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500">
+                                        <span class="sr-only">Open options</span>
+                                        <DotsVerticalIcon class="h-6 w-6" aria-hidden="true" />
+                                    </MenuButton>
+                                </div>
+
+                                <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <div class="py-1">
+                                            <MenuItem v-slot="{ active }">
+                                                <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Bearbeiten</a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }">
+                                                <a href="#" :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Löschen</a>
+                                            </MenuItem>
+                                        </div>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
+
                         </li>
                     </ul>
                 </div>
@@ -37,6 +58,8 @@
 </template>
 
 <script>
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+
 const people = [
     {
         name: 'Calvin Hawkins',
@@ -78,9 +101,18 @@ export default defineComponent({
         AppLayout,
         DotsVerticalIcon,
         PlusSmIcon,
-        SearchIcon
+        SearchIcon,
+        Menu,
+        MenuButton,
+        MenuItem,
+        MenuItems,
     },
     props: ['users'],
+    methods:{
+      addUser(){
+
+      }
+    },
     setup() {
         return {
             people,

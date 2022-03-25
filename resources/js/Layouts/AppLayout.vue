@@ -153,7 +153,7 @@ const navigation = [
 ]
 const managementNavigation = [
     { name: 'Nutzerverwaltung', href: route('users'),route: ['/users'], icon: ArrowCircleRightIcon},
-    { name: 'Abteilungsverwaltung', href: route('departmentManagement'),route: ['/departmentManagement'], icon: ArrowCircleRightIcon},
+    { name: 'Abteilungsverwaltung', href: route('department.management'),route: ['/departments/management'], icon: ArrowCircleRightIcon},
 ]
 const userNavigation = [
     { name: 'Your Profile', href: '#' },

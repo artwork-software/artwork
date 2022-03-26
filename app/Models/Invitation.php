@@ -17,8 +17,4 @@ class Invitation extends Model
     protected $casts = [
         'permissions' => 'array'
     ];
-
-    public function user() {
-        return $this->belongsTo(User::class);
-    }
 }

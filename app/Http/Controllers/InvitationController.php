@@ -72,7 +72,7 @@ class InvitationController extends Controller
         foreach ($request->user_emails as $email) {
             $token = createToken();
 
-            $invitation = $admin_user->invitations()->create([
+            $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
                 'permissions' => $permissions
@@ -95,7 +95,6 @@ class InvitationController extends Controller
         return inertia('Users/InvitationEdit', [
             'invitation' => [
                 'id' => $invitation->id,
-                'name' => $invitation->name,
                 'email' => $invitation->email,
             ]
         ]);

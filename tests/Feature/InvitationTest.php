@@ -238,7 +238,7 @@ test('admins can edit invitations', function () {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Users/InvitationEdit')
             ->has('invitation', fn(Assert $invitation) => $invitation
-                ->hasAll(['id','name','email'])
+                ->hasAll(['id', 'email'])
             )
         );
 

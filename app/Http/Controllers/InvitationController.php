@@ -69,16 +69,16 @@ class InvitationController extends Controller
         $admin_user = Auth::user();
         $permissions = $request->permissions;
 
-        foreach ($request->users as $user) {
+        foreach ($request->user_emails as $email) {
             $token = createToken();
 
             $invitation = $admin_user->invitations()->create([
-                'email' => $user['email'],
+                'email' => $email,
                 'token' => $token['hash'],
                 'permissions' => $permissions
             ]);
 
-            Mail::to($user['email'])->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
+            Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
         }
 
         return Redirect::route('user.invitations')->with('success', 'Invitation created.');

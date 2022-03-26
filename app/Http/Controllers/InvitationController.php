@@ -77,7 +77,7 @@ class InvitationController extends Controller
             $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
-                'permissions' => $permissions
+                'permissions' => json_encode($permissions)
             ]);
 
             Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));

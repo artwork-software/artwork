@@ -20,7 +20,6 @@ class InvitationFactory extends Factory
         return [
             'email' => $this->faker->unique()->safeEmail(),
             'token' => Str::random(20),
-            'user_id' => $this->faker->numberBetween([0], [1000]),
             'permissions' => ['invitation permission factory']
         ];
     }

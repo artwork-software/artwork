@@ -15,7 +15,7 @@ it('aborts invalid tokens', function () {
 
     $user->assignRole('admin');
 
-    Invitation::factory()->create(['user_id' => $user->id,'email' => 'user@example.com']);
+    Invitation::factory()->create(['email' => 'user@example.com']);
 
     $password = "TesterTest_123?";
 
@@ -59,7 +59,7 @@ test('users can accept the invitation', function () {
 
     $validPlainToken = 'validToken0123456789';
 
-    $invitation = Invitation::factory()->create(['user_id' => $user->id, 'email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
+    $invitation = Invitation::factory()->create(['email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
 
     $password = "TesterTest_123?";
 
@@ -122,7 +122,7 @@ test('invitations requests are validated', function () {
 
 test('admins can invite users', function () {
 
-    //Mail::fake();
+    Mail::fake();
 
     $admin_user = User::factory()->create();
 
@@ -135,7 +135,7 @@ test('admins can invite users', function () {
         'permissions' => ['invite users', 'view users']
     ]);
 
-    //Mail::assertSent(InvitationCreated::class);
+    Mail::assertSent(InvitationCreated::class);
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",
@@ -181,7 +181,7 @@ test('admins can view invitations', function () {
     $admin_user = User::factory()->create();
 
     for ($i = 0; $i < 10; $i++) {
-        Invitation::factory()->create(['user_id' => $admin_user->id]);
+        Invitation::factory()->create();
     }
 
     $admin_user->assignRole('admin');
@@ -211,7 +211,7 @@ test('admins and can update invitations', function () {
 
     $this->actingAs($admin_user);
 
-    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+    $invitation = Invitation::factory()->create();
 
     $response = $this->patch("/users/invitations/{$invitation->id}", [
         'email' => 'user@example.de',
@@ -228,7 +228,7 @@ test('admins can edit invitations', function () {
 
     $admin_user = User::factory()->create();
 
-    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+    $invitation = Invitation::factory()->create();
 
     $admin_user->assignRole('admin');
 
@@ -254,7 +254,7 @@ test('admins can delete invitations', function () {
 
     $this->actingAs($admin_user);
 
-    $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
+    $invitation = Invitation::factory()->create();
 
     $this->delete("/users/invitations/{$invitation->id}")->assertStatus(302);
 

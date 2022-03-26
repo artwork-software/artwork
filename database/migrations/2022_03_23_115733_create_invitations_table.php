@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('token');
             $table->json('permissions');
-            $table->unsignedInteger('user_id');
             $table->timestamps();
         });
     }

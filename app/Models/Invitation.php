@@ -10,9 +10,12 @@ class Invitation extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
         'email',
         'token'
+    ];
+
+    protected $casts = [
+        'permissions' => 'array'
     ];
 
     public function user() {

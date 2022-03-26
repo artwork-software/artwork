@@ -5,8 +5,8 @@ use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
-use Inertia\Testing\Assert;
 use function Pest\Faker\faker;
+use Inertia\Testing\AssertableInertia as Assert;
 
 it('aborts invalid tokens', function () {
 
@@ -59,12 +59,13 @@ test('users can accept the invitation', function () {
 
     $validPlainToken = 'validToken0123456789';
 
-    $invitation = Invitation::factory()->create(['user_id' => $user->id, 'name' => 'testName', 'email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
+    $invitation = Invitation::factory()->create(['user_id' => $user->id, 'email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
 
     $password = "TesterTest_123?";
 
     $this->post('/users/invitations/accept', [
         'email' => 'user@example.com',
+        'name' => 'TestName',
         'token' => $validPlainToken,
         'password' => $password,
         'password_confirmation' => $password,
@@ -75,7 +76,7 @@ test('users can accept the invitation', function () {
     ]);
 
     $this->assertDatabaseHas('users', [
-        'name' => $invitation->name,
+        'name' => 'TestName',
         'email' => $invitation->email,
     ]);
 
@@ -113,7 +114,9 @@ test('invitations requests are validated', function () {
 
     $this->post('/users/invitations', [
         'name' => null
-    ])->assertInvalid();
+    ]);
+
+    $this->assertDatabaseCount('invitations', 0);
 
 });
 
@@ -128,15 +131,25 @@ test('admins can invite users', function () {
     $this->actingAs($admin_user);
 
     $response = $this->post('/users/invitations', [
-        'name' => 'Test',
-        'email' => 'user@example.de',
+        'users' => [
+            [
+                'email'=> 'user@example.de'
+            ],
+            [
+                'email'=> 'user2@example.de'
+            ]
+        ],
+        'permissions' => ['invite users', 'view users']
     ]);
 
     Mail::assertSent(InvitationCreated::class);
 
     $this->assertDatabaseHas('invitations', [
-        "name" => "Test",
         "email" => "user@example.de",
+    ]);
+
+    $this->assertDatabaseHas('invitations', [
+        "email" => "user2@example.de",
     ]);
 
     $created_invitation = Invitation::first();
@@ -157,12 +170,15 @@ test('non admins cannot invite users', function () {
     $this->actingAs($user);
 
     $response = $this->post('/users/invitations', [
-        'name' => 'Test',
-        'email' => 'user@example.de',
+        'users' => [
+            [
+                'email'=> 'user@example.de'
+            ]
+        ],
+        'permissions' => ['invite users', 'view users'],
     ]);
 
     $this->assertDatabaseMissing('invitations', [
-        "name" => "Test",
         "email" => "user@example.de",
         "token" => "test",
     ]);
@@ -188,7 +204,7 @@ test('admins can view invitations', function () {
             ->component('Users/Invitations')
             ->has('invitations.data', 10)
             ->has('invitations.data.0', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'email'])
+                ->hasAll(['id','name', 'email', 'created_at'])
             )
             ->where('invitations.per_page', 10)
         );
@@ -197,6 +213,8 @@ test('admins can view invitations', function () {
 });
 
 test('admins and can update invitations', function () {
+
+    Mail::fake();
 
     $admin_user = User::factory()->create();
 
@@ -207,14 +225,12 @@ test('admins and can update invitations', function () {
     $invitation = Invitation::factory()->create(['user_id' => $admin_user->id]);
 
     $response = $this->patch("/users/invitations/{$invitation->id}", [
-        'name' => 'Test',
         'email' => 'user@example.de',
     ]);
 
     $response->assertStatus(302);
 
     $this->assertDatabaseHas('invitations', [
-        "name" => "Test",
         "email" => "user@example.de",
     ]);
 });
@@ -254,7 +270,6 @@ test('admins can delete invitations', function () {
     $this->delete("/users/invitations/{$invitation->id}")->assertStatus(302);
 
     $this->assertDatabaseMissing('invitations', [
-        "name" => $invitation->name,
         "email" => $invitation->email,
         "token" => $invitation->token,
     ]);

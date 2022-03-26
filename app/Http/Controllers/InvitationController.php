@@ -44,7 +44,7 @@ class InvitationController extends Controller
             $query->orderBy(Str::of('invitations.')->append(request('field')), request('direction'));
         }
 
-        return inertia('Users/Users', [
+        return inertia('Users/Invitations', [
             'invitations' => $query->paginate(10)->through(fn($invitation) => [
                 'id' => $invitation->invitable_id,
                 'name' => $invitation->name,
@@ -66,17 +66,20 @@ class InvitationController extends Controller
      */
     public function store(Request $request)
     {
-        $user = Auth::user();
+        $admin_user = Auth::user();
+        $permissions = $request->permissions;
 
-        $token = createToken();
+        foreach ($request->users as $user) {
+            $token = createToken();
 
-        $invitation = $user->invitations()->create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'token' => $token['hash'],
-        ]);
+            $invitation = $admin_user->invitations()->create([
+                'email' => $user['email'],
+                'token' => $token['hash'],
+                'permissions' => $permissions
+            ]);
 
-        Mail::to($request->email)->send(new InvitationCreated($invitation, $user, $token['plain']));
+            Mail::to($user['email'])->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
+        }
 
         return Redirect::route('user.invitations')->with('success', 'Invitation created.');
     }
@@ -92,8 +95,8 @@ class InvitationController extends Controller
         return inertia('Users/InvitationEdit', [
             'invitation' => [
                 'id' => $invitation->id,
-                'name' => $invitation->invitation->name,
-                'email' => $invitation->invitation->email,
+                'name' => $invitation->name,
+                'email' => $invitation->email,
             ]
         ]);
     }
@@ -110,7 +113,7 @@ class InvitationController extends Controller
         $oldEmail = $invitation->email;
         $newMail = $request->input('email');
 
-        $invitation->update($request->only('name', 'email'));
+        $invitation->update($request->only('email'));
 
         if ($newMail !== $oldEmail) {
             $token = createToken();
@@ -147,7 +150,7 @@ class InvitationController extends Controller
         if (Hash::check($request->token, $invitation->token)) {
 
             $user = User::create([
-                'name' => $invitation->name,
+                'name' => $request->name,
                 'email' => $invitation->email,
                 'phone_number' => $request->phone_number,
                 'password' => Hash::make($request->password),
@@ -156,11 +159,11 @@ class InvitationController extends Controller
                 'description' => $request->description
             ]);
 
-            $user->givePermissionTo($request->permissions);
-
             $invitation->delete();
 
             $this->guard->login($user);
+
+            $user->givePermissionTo($invitation->permissions);
 
             return Redirect::to('/')->with('success', 'Herzlich Willkommen.');
 

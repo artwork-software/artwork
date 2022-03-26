@@ -18,10 +18,10 @@ class InvitationFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name(),
             'email' => $this->faker->unique()->safeEmail(),
             'token' => Str::random(20),
-            'user_id' => $this->faker->numberBetween([0], [1000])
+            'user_id' => $this->faker->numberBetween([0], [1000]),
+            'permissions' => ['invitation permission factory']
         ];
     }
 }

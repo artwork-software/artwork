@@ -164,7 +164,7 @@ class InvitationController extends Controller
 
             $this->guard->login($user);
 
-            $user->givePermissionTo($invitation->permissions);
+            $user->givePermissionTo(json_decode($invitation->permissions));
 
             return Redirect::to('/')->with('success', 'Herzlich Willkommen.');
 

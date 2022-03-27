@@ -54,12 +54,12 @@ it('aborts weak passwords', function () {
 
 test('users can accept the invitation', function () {
 
-    //create Invitation
-    $user = User::factory()->create();
-
     $validPlainToken = 'validToken0123456789';
 
-    $invitation = Invitation::factory()->create(['email' => 'user@example.com', 'token' => Hash::make($validPlainToken)]);
+    $invitation = Invitation::factory()->create([
+        'email' => 'user@example.com',
+        'token' => Hash::make($validPlainToken),
+        'permissions' => json_encode(['invite users', 'view users'])]);
 
     $password = "TesterTest_123?";
 
@@ -83,6 +83,8 @@ test('users can accept the invitation', function () {
     $user = User::where('email', 'user@example.com')->first();
 
     $this->assertTrue(Hash::check($password,$user->password));
+
+    $this->assertEquals($user->getPermissionNames()->toArray(), json_decode($invitation->permissions));
 
     $this->assertModelMissing($invitation);
 

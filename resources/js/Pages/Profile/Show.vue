@@ -3,44 +3,49 @@
         <div>
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-5">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-                    <form>
+
+                    {{userForm}}
+
+                    <form @submit.prevent="updateProfileInformation">
                         <div class="space-y-8 divide-y divide-gray-200">
                             <div>
-                                    <!-- Profile Photo -->
-                                    <div class="col-span-6 sm:col-span-4">
-                                        <!-- Profile Photo File Input -->
-                                        <input type="file" class="hidden"
-                                               ref="photo"
-                                               @change="updatePhotoPreview">
-                                        <label class="block text-sm font-medium text-gray-700">
-                                            Profilbild
-                                        </label>
+                                <!-- Profile Photo -->
+                                <div class="col-span-6 sm:col-span-4">
+                                    <!-- Profile Photo File Input -->
+                                    <input type="file" class="hidden"
+                                           ref="photo"
+                                           @change="updatePhotoPreview">
+                                    <label class="block text-sm font-medium text-gray-700">
+                                        Profilbild
+                                    </label>
 
+                                    <div class="mt-1 flex items-center">
+                                        <!-- Current Profile Photo -->
+                                        <div class="mt-2" v-show="! photoPreview">
+                                            <img :src="user.profile_photo_url" :alt="user.name"
+                                                 class="rounded-full h-20 w-20 object-cover">
+                                        </div>
+
+                                        <!-- New Profile Photo Preview -->
                                         <div class="mt-1 flex items-center">
-                                            <!-- Current Profile Photo -->
-                                            <div class="mt-2" v-show="! photoPreview">
-                                                <img :src="user.profile_photo_url" :alt="user.name" class="rounded-full h-20 w-20 object-cover">
-                                            </div>
-
-                                            <!-- New Profile Photo Preview -->
-                                            <div class="mt-1 flex items-center">
-                                                <div class="mt-2" v-show="photoPreview">
+                                            <div class="mt-2" v-show="photoPreview">
                             <span class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
                                   :style="'background-image: url(\'' + photoPreview + '\');'">
                             </span>
-                                                </div>
                                             </div>
-                                            <jet-secondary-button class="mt-2 mr-2 ml-3" type="button" @click.prevent="selectNewPhoto">
-                                                Profilbild ändern
-                                            </jet-secondary-button>
-                                            <jet-secondary-button type="button" class="mt-2" @click.prevent="deletePhoto"
-                                                                  v-if="user.profile_photo_path">
-                                                Profilbild löschen
-                                            </jet-secondary-button>
-
-                                            <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                                         </div>
+                                        <jet-secondary-button class="mt-2 mr-2 ml-3" type="button"
+                                                              @click.prevent="selectNewPhoto">
+                                            Profilbild ändern
+                                        </jet-secondary-button>
+                                        <jet-secondary-button type="button" class="mt-2" @click.prevent="deletePhoto"
+                                                              v-if="user.profile_photo_path">
+                                            Profilbild löschen
+                                        </jet-secondary-button>
+
+                                        <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                                     </div>
+                                </div>
                                 <h2 class="font-bold mt-10 text-2xl">Jannik Müller</h2>
                             </div>
                             <div class="pt-8">
@@ -96,7 +101,8 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Beschreibung </label>
                                         <div class="mt-1">
-                                            <textarea v-model="userForm.description" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
+                                            <textarea v-model="userForm.description" rows="3"
+                                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
                                         </div>
                                         <p class="mt-2 text-sm text-gray-500">Nähere Infos für die Kolleg:innen.</p>
                                     </div>
@@ -110,7 +116,7 @@
                                         class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Abbrechen
                                 </button>
-                                <button type="submit"
+                                <button :class="{ 'opacity-25': userForm.processing }" :disabled="userForm.processing" type="submit"
                                         class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                                     Speichern
                                 </button>
@@ -131,10 +137,12 @@
 
                     <div class="col-span-6 sm:col-span-4 my-4">
                         <label for="password" class="font-medium"> Neues Passwort</label>
-                        <jet-input id="password" type="password" class="mt-1 block w-full" v-model="passwordForm.password"
+                        <jet-input id="password" type="password" class="mt-1 block w-full"
+                                   v-model="passwordForm.password"
                                    ref="password" autocomplete="new-password"/>
                         <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
-                        <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 8 Zeichen lang sein und mind. 1 Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
+                        <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 8 Zeichen lang sein und mind. 1
+                            Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
                     </div>
 
                     <div class="col-span-6 sm:col-span-4 my-4">
@@ -148,9 +156,10 @@
                         Saved.
                     </jet-action-message>
 
-                    <button class="ml-3 mb-6 py-2 px-4 float-right border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    :class="{ 'opacity-25': passwordForm.processing }"
-                                :disabled="passwordForm.processing">
+                    <button
+                        class="ml-3 mb-6 py-2 px-4 float-right border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        :class="{ 'opacity-25': passwordForm.processing }"
+                        :disabled="passwordForm.processing">
                         Passwort ändern
                     </button>
 
@@ -198,18 +207,20 @@ export default defineComponent({
     data() {
         return {
             userForm: this.$inertia.form({
-                business:'',
-                position:'',
-                department:'',
-                phone_number:'',
-                email:'',
-                description:''
+                _method: 'PUT',
+                business: this.user.business,
+                position: this.user.position,
+                name: this.user.name,
+                department: this.user.department,
+                phone_number: this.user.phone_number,
+                email: this.user.email,
+                description: this.user.description,
+                photo: null,
             }),
             passwordForm: this.$inertia.form({
                 current_password: '',
                 password: '',
                 password_confirmation: '',
-                photo: null,
             }),
             photoPreview: null,
         }
@@ -217,11 +228,12 @@ export default defineComponent({
 
     methods: {
         updateProfileInformation() {
+
             if (this.$refs.photo) {
-                this.form.photo = this.$refs.photo.files[0]
+                this.userForm.photo = this.$refs.photo.files[0]
             }
 
-            this.form.post(route('user-profile-information.update'), {
+            this.userForm.post(route('user-profile-information.update'), {
                 errorBag: 'updateProfileInformation',
                 preserveScroll: true,
                 onSuccess: () => (this.clearPhotoFileInput()),

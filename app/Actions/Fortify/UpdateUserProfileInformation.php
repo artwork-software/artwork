@@ -18,10 +18,15 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
      */
     public function update($user, array $input)
     {
+
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'photo' => ['nullable', 'mimes:jpg,jpeg,png', 'max:1024'],
+            'phone_number' => ['string', 'max:15'],
+            'position' => ['required', 'string', 'max:255'],
+            'business' => ['required', 'string', 'max:255'],
+            'description' => ['nullable','string', 'max:5000']
         ])->validateWithBag('updateProfileInformation');
 
         if (isset($input['photo'])) {
@@ -35,6 +40,10 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             $user->forceFill([
                 'name' => $input['name'],
                 'email' => $input['email'],
+                'phone_number' => $input['phone_number'],
+                'position' => $input['position'],
+                'business' => $input['business'],
+                'description' => $input['description'],
             ])->save();
         }
     }
@@ -52,6 +61,10 @@ class UpdateUserProfileInformation implements UpdatesUserProfileInformation
             'name' => $input['name'],
             'email' => $input['email'],
             'email_verified_at' => null,
+            'phone_number' => $input['phone_number'],
+            'position' => $input['position'],
+            'business' => $input['business'],
+            'description' => $input['description'],
         ])->save();
 
         $user->sendEmailVerificationNotification();

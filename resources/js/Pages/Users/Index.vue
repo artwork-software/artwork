@@ -18,7 +18,7 @@
                 </div>
                     <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
                         <li v-for="person in users.data" :key="person.email" class="py-4 flex justify-between">
-                            <img class="h-14 w-14 rounded-full flex justify-start" :src="person.image" alt="" />
+                            <img class="h-14 w-14 rounded-full flex justify-start" :src="person.profile_photo" alt="" />
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
                                 <p class="text-md font-medium text-gray-900">{{ person.name }},</p><p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{person.business}}, {{person.position}}</p>

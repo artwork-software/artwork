@@ -31,6 +31,7 @@ class UserController extends Controller
         return inertia('Users/Index', [
             'users' => User::paginate(15)->through( fn($user) => [
                 "name" => $user->name,
+                "profile_photo" => $user->profile_photo_url,
                 "email" => $user->email,
                 "position" => $user->position,
                 "business" => $user->business,

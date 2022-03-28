@@ -29,6 +29,8 @@ class UpdateUserRequest extends FormRequest
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
+            'role' => ['string'],
+            'permissions' => ['required','array']
         ];
     }
 }

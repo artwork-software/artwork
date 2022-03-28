@@ -16,6 +16,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
 {
@@ -35,12 +37,14 @@ class InvitationController extends Controller
      */
     public function index()
     {
+
         request()->validate([
             'direction' => ['in:asc,desc', 'string'],
             'field' => ['in:name,created_at','string']
         ]);
+
         //This is necessary to enable sorting
-        $query = Invitation::select(['invitations.*']);
+        $query = Invitation::query();
 
         if(request()->has(['field', 'direction'])) {
             $query->orderBy(Str::of('invitations.')->append(request('field')), request('direction'));
@@ -48,7 +52,7 @@ class InvitationController extends Controller
 
         return inertia('Users/Invitations', [
             'invitations' => $query->paginate(10)->through(fn($invitation) => [
-                'id' => $invitation->invitable_id,
+                'id' => $invitation->id,
                 'name' => $invitation->name,
                 'email' => $invitation->email,
                 'created_at' => Carbon::parse($invitation->created_at)->format('d.m.Y')
@@ -57,7 +61,10 @@ class InvitationController extends Controller
     }
 
     public function invite() {
-        return inertia('Users/Invite');
+        return inertia('Users/Invite', [
+            'available_roles' => Role::all()->pluck('name'),
+            'available_permissions' => Permission::all()->pluck('name'),
+        ]);
     }
 
     /**
@@ -164,6 +171,7 @@ class InvitationController extends Controller
 
             $this->guard->login($user);
 
+            $user->assignRole($invitation->role);
             $user->givePermissionTo(json_decode($invitation->permissions));
 
             return Redirect::to('/')->with('success', 'Herzlich Willkommen.');

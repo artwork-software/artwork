@@ -3,9 +3,6 @@
         <div>
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-5">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-
-                    {{userForm}}
-
                     <form @submit.prevent="updateProfileInformation">
                         <div class="space-y-8 divide-y divide-gray-200">
                             <div>
@@ -95,6 +92,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.email"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                            <jet-input-error :message="userForm.errors.email" class="mt-2" />
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">

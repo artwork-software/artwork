@@ -195,7 +195,7 @@ test('admins can view invitations', function () {
             ->component('Users/Invitations')
             ->has('invitations.data', 10)
             ->has('invitations.data.0', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'email', 'created_at'])
+                ->hasAll(['id','name', 'email','created_at'])
             )
             ->where('invitations.per_page', 10)
         );

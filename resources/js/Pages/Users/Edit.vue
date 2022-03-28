@@ -1,6 +1,8 @@
 <template>
     <div>
-        {{user}}
+        <pre>
+            {{user}}
+        </pre>
     </div>
 </template>
 

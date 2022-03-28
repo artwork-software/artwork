@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -56,7 +58,11 @@ class UserController extends Controller
                 'phone_number' => $user->phone_number,
                 'position' => $user->position,
                 'business' => $user->business,
-                'description' => $user->description
+                'description' => $user->description,
+                'roles' => $user->getRoleNames(),
+                'available_roles' => Role::all()->pluck('name'),
+                'permissions' => $user->getPermissionNames(),
+                'available_permissions' => Permission::all()->pluck('name'),
             ]
         ]);
     }
@@ -71,6 +77,9 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $user->update($request->only('name', 'phone_number', 'position', 'business', 'description'));
+
+        $user->assignRole($request->role);
+        $user->givePermissionTo($request->permissions);
 
         return Redirect::route('users')->with('success', 'Benutzer aktualisiert');
     }

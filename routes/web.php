@@ -32,18 +32,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::get('/departments/management', function () { return Inertia::render('DepartmentManagement'); })->name('department.management');
 
-    //Users
-    Route::get('/users', [UserController::class, 'index'])->name('users');
-    Route::patch('/users/{user}', [UserController::class, 'update']);
-    Route::delete('/users/{user}', [UserController::class, 'destroy']);
-
-
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
     Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])->name('user.invitations.edit');
     Route::post('/users/invitations', [InvitationController::class, 'store']);
     Route::patch('/users/invitations/{invitation}', [InvitationController::class, 'update']);
     Route::delete('/users/invitations/{invitation}', [InvitationController::class, 'destroy']);
+
+    //Users
+    Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::get('/users/{user}', [UserController::class, 'edit']);
+    Route::patch('/users/{user}', [UserController::class, 'update']);
+    Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
 });
 

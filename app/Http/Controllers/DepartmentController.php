@@ -67,11 +67,33 @@ class DepartmentController extends Controller
             'name' => $request->name
         ]);
 
-        if($logo) {
-            $department->logo_path = $logo->storePublicly('logo', ['disk' => 'public']);
+        if ($logo) {
+            $department->logo_path = $logo->storePublicly('logos', ['disk' => 'public']);
         }
 
         return Redirect::route('departments')->with('success', 'Department created.');
+    }
+
+    /**
+     * Show the specified resource.
+     *
+     * @param Department $department
+     * @return Response|ResponseFactory
+     */
+    public function show(Department $department)
+    {
+        return inertia('Departments/Show', [
+            'department' => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'logo_url' => $department->logo_url,
+                'users' => $department->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'profile_photo_url' => $user->profile_photo_url
+                ])
+            ]]);
     }
 
     /**
@@ -82,9 +104,18 @@ class DepartmentController extends Controller
      */
     public function edit(Department $department)
     {
-        return inertia('Departments/Show', [
-            'department' => $department
-        ]);
+        return inertia('Departments/Edit', [
+            'department' => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'logo_url' => $department->logo_url,
+                'users' => $department->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'profile_photo_url' => $user->profile_photo_url
+                ])
+            ]]);
     }
 
     /**
@@ -98,17 +129,19 @@ class DepartmentController extends Controller
     {
         $logo = $request->file('logo');
 
+        $department->update($request->only('name'));
+
         $department->users()->sync(
             collect($request->assigned_users)
                 ->map(function ($user) {
 
-                    $this->authorize('update',User::find($user['id']));
+                    $this->authorize('update', User::find($user['id']));
 
                     return $user['id'];
                 })
         );
 
-        if($logo) {
+        if ($logo) {
             tap($department->logo_path, function ($previous) use ($logo, $department) {
                 $department->forceFill([
                     'logo_path' => $logo->storePublicly(
@@ -121,8 +154,6 @@ class DepartmentController extends Controller
                 }
             });
         }
-
-        $department->update($request->only('name'));
 
         return Redirect::route('departments')->with('success', 'Department updated');
     }

@@ -4,9 +4,13 @@ use App\Models\Department;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
-test('admins can view departments', function () {
+beforeEach(function() {
 
-    $admin_user = User::factory()->create();
+    $this->auth_user = User::factory()->create();
+
+});
+
+test('authorized users can view departments', function () {
 
     for ($i = 0; $i < 10; $i++) {
         $department = Department::factory()->create();
@@ -16,16 +20,16 @@ test('admins can view departments', function () {
         $user->departments()->attach($department->id);
     }
 
-    $admin_user->assignRole('admin');
+    $this->auth_user->givePermissionTo('view departments');
 
-    $this->actingAs($admin_user);
+    $this->actingAs($this->auth_user);
 
     $response = $this->get('/departments')
         ->assertInertia(fn(Assert $page) => $page
             ->component('DepartmentManagement')
             ->has('departments.data', 10)
             ->has('departments.data.0', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'users', 'logo'])
+                ->hasAll(['id','name', 'users', 'logo_url'])
             )
             ->has('departments.data.0.users.0', fn(Assert $page) => $page
                 ->hasAll('id', 'name', 'email', 'profile_photo_url')
@@ -34,4 +38,141 @@ test('admins can view departments', function () {
         );
 
     $response->assertStatus(200);
+});
+
+test('authorized users can open the page to create new departments', function () {
+
+    $this->auth_user->givePermissionTo('create departments');
+
+    $this->actingAs($this->auth_user);
+
+    $response = $this->get('/departments/create')
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Departments/Create')
+        );
+
+    $response->assertStatus(200);
+
+});
+
+test('authorized users can create new departments', function() {
+
+    $this->auth_user->givePermissionTo('create departments');
+
+    $this->actingAs($this->auth_user);
+
+    $this->post('/departments', [
+        'name' => 'Department 1'
+    ]);
+
+    $this->assertDatabaseHas('departments', [
+        'name' => 'Department 1'
+    ]);
+
+});
+
+test('authorized users can view a single department', function() {
+
+    $this->auth_user->givePermissionTo('view departments');
+
+    $this->actingAs($this->auth_user);
+
+    $department = Department::factory()->create();
+    $user = User::factory()->create();
+
+    $department->users()->attach($user->id);
+    $user->departments()->attach($department->id);
+
+    $response = $this->get("/departments/{$department->id}")
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Departments/Show')
+            ->has('department', fn(Assert $page) => $page
+                ->hasAll(['id','name', 'users', 'logo_url'])
+            )
+            ->has('department.users.0', fn(Assert $page) => $page
+                ->hasAll('id', 'name', 'email', 'profile_photo_url')
+            )
+        );
+
+    $response->assertStatus(200);
+
+
+});
+
+test('authorized users can open the form to update a single department', function() {
+
+    $this->auth_user->givePermissionTo('update departments');
+
+    $this->actingAs($this->auth_user);
+
+    $department = Department::factory()->create();
+    $user = User::factory()->create();
+
+    $department->users()->attach($user->id);
+    $user->departments()->attach($department->id);
+
+    $response = $this->get("/departments/{$department->id}/edit")
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Departments/Edit')
+            ->has('department', fn(Assert $page) => $page
+                ->hasAll(['id','name', 'users', 'logo_url'])
+            )
+            ->has('department.users.0', fn(Assert $page) => $page
+                ->hasAll('id', 'name', 'email', 'profile_photo_url')
+            )
+        );
+
+    $response->assertStatus(200);
+
+});
+
+test('authorized users can update a departments name and assigned users', function() {
+
+    $this->auth_user->givePermissionTo('update departments', 'update users');
+
+    $this->actingAs($this->auth_user);
+
+    $department = Department::factory()->create();
+    $user_1 = User::factory()->create(['name' => 'TestUser1']);
+
+    $department->users()->attach($user_1->id);
+    $user_1->departments()->attach($department->id);
+
+    $user_2 = User::factory()->create(['name' => 'TestUser2']);
+
+    $this->patch("departments/{$department->id}", [
+        'name' => 'NewName',
+        'assigned_users' => [
+            $user_2
+        ]
+    ]);
+
+    $this->assertDatabaseHas('departments', [
+        'name' => 'NewName'
+    ]);
+
+    $this->assertDatabaseHas('department_user', [
+        'department_id' => $department->id,
+        'user_id' => $user_2->id
+    ]);
+
+});
+
+test('authorized users can delete a department', function() {
+
+    $this->auth_user->givePermissionTo('delete departments');
+    $this->actingAs($this->auth_user);
+
+    $department = Department::factory()->create();
+    $user_1 = User::factory()->create();
+
+    $department->users()->attach($user_1->id);
+    $user_1->departments()->attach($department->id);
+
+    $this->delete("departments/{$department->id}");
+
+    $this->assertDatabaseMissing('departments', [
+        'id' => $department->id
+    ]);
+
 });

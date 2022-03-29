@@ -51,7 +51,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
     Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
     Route::post('/departments', [DepartmentController::class, 'store']);
-    Route::get('/departments/{department}', [DepartmentController::class, 'edit']);
+    Route::get('/departments/{department}', [DepartmentController::class, 'show']);
+    Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit']);
     Route::patch('/departments/{department}', [DepartmentController::class, 'update']);
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 

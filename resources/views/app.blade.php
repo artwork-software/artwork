@@ -12,6 +12,7 @@
         <!-- Scripts -->
         @routes
         <script src="{{ mix('js/app.js') }}" defer></script>
+        <script src="../artwork_tools/node_modules/flowbite/dist/flowbite.js"></script>
     </head>
     <body class="font-sans antialiased">
         @inertia

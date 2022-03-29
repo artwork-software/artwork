@@ -38,6 +38,10 @@ class User extends Authenticatable
         'description'
     ];
 
+    public function departments() {
+        return $this->belongsToMany(Department::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

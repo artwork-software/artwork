@@ -2,8 +2,10 @@
 
 namespace App\Providers;
 
+use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
+use App\Policies\DepartmentPolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
@@ -19,7 +21,8 @@ class AuthServiceProvider extends ServiceProvider
     protected $policies = [
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         Invitation::class => InvitationPolicy::class,
-        User::class => UserPolicy::class
+        User::class => UserPolicy::class,
+        Department::class => DepartmentPolicy::class
     ];
 
     /**

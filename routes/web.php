@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -32,6 +33,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::get('/departments/management', function () { return Inertia::render('DepartmentManagement'); })->name('department.management');
 
+    //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
     Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])->name('user.invitations.edit');
@@ -44,6 +46,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/{user}', [UserController::class, 'edit']);
     Route::patch('/users/{user}', [UserController::class, 'update']);
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
+
+    //Departments
+    Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
+    Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
+    Route::post('/departments', [DepartmentController::class, 'store']);
+    Route::get('/departments/{department}', [DepartmentController::class, 'edit']);
+    Route::patch('/departments/{department}', [DepartmentController::class, 'update']);
+    Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
 
 });
 

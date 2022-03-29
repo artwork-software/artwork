@@ -157,7 +157,8 @@ return [
 
     'attributes' => [
         'email' => 'Email',
-        'password' => 'Passwort'
+        'password' => 'Passwort',
+        'photo' => 'Bild'
     ],
 
 ];

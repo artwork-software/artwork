@@ -25,7 +25,7 @@ test('admins can view departments', function () {
             ->component('DepartmentManagement')
             ->has('departments.data', 10)
             ->has('departments.data.0', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'users', 'logo_url'])
+                ->hasAll(['id','name', 'users', 'logo'])
             )
             ->has('departments.data.0.users.0', fn(Assert $page) => $page
                 ->hasAll('id', 'name', 'email', 'profile_photo_url')

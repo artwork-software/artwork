@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Department extends Model
 {
@@ -30,4 +31,14 @@ class Department extends Model
     protected $appends = [
         'logo_url'
     ];
+
+    public function getLogoURLAttribute(): ?string
+    {
+        if($this->logo_path) {
+            return Storage::disk('public')->url($this->logo_path);
+        } else {
+            return null;
+        }
+
+    }
 }

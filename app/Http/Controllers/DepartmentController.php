@@ -68,17 +68,7 @@ class DepartmentController extends Controller
         ]);
 
         if($logo) {
-            tap($department->logo_url, function ($previous) use ($logo, $department) {
-                $department->forceFill([
-                    'logo_url' => $logo->storePublicly(
-                        'logos', ['disk' => 'public']
-                    ),
-                ])->save();
-
-                if ($previous) {
-                    Storage::disk('public')->delete($previous);
-                }
-            });
+            $department->logo_path = $logo->storePublicly('logo', ['disk' => 'public']);
         }
 
         return Redirect::route('departments')->with('success', 'Department created.');
@@ -106,6 +96,8 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, Department $department)
     {
+        $logo = $request->file('logo');
+
         $department->users()->sync(
             collect($request->assigned_users)
                 ->map(function ($user) {
@@ -115,6 +107,20 @@ class DepartmentController extends Controller
                     return $user['id'];
                 })
         );
+
+        if($logo) {
+            tap($department->logo_path, function ($previous) use ($logo, $department) {
+                $department->forceFill([
+                    'logo_path' => $logo->storePublicly(
+                        'logos', ['disk' => 'public']
+                    ),
+                ])->save();
+
+                if ($previous) {
+                    Storage::disk('public')->delete($previous);
+                }
+            });
+        }
 
         $department->update($request->only('name'));
 

@@ -68,6 +68,16 @@ class DepartmentController extends Controller
             'name' => $request->name
         ]);
 
+        $department->users()->sync(
+            collect($request->assigned_users)
+                ->map(function ($user) {
+
+                    $this->authorize('update', User::find($user['id']));
+
+                    return $user['id'];
+                })
+        );
+
         if ($logo) {
             $department->logo_path = $logo->storePublicly('logos', ['disk' => 'public']);
         }

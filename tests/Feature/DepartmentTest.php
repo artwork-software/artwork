@@ -28,6 +28,7 @@ test('authorized users can view departments', function () {
         ->assertInertia(fn(Assert $page) => $page
             ->component('DepartmentManagement')
             ->has('departments.data', 10)
+            ->has('users')
             ->has('departments.data.0', fn(Assert $page) => $page
                 ->hasAll(['id','name', 'users', 'logo_url'])
             )
@@ -57,16 +58,26 @@ test('authorized users can open the page to create new departments', function ()
 
 test('authorized users can create new departments', function() {
 
-    $this->auth_user->givePermissionTo('create departments');
+    $this->auth_user->givePermissionTo('create departments', 'update users');
 
     $this->actingAs($this->auth_user);
 
+    $user = User::factory()->create(['name' => 'TestName']);
+
     $this->post('/departments', [
-        'name' => 'Department 1'
+        'name' => 'Department 1',
+        'assigned_users' => [$user]
     ]);
 
     $this->assertDatabaseHas('departments', [
         'name' => 'Department 1'
+    ]);
+
+    $department = Department::where('name', 'Department 1')->first();
+
+    $this->assertDatabaseHas('department_user', [
+        'department_id' => $department->id,
+        'user_id' => $user->id
     ]);
 
 });
@@ -114,6 +125,7 @@ test('authorized users can open the form to update a single department', functio
     $response = $this->get("/departments/{$department->id}/edit")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Departments/Edit')
+            ->has('users')
             ->has('department', fn(Assert $page) => $page
                 ->hasAll(['id','name', 'users', 'logo_url'])
             )

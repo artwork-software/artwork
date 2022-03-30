@@ -39,7 +39,8 @@ class DepartmentController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ])
-            ])
+            ]),
+            'users' => User::all()
         ]);
     }
 
@@ -92,8 +93,9 @@ class DepartmentController extends Controller
                     'name' => $user->name,
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
-                ])
-            ]]);
+                ]),
+            ]
+        ]);
     }
 
     /**
@@ -115,7 +117,8 @@ class DepartmentController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ])
-            ]]);
+            ],
+            'users' => User::all()]);
     }
 
     /**

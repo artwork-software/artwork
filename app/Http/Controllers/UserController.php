@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UpdateUserRequest;
+use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Redirect;
@@ -39,7 +40,8 @@ class UserController extends Controller
                 "position" => $user->position,
                 "business" => $user->business,
                 "phone_number" => $user->phone_number
-            ])
+            ]),
+            "departments" => Department::all()
         ]);
     }
 

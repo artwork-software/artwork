@@ -19,7 +19,5 @@
         @env ('local')
             <script src="http://localhost:3000/browser-sync/browser-sync-client.js"></script>
         @endenv
-
-        <script src="./node_modules/flowbite/dist/flowbite.js"></script>
     </body>
 </html>

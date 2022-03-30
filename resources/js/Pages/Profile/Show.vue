@@ -19,7 +19,7 @@
                                     <div class="mt-1 flex items-center">
                                         <!-- Current Profile Photo -->
                                         <div class="mt-2" v-show="! photoPreview">
-                                            <img :src="user.profile_photo_path" :alt="user.name"
+                                            <img :src="user.profile_photo_url" :alt="user.name"
                                                  class="rounded-full h-20 w-20 object-cover">
                                         </div>
 

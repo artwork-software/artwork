@@ -31,7 +31,6 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
-    Route::get('/departments/management', function () { return Inertia::render('DepartmentManagement'); })->name('department.management');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

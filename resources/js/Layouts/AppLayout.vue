@@ -189,8 +189,8 @@ const managementNavigation = [
     {name: 'Nutzer*innen', href: route('users'), route: ['/users'], icon: ArrowCircleRightIcon},
     {
         name: 'Teams',
-        href: route('department.management'),
-        route: ['/departments/management'],
+        href: route('departments'),
+        route: ['/departments'],
         icon: ArrowCircleRightIcon
     },
 ]

@@ -24,7 +24,7 @@
                                  alt=""/>
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
-                                    <p class="text-lg font-medium text-gray-900">{{ person.name }},</p>
+                                    <p class="text-lg font-medium text-gray-900">{{ person.last_name }}, {{ person.first_name }}, </p>
                                     <p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{ person.business }},
                                         {{ person.position }}</p>
                                 </div>
@@ -203,13 +203,13 @@ export default defineComponent({
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
             }
-            console.log('EMAIL ARRAY:' + this.form.user_emails)
             permissionCheckboxes.forEach((item) =>
             {
                 if(item.checked){
                     this.form.permissions.push(item.permissionName);
                 }
             })
+            console.log('EMAIL ARRAY:' + this.form.user_emails)
             console.log('PERMISSION CHECKED' + this.form.permissions)
 
             this.form.permissions = [];
@@ -221,16 +221,12 @@ export default defineComponent({
             this.form.permissions = [];
 
         },
-        changeTab(tabName) {
-            this.activeTab = tabName;
-        }
     },
     data() {
         return {
             showUserPermissions: true,
             addingUser: false,
             emailInput: "",
-            activeTab: "User",
             form: useForm({
                 user_emails: [],
                 permissions:[]

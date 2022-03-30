@@ -6,30 +6,17 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div class="space-y-8 divide-y divide-gray-200">
                             <div>
-                                <!-- Profile Photo -->
-                                <button data-tooltip-target="tooltip-light" data-tooltip-style="light" type="button" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Light tooltip</button>
-                                <div id="tooltip-light"
-                                     role="tooltip"
-                                     class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium
-                                     text-gray-900 bg-white
-                                     rounded-lg border border-gray-200 shadow-sm opacity-0 tooltip">
-                                    Tooltip content
-                                    <div class="tooltip-arrow" data-popper-arrow></div>
-                                </div>
-
+                                <h2 class="font-bold text-2xl my-2" >Dein Konto</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"
                                            ref="photo"
                                            @change="updatePhotoPreview">
-                                    <label class="block text-sm font-medium text-gray-700">
-                                        Profilbild
-                                    </label>
 
                                     <div class="mt-1 flex items-center">
                                         <!-- Current Profile Photo -->
                                         <div class="mt-2" v-show="! photoPreview">
-                                            <img :src="user.profile_photo_url" :alt="user.name"
+                                            <img :src="user.profile_photo_url" :alt="user.first_name"
                                                  class="rounded-full h-20 w-20 object-cover">
                                         </div>
 
@@ -53,7 +40,25 @@
                                         <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                                     </div>
                                 </div>
-                                <h2 class="font-bold mt-10 text-2xl">Jannik Müller</h2>
+                                <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                <div class="sm:col-span-3">
+                                    <label class="block text-medium font-medium text-gray-700">
+                                        Vorname </label>
+                                    <div class="mt-1">
+                                        <input type="text" v-model="userForm.first_name"
+                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                    </div>
+                                </div>
+
+                                <div class="sm:col-span-3">
+                                    <label class="block text-medium font-medium text-gray-700">
+                                        Nachname </label>
+                                    <div class="mt-1">
+                                        <input type="text" v-model="userForm.last_name"
+                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                    </div>
+                                </div>
+                            </div>
                             </div>
                             <div class="pt-8">
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -72,19 +77,6 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position"
                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
-                                        </div>
-                                    </div>
-
-                                    <div class="sm:col-span-6">
-                                        <label for="department" class="block text-medium font-medium text-gray-700">
-                                            Abteilung </label>
-                                        <div class="mt-1">
-                                            <select id="department" v-model="userForm.department"
-                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                                <option>A</option>
-                                                <option>B</option>
-                                                <option>C</option>
-                                            </select>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
@@ -109,10 +101,21 @@
                                         <label class="block text-medium font-medium text-gray-700">
                                             Beschreibung </label>
                                         <div class="mt-1">
-                                            <textarea v-model="userForm.description" rows="3"
+                                            <textarea placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?" v-model="userForm.description" rows="3"
                                                       class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
                                         </div>
-                                        <p class="mt-2 text-sm text-gray-500">Nähere Infos für die Kolleg:innen.</p>
+                                    </div>
+                                    <div class="sm:col-span-6">
+                                        <label for="department" class="block text-medium font-medium text-gray-700">
+                                            Abteilung </label>
+                                        <div class="mt-1">
+                                            <select id="department" v-model="userForm.department"
+                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
+                                                <option>A</option>
+                                                <option>B</option>
+                                                <option>C</option>
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -217,7 +220,8 @@ export default defineComponent({
                 _method: 'PUT',
                 business: this.user.business,
                 position: this.user.position,
-                name: this.user.name,
+                first_name: this.user.first_name,
+                last_name: this.user.last_name,
                 department: this.user.department,
                 phone_number: this.user.phone_number,
                 email: this.user.email,

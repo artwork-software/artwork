@@ -18,4 +18,8 @@ class Invitation extends Model
     protected $casts = [
         'permissions' => 'array'
     ];
+
+    public function departments() {
+        return $this->belongsToMany(Department::class);
+    }
 }

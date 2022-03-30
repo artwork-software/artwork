@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
+use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
 use Carbon\Carbon;
@@ -87,6 +88,16 @@ class InvitationController extends Controller
                 'permissions' => json_encode($permissions)
             ]);
 
+            $invitation->departments()->sync(
+                collect($request->departments)
+                    ->map(function ($department) {
+
+                        $this->authorize('update', Department::find($department['id']));
+
+                        return $department['id'];
+                    })
+            );
+
             Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
         }
 
@@ -167,6 +178,13 @@ class InvitationController extends Controller
                 'business' => $request->business,
                 'description' => $request->description
             ]);
+
+            $departments = $invitation->departments;
+
+            foreach($departments as $department) {
+                $department->users()->attach($user->id);
+                $user->departments()->attach($department->id);
+            }
 
             $invitation->delete();
 

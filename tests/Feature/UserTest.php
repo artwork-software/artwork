@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Department;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia;
 
@@ -23,6 +24,7 @@ test('users can view users if they have the right to', function () {
                         'phone_number',
                         'position',
                         'business',
+                        'departments'
                     ])->etc()
             )
             ->where('users.per_page', 15)
@@ -45,6 +47,7 @@ test('users can view users if they have the right to', function () {
                     'phone_number',
                     'position',
                     'business',
+                    'departments'
                 ])->etc()
             )
             ->where('users.per_page', 15)
@@ -66,6 +69,8 @@ test('users cannot view all users without permission', function () {
 test('users can update update other users', function () {
 
     $user = User::factory()->create();
+    $department = Department::factory()->create();
+
 
     $user_to_edit = User::factory()->create();
     $user->assignRole('admin');
@@ -78,7 +83,8 @@ test('users can update update other users', function () {
         "business" => "DTH",
         "phone_number" => "1337",
         "description" => "Description was changed",
-        "permissions" => ['invite users']
+        "permissions" => ['invite users'],
+        "departments" => [$department]
     ]);
 
     $response->assertStatus(302);
@@ -90,11 +96,17 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed"
+        "description" => "Description was changed",
+    ]);
+
+    $this->assertDatabaseHas('department_user', [
+        'department_id' => $department->id,
+        'user_id' => $user_to_edit->id
     ]);
 
     $user->removeRole('admin');
     $user->givePermissionTo('update users');
+    $user->givePermissionTo('update departments');
 
     $response = $this->patch("/users/{$user_to_edit->id}", [
         "first_name" => "Miriam",
@@ -102,7 +114,8 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed"
+        "description" => "Description was changed",
+        "departments" => [$department]
     ]);
 
     $response->assertStatus(302);
@@ -114,7 +127,12 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed"
+        "description" => "Description was changed",
+    ]);
+
+    $this->assertDatabaseHas('department_user', [
+        'department_id' => $department->id,
+        'user_id' => $user_to_edit->id
     ]);
 
 });

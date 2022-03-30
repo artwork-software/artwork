@@ -1,6 +1,7 @@
 <?php
 
 use App\Mail\InvitationCreated;
+use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
@@ -56,10 +57,15 @@ test('users can accept the invitation', function () {
 
     $validPlainToken = 'validToken0123456789';
 
+    $department = Department::factory()->create();
+
     $invitation = Invitation::factory()->create([
         'email' => 'user@example.com',
         'token' => Hash::make($validPlainToken),
         'permissions' => json_encode(['invite users', 'view users'])]);
+
+    $department->invitations()->attach($invitation->id);
+    $invitation->departments()->attach($department->id);
 
     $password = "TesterTest_123?";
 
@@ -83,6 +89,11 @@ test('users can accept the invitation', function () {
     ]);
 
     $user = User::where('email', 'user@example.com')->first();
+
+    $this->assertDatabaseHas('department_user', [
+        'department_id' => $department->id,
+        'user_id' => $user->id
+    ]);
 
     $this->assertTrue(Hash::check($password,$user->password));
 
@@ -130,13 +141,16 @@ test('admins can invite users', function () {
 
     $admin_user = User::factory()->create();
 
+    $department = Department::factory()->create();
+
     $admin_user->assignRole('admin');
 
     $this->actingAs($admin_user);
 
     $response = $this->post('/users/invitations', [
         'user_emails' => ['user@example.de', 'user2@example.de'],
-        'permissions' => ['invite users', 'view users']
+        'permissions' => ['invite users', 'view users'],
+        'departments' => [$department]
     ]);
 
     Mail::assertSent(InvitationCreated::class);
@@ -147,6 +161,13 @@ test('admins can invite users', function () {
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user2@example.de",
+    ]);
+
+    $invitation = Invitation::where('email', 'user@example.de')->first();
+
+    $this->assertDatabaseHas('department_invitation', [
+        "invitation_id" => $invitation->id,
+        "department_id" => $department->id
     ]);
 
     $created_invitation = Invitation::first();

@@ -37,6 +37,7 @@ class UserController extends Controller
                 'last_name' => $user->last_name,
                 "profile_photo_url" => $user->profile_photo_url,
                 "email" => $user->email,
+                'departments' => $user->departments,
                 "position" => $user->position,
                 "business" => $user->business,
                 "phone_number" => $user->phone_number
@@ -63,11 +64,13 @@ class UserController extends Controller
                 'position' => $user->position,
                 'business' => $user->business,
                 'description' => $user->description,
+                'departments' => $user->departments,
                 'roles' => $user->getRoleNames(),
                 'available_roles' => Role::all()->pluck('name'),
                 'permissions' => $user->getPermissionNames(),
                 'available_permissions' => Permission::all()->pluck('name'),
-            ]
+            ],
+            "departments" => Department::all()
         ]);
     }
 
@@ -81,6 +84,16 @@ class UserController extends Controller
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
         $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description'));
+
+        $user->departments()->sync(
+            collect($request->departments)
+                ->map(function ($department) {
+
+                    $this->authorize('update', Department::find($department['id']));
+
+                    return $department['id'];
+                })
+        );
 
         $user->assignRole($request->role);
         $user->givePermissionTo($request->permissions);

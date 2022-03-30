@@ -15,13 +15,24 @@
                     <p>ArtWork.tools</p>
                 </div>
                 <div>
-                    <label for="email" class="block text-sm font-bold text-gray-700">
-                        Name
+                    <label for="first_name" class="block text-sm font-bold text-gray-700">
+                        Vorname
                     </label>
                     <div class="mt-1">
                         <input
-                            v-model="form.name"
-                            id="name" name="name" type="text" autocomplete="name" required
+                            v-model="form.first_name"
+                            id="first_name" name="name" type="text" required
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                    </div>
+                </div>
+                <div>
+                    <label for="last_name" class="block text-sm font-bold text-gray-700">
+                        Nachname
+                    </label>
+                    <div class="mt-1">
+                        <input
+                            v-model="form.last_name"
+                            id="last_name" name="name" type="text" required
                             class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                     </div>
                 </div>
@@ -199,7 +210,8 @@ export default defineComponent({
             bannerPreview: null,
             form: this.$inertia.form({
                 _method: 'POST',
-                name: '',
+                first_name: '',
+                last_name: '',
                 email: '',
                 business:'',
                 position:'',

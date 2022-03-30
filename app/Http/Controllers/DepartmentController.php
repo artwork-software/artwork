@@ -28,7 +28,7 @@ class DepartmentController extends Controller
      */
     public function index()
     {
-        return inertia('DepartmentManagement', [
+        return inertia('Departments/DepartmentManagement', [
             'departments' => Department::paginate(10)->through(fn($department) => [
                 'id' => $department->id,
                 'name' => $department->name,

@@ -158,7 +158,8 @@ class InvitationController extends Controller
         if (Hash::check($request->token, $invitation->token)) {
 
             $user = User::create([
-                'name' => $request->name,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
                 'email' => $invitation->email,
                 'phone_number' => $request->phone_number,
                 'password' => Hash::make($request->password),

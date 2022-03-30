@@ -33,7 +33,7 @@ test('authorized users can view departments', function () {
                 ->hasAll(['id','name', 'users', 'logo_url'])
             )
             ->has('departments.data.0.users.0', fn(Assert $page) => $page
-                ->hasAll('id', 'name', 'email', 'profile_photo_url')
+                ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')
             )
             ->where('departments.per_page', 10)
         );
@@ -62,7 +62,7 @@ test('authorized users can create new departments', function() {
 
     $this->actingAs($this->auth_user);
 
-    $user = User::factory()->create(['name' => 'TestName']);
+    $user = User::factory()->create(['first_name' => 'TestName']);
 
     $this->post('/departments', [
         'name' => 'Department 1',
@@ -101,7 +101,7 @@ test('authorized users can view a single department', function() {
                 ->hasAll(['id','name', 'users', 'logo_url'])
             )
             ->has('department.users.0', fn(Assert $page) => $page
-                ->hasAll('id', 'name', 'email', 'profile_photo_url')
+                ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')
             )
         );
 
@@ -130,7 +130,7 @@ test('authorized users can open the form to update a single department', functio
                 ->hasAll(['id','name', 'users', 'logo_url'])
             )
             ->has('department.users.0', fn(Assert $page) => $page
-                ->hasAll('id', 'name', 'email', 'profile_photo_url')
+                ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')
             )
         );
 
@@ -145,12 +145,12 @@ test('authorized users can update a departments name and assigned users', functi
     $this->actingAs($this->auth_user);
 
     $department = Department::factory()->create();
-    $user_1 = User::factory()->create(['name' => 'TestUser1']);
+    $user_1 = User::factory()->create(['first_name' => 'TestName1']);
 
     $department->users()->attach($user_1->id);
     $user_1->departments()->attach($department->id);
 
-    $user_2 = User::factory()->create(['name' => 'TestUser2']);
+    $user_2 = User::factory()->create(['first_name' => 'TestName2']);
 
     $this->patch("departments/{$department->id}", [
         'name' => 'NewName',

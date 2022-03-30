@@ -32,7 +32,8 @@ class UserController extends Controller
     {
         return inertia('Users/Index', [
             'users' => User::paginate(15)->through( fn($user) => [
-                "name" => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 "profile_photo_url" => $user->profile_photo_url,
                 "email" => $user->email,
                 "position" => $user->position,
@@ -53,7 +54,8 @@ class UserController extends Controller
         return inertia('Users/Edit', [
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
                 'email' => $user->email,
                 'phone_number' => $user->phone_number,
                 'position' => $user->position,
@@ -76,7 +78,7 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
-        $user->update($request->only('name', 'phone_number', 'position', 'business', 'description'));
+        $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description'));
 
         $user->assignRole($request->role);
         $user->givePermissionTo($request->permissions);

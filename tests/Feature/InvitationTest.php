@@ -65,7 +65,8 @@ test('users can accept the invitation', function () {
 
     $this->post('/users/invitations/accept', [
         'email' => 'user@example.com',
-        'name' => 'TestName',
+        'first_name' => 'Benjamin',
+        'last_name' => 'Willems',
         'token' => $validPlainToken,
         'password' => $password,
         'password_confirmation' => $password,
@@ -76,7 +77,8 @@ test('users can accept the invitation', function () {
     ]);
 
     $this->assertDatabaseHas('users', [
-        'name' => 'TestName',
+        'first_name' => 'Benjamin',
+        'last_name' => 'Willems',
         'email' => $invitation->email,
     ]);
 

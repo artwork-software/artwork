@@ -35,7 +35,8 @@ class DepartmentController extends Controller
                 'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ])
@@ -100,7 +101,8 @@ class DepartmentController extends Controller
                 'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
@@ -123,7 +125,8 @@ class DepartmentController extends Controller
                 'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
-                    'name' => $user->name,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ])

@@ -17,7 +17,8 @@ test('users can view users if they have the right to', function () {
             ->has('users.data', 1)
             ->has('users.data.0', fn(AssertableInertia $page) => $page
                 ->hasAll([
-                        'name',
+                        'first_name',
+                        'last_name',
                         'email',
                         'phone_number',
                         'position',
@@ -38,7 +39,8 @@ test('users can view users if they have the right to', function () {
             ->has('users.data', 1)
             ->has('users.data.0', fn(AssertableInertia $page) => $page
                 ->hasAll([
-                    'name',
+                    'first_name',
+                    'last_name',
                     'email',
                     'phone_number',
                     'position',
@@ -70,18 +72,21 @@ test('users can update update other users', function () {
     $this->actingAs($user);
 
     $response = $this->patch("/users/{$user_to_edit->id}", [
-        "name" => "Benjamin",
+        "first_name" => "Benjamin",
+        "last_name" => "Willems",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed"
+        "description" => "Description was changed",
+        "permissions" => ['invite users']
     ]);
 
     $response->assertStatus(302);
 
     $this->assertDatabaseHas('users', [
         "id" => $user_to_edit->id,
-        "name" => "Benjamin",
+        "first_name" => "Benjamin",
+        "last_name" => "Willems",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
@@ -92,7 +97,8 @@ test('users can update update other users', function () {
     $user->givePermissionTo('update users');
 
     $response = $this->patch("/users/{$user_to_edit->id}", [
-        "name" => "Benjamin",
+        "first_name" => "Miriam",
+        "last_name" => "Seixas",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
@@ -103,7 +109,8 @@ test('users can update update other users', function () {
 
     $this->assertDatabaseHas('users', [
         "id" => $user_to_edit->id,
-        "name" => "Benjamin",
+        "first_name" => "Benjamin",
+        "last_name" => "Willems",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
@@ -121,7 +128,8 @@ test('users cannot update users without permission', function () {
     $this->actingAs($user);
 
     $this->patch("/users/{$user_to_edit->id}", [
-        "name" => "Benjamin",
+        "first_name" => "Benjamin",
+        "last_name" => "Willems",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",

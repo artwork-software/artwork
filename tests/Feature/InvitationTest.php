@@ -153,7 +153,9 @@ test('admins can invite users', function () {
         'departments' => [$department]
     ]);
 
-    Mail::assertSent(InvitationCreated::class);
+    Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
+        return $mail->hasTo($admin_user->first_name);
+    });
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",

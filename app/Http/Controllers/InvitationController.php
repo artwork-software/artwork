@@ -101,7 +101,7 @@ class InvitationController extends Controller
             Mail::to($email)->send(new InvitationCreated($invitation, $admin_user, $token['plain']));
         }
 
-        return Redirect::route('user.invitations')->with('success', 'Invitation created.');
+        return Redirect::route('users')->with('success', 'Invitation created.');
     }
 
     /**

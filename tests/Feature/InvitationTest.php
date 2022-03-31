@@ -154,7 +154,8 @@ test('admins can invite users', function () {
     ]);
 
     Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
-        return $mail->hasTo($admin_user->first_name);
+        $mail->build();
+        return $mail->subject = 'Einladung für Artwork.tools';
     });
 
     $this->assertDatabaseHas('invitations', [

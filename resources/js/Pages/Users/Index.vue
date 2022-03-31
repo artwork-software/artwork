@@ -1,15 +1,14 @@
 <template>
     <app-layout title="Dashboard">
-        <div class="py-12">
+        <div class="py-4">
             <div class="max-w-screen-2xl my-12 flex flex-row mx-auto sm:px-6 lg:px-8">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="text-2xl">Alle Nutzer*innen</h2>
                             <button @click="openAddUserModal" type="button"
-                                    class="flex my-auto ml-6 pr-2 items-center font-bold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <PlusSmIcon class="h-5 w-5 " aria-hidden="true"/>
-                                User hinzufügen
+                                    class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
                     </div>
@@ -18,27 +17,59 @@
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                     </div>
-                    <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
-                        <li v-for="person in users.data" :key="person.email" class="py-4 flex justify-between">
+                    <ul role="list" class="mt-6 w-full">
+                        <li v-for="user in users.data" :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
-                            <img class="h-14 w-14 rounded-full flex justify-start" :src="person.profile_photo_url"
+                            <img class="h-14 w-14 rounded-full flex justify-start" :src="user.profile_photo_url"
                                  alt=""/>
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
-                                    <p class="text-lg mr-3 font-semibold text-gray-900">{{ person.last_name }}, {{ person.first_name }} </p>
-                                    <p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{ person.business }},
-                                        {{ person.position }}</p>
+                                    <p class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">{{ user.last_name }}, {{ user.first_name }} </p>
+                                    <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
+                                        {{ user.position }}</p>
                                 </div>
                             </div>
                             </div>
                             <div class="flex">
-                                <div class="mt-3 mr-6" v-for="department in users.data">
+                                <div class="flex mr-8">
+                                <div class="mt-3 -mr-3" v-for="department in user.departments">
+                                    <img class="h-9 w-9 rounded-full"
+                                         src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                         alt=""/>
+                                    <!-- TODO: DEPARTMENT FOTO EINBAUEN und was wenn zu viele Departments
                                     <img class="h-8 w-8 rounded-full"
                                          :src="department.profile_photo_url"
                                          alt=""/>
+                                         -->
                                 </div>
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                </div>
+                                <Menu as="div" class="my-auto relative">
+                                    <div>
+                                        <MenuButton
+                                            class="flex">
+                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                              aria-hidden="true"/>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <PencilAltIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                                        Nutzer*in bearbeiten
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                                        Nutzer*in löschen
+                                                    </a>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
                             </div>
                         </li>
                     </ul>
@@ -49,11 +80,11 @@
         <jet-dialog-modal :show="addingUser" @close="closeAddUserModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-2xl my-2">
+                    <div class="font-bold text-primary text-2xl my-2">
                         Nutzer*innen einladen
                     </div>
                     <XIcon @click="closeAddUserModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer" aria-hidden="true" />
-                    <div class="text-gray-500">
+                    <div class="text-secondary">
                         Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                         einladen.
                     </div>
@@ -62,9 +93,9 @@
                                    v-model="emailInput"
                         />
                         <jet-input-error :message="form.error" class="mt-2"/>
-                        <jet-button class="mt-2" @click="addEmailToInvitationArray" :disabled="!emailInput">
+                        <button :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mt-2 inline-flex items-center px-4 py-2 border border-transparent uppercase shadow-sm text-secondaryHover']" @click="addEmailToInvitationArray" :disabled="!emailInput">
                             {{form.user_emails.length >= 1 ? 'Weitere ' : '' }}E-Mail-Adresse hinzufügen
-                        </jet-button>
+                        </button>
                         <h4 class="mt-2 mb-1" v-show="this.form.user_emails.length >= 1">Bereits eingegebene
                             Emails:</h4>
                         <span v-for="(email,index) in form.user_emails"
@@ -78,7 +109,7 @@
                         </svg>
                     </button>
                     </span>
-                        <h2 class="mt-2">Teams:</h2>
+                        <h2 class="mt-2">Teams zuweisen:</h2>
                         <span class="flex" v-for="(team,index) in form.departments">
                                 <img   class="h-14 w-14 rounded-full flex justify-start" :src="team.logo_url"
                                        alt=""/>
@@ -94,7 +125,7 @@
                             <div>
                                 <MenuButton
                                     class="mt-2 flex my-auto items-center font-bold p-1 rounded-full shadow-sm text-white bg-black">
-                                    <PlusSmIcon class="h-5 w-5 " aria-hidden="true"/>
+                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                                 </MenuButton>
                             </div>
                             <transition enter-active-class="transition ease-out duration-100"
@@ -104,12 +135,17 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <MenuItems
-                                    class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="origin-top-right absolute right-0 mt-2 w-48 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <MenuItem v-for="team in departments" v-slot="{ active }">
-                                        <span>
-                                            <img   class="h-6 w-6 rounded-full flex justify-start" :src="team.logo_url"
+                                        <span class="flex " :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <!--TODO: :src="team.logo_url" -->
+                                            <input :key="team.name" v-model="team.checked" type="checkbox"
+                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-primaryText"/>
+                                            <img class="h-7 w-7 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                alt=""/>
+                                            <span class="ml-2">
                                             {{ team.name }}
+                                            </span>
                                         </span>
                                     </MenuItem>
                                 </MenuItems>
@@ -134,9 +170,9 @@
                     </div>
 
                     <button :class="[form.user_emails.length === 0 ?
-                    'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']"
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                             class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-white"
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="addUser" :disabled="form.user_emails.length === 0">
                         Einladen
                     </button>
@@ -163,7 +199,7 @@ const permissionCheckboxes = [
 ]
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {DotsVerticalIcon} from '@heroicons/vue/outline'
+import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import JetButton from '@/Jetstream/Button.vue'
@@ -195,7 +231,9 @@ export default defineComponent({
         ChevronDownIcon,
         ChevronUpIcon,
         Checkbox,
-        XIcon
+        XIcon,
+        PencilAltIcon,
+        TrashIcon
     },
     props: ['users','departments'],
     data() {

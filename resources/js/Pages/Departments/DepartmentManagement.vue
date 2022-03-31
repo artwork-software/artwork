@@ -1,15 +1,14 @@
 <template>
     <app-layout title="Dashboard">
-        <div class="py-12">
+        <div class="py-4">
             <div class="max-w-screen-2xl my-12 flex flex-row mx-auto sm:px-6 lg:px-8">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-2xl flex">Alle Teams</h2>
                             <button @click="openAddTeamModal" type="button"
-                                    class="flex my-auto ml-4 pr-2 items-center font-semibold p-1 border border-transparent rounded-full shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                <PlusSmIcon class="h-4 w-4 " aria-hidden="true"/>
-                                Team hinzufügen
+                                    class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
                         <div class="flex items-center">
@@ -19,25 +18,69 @@
                             </div>
                         </div>
                     </div>
-                    <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
+                    <ul role="list" class="mt-6 w-full">
                         <li v-for="department in departments.data" :key="department.id"
-                            class="py-4 flex justify-between">
+                            class="py-6 flex justify-between">
                             <div class="flex">
-                            <img class="h-14 w-14 rounded-full flex justify-start" :src="department.logo_url" alt=""/>
-                            <div class="ml-3 my-auto w-full justify-start mr-6">
-                                <div class="flex my-auto">
-                                    <p class="text-md font-semibold text-gray-900">{{ department.name }}</p>
+                                <!-- TODO:DEPARTMENT FOTOS  :src="department.logo_url"-->
+                                <img class="h-14 w-14 rounded-full flex justify-start"
+                                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                     alt=""/>
+                                <div class="ml-5 my-auto w-full justify-start mr-6">
+                                    <div class="flex my-auto">
+                                        <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
+                                    </div>
                                 </div>
                             </div>
-                            </div>
                             <div class="flex">
-                            <div class="mt-3 mr-6" v-for="user in department.users">
-                                <img class="h-8 w-8 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                            </div>
-                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                              aria-hidden="true"/>
+                                <div class="flex mr-8">
+                                    <div class="mt-3 -mr-3" v-for="user in department.users">
+                                        <img class="h-9 w-9 rounded-full"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                    </div>
+                                </div>
+
+                                <Menu as="div" class="my-auto relative">
+                                    <div>
+                                        <MenuButton
+                                            class="flex">
+                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                              aria-hidden="true"/>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <PencilAltIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Team bearbeiten
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Alle Teammitglieder entfernen
+                                                    </a>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+
                             </div>
                         </li>
                     </ul>
@@ -60,72 +103,75 @@
                     </div>
                     <div class="mt-4">
                         <div class="flex">
-                    <img  class="h-14 w-14 rounded-full flex justify-start" :src="$page.props.user.profile_photo_url"
-                          alt=""/>
-                        <jet-input type="text" class="ml-4 mt-1 block w-3/4" placeholder="Name eingeben"
-                                   v-model="this.form.name"
-                        />
-                        <jet-input-error :message="form.error" class="mt-2"/>
+                            <img class="h-14 w-14 rounded-full flex justify-start"
+                                 :src="$page.props.user.profile_photo_url"
+                                 alt=""/>
+                            <jet-input type="text" class="ml-4 mt-1 block w-3/4" placeholder="Name eingeben"
+                                       v-model="this.form.name"
+                            />
+                            <jet-input-error :message="form.error" class="mt-2"/>
                         </div>
                         <div class="mt-4">
                             <div class="flex">
-                            <!-- TODO: HIER INPUT MIT MEILISEARCH -->
-                            <Listbox as="div" v-model="selected">
-                                <ListboxLabel class="block text-sm font-medium text-gray-700"> Nutzer*in zum Hinzufügen
-                                    auswählen
-                                </ListboxLabel>
-                                <div class="mt-1 relative">
-                                    <ListboxButton
-                                        class="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                                <!-- TODO: HIER INPUT MIT MEILISEARCH -->
+                                <Listbox as="div" v-model="selected">
+                                    <ListboxLabel class="block text-sm font-medium text-gray-700">
+                                        Nutzer*in zum Hinzufügen auswählen
+                                    </ListboxLabel>
+                                    <div class="mt-1 relative">
+                                        <ListboxButton
+                                            class="relative w-full bg-white border border-gray-300 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
                                         <span class="flex items-center">
                                             <img :src="selected.profile_photo_url" alt=""
                                                  class="flex-shrink-0 h-6 w-6 rounded-full"/>
-                                            <span class="ml-3 block truncate">{{ selected.first_name }} {{ selected.last_name }}</span>
+                                            <span class="ml-3 block truncate">
+                                                {{ selected.first_name}} {{ selected.last_name }}</span>
                                         </span>
-                                        <span
-                                            class="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <span
+                                                class="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <SelectorIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                         </span>
-                                    </ListboxButton>
+                                        </ListboxButton>
 
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" v-for="user in users.data" :key="user.email"
-                                                           :value="user" v-slot="{ active, selected }">
-                                                <li :class="[active ? 'text-white bg-indigo-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9']">
-                                                    <div class="flex items-center">
-                                                        <img :src="user.profile_photo_url" alt=""
-                                                             class="flex-shrink-0 h-6 w-6 rounded-full"/>
-                                                        <span
-                                                            :class="[selected ? 'font-semibold' : 'font-normal', 'ml-3 block truncate']">
+                                        <transition leave-active-class="transition ease-in duration-100"
+                                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                            <ListboxOptions
+                                                class="absolute z-10 mt-1 w-full bg-white shadow-lg max-h-56 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                                <ListboxOption as="template" v-for="user in users" :key="user.email"
+                                                               :value="user" v-slot="{ active, selected }">
+                                                    <li :class="[active ? 'text-white bg-indigo-600' : 'text-gray-900', 'cursor-default select-none relative py-2 pl-3 pr-9']">
+                                                        <div class="flex items-center">
+                                                            <img :src="user.profile_photo_url" alt=""
+                                                                 class="flex-shrink-0 h-6 w-6 rounded-full"/>
+                                                            <span
+                                                                :class="[selected ? 'font-semibold' : 'font-normal', 'ml-3 block truncate']">
                                                             {{ user.first_name }} {{ user.last_name }}
                                                         </span>
-                                                    </div>
+                                                        </div>
 
-                                                    <span v-if="selected"
-                                                          :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                        <span v-if="selected"
+                                                              :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
                                                         <CheckIcon class="h-5 w-5" aria-hidden="true"/>
                                                      </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
+                                                    </li>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </transition>
+                                    </div>
+                                </Listbox>
                                 <div class="flex items-center">
-                            <Button @click="addUserToAssignedUsersArray"
-                                    class="mt-6 ml-2 inline-flex items-center px-6 border border-transparent text-sm shadow-sm text-white bg-indigo-900 hover:bg-indigo-700 focus:outline-none">
-                                Hinzufügen
-                            </Button>
+                                    <Button @click="addUserToAssignedUsersArray"
+                                            class="mt-6 ml-2 inline-flex items-center px-6 border border-transparent text-sm shadow-sm text-white bg-indigo-900 hover:bg-indigo-700 focus:outline-none">
+                                        Hinzufügen
+                                    </Button>
                                 </div>
                             </div>
 
 
-                            <h4 class="mt-2 mb-1" v-show="this.form.assigned_users.length >= 1">Aktuelle Teammitglieder:</h4>
-                            <span  class="flex" v-for="(user,index) in form.assigned_users">
-                                <img  class="h-14 w-14 rounded-full flex justify-start" :src="user.profile_photo_url"
+                            <h4 class="mt-2 mb-1" v-show="this.form.assigned_users.length >= 1">Aktuelle
+                                Teammitglieder:</h4>
+                            <span class="flex inline-flex" v-for="(user,index) in form.assigned_users">
+                                <img class="h-14 w-14 rounded-full flex justify-start" :src="user.profile_photo_url"
                                      alt=""/>
                                 <button type="button" @click="deleteUserFromAssignedUsersArray(index)"
                                         class="flex-shrink-0 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
@@ -136,8 +182,11 @@
                                 </button>
                              </span>
                         </div>
-                        <Button :class="[this.form.assigned_users.length === 0 || this.form.name === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white " @click="addTeam"
-                                :disabled="this.form.assigned_users.length === 0  || this.form.name === ''">
+                        <Button
+                            :class="[this.form.assigned_users.length === 0 || this.form.name === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']"
+                            class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white "
+                            @click="addTeam"
+                            :disabled="this.form.assigned_users.length === 0  || this.form.name === ''">
                             Team erstellen
                         </Button>
                     </div>
@@ -153,8 +202,8 @@
 
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {DotsVerticalIcon, InformationCircleIcon, XIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon} from '@heroicons/vue/solid'
+import {DotsVerticalIcon, InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
+import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {ref} from 'vue'
 import {
@@ -167,7 +216,6 @@ import {
     MenuButton,
     MenuItem, MenuItems
 } from '@headlessui/vue'
-import {CheckIcon, SelectorIcon} from '@heroicons/vue/solid'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -205,7 +253,9 @@ export default defineComponent({
         ChevronDownIcon,
         ChevronUpIcon,
         Checkbox,
-        XIcon
+        XIcon,
+        PencilAltIcon,
+        TrashIcon
     },
     props: ['departments', 'users'],
     methods: {
@@ -214,7 +264,7 @@ export default defineComponent({
             this.showX = [];
         },
         addUserToAssignedUsersArray() {
-            if(!this.form.assigned_users.includes(this.selected)){
+            if (!this.form.assigned_users.includes(this.selected)) {
                 this.form.assigned_users.push(this.selected);
             }
         },
@@ -224,9 +274,7 @@ export default defineComponent({
         addTeam() {
             console.log("USERS: " + this.form.assigned_users);
             console.log("NAME: " + this.form.name);
-            this.form.post(route('departments.store'), {
-
-            })
+            this.form.post(route('departments.store'), {})
 
         },
         closeAddTeamModal() {
@@ -243,8 +291,8 @@ export default defineComponent({
             addingTeam: false,
             showX: [],
             form: useForm({
-                logo:"",
-                name:"",
+                logo: "",
+                name: "",
                 assigned_users: [],
 
             }),

@@ -12,6 +12,15 @@ module.exports = {
 
     theme: {
         extend: {
+            colors: {
+                primary:'#27233C',
+                primaryHover:'#372F60',
+                success:'#1FC687',
+                error:'#FD6D73',
+                secondary:'#A7A6B1',
+                secondaryHover:'#FCFCFB'
+
+            },
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
             },

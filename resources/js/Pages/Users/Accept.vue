@@ -15,13 +15,24 @@
                     <p>ArtWork.tools</p>
                 </div>
                 <div>
-                    <label for="email" class="block text-sm font-bold text-gray-700">
-                        Name
+                    <label for="first_name" class="block text-sm font-bold text-gray-700">
+                        Vorname
                     </label>
                     <div class="mt-1">
                         <input
-                            v-model="form.name"
-                            id="name" name="name" type="text" autocomplete="name" required
+                            v-model="form.first_name"
+                            id="first_name" name="name" type="text" required
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                    </div>
+                </div>
+                <div>
+                    <label for="last_name" class="block text-sm font-bold text-gray-700">
+                        Nachname
+                    </label>
+                    <div class="mt-1">
+                        <input
+                            v-model="form.last_name"
+                            id="last_name" name="name" type="text" required
                             class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                     </div>
                 </div>
@@ -32,9 +43,9 @@
                     </label>
                     <div class="mt-1">
                         <input
-                            v-model="form.email"
+                            v-model="form.email" disabled
                             id="email" name="email" type="email" autocomplete="email" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                            class="appearance-none block w-full px-4 py-3 border border-gray-300 bg-gray-100 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                     </div>
                 </div>
 
@@ -100,18 +111,8 @@
 
                 <div>
 
-                    <button type="submit"
-                            class="w-full flex justify-center
-                    py-3 px-4 border border-transparent rounded-md shadow-sm
-                    text-sm font-bold text-white
-                    bg-blue-500 hover:bg-dark-primary
-                    focus:outline-none focus:ring-2 focus:ring-offset-2
-                    focus:ring-primary"
-                            :disabled="form.processing"
-                            :class="{ 'opacity-25': form.processing }"
-                    >
-                        Registrieren
-                    </button>
+                    <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
+                            :disabled="this.form.email === '' || this.form.password === ''">Registrieren</button>
                 </div>
             </form>
         </div>
@@ -141,18 +142,20 @@ export default defineComponent({
         JetValidationErrors,
         Link,
     },
-    props: ['user'],
+    props: ['user','email','token'],
     data() {
         return {
             form: this.$inertia.form({
                 _method: 'POST',
-                name: '',
-                email: '',
+                first_name: '',
+                last_name:'',
+                email: this.email,
                 business:'',
                 position:'',
                 phone_number:'',
                 password: '',
                 password_confirmation: '',
+                token: this.token
             })
         }
     },

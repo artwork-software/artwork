@@ -1,6 +1,7 @@
 <template>
     <div class="min-h-full flex">
-        <div class="flex-1 flex min-h-screen flex-col align-items-center justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
+        <div
+            class="flex-1 flex min-h-screen flex-col align-items-center justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
             <div class="mx-auto  w-full max-w-sm lg:w-96">
                 <div>
                     <div class="text-2xl font-bold text-black">
@@ -31,7 +32,8 @@
                                 <div class="mt-1">
                                     <input
                                         v-model="form.password"
-                                        id="password" name="password" type="password" autocomplete="current-password" required
+                                        id="password" name="password" type="password" autocomplete="current-password"
+                                        required
                                         class="appearance-none block w-full px-4 py-3 border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                                 </div>
                             </div>
@@ -40,20 +42,20 @@
                                 <div class="flex items-center">
                                     <Checkbox class="justify-between text-sm" :item=rememberCheckbox />
                                 </div>
-
                                 <div class="text-sm">
-
                                     <Link v-if="canResetPassword" :href="route('password.request')"
-                                          class="text-sm text-gray-400 hover:font-semibold hover:text-black">
+                                          class="text-sm text-secondary subpixel-antialiased hover:font-semibold hover:text-primary">
                                         Passwort vergessen
                                     </Link>
-
                                 </div>
                             </div>
 
                             <div>
-                                <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
-                                        :disabled="this.form.email === '' || this.form.password === ''">Login</button>
+                                <button type="submit"
+                                        :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                        :disabled="this.form.email === '' || this.form.password === ''">Login
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -61,7 +63,9 @@
             </div>
         </div>
         <div class="hidden lg:block relative w-0 flex-1">
-            <img class="absolute inset-0 h-full w-full object-cover" src="https://images.unsplash.com/photo-1505904267569-f02eaeb45a4c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80" alt="" />
+            <img class="absolute inset-0 h-full w-full object-cover"
+                 src="https://images.unsplash.com/photo-1505904267569-f02eaeb45a4c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
+                 alt=""/>
         </div>
     </div>
 </template>

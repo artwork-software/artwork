@@ -132,16 +132,17 @@
                             <Checkbox v-for="permission in permissionCheckboxes" class="justify-between" :item=permission />
                         </div>
                     </div>
-                    <Button :class="[this.form.user_emails.length === 0 ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white " @click="addUser"
-                                :disabled="this.form.user_emails.length === 0">
+
+                    <button :class="[form.user_emails.length === 0 ?
+                    'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']"
+                            class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-white"
+                            @click="addUser" :disabled="form.user_emails.length === 0">
                         Einladen
-                    </Button>
+                    </button>
                 </div>
 
             </template>
-
-
-
 
         </jet-dialog-modal>
     </app-layout>
@@ -235,9 +236,8 @@ export default defineComponent({
             console.log('EMAIL ARRAY:' + this.form.user_emails)
             console.log('PERMISSION CHECKED' + this.form.permissions)
             console.log('TEAM ARRAY' + this.form.departments)
-            this.form.post(route('invitations.store'), {
 
-            })
+            this.form.post(route('invitations.store'));
             this.closeAddUserModal();
         },
         closeAddUserModal() {

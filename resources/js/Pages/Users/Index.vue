@@ -63,7 +63,7 @@
                         />
                         <jet-input-error :message="form.error" class="mt-2"/>
                         <jet-button class="mt-2" @click="addEmailToInvitationArray" :disabled="!emailInput">
-                            Weitere E-Mail-Adresse hinzufügen
+                            {{form.user_emails.length >= 1 ? 'Weitere ' : '' }}E-Mail-Adresse hinzufügen
                         </jet-button>
                         <h4 class="mt-2 mb-1" v-show="this.form.user_emails.length >= 1">Bereits eingegebene
                             Emails:</h4>

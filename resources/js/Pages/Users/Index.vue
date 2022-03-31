@@ -20,46 +20,26 @@
                     </div>
                     <ul role="list" class="mt-4 divide-y divide-gray-200 w-full">
                         <li v-for="person in users.data" :key="person.email" class="py-4 flex justify-between">
+                            <div class="flex">
                             <img class="h-14 w-14 rounded-full flex justify-start" :src="person.profile_photo_url"
                                  alt=""/>
                             <div class="ml-3 my-auto w-full justify-start mr-6">
                                 <div class="flex my-auto">
-                                    <p class="text-lg font-medium text-gray-900">{{ person.last_name }}, {{ person.first_name }}, </p>
+                                    <p class="text-lg mr-3 font-semibold text-gray-900">{{ person.last_name }}, {{ person.first_name }} </p>
                                     <p class="ml-1 text-sm font-medium text-gray-900 my-auto"> {{ person.business }},
                                         {{ person.position }}</p>
                                 </div>
                             </div>
-                            <Menu as="div" class="relative inline-block text-left">
-                                <div>
-                                    <MenuButton
-                                        class=" mr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-indigo-500">
-                                        <span class="sr-only">Open options</span>
-                                        <DotsVerticalIcon class="h-6 w-6" aria-hidden="true"/>
-                                    </MenuButton>
+                            </div>
+                            <div class="flex">
+                                <div class="mt-3 mr-6" v-for="department in users.data">
+                                    <img class="h-8 w-8 rounded-full"
+                                         :src="department.profile_photo_url"
+                                         alt=""/>
                                 </div>
-
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <div class="py-1">
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#"
-                                                   :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Bearbeiten</a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#"
-                                                   :class="[active ? 'bg-gray-100 text-gray-900' : 'text-gray-700', 'block px-4 py-2 text-sm']">Löschen</a>
-                                            </MenuItem>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-
+                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                  aria-hidden="true"/>
+                            </div>
                         </li>
                     </ul>
                 </div>
@@ -98,12 +78,43 @@
                         </svg>
                     </button>
                     </span>
-                        <div class="mt-4">
-                            <button @click="openAddDepartmentDropdown" type="button"
-                                    class="flex my-auto items-center font-bold p-1 rounded-full shadow-sm text-white bg-black">
-                                <PlusSmIcon class="h-5 w-5 " aria-hidden="true"/>
-                            </button>
-                        </div>
+                        <h2 class="mt-2">Teams:</h2>
+                        <span class="flex" v-for="(team,index) in form.departments">
+                                <img   class="h-14 w-14 rounded-full flex justify-start" :src="team.logo_url"
+                                       alt=""/>
+                                <button type="button" @click="deleteTeamFromDepartmentsArray(index)"
+                                        class="flex-shrink-0 ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
+                                    <span class="sr-only">Teamzuweisung entfernen</span>
+                                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                                        <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
+                                    </svg>
+                                </button>
+                             </span>
+                        <Menu as="div" class="relative">
+                            <div>
+                                <MenuButton
+                                    class="mt-2 flex my-auto items-center font-bold p-1 rounded-full shadow-sm text-white bg-black">
+                                    <PlusSmIcon class="h-5 w-5 " aria-hidden="true"/>
+                                </MenuButton>
+                            </div>
+                            <transition enter-active-class="transition ease-out duration-100"
+                                        enter-from-class="transform opacity-0 scale-95"
+                                        enter-to-class="transform opacity-100 scale-100"
+                                        leave-active-class="transition ease-in duration-75"
+                                        leave-from-class="transform opacity-100 scale-100"
+                                        leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems
+                                    class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <MenuItem v-for="team in departments" v-slot="{ active }">
+                                        <span>
+                                            <img   class="h-6 w-6 rounded-full flex justify-start" :src="team.logo_url"
+                                               alt=""/>
+                                            {{ team.name }}
+                                        </span>
+                                    </MenuItem>
+                                </MenuItems>
+                            </transition>
+                        </Menu>
                         <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                             <h3 class="text-xl mt-6 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte definieren</h3>
 
@@ -140,14 +151,14 @@
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 const roleCheckboxes = [
-    {name: 'Adminrechte', checked: false, roleName: "admin"},
+    {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
 ]
 
 const permissionCheckboxes = [
-    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users"},
-    {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users"},
-    {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users"},
-    {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users"}
+    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true},
+    {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users", showIcon: true},
+    {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users", showIcon: true},
+    {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users", showIcon: true}
 ]
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -185,7 +196,19 @@ export default defineComponent({
         Checkbox,
         XIcon
     },
-    props: ['users'],
+    props: ['users','departments'],
+    data() {
+        return {
+            showUserPermissions: true,
+            addingUser: false,
+            emailInput: "",
+            form: useForm({
+                user_emails: [],
+                permissions:[],
+                departments: [],
+            }),
+        }
+    },
     methods: {
         openAddUserModal() {
             this.addingUser = true
@@ -211,27 +234,22 @@ export default defineComponent({
             })
             console.log('EMAIL ARRAY:' + this.form.user_emails)
             console.log('PERMISSION CHECKED' + this.form.permissions)
+            console.log('TEAM ARRAY' + this.form.departments)
+            this.form.post(route('invitations.store'), {
 
-            this.form.permissions = [];
+            })
+            this.closeAddUserModal();
         },
         closeAddUserModal() {
             this.addingUser = false;
             this.emailInput = "";
             this.form.user_emails = [];
             this.form.permissions = [];
+            this.form.departments = [];
 
         },
-    },
-    data() {
-        return {
-            showUserPermissions: true,
-            addingUser: false,
-            emailInput: "",
-            form: useForm({
-                user_emails: [],
-                permissions:[]
-
-            }),
+        deleteTeamFromDepartmentsArray(index){
+            this.form.departments.splice(index,1);
         }
     },
     setup() {

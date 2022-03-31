@@ -81,15 +81,6 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <label class="block text-medium font-medium text-gray-700">
-                                            Telefonnummer </label>
-                                        <div class="mt-1">
-                                            <input type="text" v-model="userForm.phone_number"
-                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
-                                        </div>
-                                    </div>
-
-                                    <div class="sm:col-span-3">
-                                        <label class="block text-medium font-medium text-gray-700">
                                             E-Mail-Adresse </label>
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.email"
@@ -97,6 +88,16 @@
                                             <jet-input-error :message="userForm.errors.email" class="mt-2" />
                                         </div>
                                     </div>
+                                    <div class="sm:col-span-3">
+                                        <label class="block text-medium font-medium text-gray-700">
+                                            Telefonnummer </label>
+                                        <div class="mt-1">
+                                            <input type="text" v-model="userForm.phone_number"
+                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                        </div>
+                                    </div>
+
+
                                     <div class="sm:col-span-6">
                                         <label class="block text-medium font-medium text-gray-700">
                                             Beschreibung </label>

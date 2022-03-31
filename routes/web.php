@@ -36,7 +36,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
     Route::get('/users/invitations/invite', [InvitationController::class, 'invite'])->name('user.invite');
     Route::get('/users/invitations/{invitation}/edit', [InvitationController::class, 'edit'])->name('user.invitations.edit');
-    Route::post('/users/invitations', [InvitationController::class, 'store']);
+    Route::post('/users/invitations', [InvitationController::class, 'store'])->name('invitations.store');
     Route::patch('/users/invitations/{invitation}', [InvitationController::class, 'update']);
     Route::delete('/users/invitations/{invitation}', [InvitationController::class, 'destroy']);
 
@@ -49,7 +49,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
     Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
-    Route::post('/departments', [DepartmentController::class, 'store']);
+    Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [DepartmentController::class, 'show']);
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit']);
     Route::patch('/departments/{department}', [DepartmentController::class, 'update']);

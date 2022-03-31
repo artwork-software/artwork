@@ -20,7 +20,7 @@
                                     <input
                                         v-model="form.email"
                                         id="email" name="email" type="email" autocomplete="email" required
-                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                                 </div>
                             </div>
 
@@ -32,20 +32,19 @@
                                     <input
                                         v-model="form.password"
                                         id="password" name="password" type="password" autocomplete="current-password" required
-                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
                                 </div>
                             </div>
 
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
-                                    <jet-checkbox name="remember" v-model:checked="form.remember"/>
-                                    <span class="ml-2 text-sm font-bold text-gray-600">Angemeldet bleiben</span>
+                                    <Checkbox class="justify-between text-sm" :item=rememberCheckbox />
                                 </div>
 
                                 <div class="text-sm">
 
                                     <Link v-if="canResetPassword" :href="route('password.request')"
-                                          class="text-sm font-bold text-primary hover:text-primary">
+                                          class="text-sm text-gray-400 hover:font-semibold hover:text-black">
                                         Passwort vergessen
                                     </Link>
 
@@ -53,8 +52,8 @@
                             </div>
 
                             <div>
-                                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" :disabled="form.processing"
-                                        :class="{ 'opacity-25': form.processing }">Einloggen</button>
+                                <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
+                                        :disabled="this.form.email === '' || this.form.password === ''">Login</button>
                             </div>
                         </form>
                     </div>
@@ -77,7 +76,10 @@ import JetCheckbox from '@/Jetstream/Checkbox.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
+import Checkbox from "@/Layouts/Components/Checkbox";
 
+
+const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
     components: {
@@ -90,6 +92,7 @@ export default defineComponent({
         JetLabel,
         JetValidationErrors,
         Link,
+        Checkbox
     },
     props: {
         canResetPassword: Boolean,
@@ -111,11 +114,16 @@ export default defineComponent({
             this.form
                 .transform(data => ({
                     ...data,
-                    remember: this.form.remember ? 'on' : ''
+                    remember: this.rememberCheckbox.checked ? 'on' : ''
                 }))
                 .post(this.route('login'), {
                     onFinish: () => this.form.reset('password'),
                 })
+        }
+    },
+    setup() {
+        return {
+            rememberCheckbox
         }
     }
 })

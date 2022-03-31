@@ -107,16 +107,19 @@
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">
-                                        <label for="department" class="block text-medium font-medium text-gray-700">
+                                        <label class="block text-medium font-medium text-gray-700">
                                             Abteilung </label>
-                                        <div class="mt-1">
-                                            <select id="department" v-model="userForm.department"
-                                                    class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">
-                                                <option>A</option>
-                                                <option>B</option>
-                                                <option>C</option>
-                                            </select>
-                                        </div>
+                                        <span class="flex" v-for="(team,index) in userForm.departments">
+                                <img   class="h-14 w-14 rounded-full flex justify-start" :src="team.logo_url"
+                                       alt=""/>
+                                <button type="button" @click="deleteTeamFromDepartmentsArray(index)"
+                                        class="flex-shrink-0 ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
+                                    <span class="sr-only">Teamzuweisung entfernen</span>
+                                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                                        <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
+                                    </svg>
+                                </button>
+                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -223,7 +226,7 @@ export default defineComponent({
                 position: this.user.position,
                 first_name: this.user.first_name,
                 last_name: this.user.last_name,
-                department: this.user.department,
+                departments: this.user.departments,
                 phone_number: this.user.phone_number,
                 email: this.user.email,
                 description: this.user.description,
@@ -284,6 +287,9 @@ export default defineComponent({
             if (this.$refs.photo?.value) {
                 this.$refs.photo.value = null;
             }
+        },
+        deleteTeamFromDepartmentsArray(index){
+            this.userForm.departments.splice(index,1);
         },
         updatePassword() {
             this.passwordForm.put(route('user-password.update'), {

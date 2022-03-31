@@ -89,7 +89,7 @@
                                         <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
                                     </svg>
                                 </button>
-                             </span>
+                        </span>
                         <Menu as="div" class="relative">
                             <div>
                                 <MenuButton

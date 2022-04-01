@@ -12,7 +12,8 @@ class Invitation extends Model
     protected $fillable = [
         'email',
         'token',
-        'permissions'
+        'permissions',
+        'role'
     ];
 
     protected $casts = [

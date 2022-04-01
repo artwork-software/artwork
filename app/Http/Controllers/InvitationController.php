@@ -85,7 +85,8 @@ class InvitationController extends Controller
             $invitation = Invitation::create([
                 'email' => $email,
                 'token' => $token['hash'],
-                'permissions' => json_encode($permissions)
+                'permissions' => json_encode($permissions),
+                'role' => $request->role
             ]);
 
             $invitation->departments()->sync(
@@ -184,6 +185,10 @@ class InvitationController extends Controller
             foreach($departments as $department) {
                 $department->users()->attach($user->id);
                 $user->departments()->attach($department->id);
+            }
+
+            if($invitation->role) {
+                $user->assignRole($invitation->role);
             }
 
             $invitation->delete();

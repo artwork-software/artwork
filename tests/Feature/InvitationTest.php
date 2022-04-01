@@ -62,6 +62,7 @@ test('users can accept the invitation', function () {
     $invitation = Invitation::factory()->create([
         'email' => 'user@example.com',
         'token' => Hash::make($validPlainToken),
+        'role' => 'admin',
         'permissions' => json_encode(['invite users', 'view users'])]);
 
     $department->invitations()->attach($invitation->id);
@@ -96,6 +97,7 @@ test('users can accept the invitation', function () {
     ]);
 
     $this->assertTrue(Hash::check($password,$user->password));
+    $this->assertTrue($user->hasRole('admin'));
 
     $this->assertEquals($user->getPermissionNames()->toArray(), json_decode($invitation->permissions));
 
@@ -150,7 +152,8 @@ test('admins can invite users', function () {
     $response = $this->post('/users/invitations', [
         'user_emails' => ['user@example.de', 'user2@example.de'],
         'permissions' => ['invite users', 'view users'],
-        'departments' => [$department]
+        'departments' => [$department],
+        'role' => 'admin'
     ]);
 
     Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
@@ -160,10 +163,12 @@ test('admins can invite users', function () {
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",
+        "role" => 'admin'
     ]);
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user2@example.de",
+        "role" => 'admin'
     ]);
 
     $invitation = Invitation::where('email', 'user@example.de')->first();

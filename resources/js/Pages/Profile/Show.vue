@@ -2,6 +2,7 @@
     <app-layout title="Profile">
         <div>
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-5">
+                {{departments}}
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="updateProfileInformation">
                         <div class="space-y-8 divide-y divide-gray-200">
@@ -217,7 +218,7 @@ export default defineComponent({
         UpdateProfileInformationForm,
         JetSecondaryButton,
     },
-    props: ['user'],
+    props: ['user', 'departments'],
     data() {
         return {
             userForm: this.$inertia.form({

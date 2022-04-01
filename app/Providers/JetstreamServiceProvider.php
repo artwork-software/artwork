@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Actions\Jetstream\DeleteUser;
+use App\Models\Department;
+use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
 
@@ -26,6 +28,15 @@ class JetstreamServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->configurePermissions();
+
+        Jetstream::inertia()->whenRendering(
+            'Profile/Show',
+            function (Request $request, array $data) {
+                return array_merge($data, [
+                    "departments" => Department::all()
+                ]);
+            }
+        );
 
         Jetstream::deleteUsersUsing(DeleteUser::class);
     }

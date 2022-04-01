@@ -56,7 +56,7 @@ class UserController extends Controller
     public function edit(User $user): Response|ResponseFactory
     {
         return inertia('Users/Edit', [
-            'user' => [
+            'user_to_edit' => [
                 'id' => $user->id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,

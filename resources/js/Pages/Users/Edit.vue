@@ -6,10 +6,10 @@
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
-                                <img class="h-16 w-16 rounded-full flex justify-start" :src="user.profile_photo_url"
+                                <img class="h-16 w-16 rounded-full flex justify-start" :src="user_to_edit.profile_photo_url"
                                      alt=""/>
                                 <p class="text-3xl ml-3 my-auto mr-3 font-bold subpixel-antialiased text-primary">
-                                    {{ user.first_name }} {{ user.last_name }}</p>
+                                    {{ user_to_edit.first_name }} {{ user_to_edit.last_name }}</p>
                             </div>
                             <div class="pt-4">
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -188,18 +188,18 @@ export default defineComponent({
         ChevronDownIcon,
         ChevronUpIcon
     },
-    props: ['user', 'permissions'],
+    props: ['user_to_edit', 'permissions'],
     data() {
         return {
             showUserPermissions: true,
             userForm: this.$inertia.form({
                 _method: 'PUT',
-                business: this.user.business,
-                position: this.user.position,
-                departments: this.user.departments,
-                phone_number: this.user.phone_number,
-                email: this.user.email,
-                description: this.user.description,
+                business: this.user_to_edit.business,
+                position: this.user_to_edit.position,
+                departments: this.user_to_edit.departments,
+                phone_number: this.user_to_edit.phone_number,
+                email: this.user_to_edit.email,
+                description: this.user_to_edit.description,
             }),
         }
     },

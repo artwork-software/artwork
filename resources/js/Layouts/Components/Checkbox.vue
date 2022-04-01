@@ -25,7 +25,7 @@ export default {
     props:['item'],
     data() {
         return {
-            checkedStyle: false,
+            checkedStyle: this.item.checked,
         }
     },
     methods:{

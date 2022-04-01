@@ -4,6 +4,7 @@
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-12">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="editUser">
+                        {{this.userForm}}
                         <div>
                             <div class="flex">
                                 <img class="h-16 w-16 rounded-full flex justify-start" :src="user_to_edit.profile_photo_url"
@@ -28,8 +29,8 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.email" placeholder="E-Mail"
-                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                            <input type="text" v-model="this.user_to_edit.email" disabled
+                                                   class="shadow-sm placeholder-secondary focus:ring-black bg-gray-100 focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
                                     </div>
@@ -48,7 +49,7 @@
                                                       class="shadow-sm placeholder-secondary p-4 focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300"/>
                                         </div>
                                     </div>
-                                    <div class="sm:col-span-6 flex inline-flex">
+                                    <div class="sm:col-span-6 mt-4 flex inline-flex">
                                         <span v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto ml-2 mr-4" >In keinem Team</span>
                                         <span  v-else class="flex" v-for="(team,index) in userForm.departments">
                                             <!--TODO: :src="team.logo_url" -->
@@ -99,7 +100,7 @@
                         </div>
                     </form>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="text-2xl mt-24 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
+                        <h3 class="text-2xl mt-16 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
 
                         <div class="mb-8">
                             <Checkbox v-for="role in roleCheckboxes" class="justify-between" :item=role></Checkbox>
@@ -116,12 +117,15 @@
                     </div>
                     <div class="mt-8">
                         <div class="flex">
-                            <button type="submit"
+                            <button @click="editUser"
                                     class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             >Einstellungen ändern
                             </button>
                         </div>
                     </div>
+                </div>
+                <div class="flex mt-12">
+                <span @click="openDeleteUserModal" class="text-secondary subpixel-antialiased cursor-pointer">Nutzer*in endgültig löschen</span>
                 </div>
             </div>
         </div>
@@ -134,14 +138,8 @@ const roleCheckboxes = [
     {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
 ]
 
-const userPermissionCheckboxes = [
-    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true},
-    {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users", showIcon: true},
-    {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users", showIcon: true},
-    {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users", showIcon: true}
-]
 
-import {defineComponent} from 'vue'
+import {computed, defineComponent} from 'vue'
 import JetActionMessage from '@/Jetstream/ActionMessage.vue'
 import JetButton from '@/Jetstream/Button.vue'
 import JetFormSection from '@/Jetstream/FormSection.vue'
@@ -161,6 +159,36 @@ import {DotsVerticalIcon,PencilAltIcon,TrashIcon, ChevronDownIcon,ChevronUpIcon}
 import Checkbox from "@/Layouts/Components/Checkbox";
 
 export default defineComponent({
+    computed: {
+        userPermissionCheckboxes() {
+            return [
+                {
+                    name: 'Nutzer*innen einladen',
+                    checked: this.userForm.permissions.includes("invite users"),
+                    permissionName: "invite users",
+                    showIcon: true
+                },
+                {
+                    name: 'Nutzerprofile ansehen',
+                    checked: this.userForm.permissions.includes("view users"),
+                    permissionName: "view users",
+                    showIcon: true
+                },
+                {
+                    name: 'Nutzerprofile bearbeiten',
+                    checked: this.userForm.permissions.includes("update users"),
+                    permissionName: "update users",
+                    showIcon: true
+                },
+                {
+                    name: 'Nutzer*innen löschen',
+                    checked: this.userForm.permissions.includes("delete users"),
+                    permissionName: "delete users",
+                    showIcon: true
+                }
+            ]
+        },
+    },
     name: 'Edit',
     components: {
         DotsVerticalIcon,
@@ -193,28 +221,45 @@ export default defineComponent({
         return {
             showUserPermissions: true,
             userForm: this.$inertia.form({
-                _method: 'PUT',
+                first_name: this.user_to_edit.first_name,
+                last_name:this.user_to_edit.last_name,
                 business: this.user_to_edit.business,
                 position: this.user_to_edit.position,
                 departments: this.user_to_edit.departments,
                 phone_number: this.user_to_edit.phone_number,
-                email: this.user_to_edit.email,
                 description: this.user_to_edit.description,
+                permissions: this.user_to_edit.permissions,
             }),
         }
     },
 
     methods: {
+        openDeleteUserModal(){
+
+        },
         editUser() {
-            this.userForm.patch(route('user.update'));
+            this.userPermissionCheckboxes.forEach((item) =>
+            {
+                // HIER STIMMT NOCH WAS NICHT EINE PERMISSION WAR 2 MAL IM BODY
+                if(this.userForm.permissions.includes(item.permissionName)){
+                    if(!item.checked){
+                        this.userForm.permissions.splice(this.userForm.permissions.indexOf(item.permissionName),1);
+                    }
+                }
+                if(item.checked){
+                    this.userForm.permissions.push(item.permissionName);
+                }
+            })
+            console.log(this.userForm);
+            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         },
         deleteTeamFromDepartmentsArray(index) {
             this.userForm.departments.splice(index, 1);
         },
     },
     setup() {
+
         return {
-            userPermissionCheckboxes,
             roleCheckboxes
         }
     }

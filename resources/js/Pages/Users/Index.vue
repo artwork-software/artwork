@@ -121,12 +121,12 @@
                                     </svg>
                                 </button>
                         </span>
-                        <Menu as="div" class="relative">
+                        <Disclosure @focusout="close()" as="div" class="relative">
                             <div>
-                                <MenuButton
+                                <DisclosureButton
                                     class="mt-2 flex my-auto items-center font-bold p-1 rounded-full shadow-sm text-white bg-black">
-                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                </MenuButton>
+                                    <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
+                                </DisclosureButton>
                             </div>
                             <transition enter-active-class="transition ease-out duration-100"
                                         enter-from-class="transform opacity-0 scale-95"
@@ -134,23 +134,23 @@
                                         leave-active-class="transition ease-in duration-75"
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="origin-top-right absolute right-0 mt-2 w-48 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <MenuItem v-for="team in departments" v-slot="{ active }">
-                                        <span class="flex " :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                <DisclosurePanel
+                                    class="origin-top-right absolute overflow-y-auto max-h-48  mt-2 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div v-for="team in departments">
+                                        <span class="flex " :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <!--TODO: :src="team.logo_url" -->
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-primaryText"/>
-                                            <img class="h-7 w-7 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                            <img class="h-8 w-8 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                alt=""/>
                                             <span class="ml-2">
                                             {{ team.name }}
                                             </span>
                                         </span>
-                                    </MenuItem>
-                                </MenuItems>
+                                    </div>
+                                </DisclosurePanel>
                             </transition>
-                        </Menu>
+                        </Disclosure>
                         <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                             <h3 class="text-xl mt-6 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte definieren</h3>
 
@@ -185,7 +185,7 @@
 </template>
 
 <script>
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 const roleCheckboxes = [
     {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
@@ -233,7 +233,10 @@ export default defineComponent({
         Checkbox,
         XIcon,
         PencilAltIcon,
-        TrashIcon
+        TrashIcon,
+        Disclosure,
+        DisclosureButton,
+        DisclosurePanel
     },
     props: ['users','departments'],
     data() {

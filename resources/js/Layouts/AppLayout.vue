@@ -65,11 +65,11 @@
         <!-- Sidebar component, swap this element with another sidebar if you like -->
         <div class="flex">
             <div class="hidden w-28 bg-primary md:block bottom-0 top-0 fixed">
-                <div class="w-full py-6 flex flex-col items-center">
+                <div class="w-full py-6 mt-12 flex flex-col items-center">
                     <div class="text-2xl font-bold text-secondaryHover">
                         <p>ArtWork</p>
                     </div>
-                    <div class="flex-1 mt-6 w-full px-2 space-y-1">
+                    <div class="flex-1 mt-12 w-full px-2 space-y-1">
                         <a v-for="item in navigation" :key="item.name" :href="item.href"
                            :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', ' font-semibold group w-full p-3 rounded-md flex flex-col items-center text-sm']">
                             <component :is="item.icon"

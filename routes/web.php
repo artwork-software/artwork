@@ -42,8 +42,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
-    Route::get('/users/{user}', [UserController::class, 'edit']);
-    Route::patch('/users/{user}', [UserController::class, 'update']);
+    Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
+    Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     //Departments

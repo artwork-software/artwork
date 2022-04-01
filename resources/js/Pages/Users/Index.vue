@@ -55,7 +55,7 @@
                                         <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <a :href="getEditHref(user)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
                                                         Nutzer*in bearbeiten
                                                     </a>
@@ -110,16 +110,10 @@
                     </button>
                     </span>
                         <h2 class="mt-2">Teams zuweisen:</h2>
-                        <span class="flex" v-for="(team,index) in form.departments">
-                                <img   class="h-14 w-14 rounded-full flex justify-start" :src="team.logo_url"
+                        <span class="flex inline-flex -mr-3" v-for="(team,index) in form.departments">
+                            <!--TODO: :src="team.logo_url" -->
+                                <img   class="h-14 w-14 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                        alt=""/>
-                                <button type="button" @click="deleteTeamFromDepartmentsArray(index)"
-                                        class="flex-shrink-0 ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                                    <span class="sr-only">Teamzuweisung entfernen</span>
-                                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                        <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
-                                    </svg>
-                                </button>
                         </span>
                         <Disclosure @focusout="close()" as="div" class="relative">
                             <div>
@@ -139,7 +133,7 @@
                                     <div v-for="team in departments">
                                         <span class="flex " :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <!--TODO: :src="team.logo_url" -->
-                                            <input :key="team.name" v-model="team.checked" type="checkbox"
+                                            <input :key="team.name" v-model="team.checked" type="checkbox" @change="teamChecked(team,index)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-primaryText"/>
                                             <img class="h-8 w-8 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                alt=""/>
@@ -165,7 +159,7 @@
                             </h2>
                         </div>
                         <div v-if="showUserPermissions" class="flex flex-col">
-                            <Checkbox v-for="permission in permissionCheckboxes" class="justify-between" :item=permission />
+                            <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between" :item=permission />
                         </div>
                     </div>
 
@@ -185,19 +179,21 @@
 </template>
 
 <script>
-import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+
 
 const roleCheckboxes = [
     {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
 ]
 
-const permissionCheckboxes = [
+const userPermissionCheckboxes = [
     {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true},
     {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users", showIcon: true},
     {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users", showIcon: true},
     {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users", showIcon: true}
 ]
+
 import {defineComponent} from 'vue'
+import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon} from '@heroicons/vue/solid'
@@ -255,6 +251,13 @@ export default defineComponent({
         openAddUserModal() {
             this.addingUser = true
         },
+        teamChecked(team,index){
+            if(team.checked){
+                this.form.departments.push(team);
+            }else{
+                this.form.departments.splice(index,1);
+            }
+        },
         addEmailToInvitationArray() {
             if (this.emailInput.indexOf(' ') === -1) {
                 this.form.user_emails.push(this.emailInput);
@@ -268,7 +271,7 @@ export default defineComponent({
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
             }
-            permissionCheckboxes.forEach((item) =>
+            userPermissionCheckboxes.forEach((item) =>
             {
                 if(item.checked){
                     this.form.permissions.push(item.permissionName);
@@ -287,15 +290,22 @@ export default defineComponent({
             this.form.user_emails = [];
             this.form.permissions = [];
             this.form.departments = [];
+            this.departments.forEach((team) =>{
+                team.checked = false;
+            })
 
         },
-        deleteTeamFromDepartmentsArray(index){
+        deleteTeamFromDepartmentsArray(team,index){
+            team.checked = false;
             this.form.departments.splice(index,1);
+        },
+        getEditHref(user){
+            return route('user.edit',{ user: user.id});
         }
     },
     setup() {
         return {
-            permissionCheckboxes,
+            userPermissionCheckboxes,
             roleCheckboxes
         }
     }

@@ -1,11 +1,10 @@
 <template>
     <app-layout title="Profile">
         <div>
-            <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-5">
-                {{departments}}
+            <div class="max-w-7xl mx-auto py-4 sm:px-3 lg:px-5">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="updateProfileInformation">
-                        <div class="space-y-8 divide-y divide-gray-200">
+                        <div>
                             <div>
                                 <h2 class="font-bold text-2xl my-2" >Dein Konto</h2>
                                 <div class="col-span-6 sm:col-span-4">
@@ -47,7 +46,7 @@
                                         Vorname </label>
                                     <div class="mt-1">
                                         <input type="text" v-model="userForm.first_name"
-                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                               class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                     </div>
                                 </div>
 
@@ -56,7 +55,7 @@
                                         Nachname </label>
                                     <div class="mt-1">
                                         <input type="text" v-model="userForm.last_name"
-                                               class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                               class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                     </div>
                                 </div>
                             </div>
@@ -68,7 +67,7 @@
                                             Unternehmen </label>
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business"
-                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -77,7 +76,7 @@
                                             Position </label>
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position"
-                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
@@ -85,7 +84,7 @@
                                             E-Mail-Adresse </label>
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.email"
-                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2" />
                                         </div>
                                     </div>
@@ -94,7 +93,7 @@
                                             Telefonnummer </label>
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
-                                                   class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"/>
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -104,23 +103,19 @@
                                             Beschreibung </label>
                                         <div class="mt-1">
                                             <textarea placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?" v-model="userForm.description" rows="3"
-                                                      class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border border-gray-300 rounded-md"/>
+                                                      class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            Abteilung </label>
-                                        <span class="flex" v-for="(team,index) in userForm.departments">
-                                <img   class="h-14 w-14 rounded-full flex justify-start" :src="team.logo_url"
-                                       alt=""/>
-                                <button type="button" @click="deleteTeamFromDepartmentsArray(index)"
-                                        class="flex-shrink-0 ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                                    <span class="sr-only">Teamzuweisung entfernen</span>
-                                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                        <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
-                                    </svg>
-                                </button>
-                        </span>
+                                        <div class="sm:col-span-6 ml-3 flex inline-flex">
+                                            <span v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto" >In keinem Team </span>
+                                            <span v-else class="flex mt-3 -ml-3" v-for="(team,index) in userForm.departments">
+                                            <!--TODO: :src="team.logo_url" -->
+                                            <img class="h-14 w-14 rounded-full flex justify-start"
+                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                                 alt=""/>
+                                        </span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -128,13 +123,9 @@
 
                         <div class="pt-5">
                             <div class="flex justify-end">
-                                <button type="button"
-                                        class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-bold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Abbrechen
-                                </button>
-                                <button :class="{ 'opacity-25': userForm.processing }" :disabled="userForm.processing" type="submit"
-                                        class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                                    Speichern
+                                <button type="submit"
+                                        class=" inline-flex items-center px-8 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                >Profil-Änderungen speichern
                                 </button>
                             </div>
                         </div>
@@ -142,7 +133,7 @@
                 </div>
 
                 <div v-if="$page.props.jetstream.canUpdatePassword">
-                    <h2 class="font-bold text-2xl my-6">Passwort ändern</h2>
+                    <h2 class="font-bold text-2xl my-6">Dein Passwort</h2>
                     <div class="col-span-6 sm:col-span-4 my-4">
                         <label for="current_password" class="font-medium"> Aktuelles Passwort</label>
                         <jet-input id="current_password" type="password" class="mt-1 block w-full"
@@ -157,7 +148,7 @@
                                    v-model="passwordForm.password"
                                    ref="password" autocomplete="new-password"/>
                         <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
-                        <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 8 Zeichen lang sein und mind. 1
+                        <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 10 Zeichen lang sein und mind. 1
                             Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
                     </div>
 
@@ -172,11 +163,9 @@
                         Saved.
                     </jet-action-message>
 
-                    <button
-                        class="ml-3 mb-6 py-2 px-4 float-right border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        :class="{ 'opacity-25': passwordForm.processing }"
-                        :disabled="passwordForm.processing">
-                        Passwort ändern
+                    <button @click="updatePassword"
+                            class=" inline-flex items-center px-8 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                    >Passwort ändern
                     </button>
 
                 </div>
@@ -227,7 +216,7 @@ export default defineComponent({
                 position: this.user.position,
                 first_name: this.user.first_name,
                 last_name: this.user.last_name,
-                departments: this.user.departments,
+                departments: this.departments,
                 phone_number: this.user.phone_number,
                 email: this.user.email,
                 description: this.user.description,
@@ -244,7 +233,6 @@ export default defineComponent({
 
     methods: {
         updateProfileInformation() {
-
             if (this.$refs.photo) {
                 this.userForm.photo = this.$refs.photo.files[0]
             }

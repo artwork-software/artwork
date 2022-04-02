@@ -111,7 +111,7 @@
 
                 <div>
 
-                    <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
+                    <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-28 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
                             :disabled="this.form.email === '' || this.form.password === ''">Registrieren</button>
                 </div>
             </form>

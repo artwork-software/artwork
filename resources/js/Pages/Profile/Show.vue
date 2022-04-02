@@ -42,65 +42,51 @@
                                 </div>
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                 <div class="sm:col-span-3">
-                                    <label class="block text-medium font-medium text-gray-700">
-                                        Vorname </label>
                                     <div class="mt-1">
-                                        <input type="text" v-model="userForm.first_name"
+                                        <input type="text" v-model="userForm.first_name" placeholder="Vorname"
                                                class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                     </div>
                                 </div>
 
                                 <div class="sm:col-span-3">
-                                    <label class="block text-medium font-medium text-gray-700">
-                                        Nachname </label>
                                     <div class="mt-1">
-                                        <input type="text" v-model="userForm.last_name"
+                                        <input type="text" v-model="userForm.last_name" placeholder="Nachname"
                                                class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                     </div>
                                 </div>
                             </div>
                             </div>
-                            <div class="pt-8">
+                            <div>
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            Unternehmen </label>
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.business"
+                                            <input type="text" v-model="userForm.business" placeholder="Unternehmen"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            Position </label>
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.position"
+                                            <input type="text" v-model="userForm.position" placeholder="Position"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            E-Mail-Adresse </label>
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.email"
+                                            <input type="text" v-model="userForm.email" placeholder="E-Mail-Adresse"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2" />
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            Telefonnummer </label>
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.phone_number"
+                                            <input type="text" v-model="userForm.phone_number" placeholder="Telefonnummer"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
 
 
                                     <div class="sm:col-span-6">
-                                        <label class="block text-medium font-medium text-gray-700">
-                                            Beschreibung </label>
                                         <div class="mt-1">
                                             <textarea placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?" v-model="userForm.description" rows="3"
                                                       class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300 "/>

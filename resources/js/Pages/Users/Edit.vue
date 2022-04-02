@@ -4,10 +4,11 @@
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-12">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="editUser">
-                        {{this.userForm}}
+                        {{ this.userForm }}
                         <div>
                             <div class="flex">
-                                <img class="h-16 w-16 rounded-full flex justify-start" :src="user_to_edit.profile_photo_url"
+                                <img class="h-16 w-16 rounded-full flex justify-start"
+                                     :src="user_to_edit.profile_photo_url"
                                      alt=""/>
                                 <p class="text-3xl ml-3 my-auto mr-3 font-bold subpixel-antialiased text-primary">
                                     {{ user_to_edit.first_name }} {{ user_to_edit.last_name }}</p>
@@ -36,7 +37,8 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.phone_number" placeholder="Telefonnummer"
+                                            <input type="text" v-model="userForm.phone_number"
+                                                   placeholder="Telefonnummer"
                                                    class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
                                         </div>
                                     </div>
@@ -50,8 +52,9 @@
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6 mt-4 flex inline-flex">
-                                        <span v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto ml-2 mr-4" >In keinem Team</span>
-                                        <span  v-else class="flex" v-for="(team,index) in userForm.departments">
+                                        <span v-if="userForm.departments.length === 0"
+                                              class="text-secondary subpixel-antialiased my-auto ml-2 mr-4">In keinem Team</span>
+                                        <span v-else class="flex" v-for="(team,index) in userForm.departments">
                                             <!--TODO: :src="team.logo_url" -->
                                             <img class="h-14 w-14 rounded-full flex justify-start"
                                                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -69,24 +72,37 @@
                                             <div>
                                                 <MenuButton
                                                     class="flex">
-                                                    <DotsVerticalIcon class="mr-3 ml-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                      aria-hidden="true"/>
+                                                    <DotsVerticalIcon
+                                                        class="mr-3 ml-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                        aria-hidden="true"/>
                                                 </MenuButton>
                                             </div>
-                                            <transition enter-active-class="transition ease-out duration-100" enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100" leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
                                                     <div>
 
                                                         <MenuItem v-slot="{ active }">
 
-                                                            <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <PencilAltIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                                            <a href="#"
+                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <PencilAltIcon
+                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                    aria-hidden="true"/>
                                                                 Teamzugehörigkeit bearbeiten
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem v-slot="{ active }">
-                                                            <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                                            <a href="#"
+                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <TrashIcon
+                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                    aria-hidden="true"/>
                                                                 Nutzer*in aus allen Teams entfernen
                                                             </a>
                                                         </MenuItem>
@@ -109,11 +125,15 @@
                     </div>
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 mb-2">
-                            Nutzer*innen  <ChevronUpIcon v-if="showUserPermissions" class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon> <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                            Nutzer*innen
+                            <ChevronUpIcon v-if="showUserPermissions"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
                     <div v-if="showUserPermissions" class="flex flex-col">
-                        <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between" :item=permission />
+                        <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
+                                  :item=permission />
                     </div>
                     <div class="mt-8">
                         <div class="flex">
@@ -125,14 +145,42 @@
                     </div>
                 </div>
                 <div class="flex mt-12">
-                <span @click="openDeleteUserModal" class="text-secondary subpixel-antialiased cursor-pointer">Nutzer*in endgültig löschen</span>
+                    <span @click="openDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nutzer*in endgültig löschen</span>
                 </div>
             </div>
         </div>
+        <!-- Nutzer*in löschen Modal -->
+        <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Nutzer*in löschen
+                    </div>
+                    <XIcon @click="closeDeleteUserModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                    <div class="text-error">
+                        Bist du sicher, dass du {{user_to_edit.last_name + "," }} {{ user_to_edit.first_name}} aus dem System löschen möchtest?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="deleteUser">
+                        Löschen
+                    </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
 <script>
+
+import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
     {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
@@ -155,8 +203,9 @@ import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {DotsVerticalIcon,PencilAltIcon,TrashIcon, ChevronDownIcon,ChevronUpIcon} from "@heroicons/vue/outline";
+import {DotsVerticalIcon, PencilAltIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,XIcon} from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox";
+import JetDialogModal from '@/Jetstream/DialogModal.vue'
 
 export default defineComponent({
     computed: {
@@ -214,15 +263,18 @@ export default defineComponent({
         MenuItems,
         Checkbox,
         ChevronDownIcon,
-        ChevronUpIcon
+        ChevronUpIcon,
+        JetDialogModal,
+        XIcon
     },
     props: ['user_to_edit', 'permissions'],
     data() {
         return {
             showUserPermissions: true,
+            deletingUser: false,
             userForm: this.$inertia.form({
                 first_name: this.user_to_edit.first_name,
-                last_name:this.user_to_edit.last_name,
+                last_name: this.user_to_edit.last_name,
                 business: this.user_to_edit.business,
                 position: this.user_to_edit.position,
                 departments: this.user_to_edit.departments,
@@ -234,23 +286,35 @@ export default defineComponent({
     },
 
     methods: {
-        openDeleteUserModal(){
-
+        openDeleteUserModal() {
+            this.deletingUser = true;
+        },
+        closeDeleteUserModal(){
+          this.deletingUser = false;
+        },
+        deleteUser(){
+            Inertia.delete(`/users/${this.user_to_edit.id}`);
+            this.closeDeleteUserModal()
         },
         editUser() {
-            this.userPermissionCheckboxes.forEach((item) =>
-            {
+            this.userPermissionCheckboxes.forEach((item) => {
                 // HIER STIMMT NOCH WAS NICHT EINE PERMISSION WAR 2 MAL IM BODY
-                if(this.userForm.permissions.includes(item.permissionName)){
-                    if(!item.checked){
-                        this.userForm.permissions.splice(this.userForm.permissions.indexOf(item.permissionName),1);
+
+                if (item.checked) {
+                    if (this.userForm.permissions.includes(item.permissionName)){
+                        // do nothing if already in permissions array
+                    }else{
+                        this.userForm.permissions.push(item.permissionName);
                     }
-                }
-                if(item.checked){
-                    this.userForm.permissions.push(item.permissionName);
+                } else {
+                    if (this.userForm.permissions.includes(item.permissionName)) {
+                        console.log("LÖSCHEN:" + item.permissionName);
+                        this.userForm.permissions.splice(this.userForm.permissions.indexOf(item.permissionName), 1);
+                    }
                 }
             })
             console.log(this.userForm);
+            console.log("NEUE PERMISSIONS" + this.userForm.permissions);
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         },
         deleteTeamFromDepartmentsArray(index) {

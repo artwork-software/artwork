@@ -61,7 +61,7 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <a @click="openDeleteUserModal(user)" :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon class="mr-3 h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
                                                         Nutzer*in löschen
                                                     </a>
@@ -175,11 +175,39 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Nutzer*in löschen Modal -->
+        <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Nutzer*in löschen
+                    </div>
+                    <XIcon @click="closeDeleteUserModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                    <div class="text-error">
+                        Bist du sicher, dass du {{userToDelete.last_name + "," }} {{ userToDelete.first_name}} aus dem System löschen möchtest?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteUser">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
 <script>
 
+
+import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
     {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
@@ -239,6 +267,8 @@ export default defineComponent({
         return {
             showUserPermissions: true,
             addingUser: false,
+            deletingUser: false,
+            userToDelete:{},
             emailInput: "",
             form: useForm({
                 user_emails: [],
@@ -248,6 +278,18 @@ export default defineComponent({
         }
     },
     methods: {
+        openDeleteUserModal(user) {
+            this.userToDelete = user;
+            this.deletingUser = true;
+        },
+        closeDeleteUserModal(){
+            this.userToDelete = {};
+            this.deletingUser = false;
+        },
+        deleteUser(){
+            Inertia.delete(`/users/${this.userToDelete.id}`);
+            this.closeDeleteUserModal()
+        },
         openAddUserModal() {
             this.addingUser = true
         },

@@ -97,8 +97,8 @@ class UserController extends Controller
                 })
         );
 
+        $user->syncPermissions($request->permissions);
         $user->assignRole($request->role);
-        $user->givePermissionTo($request->permissions);
 
         return Redirect::route('users')->with('success', 'Benutzer aktualisiert');
     }
@@ -113,6 +113,6 @@ class UserController extends Controller
     {
         $user->delete();
 
-        return Redirect::back()->with('success', 'Benutzer gelöscht');
+        return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }
 }

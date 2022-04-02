@@ -73,6 +73,7 @@ test('users can update update other users', function () {
 
 
     $user_to_edit = User::factory()->create();
+    $user_to_edit->givePermissionTo('view users', 'update users');
     $user->assignRole('admin');
     $this->actingAs($user);
 
@@ -82,7 +83,6 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed",
         "permissions" => ['invite users'],
         "departments" => [$department]
     ]);
@@ -96,8 +96,14 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed",
+        "description" => $user->description,
     ]);
+
+    $updated_user = User::where('id', $user_to_edit->id)->first();
+
+    $this->assertFalse($updated_user->hasAnyPermission('view users', 'update users'));
+
+    $this->assertTrue($updated_user->hasPermissionTo('invite users'));
 
     $this->assertDatabaseHas('department_user', [
         'department_id' => $department->id,
@@ -122,8 +128,8 @@ test('users can update update other users', function () {
 
     $this->assertDatabaseHas('users', [
         "id" => $user_to_edit->id,
-        "first_name" => "Benjamin",
-        "last_name" => "Willems",
+        "first_name" => "Miriam",
+        "last_name" => "Seixas",
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",

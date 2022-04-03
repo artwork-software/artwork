@@ -1,12 +1,4 @@
 <template>
-    <!--
-      This example requires updating your template:
-
-      ```
-      <html class="h-full bg-gray-100">
-      <body class="h-full">
-      ```
-    -->
     <div>
         <TransitionRoot as="template" :show="sidebarOpen">
             <Dialog as="div" class="fixed inset-0 flex z-40 md:hidden" @close="sidebarOpen = false">
@@ -87,7 +79,7 @@
                                        aria-hidden="true"/>
                             {{ item.name }}
                         </a>
-                        <h2 v-if="$page.props.can.view_users" @click="showSystemSettings = !showSystemSettings"
+                        <h2 v-if="$page.props.can.view_users || $page.props.can.view_departments" @click="showSystemSettings = !showSystemSettings"
                             class="text-md pt-12 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
                             System
                             <ChevronUpIcon v-if="showSystemSettings"

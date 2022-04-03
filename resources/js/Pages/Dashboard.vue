@@ -3,7 +3,7 @@
         <div class="py-12">
             <div class="max-w-screen-2xl my-12 flex flex-row justify-between mx-auto sm:px-6 lg:px-8">
                 <div class="flex">
-                    <span class="text-black">{{ this.$page.props.user }}</span>
+                    <pre>{{ $page.props }}</pre>
                         <div class="bg-white shadow overflow-hidden sm:rounded-md">
                             <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
                             <ul role="list" class="divide-y divide-gray-200">

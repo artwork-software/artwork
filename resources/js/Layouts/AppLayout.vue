@@ -44,13 +44,23 @@
                                                aria-hidden="true"/>
                                     {{ item.name }}
                                 </a>
-                                <h2 v-on:click="showSystemSettings = !showSystemSettings" class="text-lg pt-12 pb-2 ml-4 flex font-bold text-secondaryHover">System <ChevronUpIcon v-if="showSystemSettings" class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon> <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon></h2>
-                                <a v-if="showSystemSettings" v-for="item in managementNavigation" :key="item.name" :href="item.href"
-                                   :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover', 'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
+                                <h2 v-on:click="showSystemSettings = !showSystemSettings"
+                                    class="text-lg pt-12 pb-2 ml-4 flex font-bold text-secondaryHover">System
+                                    <ChevronUpIcon v-if="showSystemSettings"
+                                                   class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                    <ChevronDownIcon v-else
+                                                     class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                </h2>
+
+                                <Link v-if="showSystemSettings" v-for="item in managementNavigation" :key="item.name"
+                                   :href="item.href"
+                                   :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover'
+                                   :'text-secondary hover:bg-primaryHover',
+                                   'group flex items-center px-2 py-2 text-base font-medium rounded-md']">
                                     <component :is="item.icon" class="mr-3 flex-shrink-0 h-6 w-6 text-primaryText"
                                                aria-hidden="true"/>
                                     {{ item.name }}
-                                </a>
+                                </Link>
                             </nav>
                         </div>
                     </div>
@@ -77,14 +87,25 @@
                                        aria-hidden="true"/>
                             {{ item.name }}
                         </a>
-                        <h2 v-on:click="showSystemSettings = !showSystemSettings" class="text-md pt-12 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">System <ChevronUpIcon v-if="showSystemSettings" class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon> <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon></h2>
-                        <a v-if="showSystemSettings" v-for="item in managementNavigation" :key="item.name" :href="item.href"
-                           :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center text-sm font-semibold']">
-                            <component :is="item.icon"
-                                       :class="[isCurrent(item.route) ? 'text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
-                                       aria-hidden="true"/>
-                            {{ item.name }}
-                        </a>
+                        <h2 v-if="$page.props.can.view_users" @click="showSystemSettings = !showSystemSettings"
+                            class="text-md pt-12 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
+                            System
+                            <ChevronUpIcon v-if="showSystemSettings"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                        </h2>
+
+                        <template v-for="item in managementNavigation" :key="item.name">
+                            <Link v-if="showSystemSettings && item.has_permission"
+                                  :href="item.href"
+                                  :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center text-sm font-semibold']">
+                                <component :is="item.icon"
+                                           :class="[isCurrent(item.route) ? 'text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
+                                           aria-hidden="true"/>
+                                {{ item.name }}
+                            </Link>
+                        </template>
+
                     </div>
                 </div>
             </div>
@@ -107,9 +128,15 @@
                             <Menu as="div" class="ml-3 relative">
                                 <div>
                                     <MenuButton @click="showUserMenu = !showUserMenu"
-                                        class="flex items-center rounded-full focus:outline-none">
+                                                class="flex items-center rounded-full focus:outline-none">
                                         <span class="sr-only">Open user menu</span>
-                                        <p class="subpixel-antialiased flex mr-4 pl-2">Hallo {{ $page.props.user.first_name }}<ChevronUpIcon v-if="showUserMenu" class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon><ChevronDownIcon v-else class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon></p>
+                                        <p class="subpixel-antialiased flex mr-4 pl-2">Hallo
+                                            {{ $page.props.user.first_name }}
+                                            <ChevronUpIcon v-if="showUserMenu"
+                                                           class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                        </p>
                                         <img class="h-10 w-10 rounded-full"
                                              :src="$page.props.user.profile_photo_url"
                                              alt=""/>
@@ -185,15 +212,7 @@ const navigation = [
     {name: 'Raumbelegung', href: '#', route: [], icon: CalendarIcon,},
     {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
 ]
-const managementNavigation = [
-    {name: 'Nutzer*innen', href: route('users'), route: ['/users'], icon: ArrowCircleRightIcon},
-    {
-        name: 'Teams',
-        href: route('departments'),
-        route: ['/departments'],
-        icon: ArrowCircleRightIcon
-    },
-]
+
 const userNavigation = [
     {name: 'Your Profile', href: '#'},
     {name: 'Settings', href: '#'},
@@ -216,6 +235,26 @@ export default {
         ChevronDownIcon,
         ChevronUpIcon,
         Link
+    },
+    computed: {
+        managementNavigation() {
+            return [
+                {
+                    has_permission: this.$page.props.can.view_users,
+                    name: 'Nutzer*innen',
+                    href: route('users'),
+                    route: ['/users'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
+                    name: 'Teams',
+                    has_permission: this.$page.props.can.view_departments,
+                    href: route('departments'),
+                    route: ['/departments'],
+                    icon: ArrowCircleRightIcon
+                },
+            ]
+        }
     },
     methods: {
         isCurrent(routes) {
@@ -241,7 +280,6 @@ export default {
         return {
             navigation,
             userNavigation,
-            managementNavigation,
             sidebarOpen,
         }
     },

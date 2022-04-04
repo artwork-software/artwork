@@ -6,3 +6,13 @@
     font-family: 'Inter';
     src: local('Inter-Regular'), url('../fonts/Inter-Regular.ttf') format('truetype');
 }
+
+@font-face {
+    font-family: 'Nanum Pen Script';
+    src: local('NanumPenScript'), url('../fonts/NanumPenScript-Regular.ttf') format('truetype');
+}
+
+@font-face {
+    font-family: 'Patrick Hand';
+    src: local('PatrickHand-Regular'), url('../fonts/PatrickHand-Regular.ttf') format('truetype');
+}

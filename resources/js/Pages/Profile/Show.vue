@@ -6,7 +6,7 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div>
                             <div>
-                                <h2 class="font-bold text-2xl my-2" >Dein Konto</h2>
+                                <h2 class="font-bold text-2xl my-2">Dein Konto</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"
@@ -41,20 +41,20 @@
                                     </div>
                                 </div>
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                <div class="sm:col-span-3">
-                                    <div class="mt-1">
-                                        <input type="text" v-model="userForm.first_name" placeholder="Vorname"
-                                               class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
+                                    <div class="sm:col-span-3">
+                                        <div class="mt-1">
+                                            <input type="text" v-model="userForm.first_name" placeholder="Vorname"
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
+                                        </div>
                                     </div>
-                                </div>
 
-                                <div class="sm:col-span-3">
-                                    <div class="mt-1">
-                                        <input type="text" v-model="userForm.last_name" placeholder="Nachname"
-                                               class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
+                                    <div class="sm:col-span-3">
+                                        <div class="mt-1">
+                                            <input type="text" v-model="userForm.last_name" placeholder="Nachname"
+                                                   class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                             </div>
                             <div>
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -75,12 +75,13 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.email" placeholder="E-Mail-Adresse"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
-                                            <jet-input-error :message="userForm.errors.email" class="mt-2" />
+                                            <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="userForm.phone_number" placeholder="Telefonnummer"
+                                            <input type="text" v-model="userForm.phone_number"
+                                                   placeholder="Telefonnummer"
                                                    class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300 "/>
                                         </div>
                                     </div>
@@ -88,14 +89,18 @@
 
                                     <div class="sm:col-span-6">
                                         <div class="mt-1">
-                                            <textarea placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?" v-model="userForm.description" rows="3"
-                                                      class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300 "/>
+                                            <textarea
+                                                placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?"
+                                                v-model="userForm.description" rows="3"
+                                                class="shadow-sm focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">
                                         <div class="sm:col-span-6 ml-3 flex inline-flex">
-                                            <span v-if="userForm.departments.length === 0" class="text-secondary subpixel-antialiased my-auto" >In keinem Team </span>
-                                            <span v-else class="flex mt-3 -ml-3" v-for="(team,index) in userForm.departments">
+                                            <span v-if="userForm.departments.length === 0"
+                                                  class="text-secondary subpixel-antialiased my-auto">In keinem Team </span>
+                                            <span v-else class="flex mt-3 -ml-3"
+                                                  v-for="(team,index) in userForm.departments">
                                             <!--TODO: :src="team.logo_url" -->
                                             <img class="h-14 w-14 rounded-full flex justify-start"
                                                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
@@ -136,6 +141,11 @@
                         <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
                         <p class="mt-2 text-sm text-gray-500">Das Passwort muss mind. 10 Zeichen lang sein und mind. 1
                             Ziffer und Groß- und Kleinbuchstaben beinhalten</p>
+
+                        <span class="font-patrick text-help">Das Passwort muss mind. 8 Zeichen lang sein, mind. 1 Ziffer und Groß- und Kleinbuchstaben beinhalten</span>
+                        <br>
+                        <span class="font-nanum text-help">Das Passwort muss mind. 8 Zeichen lang sein, mind. 1 Ziffer und Groß- und Kleinbuchstaben beinhalten</span>
+
                     </div>
 
                     <div class="col-span-6 sm:col-span-4 my-4">
@@ -176,6 +186,7 @@ import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthe
 import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
+
 export default defineComponent({
     components: {
         JetActionMessage,
@@ -263,8 +274,8 @@ export default defineComponent({
                 this.$refs.photo.value = null;
             }
         },
-        deleteTeamFromDepartmentsArray(index){
-            this.userForm.departments.splice(index,1);
+        deleteTeamFromDepartmentsArray(index) {
+            this.userForm.departments.splice(index, 1);
         },
         updatePassword() {
             this.passwordForm.put(route('user-password.update'), {

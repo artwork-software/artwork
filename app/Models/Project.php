@@ -12,4 +12,13 @@ class Project extends Model
     protected $fillable = [
         'name'
     ];
+
+    public function users() {
+        return $this->belongsToMany(User::class)->withPivot('is_admin');
+    }
+
+    public function departments() {
+        return $this->belongsToMany(Department::class);
+    }
+
 }

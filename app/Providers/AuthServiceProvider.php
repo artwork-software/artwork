@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Models\Department;
 use App\Models\Invitation;
+use App\Models\Project;
 use App\Models\User;
 use App\Policies\DepartmentPolicy;
 use App\Policies\InvitationPolicy;
+use App\Policies\ProjectPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -22,7 +24,8 @@ class AuthServiceProvider extends ServiceProvider
         // 'App\Models\Model' => 'App\Policies\ModelPolicy',
         Invitation::class => InvitationPolicy::class,
         User::class => UserPolicy::class,
-        Department::class => DepartmentPolicy::class
+        Department::class => DepartmentPolicy::class,
+        Project::class => ProjectPolicy::class
     ];
 
     /**

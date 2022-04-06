@@ -43,6 +43,10 @@ class User extends Authenticatable
         return $this->belongsToMany(Department::class);
     }
 
+    public function projects() {
+        return $this->belongsToMany(Project::class)->withPivot('is_admin');;
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

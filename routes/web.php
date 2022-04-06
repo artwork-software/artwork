@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Redirect;
@@ -54,6 +55,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/departments/{department}/edit', [DepartmentController::class, 'edit']);
     Route::patch('/departments/{department}', [DepartmentController::class, 'update']);
     Route::delete('/departments/{department}', [DepartmentController::class, 'destroy']);
+
+    //Projects
+    Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
+    Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
+    Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
+    Route::patch('/projects/{project}', [ProjectController::class, 'update']);
+    Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
 });
 

@@ -27,6 +27,10 @@ class Department extends Model
         return $this->belongsToMany(Invitation::class);
     }
 
+    public function projects() {
+        return $this->belongsToMany(Project::class);
+    }
+
     /**
      * The accessors to append to the model's array form.
      *

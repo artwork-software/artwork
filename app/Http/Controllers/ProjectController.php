@@ -25,7 +25,7 @@ class ProjectController extends Controller
     public function index()
     {
         return inertia('Projects/ProjectManagement', [
-            'projects' => Department::paginate(10)->through(fn($project) => [
+            'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'users' => $project->users->map(fn($user) => [
@@ -35,11 +35,11 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
-                'departments' => $project->users->map(fn($department) => [
+                'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
                     'logo_url' => $department->profile_photo_url,
-                    'users' => $project->users->map(fn($user) => [
+                    'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
@@ -70,7 +70,7 @@ class ProjectController extends Controller
      */
     public function store(Request $request)
     {
-        $project = Department::create([
+        $project = Project::create([
             'name' => $request->name
         ]);
 
@@ -94,7 +94,7 @@ class ProjectController extends Controller
                 })
         );
 
-        return Redirect::route('departments')->with('success', 'Department created.');
+        return Redirect::route('projects')->with('success', 'Project created.');
     }
 
     /**
@@ -116,11 +116,11 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
-                'departments' => $project->users->map(fn($department) => [
+                'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
                     'logo_url' => $department->profile_photo_url,
-                    'users' => $project->users->map(fn($user) => [
+                    'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
@@ -151,11 +151,11 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
-                'departments' => $project->users->map(fn($department) => [
+                'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
                     'logo_url' => $department->profile_photo_url,
-                    'users' => $project->users->map(fn($user) => [
+                    'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
@@ -200,7 +200,7 @@ class ProjectController extends Controller
                 })
         );
 
-        return Redirect::route('departments')->with('success', 'Department updated');
+        return Redirect::route('projects')->with('success', 'Project updated');
     }
 
     /**

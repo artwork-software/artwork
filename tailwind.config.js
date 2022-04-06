@@ -18,11 +18,13 @@ module.exports = {
                 success:'#1FC687',
                 error:'#FD6D73',
                 secondary:'#A7A6B1',
-                secondaryHover:'#FCFCFB'
-
+                secondaryHover:'#FCFCFB',
+                help: '#93929D'
             },
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
+                nanum: "Nanum Pen Script",
+                patrick: "Patrick Hand"
             },
         },
     },

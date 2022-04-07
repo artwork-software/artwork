@@ -112,6 +112,15 @@
                     </button>
                     <div class="flex-1 px-4 flex justify-end">
                         <div class="ml-4 flex items-center md:ml-6">
+                            <div class="flex items-center mr-6">
+                                <Switch v-model="$page.props.can.show_hints" @click="$page.props.can.show_hints = !$page.props.can.show_hints" :class="[$page.props.can.show_hints ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                                    <span aria-hidden="true" :class="[$page.props.can.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']" />
+                                </Switch>
+                                <span class="ml-3">
+                                    <SvgCollection svgName="arrowLeft"/>
+                                    <span class="text-sm font-nanum text-secondary">Hilfe einblenden </span>
+                                </span>
+                            </div>
                             <button type="button"
                                     class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
                                 <span class="sr-only">View notifications</span>
@@ -197,6 +206,7 @@ import {
 } from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
 import {Link} from "@inertiajs/inertia-vue3";
+import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
@@ -212,6 +222,7 @@ const userNavigation = [
 
 export default {
     components: {
+        SvgCollection,
         Dialog,
         DialogOverlay,
         Menu,
@@ -226,7 +237,7 @@ export default {
         XIcon,
         ChevronDownIcon,
         ChevronUpIcon,
-        Link
+        Link,
     },
     computed: {
         managementNavigation() {

@@ -43,7 +43,8 @@ class HandleInertiaRequests extends Middleware
             'permissions' => Auth::guest() ? [] : Auth::user()->getPermissionNames(),
             'can' => [
                 'view_users' => Auth::guest() ? false : Auth::user()->can("view users"),
-                'view_departments' => Auth::guest() ? false : Auth::user()->can("view departments")
+                'view_departments' => Auth::guest() ? false : Auth::user()->can("view departments"),
+                'show_hints' => true
             ]
         ]);
     }

@@ -4,7 +4,6 @@
             <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-12">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="editUser">
-                        {{ this.userForm }}
                         <div>
                             <div class="flex">
                                 <img class="h-16 w-16 rounded-full flex justify-start"

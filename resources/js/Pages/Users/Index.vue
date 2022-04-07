@@ -130,11 +130,14 @@
                                         leave-to-class="transform opacity-0 scale-95">
                                 <DisclosurePanel
                                     class="origin-top-right absolute overflow-y-auto max-h-48  mt-2 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div v-if="departments.length === 0">
+                                        <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
+                                    </div>
                                     <div v-for="team in departments">
                                         <span class="flex " :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <!--TODO: :src="team.logo_url" -->
                                             <input :key="team.name" v-model="team.checked" type="checkbox" @change="teamChecked(team,index)"
-                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-primaryText"/>
+                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
                                             <img class="h-8 w-8 rounded-full flex justify-start" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                alt=""/>
                                             <span class="ml-2">

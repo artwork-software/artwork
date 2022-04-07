@@ -15,7 +15,7 @@
                     <p>ArtWork.tools</p>
                 </div>
                 <div>
-                    <label for="first_name" class="block text-sm font-bold text-gray-700">
+                    <label for="first_name" class="block text-sm font-bold text-primary">
                         Vorname
                     </label>
                     <div class="mt-1">
@@ -26,7 +26,7 @@
                     </div>
                 </div>
                 <div>
-                    <label for="last_name" class="block text-sm font-bold text-gray-700">
+                    <label for="last_name" class="block text-sm font-bold text-primary">
                         Nachname
                     </label>
                     <div class="mt-1">
@@ -38,7 +38,7 @@
                 </div>
 
                 <div>
-                    <label for="email" class="block text-sm font-bold text-gray-700">
+                    <label for="email" class="block text-sm font-bold text-primary">
                         E-Mail-Adresse
                     </label>
                     <div class="mt-1">
@@ -50,7 +50,7 @@
                 </div>
 
                 <div>
-                    <label for="business" class="block text-sm font-bold text-gray-700">
+                    <label for="business" class="block text-sm font-bold text-primary">
                         Unternehmen
                     </label>
                     <div class="mt-1">
@@ -62,7 +62,7 @@
                 </div>
 
                 <div>
-                    <label for="position" class="block text-sm font-bold text-gray-700">
+                    <label for="position" class="block text-sm font-bold text-primary">
                         Position
                     </label>
                     <div class="mt-1">
@@ -74,7 +74,7 @@
                 </div>
 
                 <div>
-                    <label for="phoneNumber" class="block text-sm font-bold text-gray-700">
+                    <label for="phoneNumber" class="block text-sm font-bold text-primary">
                         Telefonnummer
                     </label>
                     <div class="mt-1">
@@ -86,7 +86,7 @@
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-bold text-gray-700">
+                    <label for="password" class="block text-sm font-bold text-primary">
                         Passwort
                     </label>
                     <div class="mt-1">
@@ -98,7 +98,7 @@
                 </div>
 
                 <div>
-                    <label for="password" class="block text-sm font-bold text-gray-700">
+                    <label for="password" class="block text-sm font-bold text-primary">
                         Passwort wiederholen
                     </label>
                     <div class="mt-1">
@@ -109,7 +109,7 @@
                     </div>
                 </div>
 
-                <label class="block text-sm font-medium text-gray-700">
+                <label class="block text-sm font-medium text-primary">
                     Logo
                 </label>
 
@@ -124,9 +124,9 @@
                         </svg>
                     </div>
 
-                    <jet-secondary-button class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" type="button" @click.prevent="selectNewLogo">
+                    <button class=" inline-flex items-center px-4 ml-10 py-2 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover" @click.prevent="selectNewLogo">
                         Logo ändern
-                    </jet-secondary-button>
+                    </button>
                     <input type="file" class="hidden"
                            ref="logo"
                            @change="updateLogoPreview">
@@ -134,7 +134,7 @@
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700"> Banner </label>
+                    <label class="block text-sm font-medium text-primary"> Banner </label>
                     <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                         <div v-show="!bannerPreview" class="space-y-1 text-center">
                             <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
@@ -163,12 +163,8 @@
                 <div>
 
                     <button type="submit"
-                            class="w-full flex justify-center
-                    py-3 px-4 border border-transparent rounded-md shadow-sm
-                    text-sm font-bold text-white
-                    bg-blue-500 hover:bg-dark-primary
-                    focus:outline-none focus:ring-2 focus:ring-offset-2
-                    focus:ring-primary"
+                            class=" inline-flex items-center px-28 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+
                             :disabled="form.processing"
                             :class="{ 'opacity-25': form.processing }"
                     >

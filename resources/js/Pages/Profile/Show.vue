@@ -167,6 +167,32 @@
                 </div>
             </div>
         </div>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Änderungen gespeichert
+                    </div>
+                    <XIcon @click="closeSuccessModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                    <div class="text-success" v-if="successType === 'profile'">
+                        Deine Profildaten wurden erfolgreich geändert.
+                    </div>
+                    <div class="text-success" v-if="successType === 'password'">
+                        Dein Passwort wurde erfolgreich geändert.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-4 w-4 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -186,6 +212,8 @@ import TwoFactorAuthenticationForm from "@/Pages/Profile/Partials/TwoFactorAuthe
 import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
+import {CheckIcon} from "@heroicons/vue/solid";
+import JetDialogModal from '@/Jetstream/DialogModal.vue'
 
 export default defineComponent({
     components: {
@@ -203,6 +231,8 @@ export default defineComponent({
         UpdatePasswordForm,
         UpdateProfileInformationForm,
         JetSecondaryButton,
+        CheckIcon,
+        JetDialogModal
     },
     props: ['user', 'departments'],
     data() {
@@ -225,6 +255,8 @@ export default defineComponent({
                 password_confirmation: '',
             }),
             photoPreview: null,
+            showSuccessModal: false,
+            successType: ''
         }
     },
 
@@ -237,10 +269,18 @@ export default defineComponent({
             this.userForm.post(route('user-profile-information.update'), {
                 errorBag: 'updateProfileInformation',
                 preserveScroll: true,
-                onSuccess: () => (this.clearPhotoFileInput()),
+                onSuccess: () => (this.clearPhotoFileInput(),this.openSuccessModal("profile")),
             });
         },
-
+        openSuccessModal(successType){
+          this.showSuccessModal = true;
+          // 'profile' or 'password'
+          this.successType = successType;
+        },
+        closeSuccessModal(){
+          this.showSuccessModal = false;
+          this.successType = '';
+        },
         selectNewPhoto() {
             this.$refs.photo.click();
         },
@@ -281,7 +321,7 @@ export default defineComponent({
             this.passwordForm.put(route('user-password.update'), {
                 errorBag: 'updatePassword',
                 preserveScroll: true,
-                onSuccess: () => this.passwordForm.reset(),
+                onSuccess: () => (this.passwordForm.reset(),this.openSuccessModal('password')),
                 onError: () => {
                     if (this.passwordForm.errors.password) {
                         this.passwordForm.reset('password', 'password_confirmation')

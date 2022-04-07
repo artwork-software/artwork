@@ -25,6 +25,7 @@ module.exports = {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
                 nanum: "Nanum Pen Script",
                 patrick: "Patrick Hand"
+                //lexand bei overlays und ganz fette überschriften
             },
         },
     },

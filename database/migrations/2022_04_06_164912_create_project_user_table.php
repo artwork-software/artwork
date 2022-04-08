@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->integer('project_id');
             $table->integer('user_id');
-            $table->boolean('is_admin');
+            $table->boolean('is_admin')->default(false);
             $table->timestamps();
         });
     }

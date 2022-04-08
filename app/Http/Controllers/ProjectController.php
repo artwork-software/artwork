@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreProjectRequest;
+use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\User;
@@ -38,7 +40,7 @@ class ProjectController extends Controller
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
-                    'logo_url' => $department->profile_photo_url,
+                    'svg_name' => $department->svg_name,
                     'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
@@ -68,19 +70,19 @@ class ProjectController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreProjectRequest $request)
     {
         $project = Project::create([
             'name' => $request->name
         ]);
 
         $project->users()->sync(
-            collect($request->assigned_users)
-                ->map(function ($user) {
+            collect($request->assigned_user_ids)
+                ->map(function ($user_id) {
 
-                    $this->authorize('update', User::find($user['id']));
+                    $this->authorize('update', User::find($user_id));
 
-                    return $user['id'];
+                    return $user_id;
                 })
         );
 
@@ -119,7 +121,7 @@ class ProjectController extends Controller
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
-                    'logo_url' => $department->profile_photo_url,
+                    'svg_name' => $department->svg_name,
                     'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
@@ -154,7 +156,7 @@ class ProjectController extends Controller
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
-                    'logo_url' => $department->profile_photo_url,
+                    'svg_name' => $department->svg_name,
                     'users' => $department->users->map(fn($user) => [
                         'id' => $user->id,
                         'first_name' => $user->first_name,
@@ -176,17 +178,17 @@ class ProjectController extends Controller
      * @param  \App\Models\Project  $project
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function update(Request $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project)
     {
         $project->update($request->only('name'));
 
         $project->users()->sync(
-            collect($request->assigned_users)
-                ->map(function ($user) {
+            collect($request->assigned_user_ids)
+                ->map(function ($user_id) {
 
-                    $this->authorize('update', User::find($user['id']));
+                    $this->authorize('update', User::find($user_id));
 
-                    return $user['id'];
+                    return $user_id;
                 })
         );
 

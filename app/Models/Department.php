@@ -16,7 +16,7 @@ class Department extends Model
      * @var string[]
      */
     protected $fillable = [
-        'name'
+        'name', 'svg_name'
     ];
 
     public function users() {
@@ -29,24 +29,5 @@ class Department extends Model
 
     public function projects() {
         return $this->belongsToMany(Project::class);
-    }
-
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = [
-        'logo_url'
-    ];
-
-    public function getLogoURLAttribute(): ?string
-    {
-        if($this->logo_path) {
-            return Storage::disk('public')->url($this->logo_path);
-        } else {
-            return null;
-        }
-
     }
 }

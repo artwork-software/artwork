@@ -26,11 +26,11 @@ test('authorized users can view departments', function () {
 
     $response = $this->get('/departments')
         ->assertInertia(fn(Assert $page) => $page
-            ->component('DepartmentManagement')
+            ->component('Departments/DepartmentManagement')
             ->has('departments.data', 10)
             ->has('users')
             ->has('departments.data.0', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'users', 'logo_url'])
+                ->hasAll(['id','name', 'users', 'svg_name'])
             )
             ->has('departments.data.0.users.0', fn(Assert $page) => $page
                 ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')
@@ -66,6 +66,7 @@ test('authorized users can create new departments', function() {
 
     $this->post('/departments', [
         'name' => 'Department 1',
+        'svg_name' => 'logo.svg',
         'assigned_users' => [$user]
     ]);
 
@@ -98,7 +99,7 @@ test('authorized users can view a single department', function() {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Departments/Show')
             ->has('department', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'users', 'logo_url'])
+                ->hasAll(['id','name', 'users', 'svg_name'])
             )
             ->has('department.users.0', fn(Assert $page) => $page
                 ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')
@@ -127,7 +128,7 @@ test('authorized users can open the form to update a single department', functio
             ->component('Departments/Edit')
             ->has('users')
             ->has('department', fn(Assert $page) => $page
-                ->hasAll(['id','name', 'users', 'logo_url'])
+                ->hasAll(['id','name', 'users', 'svg_name'])
             )
             ->has('department.users.0', fn(Assert $page) => $page
                 ->hasAll('id', 'first_name','last_name', 'email', 'profile_photo_url')

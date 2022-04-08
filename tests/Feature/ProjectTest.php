@@ -97,7 +97,6 @@ test('users can only view projects they are assigned to', function () {
 test('users with the permission can update projects', function () {
 
     $this->auth_user->givePermissionTo('update users', 'update departments');
-    $this->auth_user->assignRole('admin');
     $this->actingAs($this->auth_user);
 
     $this->project->users()->attach($this->auth_user, ['is_admin' => true]);

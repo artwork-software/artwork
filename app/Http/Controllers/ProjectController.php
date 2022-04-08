@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 
@@ -68,7 +69,6 @@ class ProjectController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StoreProjectRequest $request)
     {
@@ -76,15 +76,17 @@ class ProjectController extends Controller
             'name' => $request->name
         ]);
 
-        $project->users()->sync(
-            collect($request->assigned_user_ids)
-                ->map(function ($user_id) {
-
-                    $this->authorize('update', User::find($user_id));
-
-                    return $user_id;
-                })
-        );
+        if(Auth::user()->can('update users')) {
+            $project->users()->sync(
+                collect($request->assigned_user_ids)
+                    ->map(function ($user_id) {
+                        return $user_id;
+                    })
+            );
+        }
+        else {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'],403);
+        }
 
         $project->departments()->sync(
             collect($request->assigned_departments)
@@ -176,31 +178,34 @@ class ProjectController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Project  $project
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
         $project->update($request->only('name'));
 
-        $project->users()->sync(
-            collect($request->assigned_user_ids)
-                ->map(function ($user_id) {
+        if(Auth::user()->can('update users')) {
+            $project->users()->sync(
+                collect($request->assigned_user_ids)
+                    ->map(function ($user_id) {
+                        return $user_id;
+                    })
+            );
+        }
+        else {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'],403);
+        }
 
-                    $this->authorize('update', User::find($user_id));
-
-                    return $user_id;
-                })
-        );
-
-        $project->departments()->sync(
-            collect($request->assigned_departments)
-                ->map(function ($department) {
-
-                    $this->authorize('update', Department::find($department['id']));
-
-                    return $department['id'];
-                })
-        );
+        if(Auth::user()->can('update departments')) {
+            $project->departments()->sync(
+                collect($request->assigned_departments)
+                    ->map(function ($department) {
+                        return $department['id'];
+                    })
+            );
+        }
+        else {
+            return response()->json(['error' => 'Not authorized to assign departments to a project.'],403);
+        }
 
         return Redirect::route('projects')->with('success', 'Project updated');
     }

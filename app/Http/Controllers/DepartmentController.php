@@ -32,7 +32,7 @@ class DepartmentController extends Controller
             'departments' => Department::paginate(10)->through(fn($department) => [
                 'id' => $department->id,
                 'name' => $department->name,
-                'svg_name' => $department->svg_name,
+                'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -63,10 +63,10 @@ class DepartmentController extends Controller
      */
     public function store(StoreDepartmentRequest $request)
     {
+        $logo = $request->file('logo');
 
         $department = Department::create([
-            'name' => $request->name,
-            'svg_name' => $request->svg_name
+            'name' => $request->name
         ]);
 
         $department->users()->sync(
@@ -78,6 +78,10 @@ class DepartmentController extends Controller
                     return $user['id'];
                 })
         );
+
+        if ($logo) {
+            $department->logo_path = $logo->storePublicly('logos', ['disk' => 'public']);
+        }
 
         return Redirect::route('departments')->with('success', 'Department created.');
     }
@@ -94,7 +98,7 @@ class DepartmentController extends Controller
             'department' => [
                 'id' => $department->id,
                 'name' => $department->name,
-                'svg_name' => $department->svg_name,
+                'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -118,7 +122,7 @@ class DepartmentController extends Controller
             'department' => [
                 'id' => $department->id,
                 'name' => $department->name,
-                'svg_name' => $department->svg_name,
+                'logo_url' => $department->logo_url,
                 'users' => $department->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -139,8 +143,9 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, Department $department)
     {
+        $logo = $request->file('logo');
 
-        $department->update($request->only('name', 'svg_name'));
+        $department->update($request->only('name'));
 
         $department->users()->sync(
             collect($request->assigned_users)
@@ -151,6 +156,20 @@ class DepartmentController extends Controller
                     return $user['id'];
                 })
         );
+
+        if ($logo) {
+            tap($department->logo_path, function ($previous) use ($logo, $department) {
+                $department->forceFill([
+                    'logo_path' => $logo->storePublicly(
+                        'logos', ['disk' => 'public']
+                    ),
+                ])->save();
+
+                if ($previous) {
+                    Storage::disk('public')->delete($previous);
+                }
+            });
+        }
 
         return Redirect::route('departments')->with('success', 'Department updated');
     }

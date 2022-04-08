@@ -9,35 +9,11 @@
             <path id="Pfad_161" data-name="Pfad 161" d="M12.974,5.782c-.855-1.718-2.834-2.737-4.606-3.239a10.281,10.281,0,0,0-5.25-.082l.93-1.254A.808.808,0,0,0,3.76.109.821.821,0,0,0,2.663.4L.128,3.813A.807.807,0,0,0,.82,5.021a3.8,3.8,0,0,1,1.773.395,4.723,4.723,0,0,1,.462.269,1.939,1.939,0,0,1,.3.22,4.507,4.507,0,0,1,.356.34c.056.06.109.123.163.184l.047.057c.026.035.052.071.077.107a.824.824,0,0,0,1.1.288.809.809,0,0,0,.288-1.1A5.628,5.628,0,0,0,3.411,4.044a8.658,8.658,0,0,1,4.4.012,5.75,5.75,0,0,1,3.775,2.537c.46.925,1.845.113,1.386-.81" transform="translate(0 0)" fill="#a7a6b1"/>
         </g>
     </svg>
-    <svg v-else-if="svgName === 'departmentImagePlaceholder'" xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100">
-        <g id="abteilung_pic" transform="translate(6.629 10.449)" style="isolation: isolate">
-            <circle id="Ellipse_48" data-name="Ellipse 48" cx="50" cy="50" r="50" transform="translate(-6.629 -10.449)" fill="#f5cac3"/>
-            <path id="Polygon_1" data-name="Polygon 1" d="M22.922,0,45.845,43.935H0Z" transform="translate(13.763 19.494)" fill="#fcfcfb" opacity="0.413"/>
-            <path id="Polygon_2" data-name="Polygon 2" d="M19.58,0l19.58,35.339H0Z" transform="translate(37.641 28.09)" fill="#fcfcfb" opacity="0.413"/>
-            <circle id="Ellipse_39" data-name="Ellipse 39" cx="5.56" cy="5.56" r="5.56" transform="translate(9.943 15.674)" fill="#fcfcfb" opacity="0.66"/>
-        </g>
-    </svg>
     <svg v-else-if="svgName === 'bgCircles'" id="Gruppe_197" data-name="Gruppe 197" xmlns="http://www.w3.org/2000/svg" width="110.26" height="194.684" viewBox="0 0 110.26 194.684">
         <g id="Gruppe_229" data-name="Gruppe 229">
             <path id="Pfad_193" data-name="Pfad 193" d="M97.342,193.684A96.342,96.342,0,0,1,97.342,1h12.9" fill="none" stroke="#ededec" stroke-width="2"/>
             <path id="Pfad_194" data-name="Pfad 194" d="M96.807,164.93a67.588,67.588,0,1,1,0-135.177H110.26" fill="none" stroke="#ededec" stroke-width="2"/>
             <path id="Pfad_195" data-name="Pfad 195" d="M97.342,135.788a38.446,38.446,0,1,1,0-76.892h12.487" fill="none" stroke="#ededec" stroke-width="2"/>
-        </g>
-    </svg>
-    <svg v-else-if="svgName === 'teamIconTech'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40" viewBox="0 0 40 40">
-        <defs>
-            <clipPath id="clip-path">
-                <rect id="Rechteck_165" data-name="Rechteck 165" width="24.215" height="26.947" transform="translate(0 0)" fill="#27233c"/>
-            </clipPath>
-        </defs>
-        <g id="abteilung_pic" transform="translate(6.629 10.449)" style="isolation: isolate">
-            <circle id="Ellipse_48" data-name="Ellipse 48" cx="20" cy="20" r="20" transform="translate(-6.629 -10.449)" fill="#337aaa"/>
-            <g id="Gruppe_251" data-name="Gruppe 251" transform="translate(3.371 -3.923)">
-                <g id="Gruppe_250" data-name="Gruppe 250" clip-path="url(#clip-path)">
-                    <path id="Pfad_230" data-name="Pfad 230" d="M13.777,21.94a7.041,7.041,0,0,0,7.956-7.956Z" fill="#fcfcfb"/>
-                    <path id="Pfad_231" data-name="Pfad 231" d="M14.663,4.915l-.01.009L10.617.887a3.03,3.03,0,0,0-4.285,0L.887,6.333a3.029,3.029,0,0,0,0,4.284l1.131,1.131v15.2H5.083v-12l4.666,9.273L24.215,9.749ZM3.55,10.527a2.1,2.1,0,1,1,2.1-2.1,2.1,2.1,0,0,1-2.1,2.1m16.654-.47a.6.6,0,0,1-.46-.025L16.773,8.606a.6.6,0,1,1,.52-1.086l2.972,1.426a.6.6,0,0,1-.061,1.111" fill="#27233c" opacity="0.8"/>
-                </g>
-            </g>
         </g>
     </svg>
     <svg v-else-if="svgName === 'arrowRight'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27.74" height="9.172" viewBox="0 0 27.74 9.172">

@@ -116,9 +116,9 @@
                                 <Switch v-model="$page.props.can.show_hints" @click="$page.props.can.show_hints = !$page.props.can.show_hints" :class="[$page.props.can.show_hints ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
                                     <span aria-hidden="true" :class="[$page.props.can.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']" />
                                 </Switch>
-                                <span class="ml-3">
-                                    <SvgCollection svgName="arrowLeft"/>
-                                    <span class="text-sm font-nanum text-secondary">Hilfe einblenden </span>
+                                <span class="ml-2 flex mt-1">
+                                    <SvgCollection svgName="arrowLeft" class="mt-1 mr-1"/>
+                                    <span class="text-md font-nanum tracking-tight text-lg text-secondary">Hilfe einblenden </span>
                                 </span>
                             </div>
                             <button type="button"

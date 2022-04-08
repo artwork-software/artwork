@@ -29,6 +29,7 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
+                                            <!-- TODO: EMAIL NUR NICHT DISABLED WENN ROLLE VOM ANGEMELDETEM NUTZER ADMIN IST -->
                                             <input type="text" v-model="this.user_to_edit.email" disabled
                                                    class="shadow-sm placeholder-secondary focus:ring-black bg-gray-100 focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
@@ -53,20 +54,13 @@
                                     <div class="sm:col-span-6 mt-4 flex inline-flex">
                                         <span v-if="userForm.departments.length === 0"
                                               class="text-secondary subpixel-antialiased my-auto ml-2 mr-4">In keinem Team</span>
-                                        <span v-else class="flex" v-for="(team,index) in userForm.departments">
+                                        <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
                                             <!--TODO: :src="team.logo_url" -->
-                                            <img class="h-14 w-14 rounded-full flex justify-start"
+                                            <img class="h-14 w-14 rounded-full flex justify-start ring-2 ring-white"
                                                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                  alt=""/>
-                                            <button type="button" @click="deleteTeamFromDepartmentsArray(index)"
-                                                    class="flex-shrink-0 ml-0.5 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                                            <span class="sr-only">Teamzuweisung entfernen</span>
-                                            <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                                <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
-                                            </svg>
-                                            </button>
                                         </span>
-                                        <!-- TODO: FUNKTIONEN einfügen für beide Befehle  -->
+                                        <!-- TODO: FUNKTIONEN einfügen für aus allen Teams entfernen Befehle  -->
                                         <Menu as="div" class="my-auto relative">
                                             <div>
                                                 <MenuButton
@@ -88,7 +82,7 @@
 
                                                         <MenuItem v-slot="{ active }">
 
-                                                            <a href="#"
+                                                            <a href="#" @click="openChangeTeamsModal"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <PencilAltIcon
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -169,6 +163,46 @@
                             <span @click="closeDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
+        <!-- Change Teams Modal -->
+        <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
+            <template #content>
+                <div class="mx-3">
+                    <div class="font-bold font-lexend text-primary text-2xl my-2">
+                        Teamzugehörigkeit
+                    </div>
+                    <XIcon @click="closeChangeTeamsModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-secondary tracking-tight leading-6 sub">
+                        Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle den Teams zugeordneten <br/>Projekte einzusehen.
+                    </div>
+                    <span v-if="!all_departments"
+                          class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                    <div v-for="team in all_departments">
+                                        <span class="flex "
+                                              :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
+                                            <!--TODO: :src="team.logo_url" -->
+                                            <input :key="team.name" v-model="team.checked" type="checkbox"
+                                                   @change="teamChecked(team,index)"
+                                                   class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
+                                            <img class="h-8 w-8 rounded-full flex justify-start"
+                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
+                                                 alt=""/>
+                                            <span class="ml-2">
+                                            {{ team.name }}
+                                            </span>
+                                        </span>
+                    </div>
+
+                    <button class="mt-4 bg-primary hover:bg-primaryHover focus:outline-none inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="saveNewTeams">
+                        Speichern
+                    </button>
                 </div>
 
             </template>
@@ -266,11 +300,12 @@ export default defineComponent({
         JetDialogModal,
         XIcon
     },
-    props: ['user_to_edit', 'permissions'],
+    props: ['user_to_edit', 'permissions','all_departments'],
     data() {
         return {
             showUserPermissions: true,
             deletingUser: false,
+            showChangeTeamsModal: false,
             userForm: this.$inertia.form({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
@@ -291,14 +326,18 @@ export default defineComponent({
         closeDeleteUserModal(){
           this.deletingUser = false;
         },
+        openChangeTeamsModal(){
+            this.showChangeTeamsModal = true;
+        },
+        closeChangeTeamsModal(){
+            this.showChangeTeamsModal = false;
+        },
         deleteUser(){
             Inertia.delete(`/users/${this.user_to_edit.id}`);
             this.closeDeleteUserModal()
         },
         editUser() {
             this.userPermissionCheckboxes.forEach((item) => {
-                // HIER STIMMT NOCH WAS NICHT EINE PERMISSION WAR 2 MAL IM BODY
-
                 if (item.checked) {
                     if (this.userForm.permissions.includes(item.permissionName)){
                         // do nothing if already in permissions array
@@ -319,6 +358,16 @@ export default defineComponent({
         deleteTeamFromDepartmentsArray(index) {
             this.userForm.departments.splice(index, 1);
         },
+        teamChecked(team, index) {
+            if (team.checked) {
+                this.userForm.departments.push(team);
+            } else {
+                this.userForm.departments.splice(index, 1);
+            }
+        },
+        saveNewTeams(){
+            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+        }
     },
     setup() {
 

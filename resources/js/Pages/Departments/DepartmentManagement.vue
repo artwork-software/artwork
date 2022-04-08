@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Dashboard">
         <div class="py-4">
-            <div class="max-w-screen-2xl my-12 flex flex-row mx-auto sm:px-6 lg:px-8">
+            <div class="max-w-screen-xl my-12 flex flex-row ml-16 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
@@ -10,6 +10,10 @@
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                <span class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Stelle neue Teams zusammen</span>
+                            </div>
                         </div>
                         <div class="flex items-center">
 
@@ -18,9 +22,9 @@
                             </div>
                         </div>
                     </div>
-                    <ul role="list" class="mt-6 w-full">
-                        <li v-for="department in departments.data" :key="department.id"
-                            class="py-6 flex justify-between">
+                    <ul role="list" class="mt-5 w-full">
+                        <li v-for="(department,index) in departments.data" :key="department.id"
+                            class="py-5 flex justify-between">
                             <div class="flex">
                                 <!-- TODO:DEPARTMENT FOTOS  :src="department.logo_url"-->
                                 <img class="h-14 w-14 rounded-full flex justify-start"
@@ -35,19 +39,27 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="mt-3 -mr-3" v-for="user in department.users">
-                                        <img class="h-9 w-9 rounded-full"
+                                        <img class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                     </div>
                                 </div>
 
                                 <Menu as="div" class="my-auto relative">
-                                    <div>
+                                    <div class="flex">
                                         <MenuButton
                                             class="flex">
                                             <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                               aria-hidden="true"/>
                                         </MenuButton>
+                                        <div v-if="$page.props.can.show_hints && index === 0" class="absolute flex w-40 ml-6">
+                                            <div>
+                                            <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                            </div>
+                                            <div class="flex">
+                                                <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite dein Team</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <transition enter-active-class="transition ease-out duration-100"
                                                 enter-from-class="transform opacity-0 scale-95"
@@ -59,7 +71,7 @@
                                             class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#"
+                                                    <a :href="getEditHref(department)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -93,27 +105,60 @@
         <jet-dialog-modal :show="addingTeam" @close="closeAddTeamModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-2xl my-2">
-                        Team erstellen
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Neues Team erstellen
                     </div>
                     <XIcon @click="closeAddTeamModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-gray-500">
-                        Lege Namen, Profilbild und die Mitglieder des Teams fest.
+                    <div class="text-secondary subpixel-antialiased">
+                        Erstelle ein festes Team/Abteilung.
                     </div>
-                    <div class="mt-4">
+                    <div class="mt-12">
                         <div class="flex">
-                            <img class="h-14 w-14 rounded-full flex justify-start"
-                                 :src="$page.props.user.profile_photo_url"
-                                 alt=""/>
-                            <jet-input type="text" class="ml-4 mt-1 block w-3/4" placeholder="Name eingeben"
-                                       v-model="this.form.name"
-                            />
-                            <jet-input-error :message="form.error" class="mt-2"/>
+                            <Menu as="div" class=" relative">
+                                <div>
+                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                        <ChevronDownIcon v-if="form.logo === ''"
+                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                        <TeamIconCollection v-else class="h-16 w-16" :iconName="form.logo" />
+                                    </MenuButton>
+                                </div>
+                                <transition enter-active-class="transition ease-out duration-100"
+                                            enter-from-class="transform opacity-0 scale-95"
+                                            enter-to-class="transform opacity-100 scale-100"
+                                            leave-active-class="transition ease-in duration-75"
+                                            leave-from-class="transform opacity-100 scale-100"
+                                            leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems
+                                        class="z-40 origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <MenuItem v-for="item in iconMenuItems"  v-slot="{ active }">
+                                            <Link href="#" @click="form.logo = item.iconName"
+                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <TeamIconCollection class="h-16 w-16" :iconName="item.iconName" />
+                                            </Link>
+                                        </MenuItem>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
+                            <div class="relative my-auto w-full ml-8 mr-12">
+                                <input id="name" v-model="form.name" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                                <label for="name" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                            </div>
                         </div>
-                        <div class="mt-4">
+                        <div class="mt-12">
+                            <div class="font-bold font-lexend text-primary text-2xl my-2">
+                                Nutzer*innen hinzufügen
+                            </div>
+                            <div class="text-secondary tracking-tight leading-6 subpixel-antialiased">
+                                Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest.
+                            </div>
                             <div class="flex">
-                                <!-- TODO: HIER INPUT MIT MEILISEARCH -->
+                                <!-- TODO: HIER MEILISEARCH mit Input verbinden -->
+                                <div class="relative my-auto w-full ml-8 mr-12">
+                                    <input id="userSearch" v-model="username" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                                    <label for="userSearch" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                </div>
+                                <!-- Ganze Listbox + Hinzufügen Button kann weg wenn MEILISEARCH da, brauche nur zum zuweisen -->
                                 <Listbox as="div" v-model="selected">
                                     <ListboxLabel class="block text-sm font-medium text-gray-700">
                                         Nutzer*in zum Hinzufügen auswählen
@@ -125,7 +170,7 @@
                                             <img :src="selected.profile_photo_url" alt=""
                                                  class="flex-shrink-0 h-6 w-6 rounded-full"/>
                                             <span class="ml-3 block truncate">
-                                                {{ selected.first_name}} {{ selected.last_name }}</span>
+                                                {{ selected.first_name }} {{ selected.last_name }}</span>
                                         </span>
                                             <span
                                                 class="ml-3 absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
@@ -159,6 +204,7 @@
                                         </transition>
                                     </div>
                                 </Listbox>
+
                                 <div class="flex items-center">
                                     <Button @click="addUserToAssignedUsersArray"
                                             class="mt-6 ml-2 inline-flex items-center px-6 border border-transparent text-sm shadow-sm text-white bg-indigo-900 hover:bg-indigo-700 focus:outline-none">
@@ -166,29 +212,33 @@
                                     </Button>
                                 </div>
                             </div>
-
-
-                            <h4 class="mt-2 mb-1" v-show="this.form.assigned_users.length >= 1">Aktuelle
-                                Teammitglieder:</h4>
-                            <span class="flex inline-flex" v-for="(user,index) in form.assigned_users">
-                                <img class="h-14 w-14 rounded-full flex justify-start" :src="user.profile_photo_url"
-                                     alt=""/>
-                                <button type="button" @click="deleteUserFromAssignedUsersArray(index)"
-                                        class="flex-shrink-0 h-4 w-4 rounded-full inline-flex items-center justify-center text-indigo-400 hover:bg-indigo-200 hover:text-indigo-500 focus:outline-none focus:bg-indigo-500 focus:text-white">
-                                    <span class="sr-only">Nutzer*in aus Team entfernen</span>
-                                    <svg class="h-2 w-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
-                                        <path stroke-linecap="round" stroke-width="1.5" d="M1 1l6 6m0-6L1 7"/>
-                                    </svg>
-                                </button>
-                             </span>
                         </div>
-                        <Button
-                            :class="[this.form.assigned_users.length === 0 || this.form.name === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']"
-                            class="mt-4 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold uppercase shadow-sm text-white "
+                        <div class="mt-4">
+                            <div class="flex">
+                            </div>
+                            <span v-for="(user,index) in form.assigned_users"
+                                  class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                            <div class="flex items-center">
+                                <img class="flex h-11 w-11 rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                <span class="flex ml-4">
+                                {{ user.first_name }} {{ user.last_name }}
+                                    </span>
+                            </div>
+                            <button type="button" @click="deleteUserFromTeam(index)">
+                                <span class="sr-only">User aus Team entfernen</span>
+                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                            </button>
+                        </span>
+                        </div>
+                        <button
+                            :class="[this.form.assigned_users.length === 0 || this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="addTeam"
                             :disabled="this.form.assigned_users.length === 0  || this.form.name === ''">
                             Team erstellen
-                        </Button>
+                        </button>
                     </div>
 
                 </div>
@@ -203,7 +253,7 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon} from '@heroicons/vue/solid'
+import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {ref} from 'vue'
 import {
@@ -224,10 +274,18 @@ import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm} from "@inertiajs/inertia-vue3";
+import SvgCollection from "@/Layouts/Components/SvgCollection";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 
+const iconMenuItems = [
+    {iconName: 'departmentImagePlaceholder'},
+    {iconName: 'teamIconTech'},
+]
 
 export default defineComponent({
     components: {
+        TeamIconCollection,
+        SvgCollection,
         Button,
         AppLayout,
         DotsVerticalIcon,
@@ -255,7 +313,8 @@ export default defineComponent({
         Checkbox,
         XIcon,
         PencilAltIcon,
-        TrashIcon
+        TrashIcon,
+        XCircleIcon
     },
     props: ['departments', 'users'],
     methods: {
@@ -267,6 +326,9 @@ export default defineComponent({
             if (!this.form.assigned_users.includes(this.selected)) {
                 this.form.assigned_users.push(this.selected);
             }
+        },
+        deleteUserFromTeam(index) {
+            this.form.assigned_users.splice(index, 1);
         },
         deleteUserFromAssignedUsersArray(index) {
             this.form.assigned_users.splice(index, 1);
@@ -285,6 +347,9 @@ export default defineComponent({
             this.form.logo = "";
 
         },
+        getEditHref(department) {
+            return route('departments.show', {department: department.id});
+        }
     },
     data() {
         return {
@@ -303,6 +368,7 @@ export default defineComponent({
 
         return {
             selected,
+            iconMenuItems
         }
     }
 })

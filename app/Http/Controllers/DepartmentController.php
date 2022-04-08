@@ -83,7 +83,7 @@ class DepartmentController extends Controller
             $department->logo_path = $logo->storePublicly('logos', ['disk' => 'public']);
         }
 
-        return Redirect::route('departments')->with('success', 'Department created.');
+        return Redirect::route('departments.show', $department -> id)->with('success', 'Department created.');
     }
 
     /**

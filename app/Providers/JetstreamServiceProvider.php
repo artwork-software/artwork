@@ -7,6 +7,7 @@ use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
+use Illuminate\Support\Facades\Auth;
 
 class JetstreamServiceProvider extends ServiceProvider
 {
@@ -33,7 +34,8 @@ class JetstreamServiceProvider extends ServiceProvider
             'Profile/Show',
             function (Request $request, array $data) {
                 return array_merge($data, [
-                    "departments" => Department::all()
+                    "all_departments" => Department::all(),
+                    "user_departments" => Auth::user() -> departments,
                 ]);
             }
         );

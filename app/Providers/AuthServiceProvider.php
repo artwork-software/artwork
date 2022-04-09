@@ -2,10 +2,12 @@
 
 namespace App\Providers;
 
+use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Invitation;
 use App\Models\Project;
 use App\Models\User;
+use App\Policies\ChecklistPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\ProjectPolicy;
@@ -25,7 +27,8 @@ class AuthServiceProvider extends ServiceProvider
         Invitation::class => InvitationPolicy::class,
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
-        Project::class => ProjectPolicy::class
+        Project::class => ProjectPolicy::class,
+        Checklist::class => ChecklistPolicy::class
     ];
 
     /**

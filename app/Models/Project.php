@@ -21,4 +21,9 @@ class Project extends Model
         return $this->belongsToMany(Department::class);
     }
 
+    public function checklists()
+    {
+        return $this->hasMany(Checklist::class);
+    }
+
 }

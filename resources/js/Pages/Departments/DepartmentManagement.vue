@@ -26,10 +26,7 @@
                         <li v-for="(department,index) in departments.data" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <!-- TODO:DEPARTMENT FOTOS  :src="department.logo_url"-->
-                                <img class="h-14 w-14 rounded-full flex justify-start"
-                                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                     alt=""/>
+                                <TeamIconCollection class="h-18 w-18" :iconName="department.svg_name" />
                                 <div class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
@@ -118,9 +115,9 @@
                             <Menu as="div" class=" relative">
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                        <ChevronDownIcon v-if="form.logo === ''"
-                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <TeamIconCollection v-else class="h-16 w-16" :iconName="form.logo" />
+                                        <ChevronDownIcon v-if="form.svg_name === ''"
+                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                        <TeamIconCollection v-else class="h-16 w-16" :iconName="form.svg_name" />
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -132,7 +129,7 @@
                                     <MenuItems
                                         class="z-40 origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems"  v-slot="{ active }">
-                                            <Link href="#" @click="form.logo = item.iconName"
+                                            <Link href="#" @click="form.svg_name = item.iconName"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TeamIconCollection class="h-16 w-16" :iconName="item.iconName" />
                                             </Link>
@@ -233,10 +230,10 @@
                         </span>
                         </div>
                         <button
-                            :class="[this.form.assigned_users.length === 0 || this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                             class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="addTeam"
-                            :disabled="this.form.assigned_users.length === 0  || this.form.name === ''">
+                            :disabled="this.form.name === ''">
                             Team erstellen
                         </button>
                     </div>
@@ -322,6 +319,13 @@ export default defineComponent({
             this.addingTeam = true;
             this.showX = [];
         },
+        closeAddTeamModal() {
+            this.addingTeam = false;
+            this.showX = [];
+            this.form.assigned_users = [];
+            this.form.name = "";
+            this.form.svg_name = "";
+        },
         addUserToAssignedUsersArray() {
             if (!this.form.assigned_users.includes(this.selected)) {
                 this.form.assigned_users.push(this.selected);
@@ -337,16 +341,10 @@ export default defineComponent({
             console.log("USERS: " + this.form.assigned_users);
             console.log("NAME: " + this.form.name);
             this.form.post(route('departments.store'), {})
+            this.closeAddTeamModal();
 
         },
-        closeAddTeamModal() {
-            this.addingTeam = false;
-            this.showX = [];
-            this.form.assigned_users = [];
-            this.form.name = "";
-            this.form.logo = "";
 
-        },
         getEditHref(department) {
             return route('departments.show', {department: department.id});
         }
@@ -356,7 +354,7 @@ export default defineComponent({
             addingTeam: false,
             showX: [],
             form: useForm({
-                logo: "",
+                svg_name: "",
                 name: "",
                 assigned_users: [],
 

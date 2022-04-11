@@ -81,7 +81,7 @@
                                             <span v-else class="flex mt-3 -ml-3"
                                                   v-for="(team,index) in userForm.departments">
                                             <!--TODO: :src="team.logo_url" -->
-                                            <img class="h-14 w-14 rounded-full flex justify-start"
+                                            <img class="h-14 w-14 rounded-full flex justify-start ring-2 ring-white"
                                                  src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
                                                  alt=""/>
                                             </span>
@@ -124,7 +124,7 @@
                         <div class="sm:col-span-3">
                             <div class="mt-1">
                                 <input
-                                    v-model="passwordForm.password_confirmation"
+                                    v-model="passwordForm.password"
                                     id="password_confirmation1" name="password" type="password" autocomplete="new-password" required placeholder="Neues Passwort"
                                     class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                             </div>

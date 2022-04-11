@@ -1,6 +1,6 @@
 <template>
     <app-layout title="Teamprofil">
-        <div class="max-w-screen-xl my-12 ml-16 mr-40">
+        <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
             <div class="flex">
                 <h2 class="font-bold font-lexend text-2xl">Teamprofil</h2>

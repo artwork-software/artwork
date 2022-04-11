@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Dashboard">
         <div class="py-4">
-            <div class="max-w-screen-xl my-12 flex flex-row ml-16 mr-40">
+            <div class="max-w-screen-lg my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto">
@@ -36,16 +36,9 @@
                                 </div>
                             </div>
                             <div class="flex">
-                                <div class="flex mr-8">
-                                    <div class="mt-3 -mr-3" v-for="department in user.departments">
-                                        <img class="h-9 w-9 rounded-full ring-2 ring-white"
-                                             src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                             alt=""/>
-                                        <!-- TODO: DEPARTMENT FOTO EINBAUEN und was wenn zu viele Departments
-                                        <img class="h-8 w-8 rounded-full"
-                                             :src="department.profile_photo_url"
-                                             alt=""/>
-                                             -->
+                                <div class="flex mr-8 items-center">
+                                    <div class="-mr-3" v-for="department in user.departments">
+                                        <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white" :iconName="department.svg_name" />
                                     </div>
                                 </div>
                                 <Menu as="div" class="my-auto relative">
@@ -139,10 +132,7 @@
                     </button>
                     </span>
                         <span class="flex inline-flex mt-4 -mr-3" v-for="(team,index) in form.departments">
-                            <!--TODO: :src="team.logo_url" -->
-                                <img class="h-14 w-14 rounded-full flex justify-start ring-2 ring-white"
-                                     src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                     alt=""/>
+                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                         </span>
                         <Disclosure @focusout="close()" as="div" class="relative">
                             <div class="flex mt-4 mb-10">
@@ -174,9 +164,7 @@
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
                                                    @change="teamChecked(team,index)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
-                                            <img class="h-8 w-8 rounded-full flex justify-start"
-                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                                 alt=""/>
+                                            <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name" />
                                             <span class="ml-2">
                                             {{ team.name }}
                                             </span>
@@ -309,6 +297,7 @@ import {InformationCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 
 
 export default defineComponent({
@@ -338,7 +327,8 @@ export default defineComponent({
         DisclosurePanel,
         SvgCollection,
         XCircleIcon,
-        CheckIcon
+        CheckIcon,
+        TeamIconCollection
     },
     props: ['users', 'departments'],
     data() {
@@ -403,9 +393,6 @@ export default defineComponent({
                     this.form.permissions.push(item.permissionName);
                 }
             })
-            console.log('EMAIL ARRAY:' + this.form.user_emails)
-            console.log('PERMISSION CHECKED' + this.form.permissions)
-            console.log('TEAM ARRAY' + this.form.departments)
 
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();

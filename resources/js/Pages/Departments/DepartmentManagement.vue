@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Dashboard">
         <div class="py-4">
-            <div class="max-w-screen-xl my-12 flex flex-row ml-16 mr-40">
+            <div class="max-w-screen-lg my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">

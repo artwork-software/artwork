@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Profile">
         <div>
-            <div class="max-w-screen-xl py-4 pl-12 pr-4">
+            <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="updateProfileInformation">
                         <div>
@@ -21,7 +21,7 @@
                                                  class="rounded-full h-20 w-20 object-cover cursor-pointer">
                                         </div>
                                         <div class="mt-6 flex flex-grow w-full">
-                                            <div class="relative flex w-5/12 ml-12 mr-4">
+                                            <div class="relative flex w-5/12 ml-6 mr-4">
                                                 <input id="first_name" v-model="userForm.first_name" type="text" class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
                                                 <label for="first_name" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                                             </div>
@@ -78,12 +78,9 @@
                                         <div class="sm:col-span-6 ml-3 flex inline-flex">
                                             <span v-if="userForm.departments.length === 0"
                                                   class="text-secondary subpixel-antialiased my-auto">In keinem Team </span>
-                                            <span v-else class="flex mt-3 -ml-3"
+                                            <span v-else class="flex mt-3 -ml-4"
                                                   v-for="(team,index) in userForm.departments">
-                                            <!--TODO: :src="team.logo_url" -->
-                                            <img class="h-14 w-14 rounded-full flex justify-start ring-2 ring-white"
-                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                                 alt=""/>
+                                            <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                                             </span>
                                         </div>
                                     </div>
@@ -259,6 +256,7 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import {XIcon} from "@heroicons/vue/outline";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {Inertia} from "@inertiajs/inertia";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 
 
 export default defineComponent({
@@ -280,6 +278,7 @@ export default defineComponent({
         CheckIcon,
         JetDialogModal,
         XIcon,
+        TeamIconCollection
     },
     props: ['user', 'all_departments','user_departments'],
     data() {

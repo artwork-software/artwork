@@ -1,16 +1,30 @@
 <template>
     <app-layout title="Edit Profile">
         <div>
-            <div class="max-w-7xl mx-auto py-10 sm:px-3 lg:px-12">
+            <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
-                                <img class="h-16 w-16 rounded-full flex justify-start"
+                                <img class="mt-6 h-16 w-16 rounded-full flex justify-start"
                                      :src="user_to_edit.profile_photo_url"
                                      alt=""/>
-                                <p class="text-3xl ml-3 my-auto mr-3 font-bold subpixel-antialiased text-primary">
-                                    {{ user_to_edit.first_name }} {{ user_to_edit.last_name }}</p>
+                                <div class="mt-6 flex flex-grow w-full">
+                                    <div class="relative flex w-5/12 ml-6 mr-4">
+                                        <input id="first_name" v-model="userForm.first_name" type="text"
+                                               class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                               placeholder="placeholder"/>
+                                        <label for="first_name"
+                                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                    </div>
+                                    <div class="relative flex-grow w-6/12">
+                                        <input id="last_name" v-model="userForm.last_name" type="text"
+                                               class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                               placeholder="placeholder"/>
+                                        <label for="last_name"
+                                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                    </div>
+                                </div>
                             </div>
                             <div class="pt-4">
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
@@ -55,10 +69,8 @@
                                         <span v-if="userForm.departments.length === 0"
                                               class="text-secondary subpixel-antialiased my-auto ml-2 mr-4">In keinem Team</span>
                                         <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
-                                            <!--TODO: :src="team.logo_url" -->
-                                            <img class="h-14 w-14 rounded-full flex justify-start ring-2 ring-white"
-                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                                 alt=""/>
+                                            <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
+                                                                :iconName="team.svg_name"/>
                                         </span>
                                         <!-- TODO: FUNKTIONEN einfügen für aus allen Teams entfernen Befehle  -->
                                         <Menu as="div" class="my-auto relative">
@@ -66,7 +78,7 @@
                                                 <MenuButton
                                                     class="flex">
                                                     <DotsVerticalIcon
-                                                        class="mr-3 ml-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                        class="mr-3 ml-6 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                         aria-hidden="true"/>
                                                 </MenuButton>
                                             </div>
@@ -149,18 +161,22 @@
                     <div class="font-bold text-primary text-2xl my-2">
                         Nutzer*in löschen
                     </div>
-                    <XIcon @click="closeDeleteUserModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                    <XIcon @click="closeDeleteUserModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
                     <div class="text-error">
-                        Bist du sicher, dass du {{user_to_edit.last_name + "," }} {{ user_to_edit.first_name}} aus dem System löschen möchtest?
+                        Bist du sicher, dass du {{ user_to_edit.last_name + "," }} {{ user_to_edit.first_name }} aus dem
+                        System löschen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="deleteUser">
-                        Löschen
-                    </button>
+                                @click="deleteUser">
+                            Löschen
+                        </button>
                         <div class="flex my-auto">
-                            <span @click="closeDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                            <span @click="closeDeleteUserModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -175,29 +191,30 @@
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teamzugehörigkeit
                     </div>
-                    <XIcon @click="closeChangeTeamsModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                    <XIcon @click="closeChangeTeamsModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
-                        Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle den Teams zugeordneten <br/>Projekte einzusehen.
+                        Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle
+                        den Teams zugeordneten <br/>Projekte einzusehen.
                     </div>
-                    <span v-if="!all_departments"
-                          class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
-                    <div v-for="team in all_departments">
-                                        <span class="flex "
-                                              :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
-                                            <!--TODO: :src="team.logo_url" -->
-                                            <input :key="team.name" v-model="team.checked" type="checkbox"
-                                                   @change="teamChecked(team,index)"
+                    <div class="mt-4">
+                        <span v-if="departments.length === 0"
+                              class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                        <div v-for="team in getTeamCheckboxes">
+                                        <span class=" flex items-center pr-4 py-2 text-md subpixel-antialiased">
+                                            <input :key="team.name" type="checkbox" :value="team" :id="team.id" v-model="team.checked"
+                                                   @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
-                                            <img class="h-8 w-8 rounded-full flex justify-start"
-                                                 src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                                 alt=""/>
-                                            <span class="ml-2">
+                                            <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                                :iconName="team.svg_name"/>
+                                            <span :class="[team.checked ? 'text-primary font-black' : 'text-secondary']"
+                                                  class="ml-2">
                                             {{ team.name }}
                                             </span>
                                         </span>
+                        </div>
                     </div>
-
                     <button class="mt-4 bg-primary hover:bg-primaryHover focus:outline-none inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="saveNewTeams">
@@ -236,9 +253,17 @@ import UpdatePasswordForm from "@/Pages/Profile/Partials/UpdatePasswordForm";
 import UpdateProfileInformationForm from "@/Pages/Profile/Partials/UpdateProfileInformationForm";
 import JetSecondaryButton from '@/Jetstream/SecondaryButton.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {DotsVerticalIcon, PencilAltIcon, TrashIcon, ChevronDownIcon, ChevronUpIcon,XIcon} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    PencilAltIcon,
+    TrashIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
+    XIcon
+} from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 
 export default defineComponent({
     computed: {
@@ -270,6 +295,16 @@ export default defineComponent({
                 }
             ]
         },
+        getTeamCheckboxes(){
+            let teamCheckboxes = [];
+            this.departments.forEach((team) => {
+                if(this.userForm.departments.includes(team)){
+                    team.checked = true;
+                }
+                teamCheckboxes.push(team);
+            })
+            return teamCheckboxes;
+        }
     },
     name: 'Edit',
     components: {
@@ -298,14 +333,16 @@ export default defineComponent({
         ChevronDownIcon,
         ChevronUpIcon,
         JetDialogModal,
-        XIcon
+        XIcon,
+        TeamIconCollection
     },
-    props: ['user_to_edit', 'permissions','all_departments'],
+    props: ['user_to_edit', 'permissions', 'departments'],
     data() {
         return {
             showUserPermissions: true,
             deletingUser: false,
             showChangeTeamsModal: false,
+            teamCheckboxes: [],
             userForm: this.$inertia.form({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
@@ -323,49 +360,46 @@ export default defineComponent({
         openDeleteUserModal() {
             this.deletingUser = true;
         },
-        closeDeleteUserModal(){
-          this.deletingUser = false;
+        closeDeleteUserModal() {
+            this.deletingUser = false;
         },
-        openChangeTeamsModal(){
+        openChangeTeamsModal() {
             this.showChangeTeamsModal = true;
         },
-        closeChangeTeamsModal(){
+        closeChangeTeamsModal() {
             this.showChangeTeamsModal = false;
         },
-        deleteUser(){
+        deleteUser() {
             Inertia.delete(`/users/${this.user_to_edit.id}`);
             this.closeDeleteUserModal()
         },
         editUser() {
             this.userPermissionCheckboxes.forEach((item) => {
                 if (item.checked) {
-                    if (this.userForm.permissions.includes(item.permissionName)){
+                    if (this.userForm.permissions.includes(item.permissionName)) {
                         // do nothing if already in permissions array
-                    }else{
+                    } else {
                         this.userForm.permissions.push(item.permissionName);
                     }
                 } else {
                     if (this.userForm.permissions.includes(item.permissionName)) {
-                        console.log("LÖSCHEN:" + item.permissionName);
                         this.userForm.permissions.splice(this.userForm.permissions.indexOf(item.permissionName), 1);
                     }
                 }
             })
-            console.log(this.userForm);
-            console.log("NEUE PERMISSIONS" + this.userForm.permissions);
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         },
         deleteTeamFromDepartmentsArray(index) {
             this.userForm.departments.splice(index, 1);
         },
-        teamChecked(team, index) {
+        teamChecked(team) {
             if (team.checked) {
                 this.userForm.departments.push(team);
             } else {
-                this.userForm.departments.splice(index, 1);
+                this.userForm.departments.splice(this.userForm.departments.indexOf(team), 1);
             }
         },
-        saveNewTeams(){
+        saveNewTeams() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         }
     },

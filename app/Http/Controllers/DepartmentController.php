@@ -140,7 +140,7 @@ class DepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
 
-        $department->update($request->only('name'));
+        $department->update($request->only('name','svg_name'));
 
         $department->users()->sync(
             collect($request->assigned_users)

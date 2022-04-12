@@ -13,7 +13,12 @@ class Task extends Model
         'name',
         'description',
         'deadline',
-        'done'
+        'done',
+        'checklist_id'
+    ];
+
+    protected $casts = [
+        'deadline' => 'datetime:Y-m-d'
     ];
 
     public function checklist()

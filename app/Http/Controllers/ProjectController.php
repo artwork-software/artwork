@@ -49,6 +49,24 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
+                ]),
+                'checklists' => $project->checklists->map(fn($checklist) => [
+                    'id' => $checklist->id,
+                    'name' => $checklist->name,
+                    'tasks' => $checklist->tasks->map(fn($task) => [
+                        'id' => $task->id,
+                        'name' => $task->name,
+                        'description' => $task->description,
+                        'deadline' => $task->deadline,
+                        'done' => $task->done,
+                    ]),
+                    'users' => $checklist->users->map(fn($user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'profile_photo_url' => $user->profile_photo_url
+                        ])
                 ])
             ]),
             'users' => User::all()

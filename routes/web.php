@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Redirect;
@@ -64,6 +66,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update']);
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+
+    //Checklists
+    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
+    Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
+    Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
+    Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
+    Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update']);
+    Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy']);
+
+    //Tasks
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
+    Route::patch('/tasks/{task}', [TaskController::class, 'update']);
+    Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
 });
 

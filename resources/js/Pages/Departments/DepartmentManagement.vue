@@ -35,7 +35,7 @@
                             </div>
                             <div class="flex">
                                 <div class="flex mr-8">
-                                    <div class="mt-3 -mr-3" v-for="user in department.users">
+                                    <div class="my-auto -mr-3" v-for="user in department.users">
                                         <img class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
@@ -77,7 +77,7 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#"
+                                                    <a href="#" @click="deleteAllTeamMembers(department.id)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -338,13 +338,13 @@ export default defineComponent({
             this.form.assigned_users.splice(index, 1);
         },
         addTeam() {
-            console.log("USERS: " + this.form.assigned_users);
-            console.log("NAME: " + this.form.name);
             this.form.post(route('departments.store'), {})
             this.closeAddTeamModal();
 
         },
-
+        deleteAllTeamMembers(teamId){
+            this.deleteMembersForm.patch(route('departments.edit',{department: teamId}));
+        },
         getEditHref(department) {
             return route('departments.show', {department: department.id});
         }
@@ -358,6 +358,10 @@ export default defineComponent({
                 name: "",
                 assigned_users: [],
 
+            }),
+            deleteMembersForm: this.$inertia.form({
+                _method: 'PUT',
+                users: [],
             }),
         }
     },

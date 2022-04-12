@@ -131,7 +131,7 @@
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
-                        <span class="flex inline-flex mt-4 -mr-3" v-for="(team,index) in form.departments">
+                        <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
                                 <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                         </span>
                         <Disclosure @focusout="close()" as="div" class="relative">
@@ -162,7 +162,7 @@
                                               :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <!--TODO: :src="team.logo_url" -->
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
-                                                   @change="teamChecked(team,index)"
+                                                   @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
                                             <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name" />
                                             <span class="ml-2">
@@ -368,11 +368,14 @@ export default defineComponent({
         openAddUserModal() {
             this.addingUser = true
         },
-        teamChecked(team, index) {
+        teamChecked(team) {
             if (team.checked) {
                 this.form.departments.push(team);
             } else {
-                this.form.departments.splice(index, 1);
+                const spliceIndex = this.form.departments.findIndex(teamToSplice => {
+                    return team.id === teamToSplice.id
+                })
+                this.form.departments.splice(spliceIndex, 1);
             }
         },
         addEmailToInvitationArray() {
@@ -393,7 +396,7 @@ export default defineComponent({
                     this.form.permissions.push(item.permissionName);
                 }
             })
-
+            console.log(this.form.departments);
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();
             this.openSuccessModal();
@@ -408,10 +411,6 @@ export default defineComponent({
                 team.checked = false;
             })
 
-        },
-        deleteTeamFromDepartmentsArray(team, index) {
-            team.checked = false;
-            this.form.departments.splice(index, 1);
         },
         getEditHref(user) {
             return route('user.edit', {user: user.id});

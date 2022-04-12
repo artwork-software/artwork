@@ -80,7 +80,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="deleteAllTeamMembers(department.id)"
+                                    <a @click="deleteAllTeamMembers()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"

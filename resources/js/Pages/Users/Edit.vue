@@ -6,6 +6,7 @@
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
+                                {{user_to_edit}}
                                 <img class="mt-6 h-16 w-16 rounded-full flex justify-start"
                                      :src="user_to_edit.profile_photo_url"
                                      alt=""/>
@@ -201,7 +202,7 @@
                     <div class="mt-4">
                         <span v-if="departments.length === 0"
                               class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
-                        <div v-for="team in getTeamCheckboxes">
+                        <div v-for="team in departments">
                                         <span class=" flex items-center pr-4 py-2 text-md subpixel-antialiased">
                                             <input :key="team.name" type="checkbox" :value="team" :id="team.id" v-model="team.checked"
                                                    @change="teamChecked(team)"
@@ -295,16 +296,6 @@ export default defineComponent({
                 }
             ]
         },
-        getTeamCheckboxes(){
-            let teamCheckboxes = [];
-            this.departments.forEach((team) => {
-                if(this.userForm.departments.includes(team)){
-                    team.checked = true;
-                }
-                teamCheckboxes.push(team);
-            })
-            return teamCheckboxes;
-        }
     },
     name: 'Edit',
     components: {
@@ -364,6 +355,12 @@ export default defineComponent({
             this.deletingUser = false;
         },
         openChangeTeamsModal() {
+            this.departments.forEach((team) =>{
+                this.userForm.departments.forEach((userTeam) => {
+                    if(userTeam.id === team.id) {
+                        team.checked = true;
+                    }})
+                })
             this.showChangeTeamsModal = true;
         },
         closeChangeTeamsModal() {
@@ -396,7 +393,10 @@ export default defineComponent({
             if (team.checked) {
                 this.userForm.departments.push(team);
             } else {
-                this.userForm.departments.splice(this.userForm.departments.indexOf(team), 1);
+                const spliceIndex = this.userForm.departments.findIndex(teamToSplice => {
+                    return team.id === teamToSplice.id
+                })
+                this.userForm.departments.splice(spliceIndex, 1);
             }
         },
         saveNewTeams() {

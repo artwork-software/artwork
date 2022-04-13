@@ -13,11 +13,14 @@ class Project extends Model
         'name',
         'description',
         'number_of_participants',
-        'cost_center'
+        'cost_center',
+        'sector_id',
+        'category_id',
+        'genre_id'
     ];
 
     public function users() {
-        return $this->belongsToMany(User::class)->withPivot('is_admin');
+        return $this->belongsToMany(User::class)->withPivot('is_admin', 'is_manager');
     }
 
     public function departments() {
@@ -28,5 +31,27 @@ class Project extends Model
     {
         return $this->hasMany(Checklist::class);
     }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    public function sector()
+    {
+        return $this->belongsTo(Sector::class, 'sector_id');
+    }
+
+    public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_id');
+    }
+
+    public function genre()
+    {
+        return $this->belongsTo(Genre::class, 'genre_id');
+    }
+
+
 
 }

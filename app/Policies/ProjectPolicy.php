@@ -18,7 +18,7 @@ class ProjectPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view projects');
+        return true;
     }
 
     /**
@@ -30,9 +30,8 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project)
     {
-        return $user->can('view projects') &&
-            (($user->projects->contains($project->id) && $project->users->contains($user->id))
-                || ($project->departments->users->contains($user->id)));
+        return ($user->projects->contains($project->id) && $project->users->contains($user->id))
+                || ($project->departments->users->contains($user->id));
     }
 
     /**

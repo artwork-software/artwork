@@ -113,7 +113,11 @@
                     <div class="flex-1 px-4 flex justify-end">
                         <div class="ml-4 flex items-center md:ml-6">
                             <div class="flex items-center mr-6">
-                                <Switch v-model="$page.props.can.show_hints" @click="$page.props.can.show_hints = !$page.props.can.show_hints" :class="[$page.props.can.show_hints ? 'bg-success' : 'bg-gray-300', 'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500']">
+                                <Switch @click="toggle_hints()"
+                                        :class="[$page.props.can.show_hints ?
+                                        'bg-success' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                     <span aria-hidden="true" :class="[$page.props.can.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']" />
                                 </Switch>
                                 <span class="ml-2 flex mt-1">
@@ -192,6 +196,7 @@ import {
     MenuItems,
     TransitionChild,
     TransitionRoot,
+    Switch
 } from '@headlessui/vue'
 import {
     BellIcon,
@@ -210,7 +215,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
-    {name: 'Projekte', href: '#', route: [], icon: ArrowCircleRightIcon},
+    {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
     {name: 'Raumbelegung', href: '#', route: [], icon: CalendarIcon,},
     {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
 ]
@@ -238,6 +243,7 @@ export default {
         ChevronDownIcon,
         ChevronUpIcon,
         Link,
+        Switch
     },
     computed: {
         managementNavigation() {
@@ -273,6 +279,9 @@ export default {
                     return true
                 }
             }
+        },
+        toggle_hints() {
+            this.$inertia.post(route('toggle.hints'))
         },
         logout() {
             this.$inertia.post(route('logout'))

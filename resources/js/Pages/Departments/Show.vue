@@ -3,7 +3,6 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
             <div class="flex">
-                {{teamForm}}
                 <h2 class="font-bold font-lexend text-2xl">Teamprofil</h2>
             </div>
             <div class="flex mt-12">

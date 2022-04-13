@@ -8,9 +8,12 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use ZxcvbnPhp\Zxcvbn;
 
 
 class AppController extends Controller
@@ -22,6 +25,17 @@ class AppController extends Controller
     public function __construct(StatefulGuard $guard)
     {
         $this->guard = $guard;
+    }
+
+    public function toggle_hints() {
+
+        $user = Auth::user();
+
+        $user->update([
+           'toggle_hints' => !$user->toggle_hints
+        ]);
+
+        return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
 
     public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
@@ -61,7 +75,9 @@ class AppController extends Controller
             $settings->banner_path = $logo->storePublicly('banner', ['disk' => 'public']);
         }
 
-        $request->validate([
+        $zxcvbn = new Zxcvbn();
+
+        Validator::make($request->all(), [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -70,7 +86,14 @@ class AppController extends Controller
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
-        ]);
+        ])->after(function ($validator) use($request, $zxcvbn) {
+
+            if (isset($request->password) && $validator->failed()) {
+                $validator->errors()->add('password_strength', $zxcvbn->passwordStrength($request->password)['score']);
+            }
+
+        })->validate();
+
 
         $user = User::create([
             'first_name' => $request['first_name'],

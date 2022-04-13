@@ -36,7 +36,8 @@ class User extends Authenticatable
         'password',
         'position',
         'business',
-        'description'
+        'description',
+        'toggle_hints'
     ];
 
     public function departments() {

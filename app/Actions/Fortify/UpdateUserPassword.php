@@ -5,6 +5,7 @@ namespace App\Actions\Fortify;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Laravel\Fortify\Contracts\UpdatesUserPasswords;
+use ZxcvbnPhp\Zxcvbn;
 
 class UpdateUserPassword implements UpdatesUserPasswords
 {
@@ -19,12 +20,19 @@ class UpdateUserPassword implements UpdatesUserPasswords
      */
     public function update($user, array $input)
     {
+        $zxcvbn = new Zxcvbn();
+
         Validator::make($input, [
             'current_password' => ['required', 'string'],
             'password' => $this->passwordRules(),
-        ])->after(function ($validator) use ($user, $input) {
+        ])->after(function ($validator) use ($user, $input, $zxcvbn) {
+
+            if (isset($input['password']) && $validator->failed()) {
+                $validator->errors()->add('password_strength', $zxcvbn->passwordStrength($input['password'])['score']);
+            }
+
             if (! isset($input['current_password']) || ! Hash::check($input['current_password'], $user->password)) {
-                $validator->errors()->add('current_password', __('The provided password does not match your current password.'));
+                $validator->errors()->add('current_password', "Das eingegebene Passwort entspricht nicht Ihrem aktuellen Passwort.");
             }
         })->validateWithBag('updatePassword');
 

@@ -34,6 +34,9 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
+    //Hints
+    Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
+
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::get('/tool/settings', function () { return Inertia::render('ToolSettings'); })->name('tool.settings');
 
@@ -64,9 +67,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
-    Route::patch('/projects/{project}', [ProjectController::class, 'update']);
+    Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     //Checklists

@@ -44,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'can' => [
                 'view_users' => Auth::guest() ? false : Auth::user()->can("view users"),
                 'view_departments' => Auth::guest() ? false : Auth::user()->can("view departments"),
-                'show_hints' => true
+                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
             ]
         ]);
     }

@@ -1,7 +1,7 @@
 <template>
     <app-layout title="Dashboard">
         <div class="py-4">
-            <div class="max-w-screen-lg my-12 flex flex-row ml-20 mr-40">
+            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
@@ -35,10 +35,40 @@
                             </div>
                             <div class="flex">
                                 <div class="flex mr-8">
-                                    <div class="my-auto -mr-3" v-for="user in department.users">
+                                    <div  class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
                                         <img class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
+                                    </div>
+                                    <div v-if="department.users.length >= 9" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon  class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="user in department.users" v-slot="{ active }">
+                                                        <Link href="#"
+                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <img class="h-9 w-9 rounded-full"
+                                                                 :src="user.profile_photo_url"
+                                                                 alt=""/>
+                                                            <span class="ml-4">
+                                                                {{user.first_name}} {{user.last_name}}
+                                                            </span>
+                                                        </Link>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
                                     </div>
                                 </div>
 
@@ -116,7 +146,7 @@
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="form.svg_name === ''"
-                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                         <TeamIconCollection v-else class="h-16 w-16" :iconName="form.svg_name" />
                                     </MenuButton>
                                 </div>
@@ -249,8 +279,8 @@
 
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {DotsVerticalIcon, InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {DotsVerticalIcon,ChevronDownIcon ,InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
+import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {ref} from 'vue'
 import {

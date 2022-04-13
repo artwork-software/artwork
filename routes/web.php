@@ -25,6 +25,7 @@ use Inertia\Inertia;
 
 Route::get('/', [AppController::class, 'index']);
 
+
 Route::get('/setup', [AppController::class, 'setup_company'])->name('setup');
 Route::post('/setup', [AppController::class, 'create_admin'])->name('setup.create');
 
@@ -34,6 +35,7 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
+    Route::get('/tool/settings', function () { return Inertia::render('ToolSettings'); })->name('tool.settings');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

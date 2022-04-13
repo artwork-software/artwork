@@ -3,10 +3,10 @@
         <div>
             <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
+                    {{user_to_edit}}
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
-                                {{user_to_edit}}
                                 <img class="mt-6 h-16 w-16 rounded-full flex justify-start"
                                      :src="user_to_edit.profile_photo_url"
                                      alt=""/>

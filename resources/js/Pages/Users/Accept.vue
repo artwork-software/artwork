@@ -1,122 +1,100 @@
 <template>
-    <Head title="Register"/>
-
-    <jet-authentication-card>
-        <template #AuthHeading>
-            <h2 class="mt-6 text-center text-4xl font-bold text-gray-900">
-                Account erstellen
-            </h2>
-        </template>
-
-        <jet-validation-errors class="mb-4"/>
-        <div class="py-8 px-4">
-            <form class="space-y-6" @submit.prevent="submit">
-                <div class="text-2xl font-bold text-black">
-                    <p>ArtWork.tools</p>
-                </div>
-                <div>
-                    <label for="first_name" class="block text-sm font-bold text-gray-700">
-                        Vorname
-                    </label>
+    <div class="py-8 px-64">
+        <form class="space-y-6" @submit.prevent="submit">
+            <div class="text-2xl font-bold text-black">
+                <p>ArtWork.tools</p>
+            </div>
+            <div class="flex items-center">
+                <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Registrierung</h2>
+                <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
+            </div>
+            <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.first_name"
-                            id="first_name" name="name" type="text" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                            id="first_name" name="name" type="text" required placeholder="Vorname"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
                 </div>
-                <div>
-                    <label for="last_name" class="block text-sm font-bold text-gray-700">
-                        Nachname
-                    </label>
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.last_name"
-                            id="last_name" name="name" type="text" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                            id="last_name" name="name" type="text" required placeholder="Name"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
                 </div>
-
-                <div>
-                    <label for="email" class="block text-sm font-bold text-gray-700">
-                        E-Mail-Adresse
-                    </label>
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.email" disabled
-                            id="email" name="email" type="email" autocomplete="email" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 bg-gray-100 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                            id="email" name="email" type="email" autocomplete="email" required placeholder="E-Mail"
+                            class="shadow-sm placeholder-secondary bg-gray-100 subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
                 </div>
-
-                <div>
-                    <label for="business" class="block text-sm font-bold text-gray-700">
-                        Unternehmen
-                    </label>
-                    <div class="mt-1">
-                        <input
-                            v-model="form.business"
-                            id="business" type="text" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="position" class="block text-sm font-bold text-gray-700">
-                        Position
-                    </label>
-                    <div class="mt-1">
-                        <input
-                            v-model="form.position"
-                            id="position" type="text" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="phoneNumber" class="block text-sm font-bold text-gray-700">
-                        Telefonnummer
-                    </label>
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.phone_number"
-                            id="phoneNumber" type="text"
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
+                            id="phoneNumber" type="text" placeholder="Telefonnummer"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                    </div>
+                </div>
+                <div class="sm:col-span-3">
+                    <div class="mt-1">
+                        <input
+                            v-model="form.business"
+                            id="business" type="text" required placeholder="Unternehmen"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
                 </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-bold text-gray-700">
-                        Passwort
-                    </label>
+                <div class="sm:col-span-3">
+                    <div class="mt-1">
+                        <input
+                            v-model="form.position"
+                            id="position" type="text" required placeholder="Position"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.password"
-                            id="password" name="password" type="password" autocomplete="new-password" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+                            id="password" name="password" type="password" autocomplete="new-password" required placeholder="Passwort"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
-                </div>
 
-                <div>
-                    <label for="password" class="block text-sm font-bold text-gray-700">
-                        Passwort wiederholen
-                    </label>
+                </div>
+                <div class="sm:col-span-3">
+                    <!-- TODO: HIER PASSWORTBALKEN + HINWEIS EINBAUEN -->
+                </div>
+                <div class="sm:col-span-3">
                     <div class="mt-1">
                         <input
                             v-model="form.password_confirmation"
-                            id="password_confirmation" name="password" type="password" autocomplete="new-password" required
-                            class="appearance-none block w-full px-4 py-3 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+                            id="password_confirmation" name="password" type="password" autocomplete="new-password" required placeholder="Passwort wiederholen"
+                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
                     </div>
                 </div>
+            </div>
+            <div>
 
-                <div>
-
-                    <button type="submit" :class="[this.form.email === '' || this.form.password === '' ? 'bg-gray-400': 'bg-indigo-900 hover:bg-indigo-700 focus:outline-none']" class=" inline-flex items-center px-28 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-white"
-                            :disabled="this.form.email === '' || this.form.password === ''">Registrieren</button>
-                </div>
-            </form>
-        </div>
-    </jet-authentication-card>
+                <button type="submit"
+                        class=" inline-flex items-center px-28 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        :class="[this.form.email === '' || this.form.password === '' || this.form.first_name === '' || this.form.last_name === '' || this.form.password_confirmation === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                        :disabled="this.form.email === '' || this.form.password === '' || this.form.first_name === '' || this.form.last_name === '' || this.form.password_confirmation === ''"
+                >
+                    Registrieren
+                </button>
+            </div>
+        </form>
+    </div>
 </template>
 
 <script>
@@ -129,6 +107,8 @@ import JetCheckbox from '@/Jetstream/Checkbox.vue'
 import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
+import SvgCollection from "@/Layouts/Components/SvgCollection";
+
 
 export default defineComponent({
     components: {
@@ -141,6 +121,7 @@ export default defineComponent({
         JetLabel,
         JetValidationErrors,
         Link,
+        SvgCollection
     },
     props: ['user','email','token'],
     data() {

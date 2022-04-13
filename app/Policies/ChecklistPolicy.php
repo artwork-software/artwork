@@ -11,17 +11,6 @@ class ChecklistPolicy
     use HandlesAuthorization;
 
     /**
-     * Determine whether the user can view any models.
-     *
-     * @param  \App\Models\User  $user
-     * @return \Illuminate\Auth\Access\Response|bool
-     */
-    public function viewAny(User $user)
-    {
-        //
-    }
-
-    /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
@@ -30,7 +19,7 @@ class ChecklistPolicy
      */
     public function view(User $user, Checklist $checklist)
     {
-        //
+        $user->can('view checklists') && $checklist->users->contains($user->id);
     }
 
     /**
@@ -41,7 +30,7 @@ class ChecklistPolicy
      */
     public function create(User $user)
     {
-        //
+        $user->can('create checklists');
     }
 
     /**
@@ -53,7 +42,7 @@ class ChecklistPolicy
      */
     public function update(User $user, Checklist $checklist)
     {
-        //
+        $user->can('update checklists') && $checklist->users->contains($user->id);
     }
 
     /**
@@ -65,7 +54,7 @@ class ChecklistPolicy
      */
     public function delete(User $user, Checklist $checklist)
     {
-        //
+        $user->can('delete checklists') && $checklist->users->contains($user->id);
     }
 
     /**

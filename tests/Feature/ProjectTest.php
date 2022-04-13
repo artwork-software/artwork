@@ -30,7 +30,6 @@ test('aborts invalid requests', function () {
 test('users with the permission can create projects and assign users and departments to it', function () {
 
     $this->auth_user->givePermissionTo('create projects', 'update users', 'update departments');
-    $this->auth_user->assignRole('admin');
 
     $this->actingAs($this->auth_user);
 

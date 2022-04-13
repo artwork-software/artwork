@@ -243,6 +243,13 @@ export default {
         managementNavigation() {
             return [
                 {
+                has_permission: true,
+                name: 'Tool',
+                href: route('tool.settings'),
+                route: ['/tool/settings'],
+                icon: ArrowCircleRightIcon
+            },
+                {
                     has_permission: this.$page.props.can.view_users,
                     name: 'Nutzer*innen',
                     href: route('users'),

@@ -3,6 +3,7 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
             <div class="flex">
+                {{teamForm}}
                 <h2 class="font-bold font-lexend text-2xl">Teamprofil</h2>
             </div>
             <div class="flex mt-12">
@@ -80,7 +81,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="deleteAllTeamMembers()"
+                                    <a @click="openDeleteAllTeamMembersModal"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -112,7 +113,7 @@
             </div>
 
         </div>
-        <!-- Nutzer*in löschen Modal -->
+        <!-- Team löschen Modal -->
         <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
             <template #content>
                 <div class="mx-4">
@@ -131,6 +132,32 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteTeamModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
+        <!--Alle Nutzer aus Team löschen Modal -->
+        <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Alle Teammitglieder entfernen
+                    </div>
+                    <XIcon @click="closeDeleteAllTeamMembersModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                    <div class="text-error">
+                        Bist du sicher, dass du alle Teammitglieder aus dem Team {{department.name}} entfernen willst?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteAllTeamMembers">
+                            Alle entfernen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteAllTeamMembersModal" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -230,6 +257,7 @@ export default {
             showChangeTeamMemberModal: false,
             deletingTeam: false,
             showSuccess: false,
+            deletingAllTeamMembers: false,
             teamForm: this.$inertia.form({
                 _method: 'PUT',
                 name: this.department.name,
@@ -244,6 +272,12 @@ export default {
         },
         closeDeleteTeamModal(){
             this.deletingTeam = false;
+        },
+        openDeleteAllTeamMembersModal() {
+            this.deletingAllTeamMembers = true;
+        },
+        closeDeleteAllTeamMembersModal(){
+            this.deletingAllTeamMembers = false;
         },
         deleteTeam(){
             Inertia.delete(`/departments/${this.department.id}`);
@@ -272,6 +306,7 @@ export default {
         deleteAllTeamMembers(){
             this.teamForm.users = [];
             this.teamForm.patch(route('departments.edit',{department: this.department.id}));
+            this.closeDeleteAllTeamMembersModal();
         }
     },
     setup() {

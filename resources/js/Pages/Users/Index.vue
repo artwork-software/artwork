@@ -37,8 +37,36 @@
                             </div>
                             <div class="flex">
                                 <div class="flex mr-8 items-center">
-                                    <div class="-mr-3" v-for="department in user.departments">
+                                    <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
                                         <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white" :iconName="department.svg_name" />
+                                    </div>
+                                    <div v-if="user.departments.length >= 3" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon  class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="department in user.departments" v-slot="{ active }">
+                                                        <Link href="#"
+                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TeamIconCollection class="h-10 w-10 rounded-full" :iconName="department.svg_name" />
+                                                            <span class="ml-4">
+                                                                {{department.name}}
+                                                            </span>
+                                                        </Link>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
                                     </div>
                                 </div>
                                 <Menu as="div" class="my-auto relative">
@@ -74,7 +102,7 @@
                                                         <PencilAltIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
-                                                        Nutzer*in bearbeiten
+                                                        Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
@@ -131,10 +159,13 @@
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
+                        <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
+
+                        </span>
                         <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
                                 <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                         </span>
-                        <Disclosure @focusout="close()" as="div" class="relative">
+                        <Disclosure @focusout="close()" as="div">
                             <div class="flex mt-4 mb-10">
                                 <DisclosureButton
                                     class="mt-3 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black">
@@ -153,14 +184,13 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <DisclosurePanel
-                                    class="origin-top-right absolute overflow-y-auto max-h-48  mt-2 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                     <div v-if="departments.length === 0">
                                         <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
                                     </div>
                                     <div v-for="team in departments">
                                         <span class="flex "
                                               :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
-                                            <!--TODO: :src="team.logo_url" -->
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
                                                    @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
@@ -178,8 +208,25 @@
                                 definieren</h3>
 
                             <div class="mb-8">
-                                <Checkbox v-for="role in roleCheckboxes" class="justify-between" :item=role
-                                          type="role"></Checkbox>
+                                <RadioGroup v-model="selected">
+                                    <div class="bg-white rounded-md -space-y-px">
+                                        <RadioGroupOption as="template" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
+                                            <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
+                                                <div class="flex items-center text-sm">
+                                                    <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
+                                                        <CheckIcon v-if="checked" class="w-6 h-6 text-white" />
+                                                    </span>
+                                                    <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
+                                                </div>
+                                                <div class="flex flex-1 justify-end">
+                                                <InformationCircleIcon class="h-7 w-7 text-gray-400"
+                                                                       aria-hidden="true"/>
+                                                </div>
+                                            </div>
+
+                                        </RadioGroupOption>
+                                    </div>
+                                </RadioGroup>
                             </div>
 
                         </div>
@@ -272,7 +319,8 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
+    {name: 'Keine Rollenrechte', roleName: "", showIcon: true},
+    {name: 'Adminrechte', roleName: "admin", showIcon: true},
 ]
 
 const userPermissionCheckboxes = [
@@ -283,7 +331,8 @@ const userPermissionCheckboxes = [
 ]
 
 import {defineComponent} from 'vue'
-import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import { ref } from 'vue'
+import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems, RadioGroup, RadioGroupDescription, RadioGroupLabel, RadioGroupOption } from "@headlessui/vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
 import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon,CheckIcon} from '@heroicons/vue/solid'
@@ -328,7 +377,11 @@ export default defineComponent({
         SvgCollection,
         XCircleIcon,
         CheckIcon,
-        TeamIconCollection
+        TeamIconCollection,
+        RadioGroup,
+        RadioGroupDescription,
+        RadioGroupLabel,
+        RadioGroupOption,
     },
     props: ['users', 'departments'],
     data() {
@@ -343,6 +396,7 @@ export default defineComponent({
                 user_emails: [],
                 permissions: [],
                 departments: [],
+                role:"",
             }),
         }
     },
@@ -396,7 +450,8 @@ export default defineComponent({
                     this.form.permissions.push(item.permissionName);
                 }
             })
-            console.log(this.form.departments);
+            this.form.role = this.selected;
+            console.log(this.form.role);
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();
             this.openSuccessModal();
@@ -407,6 +462,7 @@ export default defineComponent({
             this.form.user_emails = [];
             this.form.permissions = [];
             this.form.departments = [];
+            this.form.roles = [];
             this.departments.forEach((team) => {
                 team.checked = false;
             })
@@ -417,9 +473,12 @@ export default defineComponent({
         }
     },
     setup() {
+        const selected = ref(roleCheckboxes[0])
+
         return {
             userPermissionCheckboxes,
-            roleCheckboxes
+            roleCheckboxes,
+            selected
         }
     }
 })

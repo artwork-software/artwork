@@ -143,7 +143,7 @@ class DepartmentController extends Controller
         $department->update($request->only('name','svg_name'));
 
         $department->users()->sync(
-            collect($request->assigned_users)
+            collect($request->users)
                 ->map(function ($user) {
 
                     $this->authorize('update', User::find($user['id']));

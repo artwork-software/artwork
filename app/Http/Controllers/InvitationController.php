@@ -184,7 +184,6 @@ class InvitationController extends Controller
 
             foreach($departments as $department) {
                 $department->users()->attach($user->id);
-                $user->departments()->attach($department->id);
             }
 
             if($invitation->role) {

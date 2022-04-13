@@ -67,9 +67,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
-    Route::get('/projects/{project}', [ProjectController::class, 'show']);
+    Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
-    Route::patch('/projects/{project}', [ProjectController::class, 'update']);
+    Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     //Checklists

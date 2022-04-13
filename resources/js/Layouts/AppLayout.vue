@@ -215,7 +215,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
-    {name: 'Projekte', href: '#', route: [], icon: ArrowCircleRightIcon},
+    {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
     {name: 'Raumbelegung', href: '#', route: [], icon: CalendarIcon,},
     {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
 ]

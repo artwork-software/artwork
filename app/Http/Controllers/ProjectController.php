@@ -252,7 +252,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign departments to a project.'], 403);
         }
 
-        return Redirect::route('projects')->with('success', 'Project updated');
+        return Redirect::route('projects.update', $project -> id)->with('success', 'Project updated');
     }
 
     /**

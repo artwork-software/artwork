@@ -35,12 +35,18 @@ test('users with the permission can create projects and assign users and departm
 
     $this->post('/projects', [
         'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
         'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
         'assigned_departments' => [$this->department]
     ]);
 
     $this->assertDatabaseHas('projects', [
-        'name' => 'TestProject'
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
     ]);
 
     $project = Project::where('name', 'TestProject')->first();
@@ -83,7 +89,7 @@ test('users can only view projects they are assigned to', function () {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
             ->has('project', fn(Assert $page) => $page
-                ->hasAll(['id', 'name', 'users', 'departments'])
+                ->hasAll(['id', 'name', 'users', 'departments', 'description', 'number_of_participants', 'cost_center', 'checklists'])
             )
             ->has('project.departments.0', fn(Assert $page) => $page
                 ->hasAll('id', 'name', 'users', 'svg_name')
@@ -103,6 +109,9 @@ test('users with the permission can update projects', function () {
 
     $this->patch("/projects/{$this->project->id}", [
         'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
         'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
         'assigned_departments' => [$this->department]
     ]);
@@ -110,7 +119,10 @@ test('users with the permission can update projects', function () {
     //dd($res);
 
     $this->assertDatabaseHas('projects', [
-        'name' => 'TestProject'
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
     ]);
 
     $project = Project::where('name', 'TestProject')->first();

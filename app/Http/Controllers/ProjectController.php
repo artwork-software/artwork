@@ -31,6 +31,9 @@ class ProjectController extends Controller
             'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
+                'description' => $project->description,
+                'number_of_participants' => $project->number_of_participants,
+                'cost_center' => $project->cost_center,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -66,7 +69,7 @@ class ProjectController extends Controller
                         'last_name' => $user->last_name,
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
-                        ])
+                    ])
                 ])
             ]),
             'users' => User::all()
@@ -86,24 +89,26 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      */
     public function store(StoreProjectRequest $request)
     {
         $project = Project::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'description' => $request->description,
+            'number_of_participants' => $request->number_of_participants,
+            'cost_center' => $request->cost_center,
         ]);
 
-        if(Auth::user()->can('update users')) {
+        if (Auth::user()->can('update users')) {
             $project->users()->sync(
                 collect($request->assigned_user_ids)
                     ->map(function ($user_id) {
                         return $user_id;
                     })
             );
-        }
-        else {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'],403);
+        } else {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
         $project->departments()->sync(
@@ -122,7 +127,7 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Project  $project
+     * @param \App\Models\Project $project
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(Project $project)
@@ -131,6 +136,9 @@ class ProjectController extends Controller
             'project' => [
                 'id' => $project->id,
                 'name' => $project->name,
+                'description' => $project->description,
+                'number_of_participants' => $project->number_of_participants,
+                'cost_center' => $project->cost_center,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -149,6 +157,24 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
+                ]),
+                'checklists' => $project->checklists->map(fn($checklist) => [
+                    'id' => $checklist->id,
+                    'name' => $checklist->name,
+                    'tasks' => $checklist->tasks->map(fn($task) => [
+                        'id' => $task->id,
+                        'name' => $task->name,
+                        'description' => $task->description,
+                        'deadline' => $task->deadline,
+                        'done' => $task->done,
+                    ]),
+                    'users' => $checklist->users->map(fn($user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'profile_photo_url' => $user->profile_photo_url
+                    ])
                 ])
             ]
         ]);
@@ -157,7 +183,7 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Project  $project
+     * @param \App\Models\Project $project
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function edit(Project $project)
@@ -166,6 +192,9 @@ class ProjectController extends Controller
             'project' => [
                 'id' => $project->id,
                 'name' => $project->name,
+                'description' => $project->description,
+                'number_of_participants' => $project->number_of_participants,
+                'cost_center' => $project->cost_center,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -194,35 +223,33 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Project  $project
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Project $project
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        $project->update($request->only('name'));
+        $project->update($request->only('name', 'description', 'number_of_participants', 'cost_center'));
 
-        if(Auth::user()->can('update users')) {
+        if (Auth::user()->can('update users')) {
             $project->users()->sync(
                 collect($request->assigned_user_ids)
                     ->map(function ($user_id) {
                         return $user_id;
                     })
             );
-        }
-        else {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'],403);
+        } else {
+            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        if(Auth::user()->can('update departments')) {
+        if (Auth::user()->can('update departments')) {
             $project->departments()->sync(
                 collect($request->assigned_departments)
                     ->map(function ($department) {
                         return $department['id'];
                     })
             );
-        }
-        else {
-            return response()->json(['error' => 'Not authorized to assign departments to a project.'],403);
+        } else {
+            return response()->json(['error' => 'Not authorized to assign departments to a project.'], 403);
         }
 
         return Redirect::route('projects')->with('success', 'Project updated');
@@ -231,7 +258,7 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Project  $project
+     * @param \App\Models\Project $project
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Project $project)

@@ -158,7 +158,8 @@ return [
     'attributes' => [
         'email' => 'Email',
         'password' => 'Passwort',
-        'photo' => 'Bild'
+        'photo' => 'Bild',
+        'current_password' => 'Aktuelles Passwort'
     ],
 
 ];

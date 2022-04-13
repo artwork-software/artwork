@@ -347,7 +347,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-
+import { Link } from "@inertiajs/inertia-vue3";
 
 export default defineComponent({
     components: {
@@ -382,6 +382,7 @@ export default defineComponent({
         RadioGroupDescription,
         RadioGroupLabel,
         RadioGroupOption,
+        Link
     },
     props: ['users', 'departments'],
     data() {

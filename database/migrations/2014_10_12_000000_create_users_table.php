@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('position');
             $table->string('business');
             $table->string('description')->nullable();
+            $table->boolean('toggle_hints')->default(true);
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();

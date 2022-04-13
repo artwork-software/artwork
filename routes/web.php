@@ -34,6 +34,9 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'handle_a
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
+    //Hints
+    Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
+
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::get('/tool/settings', function () { return Inertia::render('ToolSettings'); })->name('tool.settings');
 

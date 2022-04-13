@@ -28,6 +28,18 @@
             </g>
         </g>
     </svg>
+    <svg v-else-if="svgName === 'arrowTopLeft'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="14.188" height="14.188" viewBox="0 0 14.188 14.188">
+        <defs>
+            <clipPath id="clip-path">
+                <rect id="Rechteck_147" data-name="Rechteck 147" width="13.065" height="7" fill="#a7a6b1"/>
+            </clipPath>
+        </defs>
+        <g id="Gruppe_315" data-name="Gruppe 315" transform="translate(4.95) rotate(45)">
+            <g id="Gruppe_174" data-name="Gruppe 174" clip-path="url(#clip-path)">
+                <path id="Pfad_161" data-name="Pfad 161" d="M12.974,1.218c-.855,1.718-2.834,2.736-4.606,3.239a10.282,10.282,0,0,1-5.25.082l.93,1.254a.808.808,0,0,1-.288,1.1.821.821,0,0,1-1.1-.288L.128,3.186A.807.807,0,0,1,.82,1.979a3.8,3.8,0,0,0,1.773-.395,4.723,4.723,0,0,0,.462-.269,1.939,1.939,0,0,0,.3-.22,4.507,4.507,0,0,0,.356-.34c.056-.06.109-.123.163-.184L3.918.515c.026-.035.052-.071.077-.107A.824.824,0,0,1,5.092.12a.809.809,0,0,1,.288,1.1A5.628,5.628,0,0,1,3.411,2.956a8.658,8.658,0,0,0,4.4-.012A5.75,5.75,0,0,0,11.588.407c.46-.925,1.845-.113,1.386.81" transform="translate(0 0)" fill="#a7a6b1"/>
+            </g>
+        </g>
+    </svg>
 
 </template>
 

@@ -34,15 +34,15 @@ class ChecklistController extends Controller
 
         $checklist->tasks()->createMany($request->tasks);
 
-        if (Auth::user()->can('update users')) {
-            $checklist->users()->sync(
-                collect($request->assigned_user_ids)
-                    ->map(function ($user_id) {
-                        return $user_id;
+        if (Auth::user()->can('update departments')) {
+            $checklist->departments()->sync(
+                collect($request->assigned_department_ids)
+                    ->map(function ($department_id) {
+                        return $department_id;
                     })
             );
         } else {
-            return response()->json(['error' => 'Not authorized to assign users to a checklist.'], 403);
+            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }
 
         return Redirect::back()->with('success', 'Checklist created.');
@@ -67,12 +67,10 @@ class ChecklistController extends Controller
                     'deadline' => $task->deadline,
                     'done' => $task->done,
                 ]),
-                'users' => $checklist->users->map(fn($user) => [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                'departments' => $checklist->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->first_name,
+                    'svg_name' => $department->svg_name,
                 ])
             ]
         ]);
@@ -97,12 +95,10 @@ class ChecklistController extends Controller
                     'deadline' => $task->deadline,
                     'done' => $task->done,
                 ]),
-                'users' => $checklist->users->map(fn($user) => [
-                    'id' => $user->id,
-                    'first_name' => $user->first_name,
-                    'last_name' => $user->last_name,
-                    'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                'departments' => $checklist->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->first_name,
+                    'svg_name' => $department->svg_name,
                 ])
             ]
         ]);
@@ -120,16 +116,16 @@ class ChecklistController extends Controller
 
         $checklist->tasks()->createMany($request->tasks);
 
-        if(Auth::user()->can('update users')) {
-            $checklist->users()->sync(
-                collect($request->assigned_user_ids)
-                    ->map(function ($user_id) {
-                        return $user_id;
+        if(Auth::user()->can('update departments')) {
+            $checklist->departments()->sync(
+                collect($request->assigned_department_ids)
+                    ->map(function ($department_id) {
+                        return $department_id;
                     })
             );
         }
         else {
-            return response()->json(['error' => 'Not authorized to assign users to a checklist.'],403);
+            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'],403);
         }
 
         return Redirect::back()->with('success', 'Checklist updated');

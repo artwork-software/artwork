@@ -15,22 +15,6 @@ class SectorController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function index()
-    {
-        return inertia('Settings/SectorManagement', [
-            'sectors' => Sector::paginate(10)->through(fn($sector) => [
-                'id' => $sector->id,
-                'name' => $sector->name,
-                'projects' => $sector->projects
-            ])
-        ]);
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -41,7 +25,7 @@ class SectorController extends Controller
         Sector::create([
             'name' => $request->name,
         ]);
-        return Redirect::back()->with('success', 'Genre created');
+        return Redirect::back()->with('success', 'Sector created');
     }
 
     /**

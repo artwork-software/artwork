@@ -30,4 +30,9 @@ class Department extends Model
     public function projects() {
         return $this->belongsToMany(Project::class);
     }
+
+    public function checklists()
+    {
+        return $this->belongsToMany(Checklist::class);
+    }
 }

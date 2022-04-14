@@ -1,17 +1,17 @@
 <?php
 
 use App\Models\Checklist;
+use App\Models\Department;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
-use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
 
     $this->auth_user = User::factory()->create();
 
-    $this->assigned_user = User::factory()->create();
+    $this->assigned_department = Department::factory()->create();
 
     $this->project = Project::factory()->create();
 
@@ -23,14 +23,14 @@ beforeEach(function () {
 
 test('users with the permission can create checklists and assign users to it', function () {
 
-    $this->auth_user->givePermissionTo('create checklists', 'update users');
+    $this->auth_user->givePermissionTo('create checklists', 'update departments');
 
     $this->actingAs($this->auth_user);
 
     $this->post('/checklists', [
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
-        'assigned_user_ids' => [$this->assigned_user->id],
+        'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
                 'name' => 'TestTask',
@@ -49,9 +49,9 @@ test('users with the permission can create checklists and assign users to it', f
 
     $checklist = Checklist::where('name', 'TestChecklist')->first();
 
-    $this->assertDatabaseHas('checklist_user', [
+    $this->assertDatabaseHas('checklist_department', [
         'checklist_id' => $checklist->id,
-        'user_id' => $this->assigned_user->id
+        'department_id' => $this->assigned_department->id
     ]);
 
     $this->assertDatabaseHas('tasks', [
@@ -68,7 +68,7 @@ test('users without the permission cant create checklists', function () {
     $this->post('/checklists', [
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
-        'assigned_users' => [$this->assigned_user],
+        'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
                 'name' => 'TestTask',
@@ -83,7 +83,8 @@ test('users without the permission cant create checklists', function () {
 
 test('users can only view checklists they are assigned to', function () {
 
-    $this->checklist->users()->attach($this->auth_user);
+    $this->assigned_department->users()->attach($this->auth_user);
+    $this->checklist->departments()->attach($this->assigned_department);
 
     $this->task->checklist()->associate($this->checklist);
     $this->task->save();
@@ -95,7 +96,7 @@ test('users can only view checklists they are assigned to', function () {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Checklists/Show')
             ->has('checklist', fn(Assert $page) => $page
-                ->hasAll(['id', 'name', 'users', 'tasks'])
+                ->hasAll(['id', 'name', 'departments', 'tasks'])
             )
         );
 
@@ -104,14 +105,15 @@ test('users can only view checklists they are assigned to', function () {
 
 test('users with the permission can update checklists', function () {
 
-    $this->auth_user->givePermissionTo('update users', 'update checklists');
+    $this->auth_user->givePermissionTo('update departments', 'update checklists');
     $this->actingAs($this->auth_user);
 
-    $this->checklist->users()->attach($this->auth_user);
+    $this->assigned_department->users()->attach($this->auth_user);
+    $this->checklist->departments()->attach($this->assigned_department);
 
     $this->patch("/checklists/{$this->checklist->id}", [
         'name' => 'TestChecklist',
-        'assigned_user_ids' => [$this->assigned_user->id],
+        'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
                 'name' => 'TestTask',
@@ -129,9 +131,9 @@ test('users with the permission can update checklists', function () {
 
     $checklist = Checklist::where('name', 'TestChecklist')->first();
 
-    $this->assertDatabaseHas('checklist_user', [
+    $this->assertDatabaseHas('checklist_department', [
         'checklist_id' => $checklist->id,
-        'user_id' => $this->assigned_user->id,
+        'department_id' => $this->assigned_department->id,
     ]);
 
     $this->assertDatabaseHas('tasks', [
@@ -145,7 +147,9 @@ test('users with the permission can update checklists', function () {
 test('users with the permission can delete checklists', function () {
 
     $this->auth_user->givePermissionTo('delete checklists');
-    $this->checklist->users()->attach($this->auth_user);
+    $this->assigned_department->users()->attach($this->auth_user);
+    $this->checklist->departments()->attach($this->assigned_department);
+
     $this->actingAs($this->auth_user);
 
     $this->delete("/checklists/{$this->checklist->id}");

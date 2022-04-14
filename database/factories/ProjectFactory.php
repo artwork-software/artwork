@@ -20,7 +20,10 @@ class ProjectFactory extends Factory
             'name' => $this->faker->name,
             'description' => $this->faker->paragraph,
             'cost_center' => $this->faker->name,
-            'number_of_participants' => '1'
+            'number_of_participants' => '1',
+            'sector_id' => 1,
+            'category_id' => 1,
+            'genre_id' => 1
         ];
     }
 }

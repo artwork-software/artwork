@@ -24,8 +24,8 @@ class Checklist extends Model
         return $this->belongsTo(Project::class, 'project_id');
     }
 
-    public function users()
+    public function departments()
     {
-        return $this->belongsToMany(User::class);
+        return $this->belongsToMany(Department::class);
     }
 }

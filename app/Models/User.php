@@ -48,11 +48,6 @@ class User extends Authenticatable
         return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');;
     }
 
-    public function checklists()
-    {
-        return $this->belongsToMany(Checklist::class);
-    }
-
     public function comments()
     {
         return $this->hasMany(Comment::class);

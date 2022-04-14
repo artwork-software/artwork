@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\Department;
+use App\Models\Genre;
 use App\Models\Project;
+use App\Models\Sector;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -14,6 +16,10 @@ beforeEach(function () {
     $this->department = Department::factory()->create();
 
     $this->project = Project::factory()->create();
+
+    $this->sector = Sector::factory()->create();
+
+    $this->genre = Genre::factory()->create();
 
 });
 
@@ -38,6 +44,8 @@ test('users with the permission can create projects and assign users and departm
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
         'cost_center' => 'DTH CT1',
+        'sector_id' => $this->sector->id,
+        'genre_id' => $this->genre->id,
         'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
         'assigned_departments' => [$this->department]
     ]);
@@ -47,6 +55,8 @@ test('users with the permission can create projects and assign users and departm
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
         'cost_center' => 'DTH CT1',
+        'sector_id' => $this->sector->id,
+        'genre_id' => $this->genre->id
     ]);
 
     $project = Project::where('name', 'TestProject')->first();
@@ -82,14 +92,13 @@ test('users can only view projects they are assigned to', function () {
     $this->project->users()->attach($this->auth_user);
     $this->department->projects()->attach($this->project);
 
-    $this->auth_user->givePermissionTo('view projects');
     $this->actingAs($this->auth_user);
 
     $response = $this->get("/projects/{$this->project->id}")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
             ->has('project', fn(Assert $page) => $page
-                ->hasAll(['id', 'name', 'users', 'departments', 'description', 'number_of_participants', 'cost_center', 'checklists'])
+                ->hasAll(['id', 'name', 'users', 'departments', 'description', 'number_of_participants', 'cost_center', 'checklists', 'sector_id', 'category_id', 'genre_id', 'comments'])
             )
             ->has('project.departments.0', fn(Assert $page) => $page
                 ->hasAll('id', 'name', 'users', 'svg_name')

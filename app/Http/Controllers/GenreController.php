@@ -16,23 +16,6 @@ class GenreController extends Controller
     }
 
     /**
-     * Display a listing of the resource.
-     *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
-     */
-    public function index()
-    {
-        return inertia('Settings/GenreManagement', [
-            'genres' => Genre::paginate(10)->through(fn($genre) => [
-                'id' => $genre->id,
-                'name' => $genre->name,
-                'projects' => $genre->projects
-            ])
-        ]);
-
-    }
-
-    /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request

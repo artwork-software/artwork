@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -27,15 +28,17 @@ class CommentController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(StoreCommentRequest $request)
     {
         Comment::create([
             'text' => $request->text,
             'user_id' => $request->user_id,
             'project_id' => $request->project_id,
         ]);
+
+        return Redirect::back()->with('success', 'Comment created');
     }
 
     /**

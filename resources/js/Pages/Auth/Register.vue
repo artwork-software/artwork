@@ -79,16 +79,17 @@
                     <jet-input-error :message="form.errors.password" class="mt-2"/>
 
                 </div>
-                <div v-if="!isNaN(form.errors.password_strength)" class="sm:col-span-3 flex items-center">
+                <div v-if="form.password.length>0" class="sm:col-span-3 flex items-center">
+
                     <span class="text-xs text-secondary">Schwach</span>
 
                     <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
-                        <div :class="[form.errors.password_strength < 1
+                        <div :class="[pw_feedback < 1
                                 ? 'bg-error'
-                                : form.errors.password_strength < 3
+                                : pw_feedback < 3
                                 ? 'bg-amber-400' :
                                 'bg-success' ,
-                                'h-1']" :style="{width: `${(form.errors.password_strength + 1) / 5 * 100}%`}"></div>
+                                'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}"></div>
                     </div>
 
                     <span class="text-xs">Stark</span>
@@ -178,6 +179,7 @@ export default defineComponent({
         return {
             logoPreview: null,
             bannerPreview: null,
+            pw_feedback: 0,
             form: this.$inertia.form({
                 _method: 'POST',
                 first_name: '',
@@ -193,8 +195,43 @@ export default defineComponent({
             })
         }
     },
-
+    watch: {
+        'form.password': {
+            handler() {
+                if(this.form.password.length > 0) {
+                    this.password_feedback()
+                }
+            },
+            deep: true
+        },
+        'form.email': {
+            handler() {
+                if(this.form.email.length > 0) {
+                    this.validate_email()
+                }
+            },
+            deep: true
+        },
+    },
     methods: {
+        validate_email() {
+            axios.get('/email', {
+                params: {
+                    email: this.form.email
+                }
+            }).then( response => {
+                console.log(response.data)
+            })
+        },
+        password_feedback() {
+            axios.get('/password_feedback', {
+                params: {
+                    password: this.form.password
+                }
+            }).then( response => {
+                this.pw_feedback = response.data
+            })
+        },
         selectNewLogo() {
             this.$refs.logo.click();
         },

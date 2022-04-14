@@ -11,8 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use ZxcvbnPhp\Zxcvbn;
 
 
@@ -27,7 +27,35 @@ class AppController extends Controller
         $this->guard = $guard;
     }
 
-    public function toggle_hints() {
+    public function get_password_feedback(): int
+    {
+        if(strlen(request('password'))) {
+            $zxcvbn = new Zxcvbn();
+            return $zxcvbn->passwordStrength(request('password'))['score'];
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     */
+    public function validate_email(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if(Auth::user()) {
+            $user_id = Auth::user()->id;
+        } else {
+            $user_id = null;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user_id)],
+        ]);
+
+        return response()->json($validator->errors());
+    }
+
+    public function toggle_hints(): \Illuminate\Http\RedirectResponse
+    {
 
         $user = Auth::user();
 
@@ -75,9 +103,7 @@ class AppController extends Controller
             $settings->banner_path = $logo->storePublicly('banner', ['disk' => 'public']);
         }
 
-        $zxcvbn = new Zxcvbn();
-
-        Validator::make($request->all(), [
+        $request->validate([
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
@@ -86,14 +112,7 @@ class AppController extends Controller
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],
-        ])->after(function ($validator) use($request, $zxcvbn) {
-
-            if (isset($request->password) && $validator->failed()) {
-                $validator->errors()->add('password_strength', $zxcvbn->passwordStrength($request->password)['score']);
-            }
-
-        })->validate();
-
+        ]);
 
         $user = User::create([
             'first_name' => $request['first_name'],

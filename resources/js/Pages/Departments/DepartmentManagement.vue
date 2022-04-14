@@ -260,10 +260,10 @@
                         </span>
                         </div>
                         <button
-                            :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="addTeam"
-                            :disabled="this.form.name === ''">
+                            :disabled="this.form.name === '' || this.form.svg_name === ''">
                             Team erstellen
                         </button>
                     </div>
@@ -280,7 +280,7 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon,ChevronDownIcon ,InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {ChevronUpIcon, PlusSmIcon, CheckIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {ref} from 'vue'
 import {
@@ -324,7 +324,6 @@ export default defineComponent({
         ListboxOption,
         ListboxOptions,
         CheckIcon,
-        SelectorIcon,
         Menu,
         MenuButton,
         MenuItem,
@@ -347,11 +346,9 @@ export default defineComponent({
     methods: {
         openAddTeamModal() {
             this.addingTeam = true;
-            this.showX = [];
         },
         closeAddTeamModal() {
             this.addingTeam = false;
-            this.showX = [];
             this.form.assigned_users = [];
             this.form.name = "";
             this.form.svg_name = "";
@@ -382,7 +379,6 @@ export default defineComponent({
     data() {
         return {
             addingTeam: false,
-            showX: [],
             form: useForm({
                 svg_name: "",
                 name: "",

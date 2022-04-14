@@ -19,6 +19,9 @@ return new class extends Migration
             $table->string('description');
             $table->string('number_of_participants');
             $table->string('cost_center');
+            $table->unsignedBigInteger('sector_id')->default(null);
+            $table->unsignedBigInteger('category_id')->default(null);;
+            $table->unsignedBigInteger('genre_id')->default(null);;
             $table->timestamps();
         });
     }

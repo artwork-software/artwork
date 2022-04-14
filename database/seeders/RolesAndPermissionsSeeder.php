@@ -34,7 +34,6 @@ class RolesAndPermissionsSeeder extends Seeder
 
         //Projects
         Permission::create(['name' => 'create projects']);
-        Permission::create(['name' => 'view projects']);
         Permission::create(['name' => 'update projects']);
         Permission::create(['name' => 'delete projects']);
 
@@ -43,6 +42,10 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'view checklists']);
         Permission::create(['name' => 'update checklists']);
         Permission::create(['name' => 'delete checklists']);
+
+        //Categories, Genres etc.
+        Permission::create(['name' => 'create and edit categories_etc']);
+
 
         //Has every permission because of the gate in AuthServiceProvider
         Role::create(['name' => 'admin']);

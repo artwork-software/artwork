@@ -2,15 +2,23 @@
 
 namespace App\Providers;
 
+use App\Models\Category;
 use App\Models\Checklist;
+use App\Models\Comment;
 use App\Models\Department;
+use App\Models\Genre;
 use App\Models\Invitation;
 use App\Models\Project;
+use App\Models\Sector;
 use App\Models\User;
+use App\Policies\CategoryPolicy;
 use App\Policies\ChecklistPolicy;
+use App\Policies\CommentPolicy;
 use App\Policies\DepartmentPolicy;
+use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\ProjectPolicy;
+use App\Policies\SectorPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -28,7 +36,11 @@ class AuthServiceProvider extends ServiceProvider
         User::class => UserPolicy::class,
         Department::class => DepartmentPolicy::class,
         Project::class => ProjectPolicy::class,
-        Checklist::class => ChecklistPolicy::class
+        Checklist::class => ChecklistPolicy::class,
+        Sector::class => SectorPolicy::class,
+        Category::class => CategoryPolicy::class,
+        Genre::class => GenrePolicy::class,
+        Comment::class => CommentPolicy::class
     ];
 
     /**

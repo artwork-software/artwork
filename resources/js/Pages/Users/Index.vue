@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Dashboard">
+    <app-layout>
         <div class="py-4">
             <div class="max-w-screen-lg my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap justify-between">
@@ -144,11 +144,13 @@
                                 <label for="email" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
                             </div>
                             <jet-input-error :message="form.error" class="mt-2"/>
+                            <div class="flex m-2">
                             <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mt-2 ml-1 items-center text-sm px-2 py-2 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
-                                {{ form.user_emails.length >= 1 ? 'Weitere ' : '' }}E-Mail-Adresse hinzufügen
+                                <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>
+                            </div>
                         </div>
                         <span v-for="(email,index) in form.user_emails"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
@@ -382,7 +384,7 @@ export default defineComponent({
         RadioGroupDescription,
         RadioGroupLabel,
         RadioGroupOption,
-        Link
+        Link,
     },
     props: ['users', 'departments'],
     data() {

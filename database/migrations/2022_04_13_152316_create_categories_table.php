@@ -13,12 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('project_user', function (Blueprint $table) {
+        Schema::create('categories', function (Blueprint $table) {
             $table->id();
-            $table->integer('project_id');
-            $table->integer('user_id');
-            $table->boolean('is_admin')->default(false);
-            $table->boolean('is_manager')->default(false);
+            $table->string('name');
+            $table->string('svg_name');
             $table->timestamps();
         });
     }
@@ -30,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('project_user');
+        Schema::dropIfExists('categories');
     }
 };

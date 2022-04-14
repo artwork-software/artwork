@@ -34,6 +34,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
+                'sector_id' => $project->sector_id,
+                'category_id' => $project->sector_id,
+                'genre_id' => $project->genre_id,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -52,24 +55,6 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
-                ]),
-                'checklists' => $project->checklists->map(fn($checklist) => [
-                    'id' => $checklist->id,
-                    'name' => $checklist->name,
-                    'tasks' => $checklist->tasks->map(fn($task) => [
-                        'id' => $task->id,
-                        'name' => $task->name,
-                        'description' => $task->description,
-                        'deadline' => $task->deadline,
-                        'done' => $task->done,
-                    ]),
-                    'users' => $checklist->users->map(fn($user) => [
-                        'id' => $user->id,
-                        'first_name' => $user->first_name,
-                        'last_name' => $user->last_name,
-                        'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
-                    ])
                 ])
             ]),
             'users' => User::all()
@@ -98,6 +83,9 @@ class ProjectController extends Controller
             'description' => $request->description,
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
+            'sector_id' => $request->sector_id,
+            'category_id' => $request->sector_id,
+            'genre_id' => $request->genre_id,
         ]);
 
         if (Auth::user()->can('update users')) {
@@ -139,6 +127,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
+                'sector_id' => $project->sector_id,
+                'category_id' => $project->sector_id,
+                'genre_id' => $project->genre_id,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -175,6 +166,11 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ])
+                ]),
+                'comments' => $project->comments->map(fn($comment) => [
+                    'id' => $comment->id,
+                    'text' => $comment->text,
+                    'created' => $comment->created
                 ])
             ]
         ]);
@@ -195,6 +191,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
+                'sector_id' => $project->sector_id,
+                'category_id' => $project->sector_id,
+                'genre_id' => $project->genre_id,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -213,7 +212,7 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
-                ])
+                ]),
             ],
             'users' => User::all(),
             'departments' => Department::all()
@@ -228,7 +227,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
-        $project->update($request->only('name', 'description', 'number_of_participants', 'cost_center'));
+        $project->update($request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id'));
 
         if (Auth::user()->can('update users')) {
             $project->users()->sync(
@@ -252,7 +251,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign departments to a project.'], 403);
         }
 
-        return Redirect::route('projects')->with('success', 'Project updated');
+        return Redirect::route('projects.update', $project -> id)->with('success', 'Project updated');
     }
 
     /**

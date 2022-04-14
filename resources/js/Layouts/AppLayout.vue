@@ -215,7 +215,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
-    {name: 'Projekte', href: '#', route: [], icon: ArrowCircleRightIcon},
+    {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
     {name: 'Raumbelegung', href: '#', route: [], icon: CalendarIcon,},
     {name: 'Aufgaben', href: '#', route: [], icon: ClipboardCheckIcon,},
 ]
@@ -254,7 +254,7 @@ export default {
                 href: route('tool.settings'),
                 route: ['/tool/settings'],
                 icon: ArrowCircleRightIcon
-            },
+                },
                 {
                     has_permission: this.$page.props.can.view_users,
                     name: 'Nutzer*innen',
@@ -267,6 +267,13 @@ export default {
                     has_permission: this.$page.props.can.view_departments,
                     href: route('departments'),
                     route: ['/departments'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
+                    name: 'Projekte',
+                    has_permission: true,
+                    href: route('project.settings'),
+                    route: ['/settings/projects'],
                     icon: ArrowCircleRightIcon
                 },
             ]

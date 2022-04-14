@@ -60,21 +60,29 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class=" text-primary  focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
+                                                   class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300"/>
                                         </div>
                                     </div>
+
                                     <div class="sm:col-span-3">
-                                        <div class="mt-1">
-                                            <input type="text" v-model="userForm.email" placeholder="E-Mail-Adresse"
-                                                   class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
-                                            <jet-input-error :message="userForm.errors.email" class="mt-2"/>
+                                        <div class="mt-1 relative">
+                                            <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
+                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:border-primary']"/>
+
+                                            <div v-if="!email_validation.email" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            </div>
+                                            <div v-if="email_validation.email && email_validation.email.length > 0" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                                <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
+                                            </div>
                                         </div>
+                                        <jet-input-error :message="email_validation.email && email_validation.email[0]" class="mt-2"/>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                    placeholder="Telefonnummer"
-                                                   class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
+                                                   class="text-primary border-2 w-full font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -125,25 +133,26 @@
 
                         <div class="sm:col-span-3">
                             <div class="mt-1">
-                                <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="mt-1 relative rounded-md ">
                                     <input
                                         v-model="passwordForm.current_password"
+                                        ref="current_password"
                                         id="password" name="password" type="password" autocomplete="new-password"
                                         required
                                         placeholder="Aktuelles Passwort"
-                                        :class="[passwordForm.hasErrors
-                                            && passwordForm.errors.current_password
+                                        :class="[passwordForm.hasErrors && passwordForm.errors.current_password
                                             ? 'border-error'
-                                            : passwordForm.current_password.length > 0
-                                            ? 'border-success' :
-                                            '',
+                                            : passwordForm.current_password.length > 0 && passwordForm.hasErrors
+                                            ? 'border-success' : '',
                                     'placeholder-secondary subpixel-antialiased border-gray-200 focus:ring-black focus:border-black border-2 block w-full sm:text-sm']"/>
                                     <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
                                          class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
                                     </div>
                                     <div
-                                        v-if="!passwordForm.errors.current_password && passwordForm.current_password.length > 0 "
+                                        v-if="!passwordForm.errors.current_password
+                                        && passwordForm.current_password.length > 0
+                                        && passwordForm.hasErrors"
                                         class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
                                     </div>
@@ -155,9 +164,10 @@
 
                     <div class="mt-4 grid grid-cols-2 gap-y-4 gap-x-4 sm:grid-cols-6">
                         <div class="sm:col-span-3">
-                            <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="mt-1 relative rounded-md ">
                                 <input
                                     v-model="passwordForm.password"
+                                    ref="password"
                                     id="password_confirmation1" name="password" type="password"
                                     autocomplete="new-password" required placeholder="Neues Passwort"
                                     :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
@@ -169,19 +179,17 @@
                             </div>
                             <jet-input-error :message="passwordForm.errors.password" class="mt-2"/>
                         </div>
-                        <div v-if="!isNaN(passwordForm.errors.password_strength)"
-                             class="sm:col-span-3 flex items-center">
+                        <div v-if="passwordForm.password.length>0" class="sm:col-span-3 flex items-center">
 
                             <span class="text-xs text-secondary">Schwach</span>
 
                             <div class="mx-6 mt-1 w-full bg-gray-200 h-1 dark:bg-gray-700">
-                                <div :class="[passwordForm.errors.password_strength < 1
+                                <div :class="[pw_feedback < 1
                                 ? 'bg-error'
-                                : passwordForm.errors.password_strength < 3
+                                : pw_feedback < 3
                                 ? 'bg-amber-400' :
                                 'bg-success' ,
-                                'h-1']"
-                                     :style="{width: `${(passwordForm.errors.password_strength + 1) / 5 * 100}%`}"></div>
+                                'h-1']" :style="{width: `${(pw_feedback + 1) / 5 * 100}%`}"></div>
                             </div>
 
                             <span class="text-xs">Stark</span>
@@ -191,7 +199,7 @@
                     <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
                         <div class="sm:col-span-3">
                             <div class="mt-1">
-                                <div class="mt-1 relative rounded-md shadow-sm">
+                                <div class="mt-1 relative rounded-md">
 
                                     <input
                                         v-model="passwordForm.password_confirmation"
@@ -395,10 +403,62 @@ export default defineComponent({
             showSuccess: false,
             showChangePictureModal: false,
             deletingUser: false,
+            pw_feedback: 0,
+            email_validation: {
+                email: true
+            }
         }
     },
-
+    computed: {
+      email_validation_classes() {
+          if(this.email_validation.email) {
+              if(this.email_validation.email.length > 0) {
+                  return 'border-error';
+              } else {
+                  return 'border-gray-300'
+              }
+          } else {
+              return 'border-success';
+          }
+      }
+    },
+    watch: {
+        'passwordForm.password': {
+            handler() {
+                if(this.passwordForm.password.length > 0) {
+                    this.password_feedback()
+                }
+            },
+            deep: true
+        },
+        'userForm.email': {
+            handler() {
+                if(this.userForm.email.length > 0) {
+                    this.validate_email()
+                }
+            },
+            deep: true
+        },
+    },
     methods: {
+        validate_email() {
+            axios.get('/email', {
+                params: {
+                    email: this.userForm.email
+                }
+            }).then( response => {
+                this.email_validation = response.data
+            })
+        },
+        password_feedback() {
+          axios.get('/password_feedback', {
+              params: {
+                  password: this.passwordForm.password
+              }
+          }).then( response => {
+              this.pw_feedback = response.data
+          })
+        },
         openDeleteUserModal() {
             this.deletingUser = true;
         },
@@ -479,6 +539,7 @@ export default defineComponent({
             this.userForm.departments.splice(index, 1);
         },
         updatePassword() {
+
             this.passwordForm.put(route('user-password.update'), {
                 errorBag: 'updatePassword',
                 preserveScroll: true,

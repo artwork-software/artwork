@@ -33,12 +33,12 @@
                 </div>
 
                 <button
-                    class=" inline-flex items-center px-4 ml-10 py-2 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                    class="inline-flex items-center px-4 ml-10 py-2 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                     @click.prevent="selectNewBigLogo">
                     Großes Logo ändern
                 </button>
                 <input type="file" class="hidden"
-                       ref="logo"
+                       ref="bigLogo"
                        @change="updateBigLogoPreview">
             </div>
 

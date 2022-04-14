@@ -29,6 +29,8 @@ use Inertia\Inertia;
 
 Route::get('/', [AppController::class, 'index']);
 
+Route::get('/password_feedback', [AppController::class, 'get_password_feedback']);
+Route::get('/email', [AppController::class, 'validate_email']);
 
 Route::get('/setup', [AppController::class, 'setup_company'])->name('setup');
 Route::post('/setup', [AppController::class, 'create_admin'])->name('setup.create');

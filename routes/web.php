@@ -1,10 +1,14 @@
 <?php
 
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
@@ -86,6 +90,30 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
+
+    //Categories
+    Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
+    Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
+    Route::patch('/categories/{category}', [CategoryController::class, 'update']);
+    Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+
+    //Genres
+    Route::get('/genres', [GenreController::class, 'index'])->name('genres');
+    Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
+    Route::patch('/genres/{genre}', [GenreController::class, 'update']);
+    Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
+
+    //Sectors
+    Route::get('/sectors', [SectorController::class, 'index'])->name('sectors');
+    Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
+    Route::patch('/sectors/{sector}', [SectorController::class, 'update']);
+    Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);
+
+    //Comments
+    Route::get('/comments/create', [CommentController::class, 'create'])->name('comments.create');
+    Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
+    Route::patch('/comments/{comment}', [CommentController::class, 'update']);
+    Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
 
 });
 

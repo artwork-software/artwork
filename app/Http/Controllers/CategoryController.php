@@ -26,6 +26,7 @@ class CategoryController extends Controller
             'categories' => Category::paginate(10)->through(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
+                'svg_name',
                 'projects' => $category->projects
             ])
         ]);
@@ -41,6 +42,7 @@ class CategoryController extends Controller
     {
         Category::create([
             'name' => $request->name,
+            'svg_name' => $request->svg_name
         ]);
     }
 
@@ -52,7 +54,7 @@ class CategoryController extends Controller
      */
     public function update(Request $request, Category $category)
     {
-        $category->update($request->only('name'));
+        $category->update($request->only('name', 'svg_name'));
 
         if (Auth::user()->can('update projects')) {
             $category->projects()->sync(

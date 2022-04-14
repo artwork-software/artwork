@@ -23,13 +23,13 @@
                             </div>
                         </div>
                     </div>
-                    <ul role="list" class="mt-5 w-full">
-                        <li v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id"
+                    <div v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+                        <div
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <div class="ml-5 my-auto w-full justify-start mr-6">
+                                <div class="w-full mr-6">
                                     <div class="flex my-auto">
-                                        <p class="text-lg subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                        <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -133,11 +133,12 @@
                                 </Menu>
 
                             </div>
-                            <div>
-                                <span>zuletzt geändert:</span>
-                            </div>
-                        </li>
-                    </ul>
+
+                        </div>
+                        <div class="flex">
+                            <span class="w-full mb-10 text-secondary">zuletzt geändert:</span>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -318,6 +319,9 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
+            this.form.sector_id = 0;
+            this.form.category_id = 0;
+            this.form.genre_id = 0;
         },
         addTeam() {
             this.form.number_of_participants = this.selectedParticipantNumber;
@@ -338,7 +342,10 @@ export default defineComponent({
                 name: "",
                 description: "",
                 cost_center:"",
-                number_of_participants:""
+                number_of_participants:"",
+                sector_id:0,
+                category_id:0,
+                genre_id:0,
             }),
         }
     },

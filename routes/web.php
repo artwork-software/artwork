@@ -42,7 +42,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
-    Route::get('/tool/settings', function () { return Inertia::render('ToolSettings'); })->name('tool.settings');
+    Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
@@ -92,7 +92,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
     //Categories
-    Route::get('/categories', [CategoryController::class, 'index'])->name('categories');
+    Route::get('/settings/projects', [CategoryController::class, 'index'])->name('project.settings');
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update']);
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);

@@ -280,7 +280,7 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon,ChevronDownIcon ,InformationCircleIcon, XIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {ChevronUpIcon, PlusSmIcon, CheckIcon, XCircleIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {ref} from 'vue'
 import {
@@ -324,7 +324,6 @@ export default defineComponent({
         ListboxOption,
         ListboxOptions,
         CheckIcon,
-        SelectorIcon,
         Menu,
         MenuButton,
         MenuItem,

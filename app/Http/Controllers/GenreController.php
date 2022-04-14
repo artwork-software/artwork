@@ -29,19 +29,21 @@ class GenreController extends Controller
                 'projects' => $genre->projects
             ])
         ]);
+
     }
 
     /**
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         Genre::create([
             'name' => $request->name,
         ]);
+        return Redirect::back()->with('success', 'Genre created');
     }
 
     /**

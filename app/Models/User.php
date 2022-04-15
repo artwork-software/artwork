@@ -81,7 +81,8 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
-        'logo',
+        'smallLogo',
+        'bigLogo',
         'banner'
     ];
 
@@ -97,9 +98,21 @@ class User extends Authenticatable
 
     }
 
-    public function getLogoAttribute(): ?string
+    public function getSmallLogoAttribute(): ?string
     {
-        $path = app(GeneralSettings::class)->logo_path;
+        $path = app(GeneralSettings::class)->small_logo_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
+
+    public function getBigLogoAttribute(): ?string
+    {
+        $path = app(GeneralSettings::class)->big_logo_path;
 
         if($path) {
             return Storage::disk('public')->url($path);

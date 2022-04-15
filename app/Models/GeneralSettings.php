@@ -12,7 +12,9 @@ class GeneralSettings extends Settings
 
     public string $banner_path;
 
-    public string $logo_path;
+    public string $big_logo_path;
+
+    public string $small_logo_path;
 
     public static function group(): string
     {

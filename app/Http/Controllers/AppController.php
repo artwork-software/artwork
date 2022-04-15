@@ -90,6 +90,34 @@ class AppController extends Controller
 
     }
 
+    public function update_tool(Request $request, GeneralSettings $settings) {
+
+        if(!Auth::user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        $smallLogo = $request->file('smallLogo');
+        $bigLogo = $request->file('bigLogo');
+        $banner = $request->file('banner');
+
+        if($smallLogo) {
+            $settings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($bigLogo) {
+            $settings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($banner) {
+            $settings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
+        }
+
+        $settings->save();
+
+        return Redirect::back()->with('success', 'Fotos hinzugefügt');
+
+    }
+
     public function create_admin(Request $request, GeneralSettings $settings) {
 
         $logo = $request->file('logo');

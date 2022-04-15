@@ -12,7 +12,8 @@ class CreateGeneralSettings extends SettingsMigration
     {
         $this->migrator->add('general.company_name', "DTH");
         $this->migrator->add('general.setup_finished', false);
-        $this->migrator->add('general.logo_path', "");
+        $this->migrator->add('general.big_logo_path', "");
+        $this->migrator->add('general.small_logo_path', "");
         $this->migrator->add('general.banner_path', "");
     }
 }

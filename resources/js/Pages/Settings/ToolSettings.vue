@@ -65,7 +65,7 @@
                     Kleines Logo ändern
                 </button>
                 <input type="file" class="hidden"
-                       ref="logo"
+                       ref="smallLogo"
                        @change="updateSmallLogoPreview">
             </div>
             <div>

@@ -46,7 +46,7 @@ class HandleInertiaRequests extends Middleware
                 'view_departments' => Auth::guest() ? false : Auth::user()->can("view departments"),
                 'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
             ],
-            'is_admin' => Auth::user()->hasRole('admin')
+            'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin')
         ]);
     }
 }

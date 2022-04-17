@@ -101,13 +101,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
     //Genres
-    Route::get('/genres', [GenreController::class, 'index'])->name('genres');
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
     Route::patch('/genres/{genre}', [GenreController::class, 'update']);
     Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
 
     //Sectors
-    Route::get('/sectors', [SectorController::class, 'index'])->name('sectors');
     Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
     Route::patch('/sectors/{sector}', [SectorController::class, 'update']);
     Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);

@@ -10,6 +10,7 @@ use App\Models\Genre;
 use App\Models\Invitation;
 use App\Models\Project;
 use App\Models\Sector;
+use App\Models\Task;
 use App\Models\User;
 use App\Policies\CategoryPolicy;
 use App\Policies\ChecklistPolicy;
@@ -19,6 +20,7 @@ use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
 use App\Policies\ProjectPolicy;
 use App\Policies\SectorPolicy;
+use App\Policies\TaskPolicy;
 use App\Policies\UserPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Gate;
@@ -37,6 +39,7 @@ class AuthServiceProvider extends ServiceProvider
         Department::class => DepartmentPolicy::class,
         Project::class => ProjectPolicy::class,
         Checklist::class => ChecklistPolicy::class,
+        Task::class => TaskPolicy::class,
         Sector::class => SectorPolicy::class,
         Category::class => CategoryPolicy::class,
         Genre::class => GenrePolicy::class,

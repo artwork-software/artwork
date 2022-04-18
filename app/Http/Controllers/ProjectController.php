@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Models\Category;
 use App\Models\Department;
+use App\Models\Genre;
 use App\Models\Project;
+use App\Models\Sector;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,7 +60,23 @@ class ProjectController extends Controller
                     ]),
                 ])
             ]),
-            'users' => User::all()
+            'users' => User::all(),
+            'categories' => Category::paginate(10)->through(fn($category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'svg_name' => $category->svg_name,
+                'projects' => $category->projects
+            ]),
+            'genres' => Genre::paginate(10)->through(fn($genre) => [
+                'id' => $genre->id,
+                'name' => $genre->name,
+                'projects' => $genre->projects
+            ]),
+            'sectors' => Sector::paginate(10)->through(fn($sector) => [
+                'id' => $sector->id,
+                'name' => $sector->name,
+                'projects' => $sector->projects
+            ])
         ]);
     }
 

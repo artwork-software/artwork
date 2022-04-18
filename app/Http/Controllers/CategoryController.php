@@ -69,6 +69,7 @@ class CategoryController extends Controller
     {
         $category->update($request->only('name', 'svg_name'));
 
+        /*
         if (Auth::user()->can('update projects')) {
             $category->projects()->sync(
                 collect($request->assigned_project_ids)
@@ -79,6 +80,8 @@ class CategoryController extends Controller
         } else {
             return response()->json(['error' => 'Not authorized to assign projects to a category.'], 403);
         }
+        */
+        return Redirect::back()->with('success', 'Category edited');
     }
 
     /**

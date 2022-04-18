@@ -23,7 +23,8 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+                    <div v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id"
+                         class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-5 flex justify-between">
                             <div class="flex">
@@ -156,16 +157,19 @@
                     <div class="mt-12">
                         <div class="flex">
                             <div class="relative flex w-full mr-4">
-                                <input id="first_name" v-model="form.name" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="first_name" class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Projektname</label>
+                                <input id="first_name" v-model="form.name" type="text"
+                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="first_name"
+                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Projektname</label>
                             </div>
                         </div>
-                            <div class="mt-8 mr-4">
+                        <div class="mt-8 mr-4">
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="form.description" rows="4"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
-                            </div>
+                        </div>
 
                         <div v-on:click="showDetails = !showDetails">
                             <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-4 ">
@@ -175,50 +179,174 @@
                                 <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                             </h2>
                         </div>
-                        <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                        <div class="sm:col-span-3">
-                            <div class="mt-1">
-                                <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                       class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
+                        <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
+                            <div class="sm:col-span-3">
+                                <div class="">
+                                    <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
+                                           class="text-primary h-10 focus:border-primary border-2 w-full text-sm border-gray-300 "/>
+                                </div>
                             </div>
-                        </div>
-                        <Listbox as="div" class="sm:col-span-3 mt-1" v-model="selectedParticipantNumber">
-                            <div class="relative">
-                                <ListboxButton
-                                    class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
-                                    <span class="block truncate">{{ selectedParticipantNumber }}</span>
-                                    <span v-if="selectedParticipantNumber === ''" class="block truncate">Anzahl Teilnehmer*innen</span>
-                                    <span class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate">{{ selectedParticipantNumber }}</span>
+                                        <span v-if="selectedParticipantNumber === ''" class="block truncate">Anzahl Teilnehmer*innen</span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                     </span>
-                                </ListboxButton>
+                                    </ListboxButton>
 
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" v-for="participantNumber in number_of_participants" :key="participantNumber.number"
-                                                       :value="participantNumber.number" v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template"
+                                                           v-for="participantNumber in number_of_participants"
+                                                           :key="participantNumber.number"
+                                                           :value="participantNumber.number"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
-                                                :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ participantNumber.number }}
                                             </span>
-                                                <span v-if="selected"
-                                                      :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon class="h-5 w-5" aria-hidden="true"/>
+                                                    <span v-if="selected"
+                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
                                                 </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </div>
-                        </Listbox>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedGenre">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span >{{ selectedGenre.name }}</span>
+                                        </span>
+                                        <span v-if="selectedGenre.name === ''"
+                                              class="block truncate">Genre wählen</span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="genre in genres.data"
+                                                           :key="genre.name"
+                                                           :value="genre"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ genre.name }}
+                                                    </span>
+                                                    <span
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedSector">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span>{{ selectedSector.name }}</span>
+                                        </span>
+                                        <span v-if="selectedSector.name === ''"
+                                              class="block truncate items-center">
+                                            <span>Bereich wählen</span>
+                                        </span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="sector in sectors.data"
+                                                           :key="sector.name"
+                                                           :value="sector"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ sector.name }}
+                                                    </span>
+                                                    <span
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedCategory">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center flex">
+                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16" :width="16" :iconName="selectedCategory.svg_name" /> <span class="ml-4">{{ selectedCategory.name }}</span>
+                                        </span>
+                                        <span v-if="selectedCategory.name === ''"
+                                              class="block truncate">Kategorie wählen</span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="category in categories.data"
+                                                           :key="category.name"
+                                                           :value="category"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <CategoryIconCollection :width="16" :height="16" :iconName="category.svg_name" />
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ category.name }}
+                                                    </span>
+                                                    <span
+                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
                         </div>
                         <button
                             :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                             class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="addTeam"
+                            @click="addProject"
                             :disabled="this.form.name === ''">
                             Anlegen
                         </button>
@@ -266,6 +394,7 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -274,6 +403,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        CategoryIconCollection,
         TeamIconCollection,
         SvgCollection,
         Button,
@@ -307,7 +437,7 @@ export default defineComponent({
         XCircleIcon,
         DuplicateIcon
     },
-    props: ['projects', 'users'],
+    props: ['projects', 'users','categories','genres','sectors'],
     methods: {
         openAddProjectModal() {
             this.addingProject = true;
@@ -319,13 +449,18 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
+            this.selectedCategory = {name:'',svg_name:''};
+            this.selectedGenre = {name:''};
+            this.selectedSector = {name:''};
             this.form.sector_id = 0;
             this.form.category_id = 0;
             this.form.genre_id = 0;
         },
-        addTeam() {
+        addProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
-
+            this.form.category_id = this.selectedCategory.id;
+            this.form.sector_id = this.selectedSector.id;
+            this.form.genre_id = this.selectedGenre.id;
             this.form.post(route('projects.store'), {})
             this.closeAddProjectModal();
         },
@@ -336,16 +471,19 @@ export default defineComponent({
     data() {
         return {
             addingProject: false,
-            showDetails:false,
+            showDetails: false,
             selectedParticipantNumber: "",
+            selectedCategory: {name:'',svg_name:''},
+            selectedSector:{name:''},
+            selectedGenre:{name:''},
             form: useForm({
                 name: "",
                 description: "",
-                cost_center:"",
-                number_of_participants:"",
-                sector_id:0,
-                category_id:0,
-                genre_id:0,
+                cost_center: "",
+                number_of_participants: "",
+                sector_id: 0,
+                category_id: 0,
+                genre_id: 0,
             }),
         }
     },

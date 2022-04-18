@@ -1,7 +1,6 @@
 <template>
-    <app-layout title="Tooleinstellungen">
+    <app-layout title="Projekteinstellungen">
         <div class="max-w-screen-lg my-8 ml-20 mr-40">
-            {{ categories.data }}
             <div class="">
                 <h2 class="font-bold font-lexend text-3xl my-2">Projekteinstellungen</h2>
                 <div class="text-secondary tracking-tight leading-6 sub">
@@ -103,10 +102,10 @@
                 </div>
             </div>
             <ul role="list" class="mt-5 w-full">
-                <li v-for="category in categories.data" :key="category.id"
-                    class="py-5 flex justify-between">
+                <li v-for="(category,index) in categories.data" :key="category.id"
+                    class="flex justify-between">
                     <div class="flex">
-                        <CategoryIconCollection class="h-18 w-18" :iconName="category.svg_name" />
+                        <CategoryIconCollection :height="88" :width="88" :iconName="category.svg_name" />
                         <div class="ml-5 my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
                                 <p class="text-lg subpixel-antialiased text-gray-900">{{ category.name }}</p>
@@ -140,21 +139,21 @@
                                     class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
-                                            <a :href="getEditHref(category)"
+                                            <a href="#" @click="openEditCategoryModal(category)"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <PencilAltIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Team bearbeiten
+                                                Kategorie bearbeiten
                                             </a>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <a href="#" @click="deleteAllTeamMembers(category.id)"
+                                            <a href="#" @click="deleteCategory(category)"
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <TrashIcon
                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                     aria-hidden="true"/>
-                                                Alle Teammitglieder entfernen
+                                                Kategorie entfernen
                                             </a>
                                         </MenuItem>
                                     </div>
@@ -168,7 +167,7 @@
 
 
         </div>
-        <!-- Team erstellen Modal-->
+        <!-- Kategorie erstellen Modal-->
         <jet-dialog-modal :show="addingCategory" @close="closeAddCategoryModal">
             <template #content>
                 <div class="mx-4">
@@ -180,14 +179,14 @@
                     <div class="text-secondary subpixel-antialiased">
                         Erstelle eine neue Kategorie
                     </div>
-                    <div class="mt-12">
+                    <div class="mt-4">
                         <div class="flex">
                             <Menu as="div" class=" relative">
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="categoryForm.svg_name === ''"
                                                          class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <CategoryIconCollection v-else class="h-16 w-16" :iconName="categoryForm.svg_name" />
+                                        <CategoryIconCollection v-else :height="64" :width="64" :iconName="categoryForm.svg_name" />
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -197,12 +196,12 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        class="z-40 origin-top-right h-40 w-24 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
                                         <MenuItem v-for="item in iconMenuItems"  v-slot="{ active }">
-                                            <Link href="#" @click="categoryForm.svg_name = item.iconName"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <CategoryIconCollection class="h-16 w-16" :iconName="item.iconName" />
-                                            </Link>
+                                            <div class="" @click="categoryForm.svg_name = item.iconName"
+                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <CategoryIconCollection :height="64" :width="64" :iconName="item.iconName" />
+                                            </div>
                                         </MenuItem>
                                     </MenuItems>
                                 </transition>
@@ -225,12 +224,66 @@
                 </div>
             </template>
         </jet-dialog-modal>
+        <!-- Kategorie bearbeiten Modal-->
+        <jet-dialog-modal :show="editingCategory" @close="closeEditCategoryModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Kategorie bearbeiten
+                    </div>
+                    <XIcon @click="closeEditCategoryModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="mt-12">
+                        <div class="flex">
+                            <Menu as="div" class=" relative">
+                                <div>
+                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                        <ChevronDownIcon v-if="editCategoryForm.svg_name === ''"
+                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                        <CategoryIconCollection :height="64" :width="64" v-else :iconName="editCategoryForm.svg_name" />
+                                    </MenuButton>
+                                </div>
+                                <transition enter-active-class="transition ease-out duration-100"
+                                            enter-from-class="transform opacity-0 scale-95"
+                                            enter-to-class="transform opacity-100 scale-100"
+                                            leave-active-class="transition ease-in duration-75"
+                                            leave-from-class="transform opacity-100 scale-100"
+                                            leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems
+                                        class="z-40 origin-top-right h-40 w-24 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
+                                        <MenuItem v-for="item in iconMenuItems"  v-slot="{ active }">
+                                            <Link href="#" @click="editCategoryForm.svg_name = item.iconName"
+                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <CategoryIconCollection :height="64" :width="64" :iconName="item.iconName" />
+                                            </Link>
+                                        </MenuItem>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
+                            <div class="relative my-auto w-full ml-8 mr-12">
+                                <input id="editCategoryName" v-model="editCategoryForm.name" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                                <label for="editCategoryName" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                            </div>
+                        </div>
+                        <div class="mt-12">
+                            <button
+                                :class="[this.editCategoryForm.name === '' || this.editCategoryForm.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                @click="editCategory"
+                                :disabled="this.editCategoryForm.name === '' || this.editCategoryForm.svg_name === ''">
+                                Kategorie ändern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
-import {DotsVerticalIcon, TrashIcon, PencilAltIcon} from "@heroicons/vue/outline"
+import {DotsVerticalIcon, TrashIcon, PencilAltIcon,XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -259,7 +312,8 @@ export default {
         ChevronDownIcon,
         DotsVerticalIcon,
         TrashIcon,
-        PencilAltIcon
+        PencilAltIcon,
+        XIcon
     },
     props: ['genres', 'categories', 'sectors'],
     data() {
@@ -267,10 +321,17 @@ export default {
             genreInput: '',
             sectorInput:'',
             addingCategory: false,
+            editingCategory: false,
             categoryForm: this.$inertia.form({
                 _method: 'POST',
                 svg_name: '',
                 name: ''
+            }),
+            editCategoryForm: this.$inertia.form({
+                _method: 'PATCH',
+                svg_name: '',
+                name: '',
+                id: null
             })
         }
     },
@@ -278,14 +339,31 @@ export default {
         openAddCategoryModal() {
             this.addingCategory = true;
         },
+        openEditCategoryModal(category){
+            this.editCategoryForm.svg_name = category.svg_name;
+            this.editCategoryForm.name = category.name;
+            this.editCategoryForm.id = category.id;
+            this.editingCategory = true;
+        },
+        closeEditCategoryModal(){
+            this.editCategoryForm.svg_name = "";
+            this.editCategoryForm.name = "";
+            this.editCategoryForm.id = null;
+            this.editingCategory = false;
+        },
         closeAddCategoryModal() {
             this.addingCategory = false;
-            this.form.name = "";
-            this.form.svg_name = "";
+            this.categoryForm.name = "";
+            this.categoryForm.svg_name = "";
         },
         addCategory() {
             this.categoryForm.post(route('categories.store'), {})
-            this.closeAddTeamModal();
+            this.categoryForm.name = "";
+            this.closeAddCategoryModal();
+        },
+        editCategory(){
+          this.editCategoryForm.patch(route('categories.update',{category: this.editCategoryForm.id}));
+          this.closeEditCategoryModal();
         },
         deleteGenre(genre) {
             this.$inertia.delete(`/genres/${genre.id}`);
@@ -300,6 +378,9 @@ export default {
         addSector() {
             this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
             this.sectorInput = '';
+        },
+        deleteCategory(category){
+            this.$inertia.delete(`../categories/${category.id}`);
         }
     },
     setup(){

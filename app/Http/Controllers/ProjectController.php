@@ -37,9 +37,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
-                'sector' => $project->sector,
+                'sector' => $project->sector->name,
                 'category' => $project->category,
-                'genre_id' => $project->genre_id,
+                'genre' => $project->genre->name,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,

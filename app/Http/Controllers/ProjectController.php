@@ -6,6 +6,7 @@ use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Category;
+use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Project;
@@ -153,6 +154,10 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
+
+        $public_checklists = Checklist::where('project_id', $project->id)->where('user_id', null)->get();
+        //$private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
+
         return inertia('Projects/Show', [
             'project' => [
                 'id' => $project->id,
@@ -161,7 +166,7 @@ class ProjectController extends Controller
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
                 'sector' => $project->sector->name,
-                'category' => $project->category,
+                'category' => $project->category->name,
                 'genre' => $project->genre->name,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
@@ -182,7 +187,7 @@ class ProjectController extends Controller
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
                 ]),
-                'checklists' => $project->checklists->map(fn($checklist) => [
+                'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
                     'tasks' => $checklist->tasks->map(fn($task) => [
@@ -192,12 +197,10 @@ class ProjectController extends Controller
                         'deadline' => $task->deadline,
                         'done' => $task->done,
                     ]),
-                    'users' => $checklist->users->map(fn($user) => [
-                        'id' => $user->id,
-                        'first_name' => $user->first_name,
-                        'last_name' => $user->last_name,
-                        'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
+                    'departments' => $checklist->departments->map(fn($department) => [
+                        'id' => $department->id,
+                        'name' => $department->name,
+                        'svg_name' => $department->svg_name,
                     ])
                 ]),
                 'comments' => $project->comments->map(fn($comment) => [

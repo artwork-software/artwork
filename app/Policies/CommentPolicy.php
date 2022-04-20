@@ -22,6 +22,11 @@ class CommentPolicy
         return $comment->project->users->contains($user->id);
     }
 
+    public function create(User $user)
+    {
+        return true;
+    }
+
     /**
      * Determine whether the user can update the model.
      *
@@ -31,7 +36,7 @@ class CommentPolicy
      */
     public function update(User $user, Comment $comment)
     {
-        return $comment->project->users->contains($user->id);
+        return $comment->user->id == $user->id;
     }
 
     /**
@@ -43,7 +48,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment)
     {
-        return $comment->project->users->contains($user->id);
+        return $comment->user->id == $user->id;
     }
 
     /**

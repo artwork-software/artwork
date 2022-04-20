@@ -11,7 +11,8 @@ class Checklist extends Model
 
     protected $fillable = [
         'name',
-        'project_id'
+        'project_id',
+        'user_id'
     ];
 
     public function tasks()
@@ -22,6 +23,11 @@ class Checklist extends Model
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function departments()

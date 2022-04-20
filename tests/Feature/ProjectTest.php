@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Project;
@@ -93,17 +94,15 @@ test('users can only view projects they are assigned to', function () {
     $this->project->users()->attach($this->auth_user);
     $this->department->projects()->attach($this->project);
 
+    $checklist = Checklist::factory()->create();
+    $this->project->checklists()->save($checklist);
+    $this->auth_user->private_checklists()->save($checklist);
+
     $this->actingAs($this->auth_user);
 
     $response = $this->get("/projects/{$this->project->id}")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
-            ->has('project', fn(Assert $page) => $page
-                ->hasAll(['id', 'name', 'users', 'departments', 'description', 'number_of_participants', 'cost_center', 'checklists', 'sector_id', 'category_id', 'genre_id', 'comments'])
-            )
-            ->has('project.departments.0', fn(Assert $page) => $page
-                ->hasAll('id', 'name', 'users', 'svg_name')
-            )
         );
 
     $response->assertStatus(200);

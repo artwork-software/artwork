@@ -40,6 +40,7 @@ class GenreController extends Controller
     {
         $genre->update($request->only('name'));
 
+        /*
         if (Auth::user()->can('update projects')) {
             $genre->projects()->sync(
                 collect($request->assigned_project_ids)
@@ -50,6 +51,7 @@ class GenreController extends Controller
         } else {
             return response()->json(['error' => 'Not authorized to assign projects to a genre.'], 403);
         }
+        */
     }
 
     /**

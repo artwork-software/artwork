@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class CommentController extends Controller
@@ -28,15 +29,21 @@ class CommentController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(StoreCommentRequest $request)
     {
-        Comment::create([
-            'text' => $request->text,
-            'user_id' => $request->user_id,
-            'project_id' => $request->project_id,
-        ]);
+        $project = \App\Models\Project::where('id', $request->project_id)->first();
+
+        if($project->users->contains(Auth::id())) {
+            Comment::create([
+                'text' => $request->text,
+                'user_id' => $request->user_id,
+                'project_id' => $request->project_id,
+            ]);
+        }
+        else {
+            return response()->json(['error' => 'Not authorized to assign projects to a sector.'], 403);
+        }
 
         return Redirect::back()->with('success', 'Comment created');
     }

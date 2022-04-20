@@ -38,6 +38,7 @@ class SectorController extends Controller
     {
         $sector->update($request->only('name'));
 
+        /*
         if (Auth::user()->can('update projects')) {
             $sector->projects()->sync(
                 collect($request->assigned_project_ids)
@@ -48,6 +49,7 @@ class SectorController extends Controller
         } else {
             return response()->json(['error' => 'Not authorized to assign projects to a sector.'], 403);
         }
+        */
     }
 
     /**

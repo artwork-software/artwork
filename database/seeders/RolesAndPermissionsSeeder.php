@@ -43,6 +43,12 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'update checklists']);
         Permission::create(['name' => 'delete checklists']);
 
+        //ChecklistTemplates
+        Permission::create(['name' => 'create checklist_templates']);
+        Permission::create(['name' => 'view checklist_templates']);
+        Permission::create(['name' => 'update checklist_templates']);
+        Permission::create(['name' => 'delete checklist_templates']);
+
         //Categories, Genres etc.
         Permission::create(['name' => 'create and edit categories_etc']);
 

@@ -55,6 +55,11 @@ class User extends Authenticatable
         return $this->hasMany(Comment::class);
     }
 
+    public function private_checklists()
+    {
+        return $this->hasMany(Checklist::class);
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

@@ -58,7 +58,7 @@
                                                 <MenuItems
                                                     class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in project.users" v-slot="{ active }">
-                                                        <Link href="#"
+                                                        <div
                                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <img class="h-9 w-9 rounded-full"
                                                                  :src="user.profile_photo_url"
@@ -66,7 +66,7 @@
                                                             <span class="ml-4">
                                                                 {{ user.first_name }} {{ user.last_name }}
                                                             </span>
-                                                        </Link>
+                                                        </div>
                                                     </MenuItem>
                                                 </MenuItems>
                                             </transition>
@@ -111,7 +111,7 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click=""
+                                                    <a href="#" @click="duplicateProject(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <DuplicateIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -120,7 +120,7 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click=""
+                                                    <a href="#" @click="openDeleteProjectModal(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -157,10 +157,10 @@
                     <div class="mt-12">
                         <div class="flex">
                             <div class="relative flex w-full mr-4">
-                                <input id="first_name" v-model="form.name" type="text"
+                                <input id="projectName" v-model="form.name" type="text"
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
-                                <label for="first_name"
+                                <label for="projectName"
                                        class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Projektname</label>
                             </div>
                         </div>
@@ -356,6 +356,59 @@
 
             </template>
         </jet-dialog-modal>
+        <!-- Delete Project Modal -->
+        <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Projekt löschen
+                    </div>
+                    <XIcon @click="closeDeleteProjectModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du das Projekt {{ projectToDelete.name }} löschen willst?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteProject">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteProjectModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
+        <!-- Success Modal - Delete project -->
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Projekt gelöscht
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success">
+                        Das Projekt {{nameOfDeletedProject}} wurde gelöscht.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -395,6 +448,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
+import {Inertia} from "@inertiajs/inertia";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -466,13 +520,57 @@ export default defineComponent({
         },
         getEditHref(project) {
             return route('projects.show', {project: project.id});
-        }
+        },
+        duplicateProject(project){
+            this.duplicateForm.name = project.name + " (Kopie)";
+            this.duplicateForm.description = project.description;
+            this.duplicateForm.cost_center = project.cost_center;
+            this.duplicateForm.number_of_participants = project.number_of_participants;
+            this.duplicateForm.sector_id = project.sector_id;
+            this.duplicateForm.category_id = project.category_id;
+            this.duplicateForm.genre_id = project.genre_id;
+            this.duplicateForm.post(route('projects.store'), {})
+            this.duplicateForm.name = "";
+            this.duplicateForm.description = "";
+            this.duplicateForm.cost_center = "";
+            this.duplicateForm.number_of_participants = "";
+            this.duplicateForm.sector_id = null;
+            this.duplicateForm.category_id = null;
+            this.duplicateForm.genre_id = null;
+        },
+        openDeleteProjectModal(project){
+            this.projectToDelete = project;
+            this.deletingProject = true;
+
+        },
+        closeDeleteProjectModal(){
+            this.deletingProject = false;
+            this.projectToDelete = null;
+        },
+        deleteProject(){
+            this.nameOfDeletedProject = this.projectToDelete.name;
+            Inertia.delete(`/projects/${this.projectToDelete.id}`);
+            this.closeDeleteProjectModal();
+            this.openSuccessModal();
+        },
+        openSuccessModal() {
+            this.showSuccessModal = true;
+
+        },
+        closeSuccessModal() {
+            this.showSuccessModal = false;
+            this.nameOfDeletedProject = "";
+        },
     },
     data() {
         return {
             addingProject: false,
+            deletingProject:false,
             showDetails: false,
+            projectToDelete: null,
+            showSuccessModal: false,
             selectedParticipantNumber: "",
+            nameOfDeletedProject:"",
             selectedCategory: {name:'',svg_name:''},
             selectedSector:{name:''},
             selectedGenre:{name:''},
@@ -481,9 +579,18 @@ export default defineComponent({
                 description: "",
                 cost_center: "",
                 number_of_participants: "",
-                sector_id: 0,
-                category_id: 0,
-                genre_id: 0,
+                sector_id: null,
+                category_id: null,
+                genre_id: null,
+            }),
+            duplicateForm: useForm({
+                name: "",
+                description: "",
+                cost_center: "",
+                number_of_participants: "",
+                sector_id: null,
+                category_id: null,
+                genre_id: null,
             }),
         }
     },

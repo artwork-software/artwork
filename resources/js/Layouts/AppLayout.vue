@@ -37,7 +37,7 @@
                                     {{ item.name }}
                                 </a>
                                 <h2 v-on:click="showSystemSettings = !showSystemSettings"
-                                    class="text-lg pt-12 pb-2 ml-4 flex font-bold text-secondaryHover">System
+                                    class="text-lg pt-6 pb-2 ml-4 flex font-bold text-secondaryHover">System
                                     <ChevronUpIcon v-if="showSystemSettings"
                                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                                     <ChevronDownIcon v-else
@@ -67,11 +67,11 @@
         <!-- Sidebar component, swap this element with another sidebar if you like -->
         <div class="flex">
             <div class="hidden w-28 bg-primary md:block bottom-0 top-0 fixed">
-                <div class="w-full py-6 mt-12 flex flex-col items-center">
+                <div class="w-full py-2 mt-3 flex flex-col items-center">
                     <div class="text-2xl font-bold text-secondaryHover">
                         <p>ArtWork</p>
                     </div>
-                    <div class="flex-1 mt-12 w-full px-2 space-y-1">
+                    <div class="flex-1 mt-8 w-full px-2 space-y-1">
                         <a v-for="item in navigation" :key="item.name" :href="item.href"
                            :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', ' font-semibold group w-full p-3 rounded-md flex flex-col items-center text-sm']">
                             <component :is="item.icon"
@@ -80,7 +80,7 @@
                             {{ item.name }}
                         </a>
                         <h2 v-if="$page.props.can.view_users || $page.props.can.view_departments" @click="showSystemSettings = !showSystemSettings"
-                            class="text-md pt-12 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
+                            class="text-md pt-4 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
                             System
                             <ChevronUpIcon v-if="showSystemSettings"
                                            class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
@@ -274,6 +274,13 @@ export default {
                     has_permission: true,
                     href: route('project.settings'),
                     route: ['/settings/projects'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
+                    name: 'Checklisten',
+                    has_permission: true,
+                    href: route('checklists.management'),
+                    route: ['/checklists/create'],
                     icon: ArrowCircleRightIcon
                 },
             ]

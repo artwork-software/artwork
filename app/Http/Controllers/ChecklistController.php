@@ -17,7 +17,7 @@ class ChecklistController extends Controller
      */
     public function create()
     {
-        return inertia('Checklists/Create');
+        return inertia('Checklists/ChecklistTemplateManagement');
     }
 
     /**

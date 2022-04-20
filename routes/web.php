@@ -80,7 +80,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     //Checklists
-    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
+    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.management');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
     Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);

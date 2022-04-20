@@ -17,11 +17,11 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
-            $table->string('number_of_participants');
-            $table->string('cost_center');
-            $table->unsignedBigInteger('sector_id')->default(null);
-            $table->unsignedBigInteger('category_id')->default(null);;
-            $table->unsignedBigInteger('genre_id')->default(null);;
+            $table->string('number_of_participants')->nullable();
+            $table->string('cost_center')->nullable();
+            $table->unsignedBigInteger('sector_id')->nullable();
+            $table->unsignedBigInteger('category_id')->nullable();
+            $table->unsignedBigInteger('genre_id')->nullable();
             $table->timestamps();
         });
     }

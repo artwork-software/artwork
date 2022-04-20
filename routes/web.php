@@ -57,12 +57,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Users
     Route::get('/users', [UserController::class, 'index'])->name('users');
+    Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
     Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
+
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');
+    Route::get('/departments/search', [DepartmentController::class, 'search'])->name('departments.search');
     Route::get('/departments/create', [DepartmentController::class, 'create'])->name('departments.create');
     Route::post('/departments', [DepartmentController::class, 'store'])->name('departments.store');
     Route::get('/departments/{department}', [DepartmentController::class, 'show'])->name('departments.show');
@@ -72,6 +75,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Projects
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
+    Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');

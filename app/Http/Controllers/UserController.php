@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Models\Department;
 use App\Models\User;
@@ -22,6 +23,13 @@ class UserController extends Controller
     public function __construct()
     {
         $this->authorizeResource(User::class, 'user');
+    }
+
+    public function search(SearchRequest $request) {
+
+        $this->authorize('viewAny',User::class);
+
+        return User::search($request->input('query'))->get();
     }
 
     /**

@@ -17,7 +17,7 @@
                         </div>
                     </div>
                     <div class="flex items-center">
-                        <div class="inset-y-0 mr-3 pointer-events-none">
+                        <div @click="search()" class="inset-y-0 mr-3">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                     </div>
@@ -404,6 +404,14 @@ export default defineComponent({
         }
     },
     methods: {
+        search() {
+            console.log('test')
+            axios.get('/users/search', {
+                params: {query: "Jakob"}
+            }).then( response => {
+                console.log(response)
+            })
+        },
         openSuccessModal() {
             this.showSuccessModal = true;
         },

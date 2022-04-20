@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Category;
@@ -78,6 +79,19 @@ class ProjectController extends Controller
                 'projects' => $sector->projects
             ])
         ]);
+    }
+
+    public function search_departments_and_users(SearchRequest $request): array
+    {
+
+        $this->authorize('viewAny',Department::class);
+        $this->authorize('viewAny',User::class);
+
+        return [
+            Department::search($request->input('query'))->get(),
+            User::search($request->input('query'))->get()
+        ];
+
     }
 
     /**

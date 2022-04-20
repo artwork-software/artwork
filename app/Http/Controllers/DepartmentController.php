@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Models\Department;
 use App\Models\User;
@@ -19,6 +20,13 @@ class DepartmentController extends Controller
     public function __construct()
     {
         $this->authorizeResource(Department::class);
+    }
+
+    public function search(SearchRequest $request) {
+
+        $this->authorize('viewAny',Department::class);
+
+        return Department::search($request->input('query'))->get();
     }
 
     /**

@@ -63,7 +63,8 @@ test('users with the permission can create projects and assign users and departm
 
     $this->assertDatabaseHas('project_user', [
         'project_id' => $project->id,
-        'user_id' => $this->assigned_user->id
+        'user_id' => $this->assigned_user->id,
+        'is_admin' => true,
     ]);
 
     $this->assertDatabaseHas('department_project', [

@@ -37,8 +37,8 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
-                'sector_id' => $project->sector_id,
-                'category_id' => $project->sector_id,
+                'sector' => $project->sector,
+                'category' => $project->category,
                 'genre_id' => $project->genre_id,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
@@ -110,8 +110,8 @@ class ProjectController extends Controller
         if (Auth::user()->can('update users')) {
             $project->users()->sync(
                 collect($request->assigned_user_ids)
-                    ->map(function ($user_id) {
-                        return $user_id;
+                    ->map(function ($user) {
+                        return $user;
                     })
             );
         } else {

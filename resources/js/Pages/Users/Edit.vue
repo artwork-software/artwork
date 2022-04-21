@@ -45,8 +45,8 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <!-- TODO: EMAIL NUR NICHT DISABLED WENN ROLLE VOM ANGEMELDETEM NUTZER ADMIN IST -->
-                                            <input type="text" v-model="this.user_to_edit.email" disabled
-                                                   class="shadow-sm placeholder-secondary focus:ring-black bg-gray-100 focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                            <input type="text" v-model="this.user_to_edit.email" :disabled="!$page.props.is_admin" :class="$page.props.is_admin ? '' : 'bg-gray-100'"
+                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
                                     </div>

@@ -177,7 +177,36 @@
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest.
                     </div>
-                    <!-- TODO: Volltextsuche nach allen users hier -->
+                    <div class="mt-6 relative">
+                        <div class="my-auto w-full">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="userSearch"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                        </div>
+
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(user, index) in user_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addUserToTeamUsersArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
                     <div class="mt-4">
                         <div class="flex">
                         </div>
@@ -191,7 +220,7 @@
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
                             </div>
-                            <button type="button" @click="deleteUserFromTeam(index)">
+                            <button type="button" @click="deleteUserFromTeam(user)">
                                 <span class="sr-only">User aus Team entfernen</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
@@ -257,6 +286,8 @@ export default {
             deletingTeam: false,
             showSuccess: false,
             deletingAllTeamMembers: false,
+            user_query: "",
+            user_search_results: [],
             teamForm: this.$inertia.form({
                 _method: 'PUT',
                 name: this.department.name,
@@ -288,8 +319,8 @@ export default {
         closeChangeTeamMembersModal() {
             this.showChangeTeamMemberModal = false;
         },
-        deleteUserFromTeam(index) {
-            this.department.users.splice(index, 1);
+        deleteUserFromTeam(user) {
+            this.department.users.splice(this.department.users.indexOf(user), 1);
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -306,6 +337,32 @@ export default {
             this.teamForm.users = [];
             this.teamForm.patch(route('departments.edit',{department: this.department.id}));
             this.closeDeleteAllTeamMembersModal();
+        },
+        addUserToTeamUsersArray(user) {
+            for(let teamUser of this.teamForm.users) {
+                //if User is already in Team, do nothing
+                if(user.id === teamUser.id) {
+                    this.user_query = ""
+                    return;
+                }
+            }
+            this.teamForm.users.push(user);
+            this.user_query = "";
+            this.user_search_results = []
+        },
+    },
+    watch: {
+        user_query: {
+            handler() {
+                if(this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
+                    }).then( response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
         }
     },
     setup() {

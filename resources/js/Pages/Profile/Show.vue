@@ -31,7 +31,7 @@
 
                                             <div class="mt-1 ml-5 flex-grow relative">
                                                 <input id="first_name" v-model="userForm.first_name" type="text"
-                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                        placeholder="placeholder"/>
                                                 <label for="first_name"
                                                        class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
@@ -41,7 +41,7 @@
                                         <div class="sm:col-span-3 flex items-end">
                                             <div class="relative mt-1 w-full">
                                                 <input id="last_name" v-model="userForm.last_name" type="text"
-                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0
+                                                       class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0
                                                    border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                        placeholder="placeholder"/>
                                                 <label for="last_name"
@@ -60,21 +60,21 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
+                                                   class="text-primary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300"/>
+                                                   class="text-primary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1 relative">
                                             <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
-                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:border-primary']"/>
+                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:border-black focus:ring-black']"/>
 
                                             <div v-if="!email_validation.email" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -89,7 +89,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                    placeholder="Telefonnummer"
-                                                   class="text-primary border-2 w-full font-semibold border-gray-300 "/>
+                                                   class="text-primary border-2 w-full focus:border-black focus:ring-black font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -99,7 +99,7 @@
                                             <textarea
                                                 placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?"
                                                 v-model="userForm.description" rows="3"
-                                                class="focus:border-primary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="focus:border-black focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">

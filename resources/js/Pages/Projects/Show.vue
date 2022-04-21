@@ -64,7 +64,6 @@
                 <div class="mt-2 text-secondary text-xs">
                     zuletzt geändert:
                 </div>
-                {{ project }}
                 <div class="mt-2 subpixel-antialiased text-secondary">
                     {{ project.description }}
                 </div>
@@ -73,13 +72,15 @@
                     Teilnehmer*innen:
                     {{ project.number_of_participants ? project.number_of_participants : 'noch nicht definiert' }}
                 </div>
-                <div class="mt-3 text-secondary text-xs">
-                    Kategorie: {{ project.category ? project.category : 'noch nicht definiert' }} | Genre:
+                <div class="mt-3 flex text-secondary text-xs">
+                    <span class="mr-2">Kategorie: </span>
+                     <CategoryIconCollection v-if="project.category" height="16" width="16" :iconName="project.category.svg_name" />
+                    <span class="ml-1 mr-1">{{ project.category ? project.category.name : 'noch nicht definiert' }} </span> | Genre:
                     {{ project.genre ? project.genre : 'noch nicht definiert' }} | Bereich:
-                    {{ project.field ? project.field : 'noch nicht definiert' }}
+                    {{ project.sector ? project.sector : 'noch nicht definiert' }}
                 </div>
-                <h3 class="text-xl mt-6 mb-4 leading-6 font-bold font-lexend text-gray-900">Wann und wo?</h3>
-                <span class="text-secondary text-sm mb-4">Termin & Raum noch nicht definiert</span>
+                <h3 class="text-xl mt-12 mb-4 leading-6 font-bold font-lexend text-gray-900">Wann und wo?</h3>
+                <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
                 <div class="flex">
@@ -394,7 +395,36 @@
                         Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest ein. Einzelne
                         Mitglieder kannst du zum Projektadmin oder zur Projektleitung ernennen.
                     </div>
-                    <!-- TODO: Volltextsuche nach allen teams hier -->
+                    <div class="mt-6 relative">
+                        <div class="my-auto w-full">
+                            <input id="userSearch" v-model="department_query" type="text" autocomplete="off"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="userSearch"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                        </div>
+
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="department_search_results.length > 0 && department_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(department, index) in department_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addDepartmentToProjectTeamArray(department)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ department.name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
                     <div class="mt-4">
                         <div class="flex">
                         </div>
@@ -452,7 +482,36 @@
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
                     </div>
-                    <!-- TODO: Volltextsuche nach allen departments hier -->
+                    <div class="mt-6 relative">
+                        <div class="my-auto w-full">
+                            <input id="userSearch" v-model="department_query" type="text" autocomplete="off"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="userSearch"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                        </div>
+
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="department_search_results.length > 0 && department_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(department, index) in department_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addDepartmentToChecklistTeamArray(department)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ department.name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
                     <div class="mt-4">
                         <div class="flex">
                         </div>
@@ -507,6 +566,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import Checkbox from "@/Jetstream/Checkbox";
+import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -518,6 +578,7 @@ export default {
     name: "ProjectShow",
     props: ['project'],
     components: {
+        CategoryIconCollection,
         Checkbox,
         TeamIconCollection,
         AppLayout,
@@ -564,6 +625,8 @@ export default {
             isInfoTab: false,
             editingTeam: false,
             editingChecklistTeams:false,
+            department_query: "",
+            department_search_results: [],
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -641,6 +704,30 @@ export default {
         },
         changeManagerStatus(){
 
+        },
+        addDepartmentToChecklistTeamArray(department){
+            for(let assigned_department_id of this.checklistForm.assigned_department_ids) {
+                if(department.id === assigned_department_id) {
+                    this.department_query = ""
+                    return;
+                }
+            }
+            this.checklistForm.assigned_department_ids.push(department.id);
+            this.department_query = ""
+        }
+    },
+    watch: {
+        department_query: {
+            handler() {
+                if(this.department_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.department_query}
+                    }).then( response => {
+                        this.department_search_results = response.data
+                    })
+                }
+            },
+            deep: true
         }
     },
     setup() {

@@ -190,7 +190,7 @@
 
                             <div class="mt-6 relative">
                                 <div class="my-auto w-full">
-                                    <input id="userSearch" v-model="user_query" type="text"
+                                    <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                            class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                            placeholder="placeholder"/>
                                     <label for="userSearch"

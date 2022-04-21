@@ -167,7 +167,7 @@
                         <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
                                 <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                         </span>
-                        <Disclosure @focusout="close()" as="div">
+                        <Disclosure as="div">
                             <div class="flex mt-4 mb-10">
                                 <DisclosureButton
                                     class="mt-3 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black">
@@ -461,7 +461,7 @@ export default defineComponent({
                     this.form.permissions.push(item.permissionName);
                 }
             })
-            this.form.role = this.selected;
+            this.form.role = this.selected.roleName;
             console.log(this.form.role);
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();

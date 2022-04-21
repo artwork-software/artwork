@@ -39,9 +39,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
-                'sector' => $project->sector->name,
+                'sector' => $project->sector,
                 'category' => $project->category,
-                'genre' => $project->genre->name,
+                'genre' => $project->genre,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -85,8 +85,8 @@ class ProjectController extends Controller
     public function search_departments_and_users(SearchRequest $request): array
     {
 
-        $this->authorize('viewAny',Department::class);
-        $this->authorize('viewAny',User::class);
+        $this->authorize('viewAny', Department::class);
+        $this->authorize('viewAny', User::class);
 
         return [
             Department::search($request->input('query'))->get(),
@@ -158,6 +158,7 @@ class ProjectController extends Controller
         $public_checklists = Checklist::where('project_id', $project->id)->where('user_id', null)->get();
         //$private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
 
+
         return inertia('Projects/Show', [
             'project' => [
                 'id' => $project->id,
@@ -165,9 +166,9 @@ class ProjectController extends Controller
                 'description' => $project->description,
                 'number_of_participants' => $project->number_of_participants,
                 'cost_center' => $project->cost_center,
-                'sector' => $project->sector->name,
-                'category' => $project->category->name,
-                'genre' => $project->genre->name,
+                'sector' => $project->sector,
+                'category' => $project->category,
+                'genre' => $project->genre,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -287,7 +288,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign departments to a project.'], 403);
         }
 
-        return Redirect::route('projects.update', $project -> id)->with('success', 'Project updated');
+        return Redirect::route('projects.update', $project->id)->with('success', 'Project updated');
     }
 
     /**

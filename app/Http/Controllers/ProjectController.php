@@ -89,8 +89,8 @@ class ProjectController extends Controller
         $this->authorize('viewAny', User::class);
 
         return [
-            Department::search($request->input('query'))->get(),
-            User::search($request->input('query'))->get()
+            'departments' => Department::search($request->input('query'))->get(),
+            'users' => User::search($request->input('query'))->get()
         ];
 
     }

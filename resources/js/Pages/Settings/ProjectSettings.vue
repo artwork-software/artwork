@@ -101,7 +101,7 @@
                     Lege bis zu 10 Projektkategorien fest. Projekte können diesen anschließend zugeordnet werden.
                 </div>
             </div>
-            <ul role="list" class="mt-5 w-full">
+            <ul role="list" class="mt-5 mb-20 w-full">
                 <li v-for="(category,index) in categories.data" :key="category.id"
                     class="flex justify-between">
                     <div class="flex">

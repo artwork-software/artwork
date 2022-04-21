@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Teamprofil">
+    <app-layout title="Projects">
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex">
@@ -79,14 +79,14 @@
                     <span class="ml-1 mr-1">{{
                             project.category ? project.category.name : 'noch nicht definiert'
                         }} </span> | Genre:
-                    {{ project.genre ? project.genre : 'noch nicht definiert' }} | Bereich:
-                    {{ project.sector ? project.sector : 'noch nicht definiert' }}
+                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} | Bereich:
+                    {{ project.sector ? project.sector.name : 'noch nicht definiert' }}
                 </div>
                 <h3 class="text-xl mt-12 mb-4 leading-6 font-bold font-lexend text-gray-900">Wann und wo?</h3>
                 <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
-                <div class="flex">
+                <div class="flex mt-10">
                     <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
                     <div class="cursor-pointer" @click="openEditProjectTeamModal">
                         <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
@@ -105,6 +105,14 @@
                 </div>
                 <div class="flex w-full">
                     <span class="flex text-secondary -mt-16">Projektleitung</span>
+                    <div class="flex " v-for="user in this.project.users">
+                        <img :src="user.profile_photo_url" :alt="user.name"
+                             class="rounded-full h-11 w-11 object-cover"/>
+                    </div>
+                    <div class="flex " v-for="department in this.project.departments">
+                        <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
+                                            class="rounded-full h-11 w-11 object-cover"/>
+                    </div>
                 </div>
 
             </div>
@@ -136,8 +144,8 @@
             </div>
             <div class="max-w-screen-2xl mb-20 mt-14 ml-20 mr-10 flex flex-wrap flex-row">
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab">
-                    <div class="flex items-center mb-4">
+                <div v-if="isChecklistTab" class="flex w-full flex-wrap">
+                    <div class="flex w-full items-center mb-4">
                         <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Checklisten </h3>
                         <button @click="openAddChecklistModal" type="button"
                                 class="flex ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -150,89 +158,114 @@
                         </div>
                     </div>
                     <div class="flex w-full">
-                        <span v-if="project.checklists.length === 0"
+                        <span v-if="project.public_checklists.length === 0"
                               class="text-secondary subpixel-antialiased font-semibold text-sm mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
                         <div v-else>
-                            <div>
-                                <div v-for="checklist in project.checklists" class="flex bg-white">
-                                    {{ checklist.name }}
-
-                                    <Menu as="div" class="my-auto relative">
-                                        <div class="flex">
-                                            <MenuButton
-                                                class="flex ml-6">
-                                                <DotsVerticalIcon
-                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                    aria-hidden="true"/>
-                                            </MenuButton>
-                                        </div>
-                                        <transition enter-active-class="transition ease-out duration-100"
-                                                    enter-from-class="transform opacity-0 scale-95"
-                                                    enter-to-class="transform opacity-100 scale-100"
-                                                    leave-active-class="transition ease-in duration-75"
-                                                    leave-from-class="transform opacity-100 scale-100"
-                                                    leave-to-class="transform opacity-0 scale-95">
-                                            <MenuItems
-                                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                <div class="py-1">
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click="openEditChecklistTeamsModal(checklist)"
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Teams zuweisen
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click=""
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Bearbeiten
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click=""
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Alle Aufgaben als erledigt markieren
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click=""
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <PencilAltIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Als Vorlage speichern
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a href="#" @click=""
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <DuplicateIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Duplizieren
-                                                        </a>
-                                                    </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
-                                                        <a @click=""
-                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TrashIcon
-                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                aria-hidden="true"/>
-                                                            Löschen
-                                                        </a>
-                                                    </MenuItem>
+                            <div class="flex w-full flex-wrap">
+                                <div v-for="checklist in project.public_checklists" class="flex bg-white my-2">
+                                    <div class="flex w-full flex-wrap p-4">
+                                        <div class="flex justify-between w-full">
+                                            <div class="flex">
+                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                        {{ checklist.name }}
+                                        </span>
+                                            </div>
+                                            <div class="flex">
+                                                <div class="flex " v-for="department in checklist.departments">
+                                                    <TeamIconCollection :iconName="department.svg_name"
+                                                                        :alt="department.name"
+                                                                        class="rounded-full h-9 w-9 object-cover"/>
                                                 </div>
-                                            </MenuItems>
-                                        </transition>
-                                    </Menu>
+                                                <Menu as="div" class="my-auto relative">
+                                                    <div class="flex">
+                                                        <MenuButton
+                                                            class="flex ml-6">
+                                                            <DotsVerticalIcon
+                                                                class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                aria-hidden="true"/>
+                                                        </MenuButton>
+                                                    </div>
+                                                    <transition enter-active-class="transition ease-out duration-100"
+                                                                enter-from-class="transform opacity-0 scale-95"
+                                                                enter-to-class="transform opacity-100 scale-100"
+                                                                leave-active-class="transition ease-in duration-75"
+                                                                leave-from-class="transform opacity-100 scale-100"
+                                                                leave-to-class="transform opacity-0 scale-95">
+                                                        <MenuItems
+                                                            class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            <div class="py-1">
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click="openEditChecklistTeamsModal(checklist)"
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <PencilAltIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Teams zuweisen
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click=""
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <PencilAltIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Bearbeiten
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click=""
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <PencilAltIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Alle Aufgaben als erledigt markieren
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click=""
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <PencilAltIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Als Vorlage speichern
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a href="#" @click=""
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <DuplicateIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Duplizieren
+                                                                    </a>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }">
+                                                                    <a @click=""
+                                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                        <TrashIcon
+                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                            aria-hidden="true"/>
+                                                                        Löschen
+                                                                    </a>
+                                                                </MenuItem>
+                                                            </div>
+                                                        </MenuItems>
+                                                    </transition>
+                                                </Menu>
+                                            </div>
+                                        </div>
+                                        <div class="flex w-full">
+                                            <button @click="openAddTaskModal" type="button"
+                                                    class="flex ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                            </button>
+                                            <div v-if="$page.props.can.show_hints" class="flex">
+                                                <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                                <span
+                                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -240,7 +273,7 @@
                 </div>
             </div>
         </div>
-        <!-- Projekt erstellen Modal-->
+        <!-- Projekt bearbeiten Modal-->
         <jet-dialog-modal :show="editingProject" @close="closeEditProjectModal">
             <template #content>
                 <div class="mx-4">
@@ -266,14 +299,22 @@
                                                 v-model="form.description" rows="4"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <div class="mt-4 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                        <div v-on:click="showDetails = !showDetails">
+                            <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-4 ">
+                                Weitere Angaben
+                                <ChevronUpIcon v-if="showDetails"
+                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                            </h2>
+                        </div>
+                        <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
                             <div class="sm:col-span-3">
-                                <div class="mt-1">
+                                <div class="">
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary focus:border-primary border-2 w-full font-semibold border-gray-300 "/>
+                                           class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                                 </div>
                             </div>
-                            <Listbox as="div" class="sm:col-span-3 mt-1" v-model="selectedParticipantNumber">
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
                                 <div class="relative">
                                     <ListboxButton
                                         class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
@@ -294,14 +335,140 @@
                                                            :key="participantNumber.number"
                                                            :value="participantNumber.number"
                                                            v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <span
-                                                :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                 {{ participantNumber.number }}
                                             </span>
                                                     <span v-if="selected"
                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon class="h-5 w-5" aria-hidden="true"/>
+                                                      <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedGenre">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span>{{ selectedGenre.name }}</span>
+                                        </span>
+                                        <span v-if="selectedGenre.name === ''"
+                                              class="block truncate">Genre wählen</span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="genre in genres.data"
+                                                           :key="genre.name"
+                                                           :value="genre"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ genre.name }}
+                                                    </span>
+                                                    <span
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedSector">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span>{{ selectedSector.name }}</span>
+                                        </span>
+                                        <span v-if="selectedSector.name === ''"
+                                              class="block truncate items-center">
+                                            <span>Bereich wählen</span>
+                                        </span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="sector in sectors.data"
+                                                           :key="sector.name"
+                                                           :value="sector"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ sector.name }}
+                                                    </span>
+                                                    <span
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <Listbox as="div" class="sm:col-span-3" v-model="selectedCategory">
+                                <div class="relative">
+                                    <ListboxButton
+                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center flex">
+                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16"
+                                                                    :width="16" :iconName="selectedCategory.svg_name"/> <span
+                                            class="ml-4">{{ selectedCategory.name }}</span>
+                                        </span>
+                                        <span v-if="selectedCategory.name === ''"
+                                              class="block truncate">Kategorie wählen</span>
+                                        <span
+                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions
+                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" class="max-h-8"
+                                                           v-for="category in categories.data"
+                                                           :key="category.name"
+                                                           :value="category"
+                                                           v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <CategoryIconCollection :width="16" :height="16"
+                                                                            :iconName="category.svg_name"/>
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ category.name }}
+                                                    </span>
+                                                    <span
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
                                                 </span>
                                                 </li>
                                             </ListboxOption>
@@ -315,7 +482,7 @@
                             class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="editProject"
                             :disabled="this.form.name === ''">
-                            Anlegen
+                            Speichern
                         </button>
                     </div>
 
@@ -386,7 +553,7 @@
             </template>
 
         </jet-dialog-modal>
-        <!-- Change TeamMember Modal -->
+        <!-- Change Project Team Modal -->
         <jet-dialog-modal :show="editingTeam" @close="closeEditProjectTeamModal">
             <template #content>
                 <div class="mx-3">
@@ -402,7 +569,8 @@
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
-                            <input id="departmentSearch" v-model="department_query" type="text" autocomplete="off"
+                            <input id="departmentSearch" v-model="department_and_user_query" type="text"
+                                   autocomplete="off"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="departmentSearch"
@@ -412,17 +580,37 @@
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
-                            <div v-if="department_search_results.length > 0 && department_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                            <div
+                                v-if="(department_and_user_search_results.users|| department_and_user_search_results.departments) && department_and_user_query.length > 0"
+                                class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
-                                    <div v-for="(department, index) in department_search_results" :key="index"
+                                    <div v-for="(user, index) in department_and_user_search_results.users" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addUserToProjectTeamArray(user)"
+                                               class="font-bold px-4 flex text-white items-center hover:border-l-4 hover:border-l-success">
+                                                <img :src="user.profile_photo_url" :alt="user.name"
+                                                     class="rounded-full h-8 w-8 object-cover"/>
+                                                <span class="ml-2 truncate">
+                                                    {{ user.first_name }} {{ user.last_name }}
+                                                </span>
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div v-for="(department, index) in department_and_user_search_results.departments"
+                                         :key="index"
                                          class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4">
                                             <p @click="addDepartmentToProjectTeamArray(department)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ department.name }}
+                                               class="font-bold flex items-center px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                <TeamIconCollection :iconName="department.svg_name"
+                                                                    :alt="department.name"
+                                                                    class="rounded-full h-8 w-8 object-cover"/>
+                                                <span class="ml-2">
+                                                    {{ department.name }}
+                                                </span>
                                             </p>
                                         </div>
                                     </div>
@@ -431,9 +619,8 @@
                         </transition>
                     </div>
                     <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(user,index) in department.users"
+                        {{ assignedUsers }}
+                        <span v-for="user in assignedUsers"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full"
@@ -445,9 +632,9 @@
                             </div>
                             <button type="button" @click="deleteUserFromProjectTeam(user)">
                                 <span class="sr-only">User aus Team entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
-                            <div class="flex justify-between items-center my-1.5 h-5">
+                            <div class="flex justify-between items-center ml-16 my-1.5 h-5">
                                 <div class="flex items-center justify-start">
                                     <input @change="changeAdminStatus(user)" v-model="user.is_admin"
                                            type="checkbox"
@@ -456,15 +643,30 @@
                                        class="ml-4 my-auto text-sm">Projektadmin</p>
                                     <input @change="changeManagerStatus(user)" v-model="user.is_manager"
                                            type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none ml-4 h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.is_manager ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">Projektleitung</p>
                                 </div>
                             </div>
 
                         </span>
+                        <span v-for="department in assignedDepartments"
+                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                            <div class="flex items-center">
+                                <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
+                                                    class="rounded-full h-11 w-11 object-cover"/>
+                                                <span class="flex ml-4">
+                                                    {{ department.name }}
+                                                </span>
+                            </div>
+                            <button type="button" @click="deleteDepartmentFromProjectTeam(department)">
+                                <span class="sr-only">Team aus dem Projekt entfernen</span>
+                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
+                            </button>
+
+                        </span>
                     </div>
-                    <button @click="editTeam"
+                    <button @click="editProjectTeam"
                             class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                     >Speichern
                     </button>
@@ -523,12 +725,13 @@
                         <span v-for="(team,index) in checklist_assigned_departments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <TeamIconCollection :iconName="team.svg_name"/>
+                                <TeamIconCollection :iconName="team.svg_name"
+                                                    class="rounded-full h-11 w-11 object-cover"/>
                                 <span class="flex ml-4">
                                 {{ team.name }}
                                     </span>
                             </div>
-                            <button type="button" @click="deleteTeamFromChecklist(index)">
+                            <button type="button" @click="deleteTeamFromChecklist(team)">
                                 <span class="sr-only">Team aus Checkliste entfernen</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
@@ -563,7 +766,14 @@ import {
     Switch
 } from "@headlessui/vue";
 import {PencilAltIcon, TrashIcon, XIcon, DuplicateIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon, PlusSmIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronDownIcon,
+    ChevronUpIcon,
+    DotsVerticalIcon,
+    XCircleIcon,
+    PlusSmIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -581,7 +791,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors'],
     components: {
         CategoryIconCollection,
         Checkbox,
@@ -609,7 +819,8 @@ export default {
         ListboxOption,
         ListboxOptions,
         PlusSmIcon,
-        Switch
+        Switch,
+        ChevronUpIcon
     },
     computed: {
         tabs() {
@@ -623,7 +834,7 @@ export default {
     data() {
         return {
             editingProject: false,
-            selectedParticipantNumber: this.project.number_of_participants,
+            selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             addingChecklist: false,
             isScheduleTab: false,
             isChecklistTab: true,
@@ -631,22 +842,33 @@ export default {
             editingTeam: false,
             editingChecklistTeams: false,
             department_query: "",
+            department_and_user_query: "",
             department_search_results: [],
+            department_and_user_search_results: [],
             checklist_assigned_departments: [],
-            checklistIDToEdit: null,
+            selectedCategory: {name: '', svg_name: ''},
+            selectedSector: {name: ''},
+            selectedGenre: {name: ''},
+            showDetails: false,
+            checklistToEdit: null,
+            assignedUsers: this.project.users,
+            assignedDepartments: this.project.departments,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
                 cost_center: this.project.cost_center,
                 number_of_participants: this.project.number_of_participants,
-                assigned_user_ids: this.project.users
+                assigned_user_ids: [],
+                assigned_departments: [],
+                sector_id: null,
+                category_id: null,
+                genre_id: null,
 
             }),
             checklistForm: useForm({
                 name: "",
                 project_id: this.project.id,
                 tasks: [],
-                users: [],
                 assigned_department_ids: [],
                 private: false,
             }),
@@ -666,7 +888,8 @@ export default {
             this.editingTeam = false;
         },
         openEditChecklistTeamsModal(checklist) {
-            this.checklistIDToEdit = checklist.id
+            this.checklistToEdit = checklist;
+            this.checklist_assigned_departments = checklist.departments;
             this.editingChecklistTeams = true;
         },
         closeEditChecklistTeamsModal() {
@@ -677,6 +900,17 @@ export default {
         },
         closeEditProjectModal() {
             this.editingProject = false;
+            this.form.name = "";
+            this.form.description = "";
+            this.form.cost_center = "";
+            this.form.number_of_participants = "";
+            this.selectedParticipantNumber = "";
+            this.selectedCategory = {name: '', svg_name: ''};
+            this.selectedGenre = {name: ''};
+            this.selectedSector = {name: ''};
+            this.form.sector_id = 0;
+            this.form.category_id = 0;
+            this.form.genre_id = 0;
         },
         openAddChecklistModal() {
             this.addingChecklist = true;
@@ -686,9 +920,13 @@ export default {
         },
         addChecklist() {
             this.checklistForm.post(route('checklists.store'), {})
+            this.closeAddChecklistModal();
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
+            this.form.category_id = this.selectedCategory.id;
+            this.form.sector_id = this.selectedSector.id;
+            this.form.genre_id = this.selectedGenre.id;
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },
@@ -705,7 +943,10 @@ export default {
             }
         },
         deleteUserFromProjectTeam(user) {
-
+            this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
+        },
+        deleteDepartmentFromProjectTeam(department) {
+            this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
         },
         changeAdminStatus() {
 
@@ -727,8 +968,51 @@ export default {
             this.checklist_assigned_departments.forEach((department) => {
                 this.checklistForm.assigned_department_ids.push(department.id);
             })
-            this.checklistForm.patch((route('checklists.update', {project: this.checklistIDToEdit}))
-        )
+            this.checklistForm.name = this.checklistToEdit.name;
+            this.checklistForm.project_id = this.checklistToEdit.project_id;
+            this.checklistForm.tasks = this.checklistToEdit.tasks;
+            this.checklistForm.private = this.checklistToEdit.private;
+
+            this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id}))
+            )
+            this.closeEditChecklistTeamsModal();
+        },
+        addUserToProjectTeamArray(userToAdd) {
+            for (let assignedUser of this.assignedUsers) {
+                if (userToAdd.id === assignedUser.id) {
+                    this.department_and_user_query = ""
+                    return;
+                }
+            }
+
+            this.assignedUsers.push(userToAdd);
+            this.department_and_user_query = ""
+        },
+        addDepartmentToProjectTeamArray(departmentToAdd) {
+            for (let assignedDepartment of this.assignedDepartments) {
+                if (departmentToAdd.id === assignedDepartment.id) {
+                    this.department_and_user_query = ""
+                    return;
+                }
+            }
+
+            this.assignedDepartments.push(departmentToAdd);
+            this.department_and_user_query = ""
+        },
+        editProjectTeam() {
+            // TODO: HIER NOCH IS_ADMIN IS_MANAGER VERARBEITEN
+            this.assignedUsers.forEach(user => {
+                this.form.assigned_user_ids.push(user.id);
+            })
+
+            this.assignedDepartments.forEach(department => {
+                this.form.assigned_departments.push(department);
+            })
+            this.form.patch(route('projects.update', {project: this.project.id}));
+            this.closeEditProjectTeamModal();
+        },
+        deleteTeamFromChecklist(team) {
+            this.checklist_assigned_departments.splice(this.checklist_assigned_departments.indexOf(team), 1)
         }
     },
     watch: {
@@ -739,6 +1023,18 @@ export default {
                         params: {query: this.department_query}
                     }).then(response => {
                         this.department_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        },
+        department_and_user_query: {
+            handler() {
+                if (this.department_and_user_query.length > 0) {
+                    axios.get('/projects/users_departments/search', {
+                        params: {query: this.department_and_user_query}
+                    }).then(response => {
+                        this.department_and_user_search_results = response.data
                     })
                 }
             },

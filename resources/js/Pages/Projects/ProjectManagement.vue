@@ -34,14 +34,52 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="flex ml-20">
+                            <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
+                                <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                     :iconName="department.svg_name"
+                                     alt=""/>
+                                <div v-if="project.departments.length >= 3" class="my-auto">
+                                    <Menu as="div" class="relative">
+                                        <div>
+                                            <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                <ChevronDownIcon
+                                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                            </MenuButton>
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                <MenuItem v-for="department in project.departments" v-slot="{ active }">
+                                                    <div
+                                                        :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                                            :iconName="department.svg_name"
+                                                                            alt=""/>
+                                                        <span class="ml-4">
+                                                                {{ department.name }}
+                                                            </span>
+                                                    </div>
+                                                </MenuItem>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
+                            </div>
+                            </div>
                             <div class="flex">
                                 <div class="flex mr-8">
-                                    <div class="my-auto -mr-3" v-for="user in project.users.slice(0,9)">
+                                    <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
                                         <img class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                     </div>
-                                    <div v-if="project.users.length >= 9" class="my-auto">
+                                    <div v-if="project.users.length >= 3" class="my-auto">
                                         <Menu as="div" class="relative">
                                             <div>
                                                 <MenuButton class="flex items-center rounded-full focus:outline-none">

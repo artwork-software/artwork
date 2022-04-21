@@ -209,7 +209,23 @@ class ProjectController extends Controller
                     'text' => $comment->text,
                     'created' => $comment->created
                 ])
-            ]
+            ],
+            'categories' => Category::paginate(10)->through(fn($category) => [
+                'id' => $category->id,
+                'name' => $category->name,
+                'svg_name' => $category->svg_name,
+                'projects' => $category->projects
+            ]),
+            'genres' => Genre::paginate(10)->through(fn($genre) => [
+                'id' => $genre->id,
+                'name' => $genre->name,
+                'projects' => $genre->projects
+            ]),
+            'sectors' => Sector::paginate(10)->through(fn($sector) => [
+                'id' => $sector->id,
+                'name' => $sector->name,
+                'projects' => $sector->projects
+            ])
         ]);
     }
 

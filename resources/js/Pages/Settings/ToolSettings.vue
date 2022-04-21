@@ -26,7 +26,7 @@
                     <div class="border-2 border-gray-300 border-dashed rounded-md p-2">
                         <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo"
                              class="rounded-md h-20 w-20 object-cover">
-                        <div v-if="$page.props.user.bigLogo === null">
+                        <div v-if="$page.props.big_logo === null">
                         <svg v-show="!bigLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
                              fill="none"
                              viewBox="0 0 48 48" aria-hidden="true">
@@ -36,7 +36,7 @@
                         </svg>
                         </div>
                         <div v-else-if="!bigLogoPreview">
-                            <img :src="$page.props.user.bigLogo" alt="Logo"
+                            <img :src="$page.props.big_logo" alt="Logo"
                                  class="rounded-md h-20 w-20 object-cover">
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                     <div class="border-2 border-gray-300 border-dashed rounded-md p-2">
                         <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo"
                              class="rounded-md h-20 w-20 object-cover">
-                        <div v-if="$page.props.user.smallLogo === null">
+                        <div v-if="$page.props.small_logo === null">
                         <svg v-show="!smallLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
                              fill="none"
                              viewBox="0 0 48 48" aria-hidden="true">
@@ -69,7 +69,7 @@
                         </svg>
                         </div>
                         <div v-else-if="!smallLogoPreview">
-                            <img :src="$page.props.user.smallLogo" alt="Logo"
+                            <img :src="$page.props.small_logo" alt="Logo"
                                  class="rounded-md h-20 w-20 object-cover">
                         </div>
                     </div>
@@ -88,7 +88,7 @@
                     <div
                         class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                         <div v-show="!bannerPreview" class="space-y-1 text-center">
-                            <div v-if="$page.props.user.banner === null">
+                            <div v-if="$page.props.banner === null">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
                                      viewBox="0 0 48 48" aria-hidden="true">
                                     <path
@@ -107,7 +107,7 @@
                                 <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
                             </div>
                             <div v-else >
-                                <img :src="$page.props.user.banner" alt="Logo"
+                                <img :src="$page.props.banner" alt="Logo"
                                      class="rounded-md h-60 w-60 object-cover">
                             </div>
                         </div>

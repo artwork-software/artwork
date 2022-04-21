@@ -42,11 +42,13 @@ class User extends Authenticatable
         'toggle_hints'
     ];
 
-    public function departments() {
+    public function departments()
+    {
         return $this->belongsToMany(Department::class);
     }
 
-    public function projects() {
+    public function projects()
+    {
         return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');;
     }
 
@@ -88,53 +90,15 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
-        'smallLogo',
-        'bigLogo',
-        'banner'
     ];
 
-    public function getBannerAttribute(): ?string
-    {
-        $path = app(GeneralSettings::class)->banner_path;
-
-        if($path) {
-            return Storage::disk('public')->url($path);
-        } else {
-            return null;
-        }
-
-    }
-
-    public function getSmallLogoAttribute(): ?string
-    {
-        $path = app(GeneralSettings::class)->small_logo_path;
-
-        if($path) {
-            return Storage::disk('public')->url($path);
-        } else {
-            return null;
-        }
-
-    }
-
-    public function getBigLogoAttribute(): ?string
-    {
-        $path = app(GeneralSettings::class)->big_logo_path;
-
-        if($path) {
-            return Storage::disk('public')->url($path);
-        } else {
-            return null;
-        }
-
-    }
     public function toSearchableArray(): array
     {
         return [
-                'id' => $this->id,
-                'first_name' => $this->first_name,
-                'last_name' => $this->last_name
-            ];
+            'id' => $this->id,
+            'first_name' => $this->first_name,
+            'last_name' => $this->last_name
+        ];
 
     }
 }

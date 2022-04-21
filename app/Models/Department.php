@@ -37,4 +37,12 @@ class Department extends Model
     {
         return $this->belongsToMany(Checklist::class);
     }
+    public function toSearchableArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+        ];
+
+    }
 }

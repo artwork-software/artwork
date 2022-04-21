@@ -88,7 +88,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
     Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
-    Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update']);
+    Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy']);
 
     //Tasks

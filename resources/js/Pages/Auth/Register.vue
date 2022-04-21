@@ -133,7 +133,7 @@
             <div>
 
                 <button type="submit"
-                        class=" inline-flex items-center px-28 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        class=" inline-flex items-center px-32 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         :class="[form.email === '' || form.password === '' || form.first_name === '' || form.last_name === '' || form.password_confirmation === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                         :disabled="form.email === '' || form.password === '' || form.first_name === '' || form.last_name === '' || form.password_confirmation === ''"
                 >

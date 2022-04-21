@@ -74,8 +74,11 @@
                 </div>
                 <div class="mt-3 flex text-secondary text-xs">
                     <span class="mr-2">Kategorie: </span>
-                     <CategoryIconCollection v-if="project.category" height="16" width="16" :iconName="project.category.svg_name" />
-                    <span class="ml-1 mr-1">{{ project.category ? project.category.name : 'noch nicht definiert' }} </span> | Genre:
+                    <CategoryIconCollection v-if="project.category" height="16" width="16"
+                                            :iconName="project.category.svg_name"/>
+                    <span class="ml-1 mr-1">{{
+                            project.category ? project.category.name : 'noch nicht definiert'
+                        }} </span> | Genre:
                     {{ project.genre ? project.genre : 'noch nicht definiert' }} | Bereich:
                     {{ project.sector ? project.sector : 'noch nicht definiert' }}
                 </div>
@@ -151,84 +154,86 @@
                               class="text-secondary subpixel-antialiased font-semibold text-sm mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
                         <div v-else>
                             <div>
-                            <div v-for="checklist in project.checklists" class="flex bg-white">
-                                {{ checklist.name }}
-                            </div>
-                                <Menu as="div" class="my-auto relative">
-                                    <div class="flex">
-                                        <MenuButton
-                                            class="flex ml-6">
-                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                              aria-hidden="true"/>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click="openEditChecklistTeamsModal"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Teams zuweisen
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click=""
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Bearbeiten
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click=""
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Alle Aufgaben als erledigt markieren
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click=""
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Als Vorlage speichern
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click=""
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <DuplicateIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Duplizieren
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click=""
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Löschen
-                                                    </a>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
+                                <div v-for="checklist in project.checklists" class="flex bg-white">
+                                    {{ checklist.name }}
+
+                                    <Menu as="div" class="my-auto relative">
+                                        <div class="flex">
+                                            <MenuButton
+                                                class="flex ml-6">
+                                                <DotsVerticalIcon
+                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                <div class="py-1">
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click="openEditChecklistTeamsModal(checklist)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Teams zuweisen
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click=""
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Bearbeiten
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click=""
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Alle Aufgaben als erledigt markieren
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click=""
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Als Vorlage speichern
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a href="#" @click=""
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <DuplicateIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Duplizieren
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click=""
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TrashIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Löschen
+                                                        </a>
+                                                    </MenuItem>
+                                                </div>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -397,10 +402,10 @@
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
-                            <input id="userSearch" v-model="department_query" type="text" autocomplete="off"
+                            <input id="departmentSearch" v-model="department_query" type="text" autocomplete="off"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
-                            <label for="userSearch"
+                            <label for="departmentSearch"
                                    class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                         </div>
 
@@ -476,7 +481,7 @@
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teams zuweisen
                     </div>
-                    <XIcon @click="closeChangeTeamMembersModal"
+                    <XIcon @click="closeEditChecklistTeamsModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
@@ -515,10 +520,10 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(team,index) in project.departments"
+                        <span v-for="(team,index) in checklist_assigned_departments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <TeamIconCollection :iconName="team.svg_name" />
+                                <TeamIconCollection :iconName="team.svg_name"/>
                                 <span class="flex ml-4">
                                 {{ team.name }}
                                     </span>
@@ -624,9 +629,11 @@ export default {
             isChecklistTab: true,
             isInfoTab: false,
             editingTeam: false,
-            editingChecklistTeams:false,
+            editingChecklistTeams: false,
             department_query: "",
             department_search_results: [],
+            checklist_assigned_departments: [],
+            checklistIDToEdit: null,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -658,11 +665,12 @@ export default {
         closeEditProjectTeamModal() {
             this.editingTeam = false;
         },
-        openEditChecklistTeamsModal(){
-          this.editingChecklistTeams = true;
+        openEditChecklistTeamsModal(checklist) {
+            this.checklistIDToEdit = checklist.id
+            this.editingChecklistTeams = true;
         },
-        closeEditChecklistTeamsModal(){
-          this.editingChecklistTeams = false;
+        closeEditChecklistTeamsModal() {
+            this.editingChecklistTeams = false;
         },
         openEditProjectModal() {
             this.editingProject = true;
@@ -696,33 +704,40 @@ export default {
                 this.isInfoTab = true;
             }
         },
-        deleteUserFromProjectTeam(user){
+        deleteUserFromProjectTeam(user) {
 
         },
-        changeAdminStatus(){
+        changeAdminStatus() {
 
         },
-        changeManagerStatus(){
+        changeManagerStatus() {
 
         },
-        addDepartmentToChecklistTeamArray(department){
-            for(let assigned_department_id of this.checklistForm.assigned_department_ids) {
-                if(department.id === assigned_department_id) {
+        addDepartmentToChecklistTeamArray(department) {
+            for (let assigned_department of this.checklist_assigned_departments) {
+                if (department === assigned_department) {
                     this.department_query = ""
                     return;
                 }
             }
-            this.checklistForm.assigned_department_ids.push(department.id);
+            this.checklist_assigned_departments.push(department);
             this.department_query = ""
+        },
+        saveChecklistTeams() {
+            this.checklist_assigned_departments.forEach((department) => {
+                this.checklistForm.assigned_department_ids.push(department.id);
+            })
+            this.checklistForm.patch((route('checklists.update', {project: this.checklistIDToEdit}))
+        )
         }
     },
     watch: {
         department_query: {
             handler() {
-                if(this.department_query.length > 0) {
-                    axios.get('/users/search', {
+                if (this.department_query.length > 0) {
+                    axios.get('/departments/search', {
                         params: {query: this.department_query}
-                    }).then( response => {
+                    }).then(response => {
                         this.department_search_results = response.data
                     })
                 }

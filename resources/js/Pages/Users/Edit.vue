@@ -44,7 +44,6 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <!-- TODO: EMAIL NUR NICHT DISABLED WENN ROLLE VOM ANGEMELDETEM NUTZER ADMIN IST -->
                                             <input type="text" v-model="this.user_to_edit.email" :disabled="!$page.props.is_admin" :class="$page.props.is_admin ? '' : 'bg-gray-100'"
                                                    class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
@@ -121,6 +120,9 @@
                             </div>
                         </div>
                     </form>
+                    <div class="flex mt-6" v-if="$page.props.is_admin">
+                        <span @click="resetPassword()" class="text-secondary subpixel-antialiased cursor-pointer">Passwort zurücksetzen</span>
+                    </div>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <h3 class="text-2xl mt-16 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
 
@@ -344,6 +346,9 @@ export default defineComponent({
                 description: this.user_to_edit.description,
                 permissions: this.user_to_edit.permissions,
             }),
+            resetPasswordForm: this.$inertia.form({
+              email: this.user_to_edit.email
+            }),
         }
     },
 
@@ -401,6 +406,10 @@ export default defineComponent({
         },
         saveNewTeams() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+        },
+        resetPassword(){
+            console.log(this.resetPasswordForm);
+            this.resetPasswordForm.post(route('password.email'));
         }
     },
     setup() {

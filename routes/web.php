@@ -62,6 +62,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
+    Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');
 
     //Departments
     Route::get('/departments', [DepartmentController::class, 'index'])->name('departments');

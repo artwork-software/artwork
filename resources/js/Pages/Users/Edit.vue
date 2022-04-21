@@ -3,7 +3,6 @@
         <div>
             <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-                    {{user_to_edit}}
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
@@ -123,6 +122,12 @@
                     <div class="flex mt-6" v-if="$page.props.is_admin">
                         <span @click="resetPassword()" class="text-secondary subpixel-antialiased cursor-pointer">Passwort zurücksetzen</span>
                     </div>
+                    <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
+                        {{ password_reset_status }}
+                    </div>
+
+                    <jet-validation-errors class="mb-4" />
+
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <h3 class="text-2xl mt-16 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
 
@@ -267,6 +272,7 @@ import {
 import Checkbox from "@/Layouts/Components/Checkbox";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 
 export default defineComponent({
     computed: {
@@ -327,9 +333,10 @@ export default defineComponent({
         ChevronUpIcon,
         JetDialogModal,
         XIcon,
-        TeamIconCollection
+        TeamIconCollection,
+        JetValidationErrors
     },
-    props: ['user_to_edit', 'permissions', 'departments'],
+    props: ['user_to_edit', 'permissions', 'departments', 'password_reset_status'],
     data() {
         return {
             showUserPermissions: true,
@@ -407,9 +414,8 @@ export default defineComponent({
         saveNewTeams() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         },
-        resetPassword(){
-            console.log(this.resetPasswordForm);
-            this.resetPasswordForm.post(route('password.email'));
+        resetPassword() {
+            this.resetPasswordForm.post(route('user.reset.password'));
         }
     },
     setup() {

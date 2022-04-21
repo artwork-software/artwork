@@ -7,9 +7,14 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Fortify;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -30,6 +35,21 @@ class UserController extends Controller
         $this->authorize('viewAny',User::class);
 
         return User::search($request->input('query'))->get();
+    }
+
+    public function reset_user_password(Request $request) {
+
+        $this->authorize('update',User::class);
+
+        $request->validate([Fortify::email() => 'required|email']);
+
+        $status = Password::broker()->sendResetLink(
+            $request->only(Fortify::email())
+        );
+
+        return $status == Password::RESET_LINK_SENT
+            ? app(SuccessfulPasswordResetLinkRequestResponse::class, ['status' => $status])
+            : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 
     /**
@@ -80,7 +100,8 @@ class UserController extends Controller
                 'permissions' => $user->getPermissionNames(),
                 'available_permissions' => Permission::all()->pluck('name'),
             ],
-            "departments" => Department::all()
+            "departments" => Department::all(),
+            "password_reset_status" => session('status'),
         ]);
     }
 

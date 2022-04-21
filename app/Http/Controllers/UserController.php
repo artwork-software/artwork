@@ -48,7 +48,7 @@ class UserController extends Controller
         );
 
         return $status == Password::RESET_LINK_SENT
-            ? app(SuccessfulPasswordResetLinkRequestResponse::class, ['status' => $status])
+            ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
             : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
     }
 

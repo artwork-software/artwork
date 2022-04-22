@@ -221,8 +221,12 @@
                                                     <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
                                                 </div>
                                                 <div class="flex flex-1 justify-end">
-                                                <InformationCircleIcon class="h-7 w-7 text-gray-400"
-                                                                       aria-hidden="true"/>
+                                                    <InformationCircleIcon data-tooltip-target="tooltip-default" class="h-7 w-7 flex text-gray-400"
+                                                                           aria-hidden="true"/>
+                                                    <div id="tooltip-default" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                                        {{role.tooltipText}}
+                                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -321,12 +325,12 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: "", showIcon: true},
+    {name: 'Keine Rollenrechte', roleName: "", tooltipText: "LOL"},
     {name: 'Adminrechte', roleName: "admin", showIcon: true},
 ]
 
 const userPermissionCheckboxes = [
-    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true},
+    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true, tooltipText:"HIHI"},
     {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users", showIcon: true},
     {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users", showIcon: true},
     {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users", showIcon: true}

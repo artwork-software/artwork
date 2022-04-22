@@ -71,7 +71,7 @@
                     <div v-if="$page.props.big_logo === null" class="text-2xl font-bold text-secondaryHover">
                         <p>ArtWork</p>
                     </div>
-                    <img v-else :src="$page.props.big_logo" class="rounded-full h-20 w-20"/>
+                    <img v-else :src="$page.props.small_logo" class="rounded-full h-20 w-20"/>
                     <div class="flex-1 mt-8 w-full px-2 space-y-1">
                         <a v-for="item in navigation" :key="item.name" :href="item.href"
                            :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', ' font-semibold group w-full p-3 rounded-md flex flex-col items-center text-sm']">

@@ -1058,7 +1058,6 @@ export default {
             this.assignedUsers.forEach(user => {
                 if(user.is_admin !== null){
                     console.log("HEEY IS ADMIN");
-                    this.form.assigned_user_ids.push([id:user.id, 'is_admin':user.is_admin])
                     console.log(this.form.assigned_user_ids);
                 }
                 if(user.is_manager !== null){

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Checklist;
+use App\Models\ChecklistTemplate;
+use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -27,6 +29,43 @@ class ChecklistController extends Controller
      */
     public function store(Request $request)
     {
+        //Check whether checklist should be created on basis of a template
+        if ($request->template_id) {
+            $this->createFromTemplate($request);
+        } else {
+            $this->createWithoutTemplate($request);
+        }
+        return Redirect::back()->with('success', 'Checklist created.');
+    }
+
+    /**
+     * Creates a checklist on basis of a ChecklistTemplate
+     * @param Request $request
+     * @return void
+     */
+    protected function createFromTemplate(Request $request) {
+        $template = ChecklistTemplate::where('id', $request->template_id)->first;
+
+        $checklist = Checklist::create([
+            'name' => $template->name,
+        ]);
+
+        foreach ($template->task_templates as $task_template) {
+            Task::create([
+                'name' => $task_template->name,
+                'description' => $task_template->description,
+                'done' => false,
+                'checklist_id' => $checklist->id
+            ]);
+        }
+    }
+
+    /**
+     * Default creation of a checklist without a template
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse|void
+     */
+    protected function createWithoutTemplate(Request $request) {
         $checklist = Checklist::create([
             'name' => $request->name,
             'project_id' => $request->project_id
@@ -44,8 +83,6 @@ class ChecklistController extends Controller
         } else {
             return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }
-
-        return Redirect::back()->with('success', 'Checklist created.');
     }
 
     /**
@@ -116,16 +153,15 @@ class ChecklistController extends Controller
 
         $checklist->tasks()->createMany($request->tasks);
 
-        if(Auth::user()->can('update departments')) {
+        if (Auth::user()->can('update departments')) {
             $checklist->departments()->sync(
                 collect($request->assigned_department_ids)
                     ->map(function ($department_id) {
                         return $department_id;
                     })
             );
-        }
-        else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'],403);
+        } else {
+            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }
 
         return Redirect::back()->with('success', 'Checklist updated');

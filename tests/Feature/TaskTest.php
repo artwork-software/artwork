@@ -29,43 +29,52 @@ beforeEach(function () {
 
 });
 
-/*
+
 test('users who arent assigned to a checklist cant create tasks on it', function () {
 
     $this->actingAs($this->auth_user);
+    $this->project->users()->attach($this->auth_user);
+
+    $checklist = Checklist::factory()->create([
+        'project_id' => $this->project->id
+    ]);
 
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
         'deadline' => '2022-12-11',
-        'checklist_id' => $this->checklist->id
+        'checklist_id' => $checklist->id
     ])->assertStatus(403);
 });
-*/
 
-/*
+
+
 test('users that are assigned to a checklist can create tasks for it', function () {
 
+    $this->project->users()->attach($this->auth_user);
     $this->assigned_department->users()->attach($this->auth_user);
-    $this->checklist->departments()->attach($this->assigned_department);
+
+    $checklist = Checklist::factory()->create([
+        'project_id' => $this->project->id
+    ]);
+
+    $checklist->departments()->attach($this->assigned_department);
     $this->actingAs($this->auth_user);
 
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
-        'checklist_id' => $this->checklist->id
+        'checklist_id' => $checklist->id
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
-        'checklist_id' => $this->checklist->id
+        'checklist_id' => $checklist->id
     ]);
 
 });
-*/
+
 
 test('users that are admins can create tasks for any checklist in any project', function () {
 
@@ -75,14 +84,13 @@ test('users that are admins can create tasks for any checklist in any project', 
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
         'checklist_id' => $this->checklist->id
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        //'deadline' => '2022-12-11',
         'checklist_id' => $this->checklist->id
     ]);
 

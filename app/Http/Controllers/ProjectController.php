@@ -122,6 +122,8 @@ class ProjectController extends Controller
             'genre_id' => $request->genre_id,
         ]);
 
+        dd($request->assigned_user_ids);
+
         if (Auth::user()->can('update users')) {
             $project->users()->sync(
                 collect($request->assigned_user_ids)

@@ -487,6 +487,11 @@ export default defineComponent({
             return route('user.edit', {user: user.id});
         }
     },
+    mounted() {
+        let ev = document.createEvent("Event");
+        ev.initEvent("DOMContentLoaded", true, true);
+        window.document.dispatchEvent(ev);
+    },
     setup() {
         const selected = ref(roleCheckboxes[0])
 

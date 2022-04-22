@@ -20,7 +20,7 @@ class Project extends Model
     ];
 
     public function users() {
-        return $this->belongsToMany(User::class)->withPivot('is_admin', 'is_manager');
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')->withPivot('is_admin', 'is_manager');
     }
 
     public function departments() {

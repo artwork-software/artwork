@@ -48,7 +48,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment)
     {
-        return $comment->user->id == $user->id;
+        return $comment->user->id == $user->id || $user->hasRole('admin') || $user->projects()->find($comment->project->id)->pivot->is_admin == 1;
     }
 
     /**

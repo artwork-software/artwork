@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTaskRequest;
 use App\Models\Checklist;
 use App\Models\Task;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -31,17 +32,20 @@ class TaskController extends Controller
     {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
+        $user = User::where('id', Auth::id())->first();
+
+        if(Auth::user()->hasRole('admin')
+            || $user->projects()->find($checklist->project->id)->pivot->is_admin == 1
+            || $user->projects()->find($checklist->project->id)->pivot->is_manager == 1
+        ){
+            $authorized = true;
+            $this->createTask($request);
+        }
 
         foreach ($checklist->departments as $department) {
-            if($department->users->contains(Auth::id())) {
+            if($department->users->contains(Auth::id())){
                 $authorized = true;
-                Task::create([
-                    'name' => $request->name,
-                    'description' => $request->description,
-                    'deadline' => $request->deadline,
-                    'done' => false,
-                    'checklist_id' => $request->checklist_id
-                ]);
+                $this->createTask($request);
             }
         }
         if($authorized == true) {
@@ -50,6 +54,16 @@ class TaskController extends Controller
         else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
         }
+    }
+
+    protected function createTask(Request $request) {
+        Task::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'deadline' => $request->deadline,
+            'done' => false,
+            'checklist_id' => $request->checklist_id
+        ]);
     }
 
     /**

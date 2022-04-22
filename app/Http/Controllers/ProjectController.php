@@ -156,7 +156,14 @@ class ProjectController extends Controller
     {
 
         $public_checklists = Checklist::where('project_id', $project->id)->where('user_id', null)->get();
-        //$private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
+        $private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
+
+        $project_admins = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_admin', 1);
+        })->get();
+        $project_managers = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_manager', 1);
+        })->get();
 
 
         return inertia('Projects/Show', [
@@ -169,6 +176,8 @@ class ProjectController extends Controller
                 'sector' => $project->sector,
                 'category' => $project->category,
                 'genre' => $project->genre,
+                'project_admins' => $project_admins,
+                'project_managers' => $project_managers,
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,
@@ -202,6 +211,17 @@ class ProjectController extends Controller
                         'id' => $department->id,
                         'name' => $department->name,
                         'svg_name' => $department->svg_name,
+                    ])
+                ]),
+                'private_checklists' => $private_checklists->map(fn($checklist) => [
+                    'id' => $checklist->id,
+                    'name' => $checklist->name,
+                    'tasks' => $checklist->tasks->map(fn($task) => [
+                        'id' => $task->id,
+                        'name' => $task->name,
+                        'description' => $task->description,
+                        'deadline' => $task->deadline,
+                        'done' => $task->done,
                     ])
                 ]),
                 'comments' => $project->comments->map(fn($comment) => [

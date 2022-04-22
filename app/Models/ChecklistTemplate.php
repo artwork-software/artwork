@@ -14,7 +14,7 @@ class ChecklistTemplate extends Model
         'user_id',
     ];
 
-    public function template_tasks()
+    public function task_templates()
     {
         return $this->hasMany(TaskTemplate::class);
     }

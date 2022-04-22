@@ -6,7 +6,7 @@ use App\Models\ChecklistTemplate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ChecklistTemplatePermission
+class ChecklistTemplatePolicy
 {
     use HandlesAuthorization;
 
@@ -18,7 +18,7 @@ class ChecklistTemplatePermission
      */
     public function viewAny(User $user)
     {
-        //
+        $user->can('view checklist_teplates');
     }
 
     /**
@@ -30,7 +30,7 @@ class ChecklistTemplatePermission
      */
     public function view(User $user, ChecklistTemplate $checklistTemplate)
     {
-        //
+        $user->can('view checklist_teplates');
     }
 
     /**
@@ -41,7 +41,7 @@ class ChecklistTemplatePermission
      */
     public function create(User $user)
     {
-        //
+        $user->can('create checklist_teplates');
     }
 
     /**
@@ -53,7 +53,7 @@ class ChecklistTemplatePermission
      */
     public function update(User $user, ChecklistTemplate $checklistTemplate)
     {
-        //
+        $user->can('update checklist_teplates');
     }
 
     /**
@@ -65,7 +65,7 @@ class ChecklistTemplatePermission
      */
     public function delete(User $user, ChecklistTemplate $checklistTemplate)
     {
-        //
+        $user->can('delete checklist_teplates');
     }
 
     /**

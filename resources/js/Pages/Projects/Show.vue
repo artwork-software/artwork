@@ -4,7 +4,6 @@
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-bold font-lexend text-3xl">{{ project.name }}</h2>
-                    {{this.project}}
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
@@ -152,7 +151,7 @@
                     <div class="flex w-full items-center mb-4">
                         <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Checklisten </h3>
                         <button @click="openAddChecklistModal" type="button"
-                                class="flex ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                             <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                         </button>
                         <div v-if="$page.props.can.show_hints" class="flex">
@@ -161,16 +160,16 @@
                                 class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
                         </div>
                     </div>
-                    <div class="flex w-full">
+                    <div class="w-full">
                         <span v-if="project.public_checklists.length === 0"
                               class="text-secondary subpixel-antialiased font-semibold text-sm mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
                         <div v-else>
                             <div class="flex w-full flex-wrap">
                                 <!-- Div einer Checkliste -->
                                 <div v-for="checklist in project.public_checklists" class="flex w-full bg-white my-2">
-                                    <div class="flex w-full flex-wrap p-4">
-                                        <div class="flex justify-between w-full">
-                                            <div class="flex">
+                                    <div class="flex w-full ml-4 flex-wrap p-4">
+                                        <div class="flex mt-4 justify-between w-full">
+                                            <div class="">
                                         <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
                                         {{ checklist.name }}
                                         </span>
@@ -197,7 +196,7 @@
                                                                 leave-from-class="transform opacity-100 scale-100"
                                                                 leave-to-class="transform opacity-0 scale-95">
                                                         <MenuItems
-                                                            class="origin-top-right absolute w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                             <div class="py-1">
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openEditChecklistTeamsModal(checklist)"
@@ -259,16 +258,32 @@
                                                 </Menu>
                                             </div>
                                         </div>
-                                        <div class="flex w-full">
-                                            <button @click="openAddTaskModal(checklist)" type="button"
-                                                    class="flex ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                        <div class="flex w-full mt-6">
+                                            <div class="">
+                                            <button  @click="openAddTaskModal(checklist)" type="button"
+                                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                                             </button>
+                                            </div>
                                             <div v-if="$page.props.can.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                                 <span
                                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
                                             </div>
+                                        </div>
+                                        <div class="mt-6 mb-12">
+                                            <div class="flex mt-6 flex-wrap w-full" v-for="task in checklist.tasks">
+                                                <div class="flex w-full">
+                                                <input v-model="task.done"
+                                                       type="checkbox"
+                                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                <p class="ml-4 my-auto text-primary text-lg font-black text-sm">{{task.name}}</p>
+                                                </div>
+                                                <div class="ml-10 text-secondary">
+                                                    {{task.description}}
+                                                </div>
+                                            </div>
+
                                         </div>
                                     </div>
                                 </div>
@@ -624,8 +639,6 @@
                         </transition>
                     </div>
                     <div class="mt-4">
-                        {{ assignedUsers }}
-                        {{assignedDepartments}}
                         <span v-for="user in assignedUsers"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
@@ -923,7 +936,7 @@ export default {
             taskForm: useForm({
                 name: "",
                 description: "",
-                deadline: "",
+                deadline: "2012-12-12",
                 checklist_id: null,
             })
         }
@@ -1023,9 +1036,6 @@ export default {
                 this.checklistForm.assigned_department_ids.push(department.id);
             })
             this.checklistForm.name = this.checklistToEdit.name;
-            this.checklistForm.project_id = this.checklistToEdit.project_id;
-            this.checklistForm.tasks = this.checklistToEdit.tasks;
-            this.checklistForm.private = this.checklistToEdit.private;
 
             this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id}))
             )

@@ -2,8 +2,9 @@
     <app-layout title="Projects">
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
-                <div class="flex">
+                <div class="flex ">
                     <h2 class="flex font-bold font-lexend text-3xl">{{ project.name }}</h2>
+                    {{this.project}}
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
@@ -64,7 +65,7 @@
                 <div class="mt-2 text-secondary text-xs">
                     zuletzt geändert:
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary">
+                <div class="mt-2 mr-14 subpixel-antialiased text-secondary">
                     {{ project.description }}
                 </div>
                 <div class="mt-4 text-xs text-secondary">
@@ -86,7 +87,7 @@
                 <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
-                <div class="flex mt-10">
+                <div class="flex mr-2 mt-10 flex-1 flex-wrap">
                     <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
                     <div class="cursor-pointer" @click="openEditProjectTeamModal">
                         <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
@@ -103,12 +104,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex w-full">
-                    <span class="flex text-secondary -mt-16">Projektleitung</span>
-                    <div class="flex " v-for="user in this.project.users">
+                <div class="flex flex-wrap w-full">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Projektleitung</span>
+                    <div class="flex" v-for="user in this.project.users">
                         <img :src="user.profile_photo_url" :alt="user.name"
                              class="rounded-full h-11 w-11 object-cover"/>
                     </div>
+
+                </div>
+                <div class="flex w-full flex-wrap">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Team</span>
                     <div class="flex " v-for="department in this.project.departments">
                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
                                             class="rounded-full h-11 w-11 object-cover"/>
@@ -124,7 +129,6 @@
             <div class="ml-20">
                 <div class="sm:hidden">
                     <label for="tabs" class="sr-only">Select a tab</label>
-                    <!-- Use an "onChange" listener to redirect the user to the selected tab URL. -->
                     <select id="tabs" name="tabs"
                             class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
                         <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">{{ tab.name }}</option>
@@ -162,7 +166,8 @@
                               class="text-secondary subpixel-antialiased font-semibold text-sm mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
                         <div v-else>
                             <div class="flex w-full flex-wrap">
-                                <div v-for="checklist in project.public_checklists" class="flex bg-white my-2">
+                                <!-- Div einer Checkliste -->
+                                <div v-for="checklist in project.public_checklists" class="flex w-full bg-white my-2">
                                     <div class="flex w-full flex-wrap p-4">
                                         <div class="flex justify-between w-full">
                                             <div class="flex">
@@ -192,7 +197,7 @@
                                                                 leave-from-class="transform opacity-100 scale-100"
                                                                 leave-to-class="transform opacity-0 scale-95">
                                                         <MenuItems
-                                                            class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            class="origin-top-right absolute w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                             <div class="py-1">
                                                                 <MenuItem v-slot="{ active }">
                                                                     <a @click="openEditChecklistTeamsModal(checklist)"
@@ -255,7 +260,7 @@
                                             </div>
                                         </div>
                                         <div class="flex w-full">
-                                            <button @click="openAddTaskModal" type="button"
+                                            <button @click="openAddTaskModal(checklist)" type="button"
                                                     class="flex ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                                             </button>
@@ -620,6 +625,7 @@
                     </div>
                     <div class="mt-4">
                         {{ assignedUsers }}
+                        {{assignedDepartments}}
                         <span v-for="user in assignedUsers"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
@@ -747,6 +753,47 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Projekt bearbeiten Modal-->
+        <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Neue Aufgabe
+                    </div>
+                    <XIcon @click="closeAddTaskModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="mt-12">
+                        <div class="flex">
+                            <div class="relative flex w-full mr-4">
+                                <input id="task_name" v-model="taskForm.name" type="text"
+                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="task_name"
+                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                            </div>
+                        </div>
+                        <!-- TODO: ZU ERLEDIGEN BIS bei TASK -->
+                        <span> Zu erledigen bis? (Kommt mit Raum/Zeit-Sprint)</span>
+                        <div class="mt-8 mr-4">
+                                            <textarea
+                                                placeholder="Kommentar"
+                                                v-model="taskForm.description" rows="3"
+                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                        </div>
+                        <button
+                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            @click="addTask"
+                            :disabled="this.taskForm.name === ''">
+                            Hinzufügen
+                        </button>
+                    </div>
+
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -834,6 +881,7 @@ export default {
     data() {
         return {
             editingProject: false,
+            addingTask: false,
             selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             addingChecklist: false,
             isScheduleTab: false,
@@ -846,9 +894,9 @@ export default {
             department_search_results: [],
             department_and_user_search_results: [],
             checklist_assigned_departments: [],
-            selectedCategory: {name: '', svg_name: ''},
-            selectedSector: {name: ''},
-            selectedGenre: {name: ''},
+            selectedCategory: this.project.category ? this.project.category : {name: '', svg_name: ''},
+            selectedSector: this.project.sector ? this.project.sector : {name: ''},
+            selectedGenre: this.project.genre ? this.project.genre : {name: ''},
             showDetails: false,
             checklistToEdit: null,
             assignedUsers: this.project.users,
@@ -876,7 +924,7 @@ export default {
                 name: "",
                 description: "",
                 deadline: "",
-                done: false
+                checklist_id: null,
             })
         }
     },
@@ -927,6 +975,12 @@ export default {
             this.form.category_id = this.selectedCategory.id;
             this.form.sector_id = this.selectedSector.id;
             this.form.genre_id = this.selectedGenre.id;
+            this.assignedUsers.forEach(user => {
+                this.form.assigned_user_ids.push(user.id);
+            })
+            this.assignedDepartments.forEach(department => {
+                this.form.assigned_departments.push(department);
+            })
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },
@@ -1002,6 +1056,13 @@ export default {
         editProjectTeam() {
             // TODO: HIER NOCH IS_ADMIN IS_MANAGER VERARBEITEN
             this.assignedUsers.forEach(user => {
+                if(user.is_admin !== null){
+                    console.log("HEEY IS ADMIN");
+                    console.log(this.form.assigned_user_ids);
+                }
+                if(user.is_manager !== null){
+                    console.log("HOOOO IS MANAGER")
+                }
                 this.form.assigned_user_ids.push(user.id);
             })
 
@@ -1013,6 +1074,19 @@ export default {
         },
         deleteTeamFromChecklist(team) {
             this.checklist_assigned_departments.splice(this.checklist_assigned_departments.indexOf(team), 1)
+        },
+        openAddTaskModal(checklist){
+            this.taskForm.checklist_id = checklist.id;
+            this.addingTask = true;
+        },
+        closeAddTaskModal(){
+            this.taskForm.checklist_id = null;
+            this.addingTask = false;
+        },
+        addTask(){
+            console.log(this.taskForm);
+            this.taskForm.post(route('tasks.store'),{});
+            this.closeAddTaskModal();
         }
     },
     watch: {

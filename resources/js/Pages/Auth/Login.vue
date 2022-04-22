@@ -1,10 +1,12 @@
 <template>
     <div class="min-h-full flex">
+        <img :src="$page.props.big_logo" class="w-20 h-20 ml-12 mt-12 absolute rounded-full" />
         <div
             class="flex-1 flex min-h-screen flex-col align-items-center justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
             <div class="mx-auto  w-full max-w-sm lg:w-96">
+
                 <div>
-                    <div class="text-2xl font-bold text-black">
+                    <div class="text-2xl mb-12 font-bold text-black">
                         <p>ArtWork.tools</p>
                     </div>
                     <div class="flex items-center">
@@ -52,7 +54,7 @@
         </div>
         <div class="hidden lg:block relative w-0 flex-1">
             <img class="absolute inset-0 h-full w-full object-cover"
-                 src="https://images.unsplash.com/photo-1505904267569-f02eaeb45a4c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
+                 :src="$page.props.banner"
                  alt=""/>
         </div>
     </div>

@@ -1,15 +1,15 @@
 <template>
     <app-layout title="Tooleinstellungen">
         <form @submit.prevent="submit">
-            <div class="max-w-screen-lg my-8 ml-20 mr-40">
+            <div class="max-w-screen-xl my-8 ml-20 mr-40">
 
                 <div class="">
-                    <h2 class="font-bold font-lexend text-3xl my-2">Tooleinstellungen</h2>
+                    <h2 class="font-bold font-lexend text-3xl mb-2">Tooleinstellungen</h2>
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Definiere globale Einstellungen für dein ArtWork tool.
                     </div>
                 </div>
-                <div class="mt-16 max-w-2xl">
+                <div class="mt-6 max-w-2xl">
                     <h2 class="font-bold font-lexend text-xl my-2">Branding</h2>
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Damit dein ArtWork tool eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine
@@ -18,14 +18,17 @@
                     </div>
                 </div>
 
-                <label class="block text-sm font-medium text-primary">
-                    Logo groß
+                <label class="block mt-6 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                    Logo groß (Upload per Klick)
                 </label>
 
                 <div class="flex items-center">
-                    <div class="border-2 border-gray-300 border-dashed rounded-md p-2">
+                    <div class="flex justify-center border-2 w-80 cursor-pointer border-gray-300 border-dashed rounded-md p-2" @click="selectNewBigLogo">
                         <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo"
-                             class="rounded-md h-20 w-20 object-cover">
+                             class="rounded-md h-40 w-40 object-cover">
+                        <input type="file" class="hidden"
+                               ref="bigLogo"
+                               @change="updateBigLogoPreview">
                         <div v-if="$page.props.big_logo === null">
                         <svg v-show="!bigLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
                              fill="none"
@@ -35,30 +38,33 @@
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                         </div>
-                        <div v-else-if="!bigLogoPreview">
+                        <div class="cursor-pointer" v-else-if="!bigLogoPreview" >
                             <img :src="$page.props.big_logo" alt="Logo"
-                                 class="rounded-md h-20 w-20 object-cover">
+                                 class="rounded-md h-40 w-40 object-cover">
+                            <input type="file" class="hidden"
+                                   ref="bigLogo"
+                                   @change="updateBigLogoPreview">
                         </div>
                     </div>
-
-                    <button
-                        class="inline-flex items-center px-4 ml-10 py-2 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        @click.prevent="selectNewBigLogo">
-                        Großes Logo ändern
-                    </button>
-                    <input type="file" class="hidden"
-                           ref="bigLogo"
-                           @change="updateBigLogoPreview">
+                    <div v-if="$page.props.can.show_hints" class="flex items-center">
+                        <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
+                        <span
+                            class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
+                            Das Logo wird z.B. auf der Login-Seite und in der gesamten E-Mail-Kommunikation genutzt.
+                        </span>
+                    </div>
                 </div>
 
-                <label class="block text-sm font-medium text-primary">
-                    Logo klein
+                <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                    Logo klein (Upload per Klick)
                 </label>
-
                 <div class="flex items-center">
-                    <div class="border-2 border-gray-300 border-dashed rounded-md p-2">
+                    <div class="flex justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewSmallLogo">
                         <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo"
-                             class="rounded-md h-20 w-20 object-cover">
+                             class="rounded-md h-40 w-40 object-cover">
+                        <input type="file" class="hidden"
+                               ref="smallLogo"
+                               @change="updateSmallLogoPreview">
                         <div v-if="$page.props.small_logo === null">
                         <svg v-show="!smallLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
                              fill="none"
@@ -67,26 +73,29 @@
                                 d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
+                            <input type="file" class="hidden"
+                                   ref="smallLogo"
+                                   @change="updateSmallLogoPreview">
                         </div>
-                        <div v-else-if="!smallLogoPreview">
+                        <div class="cursor-pointer" v-else-if="!smallLogoPreview">
                             <img :src="$page.props.small_logo" alt="Logo"
-                                 class="rounded-md h-20 w-20 object-cover">
+                                 class="rounded-md h-40 w-40 object-cover">
+
                         </div>
                     </div>
-
-                    <button
-                        class=" inline-flex items-center px-4 ml-10 py-2 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        @click.prevent="selectNewSmallLogo">
-                        Kleines Logo ändern
-                    </button>
-                    <input type="file" class="hidden"
-                           ref="smallLogo"
-                           @change="updateSmallLogoPreview">
+                    <div v-if="$page.props.can.show_hints" class="flex items-center">
+                        <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
+                        <span
+                            class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
+                            Das Logo wird z.B. in der Sidebar genutzt.
+                        </span>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-primary"> Banner </label>
-                    <div
-                        class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+
+                    <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased"> Illustration (Upload per Klick) </label>
+                    <div class="flex">
+                    <div class="flex justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewBanner">
                         <div v-show="!bannerPreview" class="space-y-1 text-center">
                             <div v-if="$page.props.banner === null">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
@@ -95,27 +104,32 @@
                                         d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
                                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
-                                <div class="flex text-sm text-gray-600">
-                                    <label for="mini-logo-upload"
-                                           class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-primary">
-                                        <span>Hier hochladen</span>
-                                        <input id="mini-logo-upload" ref="banner" @change="updateBannerPreview"
-                                               name="file-upload" type="file" class="sr-only"/>
-                                    </label>
-                                    <p class="pl-1">oder per drag and drop</p>
-                                </div>
-                                <p class="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                                <input id="banner-upload" ref="banner" @change="updateBannerPreview"
+                                       name="file-upload" type="file" class="sr-only"/>
                             </div>
-                            <div v-else >
-                                <img :src="$page.props.banner" alt="Logo"
-                                     class="rounded-md h-60 w-60 object-cover">
+                            <div class="cursor-pointer" v-else>
+                                <img :src="$page.props.banner" alt="Aktuelles Banner"
+                                     class="rounded-md h-40 w-40 object-cover">
+                                <input type="file" class="hidden"
+                                       ref="banner"
+                                       @change="updateBannerPreview">
                             </div>
                         </div>
-
-                        <div class="cursor-pointer" @click="selectNewBanner">
-                            <img v-show="bannerPreview" :src="bannerPreview" alt="Aktuelles Banner">
+                        <div class="cursor-pointer">
+                            <img v-show="bannerPreview" :src="bannerPreview" alt="Aktuelles Banner" class="rounded-md h-40 w-40 object-cover">
+                            <input type="file" class="hidden"
+                                   ref="banner"
+                                   @change="updateBannerPreview">
                         </div>
                     </div>
+                        <div v-if="$page.props.can.show_hints" class="flex items-center">
+                            <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
+                            <span
+                                class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade deine Illustration als .svg, .png, .gif oder .jpg hoch.
+                                Die Illustration wird auf der Login-Seite genutzt.</span>
+                        </div>
+                    </div>
+
                     <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
                         <button type="submit" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
                                         font-bold text-lg uppercase shadow-sm text-secondaryHover">
@@ -132,11 +146,13 @@
 <script>
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
+import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 
 export default defineComponent({
     components: {
         AppLayout,
+        SvgCollection
     },
     props: [],
     data() {

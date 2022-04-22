@@ -40,7 +40,7 @@ test('users with the permission can create projects and assign users and departm
 
     $this->actingAs($this->auth_user);
 
-    $this->post('/projects', [
+    $res = $this->post('/projects', [
         'name' => 'TestProject',
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
@@ -50,6 +50,8 @@ test('users with the permission can create projects and assign users and departm
         'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
         'assigned_departments' => [$this->department]
     ]);
+
+    //dd($res);
 
     $this->assertDatabaseHas('projects', [
         'name' => 'TestProject',

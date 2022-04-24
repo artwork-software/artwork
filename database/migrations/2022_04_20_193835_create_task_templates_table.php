@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('task_template', function (Blueprint $table) {
+        Schema::create('task_templates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('description');
@@ -30,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('task_template');
+        Schema::dropIfExists('task_templates');
     }
 };

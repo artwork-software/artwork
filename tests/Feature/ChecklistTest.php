@@ -79,35 +79,22 @@ test('users with the permission can create checklists with a template and assign
     $this->actingAs($this->auth_user);
 
     $this->post('/checklists', [
-        'name' => 'TestChecklist',
+        'name' => null,
         'project_id' => $this->project->id,
         'assigned_department_ids' => [$this->assigned_department->id],
-        'template_id' => $this->checklist_template,
-        'tasks' => [
-            [
-                'name' => 'TestTask',
-                'description' => 'a description',
-                'done' => false,
-                'deadline' => '2022-4-4',
-                'checklist_id' => $this->checklist->id
-            ]
-        ]
+        'template_id' => $this->checklist_template->id,
+        'tasks' => null
     ]);
 
     $this->assertDatabaseHas('checklists', [
-        'name' => 'TestChecklist',
+        'name' => 'ChecklistTemplateTest',
         'project_id' => $this->project->id
     ]);
 
-    $checklist = Checklist::where('name', 'TestChecklist')->first();
-
-    $this->assertDatabaseHas('checklist_department', [
-        'checklist_id' => $checklist->id,
-        'department_id' => $this->assigned_department->id
-    ]);
+    $checklist = Checklist::where('name', 'ChecklistTemplateTest')->first();
 
     $this->assertDatabaseHas('tasks', [
-        'name' => 'TestTask',
+        'name' => 'TaskTemplateTest',
         'checklist_id' => $checklist->id
     ]);
 
@@ -121,6 +108,7 @@ test('users without the permission cant create checklists', function () {
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
         'assigned_department_ids' => [$this->assigned_department->id],
+        'template_id' => null,
         'tasks' => [
             [
                 'name' => 'TestTask',
@@ -163,7 +151,7 @@ test('users with the permission can update checklists', function () {
     $this->assigned_department->users()->attach($this->auth_user);
     $this->checklist->departments()->attach($this->assigned_department);
 
-    $this->patch("/checklists/{$this->checklist->id}", [
+    $res = $this->patch("/checklists/{$this->checklist->id}", [
         'name' => 'TestChecklist',
         'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [

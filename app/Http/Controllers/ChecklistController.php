@@ -12,6 +12,11 @@ use Illuminate\Support\Facades\Redirect;
 class ChecklistController extends Controller
 {
 
+    public function __construct()
+    {
+        $this->authorizeResource(Checklist::class);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -44,10 +49,11 @@ class ChecklistController extends Controller
      * @return void
      */
     protected function createFromTemplate(Request $request) {
-        $template = ChecklistTemplate::where('id', $request->template_id)->first;
+        $template = ChecklistTemplate::where('id', $request->template_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
+            'project_id' => $request->project_id
         ]);
 
         foreach ($template->task_templates as $task_template) {

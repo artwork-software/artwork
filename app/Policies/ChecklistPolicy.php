@@ -19,7 +19,7 @@ class ChecklistPolicy
      */
     public function view(User $user, Checklist $checklist)
     {
-        $user->can('view checklists') && $checklist->departments->users->contains($user->id);
+        return $user->can('view checklists') && $checklist->departments->users->contains($user->id);
     }
 
     /**
@@ -30,7 +30,7 @@ class ChecklistPolicy
      */
     public function create(User $user)
     {
-        $user->can('create checklists');
+        return $user->can('create checklists');
     }
 
     /**
@@ -42,7 +42,7 @@ class ChecklistPolicy
      */
     public function update(User $user, Checklist $checklist)
     {
-        $user->can('update checklists') && $checklist->departments->users->contains($user->id);
+        return $user->can('update checklists') && 0 < (array_intersect($checklist->departments->all(), $user->departments->all()));
     }
 
     /**
@@ -54,7 +54,7 @@ class ChecklistPolicy
      */
     public function delete(User $user, Checklist $checklist)
     {
-        $user->can('delete checklists') && $checklist->departments->users->contains($user->id);
+        return $user->can('delete checklists') && 0 < (array_intersect($checklist->departments->all(), $user->departments->all()));
     }
 
     /**

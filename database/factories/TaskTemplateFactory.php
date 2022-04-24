@@ -5,9 +5,9 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ChecklistTemplate>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TaskTemplate>
  */
-class ChecklistTemplateFactory extends Factory
+class TaskTemplateFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -18,7 +18,9 @@ class ChecklistTemplateFactory extends Factory
     {
         return [
             'name' => $this->faker->name,
-            'user_id' => 1
+            'description' => $this->faker->name,
+            'done' => false,
+            'checklist_template_id' => 1
         ];
     }
 }

@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Checklist;
+use App\Models\ChecklistTemplate;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\Task;
+use App\Models\TaskTemplate;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -19,9 +21,18 @@ beforeEach(function () {
 
     $this->task = Task::factory()->create();
 
+    $this->checklist_template = ChecklistTemplate::factory()->create([
+        'name' => 'ChecklistTemplateTest'
+    ]);
+
+    $this->task_template = TaskTemplate::factory()->create([
+        'checklist_template_id' => $this->checklist_template->id,
+        'name' => 'TaskTemplateTest'
+    ]);
+
 });
 
-test('users with the permission can create checklists and assign users to it', function () {
+test('users with the permission can create checklists without a template and assign users to it', function () {
 
     $this->auth_user->givePermissionTo('create checklists', 'update departments');
 
@@ -31,6 +42,47 @@ test('users with the permission can create checklists and assign users to it', f
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
         'assigned_department_ids' => [$this->assigned_department->id],
+        'tasks' => [
+            [
+                'name' => 'TestTask',
+                'description' => 'a description',
+                'done' => false,
+                'deadline' => '2022-4-4',
+                'checklist_id' => $this->checklist->id
+            ]
+        ]
+    ]);
+
+    $this->assertDatabaseHas('checklists', [
+        'name' => 'TestChecklist',
+        'project_id' => $this->project->id
+    ]);
+
+    $checklist = Checklist::where('name', 'TestChecklist')->first();
+
+    $this->assertDatabaseHas('checklist_department', [
+        'checklist_id' => $checklist->id,
+        'department_id' => $this->assigned_department->id
+    ]);
+
+    $this->assertDatabaseHas('tasks', [
+        'name' => 'TestTask',
+        'checklist_id' => $checklist->id
+    ]);
+
+});
+
+test('users with the permission can create checklists with a template and assign users to it', function () {
+
+    $this->auth_user->givePermissionTo('create checklists', 'update departments');
+
+    $this->actingAs($this->auth_user);
+
+    $this->post('/checklists', [
+        'name' => 'TestChecklist',
+        'project_id' => $this->project->id,
+        'assigned_department_ids' => [$this->assigned_department->id],
+        'template_id' => $this->checklist_template,
         'tasks' => [
             [
                 'name' => 'TestTask',

@@ -8,6 +8,12 @@ use Illuminate\Support\Facades\Redirect;
 
 class ChecklistTemplateController extends Controller
 {
+
+    public function __construct()
+    {
+        $this->authorizeResource(ChecklistTemplate::class);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -42,10 +48,12 @@ class ChecklistTemplateController extends Controller
      */
     public function store(Request $request)
     {
-        ChecklistTemplate::create([
+        $checklist_template = ChecklistTemplate::create([
             'name' => $request->name,
             'user_id' => $request->user_id
         ]);
+
+        $checklist_template->task_templates()->createMany($request->task_templates);
 
         return Redirect::route('departments')->with('success', 'ChecklistTemplate created.');
     }

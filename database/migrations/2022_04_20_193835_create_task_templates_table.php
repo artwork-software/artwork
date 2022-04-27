@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description');
-            $table->boolean('done');
+            $table->boolean('done')->default(false);
             $table->unsignedBigInteger('checklist_template_id');
             $table->timestamps();
         });

@@ -18,7 +18,7 @@ class ChecklistTemplatePolicy
      */
     public function viewAny(User $user)
     {
-        $user->can('view checklist_teplates');
+        return $user->can('view checklist_templates');
     }
 
     /**
@@ -30,7 +30,7 @@ class ChecklistTemplatePolicy
      */
     public function view(User $user, ChecklistTemplate $checklistTemplate)
     {
-        $user->can('view checklist_teplates');
+        return $user->can('view checklist_templates');
     }
 
     /**
@@ -41,7 +41,7 @@ class ChecklistTemplatePolicy
      */
     public function create(User $user)
     {
-        $user->can('create checklist_teplates');
+        return $user->can('create checklist_templates');
     }
 
     /**
@@ -53,7 +53,7 @@ class ChecklistTemplatePolicy
      */
     public function update(User $user, ChecklistTemplate $checklistTemplate)
     {
-        $user->can('update checklist_teplates');
+        return $user->can('update checklist_templates');
     }
 
     /**
@@ -65,7 +65,7 @@ class ChecklistTemplatePolicy
      */
     public function delete(User $user, ChecklistTemplate $checklistTemplate)
     {
-        $user->can('delete checklist_teplates');
+        return $user->can('delete checklist_templates');
     }
 
     /**

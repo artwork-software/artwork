@@ -3,6 +3,7 @@
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
+use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\GenreController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
+use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\UserController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Redirect;
@@ -85,12 +87,28 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
 
     //Checklists
-    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.management');
+    Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');
     Route::post('/checklists', [ChecklistController::class, 'store'])->name('checklists.store');
     Route::get('/checklists/{checklist}', [ChecklistController::class, 'show']);
     Route::get('/checklists/{checklist}/edit', [ChecklistController::class, 'edit']);
     Route::patch('/checklists/{checklist}', [ChecklistController::class, 'update'])->name('checklists.update');
     Route::delete('/checklists/{checklist}', [ChecklistController::class, 'destroy']);
+
+    //ChecklistTemplates
+    Route::get('/checklist_templates', [ChecklistTemplateController::class, 'index'])->name('checklist_templates.management');
+    Route::get('/checklist_templates/create', [ChecklistTemplateController::class, 'create'])->name('checklist_templates.create');
+    Route::post('/checklist_templates', [ChecklistTemplateController::class, 'store'])->name('checklist_templates.store');
+    Route::get('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'show']);
+    Route::get('/checklist_templates/{checklist_template}/edit', [ChecklistTemplateController::class, 'edit']);
+    Route::patch('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'update'])->name('checklist_templates.update');
+    Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy']);
+
+    //TaskTemplates
+    Route::get('/task_templates/create', [TaskTemplateController::class, 'create'])->name('task_templates.create');
+    Route::post('/task_templates', [TaskTemplateController::class, 'store'])->name('task_templates.store');
+    Route::get('/task_templates/{task_template}/edit', [TaskTemplateController::class, 'edit']);
+    Route::patch('/task_templates/{task_template}', [TaskTemplateController::class, 'update']);
+    Route::delete('/task_templates/{task_template}', [TaskTemplateController::class, 'destroy']);
 
     //Tasks
     Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');

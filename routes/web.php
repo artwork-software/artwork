@@ -9,6 +9,7 @@ use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
@@ -46,6 +47,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
     Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
+    Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
     Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
     Route::put('/tool/settings', [AppController::class, 'update_tool'])->name('tool.update');
 
@@ -85,6 +87,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+
+    //ProjectFiles
+    Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
+    Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download']);
+    Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
+    Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
 
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');

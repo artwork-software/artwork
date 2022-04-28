@@ -260,10 +260,10 @@
                                         </div>
                                         <div class="flex w-full mt-6">
                                             <div class="">
-                                            <button  @click="openAddTaskModal(checklist)" type="button"
-                                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                            </button>
+                                                <button @click="openAddTaskModal(checklist)" type="button"
+                                                        class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                                </button>
                                             </div>
                                             <div v-if="$page.props.can.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -272,18 +272,23 @@
                                             </div>
                                         </div>
                                         <div class="mt-6 mb-12">
-                                            <div class="flex mt-6 flex-wrap w-full" v-for="task in checklist.tasks">
-                                                <div class="flex w-full">
-                                                <input v-model="task.done"
-                                                       type="checkbox"
-                                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                <p class="ml-4 my-auto text-primary text-lg font-black text-sm">{{task.name}}</p>
-                                                </div>
-                                                <div class="ml-10 text-secondary">
-                                                    {{task.description}}
-                                                </div>
-                                            </div>
-
+                                            <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID" v-model="checklist.tasks" @start="dragging=true" @end="dragging=false">
+                                                <template #item="{element}">
+                                                    <div class="flex mt-6 flex-wrap w-full" :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                                        <div class="flex w-full">
+                                                            <input v-model="element.done"
+                                                                   type="checkbox"
+                                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                            <p class="ml-4 my-auto text-lg font-black text-sm"
+                                                               :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                                {{ element.name }}</p>
+                                                        </div>
+                                                        <div class="ml-10 text-secondary">
+                                                            {{ element.description }}
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </draggable>
                                         </div>
                                     </div>
                                 </div>
@@ -842,6 +847,7 @@ import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import Checkbox from "@/Jetstream/Checkbox";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
+import draggable from "vuedraggable";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -880,7 +886,8 @@ export default {
         ListboxOptions,
         PlusSmIcon,
         Switch,
-        ChevronUpIcon
+        ChevronUpIcon,
+        draggable
     },
     computed: {
         tabs() {
@@ -895,6 +902,7 @@ export default {
         return {
             editingProject: false,
             addingTask: false,
+            dragging:false,
             selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             addingChecklist: false,
             isScheduleTab: false,
@@ -1066,11 +1074,11 @@ export default {
         editProjectTeam() {
             // TODO: HIER NOCH IS_ADMIN IS_MANAGER VERARBEITEN
             this.assignedUsers.forEach(user => {
-                if(user.is_admin !== null){
+                if (user.is_admin !== null) {
                     console.log("HEEY IS ADMIN");
                     console.log(this.form.assigned_user_ids);
                 }
-                if(user.is_manager !== null){
+                if (user.is_manager !== null) {
                     console.log("HOOOO IS MANAGER")
                 }
                 this.form.assigned_user_ids.push(user.id);
@@ -1085,17 +1093,17 @@ export default {
         deleteTeamFromChecklist(team) {
             this.checklist_assigned_departments.splice(this.checklist_assigned_departments.indexOf(team), 1)
         },
-        openAddTaskModal(checklist){
+        openAddTaskModal(checklist) {
             this.taskForm.checklist_id = checklist.id;
             this.addingTask = true;
         },
-        closeAddTaskModal(){
+        closeAddTaskModal() {
             this.taskForm.checklist_id = null;
             this.addingTask = false;
         },
-        addTask(){
+        addTask() {
             console.log(this.taskForm);
-            this.taskForm.post(route('tasks.store'),{});
+            this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
         }
     },

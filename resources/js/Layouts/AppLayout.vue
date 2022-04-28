@@ -280,8 +280,8 @@ export default {
                 {
                     name: 'Checklisten',
                     has_permission: true,
-                    href: route('checklists.management'),
-                    route: ['/checklists/create'],
+                    href: route('checklist_templates.management'),
+                    route: ['/checklists/management'],
                     icon: ArrowCircleRightIcon
                 },
             ]

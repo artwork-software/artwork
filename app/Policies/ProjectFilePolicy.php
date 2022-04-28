@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Project;
+use App\Models\ProjectFile;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class ProjectPolicy
+class ProjectFilePolicy
 {
     use HandlesAuthorization;
 
@@ -18,19 +18,19 @@ class ProjectPolicy
      */
     public function viewAny(User $user)
     {
-        return true;
+        //
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Project  $project
+     * @param  \App\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Project $project)
+    public function view(User $user, ProjectFile $projectFile)
     {
-        return ($user->projects->contains($project->id) && $project->users->contains($user->id));
+        //
     }
 
     /**
@@ -41,45 +41,41 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create projects');
+        //
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Project  $project
+     * @param  \App\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Project $project)
+    public function update(User $user, ProjectFile $projectFile)
     {
-        return ($user->can('update projects') || $user->projects()->find($project->id)->pivot->is_admin == 1) &&
-            (($user->projects->contains($project->id) && $project->users->contains($user->id))
-                || ($project->departments->users->contains($user->id)));
+        //
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Project  $project
+     * @param  \App\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Project $project)
+    public function delete(User $user, ProjectFile $projectFile)
     {
-        return $user->can('delete projects') &&
-            (($user->projects->contains($project->id) && $project->users->contains($user->id))
-                || ($project->departments->users->contains($user->id) && $user->projects->contains($project->id)));
+        //
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Project  $project
+     * @param  \App\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Project $project)
+    public function restore(User $user, ProjectFile $projectFile)
     {
         //
     }
@@ -88,10 +84,10 @@ class ProjectPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Project  $project
+     * @param  \App\Models\ProjectFile  $projectFile
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Project $project)
+    public function forceDelete(User $user, ProjectFile $projectFile)
     {
         //
     }

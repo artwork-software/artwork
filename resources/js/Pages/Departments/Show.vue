@@ -311,7 +311,7 @@ export default {
         },
         deleteTeam(){
             Inertia.delete(`/departments/${this.department.id}`);
-            this.closeDeleteUserModal()
+            this.closeDeleteTeamModal()
         },
         openChangeTeamMembersModal() {
             this.showChangeTeamMemberModal = true;

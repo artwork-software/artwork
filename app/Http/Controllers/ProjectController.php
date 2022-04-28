@@ -7,6 +7,7 @@ use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
 use App\Models\Category;
 use App\Models\Checklist;
+use App\Models\ChecklistTemplate;
 use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Project;
@@ -245,6 +246,15 @@ class ProjectController extends Controller
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
+            ]),
+            'checklist_templates' => ChecklistTemplate::paginate(10)->through(fn($checklist_template) => [
+                'id' => $checklist_template->id,
+                'name' => $checklist_template->name,
+                'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
+                    'id' => $task_template->id,
+                    'name' => $task_template->name,
+                    'description' => $task_template->description
+                ])
             ])
         ]);
     }

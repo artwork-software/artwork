@@ -111,12 +111,21 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a href="#" @click="deleteAllTeamMembers(department.id)"
+                                                    <a href="#" @click="openDeleteAllTeamMembersModal(department)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         Alle Teammitglieder entfernen
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" @click="openDeleteTeamModal(department)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Team löschen
                                                     </a>
                                                 </MenuItem>
                                             </div>
@@ -250,6 +259,64 @@
 
             </template>
         </jet-dialog-modal>
+        <!-- Alle Mitglieder aus Team löschen Modal -->
+        <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Alle Teammitglieder löschen
+                    </div>
+                    <XIcon @click="closeDeleteAllTeamMembersModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du alle Mitglieder des Teams {{ teamToDeleteAllMembers.name }} entfernen willst?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteAllTeamMembers">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteAllTeamMembersModal"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
+        <!-- Team löschen Modal -->
+        <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Team löschen
+                    </div>
+                    <XIcon @click="closeDeleteAllTeamMembersModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du das Team {{ teamToDelete.name }} aus dem System löschen willst?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteTeam">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteTeamModal"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -290,6 +357,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import {forEach} from "lodash";
+import {Inertia} from "@inertiajs/inertia";
 
 const iconMenuItems = [
     {iconName: 'departmentImagePlaceholder'},
@@ -362,8 +430,29 @@ export default defineComponent({
             this.form.post(route('departments.store'))
             this.closeAddTeamModal();
         },
-        deleteAllTeamMembers(teamId) {
-            this.deleteMembersForm.patch(route('departments.edit', {department: teamId}));
+        openDeleteAllTeamMembersModal(team){
+            this.teamToDeleteAllMembers = team;
+            this.deletingAllTeamMembers = true;
+        },
+        closeDeleteAllTeamMembersModal(){
+          this.deletingAllTeamMembers = false;
+          this.teamToDeleteAllMembers = null;
+        },
+        openDeleteTeamModal(team){
+            this.teamToDelete = team;
+            this.deletingTeam = true;
+        },
+        closeDeleteTeamModal(){
+            this.deletingTeam = false;
+            this.teamToDelete = null;
+        },
+        deleteTeam(){
+            Inertia.delete(`/departments/${this.teamToDelete.id}`);
+            this.closeDeleteTeamModal()
+        },
+        deleteAllTeamMembers() {
+            this.deleteMembersForm.patch(route('departments.edit', {department: this.teamToDeleteAllMembers.id}));
+            this.closeDeleteAllTeamMembersModal();
         },
         getEditHref(department) {
             return route('departments.show', {department: department.id});
@@ -386,6 +475,10 @@ export default defineComponent({
     data() {
         return {
             addingTeam: false,
+            deletingTeam: false,
+            teamToDelete:null,
+            teamToDeleteAllMembers: null,
+            deletingAllTeamMembers: false,
             form: useForm({
                 svg_name: "",
                 name: "",

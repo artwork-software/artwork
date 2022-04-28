@@ -5,24 +5,23 @@
                 <div class="w-full flex my-auto justify-between">
                     <div class="flex">
                         <h2 class="text-2xl flex">Checklistenvorlagen</h2>
-                        <button @click="openAddChecklistTemplateModal" type="button"
+                        <Link :href="route('checklistTemplates.edit')" type="button"
                                 class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                             <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                        </button>
+                        </Link>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Bearbeite deine Vorlage</span>
+                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Checklistenvorlagen an</span>
                         </div>
                     </div>
                     <div class="flex items-center">
-
                         <div class="inset-y-0 mr-3 pointer-events-none">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-for="(template,index) in checklistTemplates.data" :key="template.email"
+                        <li v-for="(template,index) in checklist_templates.data" :key="template.email"
                             class="py-6 flex justify-between">
                             <div class="flex">
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
@@ -31,9 +30,11 @@
                                             {{ template.name }} </p>
                                         <p class="ml-1 text-sm font-medium text-primary my-auto"> angelegt am
                                             {{ template.created_at }} von
+                                            <!--
                                             <img class="h-6 w-6 rounded-full flex justify-start"
                                                  :src="template.last_editor.profile_photo_url"
                                                  alt=""/>
+                                                 !-->
                                         </p>
                                     </div>
                                 </div>
@@ -55,7 +56,7 @@
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite eine Vorlage</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -117,10 +118,11 @@ import {PlusSmIcon }from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {Link} from "@inertiajs/inertia-vue3";
 
 export default {
-    name: "Checklist Create",
-    props: ['checklistTemplates'],
+    name: "Checklist Management",
+    props: ['checklist_templates'],
     components: {
         PlusSmIcon,
         SvgCollection,
@@ -133,7 +135,8 @@ export default {
         TrashIcon,
         DotsVerticalIcon,
         PencilAltIcon,
-        DuplicateIcon
+        DuplicateIcon,
+        Link
     },
     data() {
         return {}

@@ -32,6 +32,10 @@ class Project extends Model
         return $this->hasMany(Checklist::class);
     }
 
+    public function project_files() {
+        return $this->hasMany(ProjectFile::class);
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);
@@ -51,7 +55,4 @@ class Project extends Model
     {
         return $this->belongsTo(Genre::class, 'genre_id');
     }
-
-
-
 }

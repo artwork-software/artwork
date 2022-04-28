@@ -186,6 +186,7 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
+                'project_files' => $project->project_files,
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,

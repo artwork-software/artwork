@@ -68,6 +68,16 @@ class ChecklistTemplateController extends Controller
             'user_id' => $request->user_id
         ]);
 
+        $checklist_template->departments()->sync(
+            collect($request->departments)
+                ->map(function ($department) {
+
+                    $this->authorize('update', Department::find($department['id']));
+
+                    return $department['id'];
+                })
+        );
+
         $checklist_template->task_templates()->createMany($request->task_templates);
 
         return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
@@ -91,6 +101,13 @@ class ChecklistTemplateController extends Controller
                     'description' => $task_template->description,
                     'done' => $task_template->done,
                 ]),
+                'departments' => $checklistTemplate->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'svg_name' => $department->svg_name,
+                ]),
+                'updated_at' => $checklistTemplate->updated_at,
+                'created_at' => $checklistTemplate->created_at
             ]
         ]);
     }
@@ -113,6 +130,11 @@ class ChecklistTemplateController extends Controller
                     'name' => $task_template->name,
                     'description' => $task_template->description,
                     'done' => $task_template->done,
+                ]),
+                'departments' => $checklistTemplate->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'svg_name' => $department->svg_name,
                 ])
             ]
         ]);
@@ -139,15 +161,7 @@ class ChecklistTemplateController extends Controller
                 })
         );
 
-        $checklistTemplate->task_templates()->sync(
-            collect($request->task_templates)
-                ->map(function ($task_template) {
-
-                    $this->authorize('update', TaskTemplate::find($task_template['id']));
-
-                    return $task_template['id'];
-                })
-        );
+        $checklistTemplate->task_templates()->createMany($request->task_templates);
 
         return Redirect::route('checklist_templates.show', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');
     }

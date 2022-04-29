@@ -8,6 +8,7 @@ use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use phpDocumentor\Reflection\Project;
 
 class ChecklistController extends Controller
 {
@@ -46,10 +47,10 @@ class ChecklistController extends Controller
     /**
      * Creates a checklist on basis of a ChecklistTemplate
      * @param Request $request
-     * @return void
      */
     protected function createFromTemplate(Request $request) {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
+        $project = \App\Models\Project::where('id', $request->project_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
@@ -63,6 +64,24 @@ class ChecklistController extends Controller
                 'done' => false,
                 'checklist_id' => $checklist->id
             ]);
+        }
+
+        if (Auth::user()->can('update departments')) {
+
+            foreach ($template->departments as $department) {
+                if(!$project->departments->contains($department)) {
+                    $project->departments->attach($department);
+                }
+            }
+
+            $checklist->departments()->sync(
+                collect($template->departments)
+                    ->map(function ($department) {
+                        return $department['id'];
+                    })
+            );
+        } else {
+            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }
     }
 

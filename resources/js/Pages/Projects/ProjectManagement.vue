@@ -579,7 +579,6 @@ export default defineComponent({
         openDeleteProjectModal(project){
             this.projectToDelete = project;
             this.deletingProject = true;
-
         },
         closeDeleteProjectModal(){
             this.deletingProject = false;

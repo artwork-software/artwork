@@ -90,7 +90,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
-    Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download']);
+    Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');;
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
 
@@ -107,7 +107,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/checklist_templates/create', [ChecklistTemplateController::class, 'create'])->name('checklist_templates.create');
     Route::post('/checklist_templates', [ChecklistTemplateController::class, 'store'])->name('checklist_templates.store');
     Route::get('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'show']);
-    Route::get('/checklist_templates/{checklist_template}/edit', [ChecklistTemplateController::class, 'edit']);
+    Route::get('/checklist_templates/{checklist_template}/edit', [ChecklistTemplateController::class, 'edit'])->name('checklist_templates.edit');
     Route::patch('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'update'])->name('checklist_templates.update');
     Route::delete('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'destroy']);
 

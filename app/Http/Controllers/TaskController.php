@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
@@ -24,10 +25,32 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
-    public function index_private()
+    public function index_own()
     {
-        return inertia('ChecklistTemplates/ChecklistTemplateManagement', [
-            'private_tasks' => Task::paginate(10)->through(fn($task) => [
+        $user = User::where('id', Auth::id());
+        $own_tasks = new Collection();
+
+        foreach (Checklist::all() as $checklist) {
+            foreach ($checklist->departments as $department) {
+                if ($department->users->contains($user->id)) {
+                    foreach ($checklist->tasks as $task) {
+                        if (!$own_tasks->contains($task)) {
+                            $own_tasks->push($task);
+                        }
+                    }
+                }
+            }
+            if ($checklist->user_id == $user->id) {
+                foreach ($checklist->tasks as $task) {
+                    if (!$own_tasks->contains($task)) {
+                        $own_tasks->push($task);
+                    }
+                }
+            }
+        }
+
+        return inertia('Tasks/OwnTasksManagement', [
+            'tasks' => $own_tasks->map(fn($task) => [
                 'id' => $task->id,
                 'name' => $task->name,
                 'description' => $task->description,

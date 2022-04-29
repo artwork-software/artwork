@@ -78,7 +78,12 @@ class ChecklistTemplateController extends Controller
                 })
         );
 
-        $checklist_template->task_templates()->createMany($request->task_templates);
+        $checklist_template->task_templates()->sync(
+            collect($request->task_templates)
+                ->map(function ($task_template) {
+                    return $task_template['id'];
+                })
+        );
 
         return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
     }

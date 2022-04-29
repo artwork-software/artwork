@@ -29,6 +29,10 @@ beforeEach(function () {
 
 });
 
+test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function() {
+    //TODO
+});
+
 
 test('users who arent assigned to a checklist cant create tasks on it', function () {
 

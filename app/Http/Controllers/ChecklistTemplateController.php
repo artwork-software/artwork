@@ -55,7 +55,7 @@ class ChecklistTemplateController extends Controller
 
         $checklist_template->task_templates()->createMany($request->task_templates);
 
-        return Redirect::route('departments')->with('success', 'ChecklistTemplate created.');
+        return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
     }
 
     /**

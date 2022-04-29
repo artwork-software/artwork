@@ -771,7 +771,7 @@
             </template>
 
         </jet-dialog-modal>
-        <!-- Projekt bearbeiten Modal-->
+        <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
             <template #content>
                 <div class="mx-4">

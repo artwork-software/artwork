@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChecklistTemplate;
+use App\Models\Department;
+use App\Models\TaskTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -26,6 +28,19 @@ class ChecklistTemplateController extends Controller
                 'id' => $checklist_template->id,
                 'name' => $checklist_template->name,
                 'user' => $checklist_template->user,
+                'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
+                    'id' => $task_template->id,
+                    'name' => $task_template->name,
+                    'description' => $task_template->description,
+                    'done' => $task_template->done,
+                ]),
+                'departments' => $checklist_template->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'svg_name' => $department->svg_name,
+                ]),
+                'updated_at' => $checklist_template->updated_at,
+                'created_at' => $checklist_template->created_at
             ]),
         ]);
     }
@@ -93,7 +108,13 @@ class ChecklistTemplateController extends Controller
                 'id' => $checklistTemplate->id,
                 'name' => $checklistTemplate->name,
                 'user' => $checklistTemplate->user,
-                ]
+                'tasks' => $checklistTemplate->task_templates->map(fn($task_template) => [
+                    'id' => $task_template->id,
+                    'name' => $task_template->name,
+                    'description' => $task_template->description,
+                    'done' => $task_template->done,
+                ])
+            ]
         ]);
     }
 
@@ -102,11 +123,33 @@ class ChecklistTemplateController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\ChecklistTemplate  $checklistTemplate
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ChecklistTemplate $checklistTemplate)
     {
         $checklistTemplate->update($request->only('name'));
+
+        $checklistTemplate->departments()->sync(
+            collect($request->departments)
+                ->map(function ($department) {
+
+                    $this->authorize('update', Department::find($department['id']));
+
+                    return $department['id'];
+                })
+        );
+
+        $checklistTemplate->task_templates()->sync(
+            collect($request->task_templates)
+                ->map(function ($task_template) {
+
+                    $this->authorize('update', TaskTemplate::find($task_template['id']));
+
+                    return $task_template['id'];
+                })
+        );
+
+        return Redirect::route('checklist_templates.show', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');
     }
 
     /**

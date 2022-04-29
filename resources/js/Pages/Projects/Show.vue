@@ -641,7 +641,9 @@
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div
-                                v-if="(department_and_user_search_results.users|| department_and_user_search_results.departments) && department_and_user_query.length > 0"
+                                v-if="(department_and_user_search_results.users
+                                || department_and_user_search_results.departments)
+                                 && department_and_user_query.length > 0"
                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
@@ -679,6 +681,9 @@
                         </transition>
                     </div>
                     <div class="mt-4">
+                        <pre>
+                            {{assignedUsers}}
+                        </pre>
                         <span v-for="user in assignedUsers"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
@@ -695,12 +700,12 @@
                             </button>
                             <div class="flex justify-between items-center ml-16 my-1.5 h-5">
                                 <div class="flex items-center justify-start">
-                                    <input @change="changeAdminStatus(user)" v-model="user.is_admin"
+                                    <input v-model="user.is_admin"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.is_admin ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">Projektadmin</p>
-                                    <input @change="changeManagerStatus(user)" v-model="user.is_manager"
+                                    <input v-model="user.is_manager"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none ml-4 h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.is_manager ? 'text-primary font-black' : 'text-secondary']"
@@ -964,7 +969,7 @@ export default {
                 description: this.project.description,
                 cost_center: this.project.cost_center,
                 number_of_participants: this.project.number_of_participants,
-                assigned_user_ids: [],
+                assigned_user_ids: {},
                 assigned_departments: [],
                 sector_id: null,
                 category_id: null,
@@ -1106,12 +1111,6 @@ export default {
         deleteDepartmentFromProjectTeam(department) {
             this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
         },
-        changeAdminStatus() {
-
-        },
-        changeManagerStatus() {
-
-        },
         addDepartmentToChecklistTeamArray(department) {
             for (let assigned_department of this.checklist_assigned_departments) {
                 if (department === assigned_department) {
@@ -1157,14 +1156,7 @@ export default {
         editProjectTeam() {
             // TODO: HIER NOCH IS_ADMIN IS_MANAGER VERARBEITEN
             this.assignedUsers.forEach(user => {
-                if (user.is_admin !== null) {
-                    console.log("HEEY IS ADMIN");
-                    console.log(this.form.assigned_user_ids);
-                }
-                if (user.is_manager !== null) {
-                    console.log("HOOOO IS MANAGER")
-                }
-                this.form.assigned_user_ids.push(user.id);
+                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
 
             this.assignedDepartments.forEach(department => {

@@ -6,6 +6,7 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Models\Checklist;
 use App\Models\Task;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -23,6 +24,23 @@ class TaskController extends Controller
         return inertia('Tasks/Create');
     }
 
+    public function index_private()
+    {
+        return inertia('ChecklistTemplates/ChecklistTemplateManagement', [
+            'private_tasks' => Task::paginate(10)->through(fn($task) => [
+                'id' => $task->id,
+                'name' => $task->name,
+                'description' => $task->description,
+                'deadline' => $task->deadline,
+                'done' => $task->done,
+                'checklist' => $task->checklist,
+                'project' => $task->checklist->project,
+                'departments' => $task->checklist->departments
+            ])
+        ]);
+
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -34,33 +52,33 @@ class TaskController extends Controller
         $authorized = false;
         $user = User::where('id', Auth::id())->first();
 
-        if(Auth::user()->hasRole('admin')
+        if (Auth::user()->hasRole('admin')
             || $user->projects()->find($checklist->project->id)->pivot->is_admin == 1
             || $user->projects()->find($checklist->project->id)->pivot->is_manager == 1
-        ){
+        ) {
             $authorized = true;
             $this->createTask($request);
         }
 
         foreach ($checklist->departments as $department) {
-            if($department->users->contains(Auth::id())){
+            if ($department->users->contains(Auth::id())) {
                 $authorized = true;
                 $this->createTask($request);
             }
         }
-        if($authorized == true) {
+        if ($authorized == true) {
             return Redirect::back()->with('success', 'Task created.');
-        }
-        else {
+        } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
         }
     }
 
-    protected function createTask(Request $request) {
+    protected function createTask(Request $request)
+    {
         Task::create([
             'name' => $request->name,
             'description' => $request->description,
-            'deadline' => $request->deadline,
+            'deadline' => Carbon::parse($request->deadline),
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);
@@ -78,7 +96,7 @@ class TaskController extends Controller
             'task' => [
                 'name' => $task->name,
                 'description' => $task->description,
-                'deadline' => $task->deadline,
+                'deadline' => Carbon::parse($task->deadline),
                 'done' => $task->done,
             ]
         ]);

@@ -69,8 +69,8 @@ class ChecklistController extends Controller
         if (Auth::user()->can('update departments')) {
 
             foreach ($template->departments as $department) {
-                if(!$project->departments->contains($department)) {
-                    $project->departments->attach($department);
+                if(!$project->departments()->contains($department)) {
+                    $project->departments()->attach($department);
                 }
             }
 

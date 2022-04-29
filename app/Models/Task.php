@@ -17,10 +17,6 @@ class Task extends Model
         'checklist_id'
     ];
 
-    protected $casts = [
-        'deadline' => 'datetime:Y-m-d'
-    ];
-
     public function checklist()
     {
         return $this->belongsTo(Checklist::class, 'checklist_id');

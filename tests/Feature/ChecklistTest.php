@@ -32,7 +32,7 @@ beforeEach(function () {
 
 });
 
-test('users with the permission can create checklists without a template and assign users to it', function () {
+test('users with the permission can create checklists without a template and assign departments to it', function () {
 
     $this->auth_user->givePermissionTo('create checklists', 'update departments');
 
@@ -72,7 +72,7 @@ test('users with the permission can create checklists without a template and ass
 
 });
 
-test('users with the permission can create checklists with a template and assign users to it', function () {
+test('users with the permission can create checklists with a template and assign departments to it', function () {
 
     $this->auth_user->givePermissionTo('create checklists', 'update departments');
 

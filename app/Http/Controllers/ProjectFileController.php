@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UpdateProjectFileRequest;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;

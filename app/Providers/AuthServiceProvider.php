@@ -43,7 +43,6 @@ class AuthServiceProvider extends ServiceProvider
         Department::class => DepartmentPolicy::class,
         Project::class => ProjectPolicy::class,
         Checklist::class => ChecklistPolicy::class,
-        Task::class => TaskPolicy::class,
         Sector::class => SectorPolicy::class,
         Category::class => CategoryPolicy::class,
         Genre::class => GenrePolicy::class,

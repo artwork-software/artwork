@@ -19,7 +19,9 @@ beforeEach(function () {
 
     $this->checklist = Checklist::factory()->create();
 
-    $this->task = Task::factory()->create();
+    $this->task = Task::factory()->create([
+        'checklist_id' => $this->checklist->id
+    ]);
 
     $this->sector = Sector::factory()->create();
 
@@ -30,7 +32,19 @@ beforeEach(function () {
 });
 
 test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function() {
-    //TODO
+
+    $this->auth_user->assignRole('admin');
+
+    $this->assigned_department->users()->attach($this->auth_user);
+    $this->checklist->departments()->attach($this->assigned_department);
+
+    $response = $this->get("/tasks/own")
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Tasks/OwnTasksManagement')
+            //->has('tasks.data', 10)
+        );
+
+    $response->assertStatus(200);
 });
 
 
@@ -188,7 +202,6 @@ test('users who are assigned to a checklist can update its tasks', function () {
         'name' => 'TestTask',
         'description' => "This is a description",
         'deadline' => '2022-12-11',
-        'checklist_id' => $this->checklist->id
     ]);
 
     $this->assertDatabaseHas('tasks', [

@@ -62,6 +62,16 @@ class User extends Authenticatable
         return $this->hasMany(Checklist::class);
     }
 
+    public function created_rooms()
+    {
+        return $this->hasMany(Room::class);
+    }
+
+    public function admin_rooms() {
+        return $this->belongsToMany(Room::class, 'room_user');
+    }
+
+
     /**
      * The attributes that should be hidden for serialization.
      *

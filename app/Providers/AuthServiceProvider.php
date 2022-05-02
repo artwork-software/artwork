@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\Area;
 use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
@@ -14,6 +15,7 @@ use App\Models\Sector;
 use App\Models\Task;
 use App\Models\TaskTemplate;
 use App\Models\User;
+use App\Policies\AreaPolicy;
 use App\Policies\CategoryPolicy;
 use App\Policies\ChecklistPolicy;
 use App\Policies\ChecklistTemplatePolicy;
@@ -48,7 +50,8 @@ class AuthServiceProvider extends ServiceProvider
         Genre::class => GenrePolicy::class,
         Comment::class => CommentPolicy::class,
         ChecklistTemplate::class => ChecklistTemplatePolicy::class,
-        TaskTemplate::class => TaskTemplatePolicy::class
+        TaskTemplate::class => TaskTemplatePolicy::class,
+        Area::class => AreaPolicy::class
     ];
 
     /**

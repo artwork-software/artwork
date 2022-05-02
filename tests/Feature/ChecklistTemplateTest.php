@@ -24,20 +24,46 @@ beforeEach(function () {
 
 });
 
-test('users with the permission can create template checklists', function () {
+test('users with the permission can create template checklists without tasks', function () {
 
-    $this->auth_user->givePermissionTo('create checklist_templates');
+    $this->auth_user->givePermissionTo('create checklist_templates', 'update departments');
 
     $this->actingAs($this->auth_user);
 
     $this->post('/checklist_templates', [
         'name' => 'TestTemplateChecklist',
         'user_id' => $this->auth_user->id,
+        'departments' => [$this->assigned_department]
+    ]);
+
+    $this->assertDatabaseHas('checklist_templates', [
+        'name' => 'TestTemplateChecklist',
+        'user_id' => $this->auth_user->id
+    ]);
+
+    $checklist_template = ChecklistTemplate::where('name', 'TestTemplateChecklist')->first();
+
+    $this->assertDatabaseHas('checklist_template_department', [
+        'department_id' => $this->assigned_department->id,
+        'checklist_template_id' => $checklist_template->id
+    ]);
+
+});
+
+test('users with the permission can create template checklists with tasks', function () {
+
+    $this->auth_user->givePermissionTo('create checklist_templates', 'update departments');
+
+    $this->actingAs($this->auth_user);
+
+    $this->post('/checklist_templates', [
+        'name' => 'TestTemplateChecklist',
+        'user_id' => $this->auth_user->id,
+        'departments' => [$this->assigned_department],
         'task_templates' => [
             [
                 'name' => 'TestTemplateTask',
                 'description' => 'a description',
-                'checklist_template_id' => $this->checklist_template->id
             ]
         ]
     ]);
@@ -48,6 +74,11 @@ test('users with the permission can create template checklists', function () {
     ]);
 
     $checklist_template = ChecklistTemplate::where('name', 'TestTemplateChecklist')->first();
+
+    $this->assertDatabaseHas('checklist_template_department', [
+        'department_id' => $this->assigned_department->id,
+        'checklist_template_id' => $checklist_template->id
+    ]);
 
     $this->assertDatabaseHas('task_templates', [
         'name' => 'TestTemplateTask',
@@ -94,15 +125,30 @@ test('users with the permission can see all checklist_templates', function() {
 
 test('users with the permission can update checklist_templates', function () {
 
-    $this->auth_user->givePermissionTo('update checklist_templates');
+    $this->auth_user->givePermissionTo('update checklist_templates', 'update departments');
     $this->actingAs($this->auth_user);
+    $task_template = TaskTemplate::factory()->create();
 
     $this->patch("/checklist_templates/{$this->checklist_template->id}", [
         'name' => 'TestChecklistNew',
+        'departments' => [$this->assigned_department],
+        'task_templates' => [$task_template]
     ]);
 
     $this->assertDatabaseHas('checklist_templates', [
-        'name' => 'TestChecklistNew'
+        'name' => 'TestChecklistNew',
+    ]);
+
+    $checklist_template = ChecklistTemplate::where('name', 'TestChecklistNew')->first();
+
+    $this->assertDatabaseHas('checklist_template_department', [
+        'department_id' => $this->assigned_department->id,
+        'checklist_template_id' => $checklist_template->id
+    ]);
+
+    $this->assertDatabaseHas('task_templates', [
+        'name' => $task_template->name,
+        'checklist_template_id' => $checklist_template->id
     ]);
 
 });

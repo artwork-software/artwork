@@ -50,7 +50,10 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create(['name' => 'delete checklist_templates']);
 
         //Categories, Genres etc.
-        Permission::create(['name' => 'create and edit categories_etc']);
+        Permission::create(['name' => 'manage categories_etc']);
+
+        //Areas & Rooms
+        Permission::create(['name' => 'manage areas']);
 
 
         //Has every permission because of the gate in AuthServiceProvider

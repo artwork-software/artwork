@@ -78,12 +78,9 @@ class ChecklistTemplateController extends Controller
                 })
         );
 
-        $checklist_template->task_templates()->sync(
-            collect($request->task_templates)
-                ->map(function ($task_template) {
-                    return $task_template['id'];
-                })
-        );
+        if($request->task_templates) {
+            $checklist_template->task_templates()->createMany($request->task_templates);
+        }
 
         return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
     }
@@ -166,9 +163,10 @@ class ChecklistTemplateController extends Controller
                 })
         );
 
-        $checklistTemplate->task_templates()->createMany($request->task_templates);
+        $checklistTemplate->task_templates()->delete();
+        $checklistTemplate->task_templates()->saveMany($request->task_templates);
 
-        return Redirect::route('checklist_templates.show', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');
+        return Redirect::route('checklist_templates.management', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');
     }
 
     /**

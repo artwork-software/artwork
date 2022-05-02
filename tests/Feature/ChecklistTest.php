@@ -76,6 +76,8 @@ test('users with the permission can create checklists with a template and assign
 
     $this->auth_user->givePermissionTo('create checklists', 'update departments');
 
+    $this->checklist_template->departments()->attach($this->assigned_department);
+
     $this->actingAs($this->auth_user);
 
     $this->post('/checklists', [
@@ -96,6 +98,16 @@ test('users with the permission can create checklists with a template and assign
     $this->assertDatabaseHas('tasks', [
         'name' => 'TaskTemplateTest',
         'checklist_id' => $checklist->id
+    ]);
+
+    $this->assertDatabaseHas('checklist_department', [
+        'checklist_id' => $checklist->id,
+        'department_id' => $this->assigned_department->id
+    ]);
+
+    $this->assertDatabaseHas('department_project', [
+        'project_id' => $this->project->id,
+        'department_id' => $this->assigned_department->id
     ]);
 
 });

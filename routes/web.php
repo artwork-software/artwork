@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AppController;
+use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\RoomController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
@@ -147,6 +149,18 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::patch('/comments/{comment}', [CommentController::class, 'update']);
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+
+    //Areas
+    Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
+    Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
+    Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
+    Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
+
+    //Rooms
+    Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+    Route::get('/rooms/{room}', [RoomController::class, 'show']);
+    Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+    Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
 
 });
 

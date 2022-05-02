@@ -18,7 +18,7 @@ class GenrePolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('create and edit categories_etc');
+        return $user->can('manage categories_etc');
     }
 
     /**
@@ -29,7 +29,7 @@ class GenrePolicy
      */
     public function create(User $user)
     {
-        return $user->can('create and edit categories_etc');
+        return $user->can('manage categories_etc');
     }
 
     /**
@@ -41,7 +41,7 @@ class GenrePolicy
      */
     public function update(User $user, Genre $genre)
     {
-        return $user->can('create and edit categories_etc');
+        return $user->can('manage categories_etc');
     }
 
     /**
@@ -53,7 +53,7 @@ class GenrePolicy
      */
     public function delete(User $user, Genre $genre)
     {
-        return $user->can('create and edit categories_etc');
+        return $user->can('manage categories_etc');
     }
 
     /**

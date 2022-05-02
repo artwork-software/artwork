@@ -160,7 +160,7 @@ class DepartmentController extends Controller
                 })
         );
 
-        return Redirect::route('departments.show', $department -> id)->with('success', 'Department updated');
+        return Redirect::route('departments.show', $department->id)->with('success', 'Department updated');
     }
 
     /**

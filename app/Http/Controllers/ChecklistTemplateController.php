@@ -164,10 +164,14 @@ class ChecklistTemplateController extends Controller
         );
 
         $checklistTemplate->task_templates()->delete();
-        $checklistTemplate->task_templates()->saveMany($request->task_templates);
 
-        if($request->new_task_templates) {
-            $checklistTemplate->task_templates()->createMany($request->new_task_templates);
+        foreach($request->task_templates as $task_template) {
+            if(!is_array($task_template)) {
+                $checklistTemplate->task_templates()->save($task_template);
+            }
+            else {
+                $checklistTemplate->task_templates()->create($task_template);
+            }
         }
 
         return Redirect::route('checklist_templates.management', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');

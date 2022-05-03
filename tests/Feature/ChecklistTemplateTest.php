@@ -130,14 +130,12 @@ test('users with the permission can update checklist_templates', function () {
     $task_template = TaskTemplate::factory()->create();
     $task_template2 = TaskTemplate::factory()->create();
 
-    $this->patch("/checklist_templates/{$this->checklist_template->id}", [
+    $res = $this->patch("/checklist_templates/{$this->checklist_template->id}", [
         'name' => 'TestChecklistNew',
         'departments' => [$this->assigned_department],
         'task_templates' => [
             $task_template,
-            $task_template2
-        ],
-        'new_task_templates' => [
+            $task_template2,
             [
                 'name' => 'TestTemplateTask',
                 'description' => 'a description',

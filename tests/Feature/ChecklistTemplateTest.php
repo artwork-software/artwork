@@ -105,7 +105,7 @@ test('users without the permission cant create checklist templates', function ()
     ])->assertStatus(403);
 });
 
-test('users with the permission can see all checklist_templates', function() {
+test('users with the permission can see all checklist_templates', function () {
 
     $this->auth_user->can('view checklist_templates');
     $this->checklist_template->user()->associate($this->auth_user);
@@ -116,7 +116,7 @@ test('users with the permission can see all checklist_templates', function() {
     $response = $this->get('/checklist_templates')
         ->assertInertia(fn(Assert $page) => $page
             ->component('ChecklistTemplates/ChecklistTemplateManagement')
-            //->has('checklist_templates.data', 1)
+        //->has('checklist_templates.data', 1)
         );
 
     $response->assertStatus(200);
@@ -128,11 +128,22 @@ test('users with the permission can update checklist_templates', function () {
     $this->auth_user->givePermissionTo('update checklist_templates', 'update departments');
     $this->actingAs($this->auth_user);
     $task_template = TaskTemplate::factory()->create();
+    $task_template2 = TaskTemplate::factory()->create();
 
     $this->patch("/checklist_templates/{$this->checklist_template->id}", [
         'name' => 'TestChecklistNew',
         'departments' => [$this->assigned_department],
-        'task_templates' => [$task_template]
+        'task_templates' => [
+            $task_template,
+            $task_template2
+        ],
+        'new_task_templates' => [
+            [
+                'name' => 'TestTemplateTask',
+                'description' => 'a description',
+                'checklist_template_id' => $this->checklist_template->id
+            ]
+        ]
     ]);
 
     $this->assertDatabaseHas('checklist_templates', [
@@ -148,6 +159,11 @@ test('users with the permission can update checklist_templates', function () {
 
     $this->assertDatabaseHas('task_templates', [
         'name' => $task_template->name,
+        'checklist_template_id' => $checklist_template->id
+    ]);
+
+    $this->assertDatabaseHas('task_templates', [
+        'name' => 'TestTemplateTask',
         'checklist_template_id' => $checklist_template->id
     ]);
 

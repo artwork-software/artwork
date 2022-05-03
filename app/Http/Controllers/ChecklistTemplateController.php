@@ -166,6 +166,10 @@ class ChecklistTemplateController extends Controller
         $checklistTemplate->task_templates()->delete();
         $checklistTemplate->task_templates()->saveMany($request->task_templates);
 
+        if($request->new_task_templates) {
+            $checklistTemplate->task_templates()->createMany($request->new_task_templates);
+        }
+
         return Redirect::route('checklist_templates.management', $checklistTemplate -> id)->with('success', 'ChecklistTemplate updated');
     }
 

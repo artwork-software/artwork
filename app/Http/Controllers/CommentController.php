@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -28,21 +29,30 @@ class CommentController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      */
     public function store(StoreCommentRequest $request)
     {
         $project = \App\Models\Project::where('id', $request->project_id)->first();
+        $user = User::where('id', Auth::id())->first();
 
-        if($project->users->contains(Auth::id())) {
+        if ($project->users->contains(Auth::id()) || Auth::user()->hasRole('admin')) {
             Comment::create([
                 'text' => $request->text,
                 'user_id' => $request->user_id,
                 'project_id' => $request->project_id,
             ]);
-        }
-        else {
-            return response()->json(['error' => 'Not authorized to assign projects to a sector.'], 403);
+        } else if ($user->projects()->find($request->project_id) != null) {
+            if ($user->projects()->find($request->project_id)->pivot->is_admin == 1
+                || $user->projects()->find($request->project_id)->pivot->is_manager == 1) {
+                Comment::create([
+                    'text' => $request->text,
+                    'user_id' => $request->user_id,
+                    'project_id' => $request->project_id,
+                ]);
+            }
+        } else {
+            return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
         }
 
         return Redirect::back()->with('success', 'Comment created');
@@ -51,8 +61,8 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Comment  $comment
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Comment $comment
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Comment $comment)
@@ -63,7 +73,7 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Comment  $comment
+     * @param \App\Models\Comment $comment
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Comment $comment)

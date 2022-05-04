@@ -66,7 +66,7 @@ test('users can only view comments from projects they are assigned to', function
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
             ->has('project.comments.0', fn(Assert $page) => $page
-                ->hasAll(['id', 'text', 'user_id'])
+                ->hasAll(['id', 'text', 'user_id', 'created'])
             )
         );
 

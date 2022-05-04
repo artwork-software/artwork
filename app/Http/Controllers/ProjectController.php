@@ -229,7 +229,8 @@ class ProjectController extends Controller
                 'comments' => $project->comments->map(fn($comment) => [
                     'id' => $comment->id,
                     'text' => $comment->text,
-                    'created' => $comment->created
+                    'created' => $comment->created,
+                    'user_id' => $comment->user_id
                 ])
             ],
             'categories' => Category::paginate(10)->through(fn($category) => [

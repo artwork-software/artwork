@@ -255,7 +255,7 @@ class ProjectController extends Controller
                     'id' => $task_template->id,
                     'name' => $task_template->name,
                     'description' => $task_template->description
-                ])
+                ]),
             ])
         ]);
     }

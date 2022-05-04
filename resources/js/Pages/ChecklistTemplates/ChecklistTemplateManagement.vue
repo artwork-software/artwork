@@ -26,7 +26,6 @@
                 <li v-for="(template,index) in checklist_templates.data" :key="template.email"
                     class="py-6 flex justify-between">
                     <div class="flex">
-                        {{template}}
                         <div class="my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
                                 <p class="text-lg mr-3 font-bold font-lexend text-primary">
@@ -141,7 +140,7 @@
 <script>
 
 import {Inertia} from "@inertiajs/inertia";
-import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon} from "@heroicons/vue/outline";
+import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {PlusSmIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AppLayout from '@/Layouts/AppLayout.vue'
@@ -167,6 +166,7 @@ export default {
         DuplicateIcon,
         Link,
         JetDialogModal,
+        XIcon
     },
     data() {
         return {
@@ -178,7 +178,7 @@ export default {
                 //user who created the template
                 user_id: this.$page.props.user.id,
                 task_templates: [],
-                assignedTeams: []
+                departments: []
             }),
         }
     },
@@ -199,11 +199,11 @@ export default {
             this.closeDeleteTemplateModal();
         },
         duplicateTemplate(templateToDuplicate){
+            console.log(templateToDuplicate);
             this.duplicateForm.name = templateToDuplicate.name + ' (Kopie)';
             this.duplicateForm.task_templates = templateToDuplicate.task_templates;
-            this.duplicateForm.assignedTeams = templateToDuplicate.assignedTeams
+            this.duplicateForm.departments = templateToDuplicate.departments
             this.duplicateForm.post(route('checklist_templates.store'));
-            this.showSuccessButton();
         },
     },
     setup() {

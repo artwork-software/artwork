@@ -20,11 +20,11 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.assignedTeams.length === 0">
+                    <div v-if="templateForm.departments.length === 0">
                         <span
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.assignedTeams">
+                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
                     </div>
                     <Menu as="div" class="my-auto relative">
@@ -204,7 +204,7 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(team,index) in templateForm.assignedTeams"
+                        <span v-for="(team,index) in templateForm.departments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <TeamIconCollection :iconName="team.svg_name"
@@ -287,7 +287,7 @@ export default {
                 //user who created the template
                 user_id: this.$page.props.user.id,
                 task_templates: [],
-                assignedTeams: []
+                departments: []
             }),
             newTaskName:"",
             newTaskDescription:"",
@@ -311,7 +311,7 @@ export default {
           this.addingTask = false;
         },
         deleteTeamFromTemplate(team) {
-            this.templateForm.assignedTeams.splice(this.templateForm.assignedTeams.indexOf(team), 1);
+            this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -320,14 +320,14 @@ export default {
             }, 1000)
         },
         addTeamToTeamsArray(team) {
-            for (let assignedTeam of this.templateForm.assignedTeams) {
+            for (let assignedTeam of this.templateForm.departments) {
                 //if team is already assigned do nothing
                 if (team.id === assignedTeam.id) {
                     this.team_query = ""
                     return;
                 }
             }
-            this.templateForm.assignedTeams.push(team);
+            this.templateForm.departments.push(team);
             this.team_query = "";
             this.team_search_results = []
         },

@@ -39,7 +39,9 @@
                                 <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
                                      :iconName="department.svg_name"
                                      alt=""/>
-                                <div v-if="project.departments.length >= 3" class="my-auto">
+
+                            </div>
+                                <div v-if="project.departments.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
                                         <div>
                                             <MenuButton class="flex items-center rounded-full focus:outline-none">
@@ -71,7 +73,6 @@
                                     </Menu>
                                 </div>
                             </div>
-                            </div>
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
@@ -79,7 +80,7 @@
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                     </div>
-                                    <div v-if="project.users.length >= 3" class="my-auto">
+                                    <div v-if="project.users.length >= 4" class="my-auto">
                                         <Menu as="div" class="relative">
                                             <div>
                                                 <MenuButton class="flex items-center rounded-full focus:outline-none">

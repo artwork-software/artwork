@@ -68,19 +68,19 @@
                     {{ project.description }}
                 </div>
                 <div class="mt-4 text-xs text-secondary">
-                    Kostenträger: {{ project.cost_center ? project.cost_center : 'noch nicht definiert' }} | Anzahl
+                    Kostenträger: <span class="text-primary font-bold">{{ project.cost_center ? project.cost_center : 'noch nicht definiert' }} </span> | Anzahl
                     Teilnehmer*innen:
-                    {{ project.number_of_participants ? project.number_of_participants : 'noch nicht definiert' }}
+                    <span class="text-primary font-bold">{{ project.number_of_participants ? project.number_of_participants : 'noch nicht definiert' }} </span>
                 </div>
                 <div class="mt-3 flex text-secondary text-xs">
                     <span class="mr-2">Kategorie: </span>
                     <CategoryIconCollection v-if="project.category" height="16" width="16"
                                             :iconName="project.category.svg_name"/>
-                    <span class="ml-1 mr-1">{{
+                    <span class="ml-1 mr-1 text-primary font-bold">{{
                             project.category ? project.category.name : 'noch nicht definiert'
-                        }} </span> | Genre:
-                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} | Bereich:
-                    {{ project.sector ? project.sector.name : 'noch nicht definiert' }}
+                        }} </span> | Genre:<span class="text-primary font-bold ml-1 mr-1 ">
+                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> | Bereich: <span class="text-primary font-bold ml-1">
+                    {{ project.sector ? project.sector.name : 'noch nicht definiert' }} </span>
                 </div>
                 <h3 class="text-xl mt-12 mb-4 leading-6 font-bold font-lexend text-gray-900">Wann und wo?</h3>
                 <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
@@ -103,19 +103,25 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex flex-wrap w-full">
+                <div class="flex mt-4 flex-wrap w-full">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Projektleitung</span>
-                    <div class="flex" v-for="user in this.project.users">
+                    <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :src="user.profile_photo_url" :alt="user.name"
-                             class="rounded-full h-11 w-11 object-cover"/>
+                             class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                     </div>
 
                 </div>
-                <div class="flex w-full flex-wrap">
+                <div class="flex w-full mt-4 flex-wrap">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Team</span>
-                    <div class="flex " v-for="department in this.project.departments">
+                    <div class="flex w-full">
+                    <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                         <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
-                                            class="rounded-full h-11 w-11 object-cover"/>
+                                            class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                    </div>
+                    </div>
+                    <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
+                        <img :src="user.profile_photo_url" :alt="user.name"
+                             class="rounded-full h-11 w-11 object-cover"/>
                     </div>
                 </div>
 
@@ -177,10 +183,41 @@
                                         </span>
                                                 </div>
                                                 <div class="flex">
-                                                    <div class="flex " v-for="department in checklist.departments">
+                                                    <div class="flex -mr-3" v-for="department in checklist.departments.slice(0,9)">
                                                         <TeamIconCollection :iconName="department.svg_name"
                                                                             :alt="department.name"
-                                                                            class="rounded-full h-9 w-9 object-cover"/>
+                                                                            class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                                    </div>
+                                                    <div v-if="checklist.departments.length >= 10" class="my-auto">
+                                                        <Menu as="div" class="relative">
+                                                            <div>
+                                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                                    <ChevronDownIcon
+                                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                                </MenuButton>
+                                                            </div>
+                                                            <transition enter-active-class="transition ease-out duration-100"
+                                                                        enter-from-class="transform opacity-0 scale-95"
+                                                                        enter-to-class="transform opacity-100 scale-100"
+                                                                        leave-active-class="transition ease-in duration-75"
+                                                                        leave-from-class="transform opacity-100 scale-100"
+                                                                        leave-to-class="transform opacity-0 scale-95">
+                                                                <MenuItems
+                                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                                    <MenuItem v-for="department in checklist.departments" v-slot="{ active }">
+                                                                        <div
+                                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <TeamIconCollection :iconName="department.svg_name"
+                                                                                                :alt="department.name"
+                                                                                                class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                                                            <span class="ml-4">
+                                                                {{ department.name }}
+                                                            </span>
+                                                                        </div>
+                                                                    </MenuItem>
+                                                                </MenuItems>
+                                                            </transition>
+                                                        </Menu>
                                                     </div>
                                                     <Menu as="div" class="my-auto relative">
                                                         <div class="flex">
@@ -220,7 +257,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="checkAllTasks(checklist.tasks)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -238,7 +275,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a href="#" @click=""
+                                                                        <a href="#" @click="duplicateChecklist(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <DuplicateIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -247,7 +284,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="deleteChecklistFromProject(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <TrashIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -278,7 +315,127 @@
                                                 <draggable ghost-class="opacity-50" tag="transition-group"
                                                            item-key="draggableID" v-model="checklist.tasks"
                                                            @start="dragging=true" @end="dragging=false">
-                                                    <template #item="{element}">
+                                                    <template #item="{element}" :key="element.id">
+                                                        <div class="flex mt-6 flex-wrap w-full"
+                                                             :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
+                                                            <div class="flex w-full">
+                                                                <input v-model="element.done"
+                                                                       type="checkbox"
+                                                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                                <p class="ml-4 my-auto text-lg font-black text-sm"
+                                                                   :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                                    {{ element.name }}</p>
+                                                            </div>
+                                                            <div class="ml-10 text-secondary">
+                                                                {{ element.description }}
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </draggable>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div v-for="checklist in project.private_checklists"
+                                         class="flex w-full bg-white my-2">
+                                        <div class="flex w-full ml-4 flex-wrap p-4">
+                                            <div class="flex mt-4 justify-between w-full">
+                                                <div class="">
+                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                        {{ checklist.name }}
+                                        </span>
+                                                </div>
+                                                <div class="flex">
+                                                    <img class="h-10 w-10 rounded-full"
+                                                         :src="$page.props.user.profile_photo_url"
+                                                         alt=""/>
+                                                    <Menu as="div" class="my-auto relative">
+                                                        <div class="flex">
+                                                            <MenuButton
+                                                                class="flex ml-6">
+                                                                <DotsVerticalIcon
+                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                    aria-hidden="true"/>
+                                                            </MenuButton>
+                                                        </div>
+                                                        <transition
+                                                            enter-active-class="transition ease-out duration-100"
+                                                            enter-from-class="transform opacity-0 scale-95"
+                                                            enter-to-class="transform opacity-100 scale-100"
+                                                            leave-active-class="transition ease-in duration-75"
+                                                            leave-from-class="transform opacity-100 scale-100"
+                                                            leave-to-class="transform opacity-0 scale-95">
+                                                            <MenuItems
+                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                <div class="py-1">
+                                                                    <MenuItem v-slot="{ active }">
+                                                                        <a @click=""
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <PencilAltIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Bearbeiten
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                    <MenuItem v-slot="{ active }">
+                                                                        <a @click="checkAllTasks(checklist.tasks)"
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <PencilAltIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Alle Aufgaben als erledigt markieren
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                    <MenuItem v-slot="{ active }">
+                                                                        <a @click=""
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <PencilAltIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Als Vorlage speichern
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                    <MenuItem v-slot="{ active }">
+                                                                        <a href="#" @click="duplicateChecklist(checklist)"
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <DuplicateIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Duplizieren
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                    <MenuItem v-slot="{ active }">
+                                                                        <a @click="deleteChecklistFromProject(checklist)"
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <TrashIcon
+                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Löschen
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                </div>
+                                                            </MenuItems>
+                                                        </transition>
+                                                    </Menu>
+                                                </div>
+                                            </div>
+                                            <div class="flex w-full mt-6">
+                                                <div class="">
+                                                    <button @click="openAddTaskModal(checklist)" type="button"
+                                                            class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                                        <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                                    </button>
+                                                </div>
+                                                <div v-if="$page.props.can.show_hints" class="flex">
+                                                    <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                                    <span
+                                                        class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                                </div>
+                                            </div>
+                                            <div class="mt-6 mb-12">
+                                                <draggable ghost-class="opacity-50" tag="transition-group"
+                                                           item-key="draggableID" v-model="checklist.tasks"
+                                                           @start="dragging=true" @end="dragging=false">
+                                                    <template #item="{element}" :key="element.id">
                                                         <div class="flex mt-6 flex-wrap w-full"
                                                              :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                             <div class="flex w-full">
@@ -304,11 +461,28 @@
                     </div>
 
                 </div>
-
                 <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14">
-                    <div class="col-span-2">
+                    <div class="col-span-2 mr-8">
                         <div class="flex w-full items-center mb-8">
-                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Informationen </h3>
+                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige Informationen </h3>
+                        </div>
+                        <div class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
+                        <textarea
+                            placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
+                            v-model="commentForm.text" rows="4"
+                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-stone-50 border-0  w-full"/>
+                            <div class="absolute bottom-0 right-0 flex">
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
+                                <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
+                            </div>
+                            <button
+                                :class="[commentForm.text === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mr-1 mb-1 rounded-full mt-2 ml-1 text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                @click="addCommentToProject" :disabled="commentForm.text === ''">
+                                <CheckIcon class="h-4 w-4"></CheckIcon>
+                            </button>
+                            </div>
                         </div>
                     </div>
                     <div class="col-span-1">
@@ -329,6 +503,11 @@
                                 <XCircleIcon @click="removeFile(project_file)" class="ml-2 hidden group-hover:block h-5 w-5 text-error" aria-hidden="true"/>
                             </div>
                         </div>
+                    </div>
+                    <div>
+                        <pre>
+                            {{project.comments}}
+                        </pre>
                     </div>
                 </div>
             </div>
@@ -565,14 +744,66 @@
                         anschließend anpassen.
                     </div>
                     <div class="flex my-6">
-                        <div class="text-primary flex tracking-tight leading-6 sub">
-                            Keine Vorlage
-                            <ChevronDownIcon class="h-6 w-6"/>
-                        </div>
+                        <Listbox class="sm:col-span-3" v-model="selectedTemplate">
+                            <div class="relative">
+                                <ListboxButton
+                                    class="bg-white relative  border-0 w-full border border-gray-300 font-semibold mr-40 py-2 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span>{{ selectedTemplate.name }}</span>
+                                        </span>
+                                    <span v-if="selectedTemplate.name === ''"
+                                          class="block truncate">Keine Vorlage</span>
+                                    <span
+                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                </ListboxButton>
+
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       :key="'keineVorlage'"
+                                                       :value="{name:''}"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        Keine Vorlage
+                                                    </span>
+                                                <span
+                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="template in checklist_templates.data"
+                                                       :key="template.id"
+                                                       :value="template"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ template.name }}
+                                                    </span>
+                                                <span
+                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </div>
+                        </Listbox>
                     </div>
                     <div class="mt-4">
                         <div class="flex mt-8">
-                            <div class="relative w-full mr-4">
+                            <div class="relative w-full mr-4" v-if="selectedTemplate.name === ''">
                                 <input id="checklistName" v-model="checklistForm.name" type="text"
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
@@ -582,7 +813,7 @@
                             </div>
                             <jet-input-error :message="form.error" class="mt-2"/>
                         </div>
-                        <div class="flex items-center my-6">
+                        <div class="flex items-center my-6" v-if="selectedTemplate.name === ''">
                             <Switch @click="checklistForm.private = !checklistForm.private"
                                     :class="[checklistForm.private ?
                                         'bg-success' :
@@ -681,9 +912,6 @@
                         </transition>
                     </div>
                     <div class="mt-4">
-                        <pre>
-                            {{assignedUsers}}
-                        </pre>
                         <span v-for="user in assignedUsers"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
@@ -897,7 +1125,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors','checklist_templates'],
     components: {
         CategoryIconCollection,
         Checkbox,
@@ -937,7 +1165,21 @@ export default {
                 {name: 'Checklisten', href: '#', current: this.isChecklistTab},
                 {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
             ]
-        }
+        },
+        projectMembers() {
+            let projectMembers = [];
+            this.project.users.forEach((user) => {
+                if(this.project.project_managers.findIndex((projectManager) => projectManager.id === user.id) !== -1){
+                    user.is_manager = true;
+                }else{
+                    projectMembers.push(user);
+                }
+                if(this.project.project_admins.findIndex((projectAdmin) => projectAdmin.id === user.id) !== -1){
+                    user.is_admin = true;
+                }
+            })
+            return projectMembers;
+        },
     },
     data() {
         return {
@@ -960,6 +1202,7 @@ export default {
             selectedCategory: this.project.category ? this.project.category : {name: '', svg_name: ''},
             selectedSector: this.project.sector ? this.project.sector : {name: ''},
             selectedGenre: this.project.genre ? this.project.genre : {name: ''},
+            selectedTemplate: {name:''},
             showDetails: false,
             checklistToEdit: null,
             assignedUsers: this.project.users,
@@ -971,9 +1214,9 @@ export default {
                 number_of_participants: this.project.number_of_participants,
                 assigned_user_ids: {},
                 assigned_departments: [],
-                sector_id: null,
-                category_id: null,
-                genre_id: null,
+                sector_id: this.project.sector_id,
+                category_id: this.project.category_id,
+                genre_id: this.project.genre_id,
 
             }),
             checklistForm: useForm({
@@ -982,6 +1225,8 @@ export default {
                 tasks: [],
                 assigned_department_ids: [],
                 private: false,
+                template_id:null,
+                user_id: null
             }),
             taskForm: useForm({
                 name: "",
@@ -989,9 +1234,21 @@ export default {
                 deadline: "2012-12-12",
                 checklist_id: null,
             }),
+            commentForm: useForm({
+                text: "",
+                user_id:this.$page.props.user.id,
+                project_id:this.project.id
+            }),
             documentForm: useForm({
                 file: null
-            })
+            }),
+            duplicateForm: useForm({
+                name: "",
+                project_id: this.project.id,
+                tasks: [],
+                assigned_department_ids: [],
+                user_id: null
+            }),
         }
     },
     methods: {
@@ -1038,6 +1295,9 @@ export default {
                 }
             })
         },
+        setName(newName){
+            this.checklistForm.name = newName;
+        },
         openEditProjectTeamModal() {
             this.editingTeam = true;
         },
@@ -1057,17 +1317,6 @@ export default {
         },
         closeEditProjectModal() {
             this.editingProject = false;
-            this.form.name = "";
-            this.form.description = "";
-            this.form.cost_center = "";
-            this.form.number_of_participants = "";
-            this.selectedParticipantNumber = "";
-            this.selectedCategory = {name: '', svg_name: ''};
-            this.selectedGenre = {name: ''};
-            this.selectedSector = {name: ''};
-            this.form.sector_id = 0;
-            this.form.category_id = 0;
-            this.form.genre_id = 0;
         },
         openAddChecklistModal() {
             this.addingChecklist = true;
@@ -1076,8 +1325,19 @@ export default {
             this.addingChecklist = false;
         },
         addChecklist() {
-            this.checklistForm.post(route('checklists.store'), {})
-            this.closeAddChecklistModal();
+            if(this.checklistForm.private === true){
+              this.checklistForm.user_id = this.$page.props.user.id
+            }
+            if(this.selectedTemplate.id !== null){
+                this.checklistForm.template_id = this.selectedTemplate.id;
+                this.checklistForm.post(route('checklists.store'), {});
+                this.checklistForm.template_id = null;
+                this.closeAddChecklistModal();
+            }else{
+                this.checklistForm.post(route('checklists.store'), {});
+                this.closeAddChecklistModal();
+            }
+
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
@@ -1085,7 +1345,7 @@ export default {
             this.form.sector_id = this.selectedSector.id;
             this.form.genre_id = this.selectedGenre.id;
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids.push(user.id);
+                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -1110,6 +1370,17 @@ export default {
         },
         deleteDepartmentFromProjectTeam(department) {
             this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
+        },
+        deleteChecklistFromProject(checklist){
+            if(this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === checklist.id) !== -1){
+                this.project.public_checklists.splice(this.project.public_checklists.indexOf(checklist), 1);
+                this.$inertia.delete(`/checklists/${checklist.id}`);
+                return;
+            }
+            if(this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1){
+                this.project.private_checklists.splice(this.project.private_checklists.indexOf(checklist), 1);
+                this.$inertia.delete(`/checklists/${checklist.id}`);
+            }
         },
         addDepartmentToChecklistTeamArray(department) {
             for (let assigned_department of this.checklist_assigned_departments) {
@@ -1154,7 +1425,6 @@ export default {
             this.department_and_user_query = ""
         },
         editProjectTeam() {
-            // TODO: HIER NOCH IS_ADMIN IS_MANAGER VERARBEITEN
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
@@ -1180,7 +1450,34 @@ export default {
             console.log(this.taskForm);
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
-        }
+        },
+        addCommentToProject(){
+            this.commentForm.post(route('comments.store'),{});
+        },
+        checkAllTasks(tasksToCheck){
+            tasksToCheck.forEach((task) => {
+                task.done = true;
+            })
+        },
+        duplicateChecklist(checklist){
+            let departmentIds = [];
+            console.log(this.project.private_checklists);
+            this.duplicateForm.name = checklist.name + " (Kopie)";
+            this.duplicateForm.tasks = checklist.tasks;
+            if(this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1){
+                this.duplicateForm.user_id = this.$page.props.user.id;
+            }else{
+                checklist.departments.forEach((department) => {
+                    departmentIds.push(department.id);
+                })
+                this.duplicateForm.assigned_department_ids = departmentIds
+            }
+            this.duplicateForm.post(route('checklists.store'), {})
+            this.duplicateForm.name = "";
+            this.duplicateForm.tasks = [];
+            this.duplicateForm.departments = [];
+            this.duplicateForm.user_id = null;
+        },
     },
     watch: {
         department_query: {

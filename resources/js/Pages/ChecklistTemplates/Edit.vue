@@ -20,11 +20,11 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.assignedTeams.length === 0">
+                    <div v-if="templateForm.departments.length === 0">
                         <span
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.assignedTeams">
+                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
                     </div>
                     <Menu as="div" class="my-auto relative">
@@ -69,7 +69,7 @@
                 </div>
                 <div class="flex">
                     <div class="flex w-full mt-12">
-                        <div class="">
+                        <div class="ml-0.5">
                             <button @click="openAddTaskModal()" type="button"
                                     class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -82,11 +82,12 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-6 mb-6">
+                <div class="mt-10 mb-6">
                     <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID"
                                v-model="templateForm.task_templates" @start="dragging=true" @end="dragging=false">
-                        <template #item="{element}">
-                            <div class="flex mt-6 flex-wrap w-full"
+                        <template #item="{element}" :key="element.id">
+                            <div class="flex">
+                            <div class="flex mt-6 flex-wrap"
                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                 <div class="flex w-full">
                                     <input v-model="element.done"
@@ -100,6 +101,11 @@
                                     {{ element.description }}
                                 </div>
                             </div>
+                                <button type="button" @click="deleteTaskFromTemplate(element)">
+                                    <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
+                                    <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                                </button>
+                            </div>
                         </template>
                     </draggable>
                 </div>
@@ -107,7 +113,7 @@
                     <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
                         <button v-if="!showSuccess" @click="editChecklistTemplate"
                                 class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >Vorlage anlegen
+                        >Speichern
                         </button>
                         <button v-else type="submit"
                                 class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
@@ -204,7 +210,7 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(team,index) in templateForm.assignedTeams"
+                        <span v-for="(team,index) in templateForm.departments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <TeamIconCollection :iconName="team.svg_name"
@@ -282,12 +288,12 @@ export default {
             showChangeTeamsModal: false,
             team_search_results: [],
             templateForm: this.$inertia.form({
-                _method: 'POST',
+                _method: 'PATCH',
                 name: this.checklist_template.name,
                 //user who created the template
                 user_id: this.$page.props.user.id,
-                task_templates: this.checklist_template.task_templates,
-                assignedTeams: this.checklist_template.assignedTeams
+                task_templates: this.checklist_template.tasks,
+                departments: this.checklist_template.departments
             }),
             newTaskName:"",
             newTaskDescription:"",
@@ -311,7 +317,7 @@ export default {
             this.addingTask = false;
         },
         deleteTeamFromTemplate(team) {
-            this.templateForm.assignedTeams.splice(this.templateForm.assignedTeams.indexOf(team), 1);
+            this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -320,18 +326,19 @@ export default {
             }, 1000)
         },
         editChecklistTemplate() {
-            this.templateForm.patch(route('checklist_templates.update'),{checklist_template: this.checklist_template.id});
+            console.log(this.templateForm.task_templates);
+            this.templateForm.patch(route('checklist_templates.update',{checklist_template: this.checklist_template.id}));
             this.showSuccessButton();
         },
         addTeamToTeamsArray(team) {
-            for (let assignedTeam of this.templateForm.assignedTeams) {
+            for (let assignedTeam of this.templateForm.departments) {
                 //if team is already assigned do nothing
                 if (team.id === assignedTeam.id) {
                     this.team_query = ""
                     return;
                 }
             }
-            this.templateForm.assignedTeams.push(team);
+            this.templateForm.departments.push(team);
             this.team_query = "";
             this.team_search_results = []
         },
@@ -340,6 +347,9 @@ export default {
             this.newTaskName = "";
             this.newTaskDescription = "";
             this.closeAddTaskModal();
+        },
+        deleteTaskFromTemplate(taskToDelete){
+            this.templateForm.task_templates.splice(this.templateForm.task_templates.indexOf(taskToDelete), 1);
         }
     },
     watch: {

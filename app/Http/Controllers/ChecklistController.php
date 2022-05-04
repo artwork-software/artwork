@@ -54,7 +54,8 @@ class ChecklistController extends Controller
 
         $checklist = Checklist::create([
             'name' => $template->name,
-            'project_id' => $request->project_id
+            'project_id' => $request->project_id,
+            'user_id' => $request->user_id
         ]);
 
         foreach ($template->task_templates as $task_template) {
@@ -93,7 +94,8 @@ class ChecklistController extends Controller
     protected function createWithoutTemplate(Request $request) {
         $checklist = Checklist::create([
             'name' => $request->name,
-            'project_id' => $request->project_id
+            'project_id' => $request->project_id,
+            'user_id' => $request->user_id
         ]);
 
         $checklist->tasks()->createMany($request->tasks);

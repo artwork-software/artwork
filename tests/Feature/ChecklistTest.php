@@ -41,6 +41,7 @@ test('users with the permission can create checklists without a template and ass
     $this->post('/checklists', [
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
+        'user_id' => null,
         'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
@@ -85,12 +86,14 @@ test('users with the permission can create checklists with a template and assign
         'project_id' => $this->project->id,
         'assigned_department_ids' => [$this->assigned_department->id],
         'template_id' => $this->checklist_template->id,
-        'tasks' => null
+        'tasks' => null,
+        'user_id' => $this->auth_user->id
     ]);
 
     $this->assertDatabaseHas('checklists', [
         'name' => 'ChecklistTemplateTest',
-        'project_id' => $this->project->id
+        'project_id' => $this->project->id,
+        'user_id' => $this->auth_user->id
     ]);
 
     $checklist = Checklist::where('name', 'ChecklistTemplateTest')->first();

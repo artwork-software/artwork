@@ -207,7 +207,7 @@ class ProjectController extends Controller
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
-                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y H:i'),
+                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'done' => $task->done,
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
@@ -223,7 +223,7 @@ class ProjectController extends Controller
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
-                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y H:i'),
+                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'done' => $task->done,
                     ])
                 ]),

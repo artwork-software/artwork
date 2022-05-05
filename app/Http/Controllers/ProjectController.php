@@ -53,6 +53,7 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
+                'project_history' => $project->project_histories()->with('user')->get(),
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
@@ -194,6 +195,7 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
+                'project_history' => $project->project_histories()->with('user')->get(),
                 'project_files' => $project->project_files,
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
@@ -314,7 +316,8 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function history_description($change) {
+    private function history_description_change($change): string
+    {
 
         return match ($change) {
             'name' => 'Projektname wurde geändert',
@@ -328,19 +331,60 @@ class ProjectController extends Controller
 
     }
 
-    private function add_to_history($project) {
+    private function history_description_added($change): string
+    {
 
-        $changes = $project->getChanges();
+        return match ($change) {
+            'description' => 'Kurzbeschreibung wurde hinzugefügt',
+            'number_of_participants' => 'Anzahl Teilnehmer:innen hinzugefügt',
+            'cost_center' => 'Kostenträger hinzugefügt',
+            'sector_id'=> 'Bereich hinzugefügt',
+            'category_id'=> 'Kategorie hinzugefügt',
+            'genre_id'=> 'Genre hinzugefügt',
+        };
+
+    }
+
+    private function history_description_removed($change): string
+    {
+
+        return match ($change) {
+            'description' => 'Kurzbeschreibung wurde gelöscht',
+            'number_of_participants' => 'Anzahl Teilnehmer:innen gelöscht',
+            'cost_center' => 'Kostenträger gelöscht',
+            'sector_id'=> 'Bereich gelöscht',
+            'category_id'=> 'Kategorie gelöscht',
+            'genre_id'=> 'Genre gelöscht',
+        };
+
+    }
+
+    private function add_to_history($project): void {
+
+        $original = $project->getOriginal();
+        $changes = $project->getDirty();
 
         $changed_fields = array_keys($changes);
 
-        dd($changed_fields);
+        foreach ($changed_fields as $change) {
 
-        foreach ($changes as $change) {
-            $project->project_histories()->create([
-                "user_id" => Auth::id(),
-                "description" => $this->history_description($change)
-            ]);
+            if($original[$change] === null) {
+                $project->project_histories()->create([
+                    "user_id" => Auth::id(),
+                    "description" => $this->history_description_added($change)
+                ]);
+            } else if($changes[$change] === null) {
+                $project->project_histories()->create([
+                    "user_id" => Auth::id(),
+                    "description" => $this->history_description_removed($change)
+                ]);
+            } else {
+                $project->project_histories()->create([
+                    "user_id" => Auth::id(),
+                    "description" => $this->history_description_change($change)
+                ]);
+            }
+
         }
     }
 
@@ -353,12 +397,13 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
-
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
 
-        $project->update($update_properties);
+        $project->fill($update_properties);
 
         $this->add_to_history($project);
+
+        $project->save();
 
         if (Auth::user()->can('update users')) {
             $project->users()->sync(

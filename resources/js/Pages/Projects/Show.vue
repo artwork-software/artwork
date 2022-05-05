@@ -356,7 +356,7 @@
                                                                     class="ml-2 my-auto text-sm subpixel-antialiased"
                                                                     :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                         element.deadline
-                                                                    }} {{element}} </span>
+                                                                    }} </span>
                                                             </div>
                                                             <Menu as="div" class="my-auto relative"
                                                                   v-show="showMenu === element.id">

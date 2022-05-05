@@ -13,6 +13,7 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -206,7 +207,7 @@ class ProjectController extends Controller
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
-                        'deadline' => $task->deadline,
+                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y H:i'),
                         'done' => $task->done,
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
@@ -222,7 +223,7 @@ class ProjectController extends Controller
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
-                        'deadline' => $task->deadline,
+                        'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y H:i'),
                         'done' => $task->done,
                     ])
                 ]),

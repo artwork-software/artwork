@@ -106,7 +106,7 @@ class TaskController extends Controller
         Task::create([
             'name' => $request->name,
             'description' => $request->description,
-            'deadline' => Carbon::parse($request->deadline)->format('d.m.Y H:i'),
+            'deadline' => Carbon::parse($request->deadline),
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);

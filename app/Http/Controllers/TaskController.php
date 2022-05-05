@@ -103,13 +103,15 @@ class TaskController extends Controller
 
     protected function createTask(Request $request)
     {
-        Task::create([
+        $task = Task::create([
             'name' => $request->name,
             'description' => $request->description,
-            'deadline' => Carbon::parse($request->deadline)->format('d.m.Y h'),
+            'deadline' => Carbon::parse($request->deadline)->format('d.m.Y H:i'),
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);
+
+        dd($task->deadline);
     }
 
     /**
@@ -140,7 +142,7 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $task->update($request->only('name', 'description', 'deadline', 'done', 'checklist_id'));
-        $task->deadline = Carbon::parse($request->deadline)->format('d.m.Y h');
+        $task->deadline = Carbon::parse($request->deadline)->format('d.m.Y H:i');
         $task->save();
 
         return Redirect::back()->with('success', 'Task updated');

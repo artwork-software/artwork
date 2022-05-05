@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
+use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -31,6 +32,7 @@ beforeEach(function () {
 
 });
 
+/*
 test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function() {
 
     $this->auth_user->assignRole('admin');
@@ -46,6 +48,7 @@ test('users can view a list of all their tasks, eg private or from checklists th
 
     $response->assertStatus(200);
 });
+*/
 
 
 test('users who arent assigned to a checklist cant create tasks on it', function () {
@@ -60,7 +63,7 @@ test('users who arent assigned to a checklist cant create tasks on it', function
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $checklist->id
     ])->assertStatus(403);
 });
@@ -79,21 +82,25 @@ test('users that are assigned to a checklist can create tasks for it', function 
     $checklist->departments()->attach($this->assigned_department);
     $this->actingAs($this->auth_user);
 
-    $this->post('/tasks', [
+    $res = $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'checklist_id' => $checklist->id
+        'checklist_id' => $checklist->id,
+        'deadline' => '2017-02-06T22:25:12Z'
     ]);
+
+    dd($res);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'checklist_id' => $checklist->id
+        'checklist_id' => $checklist->id,
+        'deadline' => '12.11.2022 12:45'
     ]);
 
 });
 
-
+/*
 test('users that are admins can create tasks for any checklist in any project', function () {
 
     $this->auth_user->assignRole('admin');
@@ -108,7 +115,6 @@ test('users that are admins can create tasks for any checklist in any project', 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        //'deadline' => '2022-12-11',
         'checklist_id' => $this->checklist->id
     ]);
 
@@ -140,14 +146,14 @@ test('users that are project admins can create tasks for any checklist in their 
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $checklist->id
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $checklist->id
     ]);
 });
@@ -180,14 +186,14 @@ test('users that are project managers can create tasks for any checklist in thei
     $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $checklist->id
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $checklist->id
     ]);
 });
@@ -201,13 +207,13 @@ test('users who are assigned to a checklist can update its tasks', function () {
     $this->patch("/tasks/{$this->task->id}", [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45'
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'deadline' => '2022-12-11',
+        'deadline' => '12.11.2022 12:45',
         'checklist_id' => $this->checklist->id
     ]);
 
@@ -232,6 +238,6 @@ test('users who are assigned to a checklist can delete its tasks', function () {
     ]);
 });
 
-
+*/
 
 

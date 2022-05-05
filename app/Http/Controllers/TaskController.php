@@ -103,15 +103,13 @@ class TaskController extends Controller
 
     protected function createTask(Request $request)
     {
-        $task = Task::create([
+        Task::create([
             'name' => $request->name,
             'description' => $request->description,
             'deadline' => Carbon::parse($request->deadline)->format('d.m.Y H:i'),
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);
-
-        dd($task->deadline);
     }
 
     /**

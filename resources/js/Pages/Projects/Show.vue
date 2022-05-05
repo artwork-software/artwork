@@ -181,8 +181,14 @@
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
                                          class="flex w-full bg-white my-2">
+                                        <button class="bg-black flex" @click="checklist.hidden = !checklist.hidden">
+                                            <ChevronUpIcon v-if="checklist.hidden !== true"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
                                         <div class="flex w-full ml-4 flex-wrap p-4">
-                                            <div class="flex mt-4 justify-between w-full">
+                                            <div class="flex justify-between w-full my-auto">
                                                 <div class="">
                                         <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
                                         {{ checklist.name }}
@@ -234,9 +240,9 @@
                                                     <Menu as="div" class="my-auto relative">
                                                         <div class="flex">
                                                             <MenuButton
-                                                                class="flex ml-6">
+                                                                class="flex ml-9">
                                                                 <DotsVerticalIcon
-                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                    class="flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                                     aria-hidden="true"/>
                                                             </MenuButton>
                                                         </div>
@@ -311,7 +317,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6">
+                                            <div class="flex w-full mt-6" v-if="!checklist.hidden">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -324,12 +330,14 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12">
-                                                <draggable ghost-class="opacity-50" tag="transition-group" key="draggableKey"
+                                            <div class="mt-6 mb-12" v-if="!checklist.hidden">
+                                                <draggable ghost-class="opacity-50"
+                                                           key="draggableKey"
                                                            item-key="draggableID" v-model="checklist.tasks"
                                                            @start="dragging=true" @end="dragging=false">
                                                     <template #item="{element}" :key="element.id">
-                                                        <div class="flex" @mouseover="showMenu = element.id" :key="element.id"
+                                                        <div class="flex" @mouseover="showMenu = element.id"
+                                                             :key="element.id"
                                                              @mouseout="showMenu = null">
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
@@ -346,7 +354,9 @@
                                                                 </div>
                                                                 <span
                                                                     class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                    :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{ element.deadline }}</span>
+                                                                    :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                        element.deadline
+                                                                    }}</span>
                                                             </div>
                                                             <Menu as="div" class="my-auto relative"
                                                                   v-show="showMenu === element.id">
@@ -399,15 +409,21 @@
                                     </div>
                                     <div v-for="checklist in project.private_checklists"
                                          class="flex w-full bg-white my-2">
+                                        <button class="bg-black flex" @click="checklist.hidden = !checklist.hidden">
+                                            <ChevronUpIcon v-if="checklist.hidden !== true"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
                                         <div class="flex w-full ml-4 flex-wrap p-4">
-                                            <div class="flex mt-4 justify-between w-full">
-                                                <div class="">
+                                            <div class="flex justify-between w-full">
+                                                <div class="my-auto">
                                         <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
                                         {{ checklist.name }}
                                         </span>
                                                 </div>
-                                                <div class="flex">
-                                                    <img class="h-10 w-10 rounded-full"
+                                                <div class="flex items-center -mr-3">
+                                                    <img class="h-9 w-9 rounded-full"
                                                          :src="$page.props.user.profile_photo_url"
                                                          alt=""/>
                                                     <Menu as="div" class="my-auto relative">
@@ -431,7 +447,7 @@
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click=""
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
@@ -440,7 +456,7 @@
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="checkAllTasks(checklist.tasks)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
@@ -449,7 +465,7 @@
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click=""
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
@@ -459,7 +475,7 @@
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a href="#"
                                                                            @click="duplicateChecklist(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <DuplicateIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
@@ -468,7 +484,7 @@
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openDeleteChecklistModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <TrashIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
@@ -481,7 +497,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6">
+                                            <div class="flex w-full mt-6" v-if="!checklist.hidden">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -494,12 +510,14 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12">
-                                                <draggable ghost-class="opacity-50" tag="transition-group" key="draggableKey"
-                                                           item-key="draggableID2" v-model="checklist.tasks"
+                                            <div class="mt-6 mb-12" v-if="!checklist.hidden">
+                                                <draggable ghost-class="opacity-50"
+                                                           key="draggableKey"
+                                                           item-key="id" v-model="checklist.tasks"
                                                            @start="dragging=true" @end="dragging=false">
                                                     <template #item="{element}" :key="element.id">
-                                                        <div class="flex" @mouseover="showMenu = element.id" :key="element.id"
+                                                        <div class="flex" @mouseover="showMenu = element.id"
+                                                             :key="element.id"
                                                              @mouseout="showMenu = null">
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
@@ -512,7 +530,9 @@
                                                                         {{ element.name }}</p>
                                                                     <span
                                                                         class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                        :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{ element.deadline }}</span>
+                                                                        :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                            element.deadline
+                                                                        }}</span>
                                                                 </div>
                                                                 <div class="ml-10 text-secondary">
                                                                     {{ element.description }}
@@ -539,7 +559,7 @@
                                                                         class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
                                                                             <MenuItem v-slot="{ active }">
-                                                                                <a @click=""
+                                                                                <a @click="openEditTaskModal(element)"
                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <PencilAltIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -1176,7 +1196,8 @@
                         </div>
                         <div class="mt-4 mr-4">
                             <div class="mb-1">
-                                <label for="datePicker" class="text-secondary subpixel-antialiased">Zu erledigen bis?</label>
+                                <label for="datePicker" class="text-secondary subpixel-antialiased">Zu erledigen
+                                    bis?</label>
                             </div>
                             <input
                                 v-model="taskForm.deadline" id="datePicker"
@@ -1194,6 +1215,55 @@
                             class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="addTask"
                             :disabled="this.taskForm.name === ''">
+                            Hinzufügen
+                        </button>
+                    </div>
+
+                </div>
+
+            </template>
+        </jet-dialog-modal>
+        <!-- Edit Task Modal-->
+        <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Aufgabe bearbeiten
+                    </div>
+                    <XIcon @click="closeEditTaskModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="mt-12">
+                        <div class="flex">
+                            <div class="relative flex w-full mr-4">
+                                <input id="edit_task_name" v-model="taskToEditForm.name" type="text"
+                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="edit_task_name"
+                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                            </div>
+                        </div>
+                        <div class="mt-4 mr-4">
+                            <div class="mb-1">
+                                <label for="datePickerEdit" class="text-secondary subpixel-antialiased">Zu erledigen
+                                    bis?</label>
+                            </div>
+                            <input
+                                v-model="taskToEditForm.deadline" id="datePickerEdit"
+                                placeholder="Zu erledigen bis?" type="datetime-local"
+                                class="border-gray-300 placeholder-secondary w-full"/>
+                        </div>
+                        <div class="mt-4 mr-4">
+                                            <textarea
+                                                placeholder="Kommentar"
+                                                v-model="taskToEditForm.description" rows="3"
+                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                        </div>
+                        <button
+                            :class="[taskToEditForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            @click="editTask"
+                            :disabled="taskToEditForm.name === ''">
                             Hinzufügen
                         </button>
                     </div>
@@ -1360,6 +1430,7 @@ export default {
             assignedDepartments: this.project.departments,
             deletingChecklist: false,
             checklistToDelete: {},
+            editingTask: false,
             showMenu: null,
             form: useForm({
                 name: this.project.name,
@@ -1387,6 +1458,11 @@ export default {
                 description: "",
                 deadline: "",
                 checklist_id: null,
+            }),
+            taskToEditForm: useForm({
+                name: "",
+                description: "",
+                deadline: "",
             }),
             commentForm: useForm({
                 text: "",
@@ -1541,8 +1617,7 @@ export default {
             })
             this.checklistForm.name = this.checklistToEdit.name;
 
-            this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id}))
-            )
+            this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id})));
             this.closeEditChecklistTeamsModal();
         },
         addUserToProjectTeamArray(userToAdd) {
@@ -1593,9 +1668,25 @@ export default {
             this.addingTask = false;
         },
         addTask() {
-            console.log(this.taskForm);
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
+        },
+        editTask(){
+            console.log(this.taskToEditForm);
+            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
+        },
+        openEditTaskModal(task) {
+            console.log(Date.parse(task.deadline));
+            console.log(new Date(Date.parse(task.deadline)));
+            this.taskToEditForm.id = task.id;
+            this.taskToEditForm.name = task.name;
+            this.taskToEditForm.deadline = new Date(Date.parse(task.deadline));
+            this.taskToEditForm.description = task.description;
+            this.editingTask = true;
+        },
+        closeEditTaskModal() {
+            this.editingTask = false;
+            this.taskToEdit = null;
         },
         addCommentToProject() {
             this.commentForm.post(route('comments.store'), {});

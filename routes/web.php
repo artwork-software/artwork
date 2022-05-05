@@ -125,7 +125,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/tasks/own', [TaskController::class, 'index_own'])->name('tasks.own');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
-    Route::patch('/tasks/{task}', [TaskController::class, 'update']);
+    Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
     //Categories

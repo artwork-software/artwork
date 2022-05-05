@@ -230,7 +230,7 @@ class ProjectController extends Controller
                 'comments' => $project->comments->map(fn($comment) => [
                     'id' => $comment->id,
                     'text' => $comment->text,
-                    'created_at' => $comment->created_at,
+                    'created_at' => $comment->created_at->format('d.m.Y, H:i'),
                     'user' => $comment->user
                 ])
             ],

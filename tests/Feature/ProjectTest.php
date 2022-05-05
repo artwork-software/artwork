@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Checklist;
+use App\Models\Comment;
 use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Project;
@@ -96,6 +97,11 @@ test('users can only view projects they are assigned to', function () {
     $this->project->users()->attach($this->auth_user);
     $this->department->projects()->attach($this->project);
 
+    $comment = Comment::factory()->create([
+       'project_id' => $this->project->id,
+       'user_id' => $this->auth_user
+    ]);
+
     $checklist = Checklist::factory()->create();
     $this->project->checklists()->save($checklist);
     $this->auth_user->private_checklists()->save($checklist);
@@ -105,6 +111,9 @@ test('users can only view projects they are assigned to', function () {
     $response = $this->get("/projects/{$this->project->id}")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
+            ->has('project.comments.0', fn(Assert $page) => $page
+                ->hasAll(['id','text', 'created_at', 'user'])
+            )
         );
 
     $response->assertStatus(200);

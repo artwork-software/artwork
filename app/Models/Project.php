@@ -27,6 +27,10 @@ class Project extends Model
         return $this->belongsToMany(Department::class);
     }
 
+    public function project_histories() {
+        return $this->hasMany(ProjectHistory::class);
+    }
+
     public function checklists()
     {
         return $this->hasMany(Checklist::class);

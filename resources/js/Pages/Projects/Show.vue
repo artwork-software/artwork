@@ -356,7 +356,7 @@
                                                                     class="ml-2 my-auto text-sm subpixel-antialiased"
                                                                     :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                         element.deadline
-                                                                    }}</span>
+                                                                    }} {{element}} </span>
                                                             </div>
                                                             <Menu as="div" class="my-auto relative"
                                                                   v-show="showMenu === element.id">
@@ -379,7 +379,7 @@
                                                                         class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
                                                                             <MenuItem v-slot="{ active }">
-                                                                                <a @click=""
+                                                                                <a @click="openEditTaskModal(element)"
                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <PencilAltIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -559,13 +559,13 @@
                                                                         class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
                                                                             <MenuItem v-slot="{ active }">
-                                                                                <a @click="openEditTaskModal(element)"
+                                                                                <span @click="openEditTaskModal(element)"
                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <PencilAltIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                         aria-hidden="true"/>
                                                                                     Bearbeiten
-                                                                                </a>
+                                                                                </span>
                                                                             </MenuItem>
                                                                             <MenuItem v-slot="{ active }">
                                                                                 <a @click="deleteTask(element)"
@@ -1676,11 +1676,9 @@ export default {
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
         },
         openEditTaskModal(task) {
-            console.log(Date.parse(task.deadline));
-            console.log(new Date(Date.parse(task.deadline)));
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
-            this.taskToEditForm.deadline = new Date(Date.parse(task.deadline));
+            this.taskToEditForm.deadline = task.deadline_dt_local;
             this.taskToEditForm.description = task.description;
             this.editingTask = true;
         },

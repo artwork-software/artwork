@@ -14,6 +14,8 @@ use App\Models\Project;
 use App\Models\Sector;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -145,13 +147,18 @@ class ProjectController extends Controller
                 })
         );
 
+        $project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Projekt angelegt"
+        ]);
+
         return Redirect::route('projects')->with('success', 'Project created.');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param \App\Models\Project $project
+     * @param Project $project
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(Project $project)
@@ -208,6 +215,7 @@ class ProjectController extends Controller
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
+                        'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'done' => $task->done,
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
@@ -224,6 +232,7 @@ class ProjectController extends Controller
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
+                        'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'done' => $task->done,
                     ])
                 ]),
@@ -265,7 +274,7 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param \App\Models\Project $project
+     * @param Project $project
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function edit(Project $project)
@@ -305,16 +314,51 @@ class ProjectController extends Controller
         ]);
     }
 
+    private function history_description($change) {
+
+        return match ($change) {
+            'name' => 'Projektname wurde geändert',
+            'description' => 'Kurzbeschreibung wurde geändert',
+            'number_of_participants' => 'Anzahl Teilnehmer:innen geändert',
+            'cost_center' => 'Kostenträger geändert',
+            'sector_id'=> 'Bereich geändert',
+            'category_id'=> 'Kategorie geändert',
+            'genre_id'=> 'Genre geändert',
+        };
+
+    }
+
+    private function add_to_history($project) {
+
+        $changes = $project->getChanges();
+
+        $changed_fields = array_keys($changes);
+
+        dd($changed_fields);
+
+        foreach ($changes as $change) {
+            $project->project_histories()->create([
+                "user_id" => Auth::id(),
+                "description" => $this->history_description($change)
+            ]);
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Project $project
+     * @param UpdateProjectRequest $request
+     * @param Project $project
+     * @return JsonResponse|RedirectResponse
      */
     public function update(UpdateProjectRequest $request, Project $project)
     {
 
-        $project->update($request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id'));
+        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
+
+        $project->update($update_properties);
+
+        $this->add_to_history($project);
 
         if (Auth::user()->can('update users')) {
             $project->users()->sync(
@@ -344,8 +388,8 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Models\Project $project
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Project $project
+     * @return RedirectResponse
      */
     public function destroy(Project $project)
     {

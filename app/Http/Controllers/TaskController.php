@@ -26,7 +26,7 @@ class TaskController extends Controller
 
     public function index_own()
     {
-        $user = User::where('id', Auth::id());
+        $user = Auth::user();
         $own_tasks = new Collection();
 
         foreach (Checklist::all() as $checklist) {
@@ -106,7 +106,7 @@ class TaskController extends Controller
         Task::create([
             'name' => $request->name,
             'description' => $request->description,
-            'deadline' => Carbon::parse($request->deadline),
+            'deadline' => $request->deadline,
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);

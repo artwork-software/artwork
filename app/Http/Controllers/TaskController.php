@@ -72,6 +72,7 @@ class TaskController extends Controller
     {
         $checklist = Checklist::where('id', $request->checklist_id)->first();
         $authorized = false;
+        $created = false;
         $user = User::where('id', Auth::id())->first();
 
         if (Auth::user()->hasRole('admin')
@@ -81,13 +82,18 @@ class TaskController extends Controller
             $authorized = true;
             $this->createTask($request);
         }
-
-        foreach ($checklist->departments as $department) {
-            if ($department->users->contains(Auth::id())) {
-                $authorized = true;
-                $this->createTask($request);
+        else {
+            foreach ($checklist->departments as $department) {
+                if ($department->users->contains(Auth::id())) {
+                    if($created == false) {
+                        $authorized = true;
+                        $this->createTask($request);
+                        $created = true;
+                    }
+                }
             }
         }
+
         if ($authorized == true) {
             return Redirect::back()->with('success', 'Task created.');
         } else {
@@ -100,7 +106,7 @@ class TaskController extends Controller
         Task::create([
             'name' => $request->name,
             'description' => $request->description,
-            'deadline' => Carbon::parse($request->deadline),
+            'deadline' => Carbon::parse($request->deadline)->format('d.m.Y h'),
             'done' => false,
             'checklist_id' => $request->checklist_id
         ]);
@@ -118,7 +124,7 @@ class TaskController extends Controller
             'task' => [
                 'name' => $task->name,
                 'description' => $task->description,
-                'deadline' => Carbon::parse($task->deadline),
+                'deadline' => $task->deadline,
                 'done' => $task->done,
             ]
         ]);
@@ -134,6 +140,8 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $task->update($request->only('name', 'description', 'deadline', 'done', 'checklist_id'));
+        $task->deadline = Carbon::parse($request->deadline)->format('d.m.Y h');
+        $task->save();
 
         return Redirect::back()->with('success', 'Task updated');
     }

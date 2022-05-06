@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
 use App\Models\TaskTemplate;
@@ -63,6 +64,47 @@ class ChecklistTemplateController extends Controller
      */
     public function store(Request $request)
     {
+        if($request->checklist_id) {
+            $this->createFromChecklist($request);
+        }
+        else {
+            $this->createFromScratch($request);
+        }
+
+        return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
+    }
+
+    protected function createFromChecklist(Request $request) {
+        $checklist = Checklist::where('id', $request->checklist_id)->first();
+
+        $checklist_template = ChecklistTemplate::create([
+            'name' => $checklist->name,
+            'user_id' => $request->user_id
+        ]);
+
+        foreach ($checklist->tasks as $task) {
+            TaskTemplate::create([
+                'name' => $task->name,
+                'description' => $task->description,
+                'checklist_template_id' => $checklist_template->id
+            ]);
+        }
+
+        $checklist_template->departments()->sync(
+            collect($checklist->departments)
+                ->map(function ($department) {
+
+                    $this->authorize('update', Department::find($department['id']));
+
+                    return $department['id'];
+                })
+        );
+
+
+
+    }
+
+    protected function createFromScratch(Request $request) {
         $checklist_template = ChecklistTemplate::create([
             'name' => $request->name,
             'user_id' => $request->user_id
@@ -81,8 +123,6 @@ class ChecklistTemplateController extends Controller
         if($request->task_templates) {
             $checklist_template->task_templates()->createMany($request->task_templates);
         }
-
-        return Redirect::route('checklist_templates.management')->with('success', 'ChecklistTemplate created.');
     }
 
     /**

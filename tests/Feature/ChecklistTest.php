@@ -38,7 +38,7 @@ test('users with the permission can create checklists without a template and ass
 
     $this->actingAs($this->auth_user);
 
-    $this->post('/checklists', [
+    $res = $this->post('/checklists', [
         'name' => 'TestChecklist',
         'project_id' => $this->project->id,
         'user_id' => null,
@@ -48,7 +48,7 @@ test('users with the permission can create checklists without a template and ass
                 'name' => 'TestTask',
                 'description' => 'a description',
                 'done' => false,
-                'deadline' => '2022-4-4',
+                'deadline_dt_local' => '2022-4-4',
                 'checklist_id' => $this->checklist->id
             ]
         ]
@@ -165,6 +165,8 @@ test('users with the permission can update checklists', function () {
 
     $this->assigned_department->users()->attach($this->auth_user);
     $this->checklist->departments()->attach($this->assigned_department);
+    $this->checklist->project()->associate($this->project);
+    $this->checklist->save();
 
     $res = $this->patch("/checklists/{$this->checklist->id}", [
         'name' => 'TestChecklist',
@@ -181,7 +183,10 @@ test('users with the permission can update checklists', function () {
         ]
     ]);
 
-    dd($res);
+    $this->assertDatabaseHas('department_project', [
+        'project_id' => $this->project->id,
+        'department_id' => $this->assigned_department->id
+    ]);
 
     $this->assertDatabaseHas('checklists', [
         'name' => 'TestChecklist'

@@ -98,7 +98,14 @@ class ChecklistController extends Controller
             'user_id' => $request->user_id
         ]);
 
-        $checklist->tasks()->createMany($request->tasks);
+        foreach($request->tasks as $task) {
+            Task::create([
+                'name' => $task['name'],
+                'description' => $task['description'],
+                'deadline' => $task['deadline_dt_local'],
+                'checklist_id' => $checklist->id
+            ]);
+        }
 
         if (Auth::user()->can('update departments')) {
             $checklist->departments()->sync(
@@ -184,12 +191,20 @@ class ChecklistController extends Controller
         }
 
         if (Auth::user()->can('update departments')) {
+
+            foreach ($request->assigned_department_ids as $department_id) {
+                if(!$checklist->project->departments->contains($department_id)) {
+                    $checklist->project->departments()->attach($department_id);
+                }
+            }
+
             $checklist->departments()->sync(
                 collect($request->assigned_department_ids)
                     ->map(function ($department_id) {
                         return $department_id;
                     })
             );
+
         } else {
             return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }

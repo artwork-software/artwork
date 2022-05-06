@@ -53,7 +53,11 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
-                'project_history' => $project->project_histories()->with('user')->get(),
+                'project_history' => $project->project_histories()->with('user')->get()->map( fn($history_entry) => [
+                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'user' => $history_entry->user,
+                    'description' => $history_entry->description
+                ]),
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
                     'name' => $department->name,
@@ -195,7 +199,11 @@ class ProjectController extends Controller
                     'email' => $user->email,
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
-                'project_history' => $project->project_histories()->with('user')->get(),
+                'project_history' => $project->project_histories()->with('user')->get()->map( fn($history_entry) => [
+                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'user' => $history_entry->user,
+                    'description' => $history_entry->description
+                ]),
                 'project_files' => $project->project_files,
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,

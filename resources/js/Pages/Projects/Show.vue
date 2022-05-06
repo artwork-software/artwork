@@ -4,7 +4,6 @@
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-bold font-lexend text-3xl">{{ project.name }}</h2>
-                    {{ project }}
                     <Menu as="div" class="my-auto relative">
                         <div class="flex">
                             <MenuButton
@@ -40,7 +39,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a href="#" @click=""
+                                        <a href="#" @click="duplicateProject"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -62,8 +61,21 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 text-secondary text-xs">
+                <div class="mt-2 text-secondary text-xs flex items-center">
+                    <span>
                     zuletzt geändert:
+                    </span>
+                    <img :src="project.project_history[project.project_history.length -1].user.profile_photo_url" :alt="project.project_history[project.project_history.length -1].user.name"
+                                           class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <span class="ml-2 subpixel-antialiased">
+                        {{ project.project_history[project.project_history.length -1].created_at }}
+                    </span>
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer" @click="openProjectHistoryModal()">
+                        <ChevronRightIcon
+                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                            aria-hidden="true"/>
+                        Verlauf ansehen
+                    </button>
                 </div>
                 <div class="mt-2 mr-14 subpixel-antialiased text-secondary">
                     {{ project.description }}
@@ -266,7 +278,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="openEditChecklistModal(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -348,15 +360,15 @@
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
                                                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                                                         {{ element.name }}</p>
+                                                                    <span
+                                                                        class="ml-2 my-auto text-sm subpixel-antialiased"
+                                                                        :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                            element.deadline
+                                                                        }}</span>
                                                                 </div>
                                                                 <div class="ml-10 text-secondary">
                                                                     {{ element.description }}
                                                                 </div>
-                                                                <span
-                                                                    class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                    :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
-                                                                        element.deadline
-                                                                    }} </span>
                                                             </div>
                                                             <Menu as="div" class="my-auto relative"
                                                                   v-show="showMenu === element.id">
@@ -446,7 +458,7 @@
                                                                 class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="openEditChecklistModal(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -530,7 +542,7 @@
                                                                         {{ element.name }}</p>
                                                                     <span
                                                                         class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                        :class="Date.parse(element.deadline) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                        :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
                                                                 </div>
@@ -616,6 +628,27 @@
                                 </button>
                             </div>
                         </div>
+                        <div>
+                            <div class="my-6" v-for="comment in project.comments" @mouseover="commentHovered = comment.id"
+                                 @mouseout="commentHovered = null">
+                                <div class="flex justify-between">
+                                    <div class="flex items-center">
+                                    <img :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                         class="rounded-full h-7 w-7 object-cover"/>
+                                    <div class="ml-2 text-secondary" :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                        {{comment.created_at}}
+                                    </div>
+                                    </div>
+                                    <button v-show="commentHovered === comment.id" type="button" @click="deleteCommentFromProject(comment)">
+                                        <span class="sr-only">Kommentar von Projekt entfernen</span>
+                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                    </button>
+                                </div>
+                                <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
+                                    {{ comment.text }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-span-1">
                         <div class="flex w-full items-center mb-8">
@@ -638,11 +671,6 @@
                                              aria-hidden="true"/>
                             </div>
                         </div>
-                    </div>
-                    <div>
-                        <pre>
-                            {{ project.comments }}
-                        </pre>
                     </div>
                 </div>
             </div>
@@ -966,12 +994,11 @@
                             </div>
                         </div>
 
-
-                        <button :class="[checklistForm.name.length === 0 ?
+                        <button :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="addChecklist" :disabled="checklistForm.name.length === 0">
+                                @click="addChecklist" :disabled="checklistForm.name.length === 0 && !selectedTemplate.id">
                             Anlegen
                         </button>
                     </div>
@@ -1301,6 +1328,90 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Project History Modal-->
+        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Projektverlauf
+                    </div>
+                    <XIcon @click="closeProjectHistoryModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-secondary subpixel-antialiased">
+                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
+                    </div>
+                    <div class="flex w-full flex-wrap mt-4">
+                        <div class="flex w-full my-1" v-for="historyItem in project.project_history">
+                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
+                        {{ historyItem.created_at }}:
+                    </span>
+                            <img :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                {{historyItem.description}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
+        <!-- Checkliste Bearbeiten-->
+        <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
+            <template #content>
+                <div class="mx-3">
+                    <div class="font-bold font-lexend text-primary text-3xl my-2">
+                        Checkliste bearbeiten
+                    </div>
+                    <XIcon @click="closeEditChecklistModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-secondary tracking-tight leading-6 sub">
+                        Bearbeite deine Checkliste.
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex mt-8">
+                            <div class="relative w-full mr-4">
+                                <input id="editChecklistName" v-model="editChecklistForm.name" type="text"
+                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                       placeholder="placeholder"/>
+                                <label for="editChecklistName"
+                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                                    der Checkliste</label>
+                            </div>
+                            <jet-input-error :message="form.error" class="mt-2"/>
+                        </div>
+                        <div class="flex items-center my-6">
+                            <Switch @click="editChecklistForm.private = !editChecklistForm.private"
+                                    :class="[editChecklistForm.private ?
+                                        'bg-success' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                <span aria-hidden="true"
+                                      :class="[editChecklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                            </Switch>
+                            <span class="ml-2 text-sm"
+                                  :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
+                            </div>
+                        </div>
+
+                        <button :class="[editChecklistForm.name.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-4 flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="editChecklist" :disabled="editChecklistForm.name.length === 0">
+                            Speichern
+                        </button>
+                    </div>
+                </div>
+            </template>
+
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -1326,7 +1437,7 @@ import {
     ChevronUpIcon,
     DotsVerticalIcon,
     XCircleIcon,
-    PlusSmIcon
+    PlusSmIcon, ChevronRightIcon
 } from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
@@ -1377,7 +1488,8 @@ export default {
         Switch,
         ChevronUpIcon,
         draggable,
-        DocumentTextIcon
+        DocumentTextIcon,
+        ChevronRightIcon
     },
     computed: {
         tabs() {
@@ -1426,12 +1538,15 @@ export default {
             selectedTemplate: {name: ''},
             showDetails: false,
             checklistToEdit: null,
+            editingChecklist: false,
             assignedUsers: this.project.users,
             assignedDepartments: this.project.departments,
             deletingChecklist: false,
             checklistToDelete: {},
             editingTask: false,
             showMenu: null,
+            showProjectHistory: false,
+            commentHovered: null,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -1452,6 +1567,11 @@ export default {
                 private: false,
                 template_id: null,
                 user_id: null
+            }),
+            editChecklistForm: useForm({
+                id: null,
+                name: "",
+                private: false,
             }),
             taskForm: useForm({
                 name: "",
@@ -1478,6 +1598,17 @@ export default {
                 tasks: [],
                 assigned_department_ids: [],
                 user_id: null
+            }),
+            duplicateProjectForm: useForm({
+                name: "",
+                description: "",
+                cost_center: "",
+                number_of_participants: "",
+                sector_id: null,
+                category_id: null,
+                genre_id: null,
+                assigned_user_ids: [],
+                assigned_departments: []
             }),
         }
     },
@@ -1595,6 +1726,29 @@ export default {
                 this.isInfoTab = true;
             }
         },
+        duplicateProject(project){
+            this.duplicateProjectForm.name = project.name + " (Kopie)";
+            this.duplicateProjectForm.description = project.description;
+            this.duplicateProjectForm.cost_center = project.cost_center;
+            this.duplicateProjectForm.number_of_participants = project.number_of_participants;
+            this.duplicateProjectForm.sector_id = project.sector_id;
+            this.duplicateProjectForm.category_id = project.category_id;
+            this.duplicateProjectForm.genre_id = project.genre_id;
+            project.users.forEach(user => {
+                this.duplicateProjectForm.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+            })
+            this.duplicateProjectForm.assigned_departments = project.departments;
+            this.duplicateProjectForm.post(route('projects.store'), {})
+            this.duplicateProjectForm.name = "";
+            this.duplicateProjectForm.description = "";
+            this.duplicateProjectForm.cost_center = "";
+            this.duplicateProjectForm.number_of_participants = "";
+            this.duplicateProjectForm.sector_id = null;
+            this.duplicateProjectForm.category_id = null;
+            this.duplicateProjectForm.genre_id = null;
+            this.duplicateProjectForm.assigned_user_ids = [];
+            this.duplicateProjectForm.assigned_departments = [];
+        },
         deleteUserFromProjectTeam(user) {
             this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
         },
@@ -1672,8 +1826,8 @@ export default {
             this.closeAddTaskModal();
         },
         editTask(){
-            console.log(this.taskToEditForm);
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
+            this.closeEditTaskModal();
         },
         openEditTaskModal(task) {
             this.taskToEditForm.id = task.id;
@@ -1684,10 +1838,15 @@ export default {
         },
         closeEditTaskModal() {
             this.editingTask = false;
-            this.taskToEdit = null;
+            this.taskToEditForm.id = null;
+            this.taskToEditForm.name = "";
+            this.taskToEditForm.deadline = "";
+            this.taskToEditForm.description = "";
+
         },
         addCommentToProject() {
             this.commentForm.post(route('comments.store'), {});
+            this.commentForm.text = "";
         },
         checkAllTasks(tasksToCheck) {
             tasksToCheck.forEach((task) => {
@@ -1697,9 +1856,12 @@ export default {
         deleteTask(task) {
             this.$inertia.delete(`/tasks/${task.id}`);
         },
+        deleteCommentFromProject(comment){
+            this.$inertia.delete(`/comments/${comment.id}`);
+        },
         duplicateChecklist(checklist) {
             let departmentIds = [];
-            console.log(this.project.private_checklists);
+            console.log(checklist.tasks[0]);
             this.duplicateForm.name = checklist.name + " (Kopie)";
             this.duplicateForm.tasks = checklist.tasks;
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
@@ -1737,6 +1899,27 @@ export default {
                 this.closeDeleteChecklistModal();
             }
         },
+        openProjectHistoryModal(){
+            this.showProjectHistory = true;
+        },
+        closeProjectHistoryModal(){
+          this.showProjectHistory = false;
+        },
+        openEditChecklistModal(checklist){
+            this.editChecklistForm.id = checklist.id;
+            this.editChecklistForm.name = checklist.name;
+            this.editChecklistForm.private = checklist.private;
+            this.editingChecklist = true;
+        },
+        closeEditChecklistModal(){
+            this.editingChecklist = false;
+            this.editChecklistForm.id = null;
+            this.editChecklistForm.name = "";
+            this.editChecklistForm.private = false;
+        },
+        editChecklist(){
+            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
+        }
     },
     watch: {
         department_query: {

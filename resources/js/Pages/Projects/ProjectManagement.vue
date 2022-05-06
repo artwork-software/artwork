@@ -35,12 +35,12 @@
                                 </div>
                             </div>
                             <div class="flex ml-20">
-                            <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
-                                <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
-                                     :iconName="department.svg_name"
-                                     alt=""/>
+                                <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
+                                    <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                        :iconName="department.svg_name"
+                                                        alt=""/>
 
-                            </div>
+                                </div>
                                 <div v-if="project.departments.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
                                         <div>
@@ -60,9 +60,10 @@
                                                 <MenuItem v-for="department in project.departments" v-slot="{ active }">
                                                     <div
                                                         :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
-                                                                            :iconName="department.svg_name"
-                                                                            alt=""/>
+                                                        <TeamIconCollection
+                                                            class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                            :iconName="department.svg_name"
+                                                            alt=""/>
                                                         <span class="ml-4">
                                                                 {{ department.name }}
                                                             </span>
@@ -98,7 +99,7 @@
                                                     class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in project.users" v-slot="{ active }">
                                                         <div
-                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <img class="h-9 w-9 rounded-full"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
@@ -175,8 +176,30 @@
                             </div>
 
                         </div>
-                        <div class="flex">
-                            <span class="w-full mb-10 text-secondary">zuletzt geändert:</span>
+                        <div class="mb-2 text-secondary flex items-center">
+                    <span class="subpixel-antialiased">
+                    zuletzt geändert:
+                    </span>
+                            <div class="flex items-center" v-if="project.project_history.length !== 0">
+                                <img
+                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
+                                    :alt="project.project_history[project.project_history.length -1].user.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <span class="ml-2 subpixel-antialiased">
+                                    {{ project.project_history[project.project_history.length - 1].created_at }}
+                                </span>
+                                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                                        @click="openProjectHistoryModal(project.project_history)">
+                                    <ChevronRightIcon
+                                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Verlauf ansehen
+                                </button>
+                            </div>
+                            <div v-else class="ml-2 text-secondary subpixel-antialiased">
+                                Noch kein Verlauf verfügbar
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -266,7 +289,7 @@
                                     <ListboxButton
                                         class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center">
-                                            <span >{{ selectedGenre.name }}</span>
+                                            <span>{{ selectedGenre.name }}</span>
                                         </span>
                                         <span v-if="selectedGenre.name === ''"
                                               class="block truncate">Genre wählen</span>
@@ -292,7 +315,8 @@
                                                     </span>
                                                     <span
                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
                                                 </span>
                                                 </li>
                                             </ListboxOption>
@@ -333,7 +357,8 @@
                                                     </span>
                                                     <span
                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
                                                 </span>
                                                 </li>
                                             </ListboxOption>
@@ -346,7 +371,9 @@
                                     <ListboxButton
                                         class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center flex">
-                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16" :width="16" :iconName="selectedCategory.svg_name" /> <span class="ml-4">{{ selectedCategory.name }}</span>
+                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16"
+                                                                    :width="16" :iconName="selectedCategory.svg_name"/> <span
+                                            class="ml-4">{{ selectedCategory.name }}</span>
                                         </span>
                                         <span v-if="selectedCategory.name === ''"
                                               class="block truncate">Kategorie wählen</span>
@@ -366,14 +393,16 @@
                                                            :value="category"
                                                            v-slot="{ active, selected }">
                                                 <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <CategoryIconCollection :width="16" :height="16" :iconName="category.svg_name" />
+                                                    <CategoryIconCollection :width="16" :height="16"
+                                                                            :iconName="category.svg_name"/>
                                                     <span
                                                         :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                         {{ category.name }}
                                                     </span>
                                                     <span
-                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
                                                 </span>
                                                 </li>
                                             </ListboxOption>
@@ -435,7 +464,7 @@
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-success">
-                        Das Projekt {{nameOfDeletedProject}} wurde gelöscht.
+                        Das Projekt {{ nameOfDeletedProject }} wurde gelöscht.
                     </div>
                     <div class="mt-6">
                         <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -443,6 +472,35 @@
                                 @click="closeSuccessModal">
                             <CheckIcon class="h-6 w-6 text-secondaryHover"/>
                         </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
+        <!-- Project History Modal-->
+        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Projektverlauf
+                    </div>
+                    <XIcon @click="closeProjectHistoryModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-secondary subpixel-antialiased">
+                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
+                    </div>
+                    <div class="flex w-full flex-wrap mt-4">
+                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
+                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
+                        {{ historyItem.created_at }}:
+                    </span>
+                            <img :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                {{ historyItem.description }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -464,7 +522,7 @@ import {
     TrashIcon,
     DuplicateIcon
 } from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {ChevronUpIcon, PlusSmIcon, CheckIcon, SelectorIcon, XCircleIcon, ChevronRightIcon} from '@heroicons/vue/solid'
 import {SearchIcon} from "@heroicons/vue/outline";
 import {
     Listbox,
@@ -528,9 +586,10 @@ export default defineComponent({
         PencilAltIcon,
         TrashIcon,
         XCircleIcon,
-        DuplicateIcon
+        DuplicateIcon,
+        ChevronRightIcon
     },
-    props: ['projects', 'users','categories','genres','sectors'],
+    props: ['projects', 'users', 'categories', 'genres', 'sectors'],
     methods: {
         openAddProjectModal() {
             this.addingProject = true;
@@ -542,9 +601,9 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
-            this.selectedCategory = {name:'',svg_name:''};
-            this.selectedGenre = {name:''};
-            this.selectedSector = {name:''};
+            this.selectedCategory = {name: '', svg_name: ''};
+            this.selectedGenre = {name: ''};
+            this.selectedSector = {name: ''};
             this.form.sector_id = 0;
             this.form.category_id = 0;
             this.form.genre_id = 0;
@@ -560,7 +619,7 @@ export default defineComponent({
         getEditHref(project) {
             return route('projects.show', {project: project.id});
         },
-        duplicateProject(project){
+        duplicateProject(project) {
             this.duplicateForm.name = project.name + " (Kopie)";
             this.duplicateForm.description = project.description;
             this.duplicateForm.cost_center = project.cost_center;
@@ -568,6 +627,10 @@ export default defineComponent({
             this.duplicateForm.sector_id = project.sector_id;
             this.duplicateForm.category_id = project.category_id;
             this.duplicateForm.genre_id = project.genre_id;
+            project.users.forEach(user => {
+                this.duplicateForm.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+            })
+            this.duplicateForm.assigned_departments = project.departments;
             this.duplicateForm.post(route('projects.store'), {})
             this.duplicateForm.name = "";
             this.duplicateForm.description = "";
@@ -576,16 +639,18 @@ export default defineComponent({
             this.duplicateForm.sector_id = null;
             this.duplicateForm.category_id = null;
             this.duplicateForm.genre_id = null;
+            this.duplicateForm.assigned_user_ids = [];
+            this.duplicateForm.assigned_departments = [];
         },
-        openDeleteProjectModal(project){
+        openDeleteProjectModal(project) {
             this.projectToDelete = project;
             this.deletingProject = true;
         },
-        closeDeleteProjectModal(){
+        closeDeleteProjectModal() {
             this.deletingProject = false;
             this.projectToDelete = null;
         },
-        deleteProject(){
+        deleteProject() {
             this.nameOfDeletedProject = this.projectToDelete.name;
             Inertia.delete(`/projects/${this.projectToDelete.id}`);
             this.closeDeleteProjectModal();
@@ -599,19 +664,29 @@ export default defineComponent({
             this.showSuccessModal = false;
             this.nameOfDeletedProject = "";
         },
+        openProjectHistoryModal(projectHistory) {
+            this.projectHistoryToDisplay = projectHistory;
+            this.showProjectHistory = true;
+        },
+        closeProjectHistoryModal() {
+            this.showProjectHistory = false;
+            this.projectHistoryToDisplay = [];
+        }
     },
     data() {
         return {
             addingProject: false,
-            deletingProject:false,
+            deletingProject: false,
             showDetails: false,
             projectToDelete: null,
             showSuccessModal: false,
             selectedParticipantNumber: "",
-            nameOfDeletedProject:"",
-            selectedCategory: {name:'',svg_name:''},
-            selectedSector:{name:''},
-            selectedGenre:{name:''},
+            nameOfDeletedProject: "",
+            selectedCategory: {name: '', svg_name: ''},
+            selectedSector: {name: ''},
+            selectedGenre: {name: ''},
+            showProjectHistory: false,
+            projectHistoryToDisplay: [],
             form: useForm({
                 name: "",
                 description: "",
@@ -629,6 +704,8 @@ export default defineComponent({
                 sector_id: null,
                 category_id: null,
                 genre_id: null,
+                assigned_user_ids: [],
+                assigned_departments: []
             }),
         }
     },

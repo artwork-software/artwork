@@ -140,8 +140,6 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $task->update($request->only('name', 'description', 'deadline', 'done', 'checklist_id'));
-        $task->deadline = Carbon::parse($request->deadline)->format('d.m.Y H:i');
-        $task->save();
 
         return Redirect::back()->with('success', 'Task updated');
     }

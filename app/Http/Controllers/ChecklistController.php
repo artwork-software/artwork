@@ -176,9 +176,12 @@ class ChecklistController extends Controller
      */
     public function update(Request $request, Checklist $checklist)
     {
-        $checklist->update($request->only('name'));
+        $checklist->update($request->only('name', 'user_id'));
 
-        $checklist->tasks()->createMany($request->tasks);
+        if($request->tasks) {
+            $checklist->tasks()->delete();
+            $checklist->tasks()->createMany($request->tasks);
+        }
 
         if (Auth::user()->can('update departments')) {
             $checklist->departments()->sync(

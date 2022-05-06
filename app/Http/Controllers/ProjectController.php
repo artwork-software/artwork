@@ -131,15 +131,17 @@ class ProjectController extends Controller
             'genre_id' => $request->genre_id,
         ]);
 
-        if (Auth::user()->can('update users')) {
-            $project->users()->sync(
-                collect($request->assigned_user_ids)
-                    ->map(function ($user) {
-                        return $user;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+        if($request->assigned_user_ids) {
+            if (Auth::user()->can('update users')) {
+                $project->users()->sync(
+                    collect($request->assigned_user_ids)
+                        ->map(function ($user) {
+                            return $user;
+                        })
+                );
+            } else {
+                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+            }
         }
 
         $project->departments()->sync(
@@ -413,16 +415,19 @@ class ProjectController extends Controller
 
         $project->save();
 
-        if (Auth::user()->can('update users')) {
-            $project->users()->sync(
-                collect($request->assigned_user_ids)
-                    ->map(function ($user_id) {
-                        return $user_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+        if($request->assigned_user_ids) {
+            if (Auth::user()->can('update users')) {
+                $project->users()->sync(
+                    collect($request->assigned_user_ids)
+                        ->map(function ($user_id) {
+                            return $user_id;
+                        })
+                );
+            } else {
+                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+            }
         }
+
 
         if (Auth::user()->can('update departments')) {
             $project->departments()->sync(

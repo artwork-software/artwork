@@ -168,6 +168,7 @@ test('users with the permission can update checklists', function () {
 
     $res = $this->patch("/checklists/{$this->checklist->id}", [
         'name' => 'TestChecklist',
+        'user_id' => null,
         'assigned_department_ids' => [$this->assigned_department->id],
         'tasks' => [
             [
@@ -179,6 +180,8 @@ test('users with the permission can update checklists', function () {
             ]
         ]
     ]);
+
+    dd($res);
 
     $this->assertDatabaseHas('checklists', [
         'name' => 'TestChecklist'

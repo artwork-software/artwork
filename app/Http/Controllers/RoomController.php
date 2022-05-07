@@ -19,10 +19,16 @@ class RoomController extends Controller
     public function store(Request $request)
     {
         Room::create([
-            'name' => $request->name
+            'name' => $request->name,
+            'description' => $request->description,
+            'temporary' => $request->temporary,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'area_id' => $request->area_id,
+            'user_id' => $request->user_id
         ]);
 
-        return Redirect::route('area.management')->with('success', 'Room created.');
+        return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
     /**
@@ -85,6 +91,12 @@ class RoomController extends Controller
     public function destroy(Room $room)
     {
         $room->delete();
-        return Redirect::route('areas.management')->with('success', 'Room deleted');
+        return Redirect::route('areas.management')->with('success', 'Room moved to trash');
+    }
+
+    public function forceDelete(Room $room) {
+
+        $room->forceDelete();
+        return Redirect::route('areas.management')->with('success', 'Room deleted permanently');
     }
 }

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Prunable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes, Prunable;
 
     protected $fillable = [
         'name',
@@ -58,5 +60,10 @@ class Project extends Model
     public function genre()
     {
         return $this->belongsTo(Genre::class, 'genre_id');
+    }
+
+    public function prunable()
+    {
+        return static::where('created_at', '<=', now()->subMonth());
     }
 }

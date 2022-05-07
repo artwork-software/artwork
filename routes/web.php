@@ -89,6 +89,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
+    Route::delete('/projects/{project}/force', [ProjectController::class, 'forceDelete']);
+    Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
+    Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
@@ -155,12 +158,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
+    Route::delete('/areas/{area}/force', [AreaController::class, 'forceDelete']);
+    Route::patch('/areas/{area}/restore', [AreaController::class, 'restore'])->name('areas.restore');
+    Route::get('/areas/trashed', [AreaController::class, 'getTrashed'])->name('areas.trashed');
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/rooms/{room}', [RoomController::class, 'show']);
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+    Route::delete('/rooms/{room}/force', [RoomController::class, 'forceDelete']);
 
 });
 

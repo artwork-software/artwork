@@ -452,7 +452,58 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
+        return Redirect::back()->with('success', 'Project moved to trash');
+    }
 
-        return Redirect::back()->with('success', 'Project deleted');
+    public function forceDelete(Project $project) {
+
+        $project->forceDelete();
+        return Redirect::route('projects')->with('success', 'Project deleted permanently');
+    }
+
+    public function restore(Project $project) {
+
+        $project->restore();
+        return Redirect::route('projects')->with('success', 'Project restored');
+    }
+
+    public function getTrashed()
+    {
+        return inertia('Trash/Projects', [
+            'trashed_projects' => Project::onlyTrashed()->paginate(10)->through(fn($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'description' => $project->description,
+                'number_of_participants' => $project->number_of_participants,
+                'cost_center' => $project->cost_center,
+                'sector' => $project->sector,
+                'category' => $project->category,
+                'genre' => $project->genre,
+                'users' => $project->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'email' => $user->email,
+                    'profile_photo_url' => $user->profile_photo_url
+                ]),
+                'project_history' => $project->project_histories()->with('user')->get()->map( fn($history_entry) => [
+                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'user' => $history_entry->user,
+                    'description' => $history_entry->description
+                ]),
+                'departments' => $project->departments->map(fn($department) => [
+                    'id' => $department->id,
+                    'name' => $department->name,
+                    'svg_name' => $department->svg_name,
+                    'users' => $department->users->map(fn($user) => [
+                        'id' => $user->id,
+                        'first_name' => $user->first_name,
+                        'last_name' => $user->last_name,
+                        'email' => $user->email,
+                        'profile_photo_url' => $user->profile_photo_url
+                    ]),
+                ])
+            ])
+        ]);
     }
 }

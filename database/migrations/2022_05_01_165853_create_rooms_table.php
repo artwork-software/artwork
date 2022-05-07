@@ -16,13 +16,14 @@ return new class extends Migration
         Schema::create('rooms', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->boolean('temporary')->default(false);
-            $table->timestamp('start_date');
-            $table->timestamp('end_date');
+            $table->timestamp('start_date')->nullable();
+            $table->timestamp('end_date')->nullable();
             $table->unsignedBigInteger('area_id');
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

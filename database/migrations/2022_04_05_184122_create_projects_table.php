@@ -23,6 +23,7 @@ return new class extends Migration
             $table->unsignedBigInteger('category_id')->nullable();
             $table->unsignedBigInteger('genre_id')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

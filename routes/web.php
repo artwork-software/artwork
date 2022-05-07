@@ -12,6 +12,7 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\RoomController;
+use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
@@ -168,6 +169,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
     Route::delete('/rooms/{room}/force', [RoomController::class, 'forceDelete']);
+
+    //RoomFiles
+    Route::post('/rooms/{room}/files', [RoomFileController::class, 'store']);
+    Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');;
+    Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
+    Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
 });
 

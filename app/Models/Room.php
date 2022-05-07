@@ -35,6 +35,10 @@ class Room extends Model
         return $this->belongsToMany(User::class, 'room_user');
     }
 
+    public function room_files() {
+        return $this->hasMany(RoomFile::class);
+    }
+
     public function prunable()
     {
         return static::where('created_at', '<=', now()->subMonth());

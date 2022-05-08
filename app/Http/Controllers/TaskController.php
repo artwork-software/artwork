@@ -108,6 +108,7 @@ class TaskController extends Controller
             'description' => $request->description,
             'deadline' => $request->deadline,
             'done' => false,
+            'order' => Task::max('order') + 1,
             'checklist_id' => $request->checklist_id
         ]);
     }
@@ -142,6 +143,23 @@ class TaskController extends Controller
         $task->update($request->only('name', 'description', 'deadline', 'done', 'checklist_id'));
 
         return Redirect::back()->with('success', 'Task updated');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Task $task
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateOrder(Request $request)
+    {
+
+        foreach ($request->tasks as $task) {
+            Task::findOrFail($task['id'])->update(['order' => $task['order']]);
+        }
+
+        return Redirect::back();
     }
 
     /**

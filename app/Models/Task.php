@@ -14,7 +14,8 @@ class Task extends Model
         'description',
         'deadline',
         'done',
-        'checklist_id'
+        'checklist_id',
+        'order'
     ];
 
     public function checklist()

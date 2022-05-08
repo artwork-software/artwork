@@ -21,6 +21,7 @@ class TaskFactory extends Factory
             'description' => $this->faker->paragraph,
             'deadline' => $this->faker->date,
             'done' => $this->faker->boolean(50),
+            'order' => 1,
             'checklist_id' => 1
         ];
     }

@@ -222,12 +222,13 @@ class ProjectController extends Controller
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
-                    'tasks' => $checklist->tasks->map(fn($task) => [
+                    'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
+                        'order' => $task->order,
                         'done' => $task->done,
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
@@ -239,12 +240,13 @@ class ProjectController extends Controller
                 'private_checklists' => $private_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
-                    'tasks' => $checklist->tasks->map(fn($task) => [
+                    'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
+                        'order' => $task->order,
                         'done' => $task->done,
                     ])
                 ]),

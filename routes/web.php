@@ -130,6 +130,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::put('/tasks/order', [TaskController::class, 'updateOrder']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
     //Categories

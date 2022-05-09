@@ -271,6 +271,13 @@ export default {
                     icon: ArrowCircleRightIcon
                 },
                 {
+                    name: 'Räume',
+                    has_permission: true,
+                    href: route('areas.management'),
+                    route: ['/areas'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
                     name: 'Projekte',
                     has_permission: true,
                     href: route('project.settings'),

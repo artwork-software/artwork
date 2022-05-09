@@ -39,7 +39,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject"
+                                        <a href="#" @click="duplicateProject(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -106,7 +106,7 @@
                 <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
-                <div class="flex mr-2 mt-10 flex-1 flex-wrap">
+                <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
                     <div class="cursor-pointer" @click="openEditProjectTeamModal">
                         <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
@@ -123,16 +123,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex mt-4 flex-wrap w-full">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Projektleitung</span>
+                <div class="flex -mt-4 flex-wrap w-full">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                     </div>
 
                 </div>
-                <div class="flex w-full mt-4 flex-wrap">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Team</span>
+                <div class="flex w-full mt-2 flex-wrap">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
                         <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                             <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
@@ -1581,17 +1581,19 @@ export default {
                 id: null,
                 name: "",
                 private: false,
+                user_id: null,
+                assigned_department_ids: null,
             }),
             taskForm: useForm({
                 name: "",
                 description: "",
-                deadline: "",
+                deadline: null,
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
                 name: "",
                 description: "",
-                deadline: "",
+                deadline: null,
             }),
             commentForm: useForm({
                 text: "",
@@ -1624,11 +1626,11 @@ export default {
     methods: {
         updateTaskOrder(tasks) {
 
-            tasks.map( (task, index) => {
+            tasks.map((task, index) => {
                 task.order = index + 1
             })
 
-            this.$inertia.put('/tasks/order',{
+            this.$inertia.put('/tasks/order', {
                 tasks
             }, {
                 preserveState: true,
@@ -1764,6 +1766,7 @@ export default {
                 };
             })
             this.duplicateProjectForm.assigned_departments = project.departments;
+            console.log(this.duplicateProjectForm.assigned_user_ids);
             this.duplicateProjectForm.post(route('projects.store'), {})
             this.duplicateProjectForm.name = "";
             this.duplicateProjectForm.description = "";
@@ -1844,7 +1847,7 @@ export default {
             this.taskForm.checklist_id = null;
             this.taskForm.name = "";
             this.taskForm.description = "";
-            this.taskForm.deadline = "";
+            this.taskForm.deadline = null;
             this.addingTask = false;
         },
         addTask() {
@@ -1866,7 +1869,7 @@ export default {
             this.editingTask = false;
             this.taskToEditForm.id = null;
             this.taskToEditForm.name = "";
-            this.taskToEditForm.deadline = "";
+            this.taskToEditForm.deadline = null;
             this.taskToEditForm.description = "";
 
         },
@@ -1932,9 +1935,16 @@ export default {
             this.showProjectHistory = false;
         },
         openEditChecklistModal(checklist) {
+            console.log(checklist);
             this.editChecklistForm.id = checklist.id;
             this.editChecklistForm.name = checklist.name;
-            this.editChecklistForm.private = checklist.private;
+            this.editChecklistForm.private = !checklist.departments;
+            if (checklist.departments) {
+                this.editChecklistForm.assigned_department_ids = [];
+                checklist.departments.forEach((department) => {
+                    this.editChecklistForm.assigned_department_ids.push(department.id);
+                })
+            }
             this.editingChecklist = true;
         },
         closeEditChecklistModal() {
@@ -1942,9 +1952,19 @@ export default {
             this.editChecklistForm.id = null;
             this.editChecklistForm.name = "";
             this.editChecklistForm.private = false;
+            this.editChecklistForm.assigned_department_ids = null;
+            this.editChecklistForm.user_id = null;
         },
         editChecklist() {
+            if (this.editChecklistForm.private) {
+                this.editChecklistForm.user_id = this.$page.props.user.id;
+                this.editChecklistForm.assigned_department_ids = null;
+            } else {
+                this.editChecklistForm.user_id = null;
+
+            }
             this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
+            this.closeEditChecklistModal();
         }
     },
     watch: {

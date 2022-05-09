@@ -54,7 +54,9 @@ class ProjectController extends Controller
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
-                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
+                        Carbon::parse($history_entry->created_at)->diffForHumans() :
+                        Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
                     'user' => $history_entry->user,
                     'description' => $history_entry->description
                 ]),
@@ -202,7 +204,9 @@ class ProjectController extends Controller
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
-                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
+                        Carbon::parse($history_entry->created_at)->diffForHumans() :
+                        Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
                     'user' => $history_entry->user,
                     'description' => $history_entry->description
                 ]),

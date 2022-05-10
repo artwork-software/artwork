@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('description')->nullable();
+            $table->integer('order');
             $table->boolean('temporary')->default(false);
             $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();

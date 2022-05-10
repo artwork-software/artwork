@@ -168,6 +168,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/rooms/{room}', [RoomController::class, 'show']);
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+    Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
     Route::delete('/rooms/{room}/force', [RoomController::class, 'forceDelete']);
 

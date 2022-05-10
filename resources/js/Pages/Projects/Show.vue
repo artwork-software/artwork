@@ -1935,7 +1935,6 @@ export default {
             this.showProjectHistory = false;
         },
         openEditChecklistModal(checklist) {
-            console.log(checklist);
             this.editChecklistForm.id = checklist.id;
             this.editChecklistForm.name = checklist.name;
             this.editChecklistForm.private = !checklist.departments;

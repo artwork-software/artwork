@@ -18,7 +18,8 @@ class Room extends Model
         'start_date',
         'end_date',
         'area_id',
-        'user_id'
+        'user_id',
+        'order'
     ];
 
     public function area()

@@ -48,6 +48,7 @@ class RoomController extends Controller
                 'temporary' => $room->temporary,
                 'start_date' => $room->start_date,
                 'end_date' => $room->end_date,
+                'room_files' => $room->room_files,
                 'room_admins' => $room->room_admins->map(fn($room_admin) => [
                     'id' => $room_admin->id,
                     'first_name' => $room_admin->first_name,

@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Dashboard">
+    <app-layout title="Areal Management">
         <div class="py-4">
             <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -130,9 +130,9 @@
                                                              :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                             <div class="flex w-full">
                                                                 <div class="flex">
-                                                                    <p class="ml-4 my-auto text-lg font-black text-sm"
+                                                                    <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto text-lg font-black text-sm"
                                                                        :class="element.done ? 'text-secondary' : 'text-primary'">
-                                                                        {{ element.name }}</p>
+                                                                        {{ element.name }}</Link>
                                                                     <div class="ml-10 text-secondary">
                                                                         angelegt am {{ element.created_at }} von
                                                                         <!-- TODO: HIER PROFILBILD ANLEGER -->
@@ -200,7 +200,7 @@
                                             </draggable>
                                             <div class="mt-12">
                                                 <h2 v-on:click="showTemporaryRooms = !showTemporaryRooms"
-                                                    class="text-sm pt-6 pb-2 ml-4 flex font-bold text-primary">Temporäre
+                                                    class="text-sm pt-6 pb-2 ml-4 flex font-bold text-primary cursor-pointer">Temporäre
                                                     Räume
                                                     <ChevronUpIcon v-if="showTemporaryRooms"
                                                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>

@@ -166,7 +166,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::get('/rooms/{room}', [RoomController::class, 'show']);
+    Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);

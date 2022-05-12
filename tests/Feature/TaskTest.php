@@ -81,10 +81,11 @@ test('users that are assigned to a checklist can create tasks for it', function 
     $checklist->departments()->attach($this->assigned_department);
     $this->actingAs($this->auth_user);
 
-    $this->post('/tasks', [
+    $res = $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
         'checklist_id' => $checklist->id,
+        'deadline' => null
     ]);
 
     $this->assertDatabaseHas('tasks', [

@@ -18,6 +18,10 @@ class Task extends Model
         'order'
     ];
 
+    protected $casts = [
+      "done" => 'boolean'
+    ];
+
     public function checklist()
     {
         return $this->belongsTo(Checklist::class, 'checklist_id');

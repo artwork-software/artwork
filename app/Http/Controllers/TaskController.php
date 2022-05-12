@@ -26,12 +26,11 @@ class TaskController extends Controller
 
     public function index_own()
     {
-        $user = Auth::user();
         $own_tasks = new Collection();
 
         foreach (Checklist::all() as $checklist) {
             foreach ($checklist->departments as $department) {
-                if ($department->users->contains($user->id)) {
+                if ($department->users->contains(Auth::id())) {
                     foreach ($checklist->tasks as $task) {
                         if (!$own_tasks->contains($task)) {
                             $own_tasks->push($task);
@@ -39,7 +38,7 @@ class TaskController extends Controller
                     }
                 }
             }
-            if ($checklist->user_id == $user->id) {
+            if ($checklist->user_id == Auth::id()) {
                 foreach ($checklist->tasks as $task) {
                     if (!$own_tasks->contains($task)) {
                         $own_tasks->push($task);
@@ -53,7 +52,8 @@ class TaskController extends Controller
                 'id' => $task->id,
                 'name' => $task->name,
                 'description' => $task->description,
-                'deadline' => $task->deadline,
+                'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
+                'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                 'done' => $task->done,
                 'checklist' => $task->checklist,
                 'project' => $task->checklist->project,

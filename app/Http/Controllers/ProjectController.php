@@ -450,6 +450,16 @@ class ProjectController extends Controller
     }
 
     /**
+     * Duplicates the project whose id is passed in the request
+     * @param Request $request
+     * @return void
+     */
+    public function duplicate(Request $request) {
+        $project = $request->project_id;
+
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param Project $project

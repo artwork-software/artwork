@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Room;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -46,8 +47,10 @@ class RoomController extends Controller
                 'name' => $room->name,
                 'description' => $room->description,
                 'temporary' => $room->temporary,
-                'start_date' => $room->start_date,
-                'end_date' => $room->end_date,
+                'created_by' => User::where('id', $room->user_id)->first(),
+                'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                'start_date' => Carbon::parse($room->start_date)->format('d.m.Y, H:i'),
+                'end_date' => Carbon::parse($room->end_date)->format('d.m.Y, H:i'),
                 'room_files' => $room->room_files,
                 'room_admins' => $room->room_admins->map(fn($room_admin) => [
                     'id' => $room_admin->id,
@@ -56,6 +59,7 @@ class RoomController extends Controller
                     'email' => $room_admin->email,
                     'profile_photo_url' => $room_admin->profile_photo_url
                 ]),
+                'area' => $room->area
             ]
         ]);
     }

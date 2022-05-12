@@ -130,10 +130,12 @@
                                                              :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                             <div class="flex w-full">
                                                                 <div class="flex">
-                                                                    <Link :href="route('rooms.show',{room: element.id})" class="ml-4 my-auto text-lg font-black text-sm"
-                                                                       :class="element.done ? 'text-secondary' : 'text-primary'">
-                                                                        {{ element.name }}</Link>
-                                                                    <div class="ml-10 text-secondary">
+                                                                    <Link :href="route('rooms.show',{room: element.id})"
+                                                                          class="ml-4 my-auto text-lg font-black text-sm"
+                                                                    >
+                                                                        {{ element.name }}
+                                                                    </Link>
+                                                                    <div class="ml-6 text-secondary text-sm my-auto">
                                                                         angelegt am {{ element.created_at }} von
                                                                         <!-- TODO: HIER PROFILBILD ANLEGER -->
                                                                     </div>
@@ -200,7 +202,8 @@
                                             </draggable>
                                             <div class="mt-12">
                                                 <h2 v-on:click="showTemporaryRooms = !showTemporaryRooms"
-                                                    class="text-sm pt-6 pb-2 ml-4 flex font-bold text-primary cursor-pointer">Temporäre
+                                                    class="text-sm pt-6 pb-2 ml-4 flex font-bold text-primary cursor-pointer">
+                                                    Temporäre
                                                     Räume
                                                     <ChevronUpIcon v-if="showTemporaryRooms"
                                                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
@@ -221,11 +224,14 @@
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
                                                                     <div class="flex">
-                                                                        <p class="ml-4 my-auto text-lg font-black text-sm"
-                                                                           :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                                        <Link
+                                                                            :href="route('rooms.show',{room: element.id})"
+                                                                            class="ml-4 my-auto text-lg font-black text-sm"
+                                                                        >
                                                                             {{ element.name }} ({{ element.start_date }}
-                                                                            - {{ element.end_date }})</p>
-                                                                        <div class="ml-10 text-secondary">
+                                                                            - {{ element.end_date }})
+                                                                        </Link>
+                                                                        <div class="ml-6 text-secondary text-sm my-auto">
                                                                             angelegt am {{ element.created_at }} von
                                                                             <!-- TODO: HIER PROFILBILD ANLEGER -->
                                                                         </div>
@@ -440,13 +446,13 @@
                 <XIcon @click="closeEditRoomModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
-                {{editRoomForm}}
+                {{ editRoomForm }}
                 <div class="mt-4">
                     <div class="flex mt-10 relative">
                         <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
-                        <label for="roomName"
+                        <label for="roomNameEdit"
                                class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
                         </label>
                         <jet-input-error :message="editRoomForm.error" class="mt-2"/>
@@ -486,7 +492,7 @@
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                             @click="editRoom"
                             :disabled="editRoomForm.name.length === 0">
-                        Anlegen
+                        Speichern
                     </button>
                 </div>
             </div>
@@ -520,7 +526,34 @@
             </div>
         </template>
     </jet-dialog-modal>
-    <!-- Delete Area Modal -->
+    <!-- Delete Room Modal -->
+    <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
+        <template #content>
+            <div class="mx-4">
+                <div class="font-bold text-primary text-2xl my-2">
+                   Raum in den Papierkorb
+                </div>
+                <XIcon @click="closeSoftDeleteRoomModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-error">
+                    Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="softDeleteRoom()">
+                        Entfernen
+                    </button>
+                    <div class="flex my-auto">
+                            <span @click="closeSoftDeleteRoomModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </jet-dialog-modal>
+    <!-- Delete All Rooms from Area Modal -->
     <jet-dialog-modal :show="showDeleteAllRoomsModal" @close="closeDeleteAllRoomsModal">
         <template #content>
             <div class="mx-4">
@@ -639,7 +672,9 @@ export default defineComponent({
             showDeleteAllRoomsModal: false,
             areaToDeleteRoomsFrom: null,
             areaToSoftDelete: null,
+            roomToSoftDelete: null,
             showSuccessModal: false,
+            showSoftDeleteRoomModal: false,
             successHeading: "",
             successDescription: "",
             showTemporaryRooms: false,
@@ -736,7 +771,7 @@ export default defineComponent({
         duplicateArea(area) {
             //TODO: HIER DUPLICATE BACKENDFUNKTION
         },
-        duplicateRoom(room){
+        duplicateRoom(room) {
             //TODO: HIER DUPLICATE BACKENDFUNKTION
         },
         openSoftDeleteAreaModal(area) {
@@ -763,7 +798,7 @@ export default defineComponent({
             this.showDeleteAllRoomsModal = false;
             this.areaToDeleteRoomsFrom = null;
             this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.successDescription = "Die Räume wurden erfolgreich in den Papierkorb gelegt."
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
@@ -778,15 +813,31 @@ export default defineComponent({
             })
             this.closeDeleteAllRoomsModal();
         },
-        openEditRoomModal(room){
+        openEditRoomModal(room) {
             this.editRoomForm = room;
-            if(room.temporary === 1){
+            if (room.temporary === 1) {
                 this.editRoomForm.temporary = true;
             }
             this.showEditRoomModal = true;
         },
-        closeEditRoomModal(){
-          this.showEditRoomModal = false;
+        closeEditRoomModal() {
+            this.showEditRoomModal = false;
+        },
+        openSoftDeleteRoomModal(room){
+            this.roomToSoftDelete = room;
+            this.showSoftDeleteRoomModal = true;
+        },
+        closeSoftDeleteRoomModal(){
+            this.showSoftDeleteRoomModal = false;
+            this.roomToSoftDelete = null;
+        },
+        softDeleteRoom() {
+            this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
+            this.closeSoftDeleteRoomModal();
+            this.successHeading = "Raum im Papierkorb"
+            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000);
         },
     },
 })

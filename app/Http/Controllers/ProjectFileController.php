@@ -7,6 +7,7 @@ use App\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -38,6 +39,11 @@ class ProjectFileController extends Controller
             'basename' => $basename,
         ]);
 
+        $project->project_histories()->create([
+            'user_id' => Auth::id(),
+            'description' => "Datei $original_name hochgeladen"
+        ]);
+
         return Redirect::back();
     }
 
@@ -51,6 +57,11 @@ class ProjectFileController extends Controller
     public function download(ProjectFile $projectFile): StreamedResponse
     {
         $this->authorize('view', $projectFile->project);
+
+        $projectFile->project->project_histories()->create([
+            'user_id' => Auth::id(),
+            'description' => "Datei $projectFile->name heruntergeladen"
+        ]);
 
         return Storage::download('project_files/'. $projectFile->basename, $projectFile->name);
     }
@@ -67,6 +78,11 @@ class ProjectFileController extends Controller
         $this->authorize('view', $projectFile->project);
 
         $projectFile->delete();
+
+        $projectFile->project->project_histories()->create([
+            'user_id' => Auth::id(),
+            'description' => "Datei $projectFile->name gelöscht"
+        ]);
 
         return Redirect::back();
     }

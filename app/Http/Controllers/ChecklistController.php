@@ -4,11 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
+use App\Models\Project;
+use App\Models\ProjectHistory;
 use App\Models\Task;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use phpDocumentor\Reflection\Project;
 
 class ChecklistController extends Controller
 {
@@ -41,6 +42,13 @@ class ChecklistController extends Controller
         } else {
             $this->createWithoutTemplate($request);
         }
+
+        ProjectHistory::create([
+            "user_id" => Auth::id(),
+            "project_id" => $request->project_id,
+            "description" => "Checkliste $request->name angelegt"
+        ]);
+
         return Redirect::back()->with('success', 'Checklist created.');
     }
 
@@ -51,7 +59,7 @@ class ChecklistController extends Controller
     protected function createFromTemplate(Request $request)
     {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
-        $project = \App\Models\Project::where('id', $request->project_id)->first();
+        $project = Project::where('id', $request->project_id)->first();
 
         $checklist = Checklist::create([
             'name' => $template->name,
@@ -185,6 +193,12 @@ class ChecklistController extends Controller
      */
     public function update(Request $request, Checklist $checklist)
     {
+
+        $checklist->project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Checkliste $checklist->name in $request->name umbenannt"
+        ]);
+
         $checklist->update($request->only('name', 'user_id'));
 
         if ($request->tasks) {
@@ -223,6 +237,12 @@ class ChecklistController extends Controller
     public function destroy(Checklist $checklist)
     {
         $checklist->delete();
+
+        $checklist->project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Checkliste $checklist->name gelöscht"
+        ]);
+
         return Redirect::back()->with('success', 'Checklist deleted');
     }
 }

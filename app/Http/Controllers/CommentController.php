@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,7 +34,7 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request)
     {
-        $project = \App\Models\Project::where('id', $request->project_id)->first();
+        $project = Project::where('id', $request->project_id)->first();
         $user = User::where('id', Auth::id())->first();
 
         if ($project->users->contains(Auth::id()) || Auth::user()->hasRole('admin')) {
@@ -54,6 +55,11 @@ class CommentController extends Controller
         } else {
             return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
         }
+
+        $project->project_histories()->create([
+            'user_id' => Auth::id(),
+            'description' => "Kommentar hinzugefügt"
+        ]);
 
         return Redirect::back()->with('success', 'Comment created');
     }
@@ -79,6 +85,11 @@ class CommentController extends Controller
     public function destroy(Comment $comment)
     {
         $comment->delete();
+
+        $comment->project->project_histories()->create([
+            'user_id' => Auth::id(),
+            'description' => "Kommentar entfernt"
+        ]);
         return Redirect::back()->with('success', 'Comment deleted');
     }
 }

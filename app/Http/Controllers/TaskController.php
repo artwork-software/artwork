@@ -94,7 +94,15 @@ class TaskController extends Controller
             }
         }
 
+
+
         if ($authorized == true) {
+
+            $checklist->project->project_histories()->create([
+                "user_id" => Auth::id(),
+                "description" => "Aufgabe $request->name zur Checkliste $checklist->name"
+            ]);
+
             return Redirect::back()->with('success', 'Task created.');
         } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
@@ -131,6 +139,64 @@ class TaskController extends Controller
         ]);
     }
 
+
+    private function history_description_change($changed_field, $task, $original, $change): string
+    {
+        return match ($changed_field) {
+            'name' => "Die Aufgabe $original wurde in $change umbenannt",
+            'description' => "Kurzbeschreibung von Aufgabe $task->name wurde geändert",
+            'deadline' => "Die Deadline der Aufgabe $task->name wurde geändert",
+        };
+    }
+
+    private function history_description_removed($changed_field, $task): string
+    {
+
+        return match ($changed_field) {
+            'description' => "Kurzbeschreibung von Aufgabe $task->name wurde entfernt",
+        };
+
+    }
+
+
+    private function add_to_history($task): void {
+
+        $original = $task->getOriginal();
+        $changes = $task->getDirty();
+
+        $changed_fields = array_keys($changes);
+
+        foreach ($changed_fields as $change) {
+
+            if($changes[$change] === null) {
+                $task->checklist->project->project_histories()->create([
+                    "user_id" => Auth::id(),
+                    "description" => $this->history_description_removed($change, $task)
+                ]);
+            } else {
+
+                if($change === 'deadline') {
+
+                    if(Carbon::parse($original[$change])->notEqualTo(Carbon::parse($changes[$change]))) {
+                        $task->checklist->project->project_histories()->create([
+                            "user_id" => Auth::id(),
+                            "description" => $this->history_description_change($change, $task, $original[$change], $changes[$change])
+                        ]);
+                    }
+
+                } else {
+                    $task->checklist->project->project_histories()->create([
+                        "user_id" => Auth::id(),
+                        "description" => $this->history_description_change($change, $task, $original[$change], $changes[$change])
+                    ]);
+                }
+
+
+            }
+
+        }
+    }
+
     /**
      * Update the specified resource in storage.
      *
@@ -140,7 +206,13 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-        $task->update($request->only('name', 'description', 'deadline', 'done', 'checklist_id'));
+        $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
+
+        $task->fill($update_properties);
+
+        $this->add_to_history($task);
+
+        $task->save();
 
         return Redirect::back()->with('success', 'Task updated');
     }
@@ -155,9 +227,16 @@ class TaskController extends Controller
     public function updateOrder(Request $request)
     {
 
+        $firstTask = Task::findOrFail($request->tasks[0]['id']);
+
         foreach ($request->tasks as $task) {
             Task::findOrFail($task['id'])->update(['order' => $task['order']]);
         }
+
+        $firstTask->checklist->project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Aufgabenanordnung in der Checkliste {$firstTask->checklist->name} geändert"
+        ]);
 
         return Redirect::back();
     }
@@ -171,6 +250,11 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         $task->delete();
+
+        $task->checklist->project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Aufgabe $task->name aus der Checkliste {$task->checklist->name} entfernt"
+        ]);
         return Redirect::back()->with('success', 'Task deleted');
     }
 }

@@ -65,11 +65,11 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
-                         :alt="project.project_history[project.project_history.length -1].user.name"
+                    <img :src="project.project_history[0].user.profile_photo_url"
+                         :alt="project.project_history[0].user.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                     <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[project.project_history.length - 1].created_at }}
+                        {{ project.project_history[0].created_at }}
                     </span>
                     <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Area;
+use App\Models\Room;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -10,6 +11,8 @@ beforeEach(function () {
     $this->auth_user = User::factory()->create();
 
     $this->area = Area::factory()->create();
+
+    $this->room = Room::factory()->create();
 
 });
 
@@ -52,6 +55,32 @@ test('users with the permission can update areas', function() {
     $this->assertDatabaseHas('areas', [
         'name' => 'TestArea'
     ]);
+});
+
+test('users with the permission can duplicate areas', function() {
+
+    $old_area = Area::factory()->create([
+        'name' => 'TestArea',
+    ]);
+
+    $old_area->rooms()->save($this->room);
+
+    $this->auth_user->givePermissionTo('manage areas');
+    $this->actingAs($this->auth_user);
+
+    $this->post("/areas/{$old_area->id}/duplicate")->assertStatus(302);
+
+    $this->assertDatabaseHas('areas', [
+        'name' => '(Kopie) TestArea'
+    ]);
+
+    $new_area = Area::where('name', '(Kopie) TestArea')->first();
+
+    $this->assertDatabaseHas('rooms', [
+        'area_id' => $new_area->id
+    ]);
+
+
 });
 
 test('users with the permission can delete areas', function() {

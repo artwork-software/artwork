@@ -129,7 +129,7 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
             'sector_id' => $request->sector_id,
-            'category_id' => $request->sector_id,
+            'category_id' => $request->category_id,
             'genre_id' => $request->genre_id,
         ]);
 
@@ -451,11 +451,59 @@ class ProjectController extends Controller
 
     /**
      * Duplicates the project whose id is passed in the request
-     * @param Request $request
-     * @return void
      */
-    public function duplicate(Request $request) {
-        $project = $request->project_id;
+    public function duplicate(Project $project) {
+
+        $new_project = Project::create([
+            'name' => '(Kopie) '. $project->name,
+            'description' => $project->description,
+            'number_of_participants' => $project->number_of_participants,
+            'cost_center' => $project->cost_center,
+            'sector_id' => $project->sector_id,
+            'category_id' => $project->category_id,
+            'genre_id' => $project->genre_id,
+        ]);
+
+        $new_project->users()->attach([Auth::id() => ['is_admin' => true]]);
+
+        if($project->users) {
+            if (Auth::user()->can('update users')) {
+                $new_project->users()->sync(
+                    collect($project->users)
+                        ->map(function ($user) {
+                            return $user['id'];
+                        })
+                );
+            } else {
+                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+            }
+        }
+
+        if($project->departments) {
+            $new_project->departments()->sync(
+                collect($project->departments)
+                    ->map(function ($department) {
+
+                        $this->authorize('update', Department::find($department['id']));
+
+                        return $department['id'];
+                    })
+            );
+        }
+
+        $new_project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Projekt angelegt"
+        ]);
+
+        $project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Projekt wurde dupliziert"
+        ]);
+
+        return Redirect::route('projects.show', $new_project->id)->with('success', 'Project created.');
+
+
 
     }
 

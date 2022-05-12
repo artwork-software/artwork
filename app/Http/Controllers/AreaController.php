@@ -85,6 +85,25 @@ class AreaController extends Controller
     }
 
     /**
+     * Duplicates the room whose id is passed in the request
+     */
+    public function duplicate(Area $area) {
+
+        $new_area = Area::create([
+            'name' => '(Kopie) ' . $area->name
+        ]);
+
+        foreach($area->rooms as $room) {
+            $new_room = $room->replicate();
+            $new_room->created_at = Carbon::now();
+            $new_area->rooms()->save($new_room);
+            $new_area->save();
+        }
+
+        return Redirect::route('areas.management')->with('success', 'Area created.');
+    }
+
+    /**
      * Remove the specified resource from storage.
      *
      * @param \App\Models\Area $area

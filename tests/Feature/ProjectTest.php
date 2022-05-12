@@ -7,6 +7,7 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
 use App\Models\User;
+use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
@@ -161,6 +162,32 @@ test('users with the permission can update projects', function () {
 
 });
 
+test('users with the permission can duplicate projects', function() {
+
+    $old_project = Project::factory()->create([
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
+        'sector_id' => $this->sector->id,
+        'genre_id' => $this->genre->id,
+    ]);
+
+    $old_project->users()->attach($this->assigned_user);
+    $old_project->departments()->attach($this->department);
+
+    $this->auth_user->givePermissionTo('create projects', 'update departments', 'update users');
+    $this->actingAs($this->auth_user);
+
+    $this->post("/projects/{$old_project->id}/duplicate")->assertStatus(302);
+
+    $this->assertDatabaseHas('projects', [
+        'name' => '(Kopie) TestProject'
+    ]);
+
+
+});
+
 test('users with the permission can delete projects', function () {
 
     $this->auth_user->givePermissionTo('delete projects');
@@ -170,8 +197,9 @@ test('users with the permission can delete projects', function () {
 
     $this->delete("/projects/{$this->project->id}");
 
-    $this->assertDatabaseMissing('projects', [
-        'id' => $this->project->id
+    $this->assertDatabaseHas('projects', [
+        'id' => $this->project->id,
+        'deleted_at' => Date::now()
     ]);
 });
 

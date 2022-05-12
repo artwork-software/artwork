@@ -86,6 +86,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
@@ -158,6 +159,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
+    Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
     Route::delete('/areas/{area}/force', [AreaController::class, 'forceDelete']);
@@ -166,6 +168,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+    Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);

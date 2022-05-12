@@ -6,6 +6,7 @@ use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class RoomController extends Controller
@@ -50,7 +51,9 @@ class RoomController extends Controller
                 'created_by' => User::where('id', $room->user_id)->first(),
                 'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
                 'start_date' => Carbon::parse($room->start_date)->format('d.m.Y, H:i'),
+                'start_date_dt_local' => Carbon::parse($room->start_date)->toDateTimeLocalString(),
                 'end_date' => Carbon::parse($room->end_date)->format('d.m.Y, H:i'),
+                'end_date_dt_local' => Carbon::parse($room->end_date)->toDateTimeLocalString(),
                 'room_files' => $room->room_files,
                 'room_admins' => $room->room_admins->map(fn($room_admin) => [
                     'id' => $room_admin->id,
@@ -86,6 +89,26 @@ class RoomController extends Controller
         );
 
         return Redirect::back()->with('success', 'Room updated');
+    }
+
+    /**
+     * Duplicates the room whose id is passed in the request
+     */
+    public function duplicate(Room $room) {
+
+        $new_room = Room::create([
+            'name' => '(Kopie) ' . $room->name,
+            'description' => $room->description,
+            'temporary' => $room->temporary,
+            'start_date' => $room->start_date,
+            'end_date' => $room->end_date,
+            'area_id' => $room->area_id,
+            'user_id' => Auth::id(),
+            'order' => Room::max('order') + 1,
+        ]);
+
+        return Redirect::route('rooms.show', $new_room->id)->with('success', 'Room created.');
+
     }
 
     /**

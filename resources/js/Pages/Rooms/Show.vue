@@ -30,8 +30,8 @@
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
-                                        <a @click="openEditProjectModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a @click="openEditRoomModal(room)"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -39,8 +39,8 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject(this.project)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a href="#" @click="duplicateRoom(room)"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -48,8 +48,8 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a @click=""
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <a @click="openSoftDeleteRoomModal(room)"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -61,17 +61,17 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="grid grid-cols-7 mt-12">
+                <div class="grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
-                        <span>
-                            Hier Room Area {{room}}
+                        <span class="text-secondary subpixel-antialiased">
+                            Hier Room Area
                         </span>
-                        <span class="text-secondary text-sm subpixel-antialiased">
+                        <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
                             {{ room.description }}
                         </span>
                     </div>
                     <div class="col-span-2">
-                        <div class="flex w-full items-center mb-8">
+                        <div class="flex w-full mt-6 items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
                         <div @dragover.prevent @drop.stop.prevent="uploadDocument($event)" class="mb-8 w-full flex justify-center items-center
@@ -106,7 +106,7 @@
                              alt=""/>
                     </div>
                     <button @click="openChangeRoomAdminsModal">
-                        <PencilAltIcon class="mt-4 ml-2 h-8 w-8"/>
+                        <PencilAltIcon class="mt-4 ml-6 h-6 w-6"/>
                     </button>
                 </div>
             </div>
@@ -185,6 +185,119 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Raum Bearbeiten-->
+        <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
+            <template #content>
+                <div class="mx-3">
+                    <div class="font-bold font-lexend text-primary text-3xl my-2">
+                        Raum bearbeiten
+                    </div>
+                    <XIcon @click="closeEditRoomModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                           aria-hidden="true"/>
+                    {{editRoomForm}}
+                    <div class="mt-4">
+                        <div class="flex mt-10 relative">
+                            <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="roomNameEdit"
+                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                            </label>
+                            <jet-input-error :message="editRoomForm.error" class="mt-2"/>
+                        </div>
+                        <div class="mt-8 mr-4">
+                                            <textarea
+                                                placeholder="Kurzbeschreibung"
+                                                v-model="editRoomForm.description" rows="4"
+                                                class="focus:border-black placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                        </div>
+                        <div class="flex items-center my-6">
+                            <input v-model="editRoomForm.temporary"
+                                   type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
+                               class="ml-4 my-auto text-sm">Temporärer Raum</p>
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                            </div>
+                        </div>
+                        <div class="flex" v-if="editRoomForm.temporary">
+                            <input
+                                v-model="editRoomForm.start_date" id="startDateEdit"
+                                placeholder="Zu erledigen bis?" type="date"
+                                class="border-gray-300 placeholder-secondary mr-2 w-full"/>
+                            <input
+                                v-model="editRoomForm.end_date" id="endDateEdit"
+                                placeholder="Zu erledigen bis?" type="date"
+                                class="border-gray-300 placeholder-secondary w-full"/>
+                        </div>
+
+                        <button :class="[editRoomForm.name.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-4 flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="editRoom"
+                                :disabled="editRoomForm.name.length === 0">
+                            Speichern
+                        </button>
+                    </div>
+                </div>
+            </template>
+        </jet-dialog-modal>
+        <!-- Delete Room Modal -->
+        <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Raum in den Papierkorb
+                    </div>
+                    <XIcon @click="closeSoftDeleteRoomModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="softDeleteRoom()">
+                            Entfernen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeSoftDeleteRoomModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </jet-dialog-modal>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        {{ successHeading }}
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success">
+                        {{ successDescription }}
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -200,7 +313,6 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
@@ -235,6 +347,12 @@ export default {
             user_query: "",
             user_search_results: [],
             uploadDocumentFeedback: "",
+            showEditRoomModal: false,
+            roomToSoftDelete: null,
+            showSuccessModal: false,
+            showSoftDeleteRoomModal: false,
+            successHeading: "",
+            successDescription: "",
             roomForm: this.$inertia.form({
                 _method: 'PUT',
                 name: this.room.name,
@@ -243,6 +361,15 @@ export default {
                 temporary: this.room.temporary,
                 start_date: this.room.start_date,
                 end_date: this.room.end_date,
+            }),
+            editRoomForm: useForm({
+                name: '',
+                description: '',
+                temporary: false,
+                start_date: null,
+                end_date: null,
+                area_id: null,
+                user_id: null,
             }),
             documentForm: useForm({
                 file: null
@@ -302,11 +429,10 @@ export default {
         deleteUserFromRoomAdminArray(user) {
             this.roomForm.room_admins.splice(this.roomForm.room_admins.indexOf(user), 1);
         },
-        showSuccessButton() {
-            this.showSuccess = true;
-            setTimeout(() => {
-                this.showSuccess = false
-            }, 1000)
+        closeSuccessModal() {
+            this.showSuccessModal = false;
+            this.successHeading = "";
+            this.successDescription = "";
         },
         editRoomAdmins() {
             this.roomForm.patch(route('rooms.update', {room: this.room.id}));
@@ -324,6 +450,32 @@ export default {
             this.roomForm.room_admins.push(user);
             this.user_query = "";
             this.user_search_results = []
+        },
+        openEditRoomModal(room){
+            this.editRoomForm = room;
+            if(room.temporary === 1){
+                this.editRoomForm.temporary = true;
+            }
+            this.showEditRoomModal = true;
+        },
+        closeEditRoomModal(){
+            this.showEditRoomModal = false;
+        },
+        openSoftDeleteRoomModal(room){
+            this.roomToSoftDelete = room;
+            this.showSoftDeleteRoomModal = true;
+        },
+        closeSoftDeleteRoomModal(){
+            this.showSoftDeleteRoomModal = false;
+            this.roomToSoftDelete = null;
+        },
+        softDeleteRoom() {
+            this.$inertia.delete(`/rooms/${this.roomToSoftDelete.id}`);
+            this.closeSoftDeleteRoomModal();
+            this.successHeading = "Raum im Papierkorb"
+            this.successDescription = "Der Raum wurde erfolgreich in den Papierkorb gelegt."
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000);
         },
     },
     watch: {

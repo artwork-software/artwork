@@ -64,7 +64,8 @@ class ChecklistController extends Controller
                 'name' => $task_template->name,
                 'description' => $task_template->description,
                 'done' => false,
-                'checklist_id' => $checklist->id
+                'checklist_id' => $checklist->id,
+                'order' => Task::max('order') + 1,
             ]);
         }
 
@@ -105,7 +106,8 @@ class ChecklistController extends Controller
                 'name' => $task['name'],
                 'description' => $task['description'],
                 'deadline' => $task['deadline_dt_local'],
-                'checklist_id' => $checklist->id
+                'checklist_id' => $checklist->id,
+                'order' => Task::max('order') + 1,
             ]);
         }
 

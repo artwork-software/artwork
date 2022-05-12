@@ -25,7 +25,8 @@ class RoomController extends Controller
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'area_id' => $request->area_id,
-            'user_id' => $request->user_id
+            'user_id' => $request->user_id,
+            'order' => Room::max('order') + 1,
         ]);
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
@@ -47,6 +48,7 @@ class RoomController extends Controller
                 'temporary' => $room->temporary,
                 'start_date' => $room->start_date,
                 'end_date' => $room->end_date,
+                'room_files' => $room->room_files,
                 'room_admins' => $room->room_admins->map(fn($room_admin) => [
                     'id' => $room_admin->id,
                     'first_name' => $room_admin->first_name,
@@ -80,6 +82,23 @@ class RoomController extends Controller
         );
 
         return Redirect::back()->with('success', 'Room updated');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Room $room
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateOrder(Request $request)
+    {
+
+        foreach ($request->rooms as $room) {
+            Room::findOrFail($room['id'])->update(['order' => $room['order']]);
+        }
+
+        return Redirect::back();
     }
 
     /**

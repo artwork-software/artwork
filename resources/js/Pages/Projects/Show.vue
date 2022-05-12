@@ -39,7 +39,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateProject"
+                                        <a href="#" @click="duplicateProject(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -65,12 +65,14 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img :src="project.project_history[project.project_history.length -1].user.profile_photo_url" :alt="project.project_history[project.project_history.length -1].user.name"
-                                           class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <img :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
+                         :alt="project.project_history[project.project_history.length -1].user.name"
+                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                     <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[project.project_history.length -1].created_at }}
+                        {{ project.project_history[project.project_history.length - 1].created_at }}
                     </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer" @click="openProjectHistoryModal()">
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                            @click="openProjectHistoryModal()">
                         <ChevronRightIcon
                             class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
                             aria-hidden="true"/>
@@ -104,7 +106,7 @@
                 <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
-                <div class="flex mr-2 mt-10 flex-1 flex-wrap">
+                <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
                     <div class="cursor-pointer" @click="openEditProjectTeamModal">
                         <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
@@ -121,16 +123,16 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex mt-4 flex-wrap w-full">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Projektleitung</span>
+                <div class="flex -mt-4 flex-wrap w-full">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                     </div>
 
                 </div>
-                <div class="flex w-full mt-4 flex-wrap">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">Team</span>
+                <div class="flex w-full mt-2 flex-wrap">
+                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
                         <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
                             <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
@@ -345,8 +347,9 @@
                                             <div class="mt-6 mb-12" v-if="!checklist.hidden">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
-                                                           item-key="draggableID" v-model="checklist.tasks"
-                                                           @start="dragging=true" @end="dragging=false">
+                                                           item-key="draggableID" :list="checklist.tasks"
+                                                           @start="dragging=true" @end="dragging=false"
+                                                           @change="updateTaskOrder(checklist.tasks)">
                                                     <template #item="{element}" :key="element.id">
                                                         <div class="flex" @mouseover="showMenu = element.id"
                                                              :key="element.id"
@@ -525,8 +528,9 @@
                                             <div class="mt-6 mb-12" v-if="!checklist.hidden">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
-                                                           item-key="id" v-model="checklist.tasks"
-                                                           @start="dragging=true" @end="dragging=false">
+                                                           item-key="id" :list="checklist.tasks"
+                                                           @start="dragging=true" @end="dragging=false"
+                                                           @change="updateTaskOrder(checklist.tasks)">
                                                     <template #item="{element}" :key="element.id">
                                                         <div class="flex" @mouseover="showMenu = element.id"
                                                              :key="element.id"
@@ -571,8 +575,9 @@
                                                                         class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
                                                                             <MenuItem v-slot="{ active }">
-                                                                                <span @click="openEditTaskModal(element)"
-                                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                <span
+                                                                                    @click="openEditTaskModal(element)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <PencilAltIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                         aria-hidden="true"/>
@@ -629,17 +634,20 @@
                             </div>
                         </div>
                         <div>
-                            <div class="my-6" v-for="comment in project.comments" @mouseover="commentHovered = comment.id"
+                            <div class="my-6" v-for="comment in project.comments"
+                                 @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                    <img :src="comment.user.profile_photo_url" :alt="comment.user.name"
-                                         class="rounded-full h-7 w-7 object-cover"/>
-                                    <div class="ml-2 text-secondary" :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
-                                        {{comment.created_at}}
+                                        <img :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                             class="rounded-full h-7 w-7 object-cover"/>
+                                        <div class="ml-2 text-secondary"
+                                             :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                            {{ comment.created_at }}
+                                        </div>
                                     </div>
-                                    </div>
-                                    <button v-show="commentHovered === comment.id" type="button" @click="deleteCommentFromProject(comment)">
+                                    <button v-show="commentHovered === comment.id" type="button"
+                                            @click="deleteCommentFromProject(comment)">
                                         <span class="sr-only">Kommentar von Projekt entfernen</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
@@ -998,7 +1006,8 @@
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="addChecklist" :disabled="checklistForm.name.length === 0 && !selectedTemplate.id">
+                                @click="addChecklist"
+                                :disabled="checklistForm.name.length === 0 && !selectedTemplate.id">
                             Anlegen
                         </button>
                     </div>
@@ -1349,7 +1358,7 @@
                             <img :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{historyItem.description}}
+                                {{ historyItem.description }}
                             </div>
                         </div>
                     </div>
@@ -1572,17 +1581,19 @@ export default {
                 id: null,
                 name: "",
                 private: false,
+                user_id: null,
+                assigned_department_ids: null,
             }),
             taskForm: useForm({
                 name: "",
                 description: "",
-                deadline: "",
+                deadline: null,
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
                 name: "",
                 description: "",
-                deadline: "",
+                deadline: null,
             }),
             commentForm: useForm({
                 text: "",
@@ -1613,9 +1624,23 @@ export default {
         }
     },
     methods: {
+        updateTaskOrder(tasks) {
+
+            tasks.map((task, index) => {
+                task.order = index + 1
+            })
+
+            this.$inertia.put('/tasks/order', {
+                tasks
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            })
+
+        },
         removeFile(project_file) {
             this.$inertia.delete(`/project_files/${project_file.id}`, {
-                preserveState: true
+                preserveState: true,
             })
         },
         downloadFile(project_file) {
@@ -1726,7 +1751,7 @@ export default {
                 this.isInfoTab = true;
             }
         },
-        duplicateProject(project){
+        duplicateProject(project) {
             this.duplicateProjectForm.name = project.name + " (Kopie)";
             this.duplicateProjectForm.description = project.description;
             this.duplicateProjectForm.cost_center = project.cost_center;
@@ -1735,9 +1760,13 @@ export default {
             this.duplicateProjectForm.category_id = project.category_id;
             this.duplicateProjectForm.genre_id = project.genre_id;
             project.users.forEach(user => {
-                this.duplicateProjectForm.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.duplicateProjectForm.assigned_user_ids[user.id] = {
+                    is_admin: user.is_admin,
+                    is_manager: user.is_manager
+                };
             })
             this.duplicateProjectForm.assigned_departments = project.departments;
+            console.log(this.duplicateProjectForm.assigned_user_ids);
             this.duplicateProjectForm.post(route('projects.store'), {})
             this.duplicateProjectForm.name = "";
             this.duplicateProjectForm.description = "";
@@ -1818,14 +1847,14 @@ export default {
             this.taskForm.checklist_id = null;
             this.taskForm.name = "";
             this.taskForm.description = "";
-            this.taskForm.deadline = "";
+            this.taskForm.deadline = null;
             this.addingTask = false;
         },
         addTask() {
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
         },
-        editTask(){
+        editTask() {
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
             this.closeEditTaskModal();
         },
@@ -1840,7 +1869,7 @@ export default {
             this.editingTask = false;
             this.taskToEditForm.id = null;
             this.taskToEditForm.name = "";
-            this.taskToEditForm.deadline = "";
+            this.taskToEditForm.deadline = null;
             this.taskToEditForm.description = "";
 
         },
@@ -1856,7 +1885,7 @@ export default {
         deleteTask(task) {
             this.$inertia.delete(`/tasks/${task.id}`);
         },
-        deleteCommentFromProject(comment){
+        deleteCommentFromProject(comment) {
             this.$inertia.delete(`/comments/${comment.id}`);
         },
         duplicateChecklist(checklist) {
@@ -1899,26 +1928,42 @@ export default {
                 this.closeDeleteChecklistModal();
             }
         },
-        openProjectHistoryModal(){
+        openProjectHistoryModal() {
             this.showProjectHistory = true;
         },
-        closeProjectHistoryModal(){
-          this.showProjectHistory = false;
+        closeProjectHistoryModal() {
+            this.showProjectHistory = false;
         },
-        openEditChecklistModal(checklist){
+        openEditChecklistModal(checklist) {
             this.editChecklistForm.id = checklist.id;
             this.editChecklistForm.name = checklist.name;
-            this.editChecklistForm.private = checklist.private;
+            this.editChecklistForm.private = !checklist.departments;
+            if (checklist.departments) {
+                this.editChecklistForm.assigned_department_ids = [];
+                checklist.departments.forEach((department) => {
+                    this.editChecklistForm.assigned_department_ids.push(department.id);
+                })
+            }
             this.editingChecklist = true;
         },
-        closeEditChecklistModal(){
+        closeEditChecklistModal() {
             this.editingChecklist = false;
             this.editChecklistForm.id = null;
             this.editChecklistForm.name = "";
             this.editChecklistForm.private = false;
+            this.editChecklistForm.assigned_department_ids = null;
+            this.editChecklistForm.user_id = null;
         },
-        editChecklist(){
+        editChecklist() {
+            if (this.editChecklistForm.private) {
+                this.editChecklistForm.user_id = this.$page.props.user.id;
+                this.editChecklistForm.assigned_department_ids = null;
+            } else {
+                this.editChecklistForm.user_id = null;
+
+            }
             this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
+            this.closeEditChecklistModal();
         }
     },
     watch: {

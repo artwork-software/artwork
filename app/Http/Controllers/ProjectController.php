@@ -54,7 +54,9 @@ class ProjectController extends Controller
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
-                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
+                        Carbon::parse($history_entry->created_at)->diffForHumans() :
+                        Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
                     'user' => $history_entry->user,
                     'description' => $history_entry->description
                 ]),
@@ -202,7 +204,9 @@ class ProjectController extends Controller
                     'profile_photo_url' => $user->profile_photo_url
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
-                    'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                    'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
+                        Carbon::parse($history_entry->created_at)->diffForHumans() :
+                        Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
                     'user' => $history_entry->user,
                     'description' => $history_entry->description
                 ]),
@@ -222,12 +226,13 @@ class ProjectController extends Controller
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
-                    'tasks' => $checklist->tasks->map(fn($task) => [
+                    'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
+                        'order' => $task->order,
                         'done' => $task->done,
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
@@ -239,12 +244,13 @@ class ProjectController extends Controller
                 'private_checklists' => $private_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
-                    'tasks' => $checklist->tasks->map(fn($task) => [
+                    'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,
                         'description' => $task->description,
                         'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
+                        'order' => $task->order,
                         'done' => $task->done,
                     ])
                 ]),

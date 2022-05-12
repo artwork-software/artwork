@@ -130,6 +130,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::put('/tasks/order', [TaskController::class, 'updateOrder']);
     Route::delete('/tasks/{task}', [TaskController::class, 'destroy']);
 
     //Categories
@@ -165,8 +166,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
-    Route::get('/rooms/{room}', [RoomController::class, 'show']);
+    Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
+    Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
     Route::delete('/rooms/{room}/force', [RoomController::class, 'forceDelete']);
 

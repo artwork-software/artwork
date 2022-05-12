@@ -48,7 +48,8 @@ class ChecklistController extends Controller
      * Creates a checklist on basis of a ChecklistTemplate
      * @param Request $request
      */
-    protected function createFromTemplate(Request $request) {
+    protected function createFromTemplate(Request $request)
+    {
         $template = ChecklistTemplate::where('id', $request->template_id)->first();
         $project = \App\Models\Project::where('id', $request->project_id)->first();
 
@@ -70,7 +71,7 @@ class ChecklistController extends Controller
         if (Auth::user()->can('update departments')) {
 
             foreach ($template->departments as $department) {
-                if(!$project->departments->contains($department)) {
+                if (!$project->departments->contains($department)) {
                     $project->departments()->attach($department);
                 }
             }
@@ -91,14 +92,15 @@ class ChecklistController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse|void
      */
-    protected function createWithoutTemplate(Request $request) {
+    protected function createWithoutTemplate(Request $request)
+    {
         $checklist = Checklist::create([
             'name' => $request->name,
             'project_id' => $request->project_id,
             'user_id' => $request->user_id
         ]);
 
-        foreach($request->tasks as $task) {
+        foreach ($request->tasks as $task) {
             Task::create([
                 'name' => $task['name'],
                 'description' => $task['description'],
@@ -185,19 +187,19 @@ class ChecklistController extends Controller
     {
         $checklist->update($request->only('name', 'user_id'));
 
-        if($request->tasks) {
+        if ($request->tasks) {
             $checklist->tasks()->delete();
             $checklist->tasks()->createMany($request->tasks);
         }
 
         if (Auth::user()->can('update departments')) {
-
-            foreach ($request->assigned_department_ids as $department_id) {
-                if(!$checklist->project->departments->contains($department_id)) {
-                    $checklist->project->departments()->attach($department_id);
+            if ($request->assigned_department_ids) {
+                foreach ($request->assigned_department_ids as $department_id) {
+                    if (!$checklist->project->departments->contains($department_id)) {
+                        $checklist->project->departments()->attach($department_id);
+                    }
                 }
             }
-
             $checklist->departments()->sync(
                 collect($request->assigned_department_ids)
                     ->map(function ($department_id) {

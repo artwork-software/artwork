@@ -27,7 +27,7 @@ class AreaController extends Controller
             'areas' => Area::paginate(10)->through(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => $area->rooms->map(fn($room) => [
+                'rooms' => $area->rooms()->orderBy('order')->get()->map(fn($room) => [
                     'id' => $room->id,
                     'name' => $room->name,
                     'description' => $room->description,

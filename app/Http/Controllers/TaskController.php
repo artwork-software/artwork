@@ -54,7 +54,7 @@ class TaskController extends Controller
                 'description' => $task->description,
                 'deadline' =>  Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
                 'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
-                'done' => $task->done,
+                'done' => (bool)$task->done,
                 'checklist' => $task->checklist,
                 'project' => $task->checklist->project,
                 'departments' => $task->checklist->departments
@@ -126,7 +126,7 @@ class TaskController extends Controller
                 'name' => $task->name,
                 'description' => $task->description,
                 'deadline' => $task->deadline,
-                'done' => $task->done,
+                'done' => (bool)$task->done,
             ]
         ]);
     }

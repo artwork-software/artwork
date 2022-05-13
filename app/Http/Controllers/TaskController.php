@@ -139,13 +139,22 @@ class TaskController extends Controller
         ]);
     }
 
+    private function get_task_status($name, $is_done) {
+        if($is_done) {
+            return "hat die Aufgabe $name abgehakt";
+        } else {
+            return "hat die Aufgabe $name auf noch nicht erledigt gesetzt";
+        }
+    }
 
     private function history_description_change($changed_field, $task, $original, $change): string
     {
+
         return match ($changed_field) {
             'name' => "Die Aufgabe $original wurde in $change umbenannt",
             'description' => "Kurzbeschreibung von Aufgabe $task->name wurde geändert",
             'deadline' => "Die Deadline der Aufgabe $task->name wurde geändert",
+            'done' => $this->get_task_status($task->name, $change)
         };
     }
 

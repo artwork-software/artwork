@@ -52,7 +52,7 @@ class RoomController extends Controller
                 'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
                 'start_date' => Carbon::parse($room->start_date)->format('d.m.Y, H:i'),
                 'start_date_dt_local' => Carbon::parse($room->start_date)->toDateTimeLocalString(),
-                'end_date' => Carbon::parse($room->end_date)->format('d.m.Y, H:i'),
+                'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
                 'end_date_dt_local' => Carbon::parse($room->end_date)->toDateTimeLocalString(),
                 'room_files' => $room->room_files,
                 'room_admins' => $room->room_admins->map(fn($room_admin) => [

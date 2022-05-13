@@ -34,8 +34,10 @@ class AreaController extends Controller
                     'temporary' => $room->temporary,
                     'created_by' => User::where('id', $room->user_id)->first(),
                     'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
-                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y, H:i'),
-                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y, H:i'),
+                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
+                    'start_date_dt_local' => Carbon::parse($room->start_date)->toDateString(),
+                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
+                    'end_date_dt_local' => Carbon::parse($room->end_date)->toDateString(),
                     'room_admins' => $room->room_admins->map(fn($room_admin) => [
                         'id' => $room_admin->id,
                         'profile_photo_url' => $room_admin->profile_photo_url

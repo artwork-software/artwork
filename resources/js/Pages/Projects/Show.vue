@@ -298,7 +298,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="createTemplateFromChecklist(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -357,7 +357,7 @@
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
-                                                                    <input v-model="element.done"
+                                                                    <input @change="updateTaskStatus(element)" v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
@@ -538,7 +538,7 @@
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full" :key="element.id">
-                                                                    <input v-model="element.done"
+                                                                    <input @change="updateTaskStatus(element)" v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
@@ -1610,16 +1610,12 @@ export default {
                 assigned_department_ids: [],
                 user_id: null
             }),
-            duplicateProjectForm: useForm({
-                name: "",
-                description: "",
-                cost_center: "",
-                number_of_participants: "",
-                sector_id: null,
-                category_id: null,
-                genre_id: null,
-                assigned_user_ids: [],
-                assigned_departments: []
+            templateForm: useForm({
+                checklist_id: null,
+                user_id: this.$page.props.user.id,
+            }),
+            doneTaskForm: useForm({
+                done: false
             }),
         }
     },
@@ -1752,31 +1748,7 @@ export default {
             }
         },
         duplicateProject(project) {
-            this.duplicateProjectForm.name = project.name + " (Kopie)";
-            this.duplicateProjectForm.description = project.description;
-            this.duplicateProjectForm.cost_center = project.cost_center;
-            this.duplicateProjectForm.number_of_participants = project.number_of_participants;
-            this.duplicateProjectForm.sector_id = project.sector_id;
-            this.duplicateProjectForm.category_id = project.category_id;
-            this.duplicateProjectForm.genre_id = project.genre_id;
-            project.users.forEach(user => {
-                this.duplicateProjectForm.assigned_user_ids[user.id] = {
-                    is_admin: user.is_admin,
-                    is_manager: user.is_manager
-                };
-            })
-            this.duplicateProjectForm.assigned_departments = project.departments;
-            console.log(this.duplicateProjectForm.assigned_user_ids);
-            this.duplicateProjectForm.post(route('projects.store'), {})
-            this.duplicateProjectForm.name = "";
-            this.duplicateProjectForm.description = "";
-            this.duplicateProjectForm.cost_center = "";
-            this.duplicateProjectForm.number_of_participants = "";
-            this.duplicateProjectForm.sector_id = null;
-            this.duplicateProjectForm.category_id = null;
-            this.duplicateProjectForm.genre_id = null;
-            this.duplicateProjectForm.assigned_user_ids = [];
-            this.duplicateProjectForm.assigned_departments = [];
+            this.$inertia.post(`/projects/${project.id}/duplicate`);
         },
         deleteUserFromProjectTeam(user) {
             this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
@@ -1964,6 +1936,14 @@ export default {
             }
             this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
             this.closeEditChecklistModal();
+        },
+        createTemplateFromChecklist(checklist){
+            this.templateForm.checklist_id = checklist.id;
+            this.templateForm.post(route('checklist_templates.store'));
+        },
+        updateTaskStatus(task) {
+            this.doneTaskForm.done = task.done;
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         }
     },
     watch: {

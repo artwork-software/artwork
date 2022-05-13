@@ -156,7 +156,6 @@ export default {
         },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
-            console.log(this.doneTaskForm)
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         }
     },

@@ -25,7 +25,7 @@
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>
                     <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
-                        <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
+                        <TeamIconCollection class="h-9 w-9 rounded-full ring-white ring-2" :iconName="team.svg_name"/>
                     </div>
                     <Menu as="div" class="my-auto relative">
                         <div class="flex mt-3">

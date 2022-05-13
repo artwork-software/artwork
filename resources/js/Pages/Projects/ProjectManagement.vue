@@ -620,27 +620,7 @@ export default defineComponent({
             return route('projects.show', {project: project.id});
         },
         duplicateProject(project) {
-            this.duplicateForm.name = project.name + " (Kopie)";
-            this.duplicateForm.description = project.description;
-            this.duplicateForm.cost_center = project.cost_center;
-            this.duplicateForm.number_of_participants = project.number_of_participants;
-            this.duplicateForm.sector_id = project.sector_id;
-            this.duplicateForm.category_id = project.category_id;
-            this.duplicateForm.genre_id = project.genre_id;
-            project.users.forEach(user => {
-                this.duplicateForm.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
-            })
-            this.duplicateForm.assigned_departments = project.departments;
-            this.duplicateForm.post(route('projects.store'), {})
-            this.duplicateForm.name = "";
-            this.duplicateForm.description = "";
-            this.duplicateForm.cost_center = "";
-            this.duplicateForm.number_of_participants = "";
-            this.duplicateForm.sector_id = null;
-            this.duplicateForm.category_id = null;
-            this.duplicateForm.genre_id = null;
-            this.duplicateForm.assigned_user_ids = [];
-            this.duplicateForm.assigned_departments = [];
+            this.$inertia.post(`/projects/${project.id}/duplicate`);
         },
         openDeleteProjectModal(project) {
             this.projectToDelete = project;
@@ -695,17 +675,6 @@ export default defineComponent({
                 sector_id: null,
                 category_id: null,
                 genre_id: null,
-            }),
-            duplicateForm: useForm({
-                name: "",
-                description: "",
-                cost_center: "",
-                number_of_participants: "",
-                sector_id: null,
-                category_id: null,
-                genre_id: null,
-                assigned_user_ids: [],
-                assigned_departments: []
             }),
         }
     },

@@ -21,7 +21,6 @@
                                     </div>
                                 </div>
                             </div>
-                            {{ areas.data }}
                             <div class="flex w-full flex-wrap mt-10">
                                 <div v-for="area in areas.data"
                                      class="flex w-full bg-white my-2 border border-gray-200">
@@ -114,7 +113,6 @@
                                                     class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
                                             </div>
                                         </div>
-                                        {{ area.rooms }}
                                         <div class="mt-6 mb-12" v-if="!area.hidden">
                                             <draggable ghost-class="opacity-50"
                                                        key="draggableKey"
@@ -135,9 +133,12 @@
                                                                     >
                                                                         {{ element.name }}
                                                                     </Link>
-                                                                    <div class="ml-6 text-secondary text-sm my-auto">
+                                                                    <div
+                                                                        class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                         angelegt am {{ element.created_at }} von
-                                                                        <!-- TODO: HIER PROFILBILD ANLEGER -->
+                                                                        <img :src="element.created_by.profile_photo_url"
+                                                                             :alt="element.created_by.first_name"
+                                                                             class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
                                                                     </div>
                                                                 </div>
                                                                 <Menu as="div" class="my-auto relative"
@@ -200,17 +201,19 @@
                                                     </div>
                                                 </template>
                                             </draggable>
-                                            <div class="mt-12">
-                                                <h2 v-on:click="showTemporaryRooms = !showTemporaryRooms"
-                                                    class="text-sm pt-6 pb-2 ml-4 flex font-bold text-primary cursor-pointer">
+                                            <div v-show="area.rooms.filter(room => room.temporary === 1).length > 0"
+                                                 class="mt-12">
+                                                <h2 v-on:click="switchVisibility(area.id)"
+                                                    class="text-sm pb-2 flex font-bold text-primary cursor-pointer">
                                                     Temporäre
                                                     Räume
-                                                    <ChevronUpIcon v-if="showTemporaryRooms"
+                                                    <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
                                                                    class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                                                     <ChevronDownIcon v-else
                                                                      class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                                                 </h2>
-                                                <draggable v-show="showTemporaryRooms" ghost-class="opacity-50"
+                                                <draggable v-show="showTemporaryRooms.includes(area.id)"
+                                                           ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="id" :list="area.rooms"
                                                            @start="dragging=true" @end="dragging=false"
@@ -231,9 +234,13 @@
                                                                             {{ element.name }} ({{ element.start_date }}
                                                                             - {{ element.end_date }})
                                                                         </Link>
-                                                                        <div class="ml-6 text-secondary text-sm my-auto">
+                                                                        <div
+                                                                            class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                             angelegt am {{ element.created_at }} von
-                                                                            <!-- TODO: HIER PROFILBILD ANLEGER -->
+                                                                            <img
+                                                                                :src="element.created_by.profile_photo_url"
+                                                                                :alt="element.created_by.first_name"
+                                                                                class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"
@@ -446,7 +453,6 @@
                 <XIcon @click="closeEditRoomModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
-                {{ editRoomForm }}
                 <div class="mt-4">
                     <div class="flex mt-10 relative">
                         <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
@@ -475,25 +481,27 @@
                                 class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
                         </div>
                     </div>
-                    <div class="flex" v-if="editRoomForm.temporary">
+                    <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
                         <input
-                            v-model="editRoomForm.start_date" id="startDateEdit"
+                            v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
                             placeholder="Zu erledigen bis?" type="date"
-                            class="border-gray-300 placeholder-secondary mr-2 w-full"/>
+                            class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
                         <input
-                            v-model="editRoomForm.end_date" id="endDateEdit"
+                            v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
                             placeholder="Zu erledigen bis?" type="date"
-                            class="border-gray-300 placeholder-secondary w-full"/>
+                            class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
+                    </div>
+                    <div class="grid grid-cols-2">
+                        <button :class="[editRoomForm.name.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="editRoom"
+                                :disabled="editRoomForm.name.length === 0">
+                            Speichern
+                        </button>
                     </div>
 
-                    <button :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="editRoom"
-                            :disabled="editRoomForm.name.length === 0">
-                        Speichern
-                    </button>
                 </div>
             </div>
         </template>
@@ -531,7 +539,7 @@
         <template #content>
             <div class="mx-4">
                 <div class="font-bold text-primary text-2xl my-2">
-                   Raum in den Papierkorb
+                    Raum in den Papierkorb
                 </div>
                 <XIcon @click="closeSoftDeleteRoomModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -677,7 +685,7 @@ export default defineComponent({
             showSoftDeleteRoomModal: false,
             successHeading: "",
             successDescription: "",
-            showTemporaryRooms: false,
+            showTemporaryRooms: [],
             showEditRoomModal: false,
             newAreaForm: useForm({
                 name: ''
@@ -692,11 +700,14 @@ export default defineComponent({
                 user_id: this.$page.props.user.id,
             }),
             editRoomForm: useForm({
+                id: null,
                 name: '',
                 description: '',
                 temporary: false,
                 start_date: null,
+                start_date_dt_local: null,
                 end_date: null,
+                end_date_dt_local: null,
                 area_id: null,
                 user_id: null,
             }),
@@ -706,8 +717,6 @@ export default defineComponent({
                 rooms: [],
             }),
         }
-
-
     },
     methods: {
         updateRoomOrder(rooms) {
@@ -769,10 +778,10 @@ export default defineComponent({
             this.closeEditAreaModal();
         },
         duplicateArea(area) {
-            //TODO: HIER DUPLICATE BACKENDFUNKTION
+            this.$inertia.post(`/areas/${area.id}/duplicate`);
         },
         duplicateRoom(room) {
-            //TODO: HIER DUPLICATE BACKENDFUNKTION
+            this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
         openSoftDeleteAreaModal(area) {
             this.areaToSoftDelete = area;
@@ -814,7 +823,13 @@ export default defineComponent({
             this.closeDeleteAllRoomsModal();
         },
         openEditRoomModal(room) {
-            this.editRoomForm = room;
+            this.editRoomForm.id = room.id;
+            this.editRoomForm.name = room.name;
+            this.editRoomForm.description = room.description;
+            this.editRoomForm.start_date = room.start_date;
+            this.editRoomForm.end_date = room.end_date;
+            this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
+            this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
             if (room.temporary === 1) {
                 this.editRoomForm.temporary = true;
             }
@@ -822,12 +837,19 @@ export default defineComponent({
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
+            this.editRoomForm.id = null;
+            this.editRoomForm.name = null;
+            this.editRoomForm.description = null;
+            this.editRoomForm.start_date = null;
+            this.editRoomForm.end_date = null;
+            this.editRoomForm.start_date_dt_local = null;
+            this.editRoomForm.end_date_dt_local = null;
         },
-        openSoftDeleteRoomModal(room){
+        openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
             this.showSoftDeleteRoomModal = true;
         },
-        closeSoftDeleteRoomModal(){
+        closeSoftDeleteRoomModal() {
             this.showSoftDeleteRoomModal = false;
             this.roomToSoftDelete = null;
         },
@@ -839,6 +861,19 @@ export default defineComponent({
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
+        switchVisibility(areaId) {
+            if (this.showTemporaryRooms.includes(areaId)) {
+                this.showTemporaryRooms.splice(this.showTemporaryRooms.indexOf(areaId), 1);
+            } else {
+                this.showTemporaryRooms.push(areaId);
+            }
+        },
+        editRoom() {
+            this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
+            this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+            this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
+            this.closeEditRoomModal();
+        }
     },
 })
 </script>

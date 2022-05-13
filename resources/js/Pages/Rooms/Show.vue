@@ -64,7 +64,7 @@
                 <div class="grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
                         <span class="text-secondary subpixel-antialiased">
-                            Hier Room Area
+                            {{room.area.name}}
                         </span>
                         <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
                             {{ room.description }}
@@ -450,6 +450,9 @@ export default {
             this.roomForm.room_admins.push(user);
             this.user_query = "";
             this.user_search_results = []
+        },
+        duplicateRoom(room) {
+            this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
         openEditRoomModal(room){
             this.editRoomForm = room;

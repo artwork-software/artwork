@@ -71,6 +71,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
+    public function done_tasks()
+    {
+        return $this->hasMany(Task::class);
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.

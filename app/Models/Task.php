@@ -15,7 +15,9 @@ class Task extends Model
         'deadline',
         'done',
         'checklist_id',
-        'order'
+        'order',
+        'user_id',
+        'done_at'
     ];
 
     protected $casts = [
@@ -25,5 +27,9 @@ class Task extends Model
     public function checklist()
     {
         return $this->belongsTo(Checklist::class, 'checklist_id');
+    }
+
+    public function user_who_done() {
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
 
 class TaskController extends Controller
@@ -57,7 +58,10 @@ class TaskController extends Controller
                 'done' => $task->done,
                 'checklist' => $task->checklist,
                 'project' => $task->checklist->project,
-                'departments' => $task->checklist->departments
+                'departments' => $task->checklist->departments,
+                'done_by_user' => $task->user_who_done(),
+                'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
             ])
         ]);
 
@@ -135,6 +139,9 @@ class TaskController extends Controller
                 'description' => $task->description,
                 'deadline' => $task->deadline,
                 'done' => $task->done,
+                'done_by_user' => $task->user_who_done(),
+                'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
             ]
         ]);
     }
@@ -154,7 +161,9 @@ class TaskController extends Controller
             'name' => "Die Aufgabe $original wurde in $change umbenannt",
             'description' => "Kurzbeschreibung von Aufgabe $task->name wurde geändert",
             'deadline' => "Die Deadline der Aufgabe $task->name wurde geändert",
-            'done' => $this->get_task_status($task->name, $change)
+            'done' => $this->get_task_status($task->name, $change),
+            'done_at' => 'Die Aufgabe wurde am ' . Date::now() . ' abgeschlossen',
+            'user_id' => 'Die Aufgabe wurde von ' . Auth::user() . 'abgeschlossen'
         };
     }
 
@@ -163,6 +172,8 @@ class TaskController extends Controller
 
         return match ($changed_field) {
             'description' => "Kurzbeschreibung von Aufgabe $task->name wurde entfernt",
+            'done_at' => 'Die Aufgabe wurde auf Nicht Erledigt gestellt',
+            'user_id' => 'Bisher hat kein Benutzer die Aufgabe erledigt'
         };
 
     }
@@ -216,6 +227,15 @@ class TaskController extends Controller
     public function update(Request $request, Task $task)
     {
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
+
+        if($request->done == true) {
+            $task->user_who_done()->associate(Auth::user());
+            $task->done_at = Date::now();
+        }
+        if($request->done == false) {
+            $task->user_id = null;
+            $task->done_at = null;
+        }
 
         $task->fill($update_properties);
 

@@ -92,6 +92,7 @@ test('users that are assigned to a checklist can create tasks for it', function 
         'name' => 'TestTask',
         'description' => "This is a description",
         'checklist_id' => $checklist->id,
+        'deadline' => null
     ]);
 
 });
@@ -194,17 +195,38 @@ test('users who are assigned to a checklist can update its tasks', function () {
 
     $this->assigned_department->users()->attach($this->auth_user);
     $this->checklist->departments()->attach($this->assigned_department);
+    $this->checklist->project()->associate($this->project);
+    $this->checklist->save();
     $this->actingAs($this->auth_user);
 
-    $this->patch("/tasks/{$this->task->id}", [
+    $res = $this->patch("/tasks/{$this->task->id}", [
         'name' => 'TestTask',
         'description' => "This is a description",
+        'done' => true
     ]);
 
     $this->assertDatabaseHas('tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
-        'checklist_id' => $this->checklist->id
+        'checklist_id' => $this->checklist->id,
+        'done_at' => Date::now(),
+        'user_id' => $this->auth_user->id
+    ]);
+
+    $res = $this->patch("/tasks/{$this->task->id}", [
+        'name' => 'TestTask',
+        'description' => "This is a description",
+        'done' => false
+    ]);
+
+    //dd($res);
+
+    $this->assertDatabaseHas('tasks', [
+        'name' => 'TestTask',
+        'description' => "This is a description",
+        'checklist_id' => $this->checklist->id,
+        'done_at' => null,
+        'user_id' => null
     ]);
 
 

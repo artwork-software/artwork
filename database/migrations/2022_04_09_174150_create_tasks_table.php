@@ -19,8 +19,10 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('done');
             $table->timestamp('deadline')->nullable()->default(null);
+            $table->timestamp('done_at')->nullable()->default(null);
             $table->integer('order');
             $table->unsignedBigInteger('checklist_id');
+            $table->unsignedBigInteger('user_id')->nullable()->default(null);
             $table->timestamps();
         });
     }

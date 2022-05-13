@@ -234,6 +234,9 @@ class ProjectController extends Controller
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'order' => $task->order,
                         'done' => $task->done,
+                        'done_by_user' => $task->user_who_done(),
+                        'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                        'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
                     ]),
                     'departments' => $checklist->departments->map(fn($department) => [
                         'id' => $department->id,
@@ -252,6 +255,9 @@ class ProjectController extends Controller
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'order' => $task->order,
                         'done' => $task->done,
+                        'done_by_user' => $task->user_who_done(),
+                        'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                        'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
                     ])
                 ]),
                 'comments' => $project->comments->map(fn($comment) => [

@@ -7,18 +7,27 @@
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
                                 <h2 class="text-3xl font-lexend font-black text-primary flex">Räume & Areale</h2>
-                                <div class="flex w-full mt-6">
-                                    <div class="">
-                                        <button @click="openAddAreaModal()" type="button"
-                                                class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                            <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                        </button>
+                                <div class="flex w-full justify-between mt-6">
+                                    <div class="flex">
+                                        <div>
+                                            <button @click="openAddAreaModal()" type="button"
+                                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                            </button>
+                                        </div>
+                                        <div v-if="$page.props.can.show_hints" class="flex">
+                                            <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                            <span
+                                                class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
+                                        </div>
                                     </div>
-                                    <div v-if="$page.props.can.show_hints" class="flex">
-                                        <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                        <span
-                                            class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
+                                    <div class="flex items-center">
+                                        <Link class="inset-y-0 mr-3"
+                                              :href="route('areas.trashed')">
+                                            <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+                                        </Link>
                                     </div>
+
                                 </div>
                             </div>
                             <div class="flex w-full flex-wrap mt-10">

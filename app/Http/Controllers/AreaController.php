@@ -117,21 +117,21 @@ class AreaController extends Controller
         return Redirect::route('areas.management')->with('success', 'Area moved to trash');
     }
 
-    public function forceDelete(Area $area)
+    public function forceDelete(int $id)
     {
+        $area = Area::onlyTrashed()->findOrFail($id);
 
         $area->forceDelete();
-        return Redirect::route('areas.management')->with('success', 'Area deleted permanently');
     }
 
-    public function restore(Area $area)
+    public function restore(int $id)
     {
+        $area = Area::onlyTrashed()->findOrFail($id);
 
         $area->restore();
         foreach ($area->rooms() as $room) {
             $room->restore();
         }
-        return Redirect::route('areas.management')->with('success', 'Area restored');
     }
 
     public function getTrashed()
@@ -144,10 +144,11 @@ class AreaController extends Controller
                     'id' => $room->id,
                     'name' => $room->name,
                     'description' => $room->description,
-                    'temporary' => $room->temporary,
+                    'temporary' => (bool)$room->temporary,
                     'start_date' => $room->start_date,
                     'end_date' => $room->end_date,
-                    'created_at' => $room->created_at,
+                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                    'created_by' => User::where('id', $room->user_id)->first(),
                     'room_admins' => $room->room_admins->map(fn($room_admin) => [
                         'id' => $room_admin->id,
                         'profile_photo_url' => $room_admin->profile_photo_url

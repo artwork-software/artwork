@@ -83,6 +83,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Projects
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
+    Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
@@ -91,9 +92,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
-    Route::delete('/projects/{project}/force', [ProjectController::class, 'forceDelete']);
-    Route::patch('/projects/{project}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
-    Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
+    Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
+    Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
@@ -158,13 +158,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');
+    Route::get('/areas/trashed', [AreaController::class, 'getTrashed'])->name('areas.trashed');
     Route::post('/areas', [AreaController::class, 'store'])->name('areas.store');
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
-    Route::delete('/areas/{area}/force', [AreaController::class, 'forceDelete']);
-    Route::patch('/areas/{area}/restore', [AreaController::class, 'restore'])->name('areas.restore');
-    Route::get('/areas/trashed', [AreaController::class, 'getTrashed'])->name('areas.trashed');
+    Route::delete('/areas/{id}/force', [AreaController::class, 'forceDelete'])->name('areas.force');
+    Route::patch('/areas/{id}/restore', [AreaController::class, 'restore'])->name('areas.restore');
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');

@@ -234,7 +234,7 @@ class ProjectController extends Controller
                         'deadline_dt_local' => $task->deadline === null ? null : Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'order' => $task->order,
                         'done' => $task->done,
-                        'done_by_user' => $task->user_who_done(),
+                        'done_by_user' => $task->user_who_done,
                         'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
                         'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
                     ]),
@@ -255,7 +255,7 @@ class ProjectController extends Controller
                         'deadline_dt_local' => Carbon::parse($task->deadline)->toDateTimeLocalString(),
                         'order' => $task->order,
                         'done' => $task->done,
-                        'done_by_user' => $task->user_who_done(),
+                        'done_by_user' => $task->user_who_done,
                         'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
                         'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
                     ])

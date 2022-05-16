@@ -33,7 +33,7 @@ beforeEach(function () {
 });
 
 
-test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function() {
+test('users can view a list of all their tasks, eg private or from checklists they are assigned to', function () {
 
     $this->auth_user->assignRole('admin');
 
@@ -43,12 +43,35 @@ test('users can view a list of all their tasks, eg private or from checklists th
     $response = $this->get("/tasks/own")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Tasks/OwnTasksManagement')
-            //->has('tasks.data', 10)
+        //->has('tasks.data', 10)
         );
 
     $response->assertStatus(200);
 });
 
+test('users can view the page to edit a task if they are assigned to the checklist', function () {
+
+    $this->auth_user->assignRole('admin');
+
+    $this->assigned_department->users()->attach($this->auth_user);
+    $this->checklist->departments()->attach($this->assigned_department);
+
+    $this->patch("/tasks/{$this->task->id}", [
+        'name' => 'TestTask',
+        'description' => "This is a description",
+        'done' => true
+    ]);
+
+    $response = $this->get("/tasks/{$this->task->id}/edit")
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Tasks/Edit')
+            ->has('task', fn(Assert $page) => $page
+                ->where('done_by_user.id', $this->auth_user->id)
+            )
+        );
+
+    $response->assertStatus(200);
+});
 
 
 test('users who arent assigned to a checklist cant create tasks on it', function () {
@@ -68,7 +91,6 @@ test('users who arent assigned to a checklist cant create tasks on it', function
 });
 
 
-
 test('users that are assigned to a checklist can create tasks for it', function () {
 
     $this->project->users()->attach($this->auth_user);
@@ -81,7 +103,7 @@ test('users that are assigned to a checklist can create tasks for it', function 
     $checklist->departments()->attach($this->assigned_department);
     $this->actingAs($this->auth_user);
 
-    $res = $this->post('/tasks', [
+    $this->post('/tasks', [
         'name' => 'TestTask',
         'description' => "This is a description",
         'checklist_id' => $checklist->id,
@@ -153,7 +175,7 @@ test('users that are project admins can create tasks for any checklist in their 
     ]);
 });
 
-test('users that are project managers can create tasks for any checklist in their project', function() {
+test('users that are project managers can create tasks for any checklist in their project', function () {
 
     $project_manager = User::factory()->create();
     $project_manager->givePermissionTo('create projects', 'update users', 'update departments');

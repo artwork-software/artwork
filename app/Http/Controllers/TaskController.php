@@ -59,7 +59,7 @@ class TaskController extends Controller
                 'checklist' => $task->checklist,
                 'project' => $task->checklist->project,
                 'departments' => $task->checklist->departments,
-                'done_by_user' => $task->user_who_done(),
+                'done_by_user' => $task->user_who_done,
                 'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
                 'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
             ])
@@ -139,7 +139,7 @@ class TaskController extends Controller
                 'description' => $task->description,
                 'deadline' => $task->deadline,
                 'done' => $task->done,
-                'done_by_user' => $task->user_who_done(),
+                'done_by_user' => $task->user_who_done,
                 'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
                 'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
             ]

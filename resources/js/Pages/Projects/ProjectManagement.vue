@@ -18,6 +18,11 @@
                         </div>
                         <div class="flex items-center">
 
+                            <Link class="inset-y-0 mr-3"
+                                  :href="route('projects.trashed')">
+                                <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+                            </Link>
+
                             <div class="inset-y-0 mr-3 pointer-events-none">
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
@@ -546,6 +551,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 import {Inertia} from "@inertiajs/inertia";
+import {Link} from "@inertiajs/inertia-vue3";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -587,7 +593,8 @@ export default defineComponent({
         TrashIcon,
         XCircleIcon,
         DuplicateIcon,
-        ChevronRightIcon
+        ChevronRightIcon,
+        Link
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors'],
     methods: {

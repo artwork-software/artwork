@@ -525,16 +525,18 @@ class ProjectController extends Controller
         return Redirect::back()->with('success', 'Project moved to trash');
     }
 
-    public function forceDelete(Project $project) {
+    public function forceDelete(int $id) {
+
+        $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->forceDelete();
-        return Redirect::route('projects')->with('success', 'Project deleted permanently');
     }
 
-    public function restore(Project $project) {
+    public function restore(int $id)
+    {
+        $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->restore();
-        return Redirect::route('projects')->with('success', 'Project restored');
     }
 
     public function getTrashed()

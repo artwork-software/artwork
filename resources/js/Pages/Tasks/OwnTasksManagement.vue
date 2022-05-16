@@ -53,7 +53,7 @@
                                         <p class="ml-4 my-auto text-lg font-black text-sm"
                                            :class="task.done ? 'text-secondary' : 'text-primary'">
                                             {{ task.name }}</p>
-                                        <span
+                                        <span v-if="!task.done && task.deadline"
                                             class="ml-2 my-auto text-sm subpixel-antialiased"
                                             :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                 task.deadline
@@ -118,6 +118,12 @@ export default {
             let taskCopy = this.tasks.slice();
             let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
             function compare(a, b) {
+                if(b.deadline === null){
+                    return -1;
+                }
+                if(a.deadline === null){
+                    return 1;
+                }
                 if (a.deadline < b.deadline)
                     return -1;
                 if (a.deadline > b.deadline)

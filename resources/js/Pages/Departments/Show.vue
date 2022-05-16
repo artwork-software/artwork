@@ -41,9 +41,10 @@
                     <span class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Team-Mitglieder hinzugefügt</span>
                 </div>
                 <div v-else class="mt-3 -mr-3" v-for="user in teamForm.users">
-                    <img class="h-9 w-9 rounded-full"
+                    <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                          :src="user.profile_photo_url"
                          alt=""/>
+                    <UserTooltip :user="user" />
                 </div>
                 <Menu as="div" class="my-auto relative">
                     <div class="flex mt-3">
@@ -256,6 +257,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Inertia} from "@inertiajs/inertia";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default {
     name: "Show",
@@ -278,7 +280,8 @@ export default {
         JetInput,
         JetInputError,
         CheckIcon,
-        ChevronDownIcon
+        ChevronDownIcon,
+        UserTooltip
     },
     data() {
         return {

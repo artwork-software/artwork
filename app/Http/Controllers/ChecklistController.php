@@ -113,6 +113,7 @@ class ChecklistController extends Controller
             Task::create([
                 'name' => $task['name'],
                 'description' => $task['description'],
+                'done' => false,
                 'deadline' => $task['deadline_dt_local'],
                 'checklist_id' => $checklist->id,
                 'order' => Task::max('order') + 1,

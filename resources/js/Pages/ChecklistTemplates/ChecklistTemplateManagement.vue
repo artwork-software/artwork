@@ -33,9 +33,10 @@
                                 <p class="ml-1 text-sm font-medium text-secondary my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>
-                                <img class="h-6 w-6 ml-2 my-auto rounded-full flex justify-start"
+                                <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 my-auto rounded-full flex justify-start"
                                      :src="template.user.profile_photo_url"
                                      alt=""/>
+                                <UserTooltip :user="template.user" />
                             </div>
                         </div>
                     </div>
@@ -147,6 +148,7 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import JetDialogModal from "@/Jetstream/DialogModal";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default {
     name: "Checklist Management",
@@ -166,7 +168,8 @@ export default {
         DuplicateIcon,
         Link,
         JetDialogModal,
-        XIcon
+        XIcon,
+        UserTooltip
     },
     data() {
         return {

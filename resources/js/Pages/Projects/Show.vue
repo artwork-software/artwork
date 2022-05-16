@@ -65,9 +65,10 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img :src="project.project_history[0].user.profile_photo_url"
+                    <img :data-tooltip-target="project.project_history[0].user.id" :src="project.project_history[0].user.profile_photo_url"
                          :alt="project.project_history[0].user.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <UserTooltip :user="project.project_history[0].user" />
                     <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0].created_at }}
                     </span>
@@ -126,8 +127,9 @@
                 <div class="flex -mt-4 flex-wrap w-full">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
-                        <img :src="user.profile_photo_url" :alt="user.name"
+                        <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                        <UserTooltip :user="user" />
                     </div>
 
                 </div>
@@ -140,8 +142,9 @@
                         </div>
                     </div>
                     <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
-                        <img :src="user.profile_photo_url" :alt="user.name"
+                        <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="rounded-full h-11 w-11 object-cover"/>
+                        <UserTooltip :user="user" />
                     </div>
                 </div>
 
@@ -363,58 +366,65 @@
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
                                                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                                                         {{ element.name }}</p>
-                                                                    <span
-                                                                        class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                        :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                    <span v-if="!element.done && element.deadline"
+                                                                          class="ml-2 my-auto text-sm subpixel-antialiased"
+                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
+                                                                    <span v-if="element.done" class="ml-2 flex my-auto items-center text-sm text-secondary">
+                                                                        <img :data-tooltip-target="element.done_by_user.id" v-if="element.done_by_user" :src="element.done_by_user.profile_photo_url" :alt="element.done_by_user.name"
+                                                                             class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
+                                                                        <UserTooltip :user="element.done_by_user" />
+                                                                        {{element.done_at}}
+                                                                    </span>
+                                                                    <Menu as="div" class="my-auto relative"
+                                                                          v-show="showMenu === element.id">
+                                                                        <div class="flex">
+                                                                            <MenuButton
+                                                                                class="flex ml-6">
+                                                                                <DotsVerticalIcon
+                                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                                    aria-hidden="true"/>
+                                                                            </MenuButton>
+                                                                        </div>
+                                                                        <transition
+                                                                            enter-active-class="transition ease-out duration-100"
+                                                                            enter-from-class="transform opacity-0 scale-95"
+                                                                            enter-to-class="transform opacity-100 scale-100"
+                                                                            leave-active-class="transition ease-in duration-75"
+                                                                            leave-from-class="transform opacity-100 scale-100"
+                                                                            leave-to-class="transform opacity-0 scale-95">
+                                                                            <MenuItems
+                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                                <div class="py-1">
+                                                                                    <MenuItem v-slot="{ active }">
+                                                                                        <a @click="openEditTaskModal(element)"
+                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                            <PencilAltIcon
+                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                                aria-hidden="true"/>
+                                                                                            Bearbeiten
+                                                                                        </a>
+                                                                                    </MenuItem>
+                                                                                    <MenuItem v-slot="{ active }">
+                                                                                        <a @click="deleteTask(element)"
+                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                            <TrashIcon
+                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                                aria-hidden="true"/>
+                                                                                            Löschen
+                                                                                        </a>
+                                                                                    </MenuItem>
+                                                                                </div>
+                                                                            </MenuItems>
+                                                                        </transition>
+                                                                    </Menu>
                                                                 </div>
-                                                                <div class="ml-10 text-secondary">
+                                                                <div v-if="!element.done" class="ml-10 text-secondary">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
-                                                            <Menu as="div" class="my-auto relative"
-                                                                  v-show="showMenu === element.id">
-                                                                <div class="flex">
-                                                                    <MenuButton
-                                                                        class="flex ml-6">
-                                                                        <DotsVerticalIcon
-                                                                            class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                            aria-hidden="true"/>
-                                                                    </MenuButton>
-                                                                </div>
-                                                                <transition
-                                                                    enter-active-class="transition ease-out duration-100"
-                                                                    enter-from-class="transform opacity-0 scale-95"
-                                                                    enter-to-class="transform opacity-100 scale-100"
-                                                                    leave-active-class="transition ease-in duration-75"
-                                                                    leave-from-class="transform opacity-100 scale-100"
-                                                                    leave-to-class="transform opacity-0 scale-95">
-                                                                    <MenuItems
-                                                                        class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                        <div class="py-1">
-                                                                            <MenuItem v-slot="{ active }">
-                                                                                <a @click="openEditTaskModal(element)"
-                                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <PencilAltIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Bearbeiten
-                                                                                </a>
-                                                                            </MenuItem>
-                                                                            <MenuItem v-slot="{ active }">
-                                                                                <a @click="deleteTask(element)"
-                                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Löschen
-                                                                                </a>
-                                                                            </MenuItem>
-                                                                        </div>
-                                                                    </MenuItems>
-                                                                </transition>
-                                                            </Menu>
+
                                                         </div>
 
                                                     </template>
@@ -532,7 +542,7 @@
                                                            @start="dragging=true" @end="dragging=false"
                                                            @change="updateTaskOrder(checklist.tasks)">
                                                     <template #item="{element}" :key="element.id">
-                                                        <div class="flex" @mouseover="showMenu = element.id"
+                                                        <div class="flex items-center" @mouseover="showMenu = element.id"
                                                              :key="element.id"
                                                              @mouseout="showMenu = null">
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
@@ -544,37 +554,38 @@
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
                                                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                                                         {{ element.name }}</p>
-                                                                    <span
+                                                                    <span v-if="!element.done && element.deadline"
                                                                         class="ml-2 my-auto text-sm subpixel-antialiased"
                                                                         :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
-                                                                </div>
-                                                                <div class="ml-10 text-secondary">
-                                                                    {{ element.description }}
-                                                                </div>
-                                                            </div>
-                                                            <Menu as="div" class="my-auto relative" :key="element.id"
-                                                                  v-show="showMenu === element.id">
-                                                                <div class="flex">
-                                                                    <MenuButton
-                                                                        class="flex ml-6">
-                                                                        <DotsVerticalIcon
-                                                                            class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                            aria-hidden="true"/>
-                                                                    </MenuButton>
-                                                                </div>
-                                                                <transition
-                                                                    enter-active-class="transition ease-out duration-100"
-                                                                    enter-from-class="transform opacity-0 scale-95"
-                                                                    enter-to-class="transform opacity-100 scale-100"
-                                                                    leave-active-class="transition ease-in duration-75"
-                                                                    leave-from-class="transform opacity-100 scale-100"
-                                                                    leave-to-class="transform opacity-0 scale-95">
-                                                                    <MenuItems
-                                                                        class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                        <div class="py-1">
-                                                                            <MenuItem v-slot="{ active }">
+                                                                    <span v-if="element.done" class="ml-2 flex my-auto items-center text-sm text-secondary">
+                                                                        <img :data-tooltip-target="element.done_by_user.id" v-if="element.done_by_user" :src="element.done_by_user.profile_photo_url" :alt="element.done_by_user.name"
+                                                                             class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
+                                                                        <UserTooltip :user="element.done_by_user" />
+                                                                        {{element.done_at}}
+                                                                    </span>
+                                                                    <Menu as="div" class="my-auto relative"
+                                                                          v-show="showMenu === element.id">
+                                                                        <div class="flex">
+                                                                            <MenuButton
+                                                                                class="flex ml-6">
+                                                                                <DotsVerticalIcon
+                                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                                    aria-hidden="true"/>
+                                                                            </MenuButton>
+                                                                        </div>
+                                                                        <transition
+                                                                            enter-active-class="transition ease-out duration-100"
+                                                                            enter-from-class="transform opacity-0 scale-95"
+                                                                            enter-to-class="transform opacity-100 scale-100"
+                                                                            leave-active-class="transition ease-in duration-75"
+                                                                            leave-from-class="transform opacity-100 scale-100"
+                                                                            leave-to-class="transform opacity-0 scale-95">
+                                                                            <MenuItems
+                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                                <div class="py-1">
+                                                                                    <MenuItem v-slot="{ active }">
                                                                                 <span
                                                                                     @click="openEditTaskModal(element)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -583,20 +594,26 @@
                                                                                         aria-hidden="true"/>
                                                                                     Bearbeiten
                                                                                 </span>
-                                                                            </MenuItem>
-                                                                            <MenuItem v-slot="{ active }">
-                                                                                <a @click="deleteTask(element)"
-                                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Löschen
-                                                                                </a>
-                                                                            </MenuItem>
-                                                                        </div>
-                                                                    </MenuItems>
-                                                                </transition>
-                                                            </Menu>
+                                                                                    </MenuItem>
+                                                                                    <MenuItem v-slot="{ active }">
+                                                                                        <a @click="deleteTask(element)"
+                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                            <TrashIcon
+                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                                aria-hidden="true"/>
+                                                                                            Löschen
+                                                                                        </a>
+                                                                                    </MenuItem>
+                                                                                </div>
+                                                                            </MenuItems>
+                                                                        </transition>
+                                                                    </Menu>
+                                                                </div>
+                                                                <div v-if="!element.done" class="ml-10 text-secondary">
+                                                                    {{ element.description }}
+                                                                </div>
+                                                            </div>
+
                                                         </div>
                                                     </template>
                                                 </draggable>
@@ -639,8 +656,9 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                        <img :data-tooltip-target="comment.user.id" :src="comment.user.profile_photo_url" :alt="comment.user.name"
                                              class="rounded-full h-7 w-7 object-cover"/>
+                                        <UserTooltip :user="comment.user" />
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ comment.created_at }}
@@ -686,6 +704,7 @@
         <!-- Projekt bearbeiten Modal-->
         <jet-dialog-modal :show="editingProject" @close="closeEditProjectModal">
             <template #content>
+                <SvgCollection svg-name="stampBrown"></SvgCollection>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Basisdaten bearbeiten
@@ -1217,6 +1236,7 @@
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neue Aufgabe
                     </div>
+                    {{this.taskForm}}
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
@@ -1355,8 +1375,9 @@
                             <span class="text-secondary my-auto text-sm subpixel-antialiased">
                         {{ historyItem.created_at }}:
                     </span>
-                            <img :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <UserTooltip :user="historyItem.user" />
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                 {{ historyItem.description }}
                             </div>
@@ -1457,6 +1478,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import Checkbox from "@/Jetstream/Checkbox";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 import draggable from "vuedraggable";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -1498,7 +1520,8 @@ export default {
         ChevronUpIcon,
         draggable,
         DocumentTextIcon,
-        ChevronRightIcon
+        ChevronRightIcon,
+        UserTooltip
     },
     computed: {
         tabs() {
@@ -1823,6 +1846,7 @@ export default {
             this.addingTask = false;
         },
         addTask() {
+            console.log(this.taskForm.deadline);
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
         },
@@ -1831,6 +1855,7 @@ export default {
             this.closeEditTaskModal();
         },
         openEditTaskModal(task) {
+            console.log(task);
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;
@@ -1943,6 +1968,11 @@ export default {
         },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
+            if(this.doneTaskForm.done === false){
+                task.done_by_user = null;
+                task.done_at = null;
+                task.done_at_dt_local = null;
+            }
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         }
     },

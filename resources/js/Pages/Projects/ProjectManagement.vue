@@ -82,9 +82,10 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                                        <img class="h-9 w-9 rounded-full ring-2 ring-white"
+                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
+                                        <UserTooltip :user="user" />
                                     </div>
                                     <div v-if="project.users.length >= 4" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -186,10 +187,11 @@
                     zuletzt geändert:
                     </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
-                                <img
+                                <img :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
                                     :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
                                     :alt="project.project_history[project.project_history.length -1].user.name"
                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip :user="project.project_history[project.project_history.length -1].user"/>
                                 <span class="ml-2 subpixel-antialiased">
                                     {{ project.project_history[project.project_history.length - 1].created_at }}
                                 </span>
@@ -500,8 +502,9 @@
                             <span class="text-secondary my-auto text-sm subpixel-antialiased">
                         {{ historyItem.created_at }}:
                     </span>
-                            <img :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <UserTooltip :user="historyItem.user" />
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                 {{ historyItem.description }}
                             </div>
@@ -552,6 +555,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -594,7 +598,8 @@ export default defineComponent({
         XCircleIcon,
         DuplicateIcon,
         ChevronRightIcon,
-        Link
+        Link,
+        UserTooltip
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors'],
     methods: {

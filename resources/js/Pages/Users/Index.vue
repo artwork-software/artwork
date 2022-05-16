@@ -38,7 +38,11 @@
                             <div class="flex">
                                 <div class="flex mr-8 items-center">
                                     <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
-                                        <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white" :iconName="department.svg_name" />
+                                        <TeamIconCollection :data-tooltip-target="department.id" class="h-10 w-10 rounded-full ring-2 ring-white" :iconName="department.svg_name" />
+                                        <div :id="department.id" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                            {{department.name}}
+                                            <div class="tooltip-arrow" data-popper-arrow></div>
+                                        </div>
                                     </div>
                                     <div v-if="user.departments.length >= 3" class="my-auto">
                                         <Menu as="div" class="relative">

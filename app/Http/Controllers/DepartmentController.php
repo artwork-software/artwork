@@ -45,8 +45,12 @@ class DepartmentController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
                 ])
             ]),
             'users' => User::all()

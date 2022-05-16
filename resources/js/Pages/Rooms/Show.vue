@@ -101,9 +101,10 @@
                         <span class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Raumadmins festgelegt</span>
                     </div>
                     <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
-                        <img class="h-9 w-9 rounded-full"
+                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                              :src="user.profile_photo_url"
                              alt=""/>
+                        <UserTooltip :user="user" />
                     </div>
                     <button @click="openChangeRoomAdminsModal">
                         <PencilAltIcon class="mt-4 ml-6 h-6 w-6"/>
@@ -314,6 +315,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {useForm} from "@inertiajs/inertia-vue3";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default {
     name: "Show",
@@ -338,7 +340,8 @@ export default {
         CheckIcon,
         ChevronDownIcon,
         DocumentTextIcon,
-        DuplicateIcon
+        DuplicateIcon,
+        UserTooltip
     },
     data() {
         return {

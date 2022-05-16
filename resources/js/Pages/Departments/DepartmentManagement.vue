@@ -37,9 +37,10 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <img class="h-9 w-9 rounded-full ring-2 ring-white"
+                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
+                                        <UserTooltip :user="user" />
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -358,6 +359,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import {forEach} from "lodash";
 import {Inertia} from "@inertiajs/inertia";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 const iconMenuItems = [
     {iconName: 'departmentImagePlaceholder'},
@@ -366,6 +368,7 @@ const iconMenuItems = [
 
 export default defineComponent({
     components: {
+        UserTooltip,
         TeamIconCollection,
         SvgCollection,
         Button,
@@ -471,6 +474,11 @@ export default defineComponent({
             },
             deep: true
         }
+    },
+    mounted() {
+        let ev = document.createEvent("Event");
+        ev.initEvent("DOMContentLoaded", true, true);
+        window.document.dispatchEvent(ev);
     },
     data() {
         return {

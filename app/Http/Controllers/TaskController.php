@@ -98,8 +98,6 @@ class TaskController extends Controller
             }
         }
 
-
-
         if ($authorized == true) {
 
             $checklist->project->project_histories()->create([
@@ -115,6 +113,7 @@ class TaskController extends Controller
 
     protected function createTask(Request $request)
     {
+
         Task::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -162,8 +161,6 @@ class TaskController extends Controller
             'description' => "Kurzbeschreibung von Aufgabe $task->name wurde geändert",
             'deadline' => "Die Deadline der Aufgabe $task->name wurde geändert",
             'done' => $this->get_task_status($task->name, $change),
-            'done_at' => 'Die Aufgabe wurde am ' . Date::now() . ' abgeschlossen',
-            'user_id' => 'Die Aufgabe wurde von ' . Auth::user() . 'abgeschlossen'
         };
     }
 
@@ -172,8 +169,6 @@ class TaskController extends Controller
 
         return match ($changed_field) {
             'description' => "Kurzbeschreibung von Aufgabe $task->name wurde entfernt",
-            'done_at' => 'Die Aufgabe wurde auf Nicht Erledigt gestellt',
-            'user_id' => 'Bisher hat kein Benutzer die Aufgabe erledigt'
         };
 
     }
@@ -189,10 +184,14 @@ class TaskController extends Controller
         foreach ($changed_fields as $change) {
 
             if($changes[$change] === null) {
-                $task->checklist->project->project_histories()->create([
-                    "user_id" => Auth::id(),
-                    "description" => $this->history_description_removed($change, $task)
-                ]);
+
+                if($change != 'done_at' && $change != 'user_id') {
+                    $task->checklist->project->project_histories()->create([
+                        "user_id" => Auth::id(),
+                        "description" => $this->history_description_removed($change, $task)
+                    ]);
+                }
+
             } else {
 
                 if($change === 'deadline') {
@@ -203,8 +202,7 @@ class TaskController extends Controller
                             "description" => $this->history_description_change($change, $task, $original[$change], $changes[$change])
                         ]);
                     }
-
-                } else {
+                } else if($change !== 'done_at' && $change !== 'user_id') {
                     $task->checklist->project->project_histories()->create([
                         "user_id" => Auth::id(),
                         "description" => $this->history_description_change($change, $task, $original[$change], $changes[$change])

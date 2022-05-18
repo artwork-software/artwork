@@ -470,6 +470,36 @@ class ProjectController extends Controller
             'genre_id' => $project->genre_id,
         ]);
 
+        foreach($project->checklists as $checklist) {
+           $replicated_checklist = $checklist->replicate([
+               'name',
+           ])->fill([
+               'user_id' => Auth::id(),
+               'project_id' => $new_project->id
+           ]);
+           $replicated_checklist->save();
+
+           foreach ($checklist->departments as $department) {
+               $replicated_checklist->departments()->attach($department);
+           }
+
+           foreach ($checklist->tasks as $task) {
+               $replicated_task = $task->replicate([
+                   'name',
+                   'description',
+                   'order',
+               ])->fill([
+                   'checklist_id' => $replicated_checklist->id,
+                   'deadline' => null,
+                   'done' => false,
+                   'done_at' => false
+               ]);
+
+               $replicated_task->checklist()->associate($replicated_checklist);
+               $replicated_task->save();
+           }
+        }
+
         $new_project->users()->attach([Auth::id() => ['is_admin' => true]]);
 
         if($project->users) {

@@ -6,6 +6,7 @@ use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
+use App\Models\Task;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -173,6 +174,14 @@ test('users with the permission can duplicate projects', function() {
         'genre_id' => $this->genre->id,
     ]);
 
+    $checklist = Checklist::create([
+        'project_id' => $old_project->id
+    ]);
+
+    Task::factory()->create([
+        'checklist_id' => $checklist->id
+    ]);
+
     $old_project->users()->attach($this->assigned_user);
     $old_project->departments()->attach($this->department);
 
@@ -183,6 +192,12 @@ test('users with the permission can duplicate projects', function() {
 
     $this->assertDatabaseHas('projects', [
         'name' => '(Kopie) TestProject'
+    ]);
+
+    $new_project = Project::where('name', '(Kopie) TestProject')->first();
+
+    $this->assertDatabaseHas('checklists', [
+        'project_id' => $new_project->id
     ]);
 
 

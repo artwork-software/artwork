@@ -216,7 +216,7 @@
                             <div class="mb-8">
                                 <RadioGroup v-model="selected">
                                     <div class="bg-white rounded-md -space-y-px">
-                                        <RadioGroupOption as="template" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
+                                        <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
                                             <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
                                                 <div class="flex items-center text-sm">
                                                     <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
@@ -225,9 +225,10 @@
                                                     <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
                                                 </div>
                                                 <div class="flex flex-1 justify-end">
-                                                    <InformationCircleIcon data-tooltip-target="tooltip-default" class="h-7 w-7 flex text-gray-400"
+                                                    <InformationCircleIcon :data-tooltip-target="role.roleName" class="h-7 w-7 flex text-gray-400"
                                                                            aria-hidden="true"/>
-                                                    <div id="tooltip-default" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                                    <div :id="role.roleName" role="tooltip"
+                                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
                                                         {{role.tooltipText}}
                                                         <div class="tooltip-arrow" data-popper-arrow></div>
                                                     </div>
@@ -330,7 +331,7 @@ import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
     {name: 'Keine Rollenrechte', roleName: "", tooltipText: "LOL"},
-    {name: 'Adminrechte', roleName: "admin", showIcon: true},
+    {name: 'Adminrechte', roleName: "admin", tooltipText: "LOL"},
 ]
 
 const userPermissionCheckboxes = [
@@ -497,7 +498,7 @@ export default defineComponent({
         window.document.dispatchEvent(ev);
     },
     setup() {
-        const selected = ref(roleCheckboxes[0])
+        const selected = ref(roleCheckboxes[0].roleName)
 
         return {
             userPermissionCheckboxes,

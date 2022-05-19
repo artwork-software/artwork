@@ -145,9 +145,11 @@
                                                                     <div
                                                                         class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                         angelegt am {{ element.created_at }} von
-                                                                        <img :src="element.created_by.profile_photo_url"
+                                                                        <img :data-tooltip-target="element.created_by.id"
+                                                                             :src="element.created_by.profile_photo_url"
                                                                              :alt="element.created_by.first_name"
                                                                              class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
+                                                                        <UserTooltip :user="element.created_by"></UserTooltip>
                                                                     </div>
                                                                 </div>
                                                                 <Menu as="div" class="my-auto relative"
@@ -246,10 +248,11 @@
                                                                         <div
                                                                             class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                             angelegt am {{ element.created_at }} von
-                                                                            <img
+                                                                            <img :data-tooltip-target="element.created_by.id"
                                                                                 :src="element.created_by.profile_photo_url"
                                                                                 :alt="element.created_by.first_name"
                                                                                 class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
+                                                                            <UserTooltip :user="element.created_by"></UserTooltip>
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"
@@ -646,9 +649,11 @@ import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import draggable from "vuedraggable";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default defineComponent({
     components: {
+        UserTooltip,
         SvgCollection,
         Button,
         AppLayout,
@@ -674,7 +679,7 @@ export default defineComponent({
         XCircleIcon,
         Link,
         DuplicateIcon,
-        draggable
+        draggable,
     },
     name: 'Area Management',
     props: ['areas'],

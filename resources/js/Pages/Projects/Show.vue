@@ -1887,7 +1887,6 @@ export default {
         },
         duplicateChecklist(checklist) {
             let departmentIds = [];
-            console.log(checklist.tasks[0]);
             this.duplicateForm.name = checklist.name + " (Kopie)";
             this.duplicateForm.tasks = checklist.tasks;
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {

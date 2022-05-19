@@ -175,7 +175,8 @@ test('users with the permission can duplicate projects', function() {
     ]);
 
     $checklist = Checklist::create([
-        'project_id' => $old_project->id
+        'project_id' => $old_project->id,
+        'name' => 'TestChecklist'
     ]);
 
     Task::factory()->create([
@@ -188,7 +189,10 @@ test('users with the permission can duplicate projects', function() {
     $this->auth_user->givePermissionTo('create projects', 'update departments', 'update users');
     $this->actingAs($this->auth_user);
 
-    $this->post("/projects/{$old_project->id}/duplicate")->assertStatus(302);
+    $res = $this->post("/projects/{$old_project->id}/duplicate");
+        //->assertStatus(302);
+
+    //dd($res);
 
     $this->assertDatabaseHas('projects', [
         'name' => '(Kopie) TestProject'
@@ -197,7 +201,8 @@ test('users with the permission can duplicate projects', function() {
     $new_project = Project::where('name', '(Kopie) TestProject')->first();
 
     $this->assertDatabaseHas('checklists', [
-        'project_id' => $new_project->id
+        'project_id' => $new_project->id,
+        'name' => 'TestChecklist'
     ]);
 
 

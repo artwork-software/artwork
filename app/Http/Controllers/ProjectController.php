@@ -471,9 +471,7 @@ class ProjectController extends Controller
         ]);
 
         foreach($project->checklists as $checklist) {
-           $replicated_checklist = $checklist->replicate([
-               'name',
-           ])->fill([
+           $replicated_checklist = $checklist->replicate()->fill([
                'user_id' => Auth::id(),
                'project_id' => $new_project->id
            ]);
@@ -484,11 +482,7 @@ class ProjectController extends Controller
            }
 
            foreach ($checklist->tasks as $task) {
-               $replicated_task = $task->replicate([
-                   'name',
-                   'description',
-                   'order',
-               ])->fill([
+               $replicated_task = $task->replicate()->fill([
                    'checklist_id' => $replicated_checklist->id,
                    'deadline' => null,
                    'done' => false,

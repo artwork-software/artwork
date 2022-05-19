@@ -486,7 +486,7 @@ class ProjectController extends Controller
                    'checklist_id' => $replicated_checklist->id,
                    'deadline' => null,
                    'done' => false,
-                   'done_at' => false
+                   'done_at' => null
                ]);
 
                $replicated_task->checklist()->associate($replicated_checklist);

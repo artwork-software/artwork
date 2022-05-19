@@ -31,20 +31,23 @@
                     <div v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
-                            class="py-5 flex justify-between">
-                            <div class="flex">
-                                <div class="w-full mr-6">
-                                    <div class="flex my-auto">
+                            class="py-5 flex">
+                            <div class="flex w-full">
+                                <div class="mr-6">
+                                    <div class="flex w-full my-auto">
                                         <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex ml-20">
+                            <div class="flex w-full justify-end">
                                 <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
-                                    <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
+                                    <TeamIconCollection :data-tooltip-target="department.name" class="h-9 w-9 rounded-full ring-2 ring-white"
                                                         :iconName="department.svg_name"
                                                         alt=""/>
-
+                                    <div :id="department.name" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                        {{department.name}}
+                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    </div>
                                 </div>
                                 <div v-if="project.departments.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
@@ -66,7 +69,7 @@
                                                     <div
                                                         :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TeamIconCollection
-                                                            class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                            class="h-9 w-9 rounded-full"
                                                             :iconName="department.svg_name"
                                                             alt=""/>
                                                         <span class="ml-4">
@@ -79,13 +82,14 @@
                                     </Menu>
                                 </div>
                             </div>
-                            <div class="flex">
-                                <div class="flex mr-8">
+                            <div class="flex w-full justify-end">
+                                <div class="flex mr-6">
                                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
+                                        <img :data-tooltip-target="user.id"
+                                             class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
-                                        <UserTooltip :user="user" />
+                                        <UserTooltip :user="user"/>
                                     </div>
                                     <div v-if="project.users.length >= 4" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -182,12 +186,13 @@
                             </div>
 
                         </div>
-                        <div class="mb-2 text-secondary flex items-center">
-                    <span class="subpixel-antialiased">
-                    zuletzt geändert:
-                    </span>
+                        <div class="mb-12 text-secondary flex items-center">
+                            <span class="subpixel-antialiased">
+                                  zuletzt geändert:
+                            </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
-                                <img :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
+                                <img
+                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
                                     :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
                                     :alt="project.project_history[project.project_history.length -1].user.name"
                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
@@ -502,9 +507,10 @@
                             <span class="text-secondary my-auto text-sm subpixel-antialiased">
                         {{ historyItem.created_at }}:
                     </span>
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
+                                 :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user" />
+                            <UserTooltip :user="historyItem.user"/>
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                 {{ historyItem.description }}
                             </div>

@@ -48,7 +48,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a @click=""
+                                        <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -124,7 +124,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex -mt-4 flex-wrap w-full">
+                <div class="flex flex-wrap w-full">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
@@ -143,7 +143,7 @@
                     </div>
                     <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
-                             class="rounded-full h-11 w-11 object-cover"/>
+                             class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
                         <UserTooltip :user="user" />
                     </div>
                 </div>
@@ -1357,6 +1357,35 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Delete Project Modal -->
+        <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary text-2xl my-2">
+                        Projekt löschen
+                    </div>
+                    <XIcon @click="closeDeleteProjectModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du das Projekt {{ projectToDelete.name }} löschen willst?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="deleteProject">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeleteProjectModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+
+        </jet-dialog-modal>
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
@@ -1479,6 +1508,7 @@ import Checkbox from "@/Jetstream/Checkbox";
 import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import {Inertia} from "@inertiajs/inertia";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -1579,6 +1609,8 @@ export default {
             showMenu: null,
             showProjectHistory: false,
             commentHovered: null,
+            projectToDelete: {},
+            deletingProject: false,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -1743,6 +1775,19 @@ export default {
                 this.closeAddChecklistModal();
             }
 
+        },
+        openDeleteProjectModal(project) {
+            this.projectToDelete = project;
+            this.deletingProject = true;
+        },
+        closeDeleteProjectModal() {
+            this.deletingProject = false;
+            this.projectToDelete = null;
+        },
+        deleteProject() {
+            this.nameOfDeletedProject = this.projectToDelete.name;
+            Inertia.delete(`/projects/${this.projectToDelete.id}`);
+            this.closeDeleteProjectModal();
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;

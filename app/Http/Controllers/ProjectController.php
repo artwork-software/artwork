@@ -50,8 +50,12 @@ class ProjectController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
                     'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
@@ -546,7 +550,7 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         $project->delete();
-        return Redirect::back()->with('success', 'Project moved to trash');
+        return Redirect::route('projects')->with('success', 'Project moved to trash');
     }
 
     public function forceDelete(int $id) {

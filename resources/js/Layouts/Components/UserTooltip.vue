@@ -42,11 +42,6 @@ export default {
     data() {
         return {}
     },
-    mounted() {
-        let ev = document.createEvent("Event");
-        ev.initEvent("DOMContentLoaded", true, true);
-        window.document.dispatchEvent(ev);
-    },
     methods: {}
 }
 </script>

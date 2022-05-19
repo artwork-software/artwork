@@ -6,7 +6,7 @@
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="text-2xl">Alle Nutzer*innen</h2>
-                            <button @click="openAddUserModal" type="button"
+                            <button data-modal-toggle="invite-user" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
@@ -129,35 +129,29 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <jet-dialog-modal :show="addingUser" @close="closeAddUserModal">
-            <template #content>
-                <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Nutzer*innen einladen
-                    </div>
-                    <XIcon @click="closeAddUserModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
-                        einladen.
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex mt-8">
-                            <div class="relative w-72 mr-4">
-                                <input id="email" v-model="emailInput" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="email" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
-                            </div>
-                            <jet-input-error :message="form.error" class="mt-2"/>
-                            <div class="flex m-2">
+        <flowbite-modal title="Nutzer*innen einladen" modal_id="invite-user" @close="closeAddUserModal">
+            <div class="mx-3">
+                <div class="text-secondary tracking-tight leading-6 sub">
+                    Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
+                    einladen.
+                </div>
+                <div class="mt-4">
+                    <div class="flex mt-8">
+                        <div class="relative w-72 mr-4">
+                            <input id="email" v-model="emailInput" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                            <label for="email" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
+                        </div>
+                        <jet-input-error :message="form.error" class="mt-2"/>
+                        <div class="flex m-2">
                             <button
                                 :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>
-                            </div>
                         </div>
-                        <span v-for="(email,index) in form.user_emails"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                    </div>
+                    <span v-for="(email,index) in form.user_emails"
+                          class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             {{ email }}
                     <button type="button" @click="deleteEmailFromInvitationArray(index)">
                     <span class="sr-only">Email aus Einladung entfernen</span>
@@ -165,36 +159,36 @@
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
-                        <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
+                    <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
 
                         </span>
-                        <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
+                    <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
                                 <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
                         </span>
-                        <Disclosure as="div">
-                            <div class="flex mt-4 mb-10">
-                                <DisclosureButton
-                                    class="mt-3 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black">
-                                    <PlusSmIcon v-if="form.departments.length === 0" class="h-5 w-5" aria-hidden="true"/>
-                                    <ChevronDownIcon v-else class="h-5 w-5" aria-hidden="true"/>
-                                </DisclosureButton>
-                                <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
-                                    <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
-                                    <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
-                                </div>
+                    <Disclosure as="div">
+                        <div class="flex mt-4 mb-10">
+                            <DisclosureButton
+                                class="mt-3 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black">
+                                <PlusSmIcon v-if="form.departments.length === 0" class="h-5 w-5" aria-hidden="true"/>
+                                <ChevronDownIcon v-else class="h-5 w-5" aria-hidden="true"/>
+                            </DisclosureButton>
+                            <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
+                                <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
+                                <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
                             </div>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <DisclosurePanel
-                                    class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <div v-if="departments.length === 0">
-                                        <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
-                                    </div>
-                                    <div v-for="team in departments">
+                        </div>
+                        <transition enter-active-class="transition ease-out duration-100"
+                                    enter-from-class="transform opacity-0 scale-95"
+                                    enter-to-class="transform opacity-100 scale-100"
+                                    leave-active-class="transition ease-in duration-75"
+                                    leave-from-class="transform opacity-100 scale-100"
+                                    leave-to-class="transform opacity-0 scale-95">
+                            <DisclosurePanel
+                                class="origin-top-right absolute overflow-y-auto max-h-48 w-72 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <div v-if="departments.length === 0">
+                                    <span class="text-secondary p-1 ml-4 flex flex-nowrap">Keine Teams zum Zuweisen vorhanden</span>
+                                </div>
+                                <div v-for="team in departments">
                                         <span class="flex "
                                               :class="[team.checked ? 'text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-md subpixel-antialiased']">
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
@@ -205,68 +199,71 @@
                                             {{ team.name }}
                                             </span>
                                         </span>
-                                    </div>
-                                </DisclosurePanel>
-                            </transition>
-                        </Disclosure>
-                        <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                            <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
-                                definieren</h3>
+                                </div>
+                            </DisclosurePanel>
+                        </transition>
+                    </Disclosure>
+                    <div class="pb-5 my-2 border-gray-200 sm:pb-0">
+                        <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
+                            definieren</h3>
 
-                            <div class="mb-8">
-                                <RadioGroup v-model="selected">
-                                    <div class="bg-white rounded-md -space-y-px">
-                                        <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
-                                            <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
-                                                <div class="flex items-center text-sm">
+                        <div class="mb-8">
+                            <RadioGroup v-model="selected">
+                                <div class="bg-white rounded-md -space-y-px">
+                                    <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
+                                        <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
+                                            <div class="flex items-center text-sm">
                                                     <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
                                                         <CheckIcon v-if="checked" class="w-6 h-6 text-white" />
                                                     </span>
-                                                    <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
-                                                </div>
-                                                <div class="flex flex-1 justify-end">
-                                                    <InformationCircleIcon :data-tooltip-target="role.roleName" class="h-7 w-7 flex text-gray-400"
-                                                                           aria-hidden="true"/>
-                                                    <div :id="role.roleName" role="tooltip"
-                                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                                        {{role.tooltipText}}
-                                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                                    </div>
-                                                </div>
+                                                <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
                                             </div>
+                                            <div class="flex flex-1 justify-end">
 
-                                        </RadioGroupOption>
-                                    </div>
-                                </RadioGroup>
-                            </div>
+                                                <div :data-tooltip-target="role.roleName">
+                                                    <InformationCircleIcon  class="h-7 w-7 flex text-gray-400"
+                                                                           aria-hidden="true"/>
+                                                </div>
 
+
+                                                <div :id="role.roleName" role="tooltip"
+                                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-bold text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                                    {{role.tooltipText}}
+                                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+
+                                    </RadioGroupOption>
+                                </div>
+                            </RadioGroup>
                         </div>
-                        <div v-on:click="showUserPermissions = !showUserPermissions">
-                            <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
-                                Nutzer*innen
-                                <ChevronUpIcon v-if="showUserPermissions"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                            </h2>
-                        </div>
-                        <div v-if="showUserPermissions" class="flex flex-col">
-                            <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
-                                      :item=permission />
-                        </div>
+
                     </div>
-
-                    <button :class="[form.user_emails.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="addUser" :disabled="form.user_emails.length === 0">
-                        Einladen
-                    </button>
+                    <div v-on:click="showUserPermissions = !showUserPermissions">
+                        <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
+                            Nutzer*innen
+                            <ChevronUpIcon v-if="showUserPermissions"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                        </h2>
+                    </div>
+                    <div v-if="showUserPermissions" class="flex flex-col">
+                        <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
+                                  :item=permission />
+                    </div>
                 </div>
 
-            </template>
-
-        </jet-dialog-modal>
+                <button :class="[form.user_emails.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                        class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        @click="addUser" :disabled="form.user_emails.length === 0">
+                    Einladen
+                </button>
+            </div>
+        </flowbite-modal>
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
@@ -330,8 +327,8 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: "", tooltipText: "LOL"},
-    {name: 'Adminrechte', roleName: "admin", tooltipText: "LOL"},
+    {name: 'Keine Rollenrechte', roleName: "no-roles", tooltipText: "Dwight Schrute"},
+    {name: 'Adminrechte', roleName: "admin", tooltipText: "MIchael Scott"},
 ]
 
 const userPermissionCheckboxes = [
@@ -359,9 +356,11 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import { Link } from "@inertiajs/inertia-vue3";
+import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 
 export default defineComponent({
     components: {
+        FlowbiteModal,
         AppLayout,
         DotsVerticalIcon,
         PlusSmIcon,
@@ -491,11 +490,6 @@ export default defineComponent({
         getEditHref(user) {
             return route('user.edit', {user: user.id});
         }
-    },
-    mounted() {
-        let ev = document.createEvent("Event");
-        ev.initEvent("DOMContentLoaded", true, true);
-        window.document.dispatchEvent(ev);
     },
     setup() {
         const selected = ref(roleCheckboxes[0].roleName)

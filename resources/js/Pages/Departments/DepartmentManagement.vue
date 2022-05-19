@@ -475,11 +475,6 @@ export default defineComponent({
             deep: true
         }
     },
-    mounted() {
-        let ev = document.createEvent("Event");
-        ev.initEvent("DOMContentLoaded", true, true);
-        window.document.dispatchEvent(ev);
-    },
     data() {
         return {
             addingTeam: false,

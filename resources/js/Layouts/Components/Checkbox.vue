@@ -41,11 +41,6 @@ export default {
             checkedStyle: this.item.checked,
         }
     },
-    mounted() {
-        let ev = document.createEvent("Event");
-        ev.initEvent("DOMContentLoaded", true, true);
-        window.document.dispatchEvent(ev);
-    },
     methods: {
         changeStyle() {
             this.checkedStyle = !this.checkedStyle

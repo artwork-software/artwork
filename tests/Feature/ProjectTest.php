@@ -202,7 +202,13 @@ test('users with the permission can duplicate projects', function() {
 
     $this->assertDatabaseHas('checklists', [
         'project_id' => $new_project->id,
-        'name' => 'TestChecklist'
+        'name' => 'TestChecklist',
+        'user_id' => null
+    ]);
+
+    $this->assertDatabaseHas('project_user', [
+        'project_id' => $new_project->id,
+        'user_id' => $this->assigned_user->id
     ]);
 
 

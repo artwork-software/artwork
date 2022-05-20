@@ -476,7 +476,6 @@ class ProjectController extends Controller
 
         foreach($project->checklists as $checklist) {
            $replicated_checklist = $checklist->replicate()->fill([
-               'user_id' => Auth::id(),
                'project_id' => $new_project->id
            ]);
            $replicated_checklist->save();

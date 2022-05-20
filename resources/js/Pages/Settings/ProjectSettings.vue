@@ -15,8 +15,7 @@
             </div>
             <div class="grid grid-cols-2 gap-4">
                 <!-- Genres -->
-                <div>
-                    <div class="mt-8">
+                    <div class="mt-8 col-span-1">
                         <div class="relative flex mr-4">
                             <input id="genre" v-model="genreInput" type="text"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -48,10 +47,9 @@
                         </span>
                         </div>
                     </div>
-                </div>
                 <!-- Sectors -->
                 <div>
-                    <div class="mt-8">
+                    <div class="mt-8 col-span-1">
                         <div class="relative flex mr-4">
                             <input id="sector" v-model="sectorInput" type="text"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -208,7 +206,8 @@
                                                                             :iconName="item.iconName"/>
                                                 </div>
                                             </div>
-                                            <div v-else>
+                                            <div v-else class="text-secondary p-2">
+                                                {{ item.iconName }} schon vergeben
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -272,8 +271,8 @@
                                                                             :iconName="item.iconName"/>
                                                 </Link>
                                             </div>
-                                            <div v-else>
-                                                {{ item.iconName }} bereits genutzt
+                                            <div v-else class="text-secondary">
+                                                {{ item.iconName }} schon vergeben
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -409,8 +408,8 @@ export default {
                     taken: this.takenCategoryColors.includes('orange'),
                 },
                 {
-                    iconName: 'turqoise',
-                    taken: this.takenCategoryColors.includes('turqoise'),
+                    iconName: 'turquoise',
+                    taken: this.takenCategoryColors.includes('turquoise'),
                 },
                 {
                     iconName: 'green',

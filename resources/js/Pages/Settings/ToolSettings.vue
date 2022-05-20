@@ -22,8 +22,8 @@
                     Logo groß (Upload per Klick)
                 </label>
 
-                <div class="flex items-center">
-                    <div class="flex justify-center border-2 w-80 cursor-pointer border-gray-300 border-dashed rounded-md p-2" @click="selectNewBigLogo">
+                <div class="grid grid-cols-6 gap-x-12 items-center">
+                    <div class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 border-dashed rounded-md p-2" @click="selectNewBigLogo">
                         <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo"
                              class="rounded-md h-40 w-40 object-cover">
                         <input type="file" class="hidden"
@@ -46,7 +46,7 @@
                                    @change="updateBigLogoPreview">
                         </div>
                     </div>
-                    <div v-if="$page.props.can.show_hints" class="flex items-center">
+                    <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
                             class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
@@ -58,8 +58,8 @@
                 <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
                     Logo klein (Upload per Klick)
                 </label>
-                <div class="flex items-center">
-                    <div class="flex justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewSmallLogo">
+                <div class="grid grid-cols-6 gap-x-12 items-center">
+                    <div class="flex col-span-2 justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewSmallLogo">
                         <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo"
                              class="rounded-md h-40 w-40 object-cover">
                         <input type="file" class="hidden"
@@ -83,7 +83,7 @@
 
                         </div>
                     </div>
-                    <div v-if="$page.props.can.show_hints" class="flex items-center">
+                    <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
                             class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
@@ -94,8 +94,8 @@
                 <div>
 
                     <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased"> Illustration (Upload per Klick) </label>
-                    <div class="flex">
-                    <div class="flex justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewBanner">
+                    <div class="grid grid-cols-6 gap-x-12 items-center">
+                    <div class="flex col-span-2 w-full justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewBanner">
                         <div v-show="!bannerPreview" class="space-y-1 text-center">
                             <div v-if="$page.props.banner === null">
                                 <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
@@ -122,7 +122,7 @@
                                    @change="updateBannerPreview">
                         </div>
                     </div>
-                        <div v-if="$page.props.can.show_hints" class="flex items-center">
+                        <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                             <span
                                 class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade deine Illustration als .svg, .png, .gif oder .jpg hoch.

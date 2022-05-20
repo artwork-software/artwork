@@ -46,6 +46,7 @@
                         <div class="flex w-full" v-for="task in tasksToDisplay">
                             <div class="flex w-full flex-wrap" :key="task.id">
                                 <div class="flex w-full grid grid-cols-6">
+
                                     <div class="flex w-full col-span-5 w-full">
                                         <input @change="updateTaskStatus(task)" v-model="task.done"
                                                type="checkbox"
@@ -54,8 +55,8 @@
                                            :class="task.done ? 'text-secondary' : 'text-primary'">
                                             {{ task.name }}</p>
                                         <span v-if="!task.done && task.deadline"
-                                            class="ml-2 my-auto text-sm subpixel-antialiased"
-                                            :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                              class="ml-2 my-auto text-sm subpixel-antialiased"
+                                              :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                 task.deadline
                                             }}</span>
 
@@ -84,6 +85,7 @@
                                         </span>
                                     </Link>
                                 </div>
+
                                 <div class="ml-10 my-3 text-secondary">
                                     {{ task.description }}
                                 </div>
@@ -117,11 +119,12 @@ export default {
         sortedTasksDeadline: function () {
             let taskCopy = this.tasks.slice();
             let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
+
             function compare(a, b) {
-                if(b.deadline === null){
+                if (b.deadline === null) {
                     return -1;
                 }
-                if(a.deadline === null){
+                if (a.deadline === null) {
                     return 1;
                 }
                 if (a.deadline < b.deadline)

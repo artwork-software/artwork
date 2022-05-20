@@ -358,12 +358,7 @@ export default {
             successDescription: "",
             roomForm: this.$inertia.form({
                 _method: 'PUT',
-                name: this.room.name,
                 room_admins: this.room.room_admins,
-                description: this.room.description,
-                temporary: this.room.temporary,
-                start_date: this.room.start_date,
-                end_date: this.room.end_date,
             }),
             editRoomForm: useForm({
                 name: '',
@@ -439,7 +434,6 @@ export default {
         },
         editRoomAdmins() {
             this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-            this.showSuccessButton();
             this.closeChangeRoomAdminsModal();
         },
         addUserToRoomAdminsArray(user) {
@@ -461,6 +455,8 @@ export default {
             this.editRoomForm = room;
             if(room.temporary === 1){
                 this.editRoomForm.temporary = true;
+                this.editRoomForm.start_date = room.start_date_dt_local;
+                this.editRoomForm.end_date = room.end_date_dt_local;
             }
             this.showEditRoomModal = true;
         },

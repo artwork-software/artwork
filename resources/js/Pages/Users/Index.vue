@@ -241,6 +241,7 @@
                         </div>
 
                     </div>
+                    <div v-if="selected !== 'admin'">
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
                             Nutzer*innen
@@ -253,6 +254,7 @@
                         <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
                                   :item=permission />
                     </div>
+                </div>
                 </div>
 
                 <button :class="[form.user_emails.length === 0 ?
@@ -327,8 +329,8 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: "no-roles", tooltipText: "Dwight Schrute"},
-    {name: 'Adminrechte', roleName: "admin", tooltipText: "MIchael Scott"},
+    {name: 'Keine Rollenrechte', roleName: "no-roles", tooltipText: "Keine vorausgewählten Rechte"},
+    {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lege- und Schreibrechte - weitere Einstellungen entfallen"},
 ]
 
 const userPermissionCheckboxes = [

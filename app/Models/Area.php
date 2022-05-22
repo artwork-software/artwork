@@ -20,6 +20,11 @@ class Area extends Model
         return $this->hasMany(Room::class);
     }
 
+    public function trashed_rooms()
+    {
+        return $this->rooms()->onlyTrashed();
+    }
+
     public function prunable()
     {
         return static::where('created_at', '<=', now()->subMonth());

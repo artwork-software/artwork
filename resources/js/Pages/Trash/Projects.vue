@@ -98,16 +98,6 @@
                             <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                               aria-hidden="true"/>
                         </MenuButton>
-                        <div v-if="$page.props.can.show_hints && index === 0"
-                             class="absolute flex w-40 ml-6">
-                            <div>
-                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                            </div>
-                            <div class="flex">
-                                                <span
-                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Projekte</span>
-                            </div>
-                        </div>
                     </div>
                     <transition enter-active-class="transition ease-out duration-100"
                                 enter-from-class="transform opacity-0 scale-95"

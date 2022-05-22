@@ -96,8 +96,12 @@ export default {
                     href: route('projects.trashed')
                 },
                 'Trash/Areas': {
-                    name: 'Räume & Areale',
+                    name: 'Areale',
                     href: route('areas.trashed')
+                },
+                'Trash/Rooms': {
+                    name: 'Räume',
+                    href: route('rooms.trashed')
                 }
             }
         }

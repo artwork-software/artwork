@@ -163,17 +163,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/areas/{area}/duplicate', [AreaController::class, 'duplicate'])->name('areas.duplicate');
     Route::patch('/areas/{area}', [AreaController::class, 'update'])->name('areas.update');
     Route::delete('/areas/{area}', [AreaController::class, 'destroy']);
+    //Trash
     Route::delete('/areas/{id}/force', [AreaController::class, 'forceDelete'])->name('areas.force');
     Route::patch('/areas/{id}/restore', [AreaController::class, 'restore'])->name('areas.restore');
 
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
+    Route::get('/rooms/trashed', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
-    Route::delete('/rooms/{room}/force', [RoomController::class, 'forceDelete']);
+    //Trash
+    Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
+    Route::patch('/rooms/{id}/restore', [RoomController::class, 'restore'])->name('rooms.restore');
 
     //RoomFiles
     Route::post('/rooms/{room}/files', [RoomFileController::class, 'store']);

@@ -18,11 +18,6 @@
                         </div>
                         <div class="flex items-center">
 
-                            <Link class="inset-y-0 mr-3"
-                                  :href="route('projects.trashed')">
-                                <TrashIcon class="h-5 w-5" aria-hidden="true"/>
-                            </Link>
-
                             <div class="inset-y-0 mr-3 pointer-events-none">
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>

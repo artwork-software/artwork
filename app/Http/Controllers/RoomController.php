@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Area;
 use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
@@ -128,6 +129,30 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
+    public function getTrashed()
+    {
+        return inertia('Trash/Rooms', [
+            'trashed_rooms' => Area::paginate(10)->through(fn($area) => [
+                'id' => $area->id,
+                'name' => $area->name,
+                'rooms' => $area->trashed_rooms->map(fn($room) => [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'description' => $room->description,
+                    'temporary' => (bool)$room->temporary,
+                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
+                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
+                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                    'created_by' => User::where('id', $room->user_id)->first(),
+                    'room_admins' => $room->room_admins->map(fn($room_admin) => [
+                        'id' => $room_admin->id,
+                        'profile_photo_url' => $room_admin->profile_photo_url
+                    ])
+                ])
+            ])
+        ]);
+    }
+
     /**
      * Remove the specified resource from storage.
      *
@@ -140,9 +165,15 @@ class RoomController extends Controller
         return Redirect::route('areas.management')->with('success', 'Room moved to trash');
     }
 
-    public function forceDelete(Room $room) {
-
+    public function forceDelete(int $id)
+    {
+        $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
-        return Redirect::route('areas.management')->with('success', 'Room deleted permanently');
+    }
+
+    public function restore(int $id)
+    {
+        $room = Room::onlyTrashed()->findOrFail($id);
+        $room->restore();
     }
 }

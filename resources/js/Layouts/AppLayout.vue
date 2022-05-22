@@ -114,6 +114,12 @@
                     <div class="flex-1 px-4 flex justify-end">
                         <div class="ml-4 flex items-center md:ml-6">
                             <div class="flex items-center mr-6">
+
+                                <Link class="inset-y-0 mr-3"
+                                      :href="getTrashRoute()">
+                                    <TrashIcon class="h-5 w-5" aria-hidden="true"/>
+                                </Link>
+
                                 <Switch @click="toggle_hints()"
                                         :class="[$page.props.can.show_hints ?
                                         'bg-success' :
@@ -209,6 +215,7 @@ import {
     ClipboardCheckIcon,
     ChevronDownIcon,
     ChevronUpIcon,
+    TrashIcon
 } from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
 import {Link} from "@inertiajs/inertia-vue3";
@@ -244,7 +251,8 @@ export default {
         ChevronDownIcon,
         ChevronUpIcon,
         Link,
-        Switch
+        Switch,
+        TrashIcon
     },
     computed: {
         managementNavigation() {
@@ -295,6 +303,19 @@ export default {
         }
     },
     methods: {
+        getTrashRoute() {
+
+            if(this.$page.url === '/areas') {
+
+                return route('areas.trashed')
+
+            } else {
+
+                return route('projects.trashed')
+
+            }
+
+        },
         isCurrent(routes) {
             for (let url of routes) {
                 if (this.$page.url === url) {

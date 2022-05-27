@@ -153,6 +153,30 @@ class RoomController extends Controller
         ]);
     }
 
+//    public function getRoomBelegung() {
+//
+//        $period = [ ['date' => Carbon::now()], [['date' => Carbon::now()]];
+//
+//        return inertia('Trash/Rooms', [
+//            'rooms' => Room::all()->with('events')->get()->map(fn ($room) => [
+//                'name' => $room->name,
+//                'days' => $period->map(fn ($day) => [
+//                    'weekday' => '',
+//                    'date' => '20.05.2022',
+//                    'events' => $room->events()->where('start_date', $day['date'])
+//                ])
+//            ])
+//        ]);
+//
+//        room in rooms
+//            room in rooms[0].days
+//
+//        room in  rooms
+//           kachel in rooms.days
+//             kachel.events
+//
+//    }
+
     /**
      * Remove the specified resource from storage.
      *

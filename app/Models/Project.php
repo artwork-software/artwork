@@ -25,6 +25,10 @@ class Project extends Model
         return $this->belongsToMany(User::class, 'project_user', 'project_id')->withPivot('is_admin', 'is_manager');
     }
 
+    public function events() {
+        return $this->hasMany(event::class);
+    }
+
     public function departments() {
         return $this->belongsToMany(Department::class);
     }

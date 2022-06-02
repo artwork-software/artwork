@@ -121,20 +121,19 @@ test('users can only view projects they are assigned to', function () {
     $response->assertStatus(200);
 });
 
-test('users with the permission can update projects', function () {
+test('users with the permission can update projects and change the role of assigned users', function () {
 
-    $this->auth_user->givePermissionTo('update users', 'update departments');
+    $this->auth_user->givePermissionTo('update users','update projects', 'update departments');
     $this->actingAs($this->auth_user);
 
     $this->project->users()->attach($this->auth_user, ['is_admin' => true]);
-    $this->auth_user->projects()->attach($this->project, ['is_admin' => true]);
 
     $this->patch("/projects/{$this->project->id}", [
         'name' => 'TestProject',
         'description' => 'a description',
         'number_of_participants' => '1000-2000',
         'cost_center' => 'DTH CT1',
-        'assigned_user_ids' => [$this->assigned_user->id => ['is_admin' => true]],
+        'assigned_user_ids' => [$this->auth_user->id => ['is_admin' => false]],
         'assigned_departments' => [$this->department]
     ]);
 
@@ -151,13 +150,58 @@ test('users with the permission can update projects', function () {
 
     $this->assertDatabaseHas('project_user', [
         'project_id' => $project->id,
-        'user_id' => $this->assigned_user->id,
-        'is_admin' => 1
+        'user_id' => $this->auth_user->id,
+        'is_admin' => 0
     ]);
 
     $this->assertDatabaseHas('department_project', [
         'project_id' => $project->id,
         'department_id' => $this->department->id
+    ]);
+
+
+});
+
+test('users with the permission can update projects and delete assigned users', function () {
+
+    $this->auth_user->givePermissionTo('update users','update projects', 'update departments');
+    $this->actingAs($this->auth_user);
+
+    $this->project->users()->attach($this->auth_user, ['is_admin' => true]);
+
+    $this->patch("/projects/{$this->project->id}", [
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
+        'assigned_user_ids' => [],
+        'assigned_departments' => [$this->department]
+    ]);
+
+    $this->assertDatabaseMissing('project_user', [
+        'user_id' => $this->auth_user->id
+    ]);
+});
+
+test('users with the permission can update projects and make assigned users to admins', function () {
+
+    $this->auth_user->givePermissionTo('update users','update projects', 'update departments');
+    $this->actingAs($this->auth_user);
+
+    $this->project->users()->attach($this->auth_user, ['is_admin' => false]);
+
+    $res = $this->patch("/projects/{$this->project->id}", [
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
+        'assigned_user_ids' => [$this->auth_user->id => ['is_admin' => true]],
+        'assigned_departments' => [$this->department]
+    ]);
+
+    $this->assertDatabaseHas('project_user', [
+        'user_id' => $this->auth_user->id,
+        'is_admin' => 1
     ]);
 
 

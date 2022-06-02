@@ -431,6 +431,10 @@ class ProjectController extends Controller
 
         $project->save();
 
+        if(empty($request->assigned_user_ids)) {
+            $project->users()->detach();
+        }
+
         if($request->assigned_user_ids) {
             if (Auth::user()->can('update users')) {
                 $project->users()->sync(

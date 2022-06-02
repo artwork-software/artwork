@@ -91,7 +91,7 @@ test('users who arent assigned to a checklist cant create tasks on it', function
 });
 
 
-test('users that are assigned to a checklist can create tasks for it', function () {
+test('users that are assigned to a checklist can create tasks without a deadline for it', function () {
 
     $this->project->users()->attach($this->auth_user);
     $this->assigned_department->users()->attach($this->auth_user);
@@ -115,6 +115,35 @@ test('users that are assigned to a checklist can create tasks for it', function 
         'description' => "This is a description",
         'checklist_id' => $checklist->id,
         'deadline' => null
+    ]);
+
+});
+
+test('users that are assigned to a checklist can create tasks with a deadline for it', function () {
+
+    $this->project->users()->attach($this->auth_user);
+    $this->assigned_department->users()->attach($this->auth_user);
+
+    $checklist = Checklist::factory()->create([
+        'project_id' => $this->project->id
+    ]);
+
+    $checklist->departments()->attach($this->assigned_department);
+    $this->actingAs($this->auth_user);
+
+    $this->post('/tasks', [
+        'name' => 'TestTask',
+        'description' => "This is a description",
+        'checklist_id' => $checklist->id,
+        'deadline' => '2022-05-28T17:48',
+        'is_Dirty' => true
+    ]);
+
+    $this->assertDatabaseHas('tasks', [
+        'name' => 'TestTask',
+        'description' => "This is a description",
+        'checklist_id' => $checklist->id,
+        'deadline' => '2022-05-28T17:48'
     ]);
 
 });

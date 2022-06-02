@@ -40,6 +40,10 @@ class Room extends Model
         return $this->hasMany(RoomFile::class);
     }
 
+    public function events() {
+        return $this->hasMany(Event::class);
+    }
+
     public function prunable()
     {
         return static::where('created_at', '<=', now()->subMonth());

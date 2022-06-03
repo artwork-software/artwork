@@ -183,6 +183,27 @@ test('users with the permission can update projects and delete assigned users', 
     ]);
 });
 
+test('users with the permission can update projects and delete project managers', function () {
+
+    $this->auth_user->givePermissionTo('update users','update projects', 'update departments');
+    $this->actingAs($this->auth_user);
+
+    $this->project->users()->attach($this->auth_user, ['is_manager' => true]);
+
+    $this->patch("/projects/{$this->project->id}", [
+        'name' => 'TestProject',
+        'description' => 'a description',
+        'number_of_participants' => '1000-2000',
+        'cost_center' => 'DTH CT1',
+        'assigned_user_ids' => [],
+        'assigned_departments' => [$this->department]
+    ]);
+
+    $this->assertDatabaseMissing('project_user', [
+        'user_id' => $this->auth_user->id
+    ]);
+});
+
 test('users with the permission can update projects and make assigned users to admins', function () {
 
     $this->auth_user->givePermissionTo('update users','update projects', 'update departments');

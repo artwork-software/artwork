@@ -10,8 +10,7 @@ class Category extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'svg_name'
+        'name'
     ];
 
     public function projects()

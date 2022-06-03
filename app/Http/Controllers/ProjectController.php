@@ -75,13 +75,13 @@ class ProjectController extends Controller
                         'email' => $user->email,
                         'profile_photo_url' => $user->profile_photo_url
                     ]),
-                ])
+                ]),
+                'events' => $project->events
             ]),
             'users' => User::all(),
             'categories' => Category::paginate(10)->through(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
-                'svg_name' => $category->svg_name,
                 'projects' => $category->projects
             ]),
             'genres' => Genre::paginate(10)->through(fn($genre) => [
@@ -165,7 +165,7 @@ class ProjectController extends Controller
             "description" => "Projekt angelegt"
         ]);
 
-        return Redirect::route('projects')->with('success', 'Project created.');
+        return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
     /**
@@ -274,7 +274,6 @@ class ProjectController extends Controller
             'categories' => Category::paginate(10)->through(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
-                'svg_name' => $category->svg_name,
                 'projects' => $category->projects
             ]),
             'genres' => Genre::paginate(10)->through(fn($genre) => [

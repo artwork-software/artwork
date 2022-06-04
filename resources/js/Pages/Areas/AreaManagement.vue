@@ -21,12 +21,6 @@
                                                 class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
                                         </div>
                                     </div>
-                                    <div class="flex items-center">
-                                        <Link class="inset-y-0 mr-3"
-                                              :href="route('areas.trashed')">
-                                            <TrashIcon class="h-5 w-5" aria-hidden="true"/>
-                                        </Link>
-                                    </div>
 
                                 </div>
                             </div>

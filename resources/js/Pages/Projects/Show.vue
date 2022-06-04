@@ -65,10 +65,11 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img :data-tooltip-target="project.project_history[0].user.id" :src="project.project_history[0].user.profile_photo_url"
+                    <img :data-tooltip-target="project.project_history[0].user.id"
+                         :src="project.project_history[0].user.profile_photo_url"
                          :alt="project.project_history[0].user.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip :user="project.project_history[0].user" />
+                    <UserTooltip :user="project.project_history[0].user"/>
                     <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0].created_at }}
                     </span>
@@ -129,7 +130,7 @@
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                        <UserTooltip :user="user" />
+                        <UserTooltip :user="user"/>
                     </div>
 
                 </div>
@@ -144,7 +145,7 @@
                     <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
-                        <UserTooltip :user="user" />
+                        <UserTooltip :user="user"/>
                     </div>
                 </div>
 
@@ -360,7 +361,8 @@
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
-                                                                    <input @change="updateTaskStatus(element)" v-model="element.done"
+                                                                    <input @change="updateTaskStatus(element)"
+                                                                           v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
@@ -371,11 +373,16 @@
                                                                           :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
-                                                                    <span v-if="element.done" class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img :data-tooltip-target="element.done_by_user.id" v-if="element.done_by_user" :src="element.done_by_user.profile_photo_url" :alt="element.done_by_user.name"
-                                                                             class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user" />
-                                                                        {{element.done_at}}
+                                                                    <span v-if="element.done"
+                                                                          class="ml-2 flex my-auto items-center text-sm text-secondary">
+                                                                        <img
+                                                                            :data-tooltip-target="element.done_by_user.id"
+                                                                            v-if="element.done_by_user"
+                                                                            :src="element.done_by_user.profile_photo_url"
+                                                                            :alt="element.done_by_user.name"
+                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
+                                                                        <UserTooltip :user="element.done_by_user"/>
+                                                                        {{ element.done_at }}
                                                                     </span>
                                                                     <Menu as="div" class="my-auto relative"
                                                                           v-show="showMenu === element.id">
@@ -542,28 +549,35 @@
                                                            @start="dragging=true" @end="dragging=false"
                                                            @change="updateTaskOrder(checklist.tasks)">
                                                     <template #item="{element}" :key="element.id">
-                                                        <div class="flex items-center" @mouseover="showMenu = element.id"
+                                                        <div class="flex items-center"
+                                                             @mouseover="showMenu = element.id"
                                                              :key="element.id"
                                                              @mouseout="showMenu = null">
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full" :key="element.id">
-                                                                    <input @change="updateTaskStatus(element)" v-model="element.done"
+                                                                    <input @change="updateTaskStatus(element)"
+                                                                           v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
                                                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
-                                                                        class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                        :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                          class="ml-2 my-auto text-sm subpixel-antialiased"
+                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
-                                                                    <span v-if="element.done" class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img :data-tooltip-target="element.done_by_user.id" v-if="element.done_by_user" :src="element.done_by_user.profile_photo_url" :alt="element.done_by_user.name"
-                                                                             class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user" />
-                                                                        {{element.done_at}}
+                                                                    <span v-if="element.done"
+                                                                          class="ml-2 flex my-auto items-center text-sm text-secondary">
+                                                                        <img
+                                                                            :data-tooltip-target="element.done_by_user.id"
+                                                                            v-if="element.done_by_user"
+                                                                            :src="element.done_by_user.profile_photo_url"
+                                                                            :alt="element.done_by_user.name"
+                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
+                                                                        <UserTooltip :user="element.done_by_user"/>
+                                                                        {{ element.done_at }}
                                                                     </span>
                                                                     <Menu as="div" class="my-auto relative"
                                                                           v-show="showMenu === element.id">
@@ -656,9 +670,10 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img :data-tooltip-target="comment.user.id" :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                        <img :data-tooltip-target="comment.user.id"
+                                             :src="comment.user.profile_photo_url" :alt="comment.user.name"
                                              class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="comment.user" />
+                                        <UserTooltip :user="comment.user"/>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ comment.created_at }}
@@ -680,20 +695,29 @@
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
-                        <div @dragover.prevent @drop.stop.prevent="uploadDocument($event)" class="mb-8 w-full flex justify-center items-center
-                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2">
-                            <p class="text-secondary">Zugelassene Formate:
-                                <br>.jpg, .pdf, .docx, .xls
+                        <input
+                            @change="uploadChosenDocuments"
+                            class="hidden"
+                            ref="project_files"
+                            id="file"
+                            type="file"
+                            multiple
+                        />
+                        <div @click="selectNewFiles" @dragover.prevent
+                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
+                            <p class="text-secondary text-center">Ziehe Dokumente hier her
+                                <br>oder klicke ins Feld
                             </p>
                         </div>
                         <jet-input-error :message="uploadDocumentFeedback"/>
                         <div class="space-y-1">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
-                                <DocumentTextIcon class="h-5 w-5" aria-hidden="true"/>
-                                <p @click="downloadFile(project_file)" class="ml-2">{{ project_file.name }}</p>
+                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
+                                <p @click="downloadFile(project_file)" class="ml-2 flex-grow truncate">{{ project_file.name }}</p>
                                 <XCircleIcon @click="removeFile(project_file)"
-                                             class="ml-2 hidden group-hover:block h-5 w-5 text-error"
+                                             class="ml-2 hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                              aria-hidden="true"/>
                             </div>
                         </div>
@@ -1236,7 +1260,7 @@
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neue Aufgabe
                     </div>
-                    {{this.taskForm}}
+                    {{ this.taskForm }}
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
@@ -1404,9 +1428,10 @@
                             <span class="text-secondary my-auto text-sm subpixel-antialiased">
                         {{ historyItem.created_at }}:
                     </span>
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
+                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
+                                 :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user" />
+                            <UserTooltip :user="historyItem.user"/>
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                 {{ historyItem.description }}
                             </div>
@@ -1675,6 +1700,9 @@ export default {
         }
     },
     methods: {
+        selectNewFiles() {
+            this.$refs.project_files.click();
+        },
         updateTaskOrder(tasks) {
 
             tasks.map((task, index) => {
@@ -1700,26 +1728,25 @@ export default {
             link.target = '_blank';
             link.click();
         },
-        uploadDocument(event) {
+        validateTypeAndUpload(files) {
             this.uploadDocumentFeedback = "";
-            const allowedTypes = [
-                "image/jpeg",
-                "application/pdf",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "application/vnd.ms-excel",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
             ]
-
-            for (let file of [...event.dataTransfer.files]) {
-                if (allowedTypes.includes(file.type)) {
-
-                    this.uploadDocumentToProject(file)
-
+            for (let file of files) {
+                if (forbiddenTypes.includes(file.type) || file.type.match('video.*')) {
+                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.uploadDocumentFeedback = "Dieses Dateiformat wird nicht unterstützt"
-
+                    this.uploadDocumentToProject(file)
                 }
             }
+        },
+        uploadChosenDocuments(event) {
+            this.validateTypeAndUpload([...event.target.files])
+        },
+        uploadDraggedDocuments(event) {
+            this.validateTypeAndUpload([...event.dataTransfer.files])
         },
         uploadDocumentToProject(file) {
             this.documentForm.file = file
@@ -2006,13 +2033,13 @@ export default {
             this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
             this.closeEditChecklistModal();
         },
-        createTemplateFromChecklist(checklist){
+        createTemplateFromChecklist(checklist) {
             this.templateForm.checklist_id = checklist.id;
             this.templateForm.post(route('checklist_templates.store'));
         },
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
-            if(this.doneTaskForm.done === false){
+            if (this.doneTaskForm.done === false) {
                 task.done_by_user = null;
                 task.done_at = null;
                 task.done_at_dt_local = null;

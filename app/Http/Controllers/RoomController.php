@@ -44,7 +44,7 @@ class RoomController extends Controller
     public function show(Room $room)
     {
         $events = [];
-        if($room->room_admins()->contains(Auth::id())) {
+        if($room->room_admins->contains(Auth::id())) {
             $events = $room->events;
         }
         return inertia('Rooms/Show', [

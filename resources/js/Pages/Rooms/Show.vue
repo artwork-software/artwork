@@ -74,20 +74,28 @@
                         <div class="flex w-full mt-6 items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
-                        <div @dragover.prevent @drop.stop.prevent="uploadDocument($event)" class="mb-8 w-full flex justify-center items-center
-                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2">
-                            <p class="text-secondary">Zugelassene Formate:
-                                <br>.jpg, .pdf, .docx, .xls
+                        <input
+                            @change="uploadChosenDocuments"
+                            class="hidden"
+                            ref="room_files"
+                            id="file"
+                            type="file"
+                            multiple
+                        />
+                        <div @click="selectNewFiles" @dragover.prevent @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
+                            <p class="text-secondary text-center">Ziehe Dokumente hier her
+                                <br>oder klicke ins Feld
                             </p>
                         </div>
                         <jet-input-error :message="uploadDocumentFeedback"/>
                         <div class="space-y-1">
                             <div v-for="room_file in room.room_files"
                                  class="cursor-pointer group flex items-center">
-                                <DocumentTextIcon class="h-5 w-5" aria-hidden="true"/>
-                                <p @click="downloadFile(room_file)" class="ml-2">{{ room_file.name }}</p>
+                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
+                                <p @click="downloadFile(room_file)" class="ml-2 truncate flex-grow">{{ room_file.name }}</p>
                                 <XCircleIcon @click="removeFile(room_file)"
-                                             class="ml-2 hidden group-hover:block h-5 w-5 text-error"
+                                             class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
                                              aria-hidden="true"/>
                             </div>
                         </div>
@@ -375,6 +383,9 @@ export default {
         }
     },
     methods: {
+        selectNewFiles() {
+            this.$refs.room_files.click();
+        },
         removeFile(room_file) {
             this.$inertia.delete(`/room_files/${room_file.id}`, {
                 preserveState: true,
@@ -386,26 +397,25 @@ export default {
             link.target = '_blank';
             link.click();
         },
-        uploadDocument(event) {
+        validateTypeAndUpload(files) {
             this.uploadDocumentFeedback = "";
-            const allowedTypes = [
-                "image/jpeg",
-                "application/pdf",
-                "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                "application/vnd.ms-excel",
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
             ]
-
-            for (let file of [...event.dataTransfer.files]) {
-                if (allowedTypes.includes(file.type)) {
-
-                    this.uploadDocumentToRoom(file)
-
+            for (let file of files) {
+                if (forbiddenTypes.includes(file.type) || file.type.match('video.*')) {
+                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.uploadDocumentFeedback = "Dieses Dateiformat wird nicht unterstützt"
-
+                    this.uploadDocumentToRoom(file)
                 }
             }
+        },
+        uploadChosenDocuments(event) {
+            this.validateTypeAndUpload([...event.target.files])
+        },
+        uploadDraggedDocuments(event) {
+            this.validateTypeAndUpload([...event.dataTransfer.files])
         },
         uploadDocumentToRoom(file) {
             this.documentForm.file = file

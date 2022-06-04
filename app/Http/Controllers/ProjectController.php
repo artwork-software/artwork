@@ -200,6 +200,19 @@ class ProjectController extends Controller
                 'genre' => $project->genre,
                 'project_admins' => $project_admins,
                 'project_managers' => $project_managers,
+                'events' => $project->events->map(fn($event) => [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'start_time' => $event->start_time,
+                    'end_time' => $event->end_time,
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience' => $event->audience,
+                    'is_loud' => $event->is_loud,
+                    'event_type_id' => $event->event_type_id,
+                    'room_id' => $event->room_id,
+                    'project_id' => $event->project_id
+                ]),
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,
                     'first_name' => $user->first_name,

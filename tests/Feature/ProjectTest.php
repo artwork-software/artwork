@@ -3,6 +3,7 @@
 use App\Models\Checklist;
 use App\Models\Comment;
 use App\Models\Department;
+use App\Models\Event;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
@@ -105,6 +106,9 @@ test('users can only view projects they are assigned to', function () {
     ]);
 
     $checklist = Checklist::factory()->create();
+    $event = Event::factory()->create([
+        'project_id' => $this->project->id
+    ]);
     $this->project->checklists()->save($checklist);
     $this->auth_user->private_checklists()->save($checklist);
 
@@ -113,6 +117,8 @@ test('users can only view projects they are assigned to', function () {
     $response = $this->get("/projects/{$this->project->id}")
         ->assertInertia(fn(Assert $page) => $page
             ->component('Projects/Show')
+            ->has('project.events.0')
+                //->where('name', $event->name)
             ->has('project.comments.0', fn(Assert $page) => $page
                 ->hasAll(['id','text', 'created_at', 'user'])
             )

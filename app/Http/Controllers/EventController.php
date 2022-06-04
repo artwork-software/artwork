@@ -12,6 +12,7 @@ class EventController extends Controller
 {
     /**
      * Display a listing of the resource.
+     * Only returns the events that are an occupancy option.
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */

@@ -108,11 +108,15 @@ class EventTypeController extends Controller
      * Remove the specified resource from storage.
      *
      * @param \App\Models\EventType $eventType
-     * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(EventType $eventType)
     {
-        $eventType->delete();
-        return Redirect::route('$event_types.management')->with('success', 'EventType deleted');
+        if($eventType->name !== 'undefiniert') {
+            $eventType->delete();
+            return Redirect::route('$event_types.management')->with('success', 'EventType deleted');
+        }
+        else {
+            return response()->json(['error' => 'This EventType cant be deleted.'], 403);
+        }
     }
 }

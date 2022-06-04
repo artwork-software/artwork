@@ -7,6 +7,8 @@ use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DepartmentController;
+use App\Http\Controllers\EventController;
+use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
@@ -184,6 +186,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');;
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
+
+    //Events
+    Route::get('/events', [EventController::class, 'index'])->name('events.management');
+    Route::post('/events/{event}', [EventController::class, 'store']);
+    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
+    Route::delete('/events/{event}', [EventController::class, 'destroy']);
+
+    //EventTypes
+    Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');
+    Route::post('/event_types/{event_type}', [EventTypeController::class, 'store']);
+    Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
+    Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
+    Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
+
 
 });
 

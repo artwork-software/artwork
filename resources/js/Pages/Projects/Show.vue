@@ -1735,7 +1735,7 @@ export default {
                 "application/x-apple-diskimage",
             ]
             for (let file of files) {
-                if (forbiddenTypes.includes(file.type) || file.type.match('video.*')) {
+                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
                     this.uploadDocumentToProject(file)

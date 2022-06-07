@@ -16,7 +16,7 @@ class EventTypeController extends Controller
      */
     public function index()
     {
-        return inertia('Events/EventSettings', [
+        return inertia('Settings/EventSettings', [
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
@@ -52,7 +52,7 @@ class EventTypeController extends Controller
             'individual_name' => $request->individual_name,
         ]);
 
-        return Redirect::route('event_types.show', $event_type)->with('success', 'EventType created.');
+        return Redirect::back();
     }
 
     /**
@@ -113,7 +113,7 @@ class EventTypeController extends Controller
     {
         if($eventType->name !== 'undefiniert') {
             $eventType->delete();
-            return Redirect::route('$event_types.management')->with('success', 'EventType deleted');
+            return Redirect::route('event_types.management')->with('success', 'EventType deleted');
         }
         else {
             return response()->json(['error' => 'This EventType cant be deleted.'], 403);

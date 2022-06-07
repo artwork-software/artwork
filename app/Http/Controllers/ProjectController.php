@@ -72,8 +72,12 @@ class ProjectController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
                         'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
+                        'phone_number' => $user->phone_number,
+                        'position' => $user->position,
+                        'business' => $user->business,
+                        'description' => $user->description,
                     ]),
                 ]),
                 'events' => $project->events
@@ -217,8 +221,12 @@ class ProjectController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
                 ]),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map( fn($history_entry) => [
                     'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
@@ -236,8 +244,12 @@ class ProjectController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
                         'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
+                        'phone_number' => $user->phone_number,
+                        'position' => $user->position,
+                        'business' => $user->business,
+                        'description' => $user->description,
                     ]),
                 ]),
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
@@ -333,8 +345,12 @@ class ProjectController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
                 ]),
                 'departments' => $project->departments->map(fn($department) => [
                     'id' => $department->id,
@@ -344,8 +360,12 @@ class ProjectController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
                         'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
+                        'phone_number' => $user->phone_number,
+                        'position' => $user->position,
+                        'business' => $user->business,
+                        'description' => $user->description,
                     ]),
                 ]),
             ],
@@ -573,6 +593,7 @@ class ProjectController extends Controller
         $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->forceDelete();
+        return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 
     public function restore(int $id)
@@ -580,6 +601,7 @@ class ProjectController extends Controller
         $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->restore();
+        return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 
     public function getTrashed()
@@ -598,8 +620,12 @@ class ProjectController extends Controller
                     'id' => $user->id,
                     'first_name' => $user->first_name,
                     'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
                     'email' => $user->email,
-                    'profile_photo_url' => $user->profile_photo_url
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
                 ]),
                 'project_history' => $project->project_histories()->with('user')->get()->map( fn($history_entry) => [
                     'created_at' => Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
@@ -614,8 +640,12 @@ class ProjectController extends Controller
                         'id' => $user->id,
                         'first_name' => $user->first_name,
                         'last_name' => $user->last_name,
+                        'profile_photo_url' => $user->profile_photo_url,
                         'email' => $user->email,
-                        'profile_photo_url' => $user->profile_photo_url
+                        'phone_number' => $user->phone_number,
+                        'position' => $user->position,
+                        'business' => $user->business,
+                        'description' => $user->description,
                     ]),
                 ])
             ])

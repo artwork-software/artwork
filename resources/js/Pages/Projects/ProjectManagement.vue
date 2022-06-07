@@ -378,9 +378,7 @@
                                     <ListboxButton
                                         class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center flex">
-                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16"
-                                                                    :width="16" :iconName="selectedCategory.svg_name"/> <span
-                                            class="ml-4">{{ selectedCategory.name }}</span>
+                                            <span class="">{{ selectedCategory.name }}</span>
                                         </span>
                                         <span v-if="selectedCategory.name === ''"
                                               class="block truncate">Kategorie wählen</span>
@@ -400,8 +398,6 @@
                                                            :value="category"
                                                            v-slot="{ active, selected }">
                                                 <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <CategoryIconCollection :width="16" :height="16"
-                                                                            :iconName="category.svg_name"/>
                                                     <span
                                                         :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                         {{ category.name }}
@@ -553,7 +549,7 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
+import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
@@ -614,7 +610,7 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
-            this.selectedCategory = {name: '', svg_name: ''};
+            this.selectedCategory = {name: ''};
             this.selectedGenre = {name: ''};
             this.selectedSector = {name: ''};
             this.form.sector_id = 0;
@@ -675,7 +671,7 @@ export default defineComponent({
             showSuccessModal: false,
             selectedParticipantNumber: "",
             nameOfDeletedProject: "",
-            selectedCategory: {name: '', svg_name: ''},
+            selectedCategory: {name: ''},
             selectedSector: {name: ''},
             selectedGenre: {name: ''},
             showProjectHistory: false,

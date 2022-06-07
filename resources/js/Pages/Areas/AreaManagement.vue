@@ -27,18 +27,18 @@
                             <div class="flex w-full flex-wrap mt-10">
                                 <div v-for="area in areas.data"
                                      class="flex w-full bg-white my-2 border border-gray-200">
-                                    <button class="bg-black flex" @click="area.hidden = !area.hidden">
-                                        <ChevronUpIcon v-if="area.hidden !== true"
+                                    <button class="bg-black flex" @click="area.showContent = !area.showContent">
+                                        <ChevronUpIcon v-if="area.showContent === true"
                                                        class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                         <ChevronDownIcon v-else
                                                          class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                     </button>
-                                    <div class="flex mt-8 w-full ml-4 flex-wrap p-4">
+                                    <div class="flex items-center w-full ml-4 flex-wrap p-4">
                                         <div class="flex justify-between w-full">
-                                            <div class="my-auto">
-                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
-                                        {{ area.name }}
-                                        </span>
+                                            <div class="my-auto flex items-center">
+                                                <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                                    {{ area.name }}
+                                                </span>
                                             </div>
                                             <div class="flex items-center">
                                                 <Menu as="div" class="my-auto relative">
@@ -103,7 +103,7 @@
                                                 </Menu>
                                             </div>
                                         </div>
-                                        <div class="flex w-full mt-6" v-if="!area.hidden">
+                                        <div class="flex w-full mt-6" v-if="area.showContent">
                                             <div class="">
                                                 <button @click="openAddRoomModal(area)" type="button"
                                                         class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -116,7 +116,7 @@
                                                     class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
                                             </div>
                                         </div>
-                                        <div class="mt-6 mb-12" v-if="!area.hidden">
+                                        <div class="mt-6 mb-12" v-if="area.showContent">
                                             <draggable ghost-class="opacity-50"
                                                        key="draggableKey"
                                                        item-key="id" :list="area.rooms"
@@ -139,11 +139,13 @@
                                                                     <div
                                                                         class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                         angelegt am {{ element.created_at }} von
-                                                                        <img :data-tooltip-target="element.created_by.id"
-                                                                             :src="element.created_by.profile_photo_url"
-                                                                             :alt="element.created_by.first_name"
-                                                                             class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
-                                                                        <UserTooltip :user="element.created_by"></UserTooltip>
+                                                                        <img
+                                                                            :data-tooltip-target="element.created_by.id"
+                                                                            :src="element.created_by.profile_photo_url"
+                                                                            :alt="element.created_by.first_name"
+                                                                            class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
+                                                                        <UserTooltip
+                                                                            :user="element.created_by"></UserTooltip>
                                                                     </div>
                                                                 </div>
                                                                 <Menu as="div" class="my-auto relative"
@@ -242,11 +244,13 @@
                                                                         <div
                                                                             class="ml-6 flex items-center text-secondary text-sm my-auto">
                                                                             angelegt am {{ element.created_at }} von
-                                                                            <img :data-tooltip-target="element.created_by.id"
+                                                                            <img
+                                                                                :data-tooltip-target="element.created_by.id"
                                                                                 :src="element.created_by.profile_photo_url"
                                                                                 :alt="element.created_by.first_name"
                                                                                 class="rounded-full ml-2 h-6 w-6 object-cover cursor-pointer">
-                                                                            <UserTooltip :user="element.created_by"></UserTooltip>
+                                                                            <UserTooltip
+                                                                                :user="element.created_by"></UserTooltip>
                                                                         </div>
                                                                     </div>
                                                                     <Menu as="div" class="my-auto relative"

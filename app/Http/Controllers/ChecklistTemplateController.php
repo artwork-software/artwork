@@ -6,6 +6,7 @@ use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
 use App\Models\TaskTemplate;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -41,7 +42,7 @@ class ChecklistTemplateController extends Controller
                     'svg_name' => $department->svg_name,
                 ]),
                 'updated_at' => $checklist_template->updated_at,
-                'created_at' => $checklist_template->created_at
+                'created_at' => Carbon::parse($checklist_template->created_at)->format('d.m.Y, H:i')
             ]),
         ]);
     }

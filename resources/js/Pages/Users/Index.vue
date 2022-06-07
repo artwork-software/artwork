@@ -24,7 +24,7 @@
                     <ul role="list" class="mt-6 w-full">
                         <li v-for="(user,index) in users.data" :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
-                                <img class="h-14 w-14 rounded-full flex justify-start" :src="user.profile_photo_url"
+                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start" :src="user.profile_photo_url"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">

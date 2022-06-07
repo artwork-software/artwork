@@ -52,7 +52,7 @@
                                                type="checkbox"
                                                class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                         <p class="ml-4 my-auto text-lg font-black text-sm"
-                                           :class="task.done ? 'text-secondary' : 'text-primary'">
+                                           :class="task.done ? 'text-secondary line-through' : 'text-primary'">
                                             {{ task.name }}</p>
                                         <span v-if="!task.done && task.deadline"
                                               class="ml-2 my-auto text-sm subpixel-antialiased"

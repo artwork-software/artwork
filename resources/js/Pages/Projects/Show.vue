@@ -95,8 +95,6 @@
                 </div>
                 <div class="mt-3 flex text-secondary text-xs">
                     <span class="mr-2">Kategorie: </span>
-                    <CategoryIconCollection v-if="project.category" height="16" width="16"
-                                            :iconName="project.category.svg_name"/>
                     <span class="ml-1 mr-1 text-primary font-bold">{{
                             project.category ? project.category.name : 'noch nicht definiert'
                         }} </span> | Genre:<span class="text-primary font-bold ml-1 mr-1 ">
@@ -137,16 +135,79 @@
                 <div class="flex w-full mt-2 flex-wrap">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
-                        <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
-                            <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
+                        <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
+                            <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name" :alt="department.name"
                                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                            <TeamTooltip  :team="department"/>
+                        </div>
+                        <div v-if="this.project.departments.length >= 5" class="my-auto">
+                            <Menu as="div" class="relative">
+                                <div>
+                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                        <ChevronDownIcon
+                                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                    </MenuButton>
+                                </div>
+                                <transition enter-active-class="transition ease-out duration-100"
+                                            enter-from-class="transform opacity-0 scale-95"
+                                            enter-to-class="transform opacity-100 scale-100"
+                                            leave-active-class="transition ease-in duration-75"
+                                            leave-from-class="transform opacity-100 scale-100"
+                                            leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems
+                                        class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <MenuItem v-for="department in this.project.departments" v-slot="{ active }">
+                                            <Link href="#"
+                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <TeamIconCollection class="h-10 w-10 rounded-full"
+                                                                    :iconName="department.svg_name"/>
+                                                <span class="ml-4">
+                                                                {{ department.name }}
+                                                            </span>
+                                            </Link>
+                                        </MenuItem>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
+                        </div>
+                        <div class="flex -mr-3 mt-2" v-for="user in projectMembers.slice(0,5)">
+                            <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
+                                 class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
+                            <UserTooltip :user="user"/>
+                        </div>
+                        <div v-if="projectMembers.length >= 5" class="my-auto">
+                            <Menu as="div" class="relative">
+                                <div>
+                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                        <ChevronDownIcon
+                                            class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                    </MenuButton>
+                                </div>
+                                <transition enter-active-class="transition ease-out duration-100"
+                                            enter-from-class="transform opacity-0 scale-95"
+                                            enter-to-class="transform opacity-100 scale-100"
+                                            leave-active-class="transition ease-in duration-75"
+                                            leave-from-class="transform opacity-100 scale-100"
+                                            leave-to-class="transform opacity-0 scale-95">
+                                    <MenuItems
+                                        class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        <MenuItem v-for="user in projectMembers" v-slot="{ active }">
+                                            <Link href="#"
+                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <img class="h-9 w-9 rounded-full"
+                                                     :src="user.profile_photo_url"
+                                                     alt=""/>
+                                                <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                            </Link>
+                                        </MenuItem>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
                         </div>
                     </div>
-                    <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
-                        <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
-                             class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
-                        <UserTooltip :user="user"/>
-                    </div>
+
                 </div>
 
             </div>
@@ -175,7 +236,7 @@
                     </div>
                 </div>
             </div>
-            <div>
+            <div class="max-w-screen-2xl">
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
                     <div class="col-span-2">
@@ -199,8 +260,9 @@
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
                                          class="flex w-full bg-white my-2">
-                                        <button class="bg-black flex" @click="checklist.hidden = !checklist.hidden">
-                                            <ChevronUpIcon v-if="checklist.hidden !== true"
+                                        <button class="bg-black flex"
+                                                @click="checklist.showContent = !checklist.showContent">
+                                            <ChevronUpIcon v-if="checklist.showContent === true"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
@@ -335,7 +397,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="!checklist.hidden">
+                                            <div class="flex w-full mt-6" v-if="checklist.showContent">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -348,7 +410,7 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="!checklist.hidden">
+                                            <div class="mt-6 mb-12" v-if="checklist.showContent">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="draggableID" :list="checklist.tasks"
@@ -361,12 +423,18 @@
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
+                                                                    <div class="flex -mt-1 items-center">
+                                                                        <DotsVerticalIcon
+                                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
+                                                                        <DotsVerticalIcon
+                                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                                                    </div>
                                                                     <input @change="updateTaskStatus(element)"
                                                                            v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
-                                                                       :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                                       :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
                                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
@@ -441,8 +509,9 @@
                                     </div>
                                     <div v-for="checklist in project.private_checklists"
                                          class="flex w-full bg-white my-2">
-                                        <button class="bg-black flex" @click="checklist.hidden = !checklist.hidden">
-                                            <ChevronUpIcon v-if="checklist.hidden !== true"
+                                        <button class="bg-black flex"
+                                                @click="checklist.showContent = !checklist.showContent">
+                                            <ChevronUpIcon v-if="checklist.showContent === true"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
@@ -450,8 +519,9 @@
                                         <div class="flex w-full ml-4 flex-wrap p-4">
                                             <div class="flex justify-between w-full">
                                                 <div class="my-auto">
-                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
-                                        {{ checklist.name }}
+                                        <span class="text-2xl leading-6 flex font-bold font-lexend text-gray-900">
+                                        {{ checklist.name }} <EyeIcon class="h-7 w-7 ml-3 text-secondary"></EyeIcon> <p
+                                            class="text-secondary text-lg ml-1">Privat</p>
                                         </span>
                                                 </div>
                                                 <div class="flex items-center -mr-3">
@@ -529,7 +599,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="!checklist.hidden">
+                                            <div class="flex w-full mt-6" v-if="checklist.showContent">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -542,7 +612,7 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="!checklist.hidden">
+                                            <div class="mt-6 mb-12" v-if="checklist.showContent">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="id" :list="checklist.tasks"
@@ -556,12 +626,18 @@
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full" :key="element.id">
+                                                                    <div class="flex -mt-1 items-center">
+                                                                        <DotsVerticalIcon
+                                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
+                                                                        <DotsVerticalIcon
+                                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                                                    </div>
                                                                     <input @change="updateTaskStatus(element)"
                                                                            v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                                     <p class="ml-4 my-auto text-lg font-black text-sm"
-                                                                       :class="element.done ? 'text-secondary' : 'text-primary'">
+                                                                       :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
                                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
@@ -665,7 +741,7 @@
                             </div>
                         </div>
                         <div>
-                            <div class="my-6" v-for="comment in project.comments"
+                            <div class="my-6" v-for="comment in sortedComments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
@@ -890,9 +966,7 @@
                                     <ListboxButton
                                         class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center flex">
-                                            <CategoryIconCollection v-if="selectedCategory.svg_name !== ''" :height="16"
-                                                                    :width="16" :iconName="selectedCategory.svg_name"/> <span
-                                            class="ml-4">{{ selectedCategory.name }}</span>
+                                            <span>{{ selectedCategory.name }}</span>
                                         </span>
                                         <span v-if="selectedCategory.name === ''"
                                               class="block truncate">Kategorie wählen</span>
@@ -912,8 +986,6 @@
                                                            :value="category"
                                                            v-slot="{ active, selected }">
                                                 <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <CategoryIconCollection :width="16" :height="16"
-                                                                            :iconName="category.svg_name"/>
                                                     <span
                                                         :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                         {{ category.name }}
@@ -1260,7 +1332,6 @@
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neue Aufgabe
                     </div>
-                    {{ this.taskForm }}
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
@@ -1423,11 +1494,16 @@
                     <div class="text-secondary subpixel-antialiased">
                         Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                     </div>
-                    <div class="flex w-full flex-wrap mt-4">
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
                         <div class="flex w-full my-1" v-for="historyItem in project.project_history">
+                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
+                                 :alt="historyItem.user.name"
+                                 class="mr-2 rounded-full h-7 w-7 object-cover"/>
                             <span class="text-secondary my-auto text-sm subpixel-antialiased">
                         {{ historyItem.created_at }}:
                     </span>
+
+                            <UserTooltip :user="historyItem.user"/>
                             <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
                                  :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
@@ -1477,10 +1553,10 @@
                             </Switch>
                             <span class="ml-2 text-sm"
                                   :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
+                            <div class="flex ml-2">
+                                <ExclamationIcon class="my-auto h-5 w-5 text-error"></ExclamationIcon>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
+                                    class="text-error text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
                             </div>
                         </div>
 
@@ -1501,7 +1577,7 @@
 
 <script>
 
-import {useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {
     Listbox,
@@ -1514,7 +1590,15 @@ import {
     MenuItems,
     Switch
 } from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon, DuplicateIcon, DocumentTextIcon} from "@heroicons/vue/outline";
+import {
+    PencilAltIcon,
+    TrashIcon,
+    XIcon,
+    DuplicateIcon,
+    DocumentTextIcon,
+    EyeIcon,
+    ExclamationIcon
+} from "@heroicons/vue/outline";
 import {
     CheckIcon,
     ChevronDownIcon,
@@ -1530,10 +1614,11 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import Checkbox from "@/Jetstream/Checkbox";
-import CategoryIconCollection from "@/Layouts/Components/CategoryIconCollection";
+import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -1545,6 +1630,7 @@ export default {
     name: "ProjectShow",
     props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates'],
     components: {
+        TeamTooltip,
         CategoryIconCollection,
         Checkbox,
         TeamIconCollection,
@@ -1576,7 +1662,10 @@ export default {
         draggable,
         DocumentTextIcon,
         ChevronRightIcon,
-        UserTooltip
+        UserTooltip,
+        EyeIcon,
+        ExclamationIcon,
+        Link
     },
     computed: {
         tabs() {
@@ -1600,6 +1689,25 @@ export default {
             })
             return projectMembers;
         },
+        sortedComments: function () {
+            let commentCopy = this.project.comments.slice();
+
+            function compare(a, b) {
+                if (b.created_at === null) {
+                    return -1;
+                }
+                if (a.created_at === null) {
+                    return 1;
+                }
+                if (a.created_at < b.created_at)
+                    return 1;
+                if (a.created_at > b.created_at)
+                    return -1;
+                return 0;
+            }
+
+            return commentCopy.sort(compare);
+        },
     },
     data() {
         return {
@@ -1619,7 +1727,7 @@ export default {
             department_search_results: [],
             department_and_user_search_results: [],
             checklist_assigned_departments: [],
-            selectedCategory: this.project.category ? this.project.category : {name: '', svg_name: ''},
+            selectedCategory: this.project.category ? this.project.category : {name: ''},
             selectedSector: this.project.sector ? this.project.sector : {name: ''},
             selectedGenre: this.project.genre ? this.project.genre : {name: ''},
             selectedTemplate: {name: ''},
@@ -1918,7 +2026,7 @@ export default {
             this.addingTask = false;
         },
         addTask() {
-            console.log(this.taskForm.deadline);
+            console.log(this.taskForm);
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
         },

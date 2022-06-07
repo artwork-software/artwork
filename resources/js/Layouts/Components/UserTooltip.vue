@@ -32,8 +32,6 @@
 </template>
 
 <script>
-import {InformationCircleIcon} from "@heroicons/vue/outline";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 export default {
     name: "UserTooltip",

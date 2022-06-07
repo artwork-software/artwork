@@ -27,7 +27,7 @@
                         <li v-for="(department,index) in departments.data" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <TeamIconCollection class="h-18 w-18" :iconName="department.svg_name"/>
+                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName="department.svg_name"/>
                                 <div class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>

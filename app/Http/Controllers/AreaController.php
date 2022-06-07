@@ -122,6 +122,7 @@ class AreaController extends Controller
         $area = Area::onlyTrashed()->findOrFail($id);
 
         $area->forceDelete();
+        return Redirect::route('areas.trashed')->with('success', 'Room restored');
     }
 
     public function restore(int $id)
@@ -132,6 +133,7 @@ class AreaController extends Controller
         foreach ($area->rooms() as $room) {
             $room->restore();
         }
+        return Redirect::route('areas.trashed')->with('success', 'Room restored');
     }
 
     public function getTrashed()

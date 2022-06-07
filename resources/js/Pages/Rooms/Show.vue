@@ -61,6 +61,9 @@
                         </transition>
                     </Menu>
                 </div>
+                <div v-if="room.temporary === 1" class="font-lexend text-lg my-4 font-semibold">
+                    {{room.start_date}} - {{room.end_date}}
+                </div>
                 <div class="grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
                         <span class="text-secondary subpixel-antialiased">
@@ -168,7 +171,7 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(user,index) in room.room_admins"
+                        <span v-for="(user,index) in roomForm.room_admins"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full"
@@ -204,7 +207,6 @@
                     <XIcon @click="closeEditRoomModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    {{editRoomForm}}
                     <div class="mt-4">
                         <div class="flex mt-10 relative">
                             <input id="roomNameEdit" v-model="editRoomForm.name" type="text"

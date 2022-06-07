@@ -64,8 +64,12 @@ class RoomController extends Controller
                     'id' => $room_admin->id,
                     'first_name' => $room_admin->first_name,
                     'last_name' => $room_admin->last_name,
+                    'profile_photo_url' => $room_admin->profile_photo_url,
                     'email' => $room_admin->email,
-                    'profile_photo_url' => $room_admin->profile_photo_url
+                    'phone_number' => $room_admin->phone_number,
+                    'position' => $room_admin->position,
+                    'business' => $room_admin->business,
+                    'description' => $room_admin->description,
                 ]),
                 'room_events' => $events,
                 'area' => $room->area
@@ -151,7 +155,14 @@ class RoomController extends Controller
                     'created_by' => User::where('id', $room->user_id)->first(),
                     'room_admins' => $room->room_admins->map(fn($room_admin) => [
                         'id' => $room_admin->id,
-                        'profile_photo_url' => $room_admin->profile_photo_url
+                        'first_name' => $room_admin->first_name,
+                        'last_name' => $room_admin->last_name,
+                        'profile_photo_url' => $room_admin->profile_photo_url,
+                        'email' => $room_admin->email,
+                        'phone_number' => $room_admin->phone_number,
+                        'position' => $room_admin->position,
+                        'business' => $room_admin->business,
+                        'description' => $room_admin->description,
                     ])
                 ])
             ])
@@ -198,11 +209,13 @@ class RoomController extends Controller
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
+        return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 
     public function restore(int $id)
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->restore();
+        return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 }

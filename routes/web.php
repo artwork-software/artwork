@@ -189,14 +189,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Events
     Route::get('/events', [EventController::class, 'index'])->name('events.management');
-    Route::post('/events/{event}', [EventController::class, 'store']);
+    Route::post('/events', [EventController::class, 'store']);
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');
-    Route::post('/event_types/{event_type}', [EventTypeController::class, 'store']);
+    Route::post('/event_types', [EventTypeController::class, 'store'])->name('event_types.store');
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
     Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);

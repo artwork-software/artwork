@@ -293,6 +293,13 @@ export default {
                     icon: ArrowCircleRightIcon
                 },
                 {
+                    name: 'Termine',
+                    has_permission: true,
+                    href: route('event_types.management'),
+                    route: ['/event_types'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
                     name: 'Checklisten',
                     has_permission: true,
                     href: route('checklist_templates.management'),

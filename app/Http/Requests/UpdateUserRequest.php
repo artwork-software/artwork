@@ -29,7 +29,7 @@ class UpdateUserRequest extends FormRequest
             'phone_number' => ['string', 'max:15'],
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
-            'description' => ['sometimes', 'string', 'max:5000'],
+            'description' => ['sometimes', 'max:5000'],
             'role' => ['sometimes', 'string'],
             'permissions' => ['sometimes','array']
         ];

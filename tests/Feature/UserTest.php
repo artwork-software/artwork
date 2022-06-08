@@ -120,7 +120,7 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed",
+        "description" => null,
         "departments" => [$department]
     ]);
 
@@ -133,7 +133,7 @@ test('users can update update other users', function () {
         "position" => "CEO",
         "business" => "DTH",
         "phone_number" => "1337",
-        "description" => "Description was changed",
+        "description" => null,
     ]);
 
     $this->assertDatabaseHas('department_user', [

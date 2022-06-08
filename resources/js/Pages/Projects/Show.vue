@@ -136,9 +136,10 @@
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
                         <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
-                            <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name" :alt="department.name"
+                            <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name"
+                                                :alt="department.name"
                                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                            <TeamTooltip  :team="department"/>
+                            <TeamTooltip :team="department"/>
                         </div>
                         <div v-if="this.project.departments.length >= 5" class="my-auto">
                             <Menu as="div" class="relative">
@@ -791,7 +792,8 @@
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p @click="downloadFile(project_file)" class="ml-2 flex-grow truncate">{{ project_file.name }}</p>
+                                <p @click="downloadFile(project_file)" class="ml-2 flex-grow truncate">
+                                    {{ project_file.name }}</p>
                                 <XCircleIcon @click="removeFile(project_file)"
                                              class="ml-2 hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                              aria-hidden="true"/>
@@ -838,7 +840,7 @@
                         </div>
                         <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
                             <div class="sm:col-span-3">
-                                <div class="">
+                                <div>
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
                                            class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                                 </div>
@@ -1954,7 +1956,9 @@ export default {
             this.$inertia.post(`/projects/${project.id}/duplicate`);
         },
         deleteUserFromProjectTeam(user) {
-            this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
+            if (this.assignedUsers.includes(user)) {
+                this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
+            }
         },
         deleteDepartmentFromProjectTeam(department) {
             this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
@@ -2001,6 +2005,7 @@ export default {
             this.department_and_user_query = ""
         },
         editProjectTeam() {
+            this.form.assigned_user_ids = {};
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
@@ -2026,7 +2031,6 @@ export default {
             this.addingTask = false;
         },
         addTask() {
-            console.log(this.taskForm);
             this.taskForm.post(route('tasks.store'), {});
             this.closeAddTaskModal();
         },
@@ -2035,7 +2039,6 @@ export default {
             this.closeEditTaskModal();
         },
         openEditTaskModal(task) {
-            console.log(task);
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;

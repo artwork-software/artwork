@@ -286,6 +286,13 @@ export default {
                     icon: ArrowCircleRightIcon
                 },
                 {
+                    name: 'Anfragen',
+                    has_permission: true,
+                    href: route('events.requests'),
+                    route: ['/events/requests'],
+                    icon: ArrowCircleRightIcon
+                },
+                {
                     name: 'Projekte',
                     has_permission: true,
                     href: route('project.settings'),

@@ -16,19 +16,19 @@ class EventController extends Controller
 {
     /**
      * Display a listing of the resource.
-     * Only returns the events that are an occupancy option.
+     * Returns all Events
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function index()
     {
         return inertia('Events/EventManagement', [
-            'optional_events' => Event::where('occupancy_option', true)->paginate(10)->through(fn($event) => [
+            'events' => Event::paginate(10)->through(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
-                'start_time' => Carbon::parse($event->start_date)->format('d.m.Y, H:i'),
-                'end_time' => Carbon::parse($event->start_date)->format('d.m.Y, H:i'),
+                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
                 'occupancy_option' => $event->occupancy_option,
                 'audience' => $event->audience,
                 'is_loud' => $event->is_loud,
@@ -63,6 +63,33 @@ class EventController extends Controller
                         'profile_photo_url' => $room_admin->profile_photo_url
                     ])
                 ])
+            ]),
+        ]);
+    }
+
+    /**
+     * Display a listing of the resource.
+     * Only returns the events that are an occupancy option
+     *
+     * @return \Inertia\Response|\Inertia\ResponseFactory
+     */
+    public function requests_index()
+    {
+        return inertia('Events/EventRequestsManagement', [
+            'event_requests' => Event::where('occupancy_option', true)->paginate(10)->through(fn($event) => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'description' => $event->description,
+                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
+                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
+                'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                'occupancy_option' => $event->occupancy_option,
+                'audience' => $event->audience,
+                'is_loud' => $event->is_loud,
+                'event_type' => $event->event_type,
+                'roorequestsm' => $event->room,
+                'project' => $event->project
             ]),
         ]);
     }
@@ -105,8 +132,8 @@ class EventController extends Controller
         Event::create([
             'name' => $request->name,
             'description' => $request->description,
-            'start_time' => $request->start_date,
-            'end_time' => $request->end_date,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
             'occupancy_option' => $request->occupancy_option,
             'audience' => $request->audience,
             'is_loud' => $request->is_loud,
@@ -115,6 +142,7 @@ class EventController extends Controller
             'project_id' => $request->project_id
         ]);
 
+        return Redirect::back()->with('success', 'Event created.');
     }
 
     /**
@@ -130,8 +158,8 @@ class EventController extends Controller
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
-                'start_time' => Carbon::parse($event->start_date)->format('d.m.Y, H:i'),
-                'end_time' => Carbon::parse($event->start_date)->format('d.m.Y, H:i'),
+                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
                 'occupancy_option' => $event->occupancy_option,
                 'audience' => $event->audience,
                 'is_loud' => $event->is_loud,

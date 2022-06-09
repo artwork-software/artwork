@@ -190,6 +190,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Events
     Route::get('/events', [EventController::class, 'index'])->name('events.management');
+    Route::get('/events/requests', [EventController::class, 'requests_index'])->name('events.requests');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');

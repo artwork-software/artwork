@@ -92,7 +92,7 @@ class EventController extends Controller
             'audience' => $request->audience,
             'is_loud' => $request->is_loud,
             'event_type_id' => $request->event_type_id,
-            'room' => $request->room_id,
+            'room_id' => $request->room_id,
             'project_id' => $request->project_id
         ]);
 

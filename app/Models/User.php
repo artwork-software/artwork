@@ -76,6 +76,10 @@ class User extends Authenticatable
         return $this->hasMany(Task::class);
     }
 
+    public function events() {
+        return $this->hasMany(event::class);
+    }
+
 
     /**
      * The attributes that should be hidden for serialization.

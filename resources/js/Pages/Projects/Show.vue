@@ -2019,7 +2019,7 @@ export default {
         deleteTeamFromChecklist(team) {
             this.checklist_assigned_departments.splice(this.checklist_assigned_departments.indexOf(team), 1)
         },
-        openAddTaskModal(checklist) {
+        openAddTaskModal(checklist) {ƒ
             this.taskForm.checklist_id = checklist.id;
             this.addingTask = true;
         },

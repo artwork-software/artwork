@@ -89,7 +89,9 @@ class EventController extends Controller
                 'is_loud' => $event->is_loud,
                 'event_type' => $event->event_type,
                 'roorequestsm' => $event->room,
-                'project' => $event->project
+                'project' => $event->project,
+                'created_at' => $event->created_at,
+                'created_by' => $event->creator
             ]),
         ]);
     }

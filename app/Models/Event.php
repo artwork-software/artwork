@@ -19,7 +19,8 @@ class Event extends Model
         'is_loud',
         'event_type_id',
         'room_id',
-        'project_id'
+        'project_id',
+        'user_id'
     ];
 
     public function event_type()
@@ -36,4 +37,11 @@ class Event extends Model
     {
         return $this->belongsTo(Project::class, 'project_id');
     }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+
 }

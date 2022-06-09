@@ -16,7 +16,7 @@
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
                             </div>
                             <pre>
-                                {{events.data}}
+                                {{ events.data }}
                             </pre>
                         </div>
                     </div>
@@ -47,7 +47,7 @@
                         <Listbox as="div" class="flex" v-model="selectedEventType">
                             <div class="relative">
                                 <ListboxButton
-                                    class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-default focus:outline-none sm:text-sm">
+                                    class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
                                         <EventTypeIconCollection :height="20" :width="20"
                                                                  :iconName="selectedEventType.svg_name"/>
@@ -64,7 +64,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                        class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="eventType in event_types.data"
                                                        :key="eventType.name"
@@ -91,14 +91,14 @@
                         <Listbox as="div" class="flex" v-model="selectedRoom">
                             <div class="relative">
                                 <ListboxButton
-                                    class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-default focus:outline-none sm:text-sm">
+                                    class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
                                         <span v-if="selectedRoom" class="block truncate items-center flex">
                                             <span>{{ selectedRoom.name }}</span>
 
                                         </span>
                                         <span v-if="!selectedRoom"
-                                              class="block truncate">Raum definieren</span>
+                                              class="block truncate">Raum definieren*</span>
                                         <span
                                             class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                             <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -108,7 +108,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                        class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <div v-for="area in areas.data">
                                             <p class="text-secondary mt-1 text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                 {{ area.name }}</p>
@@ -142,20 +142,74 @@
                         <p :class="[assignProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                            class="ml-4 my-auto text-sm">Termin einem Projekt zuordnen</p>
                     </div>
+                    <div v-if="assignProject">
+                        <div class="flex items-center mt-4">
+                            <Switch v-model="creatingProject"
+                                    :class="[creatingProject ?
+                                        'bg-success' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                <span aria-hidden="true"
+                                      :class="[creatingProject ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                            </Switch>
+                            <span class="ml-4 text-sm"
+                                  :class="[creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                Neues Projekt
+                            </span>
+                            <div v-if="$page.props.can.show_hints" class="ml-3 flex">
+                                <SvgCollection svgName="arrowLeft" class="mt-1 flex-shrink-0"/>
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege gleichzeitig ein neues Projekt an</span>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex" v-if="!creatingProject">
+                            <div class="my-auto w-full">
+                                <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                                       class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "
+                                       placeholder="Zu welchem bestehendem Projekt zuordnen?*"/>
+                            </div>
+
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100"
+                                        leave-to-class="opacity-0">
+                                <div v-if="project_search_results.length > 0 && project_query.length > 0"
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                    <div class="border-gray-200">
+                                        <div v-for="(project, index) in project_search_results" :key="index"
+                                             class="flex items-center cursor-pointer">
+                                            <div class="flex-1 text-sm py-4">
+                                                <p @click="addProjectToEvent(project)"
+                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                    {{ project.name }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+                        <div class="flex mt-2" v-if="creatingProject">
+                            <input type="text" v-model="addProjectForm.name"
+                                   placeholder="Projektname von neuem Projekt*"
+                                   class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
+                        </div>
+                    </div>
                     <div class="mt-4">
                         <input type="text" v-model="addEventForm.name" placeholder="Terminname"
                                class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                     </div>
                     <div class="flex mt-4">
                         <div class="text-secondary mr-2">
-                            <label for="startDate">Terminstart</label>
+                            <label for="startDate">Terminstart*</label>
                             <input
                                 v-model="addEventForm.start_date" id="startDate"
                                 placeholder="Terminstart" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
                         <div class="text-secondary ml-2">
-                            <label for="endDate">Terminende</label>
+                            <label for="endDate">Terminende*</label>
                             <input
                                 v-model="addEventForm.end_date" id="endDate"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
@@ -233,7 +287,7 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems
+    MenuItem, MenuItems, Switch
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
@@ -279,7 +333,8 @@ export default defineComponent({
         EventTypeIconCollection,
         AdjustmentsIcon,
         UserGroupIcon,
-        VolumeUpIcon
+        VolumeUpIcon,
+        Switch
     },
     props: ['events', 'event_types', 'areas'],
     methods: {
@@ -299,14 +354,28 @@ export default defineComponent({
             this.selectedRoom = null;
             this.selectedEventType = this.event_types.data[0];
         },
-        addEvent(){
+        addEvent() {
             this.addEventForm.event_type_id = this.selectedEventType.id;
             this.addEventForm.room_id = this.selectedRoom.id;
-            if(this.assignProject){
+            if (this.assignProject) {
                 this.addEventForm.project_id = this.selectedProject;
             }
             console.log(this.addEventForm);
             this.addEventForm.post(route('events.store'), {});
+        }
+    },
+    watch: {
+        project_query: {
+            handler() {
+                if (this.project_query.length > 0) {
+                    axios.get('/projects/search', {
+                        params: {query: this.project_query}
+                    }).then(response => {
+                        this.project_search_results = response.data
+                    })
+                }
+            },
+            deep: true
         }
     },
     data() {
@@ -316,6 +385,9 @@ export default defineComponent({
             assignProject: false,
             selectedProject: null,
             selectedRoom: null,
+            creatingProject: false,
+            project_query: "",
+            project_search_results: [],
             addEventForm: useForm({
                 name: '',
                 start_date: null,
@@ -323,12 +395,14 @@ export default defineComponent({
                 description: '',
                 occupancy_option: false,
                 is_loud: false,
-                audience:false,
+                audience: false,
                 room_id: null,
                 project_id: null,
-                event_type_id:null,
-
+                event_type_id: null,
             }),
+            addProjectForm: useForm({
+                name: '',
+            })
         }
     },
 })

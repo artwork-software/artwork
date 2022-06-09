@@ -604,6 +604,13 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 
+    public function search(SearchRequest $request) {
+
+        $this->authorize('viewAny',Project::class);
+
+        return Project::search($request->input('query'))->get();
+    }
+
     public function getTrashed()
     {
         return inertia('Trash/Projects', [

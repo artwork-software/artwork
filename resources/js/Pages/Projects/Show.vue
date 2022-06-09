@@ -2031,7 +2031,7 @@ export default {
             this.addingTask = false;
         },
         addTask() {
-            this.taskForm.post(route('tasks.store'), {});
+            this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
             this.closeAddTaskModal();
         },
         editTask() {

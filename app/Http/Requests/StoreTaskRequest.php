@@ -25,7 +25,7 @@ class StoreTaskRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255',
-            'description' => 'required|string|max:10000',
+            'description' => 'nullable|string|max:10000',
             'deadline' => 'sometimes',
             'checklist_id' => 'required|integer|max:255',
         ];

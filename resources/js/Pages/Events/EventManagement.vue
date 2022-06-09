@@ -16,7 +16,7 @@
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
                             </div>
                             <pre>
-                                {{ events.data }}
+                                {{ month_events }}
                             </pre>
                         </div>
                     </div>
@@ -336,7 +336,7 @@ export default defineComponent({
         VolumeUpIcon,
         Switch
     },
-    props: ['events', 'event_types', 'areas'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events'],
     methods: {
         openAddEventModal() {
             this.addingEvent = true;
@@ -355,12 +355,13 @@ export default defineComponent({
             this.selectedEventType = this.event_types.data[0];
         },
         addEvent() {
+
             this.addEventForm.event_type_id = this.selectedEventType.id;
             this.addEventForm.room_id = this.selectedRoom.id;
             if (this.assignProject) {
                 this.addEventForm.project_id = this.selectedProject;
             }
-            console.log(this.addEventForm);
+
             this.addEventForm.post(route('events.store'), {});
         }
     },

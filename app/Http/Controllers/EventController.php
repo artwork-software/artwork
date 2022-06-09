@@ -8,6 +8,7 @@ use App\Models\EventType;
 use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
@@ -22,7 +23,7 @@ class EventController extends Controller
     public function index()
     {
         return inertia('Events/EventManagement', [
-            'events' => Event::where('occupancy_option', true)->paginate(10)->through(fn($event) => [
+            'optional_events' => Event::where('occupancy_option', true)->paginate(10)->through(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,
@@ -35,6 +36,7 @@ class EventController extends Controller
                 'room' => $event->room,
                 'project' => $event->project
             ]),
+            'month_events' => $this->month_events(),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
@@ -75,15 +77,32 @@ class EventController extends Controller
         //
     }
 
+    public function month_events()
+    {
+        $period = CarbonPeriod::create(Carbon::now()->startOfMonth()->endOfDay(), Carbon::now()->endOfMonth()->endOfDay());
+
+        return Room::with('events')->get()->map(fn($room) => [
+            'name' => $room->name,
+            'days' => collect($period)->map(fn($date_of_day) => [
+                'date' => $date_of_day->toDateTimeLocalString(),
+                'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
+                'events' => $room->events()
+                    ->whereDate('start_time', '<=', $date_of_day)
+                    ->whereDate('end_time', '>=', $date_of_day)->get()
+            ])
+        ]);
+
+    }
+
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
-        $event = Event::create([
+        Event::create([
             'name' => $request->name,
             'description' => $request->description,
             'start_time' => $request->start_date,
@@ -96,13 +115,12 @@ class EventController extends Controller
             'project_id' => $request->project_id
         ]);
 
-        return Redirect::route('events.show', $event)->with('success', 'Event created.');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Event  $event
+     * @param \App\Models\Event $event
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(Event $event)
@@ -127,7 +145,7 @@ class EventController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Event  $event
+     * @param \App\Models\Event $event
      * @return \Illuminate\Http\Response
      */
     public function edit(Event $event)
@@ -138,8 +156,8 @@ class EventController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Event  $event
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\Event $event
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, Event $event)

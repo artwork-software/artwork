@@ -1,10 +1,17 @@
 <template>
 
+    <div>
+        <pre>
+        {{ day_events }}
+        </pre>
+    </div>
+
 </template>
 
 <script>
 export default {
-    name: "DayManagement"
+    name: "DayManagement",
+    props: ['day_events'],
 }
 </script>
 

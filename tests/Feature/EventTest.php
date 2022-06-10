@@ -33,7 +33,7 @@ test('users with the permission can view events by room and month', function() {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Events/EventManagement')
             ->has('month_events.0', fn(Assert $page) => $page
-                ->where('name', $this->room->name)
+                ->where('name', 'TestRoom')
                 ->has('days.0', fn(Assert $page) => $page
                     ->hasAll(['date','date_formatted', 'events'])
                 )
@@ -47,11 +47,11 @@ test('users with the permission can view events by room and day', function() {
     //$this->auth_user->givePermissionTo('manage events');
     $this->actingAs($this->auth_user);
 
-    $res = $this->get('/events/month?date=2022-05-29T17:48')
+    $res = $this->get('/events/day?date=2022-05-29T17:48')
         ->assertInertia(fn(Assert $page) => $page
             ->component('Events/DayManagement')
             ->has('day_events.0', fn(Assert $page) => $page
-                ->where('name', $this->room->name)
+                ->where('name', 'TestRoom')
                 ->has('hours.0')
             )
         );

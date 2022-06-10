@@ -336,7 +336,7 @@ export default defineComponent({
         VolumeUpIcon,
         Switch
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events'],
     methods: {
         openAddEventModal() {
             this.addingEvent = true;

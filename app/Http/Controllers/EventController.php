@@ -24,19 +24,6 @@ class EventController extends Controller
     public function month_index(Request $request)
     {
         return inertia('Events/EventManagement', [
-            'events' => Event::paginate(10)->through(fn($event) => [
-                'id' => $event->id,
-                'name' => $event->name,
-                'description' => $event->description,
-                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
-                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
-                'occupancy_option' => $event->occupancy_option,
-                'audience' => $event->audience,
-                'is_loud' => $event->is_loud,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-                'project' => $event->project
-            ]),
             'month_events' => $this->month_events($request->query('month_start'), $request->query('month_end')),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
@@ -87,19 +74,6 @@ class EventController extends Controller
 
     public function day_index(Request $request) {
         return inertia('Events/DayManagement', [
-            'events' => Event::paginate(10)->through(fn($event) => [
-                'id' => $event->id,
-                'name' => $event->name,
-                'description' => $event->description,
-                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
-                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
-                'occupancy_option' => $event->occupancy_option,
-                'audience' => $event->audience,
-                'is_loud' => $event->is_loud,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-                'project' => $event->project
-            ]),
             'day_events' => $this->day_events($request->query('date')),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
@@ -142,8 +116,8 @@ class EventController extends Controller
                 'events' => $room->events()
                     ->whereDate('start_time', '<=', $date)
                     ->whereDate('end_time', '>=', $date)
-                    ->whereTime('start_time', '<=', $hour)
-                    ->whereTime('end_time', '>=', $hour)
+                    ->whereTime('start_time', '<=', Carbon::parse($hour)->toTimeString())
+                    ->whereTime('end_time', '>=',  Carbon::parse($hour)->toTimeString())
                     ->get()
             ])
         ]);

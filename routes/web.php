@@ -189,8 +189,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
     //Events
-    Route::get('/events/month/{month_start}/{month_end}', [EventController::class, 'month_index'])->name('events.monthly_management');
-    Route::get('/events/day/{date}', [EventController::class, 'day_index'])->name('events.daily_management');
+    Route::get('/events/month', [EventController::class, 'month_index'])->name('events.monthly_management');
+    Route::get('/events/day', [EventController::class, 'day_index'])->name('events.daily_management');
     Route::get('/events/requests', [EventController::class, 'requests_index'])->name('events.requests');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');

@@ -21,7 +21,7 @@ class EventController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function month_index(Date $month_start, Date $month_end)
+    public function month_index(Request $request)
     {
         return inertia('Events/EventManagement', [
             'events' => Event::paginate(10)->through(fn($event) => [
@@ -37,7 +37,7 @@ class EventController extends Controller
                 'room' => $event->room,
                 'project' => $event->project
             ]),
-            'month_events' => $this->month_events($month_start, $month_end),
+            'month_events' => $this->month_events($request->query('month_start'), $request->query('month_end')),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
@@ -85,7 +85,7 @@ class EventController extends Controller
 
     }
 
-    public function day_index(Date $date) {
+    public function day_index(Request $request) {
         return inertia('Events/DayManagement', [
             'events' => Event::paginate(10)->through(fn($event) => [
                 'id' => $event->id,
@@ -100,7 +100,7 @@ class EventController extends Controller
                 'room' => $event->room,
                 'project' => $event->project
             ]),
-            'day_events' => $this->day_events($date),
+            'day_events' => $this->day_events($request->query('date')),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,

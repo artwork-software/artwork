@@ -18,9 +18,43 @@ beforeEach(function () {
 
     $this->event = Event::factory()->create([
         'room_id' => $this->room->id,
-        'start_time' => '2022-05-28T17:00',
-        'end_time' => '2022-05-28T18:00'
+        'start_time' => '2022-05-29T17:00',
+        'end_time' => '2022-05-30T18:00'
     ]);
+
+});
+
+test('users with the permission can view events by room and month', function() {
+
+    //$this->auth_user->givePermissionTo('manage events');
+    $this->actingAs($this->auth_user);
+
+    $res = $this->get('/events/month?month_start=2022-05-28T17:48&month_end=2022-06-28T17:48')
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Events/EventManagement')
+            ->has('month_events.0', fn(Assert $page) => $page
+                ->where('name', $this->room->name)
+                ->has('days.0', fn(Assert $page) => $page
+                    ->hasAll(['date','date_formatted', 'events'])
+                )
+            )
+        );
+
+});
+
+test('users with the permission can view events by room and day', function() {
+
+    //$this->auth_user->givePermissionTo('manage events');
+    $this->actingAs($this->auth_user);
+
+    $res = $this->get('/events/month?date=2022-05-29T17:48')
+        ->assertInertia(fn(Assert $page) => $page
+            ->component('Events/DayManagement')
+            ->has('day_events.0', fn(Assert $page) => $page
+                ->where('name', $this->room->name)
+                ->has('hours.0')
+            )
+        );
 
 });
 

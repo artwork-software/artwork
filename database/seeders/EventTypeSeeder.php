@@ -16,8 +16,8 @@ class EventTypeSeeder extends Seeder
     public function run()
     {
         DB::table('event_types')->insert([
-            'name' => 'undefiniert',
-            'svg_name' => 'grau',
+            'name' => 'Undefinierter Termin',
+            'svg_name' => 'grey',
             'project_mandatory' => false,
             'individual_name' => true
         ]);

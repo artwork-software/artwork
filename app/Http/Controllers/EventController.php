@@ -277,7 +277,7 @@ class EventController extends Controller
             'room_id',
             'project_id'));
 
-        return Redirect::route('events.management')->with('success', 'Event updated');
+        return Redirect::back()->with('success', 'Event updated');
     }
 
     /**
@@ -289,6 +289,6 @@ class EventController extends Controller
     public function destroy(Event $event)
     {
         $event->delete();
-        return Redirect::route('$events.management')->with('success', 'Event deleted');
+        return Redirect::back()->with('success', 'Event deleted');
     }
 }

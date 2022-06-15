@@ -245,7 +245,7 @@
                                 <span class="sr-only">User aus Team entfernen</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
-                        </span>
+                            </span>
                         </div>
                         <button
                             :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"

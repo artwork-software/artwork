@@ -13,60 +13,75 @@
                     </div>
                     <div class="flex flex-wrap">
                         <div v-for="eventRequest in event_requests.data" class="flex flex-wrap w-full items-center">
-                            <div class="flex w-full">
-                                <div class="text-lg w-full flex leading-6 font-bold font-lexend text-gray-900">
-                                    {{ eventRequest.room.name }}:
-                                </div>
-                                <div class="flex ml-12 items-center">
-                                    <EventTypeIconCollection :height="20" :width="20"
-                                                             :iconName="eventRequest.event_type.svg_name"/>
-                                    <span class="ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
-                                    {{ eventRequest.event_type.name }}
-                                </span>
-                                    <AdjustmentsIcon v-if="eventRequest.occupancy_option" class="h-5 w-5 ml-2 my-auto"/>
-                                    <UserGroupIcon v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                    <VolumeUpIcon v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
-                                    <div class="flex w-full whitespace-nowrap ml-3"
-                                         v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
-                                            eventRequest.start_time.split(',')[0]
-                                        }},{{ eventRequest.start_time.split(',')[1] }}
-                                        - {{ eventRequest.end_time.split(',')[1] }}
+                            <div class="flex w-full items-center flex-wrap">
+
+                                <div class="flex items-center w-full mt-4">
+                                    <div class="text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        {{ eventRequest.room.name }}:
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
-                                        {{ eventRequest.start_time }} -
-                                        {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
-                                        {{ eventRequest.end_time }}
-                                    </div>
-                                    <button @click="approveRequest" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                        <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
-                                    </button>
-                                    <button @click="approveOption" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                        <AdjustmentsIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
-                                    </button>
-                                    <button @click="declineRequest" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                        <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
-                                    </button>
-                                </div>
-                                <div class="flex">
-                                    <div v-if="eventRequest.project">
-                                        <div class="flex">
-                                            Zugeordnet zu
+                                    <div class="flex items-center ml-12 w-full">
+                                        <EventTypeIconCollection :height="26" :width="26"
+                                                                 :iconName="eventRequest.event_type.svg_name"/>
+                                        <div class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                            {{ eventRequest.event_type.name }}
+                                            <AdjustmentsIcon v-if="eventRequest.occupancy_option"
+                                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            <UserGroupIcon v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                            <VolumeUpIcon v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
                                         </div>
-                                        {{eventRequest.project}}
+
+                                        <div class="flex w-full whitespace-nowrap ml-3"
+                                             v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
+                                            {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
+                                                eventRequest.start_time.split(',')[0]
+                                            }},{{ eventRequest.start_time.split(',')[1] }}
+                                            - {{ eventRequest.end_time.split(',')[1] }}
+                                        </div>
+                                        <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                            {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
+                                            {{ eventRequest.start_time }} -
+                                            {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
+                                            {{ eventRequest.end_time }}
+                                        </div>
+                                        <button @click="openApproveRequestModal" type="button"
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                            <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
+                                        </button>
+                                        <button @click="openDeclineRequestModal" type="button"
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                            <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="flex items-center w-full ml-24 justify-between">
+                                    <div v-if="eventRequest.project" class="w-80">
+                                        <div class="text-secondary text-sm flex items-center">
+                                            Zugeordnet zu
+                                            <Link :href="route('projects.show',{project: eventRequest.project.id})"
+                                                class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                                {{ eventRequest.project.name }}
+                                            </Link>
+                                        </div>
+                                        <!--
                                         <div v-for="projectLeader in eventRequest.project.project_managers">
                                             <img :data-tooltip-target="projectLeader.id"
                                                  :src="projectLeader.profile_photo_url"
                                                  :alt="projectLeader.name"
                                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                            <UserTooltip :user="projectLeader"/></div>
+                                            <UserTooltip :user="projectLeader"/>
+                                        </div>
+                                        -->
                                     </div>
-                                    <div>
-                                        angefragt: <span> {{eventRequest.created_at}}</span>
+                                    <div class="text-secondary text-sm w-80" v-else>
+                                            Keinem Projekt zugeordnet
+                                    </div>
+                                    <div class="flex text-sm text-secondary items-center">
+                                        angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
+                                                       :src="eventRequest.created_by.profile_photo_url"
+                                                       :alt="eventRequest.created_by.name"
+                                                       class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                        <UserTooltip :user="eventRequest.created_by"/>
+                                        <span class="ml-2"> {{ eventRequest.created_at }}</span>
                                     </div>
                                     <div>
 

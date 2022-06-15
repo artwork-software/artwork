@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
@@ -51,6 +52,10 @@ class EventController extends Controller
                     ])
                 ])
             ]),
+            'projects' => Project::paginate(10)->through(fn($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+            ]),
         ]);
     }
 
@@ -60,6 +65,7 @@ class EventController extends Controller
 
         return Room::with('events')->get()->map(fn($room) => [
             'name' => $room->name,
+            'id' => $room->id,
             'days' => collect($period)->map(fn($date_of_day) => [
                 'date' => $date_of_day->toDateTimeLocalString(),
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
@@ -144,9 +150,9 @@ class EventController extends Controller
                 'audience' => $event->audience,
                 'is_loud' => $event->is_loud,
                 'event_type' => $event->event_type,
-                'roorequestsm' => $event->room,
+                'room' => $event->room,
                 'project' => $event->project,
-                'created_at' => $event->created_at,
+                'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
                 'created_by' => $event->creator
             ]),
         ]);
@@ -169,10 +175,10 @@ class EventController extends Controller
      */
     public function store(Request $request)
     {
-        $start_time = Carbon::parse($request->start_time);
-        $end_time = Carbon::parse($request->end_time);
+        $start_time_parse = Carbon::parse($request->start_time);
+        $end_time_parse = Carbon::parse($request->end_time);
 
-        if($start_time->lessThan($end_time)) {
+        if($start_time_parse->lessThan($end_time_parse)) {
             Event::create([
                 'name' => $request->name,
                 'description' => $request->description,

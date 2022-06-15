@@ -4,7 +4,7 @@
             <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
-                        <div class="flex">
+                        <div class="flex flex-wrap">
                             <h2 class="text-2xl flex">Raumbelegungen</h2>
                             <button @click="openAddEventModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -15,9 +15,70 @@
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
                             </div>
-                            <pre>
+                            <div class="bg-stone-50 w-full flex">
+                                <div class="mt-14 w-48">
+                                    <div v-for="dayDate in month_events[0].days"
+                                         class="w-40 inline-flex mt-1 h-36 w-full text-lg text-secondary subpixel-antialiased">
+                                        {{ dayDate.date_formatted }}
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <div v-for="room in month_events" class="inline-flex flex-col">
+                                        <h2 class="text-lg text-secondary subpixel-antialiased mt-4 mb-2">
+                                            {{ room.name }}
+                                        </h2>
+                                        <div v-for="day in room.days">
+                                            <div v-if="day.events.length > 0" class="bg-white m-0.5 h-36 mr-4 border border-gray-100">
+                                                <!-- If only 1 event on that day-->
+                                                <div v-if="day.events.length === 1">
+                                                    <!-- Icons -->
+                                                    <div class="flex p-1 ml-1">
+                                                        <UserGroupIcon v-if="day.events[0].audience"
+                                                                       class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                        <VolumeUpIcon v-if="day.events[0].is_loud" :class="day.events[0].audience ? 'ml-1' : ''"
+                                                                      class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                        <div v-if="!day.events[0].audience && !day.events[0].is_loud" class="h-5 w-5">
+
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <!-- Individual Eventname -->
+                                                        <div v-if="day.events[0].project_id === null" class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                            {{ day.events[0].name }}
+                                                        </div>
+                                                        <!-- Name of connected Project -->
+                                                        <Link :href="route('projects.show',{project: day.events[0].project_id})" v-else class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                            {{ projects.data.find(x => x.id === day.events[0].project_id).name}}
+                                                        </Link>
+                                                        <!-- Time of Event -->
+                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">
+                                                            {{ day.events[0].start_time.split(' ')[1].slice(0, -3) }}
+                                                            - {{ day.events[0].end_time.split(' ')[1].slice(0, -3) }}
+                                                        </div>
+                                                        <!-- EventType -->
+                                                        <div class="mt-8 ml-2 mb-1">
+                                                            <EventTypeIconCollection :height="20" :width="20"
+                                                                                     :iconName="this.event_types.data.find(x => x.id === day.events[0].event_type_id).svg_name"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                            <div @mouseover="activateHover(day.date,room.id)" @click="openAddEventModal(room.id)"
+                                                 @mouseout="deactivateHover()" v-else class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer" :class="showAddHoverDate === day.date && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
+                                                <button v-show="showAddHoverDate === day.date && showAddHoverRoomId === room.id" type="button"
+                                                        class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
+                                                    <PlusSmIcon  class="h-6 w-6" aria-hidden="true"/>
+                                                </button>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <pre>
                                 {{ month_events }}
                             </pre>
+                            </div>
                         </div>
                     </div>
 
@@ -162,33 +223,47 @@
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege gleichzeitig ein neues Projekt an</span>
                             </div>
                         </div>
-                        <div class="mt-2 flex" v-if="!creatingProject">
-                            <div class="my-auto w-full">
-                                <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                        <div class="mt-2 flex flex-wrap" v-if="!creatingProject">
+                            <div class="my-auto w-full" v-if="this.selectedProject === null">
+                                <input id="projectSearch" v-model="project_query" type="text" autocomplete="off" @focusout="project_query = ''"
                                        class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "
-                                       placeholder="Zu welchem bestehendem Projekt zuordnen?*"/>
-                            </div>
-
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100"
-                                        leave-to-class="opacity-0">
-                                <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                       placeholder="Zu welchem bestehendem Projekt zuordnen?*" :disabled="this.selectedProject"/>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100"
+                                            leave-to-class="opacity-0">
+                                    <div v-if="project_search_results.length > 0 && project_query.length > 0"
+                                         class="absolute z-10 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
-                                    <div class="border-gray-200">
-                                        <div v-for="(project, index) in project_search_results" :key="index"
-                                             class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4">
-                                                <p @click="addProjectToEvent(project)"
-                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                    {{ project.name }}
-                                                </p>
+                                        <div class="border-gray-200">
+                                            <div v-for="(project, index) in project_search_results" :key="index"
+                                                 class="flex items-center cursor-pointer">
+                                                <div class="flex-1 text-sm py-4">
+                                                    <p @click="addProjectToEvent(project)"
+                                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                        {{ project.name }}
+                                                    </p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
-                            </transition>
+                                </transition>
+                            </div>
+
+                            <div>
+
+                            <span v-if="this.selectedProject !== null" class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                            <div class="flex items-center">
+                                <span class="flex">
+                                    Aktuell zugeordnet zu: {{ this.selectedProject.name}}
+                                </span>
+                            </div>
+                            <button type="button" @click="deleteSelectedProject()">
+                                <span class="sr-only">User aus Team entfernen</span>
+                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
+                            </button>
+                            </span>
+                            </div>
                         </div>
                         <div class="flex mt-2" v-if="creatingProject">
                             <input type="text" v-model="addProjectForm.name"
@@ -204,14 +279,14 @@
                         <div class="text-secondary mr-2">
                             <label for="startDate">Terminstart*</label>
                             <input
-                                v-model="addEventForm.start_date" id="startDate"
+                                v-model="addEventForm.start_time" id="startDate"
                                 placeholder="Terminstart" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
                         <div class="text-secondary ml-2">
                             <label for="endDate">Terminende*</label>
                             <input
-                                v-model="addEventForm.end_date" id="endDate"
+                                v-model="addEventForm.end_time" id="endDate"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary w-full"/>
                         </div>
@@ -251,12 +326,12 @@
                                   class="resize-none shadow-sm placeholder-secondary p-4 focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300"/>
                     </div>
                     <div>
-                        <button :class="[this.addEventForm.start_date === null || this.addEventForm.end_date === null || this.selectedRoom === null ?
+                        <button :class="[this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent"
-                                :disabled="addEventForm.start_date === null && addEventForm.end_date === null">
+                                :disabled="addEventForm.start_time === null && addEventForm.end_time === null">
                             Belegen
                         </button>
                     </div>
@@ -265,7 +340,6 @@
         </jet-dialog-modal>
     </app-layout>
 </template>
-
 <script>
 
 import {defineComponent} from 'vue'
@@ -302,6 +376,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 
 
+
 export default defineComponent({
     components: {
         ListboxLabel,
@@ -336,33 +411,74 @@ export default defineComponent({
         VolumeUpIcon,
         Switch
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events','projects'],
     methods: {
-        openAddEventModal() {
+        openAddEventModal(roomId) {
             this.addingEvent = true;
+            if(this.showAddHoverDate !== null){
+                const startDate = new Date(this.showAddHoverDate);
+                startDate.setMinutes(startDate.getMinutes() - 1200);
+                this.addEventForm.start_time = startDate.toISOString().slice(0,16);
+
+                const endDate = new Date(this.showAddHoverDate);
+                endDate.setMinutes(endDate.getMinutes() + 239);
+                this.addEventForm.end_time = endDate.toISOString().slice(0,16);
+            }
+            if(roomId !== null){
+                this.areas.data.forEach((area) => {
+                    area.rooms.forEach((room) => {
+                        if(room.id === roomId){
+                            this.selectedRoom = room;
+                        }
+                    })
+
+                })
+            }
         },
         closeAddEventModal() {
             this.addingEvent = false;
             this.addEventForm.eventType = null;
             this.addEventForm.name = '';
-            this.addEventForm.start_date = null;
-            this.addEventForm.end_date = null;
+            this.addEventForm.start_time = null;
+            this.addEventForm.end_time = null;
             this.addEventForm.description = '';
             this.addEventForm.occupancy_option = false;
             this.addEventForm.is_loud = false;
             this.addEventForm.audience = false;
             this.selectedRoom = null;
+            this.addEventForm.project = null;
             this.selectedEventType = this.event_types.data[0];
         },
         addEvent() {
-
             this.addEventForm.event_type_id = this.selectedEventType.id;
             this.addEventForm.room_id = this.selectedRoom.id;
             if (this.assignProject) {
-                this.addEventForm.project_id = this.selectedProject;
+                if(this.creatingProject){
+                    this.addEventForm.project_id = null;
+                    this.newProject = this.addProjectForm.post(route('projects.store'), {})
+                    this.addEventForm.project_id = this.newProject.id;
+                }else if(this.selectedProject != null){
+                    this.addEventForm.project_id = this.selectedProject.id;
+                }
             }
 
             this.addEventForm.post(route('events.store'), {});
+            this.closeAddEventModal();
+        },
+        addProjectToEvent(project){
+            this.selectedProject = project;
+            this.project_query = ""
+        },
+        deleteSelectedProject(){
+            this.selectedProject = null;
+        },
+        activateHover(date,roomId){
+            this.showAddHoverDate = date;
+            this.showAddHoverRoomId = roomId;
+        },
+        deactivateHover(){
+            this.showAddHoverDate = null;
+            this.showAddHoverRoomId = null;
         }
     },
     watch: {
@@ -385,14 +501,17 @@ export default defineComponent({
             selectedEventType: this.event_types.data[0],
             assignProject: false,
             selectedProject: null,
+            showAddHoverDate: null,
+            showAddHoverRoomId: null,
+            newProject:null,
             selectedRoom: null,
             creatingProject: false,
             project_query: "",
             project_search_results: [],
             addEventForm: useForm({
                 name: '',
-                start_date: null,
-                end_date: null,
+                start_time: null,
+                end_time: null,
                 description: '',
                 occupancy_option: false,
                 is_loud: false,
@@ -400,6 +519,7 @@ export default defineComponent({
                 room_id: null,
                 project_id: null,
                 event_type_id: null,
+                user_id: this.$page.props.user.id,
             }),
             addProjectForm: useForm({
                 name: '',

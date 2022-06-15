@@ -224,7 +224,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
     {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
-    //{name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,0)}), route: ['/events/management'], icon: CalendarIcon,},
+    {name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,0)}), route: ['/events/management'], icon: CalendarIcon,},
     {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], icon: ClipboardCheckIcon,},
 ]
 

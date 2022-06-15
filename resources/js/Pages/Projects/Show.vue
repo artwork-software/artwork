@@ -65,7 +65,7 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img :data-tooltip-target="project.project_history[0].user.id"
+                    <img  :data-tooltip-target="project.project_history[0].user.id"
                          :src="project.project_history[0].user.profile_photo_url"
                          :alt="project.project_history[0].user.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>

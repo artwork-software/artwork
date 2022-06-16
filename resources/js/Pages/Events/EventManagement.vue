@@ -29,7 +29,7 @@
                                         </h2>
                                         <div v-for="day in room.days">
                                             <div @click="openDayDetailModal(day)" v-if="day.events.length > 0"
-                                                 class="bg-white m-0.5 h-36 mr-4 border border-gray-100">
+                                                 :class="[{'stripes': day.events[0].occupancy_option }, 'bg-white m-0.5 h-36 mr-4 border border-gray-100']">
                                                 <!-- If only 1 event on that day-->
                                                 <div v-if="day.events.length === 1">
                                                     <!-- Icons -->

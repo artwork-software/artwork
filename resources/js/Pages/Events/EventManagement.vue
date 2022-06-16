@@ -360,6 +360,7 @@
                 <XIcon @click="closeDayDetailModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div v-for="event in wantedDay.events" class="mx-4">
+
                     <div class="mt-2">
                         <Listbox as="div" class="flex" v-model="event.event_type_id">
                             <div class="relative">
@@ -370,7 +371,7 @@
                                                                  :iconName="selectedEventType.svg_name"/>
                                         <span class="block truncate items-center ml-3 flex">
                                             <span>{{ selectedEventType.name }}</span>
-                                </span>
+                                        </span>
                                         <span
                                             class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
@@ -407,7 +408,7 @@
                         </Listbox>
                         <div v-if="event.name !== null"
                              class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                            {{ event.name }}
+                            {{ wantedDay.conflicts.includes(event.id) }} {{ event.name }}
                         </div>
 
                     </div>

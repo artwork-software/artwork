@@ -59,6 +59,35 @@ class EventController extends Controller
         ]);
     }
 
+    private function conflict_event_ids($room): array
+    {
+
+        $conflict_event_ids = array();
+        $events_with_ascending_end_time = $room->events()->orderBy('end_time', 'ASC')->get();
+
+        $lastEvent = null;
+
+        foreach($events_with_ascending_end_time as $event) {
+
+            if(!blank($lastEvent)) {
+
+                $this_event_start_time = Carbon::parse($event->start_time);
+                $last_event_end_time = Carbon::parse($lastEvent->end_time);
+
+                if($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
+                    $conflict_event_ids[] = $lastEvent->id;
+                    $conflict_event_ids[] = $event->id;
+                }
+
+            }
+
+            $lastEvent = $event;
+        }
+
+
+        return $conflict_event_ids;
+    }
+
     public function month_events($month_start, $month_end)
     {
         $period = CarbonPeriod::create($month_start, $month_end);
@@ -69,6 +98,7 @@ class EventController extends Controller
             'days' => collect($period)->map(fn($date_of_day) => [
                 'date' => $date_of_day->toDateTimeLocalString(),
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
+                'conflicts' => $this->conflict_event_ids($room),
                 'events' => $room->events()
                     ->whereDate('start_time', '<=', $date_of_day)
                     ->whereDate('end_time', '>=', $date_of_day)->get()->map(fn($event) => [
@@ -87,7 +117,7 @@ class EventController extends Controller
                         "user_id" => $event->user_id,
                         "project_id" => $event->project_id,
                         "created_at" =>  $event->created_at,
-                        "updated_at" => $event->updated_at
+                        "updated_at" => $event->updated_at,
                     ])
             ])
         ]);

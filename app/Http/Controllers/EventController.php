@@ -71,7 +71,24 @@ class EventController extends Controller
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
                 'events' => $room->events()
                     ->whereDate('start_time', '<=', $date_of_day)
-                    ->whereDate('end_time', '>=', $date_of_day)->get()
+                    ->whereDate('end_time', '>=', $date_of_day)->get()->map(fn($event) => [
+                        'id' => $event->id,
+                        'name' => $event->name,
+                        'description' => $event->description,
+                        "start_time" => $event->start_time,
+                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                        "end_time" => $event->end_time,
+                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                        "occupancy_option" => $event->occupancy_option,
+                        "audience" => $event->audience,
+                        "is_loud" => $event->is_loud,
+                        "event_type_id" => $event->event_type_id,
+                        "room_id" => $event->room_id,
+                        "user_id" => $event->user_id,
+                        "project_id" => $event->project_id,
+                        "created_at" =>  $event->created_at,
+                        "updated_at" => $event->updated_at
+                    ])
             ])
         ]);
 

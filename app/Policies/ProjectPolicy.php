@@ -58,8 +58,8 @@ class ProjectPolicy
                 return true;
             }
         }
-        return ($user->can('update projects') || $user->projects()->find($project->id)->pivot->is_admin == 1) &&
-            (($user->projects->contains($project->id) && $project->users->contains($user->id)));
+        return ($user->can('update projects') || $user->projects()->find($project->id)->pivot->is_admin == 1);
+            //&& (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 
     /**
@@ -71,13 +71,15 @@ class ProjectPolicy
      */
     public function delete(User $user, Project $project)
     {
+        /*
         foreach ($project->departments as $department) {
             if($department->users->contains($user->id)) {
                 return true;
             }
         }
-        return $user->can('delete projects') &&
-            (($user->projects->contains($project->id) && $project->users->contains($user->id)));
+        */
+        return $user->can('delete projects');
+           // && (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 
     /**

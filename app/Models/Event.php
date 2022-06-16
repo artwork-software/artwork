@@ -23,6 +23,12 @@ class Event extends Model
         'user_id'
     ];
 
+    protected $casts = [
+        'is_loud' => 'boolean',
+        'audience' => 'boolean',
+        'occupancy_option' => 'boolean'
+    ];
+
     public function event_type()
     {
         return $this->belongsTo(EventType::class, 'event_type_id');

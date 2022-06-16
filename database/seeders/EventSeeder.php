@@ -25,7 +25,7 @@ class EventSeeder extends Seeder
             'is_loud' => null,
             'event_type_id' => 1,
             'room_id' => 1,
-            'project_id' => 1,
+            'project_id' => null,
             'user_id' => 1
         ]);
     }

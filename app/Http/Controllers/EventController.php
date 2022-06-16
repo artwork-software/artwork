@@ -179,24 +179,53 @@ class EventController extends Controller
         $end_time_parse = Carbon::parse($request->end_time);
 
         if($start_time_parse->lessThan($end_time_parse)) {
-            Event::create([
-                'name' => $request->name,
-                'description' => $request->description,
-                'start_time' => $request->start_time,
-                'end_time' => $request->end_time,
-                'occupancy_option' => $request->occupancy_option,
-                'audience' => $request->audience,
-                'is_loud' => $request->is_loud,
-                'event_type_id' => $request->event_type_id,
-                'room_id' => $request->room_id,
-                'project_id' => $request->project_id,
-                'user_id' => $request->user_id
-            ]);
+            if($request->project_name == null) {
+                $this->store_on_existing_project($request);
+            }
+            else {
+                $this->store_on_new_project($request);
+            }
             return Redirect::back()->with('success', 'Event created.');
         }
         else {
             return response()->json(['error' => 'Start date has to be before end date.'], 403);
         }
+    }
+
+    private function store_on_existing_project(Request $request) {
+        Event::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'occupancy_option' => $request->occupancy_option,
+            'audience' => $request->audience,
+            'is_loud' => $request->is_loud,
+            'event_type_id' => $request->event_type_id,
+            'room_id' => $request->room_id,
+            'project_id' => $request->project_id,
+            'user_id' => $request->user_id
+        ]);
+    }
+
+    private function store_on_new_project(Request $request) {
+        $project = Project::create([
+            'name' => $request->project_name
+        ]);
+
+        Event::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'start_time' => $request->start_time,
+            'end_time' => $request->end_time,
+            'occupancy_option' => $request->occupancy_option,
+            'audience' => $request->audience,
+            'is_loud' => $request->is_loud,
+            'event_type_id' => $request->event_type_id,
+            'room_id' => $request->room_id,
+            'project_id' => $project->id,
+            'user_id' => $request->user_id
+        ]);
     }
 
     /**

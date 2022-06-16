@@ -19,7 +19,7 @@ class DatabaseSeeder extends Seeder
             EventTypeSeeder::class,
             UserSeeder::class,
             AreaSeeder::class,
-            ProjectSeeder::class,
+            //ProjectSeeder::class,
             RoomSeeder::class,
             EventSeeder::class
         ]);

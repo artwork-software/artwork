@@ -3,6 +3,7 @@
 use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Support\Facades\Date;
@@ -33,6 +34,7 @@ test('users with the permission can view events by room and month', function() {
         ->assertInertia(fn(Assert $page) => $page
             ->component('Events/EventManagement')
             ->has('month_events.0', fn(Assert $page) => $page
+                ->has('id')
                 ->where('name', 'TestRoom')
                 ->has('days.0', fn(Assert $page) => $page
                     ->hasAll(['date','date_formatted', 'events'])
@@ -58,7 +60,7 @@ test('users with the permission can view events by room and day', function() {
 
 });
 
-test('users with the permission can create events', function() {
+test('users with the permission can create events on existing projects', function() {
 
     //$this->auth_user->givePermissionTo('manage events');
 
@@ -84,6 +86,38 @@ test('users with the permission can create events', function() {
         'room_id' => $this->room->id,
         'user_id' => $this->auth_user->id,
         'start_time' => null
+    ]);
+});
+
+test('users with the permission can create events on new projects', function() {
+
+    //$this->auth_user->givePermissionTo('manage events');
+
+    $this->actingAs($this->auth_user);
+
+    $res = $this->post('/events', [
+        'name' => 'TestEvent2',
+        'event_type_id' => $this->event_type->id,
+        'room_id' => $this->room->id,
+        'user_id' => $this->auth_user->id,
+        'start_time' => null,
+        'end_time' => null,
+        'description' => null,
+        'occupancy_option' => null,
+        'is_loud' => null,
+        'audience' => null,
+        'project_name' => 'TestProject2'
+    ]);
+
+    $project = Project::where('name', 'TestProject2')->first();
+
+    $this->assertDatabaseHas('events', [
+        'name' => 'TestEvent2',
+        'event_type_id' => $this->event_type->id,
+        'room_id' => $this->room->id,
+        'user_id' => $this->auth_user->id,
+        'start_time' => null,
+        'project_id' => $project->id
     ]);
 });
 

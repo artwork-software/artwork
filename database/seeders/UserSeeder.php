@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\GeneralSettings;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -30,5 +31,11 @@ class UserSeeder extends Seeder
         ]);
 
         $user->assignRole('admin');
+
+        $settings = app(GeneralSettings::class);
+
+        $settings->setup_finished = true;
+
+        $settings->save();
     }
 }

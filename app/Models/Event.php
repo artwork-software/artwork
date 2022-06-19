@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -28,6 +30,22 @@ class Event extends Model
         'audience' => 'boolean',
         'occupancy_option' => 'boolean'
     ];
+
+    protected $appends = [
+        'days_of_event',
+    ];
+
+    public function getDaysOfEventAttribute(): array
+    {
+        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days = [];
+
+        foreach ($days_period as $day) {
+            $days[] = $day->format('d.m.');
+        }
+
+        return $days;
+    }
 
     public function event_type()
     {

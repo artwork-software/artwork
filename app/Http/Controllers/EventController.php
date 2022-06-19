@@ -15,6 +15,22 @@ use Illuminate\Support\Facades\Redirect;
 
 class EventController extends Controller
 {
+
+    private function get_events_of_day($date_of_day, $room): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.');
+
+        foreach ($room->events as $event) {
+            if(in_array($today, $event->days_of_event)) {
+                $eventsToday[] = $event;
+            }
+        }
+
+        return $eventsToday;
+    }
+
     /**
      * Display a listing of the resource.
      * Returns all Events
@@ -23,8 +39,22 @@ class EventController extends Controller
      */
     public function month_index(Request $request)
     {
+
+        $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
+
         return inertia('Events/EventManagement', [
-            'month_events' => $this->month_events($request->query('month_start'), $request->query('month_end')),
+            'days_this_month' => collect($period)->map(fn($date_of_day) => [
+                'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
+            ]),
+            'rooms' => Room::with('events')->get()->map(fn($room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'days_in_month' => collect($period)->map(fn($date_of_day) => [
+                    'date_local' => $date_of_day->toDateTimeLocalString(),
+                    'date' => $date_of_day->format('d.m.'),
+                    'events' => $this->get_events_of_day($date_of_day, $room)
+                ]),
+            ]),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
@@ -35,7 +65,7 @@ class EventController extends Controller
             'areas' => Area::paginate(10)->through(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => $area->rooms()->orderBy('order')->get()->map(fn($room) => [
+                'rooms' => $area->rooms()->with('room_admins')->orderBy('order')->get()->map(fn($room) => [
                     'id' => $room->id,
                     'name' => $room->name,
                     'description' => $room->description,
@@ -86,42 +116,6 @@ class EventController extends Controller
 
 
         return $conflict_event_ids;
-    }
-
-    public function month_events($month_start, $month_end)
-    {
-        $period = CarbonPeriod::create($month_start, $month_end);
-
-        return Room::with('events')->get()->map(fn($room) => [
-            'name' => $room->name,
-            'id' => $room->id,
-            'days' => collect($period)->map(fn($date_of_day) => [
-                'date' => $date_of_day->toDateTimeLocalString(),
-                'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
-                'conflicts' => $this->conflict_event_ids($room),
-                'events' => $room->events()
-                    ->whereDate('start_time', '<=', $date_of_day)
-                    ->whereDate('end_time', '>=', $date_of_day)->get()->map(fn($event) => [
-                        'id' => $event->id,
-                        'name' => $event->name,
-                        'description' => $event->description,
-                        "start_time" => $event->start_time,
-                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
-                        "end_time" => $event->end_time,
-                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
-                        "occupancy_option" => $event->occupancy_option,
-                        "audience" => $event->audience,
-                        "is_loud" => $event->is_loud,
-                        "event_type_id" => $event->event_type_id,
-                        "room_id" => $event->room_id,
-                        "user_id" => $event->user_id,
-                        "project_id" => $event->project_id,
-                        "created_at" =>  $event->created_at,
-                        "updated_at" => $event->updated_at,
-                    ])
-            ])
-        ]);
-
     }
 
     public function day_index(Request $request) {

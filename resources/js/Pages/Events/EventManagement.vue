@@ -17,17 +17,17 @@
                             </div>
                             <div class="bg-stone-50 w-full flex">
                                 <div class="mt-14 w-48">
-                                    <div v-for="dayDate in month_events[0].days"
+                                    <div v-for="day in days_this_month"
                                          class="w-40 inline-flex mt-1 h-36 w-full text-lg text-secondary subpixel-antialiased">
-                                        {{ dayDate.date_formatted }}
+                                        {{ day.date_formatted }}
                                     </div>
                                 </div>
                                 <div class="flex">
-                                    <div v-for="room in month_events" class="inline-flex flex-col">
+                                    <div v-for="room in rooms" class="inline-flex flex-col">
                                         <h2 class="text-lg text-secondary subpixel-antialiased mt-4 mb-2">
                                             {{ room.name }}
                                         </h2>
-                                        <div v-for="day in room.days">
+                                        <div v-for="day in room.days_in_month">
                                             <div @click="openDayDetailModal(day)" v-if="day.events.length > 0"
                                                  :class="[{'stripes': day.events[0].occupancy_option }, 'bg-white m-0.5 h-36 mr-4 border border-gray-100 cursor-pointer']">
                                                 <!-- If only 1 event on that day-->
@@ -59,10 +59,10 @@
                                                             }}
                                                         </div>
                                                         <!-- Time of Event -->
-                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">
-                                                            {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}
-                                                            - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}
-                                                        </div>
+<!--                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">-->
+<!--                                                            {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}-->
+<!--                                                            - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}-->
+<!--                                                        </div>-->
                                                         <!-- EventType -->
                                                         <div class="mt-8 ml-2 mb-1">
                                                             <EventTypeIconCollection :height="20" :width="20"
@@ -79,10 +79,10 @@
                                                         {{ day.events.length }} Projekte
                                                     </div>
 
-                                                    <div class="ml-2 text-sm text-secondary subpixel-antialiased">
-                                                        {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}
-                                                        - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}
-                                                    </div>
+<!--                                                    <div class="ml-2 text-sm text-secondary subpixel-antialiased">-->
+<!--                                                        {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}-->
+<!--                                                        - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}-->
+<!--                                                    </div>-->
                                                     <div class="mt-8 ml-2 mb-1 flex">
                                                         <div class="my-auto -mr-1.5 ring-white ring-2 rounded-full" v-for="eventType in this.getEventTypes(day.events)">
                                                         <EventTypeIconCollection class="rounded-full ring-2 ring-white" :height="20" :width="20"
@@ -92,7 +92,7 @@
                                                 </div>
 
                                             </div>
-                                            <div @mouseover="activateHover(day.date,room.id)"
+                                            <div @mouseover="activateHover(day.date, room.id)"
                                                  @click="openAddEventModal(room.id)"
                                                  @mouseout="deactivateHover()" v-else
                                                  class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer"
@@ -108,9 +108,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <pre>
-                                {{ month_events }}
-                            </pre>
+
                             </div>
                         </div>
                     </div>
@@ -430,7 +428,7 @@
                         </Listbox>
                         <div v-if="event.name !== null"
                              class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                            {{ wantedDay.conflicts.includes(event.id) }} {{ event.name }}
+
                         </div>
 
                     </div>
@@ -547,6 +545,8 @@
                             Speichern
                         </button>
                     </div>
+
+
                 </div>
             </template>
         </jet-dialog-modal>
@@ -622,7 +622,7 @@ export default defineComponent({
         VolumeUpIcon,
         Switch
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];

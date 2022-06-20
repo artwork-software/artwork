@@ -20,7 +20,7 @@ class EventController extends Controller
     {
 
         $eventsToday = [];
-        $today = $date_of_day->format('d.m.');
+        $today = $date_of_day->format('d.m.Y');
 
         foreach ($room->events as $event) {
             if(in_array($today, $event->days_of_event)) {
@@ -51,7 +51,7 @@ class EventController extends Controller
                 'name' => $room->name,
                 'days_in_month' => collect($period)->map(fn($date_of_day) => [
                     'date_local' => $date_of_day->toDateTimeLocalString(),
-                    'date' => $date_of_day->format('d.m.'),
+                    'date' => $date_of_day->format('d.m.Y'),
                     'events' => $this->get_events_of_day($date_of_day, $room)
                 ]),
             ]),

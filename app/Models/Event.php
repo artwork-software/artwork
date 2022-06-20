@@ -41,7 +41,7 @@ class Event extends Model
         $days = [];
 
         foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.');
+            $days[] = $day->format('d.m.Y');
         }
 
         return $days;

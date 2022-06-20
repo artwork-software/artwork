@@ -4,8 +4,9 @@
             <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
-                        <div class="flex flex-wrap">
-                            <h2 class="text-2xl flex">Raumbelegungen</h2>
+                        <div class="flex flex-wrap items-center">
+                            <div class="flex items-center mb-4">
+                            <h2 class="text-3xl font-black flex">Raumbelegungen</h2>
                             <button @click="openAddEventModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -15,6 +16,77 @@
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
                             </div>
+                            </div>
+                            <div class="flex w-full my-4 items-center">
+                                <div class="text-xl font-black">
+                                {{formattedMonth}}
+                                {{ rooms[0].days_in_month[0].date_local.substring(0,4)}}
+                                </div>
+
+                                <div class="ml-2 flex items-center">
+                                    <Link :href="route('events.monthly_management',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) )})">
+                                    <ChevronLeftIcon class="h-5 w-5" />
+                                    </Link>
+                                    <CalendarIcon class="h-6 w-6" />
+                                    <Link :href="route('events.monthly_management',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) )})">
+                                    <ChevronRightIcon class="h-5 w-5" />
+                                    </Link>
+                                </div>
+                                <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto" v-model="wantedArea">
+                                    <div class="relative">
+                                        <ListboxButton
+                                            class="ml-4 cursor-pointer bg-white relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span v-if="wantedArea" class="block truncate items-center">
+                                            <span>{{ wantedArea.name }}</span>
+                                        </span>
+                                        <span v-else class="block truncate items-center">
+                                            <span>Alle Areale</span>
+                                        </span>
+                                            <span
+                                                class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                                        </ListboxButton>
+
+                                        <transition leave-active-class="transition ease-in duration-100"
+                                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                            <ListboxOptions
+                                                class="absolute cursor-pointer z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                                <ListboxOption as="template" class="max-h-8" key="Alle Areale" :value="null" v-slot="{active, selected}">
+                                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        Alle Areale
+                                                    </span>
+                                                        <span
+                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                                    </li>
+                                                </ListboxOption>
+                                                <ListboxOption as="template" class="max-h-8"
+                                                               v-for="area in areas.data"
+                                                               :key="area.name"
+                                                               :value="area"
+                                                               v-slot="{ active, selected }">
+                                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ area.name }}
+                                                    </span>
+                                                        <span
+                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                                    </li>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </transition>
+                                    </div>
+                                </Listbox>
+                            </div>
                             <div class="bg-stone-50 w-full flex">
                                 <div class="mt-14 w-48">
                                     <div v-for="day in days_this_month"
@@ -23,7 +95,7 @@
                                     </div>
                                 </div>
                                 <div class="flex">
-                                    <div v-for="room in rooms" class="inline-flex flex-col">
+                                    <div v-if="this.roomsToShow.length > 0" v-for="room in roomsToShow" class="inline-flex flex-col">
                                         <h2 class="text-lg text-secondary subpixel-antialiased mt-4 mb-2">
                                             {{ room.name }}
                                         </h2>
@@ -33,7 +105,7 @@
                                                 <!-- If only 1 event on that day-->
                                                 <div v-if="day.events.length === 1">
                                                     <!-- Icons -->
-                                                    <div class="flex p-1 ml-1">
+                                                    <div class="flex p-1 ml-1 mt-1">
                                                         <UserGroupIcon v-if="day.events[0].audience"
                                                                        class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
                                                         <VolumeUpIcon v-if="day.events[0].is_loud"
@@ -47,22 +119,23 @@
                                                     <div>
                                                         <!-- Individual Eventname -->
                                                         <div v-if="day.events[0].project_id === null"
-                                                             class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                             class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                         <!-- Name of connected Project -->
                                                         <div
                                                             v-else
-                                                            class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                            class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                             {{
                                                                 projects.data.find(x => x.id === day.events[0].project_id).name
                                                             }}
                                                         </div>
                                                         <!-- Time of Event -->
-<!--                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">-->
-<!--                                                            {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}-->
-<!--                                                            - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}-->
-<!--                                                        </div>-->
+                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">
+                                                            {{ getTimespan(day)[0].toString().substring(16,21) }}
+                                                            - {{ getTimespan(day)[1].toString().substring(16,21) }}
+                                                        </div>
+
                                                         <!-- EventType -->
                                                         <div class="mt-8 ml-2 mb-1">
                                                             <EventTypeIconCollection :height="20" :width="20"
@@ -71,34 +144,45 @@
                                                     </div>
                                                 </div>
                                                 <div v-else-if="day.events.length > 1">
-                                                    <div class="h-5 w-5">
-                                                        <!-- placeholder for design purposes -->
+                                                    <div class="flex p-1 ml-1 mt-1">
+                                                        <UserGroupIcon v-if="day.events.some(x => x.audience === true)"
+                                                                       class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                        <VolumeUpIcon v-if="day.events.some(x => x.is_loud === true)"
+                                                                      :class="day.events.some(x => x.audience === true) ? 'ml-1' : ''"
+                                                                      class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                        <div v-else class="h-5 w-5">
+                                                            <!-- placeholder for design purposes -->
+                                                        </div>
                                                     </div>
                                                     <div
                                                         class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                         {{ day.events.length }} Projekte
                                                     </div>
 
-<!--                                                    <div class="ml-2 text-sm text-secondary subpixel-antialiased">-->
-<!--                                                        {{ getTimespan(day)[0].split(' ')[1].slice(0, -3) }}-->
-<!--                                                        - {{ getTimespan(day)[1].split(' ')[1].slice(0, -3) }}-->
-<!--                                                    </div>-->
+                                                    <div class="ml-2 text-sm text-secondary subpixel-antialiased">
+                                                        {{ getTimespan(day)[0].toString().substring(16,21) }}
+                                                        - {{ getTimespan(day)[1].toString().substring(16,21) }}
+                                                    </div>
+
                                                     <div class="mt-8 ml-2 mb-1 flex">
-                                                        <div class="my-auto -mr-1.5 ring-white ring-2 rounded-full" v-for="eventType in this.getEventTypes(day.events)">
-                                                        <EventTypeIconCollection class="rounded-full ring-2 ring-white" :height="20" :width="20"
-                                                                                 :iconName="eventType.svg_name"/>
+                                                        <div class="my-auto -mr-1.5 ring-white ring-2 rounded-full"
+                                                             v-for="eventType in this.getEventTypes(day.events)">
+                                                            <EventTypeIconCollection
+                                                                class="rounded-full ring-2 ring-white" :height="20"
+                                                                :width="20"
+                                                                :iconName="eventType.svg_name"/>
                                                         </div>
                                                     </div>
                                                 </div>
 
                                             </div>
-                                            <div @mouseover="activateHover(day.date, room.id)"
+                                            <div @mouseover="activateHover(day.date_local, room.id)"
                                                  @click="openAddEventModal(room.id)"
                                                  @mouseout="deactivateHover()" v-else
                                                  class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer"
-                                                 :class="showAddHoverDate === day.date && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
+                                                 :class="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
                                                 <button
-                                                    v-show="showAddHoverDate === day.date && showAddHoverRoomId === room.id"
+                                                    v-show="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id"
                                                     type="button"
                                                     class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
                                                     <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
@@ -114,7 +198,7 @@
                     </div>
 
                 </div>
-
+                {{ rooms }}
 
             </div>
         </div>
@@ -557,23 +641,28 @@
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    DotsVerticalIcon,
-    ChevronDownIcon,
-    XIcon,
     AdjustmentsIcon,
+    ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    DotsVerticalIcon,
     UserGroupIcon,
-    VolumeUpIcon
+    VolumeUpIcon,
+    XIcon,
 } from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, XCircleIcon} from '@heroicons/vue/solid'
+import {CalendarIcon, CheckIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
 import {
     Listbox,
-    ListboxButton, ListboxLabel,
+    ListboxButton,
+    ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems, Switch
+    MenuItem,
+    MenuItems,
+    Switch
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
@@ -582,9 +671,8 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 
 
@@ -620,7 +708,11 @@ export default defineComponent({
         AdjustmentsIcon,
         UserGroupIcon,
         VolumeUpIcon,
-        Switch
+        Switch,
+        ChevronLeftIcon,
+        ChevronRightIcon,
+        CalendarIcon,
+
     },
     props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month'],
     computed: {
@@ -632,18 +724,53 @@ export default defineComponent({
                 })
             })
             return allRoomsArray;
-        }
+        },
+        formattedMonth: function (){
+            switch(this.rooms[0].days_in_month[0].date_local.slice(5,7)){
+                case '01':
+                    return 'Januar';
+                case '02':
+                    return 'Februar';
+                case '03':
+                    return 'März';
+                case '04':
+                    return 'April';
+                case '05':
+                    return 'Mai';
+                case '06':
+                    return 'Juni';
+                case '07':
+                    return 'Juli';
+                case '08':
+                    return 'August';
+                case '09':
+                    return 'September';
+                case '10':
+                    return 'Oktober';
+                case '11':
+                    return 'November';
+                case '12':
+                    return 'Dezember';
+            }
+        },
+        roomsToShow: function () {
+            let roomsCopy = this.rooms.slice();
+            if(this.wantedArea){
+                return roomsCopy.filter(room => room.area_id === this.wantedArea.id)
+            }
+            return  this.rooms
+        },
     },
     methods: {
         openAddEventModal(roomId) {
             this.addingEvent = true;
             if (this.showAddHoverDate !== null) {
                 const startDate = new Date(this.showAddHoverDate);
-                startDate.setMinutes(startDate.getMinutes() - 1200);
+                startDate.setMinutes(startDate.getMinutes() + 120);
                 this.addEventForm.start_time = startDate.toISOString().slice(0, 16);
 
                 const endDate = new Date(this.showAddHoverDate);
-                endDate.setMinutes(endDate.getMinutes() + 239);
+                endDate.setMinutes(endDate.getMinutes() + 1559);
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
             if (roomId !== null) {
@@ -658,35 +785,41 @@ export default defineComponent({
             }
         },
         getTimespan(day) {
-            let earliestStart = day.events[0].start_time < new Date(new Date(day.date).setMinutes(-1200)).toISOString().slice(0, 19).replace("T", " ") ? new Date(new Date(day.date).setMinutes(-1200)).toISOString().slice(0, 19).replace("T", " ") : day.events[0].start_time;
-            let latestEnd = new Date(day.events[0].end_time).getTime() > new Date(new Date(day.date).setMinutes(120)).getTime() ? new Date(new Date(day.date).setMinutes(239)).toISOString().slice(0, 19).replace("T", " ") : day.events[0].end_time;
+            let startOfDayInMillis = new Date(day.date_local).getTime();
+            let endOfDayInMillis = new Date(new Date(day.date_local).setMinutes(1439)).getTime();
+            let earliestStart = new Date(day.events[0].start_time_dt_local).getTime() < startOfDayInMillis ? startOfDayInMillis : new Date(day.events[0].start_time_dt_local).getTime();
+            let latestEnd = new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis ? endOfDayInMillis : new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis;
             day.events.forEach((event) => {
-                if (event.start_time < earliestStart) {
-                    if(event.start_time < new Date(new Date(day.date).setMinutes(-1200)).toISOString().slice(0, 19).replace("T", " ")){
-                        earliestStart = new Date(new Date(day.date).setMinutes(-1200)).toISOString().slice(0, 19).replace("T", " ");
-                    }else{
-                        earliestStart = event.start_time;
+                let startTimeInMillis = new Date(event.start_time_dt_local).getTime();
+                if (startTimeInMillis < earliestStart) {
+                    if (startTimeInMillis < startOfDayInMillis) {
+                        earliestStart = startOfDayInMillis;
+                    } else {
+                        earliestStart = startTimeInMillis;
                     }
                 }
-                if(event.end_time > latestEnd){
-                    if(new Date(event.end_time).getTime() > new Date(new Date(day.date).setMinutes(120)).getTime()){
-                        latestEnd = new Date(new Date(day.date).setMinutes(239)).toISOString().slice(0, 19).replace("T", " ")
-                    }else{
-                        latestEnd = event.end_time;
+                let endTimeInMillis = new Date(event.end_time_dt_local).getTime();
+                if (endTimeInMillis > latestEnd) {
+                    if (endTimeInMillis > endOfDayInMillis) {
+                        latestEnd = endOfDayInMillis;
+                    } else {
+                        latestEnd = endTimeInMillis;
                     }
                 }
             })
-            return [earliestStart,latestEnd]
+            let earliestStartDate = new Date(earliestStart);
+            let latestEndDate = new Date(latestEnd);
+            return [earliestStartDate, latestEndDate]
         },
-        getEventTypes(events){
+        getEventTypes(events) {
             let eventTypesToDisplay = [];
             events.forEach((event) => {
                 let wantedEventType = this.event_types.data.find(x => x.id === event.event_type_id);
-                if(!eventTypesToDisplay.includes(wantedEventType)){
+                if (!eventTypesToDisplay.includes(wantedEventType)) {
                     eventTypesToDisplay.push(wantedEventType);
                 }
             })
-          return eventTypesToDisplay;
+            return eventTypesToDisplay;
         },
         closeAddEventModal() {
             this.addingEvent = false;
@@ -785,6 +918,7 @@ export default defineComponent({
             selectedRoom: null,
             creatingProject: false,
             project_query: "",
+            wantedArea: null,
             project_search_results: [],
             addEventForm: useForm({
                 name: '',

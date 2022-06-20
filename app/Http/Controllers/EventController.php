@@ -24,7 +24,24 @@ class EventController extends Controller
 
         foreach ($room->events as $event) {
             if(in_array($today, $event->days_of_event)) {
-                $eventsToday[] = $event;
+                $eventsToday[] = [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    "start_time" => $event->start_time,
+                    "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    "end_time" => $event->end_time,
+                    "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    "occupancy_option" => $event->occupancy_option,
+                    "audience" => $event->audience,
+                    "is_loud" => $event->is_loud,
+                    "event_type_id" => $event->event_type_id,
+                    "room_id" => $event->room_id,
+                    "user_id" => $event->user_id,
+                    "project_id" => $event->project_id,
+                    "created_at" =>  $event->created_at,
+                    "updated_at" => $event->updated_at,
+                ];
             }
         }
 
@@ -49,6 +66,7 @@ class EventController extends Controller
             'rooms' => Room::with('events')->get()->map(fn($room) => [
                 'id' => $room->id,
                 'name' => $room->name,
+                'area_id' => $room->area_id,
                 'days_in_month' => collect($period)->map(fn($date_of_day) => [
                     'date_local' => $date_of_day->toDateTimeLocalString(),
                     'date' => $date_of_day->format('d.m.Y'),

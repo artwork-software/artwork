@@ -155,7 +155,7 @@
                 </div>
 
                 <div class="flex">
-                    {{new Date((new Date).getFullYear(),(new Date).getMonth(),1)}}
+                    {{$page.props}}
                     <div class="bg-white shadow overflow-hidden sm:rounded-md">
                         <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
                         <ul role="list" class="divide-y divide-gray-200">

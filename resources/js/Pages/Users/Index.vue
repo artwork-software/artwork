@@ -210,13 +210,13 @@
                         <div class="mb-8">
                             <RadioGroup v-model="selected">
                                 <div class="bg-white rounded-md -space-y-px">
-                                    <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role.roleName" v-slot="{ checked, active }">
+                                    <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role" v-slot="{ checked, active }">
                                         <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
                                             <div class="flex items-center text-sm">
                                                     <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
                                                         <CheckIcon v-if="checked" class="w-6 h-6 text-white" />
                                                     </span>
-                                                <RadioGroupLabel as="span" :class="[selected === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
+                                                <RadioGroupLabel as="span" :class="[selected.roleName === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
                                             </div>
                                             <div class="flex flex-1 justify-end">
 
@@ -414,14 +414,6 @@ export default defineComponent({
         }
     },
     methods: {
-        search() {
-            console.log('test')
-            axios.get('/users/search', {
-                params: {query: "Jakob"}
-            }).then( response => {
-                console.log(response)
-            })
-        },
         openSuccessModal() {
             this.showSuccessModal = true;
         },
@@ -494,7 +486,7 @@ export default defineComponent({
         }
     },
     setup() {
-        const selected = ref(roleCheckboxes[0].roleName)
+        const selected = ref(roleCheckboxes[0])
 
         return {
             userPermissionCheckboxes,

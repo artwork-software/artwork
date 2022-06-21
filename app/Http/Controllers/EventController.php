@@ -16,13 +16,13 @@ use Illuminate\Support\Facades\Redirect;
 class EventController extends Controller
 {
 
-    private function get_events_of_day($date_of_day, $room): array
+    private function get_events_of_day($date_of_day, $events): array
     {
 
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        foreach ($room->events as $event) {
+        foreach ($events as $event) {
             if(in_array($today, $event->days_of_event)) {
                 $eventsToday[] = [
                     'id' => $event->id,
@@ -59,6 +59,8 @@ class EventController extends Controller
 
         $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
 
+        $eventsWithoutRoom = Event::where('room_id', null);
+
         return inertia('Events/EventManagement', [
             'days_this_month' => collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
@@ -70,9 +72,17 @@ class EventController extends Controller
                 'days_in_month' => collect($period)->map(fn($date_of_day) => [
                     'date_local' => $date_of_day->toDateTimeLocalString(),
                     'date' => $date_of_day->format('d.m.Y'),
-                    'events' => $this->get_events_of_day($date_of_day, $room)
+                    'events' => $this->get_events_of_day($date_of_day, $room->events)
                 ]),
             ]),
+            'events_without_room' => [
+                'days_in_month' => collect($period)->map(fn($date_of_day) => [
+                    'date_local' => $date_of_day->toDateTimeLocalString(),
+                    'date' => $date_of_day->format('d.m.Y'),
+                    'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom ),
+                    'number_of_events' => sizeof($eventsWithoutRoom),
+                ]),
+            ],
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
@@ -205,6 +215,8 @@ class EventController extends Controller
                 'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
                 'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
                 'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
                 'occupancy_option' => $event->occupancy_option,
                 'audience' => $event->audience,
                 'is_loud' => $event->is_loud,

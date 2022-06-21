@@ -198,7 +198,7 @@
                     </div>
 
                 </div>
-                {{ rooms }}
+                {{ this.events_without_room }}
 
             </div>
         </div>
@@ -714,7 +714,7 @@ export default defineComponent({
         CalendarIcon,
 
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month','events_without_room'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];

@@ -1,318 +1,210 @@
 <template>
     <app-layout title="Dashboard">
-        <div class="py-12">
-            <div class="max-w-screen-2xl my-12 flex flex-row justify-between mx-auto sm:px-6 lg:px-8">
-                <div class="flex">
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
+            <div class="flex h-full flex-col">
+                <header class="relative z-40 flex flex-none items-center justify-between border-b border-gray-200 py-4 px-6">
+                    <h1 class="text-lg font-semibold text-gray-900">
+                        <time datetime="2022-01">Aktuelles Datum aus Backend zum direkt darstellen</time>
+                    </h1>
+                </header>
+                <div ref="container" class="flex flex-auto flex-col overflow-auto bg-white">
+                    <div style="width: 165%" class="flex max-w-full flex-none flex-col sm:max-w-none md:max-w-full">
+                        <div ref="containerNav" class="sticky top-0 z-30 flex-none bg-white shadow ring-1 ring-black ring-opacity-5 sm:pr-8">
+
+                            <div class="-mr-px hidden grid-cols-7 divide-x divide-gray-100 border-r border-gray-100 text-sm leading-6 text-gray-500 sm:grid">
+                                <div class="col-end-1 w-14" />
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Mon <span class="items-center justify-center font-semibold text-gray-900">10</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Tue <span class="items-center justify-center font-semibold text-gray-900">11</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span class="flex items-baseline">Wed <span class="ml-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">12</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Thu <span class="items-center justify-center font-semibold text-gray-900">13</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Fri <span class="items-center justify-center font-semibold text-gray-900">14</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Sat <span class="items-center justify-center font-semibold text-gray-900">15</span></span>
+                                </div>
+                                <div class="flex items-center justify-center py-3">
+                                    <span>Sun <span class="items-center justify-center font-semibold text-gray-900">16</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex flex-auto">
+                            <div class="sticky left-0 z-10 w-14 flex-none bg-white ring-1 ring-gray-100" />
+                            <div class="grid flex-auto grid-cols-1 grid-rows-1">
+                                <!-- Horizontal lines -->
+                                <div class="col-start-1 col-end-2 row-start-1 grid divide-y divide-gray-100" style="grid-template-rows: repeat(48, minmax(3.5rem, 1fr))">
+                                    <div ref="containerOffset" class="row-end-1 h-7" />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">12AM</div>
                                     </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
-                </div>
-                <div class="flex">
-
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Benachrichtigungen</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">1AM</div>
                                     </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
-                </div>
-            </div>
-            <div class="max-w-screen-2xl flex flex-row justify-between mx-auto sm:px-6 lg:px-8">
-                <div class="flex-grow">
-
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Kalender</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">2AM</div>
                                     </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
-                </div>
-
-                <div class="flex">
-                    {{$page.props}}
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">3AM</div>
                                     </div>
-                                </a>
-                            </li>
-                        </ul>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">4AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">5AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">6AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">7AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">8AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">9AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">10AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">11AM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">12PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">1PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">2PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">3PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">4PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">5PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">6PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">7PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">8PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">9PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">10PM</div>
+                                    </div>
+                                    <div />
+                                    <div>
+                                        <div class="sticky left-0 z-20 -mt-2.5 -ml-14 w-14 pr-2 text-right text-xs leading-5 text-gray-400">11PM</div>
+                                    </div>
+                                    <div />
+                                </div>
+                                <!-- Events -->
+                                <ol class="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8" style="grid-template-rows: 1.75rem repeat(360, minmax(0, 1fr)) auto">
+                                    <li class="relative mt-px flex sm:col-start-3" style="grid-row: 180 / span 180">
+                                        <a href="#" class="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100">
+                                            <p class="order-1 font-semibold text-blue-700">Breakfast</p>
+                                            <p class="text-blue-500 group-hover:text-blue-700">
+                                                <time datetime="2022-01-12T06:00">6:00 AM</time>
+                                            </p>
+                                        </a>
+                                    </li>
+                                    <li class="relative mt-px flex sm:col-start-3" style="grid-row: 92 / span 30">
+                                        <a href="#" class="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-pink-50 p-2 text-xs leading-5 hover:bg-pink-100">
+                                            <p class="order-1 font-semibold text-pink-700">Flight to Paris</p>
+                                            <p class="text-pink-500 group-hover:text-pink-700">
+                                                <time datetime="2022-01-12T07:30">7:30 AM</time>
+                                            </p>
+                                        </a>
+                                    </li>
+                                    <li class="relative mt-px hidden sm:col-start-6 sm:flex" style="grid-row: 122 / span 24">
+                                        <a href="#" class="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-100 p-2 text-xs leading-5 hover:bg-gray-200">
+                                            <p class="order-1 font-semibold text-gray-700">Meeting with design team at Disney</p>
+                                            <p class="text-gray-500 group-hover:text-gray-700">
+                                                <time datetime="2022-01-15T10:00">10:00 AM</time>
+                                            </p>
+                                        </a>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
                     </div>
-
-
                 </div>
             </div>
-        </div>
     </app-layout>
 </template>
 
 <script>
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {CalendarIcon, ChevronRightIcon} from '@heroicons/vue/solid'
+import { ref, onMounted } from 'vue'
+import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon, CalendarIcon } from '@heroicons/vue/solid'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
 
-const positions = [
-    {
-        id: 1,
-        title: 'Back End Developer',
-        department: 'Engineering',
-        closeDate: '2020-01-07',
-        closeDateFull: 'January 7, 2020',
-        applicants: [
-            {
-                name: 'Dries Vincent',
-                email: 'dries.vincent@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                email: 'lindsay.walton@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Courtney Henry',
-                email: 'courtney.henry@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Tom Cook',
-                email: 'tom.cook@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-    {
-        id: 2,
-        title: 'Front End Developer',
-        department: 'Engineering',
-        closeDate: '2020-01-07',
-        closeDateFull: 'January 7, 2020',
-        applicants: [
-            {
-                name: 'Whitney Francis',
-                email: 'whitney.francis@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Leonard Krasner',
-                email: 'leonard.krasner@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Floyd Miles',
-                email: 'floy.dmiles@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-    {
-        id: 3,
-        title: 'User Interface Designer',
-        department: 'Design',
-        closeDate: '2020-01-14',
-        closeDateFull: 'January 14, 2020',
-        applicants: [
-            {
-                name: 'Emily Selman',
-                email: 'emily.selman@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Kristin Watson',
-                email: 'kristin.watson@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Emma Dorsey',
-                email: 'emma.dorsey@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1505840717430-882ce147ef2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-]
+const container = ref(null)
+const containerNav = ref(null)
+const containerOffset = ref(null)
+
+onMounted(() => {
+    // Set the container scroll position based on the current time.
+    const currentMinute = new Date().getHours() * 60
+    container.value.scrollTop =
+        ((container.value.scrollHeight - containerNav.value.offsetHeight - containerOffset.value.offsetHeight) *
+            currentMinute) /
+        1440
+})
+
 export default defineComponent({
     components: {
         AppLayout,
         CalendarIcon,
-        ChevronRightIcon
+        ChevronRightIcon,
+        Menu,
+        MenuItem,
+        MenuButton,
+        MenuItems,
+        ChevronLeftIcon,
+        DotsHorizontalIcon,
+        ChevronDownIcon
     },
-    setup() {
-        return {
-            positions,
-        }
-    }
 })
 </script>

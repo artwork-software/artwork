@@ -16,6 +16,12 @@ class EventType extends Model
         'individual_name'
     ];
 
+    protected $casts = [
+        'project_mandatory' => 'boolean',
+        'individual_name' => 'boolean'
+
+    ];
+
     public function events() {
         return $this->hasMany(event::class);
     }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Area;
+use App\Models\EventType;
 use App\Models\Room;
 use App\Models\User;
 use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -35,17 +37,70 @@ class RoomController extends Controller
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
+    private function get_events_of_day($date_of_day, $events): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.Y');
+
+        foreach ($events as $event) {
+            if(in_array($today, $event->days_of_event)) {
+                $eventsToday[] = [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    "start_time" => $event->start_time,
+                    "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    "end_time" => $event->end_time,
+                    "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    "occupancy_option" => $event->occupancy_option,
+                    "audience" => $event->audience,
+                    "is_loud" => $event->is_loud,
+                    "event_type_id" => $event->event_type_id,
+                    "room_id" => $event->room_id,
+                    "user_id" => $event->user_id,
+                    "project_id" => $event->project_id,
+                    "created_at" =>  $event->created_at,
+                    "updated_at" => $event->updated_at,
+                ];
+            }
+        }
+
+        return $eventsToday;
+    }
+
     /**
      * Display the specified resource.
      *
      * @param  \App\Models\Room  $room
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function show(Room $room)
+    public function show(Room $room,Request $request)
     {
         $events = [];
+        $event_requests = [];
+        $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
         if($room->room_admins->contains(Auth::id())) {
             $events = $room->events;
+            $event_requests = $room->events->where('occupancy_option',true)->map(fn($event) => [
+                'id' => $event->id,
+                'name' => $event->name,
+                'description' => $event->description,
+                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
+                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
+                'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                'occupancy_option' => $event->occupancy_option,
+                'audience' => $event->audience,
+                'is_loud' => $event->is_loud,
+                'event_type' => $event->event_type,
+                'room' => $event->room,
+                'project' => $event->project,
+                'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
+                'created_by' => $event->creator
+                ]);
         }
         return inertia('Rooms/Show', [
             'room' => [
@@ -71,9 +126,18 @@ class RoomController extends Controller
                     'business' => $room_admin->business,
                     'description' => $room_admin->description,
                 ]),
-                'room_events' => $events,
+                'event_requests' => $event_requests,
+                'days_in_month' => collect($period)->map(fn($date_of_day) => [
+                    'date_local' => $date_of_day->toDateTimeLocalString(),
+                    'date' => $date_of_day->format('d.m.Y'),
+                    'events' => $this->get_events_of_day($date_of_day, $room->events)
+                ]),
                 'area' => $room->area
-            ]
+            ],
+            'event_types' => EventType::all(),
+            'days_this_month' => collect($period)->map(fn($date_of_day) => [
+                'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
+            ]),
         ]);
     }
 

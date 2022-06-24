@@ -28,7 +28,8 @@ class Event extends Model
     protected $casts = [
         'is_loud' => 'boolean',
         'audience' => 'boolean',
-        'occupancy_option' => 'boolean'
+        'occupancy_option' => 'boolean',
+
     ];
 
     protected $appends = [

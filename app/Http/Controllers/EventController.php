@@ -80,7 +80,7 @@ class EventController extends Controller
                     'date_local' => $date_of_day->toDateTimeLocalString(),
                     'date' => $date_of_day->format('d.m.Y'),
                     'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom ),
-                    'number_of_events' => sizeof($eventsWithoutRoom),
+                   // 'number_of_events' => sizeof($eventsWithoutRoom),s
                 ]),
             ],
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [

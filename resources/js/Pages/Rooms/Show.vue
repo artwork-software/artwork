@@ -62,12 +62,12 @@
                     </Menu>
                 </div>
                 <div v-if="room.temporary === 1" class="font-lexend text-lg my-4 font-semibold">
-                    {{room.start_date}} - {{room.end_date}}
+                    {{ room.start_date }} - {{ room.end_date }}
                 </div>
                 <div class="grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
                         <span class="text-secondary subpixel-antialiased">
-                            {{room.area.name}}
+                            {{ room.area.name }}
                         </span>
                         <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
                             {{ room.description }}
@@ -85,7 +85,8 @@
                             type="file"
                             multiple
                         />
-                        <div @click="selectNewFiles" @dragover.prevent @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                        <div @click="selectNewFiles" @dragover.prevent
+                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
                         border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
                             <p class="text-secondary text-center">Ziehe Dokumente hier her
                                 <br>oder klicke ins Feld
@@ -96,7 +97,9 @@
                             <div v-for="room_file in room.room_files"
                                  class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p @click="downloadFile(room_file)" class="ml-2 truncate flex-grow">{{ room_file.name }}</p>
+                                <p @click="downloadFile(room_file)" class="ml-2 truncate flex-grow">{{
+                                        room_file.name
+                                    }}</p>
                                 <XCircleIcon @click="removeFile(room_file)"
                                              class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
                                              aria-hidden="true"/>
@@ -115,16 +118,210 @@
                         <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                              :src="user.profile_photo_url"
                              alt=""/>
-                        <UserTooltip :user="user" />
+                        <UserTooltip :user="user"/>
                     </div>
                     <button @click="openChangeRoomAdminsModal">
                         <PencilAltIcon class="mt-4 ml-6 h-6 w-6"/>
                     </button>
                 </div>
+
+                <div class="flex flex-wrap">
+                    <span class="font-bold mt-12 font-lexend text-2xl w-full" v-if="room.event_requests.length > 0">
+                    Offene Belegungsanfragen
+                    </span>
+                    <div v-for="eventRequest in room.event_requests" class="flex flex-wrap w-full items-center">
+                        <div class="flex w-full items-center flex-wrap">
+                            <div class="flex items-center w-full mt-8">
+                                <div class="flex items-center w-full">
+                                    <EventTypeIconCollection :height="26" :width="26"
+                                                             :iconName="eventRequest.event_type.svg_name"/>
+                                    <div
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        {{ eventRequest.event_type.name }}
+                                        <UserGroupIcon v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                        <VolumeUpIcon v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                    </div>
+
+                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                         v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
+                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
+                                            eventRequest.start_time.split(',')[0]
+                                        }},{{ eventRequest.start_time.split(',')[1] }}
+                                        - {{ eventRequest.end_time.split(',')[1] }}
+                                    </div>
+                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                        {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
+                                        {{ eventRequest.start_time }} -
+                                        {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
+                                        {{ eventRequest.end_time }}
+                                    </div>
+                                    <button @click="openApproveRequestModal(eventRequest)" type="button"
+                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                        <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
+                                    </button>
+                                    <button @click="openDeclineRequestModal(eventRequest)" type="button"
+                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                        <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="flex items-center w-full ml-24 ">
+                                <div v-if="eventRequest.project" class="w-80">
+                                    <div class="text-secondary text-sm flex items-center">
+                                        Zugeordnet zu
+                                        <Link :href="route('projects.show',{project: eventRequest.project.id})"
+                                              class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                            {{ eventRequest.project.name }}
+                                        </Link>
+                                    </div>
+                                    <!--
+                                                                        <div v-for="projectLeader in eventRequest.project.project_managers">
+                                                                            <img :data-tooltip-target="projectLeader.id"
+                                                                                 :src="projectLeader.profile_photo_url"
+                                                                                 :alt="projectLeader.name"
+                                                                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                                                            <UserTooltip :user="projectLeader"/>
+                                                                        </div>
+                                    -->
+                                </div>
+                                <div class="text-secondary text-sm w-64" v-else>
+                                    Keinem Projekt zugeordnet
+                                </div>
+
+                                <div class="flex text-sm text-secondary items-center">
+                                    angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
+                                                   :src="eventRequest.created_by.profile_photo_url"
+                                                   :alt="eventRequest.created_by.name"
+                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip :user="eventRequest.created_by"/>
+                                    <span class="ml-2"> {{ eventRequest.created_at }}</span>
+                                </div>
+                                <div>
+
+                                </div>
+                            </div>
+
+                            <div class="flex ml-40 mt-2 text-sm text-secondary items-center w-full"
+                                 v-if="eventRequest.description">
+                                {{ eventRequest.description }}
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Raumkalender -->
+        <div class="bg-stone-50 w-full flex pl-20">
+            <div class="mt-16 w-36">
+                <div v-for="day in days_this_month"
+                     class="w-40 inline-flex mt-1 h-36 w-full text-lg text-secondary subpixel-antialiased">
+                    {{ day.date_formatted }}
+                </div>
+            </div>
+            <div class="flex">
+                <div  class="inline-flex flex-col pl-3">
+                    <h2 class="text-lg text-secondary subpixel-antialiased mt-4 mb-4 ">
+                        {{ room.name }}
+                    </h2>
+                    <div v-for="day in room.days_in_month">
+                        <div @click="openDayDetailModal(day)"
+                             v-if="day.events.length > 0 && checkEventType(day.events) && checkAttribute(day.events)"
+                             :class="[{'stripes': day.events[0].occupancy_option }, 'bg-white m-0.5 h-36 mr-4 border border-gray-100 cursor-pointer']">
+                            <!-- If only 1 event on that day-->
+                            <div
+                                v-if="day.events.length === 1">
+                                <!-- Icons -->
+                                <div class="flex p-1 ml-1 mt-1">
+                                    <UserGroupIcon v-if="day.events[0].audience"
+                                                   class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                    <VolumeUpIcon v-if="day.events[0].is_loud"
+                                                  :class="day.events[0].audience ? 'ml-1' : ''"
+                                                  class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                    <div v-if="!day.events[0].audience && !day.events[0].is_loud"
+                                         class="h-5 w-5">
+
+                                    </div>
+                                </div>
+                                <div>
+                                    <!-- Individual Eventname -->
+                                    <div v-if="day.events[0].project_id === null"
+                                         class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                        {{ day.events[0].name }}
+                                    </div>
+                                    <!-- Name of connected Project -->
+                                    <div
+                                        v-else
+                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                        {{
+                                            projects.data.find(x => x.id === day.events[0].project_id).name
+                                        }}
+                                    </div>
+                                    <!-- Time of Event -->
+                                    <div class="ml-2 text-sm text-secondary subpixel-antialiased">
+                                        {{ getTimespan(day)[0].toString().substring(16, 21) }}
+                                        - {{ getTimespan(day)[1].toString().substring(16, 21) }}
+                                    </div>
+
+                                    <!-- EventType -->
+                                    <div class="mt-8 ml-2 mb-1">
+                                        <EventTypeIconCollection :height="20" :width="20"
+                                                                 :iconName="this.event_types.data.find(x => x.id === day.events[0].event_type_id).svg_name"/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else-if="day.events.length > 1">
+                                <div class="flex p-1 ml-1 mt-1">
+                                    <UserGroupIcon v-if="day.events.some(x => x.audience === true)"
+                                                   class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                    <VolumeUpIcon v-if="day.events.some(x => x.is_loud === true)"
+                                                  :class="day.events.some(x => x.audience === true) ? 'ml-1' : ''"
+                                                  class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                    <div v-else class="h-5 w-5">
+                                        <!-- placeholder for design purposes -->
+                                    </div>
+                                </div>
+                                <div
+                                    class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                    {{ day.events.length }} Projekte
+                                </div>
+
+                                <div class="ml-2 text-sm text-secondary subpixel-antialiased">
+                                    {{ getTimespan(day)[0].toString().substring(16, 21) }}
+                                    - {{ getTimespan(day)[1].toString().substring(16, 21) }}
+                                </div>
+
+                                <div class="mt-8 ml-2 mb-1 flex">
+                                    <div class="my-auto -mr-1.5 ring-white ring-2 rounded-full"
+                                         v-for="eventType in this.getEventTypes(day.events)">
+                                        <EventTypeIconCollection
+                                            class="rounded-full ring-2 ring-white" :height="20"
+                                            :width="20"
+                                            :iconName="eventType.svg_name"/>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div @mouseover="activateHover(day.date_local, room.id)"
+                             @click="openAddEventModal(room.id)"
+                             @mouseout="deactivateHover()" v-else
+                             class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer"
+                             :class="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
+                            <button
+                                v-show="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id"
+                                type="button"
+                                class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
+                                <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
+                            </button>
+
+                        </div>
+                    </div>
+                </div>
             </div>
 
         </div>
-
         <!-- Change RoomAdmins Modal -->
         <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
             <template #content>
@@ -309,6 +506,200 @@
 
             </template>
         </jet-dialog-modal>
+        <!-- Approve Request Modal -->
+        <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Raumbelegung zusagen
+                    </div>
+                    <XIcon @click="closeApproveRequestModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success">
+                        Bist du sicher, dass du die Raumbelegung zusagen möchtest?
+                    </div>
+                    <div class="flex flex-wrap w-full items-center">
+                        <div class="flex w-full items-center flex-wrap">
+
+                            <div class="flex items-center w-full mt-4">
+                                <div class="flex items-center ml-12 w-full">
+                                    <EventTypeIconCollection :height="26" :width="26"
+                                                             :iconName="requestToApprove.event_type.svg_name"/>
+                                    <div
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        {{ requestToApprove.event_type.name }}
+                                        <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
+                                                         class="h-5 w-5 ml-2 my-auto"/>
+                                        <UserGroupIcon v-if="requestToApprove.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                        <VolumeUpIcon v-if="requestToApprove.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                    </div>
+
+                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                         v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
+                                        {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
+                                            requestToApprove.start_time.split(',')[0]
+                                        }},{{ requestToApprove.start_time.split(',')[1] }}
+                                        - {{ requestToApprove.end_time.split(',')[1] }}
+                                    </div>
+                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                        {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
+                                        {{ requestToApprove.start_time }} -
+                                        {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
+                                        {{ requestToApprove.end_time }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center w-full ml-2 justify-between">
+                                <div v-if="requestToApprove.project" class="w-80">
+                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                        Zugeordnet zu
+                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                            {{ requestToApprove.project.name }}
+                                        </div>
+                                    </div>
+                                    <!--
+                                    <div v-for="projectLeader in requestToApprove.project.project_managers">
+                                        <img :data-tooltip-target="projectLeader.id"
+                                             :src="projectLeader.profile_photo_url"
+                                             :alt="projectLeader.name"
+                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                        <UserTooltip :user="projectLeader"/>
+                                    </div>
+                                    -->
+                                </div>
+                                <div class="text-secondary text-sm ml-10" v-else>
+                                    Keinem Projekt zugeordnet
+                                </div>
+                                <div class="flex text-sm text-secondary items-center">
+                                    angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
+                                                   :src="requestToApprove.created_by.profile_photo_url"
+                                                   :alt="requestToApprove.created_by.name"
+                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip :user="requestToApprove.created_by"/>
+                                    <span class="ml-2"> {{ requestToApprove.created_at }}</span>
+                                </div>
+                                <div>
+
+                                </div>
+                            </div>
+                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                                 v-if="requestToApprove.description">
+                                {{ requestToApprove.description }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="approveRequest">
+                            Zusagen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeApproveRequestModal"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </jet-dialog-modal>
+        <!-- Decline Request Modal -->
+        <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Raumbelegung absagen
+                    </div>
+                    <XIcon @click="closeDeclineRequestModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error">
+                        Bist du sicher, dass du die Raumbelegung absagen möchtest?
+                    </div>
+                    <div class="flex flex-wrap w-full items-center">
+                        <div class="flex w-full items-center flex-wrap">
+
+                            <div class="flex items-center w-full mt-4">
+                                <div class="flex items-center ml-12 w-full">
+                                    <EventTypeIconCollection :height="26" :width="26"
+                                                             :iconName="requestToDecline.event_type.svg_name"/>
+                                    <div
+                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        {{ requestToDecline.event_type.name }}
+                                        <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
+                                                         class="h-5 w-5 ml-2 my-auto"/>
+                                        <UserGroupIcon v-if="requestToDecline.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                        <VolumeUpIcon v-if="requestToDecline.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                    </div>
+
+                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                         v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
+                                        {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
+                                            requestToDecline.start_time.split(',')[0]
+                                        }},{{ requestToDecline.start_time.split(',')[1] }}
+                                        - {{ requestToDecline.end_time.split(',')[1] }}
+                                    </div>
+                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                        {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
+                                        {{ requestToDecline.start_time }} -
+                                        {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
+                                        {{ requestToDecline.end_time }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center w-full ml-2 justify-between">
+                                <div v-if="requestToDecline.project" class="w-80">
+                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                        Zugeordnet zu
+                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                            {{ requestToDecline.project.name }}
+                                        </div>
+                                    </div>
+                                    <!--
+                                    <div v-for="projectLeader in requestToApprove.project.project_managers">
+                                        <img :data-tooltip-target="projectLeader.id"
+                                             :src="projectLeader.profile_photo_url"
+                                             :alt="projectLeader.name"
+                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                        <UserTooltip :user="projectLeader"/>
+                                    </div>
+                                    -->
+                                </div>
+                                <div class="text-secondary text-sm ml-10" v-else>
+                                    Keinem Projekt zugeordnet
+                                </div>
+                                <div class="flex text-sm text-secondary items-center">
+                                    angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
+                                                   :src="requestToDecline.created_by.profile_photo_url"
+                                                   :alt="requestToDecline.created_by.name"
+                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip :user="requestToDecline.created_by"/>
+                                    <span class="ml-2"> {{ requestToDecline.created_at }}</span>
+                                </div>
+                                <div>
+
+                                </div>
+                            </div>
+                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                                 v-if="requestToDecline.description">
+                                {{ requestToDecline.description }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="declineRequest">
+                            Absagen
+                        </button>
+                        <div class="flex my-auto">
+                            <span @click="closeDeclineRequestModal"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -316,8 +707,16 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon, DocumentTextIcon,DuplicateIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {
+    PencilAltIcon,
+    TrashIcon,
+    XIcon,
+    DocumentTextIcon,
+    DuplicateIcon,
+    VolumeUpIcon,
+    UserGroupIcon
+} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -326,10 +725,11 @@ import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 
 export default {
     name: "Show",
-    props: ['room'],
+    props: ['room', 'event_types','days_this_month'],
     components: {
         TeamIconCollection,
         AppLayout,
@@ -351,7 +751,11 @@ export default {
         ChevronDownIcon,
         DocumentTextIcon,
         DuplicateIcon,
-        UserTooltip
+        UserTooltip,
+        EventTypeIconCollection,
+        VolumeUpIcon,
+        UserGroupIcon,
+        PlusSmIcon,
     },
     data() {
         return {
@@ -364,6 +768,10 @@ export default {
             roomToSoftDelete: null,
             showSuccessModal: false,
             showSoftDeleteRoomModal: false,
+            requestToDecline: null,
+            requestToApprove: null,
+            showApproveRequestModal: false,
+            showDeclineRequestModal: false,
             successHeading: "",
             successDescription: "",
             roomForm: this.$inertia.form({
@@ -382,9 +790,130 @@ export default {
             documentForm: useForm({
                 file: null
             }),
+            approveRequestForm: useForm({
+                name: '',
+                start_time: null,
+                end_time: null,
+                description: '',
+                occupancy_option: false,
+                is_loud: false,
+                audience: false,
+                room_id: null,
+                project_id: null,
+                event_type_id: null,
+                user_id: this.$page.props.user.id,
+            }),
+            declineRequestForm: useForm({
+                name: '',
+                start_time: null,
+                end_time: null,
+                description: '',
+                occupancy_option: false,
+                is_loud: false,
+                audience: false,
+                room_id: null,
+                project_id: null,
+                event_type_id: null,
+                user_id: this.$page.props.user.id,
+            }),
         }
     },
     methods: {
+        getGermanWeekdayAbbreviation(englishWeekday) {
+            switch (englishWeekday) {
+                case 'Monday':
+                    return 'Mo';
+                case 'Tuesday':
+                    return 'Di';
+                case 'Wednesday':
+                    return 'Mi';
+                case 'Thursday':
+                    return 'Do';
+                case 'Friday':
+                    return 'Fr';
+                case 'Saturday':
+                    return 'Sa';
+                case 'Sunday':
+                    return 'So';
+            }
+        },
+        getTimespan(day) {
+            let startOfDayInMillis = new Date(day.date_local).getTime();
+            let endOfDayInMillis = new Date(new Date(day.date_local).setMinutes(1439)).getTime();
+            let earliestStart = new Date(day.events[0].start_time_dt_local).getTime() < startOfDayInMillis ? startOfDayInMillis : new Date(day.events[0].start_time_dt_local).getTime();
+            let latestEnd = new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis ? endOfDayInMillis : new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis;
+            day.events.forEach((event) => {
+                let startTimeInMillis = new Date(event.start_time_dt_local).getTime();
+                if (startTimeInMillis < earliestStart) {
+                    if (startTimeInMillis < startOfDayInMillis) {
+                        earliestStart = startOfDayInMillis;
+                    } else {
+                        earliestStart = startTimeInMillis;
+                    }
+                }
+                let endTimeInMillis = new Date(event.end_time_dt_local).getTime();
+                if (endTimeInMillis > latestEnd) {
+                    if (endTimeInMillis > endOfDayInMillis) {
+                        latestEnd = endOfDayInMillis;
+                    } else {
+                        latestEnd = endTimeInMillis;
+                    }
+                }
+            })
+            let earliestStartDate = new Date(earliestStart);
+            let latestEndDate = new Date(latestEnd);
+            return [earliestStartDate, latestEndDate]
+        },
+        openApproveRequestModal(eventRequest) {
+            this.requestToApprove = eventRequest;
+            this.showApproveRequestModal = true;
+        },
+        closeApproveRequestModal() {
+            this.showApproveRequestModal = false;
+            this.requestToApprove = null;
+        },
+        openDeclineRequestModal(eventRequest) {
+            this.requestToDecline = eventRequest;
+            this.showDeclineRequestModal = true;
+        },
+        closeDeclineRequestModal() {
+            this.showDeclineRequestModal = false;
+            this.requestToDecline = null;
+        },
+        approveRequest() {
+            this.approveRequestForm.name = this.requestToApprove.name;
+            this.approveRequestForm.start_time = this.requestToApprove.start_time_dt_local;
+            this.approveRequestForm.end_time = this.requestToApprove.end_time_dt_local;
+            this.approveRequestForm.description = this.requestToApprove.description;
+            this.approveRequestForm.occupancy_option = false;
+            this.approveRequestForm.is_loud = this.requestToApprove.is_loud;
+            this.approveRequestForm.audience = this.requestToApprove.audience;
+            if (this.requestToApprove.room) {
+                this.approveRequestForm.room_id = this.requestToApprove.room.id;
+            }
+            if (this.requestToApprove.project) {
+                this.approveRequestForm.project_id = this.requestToApprove.project.id;
+            }
+            this.approveRequestForm.event_type_id = this.requestToApprove.event_type.id;
+            this.approveRequestForm.patch(route('events.update', {event: this.requestToApprove.id}));
+            this.closeApproveRequestModal();
+        },
+        declineRequest() {
+            this.approveRequestForm.name = this.requestToDecline.name;
+            this.approveRequestForm.start_time = this.requestToDecline.start_time_dt_local;
+            this.approveRequestForm.end_time = this.requestToDecline.end_time_dt_local;
+            this.approveRequestForm.description = this.requestToDecline.description;
+            this.approveRequestForm.occupancy_option = false;
+            this.approveRequestForm.is_loud = this.requestToDecline.is_loud;
+            this.approveRequestForm.audience = this.requestToDecline.audience;
+            this.approveRequestForm.room_id = null;
+            if (this.requestToDecline.project) {
+                this.approveRequestForm.project_id = this.requestToDecline.project.id;
+            }
+            this.approveRequestForm.event_type_id = this.requestToDecline.event_type.id;
+            this.approveRequestForm.patch(route('events.update', {event: this.requestToDecline.id}));
+            this.closeDeclineRequestModal();
+        },
         selectNewFiles() {
             this.$refs.room_files.click();
         },
@@ -464,23 +993,23 @@ export default {
         duplicateRoom(room) {
             this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
-        openEditRoomModal(room){
+        openEditRoomModal(room) {
             this.editRoomForm = room;
-            if(room.temporary === 1){
+            if (room.temporary === 1) {
                 this.editRoomForm.temporary = true;
                 this.editRoomForm.start_date = room.start_date_dt_local;
                 this.editRoomForm.end_date = room.end_date_dt_local;
             }
             this.showEditRoomModal = true;
         },
-        closeEditRoomModal(){
+        closeEditRoomModal() {
             this.showEditRoomModal = false;
         },
-        openSoftDeleteRoomModal(room){
+        openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
             this.showSoftDeleteRoomModal = true;
         },
-        closeSoftDeleteRoomModal(){
+        closeSoftDeleteRoomModal() {
             this.showSoftDeleteRoomModal = false;
             this.roomToSoftDelete = null;
         },

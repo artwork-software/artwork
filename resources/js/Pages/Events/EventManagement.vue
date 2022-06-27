@@ -271,8 +271,6 @@
                                                 </div>
                                                 <div v-else-if="day.events.length > 1">
 
-                                                    {{day.conflicts}}
-
                                                     <div class="flex p-1 ml-1 mt-1">
                                                         <UserGroupIcon v-if="day.events.some(x => x.audience === true)"
                                                                        class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
@@ -392,6 +390,7 @@
                                 </transition>
                             </div>
                         </Listbox>
+
                         <Listbox as="div" class="flex" v-model="selectedRoom">
                             <div class="relative">
                                 <ListboxButton
@@ -421,16 +420,20 @@
                                                            :key="room.name"
                                                            :value="room"
                                                            v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <span
-                                                    :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                    <span :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                         {{ room.name }}
                                                     </span>
                                                     <span
                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                        <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
-                                                </span>
+
+                                                        <ExclamationIcon v-if="room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0" class="h-5 w-5 flex text-error"
+                                                                   aria-hidden="true"/>
+
+                                                    </span>
+
                                                 </li>
                                             </ListboxOption>
                                         </div>
@@ -521,11 +524,13 @@
                         <input type="text" v-model="addEventForm.name" placeholder="Terminname"
                                class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                     </div>
+
                     <div class="flex mt-4">
                         <div class="text-secondary mr-2">
                             <label for="startTime">Terminstart*</label>
                             <input
                                 v-model="addEventForm.start_time" id="startTime"
+                                @change="getStartTimeConflicts"
                                 placeholder="Terminstart" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
@@ -533,6 +538,7 @@
                             <label for="endTime">Terminende*</label>
                             <input
                                 v-model="addEventForm.end_time" id="endTime"
+                                @change="getEndTimeConflicts"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary w-full"/>
                         </div>
@@ -790,6 +796,7 @@ import {
     UserGroupIcon,
     VolumeUpIcon,
     XIcon,
+    ExclamationIcon,
 } from '@heroicons/vue/outline'
 import {CalendarIcon, CheckIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
@@ -815,6 +822,7 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import {Inertia} from "@inertiajs/inertia";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -858,9 +866,9 @@ export default defineComponent({
         ChevronLeftIcon,
         ChevronRightIcon,
         CalendarIcon,
-
+        ExclamationIcon
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month', 'events_without_room'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -915,6 +923,44 @@ export default defineComponent({
         },
     },
     methods: {
+        getStartTimeConflicts() {
+           if(this.selectedRoom) {
+
+               axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+                   params: {
+                       start_time: this.addEventForm.start_time
+                   }}).then( response => {
+                   console.log(response.data)
+               });
+
+           } else {
+
+               Inertia.get(route('events.monthly_management'), {
+                   month_start: this.requested_start_time,
+                   month_end: this.requested_end_time,
+                   start_time: this.addEventForm.start_time
+               }, {only: ['areas'], preserveState: true});
+
+           }
+        },
+        getEndTimeConflicts() {
+            if(this.selectedRoom) {
+
+                axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
+                    params: {
+                        end_time: this.addEventForm.end_time
+                    }}).then( response => {
+                    console.log(response.data)
+                });
+
+            } else {
+                Inertia.get(route('events.monthly_management'), {
+                    month_start: this.requested_start_time,
+                    month_end: this.requested_end_time,
+                    end_time: this.addEventForm.end_time
+                }, {only: ['areas'], preserveState: true});
+            }
+        },
         hasConflict(event_id) {
 
             for(let conflict of this.wantedDay.conflicts) {
@@ -1092,6 +1138,15 @@ export default defineComponent({
         }
     },
     watch: {
+        selectedRoom() {
+            if(this.addEventForm.start_time) {
+                this.getStartTimeConflicts()
+            }
+
+            if(this.addEventForm.end_time) {
+                this.getEndTimeConflicts()
+            }
+        },
         project_query: {
             handler() {
                 if (this.project_query.length > 0) {

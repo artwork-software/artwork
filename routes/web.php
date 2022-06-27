@@ -178,6 +178,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
+
+    //conflicts in room
+    Route::get('/rooms/start_time_conflicts', [EventController::class, 'get_start_time_conflicts_for_all_rooms']);
+    Route::get('/rooms/end_time_conflicts', [EventController::class, 'get_end_time_conflicts_for_all_rooms']);
+
+    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'get_conflicts_in_room_for_start_time']);
+    Route::get('/room/{room}/end_time_conflicts', [EventController::class, 'get_conflicts_in_room_for_end_time']);
+
     //Trash
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
     Route::patch('/rooms/{id}/restore', [RoomController::class, 'restore'])->name('rooms.restore');
@@ -196,6 +204,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
+
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');

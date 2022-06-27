@@ -99,6 +99,8 @@ class EventController extends Controller
         $eventsWithoutRoomCount = Event::whereNull('room_id')->count();
 
         return inertia('Events/EventManagement', [
+            'requested_start_time' => $request->query('month_start'),
+            'requested_end_time' => $request->query('month_end'),
             'days_this_month' => collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
             ]),
@@ -139,7 +141,9 @@ class EventController extends Controller
             'areas' => Area::paginate(10)->through(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => $area->rooms()->with('room_admins')->orderBy('order')->get()->map(fn($room) => [
+                'rooms' => $area->rooms()->with('room_admins', 'events')->orderBy('order')->get()->map(fn($room) => [
+                    'conflicts_start_time' => $this->get_conflicts_in_room_for_start_time($room),
+                    'conflicts_end_time' => $this->get_conflicts_in_room_for_end_time($room),
                     'id' => $room->id,
                     'name' => $room->name,
                     'description' => $room->description,
@@ -161,6 +165,55 @@ class EventController extends Controller
                 'name' => $project->name,
             ]),
         ]);
+    }
+
+    public function get_conflicts_in_room_for_start_time(Room $room): array
+    {
+
+        $start_time = request('start_time');
+
+        $conflicting_events = [];
+
+        foreach ($room->events as $event) {
+
+            if(Carbon::parse($start_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
+
+                $conflicting_events[] = [
+                    'event_name' => $event->name,
+                    'event_type' => $event->event_type,
+                    'project' => $event->project
+                ];
+
+            }
+
+        }
+
+        return $conflicting_events;
+
+    }
+
+    public function get_conflicts_in_room_for_end_time(Room $room): array
+    {
+        $end_time = request('end_time');
+
+        $conflicting_events = [];
+
+        foreach ($room->events as $event) {
+
+            if(Carbon::parse($end_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
+
+                $conflicting_events[] = [
+                    'event_name' => $event->name,
+                    'event_type' => $event->event_type,
+                    'project' => $event->project
+                ];
+
+            }
+
+        }
+
+        return $conflicting_events;
+
     }
 
     private function conflict_event_ids($events_with_ascending_end_time): array

@@ -17,6 +17,9 @@
                                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
                                 </div>
                             </div>
+
+                            {{events_without_room}}
+
                             <div class="flex w-full items-center ml-20">
                                 <div class="text-xl font-black">
                                     {{ formattedMonth }}

@@ -93,7 +93,8 @@ class EventController extends Controller
 
         $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
 
-        $eventsWithoutRoom = Event::where('room_id', null);
+        $eventsWithoutRoom = Event::whereNull('room_id')->get();
+        $eventsWithoutRoomCount = Event::whereNull('room_id')->count();
 
         return inertia('Events/EventManagement', [
             'days_this_month' => collect($period)->map(fn($date_of_day) => [
@@ -110,11 +111,11 @@ class EventController extends Controller
                 ]),
             ]),
             'events_without_room' => [
+                "count" => $eventsWithoutRoomCount,
                 'days_in_month' => collect($period)->map(fn($date_of_day) => [
                     'date_local' => $date_of_day->toDateTimeLocalString(),
                     'date' => $date_of_day->format('d.m.Y'),
-                    'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom ),
-                   // 'number_of_events' => sizeof($eventsWithoutRoom),s
+                    'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom),
                 ]),
             ],
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [

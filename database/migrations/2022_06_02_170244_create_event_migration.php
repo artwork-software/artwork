@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('audience')->default(false)->nullable(true);;
             $table->boolean('is_loud')->default(false)->nullable(true);
             $table->unsignedBigInteger('event_type_id');
-            $table->unsignedBigInteger('room_id')->nullable();;
+            $table->unsignedBigInteger('room_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('project_id')->nullable(true);
             $table->timestamps();

@@ -257,6 +257,37 @@ class EventController extends Controller
                 'area_id' => $room->area_id,
                 'events' => $this->get_events_for_day_view(Carbon::parse($request->query('wanted_day')), $room->events)
             ]),
+            'projects' => Project::paginate(10)->through(fn($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+            ]),
+            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+                'id' => $event_type->id,
+                'name' => $event_type->name,
+                'svg_name' => $event_type->svg_name,
+                'project_mandatory' => $event_type->project_mandatory,
+                'individual_name' => $event_type->individual_name,
+            ]),
+            'areas' => Area::paginate(10)->through(fn($area) => [
+                'id' => $area->id,
+                'name' => $area->name,
+                'rooms' => $area->rooms()->with('room_admins')->orderBy('order')->get()->map(fn($room) => [
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'description' => $room->description,
+                    'temporary' => $room->temporary,
+                    'created_by' => User::where('id', $room->user_id)->first(),
+                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
+                    'start_date_dt_local' => Carbon::parse($room->start_date)->toDateString(),
+                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
+                    'end_date_dt_local' => Carbon::parse($room->end_date)->toDateString(),
+                    'room_admins' => $room->room_admins->map(fn($room_admin) => [
+                        'id' => $room_admin->id,
+                        'profile_photo_url' => $room_admin->profile_photo_url
+                    ])
+                ])
+            ]),
         ]);
     }
 

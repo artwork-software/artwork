@@ -868,7 +868,7 @@ export default defineComponent({
         CalendarIcon,
         ExclamationIcon
     },
-    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time'],
+    props: ['optional_events', 'event_types', 'areas', 'month_events', 'day_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1181,8 +1181,8 @@ export default defineComponent({
             project_search_results: [],
             addEventForm: useForm({
                 name: '',
-                start_time: null,
-                end_time: null,
+                start_time: this.start_time_of_new_event,
+                end_time: this.end_time_of_new_event,
                 description: '',
                 occupancy_option: false,
                 is_loud: false,

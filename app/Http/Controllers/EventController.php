@@ -99,6 +99,8 @@ class EventController extends Controller
         $eventsWithoutRoomCount = Event::whereNull('room_id')->count();
 
         return inertia('Events/EventManagement', [
+            'start_time_of_new_event' => $request->query('start_time'),
+            'end_time_of_new_event' => $request->query('end_time'),
             'requested_start_time' => $request->query('month_start'),
             'requested_end_time' => $request->query('month_end'),
             'days_this_month' => collect($period)->map(fn($date_of_day) => [

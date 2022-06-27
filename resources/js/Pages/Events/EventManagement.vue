@@ -18,8 +18,6 @@
                                 </div>
                             </div>
 
-                            {{events_without_room}}
-
                             <div class="flex w-full items-center ml-20">
                                 <div class="text-xl font-black">
                                     {{ formattedMonth }}
@@ -231,6 +229,7 @@
                                                 <!-- If only 1 event on that day-->
                                                 <div
                                                     v-if="day.events.length === 1">
+
                                                     <!-- Icons -->
                                                     <div class="flex p-1 ml-1 mt-1">
                                                         <UserGroupIcon v-if="day.events[0].audience"
@@ -271,6 +270,9 @@
                                                     </div>
                                                 </div>
                                                 <div v-else-if="day.events.length > 1">
+
+                                                    {{day.conflicts}}
+
                                                     <div class="flex p-1 ml-1 mt-1">
                                                         <UserGroupIcon v-if="day.events.some(x => x.audience === true)"
                                                                        class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
@@ -594,6 +596,9 @@
                        aria-hidden="true"/>
                 <div v-for="event in wantedDay.events" class="mx-4 border-b-2 pb-8">
                     <div>
+
+                        {{hasConflict(event.id)}}
+
                         {{event}}
                         {{projects.data}}
                         {{event_types}}
@@ -910,6 +915,15 @@ export default defineComponent({
         },
     },
     methods: {
+        hasConflict(event_id) {
+
+            for(let conflict of this.wantedDay.conflicts) {
+                if(conflict.includes(event_id)) {
+                    return true;
+                }
+            }
+            return false;
+        },
         getLastRoom() {
             let firstRoom = true;
             let lastRoom = this.roomsToShow[this.lastRoomIndex];

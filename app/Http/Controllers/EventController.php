@@ -45,6 +45,8 @@ class EventController extends Controller
             }
         }
 
+
+
         return $eventsToday;
     }
 
@@ -100,15 +102,24 @@ class EventController extends Controller
             'days_this_month' => collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
             ]),
-            'rooms' => Room::with('events')->get()->map(fn($room) => [
+            'rooms' => Room::with(['events' => function ($query) {
+                $query->orderBy('end_time', 'ASC');
+            }])->get()->map(fn($room) => [
                 'id' => $room->id,
                 'name' => $room->name,
                 'area_id' => $room->area_id,
-                'days_in_month' => collect($period)->map(fn($date_of_day) => [
-                    'date_local' => $date_of_day->toDateTimeLocalString(),
-                    'date' => $date_of_day->format('d.m.Y'),
-                    'events' => $this->get_events_of_day($date_of_day, $room->events)
-                ]),
+                'days_in_month' => collect($period)->map(function ($date_of_day) use ($room) {
+                    $events = $this->get_events_of_day($date_of_day, $room->events);
+
+                    $conflicts = $this->conflict_event_ids($events);
+
+                    return [
+                        'date_local' => $date_of_day->toDateTimeLocalString(),
+                        'date' => $date_of_day->format('d.m.Y'),
+                        'conflicts' => $conflicts,
+                        'events' => $events
+                    ];
+                }),
             ]),
             'events_without_room' => [
                 "count" => $eventsWithoutRoomCount,
@@ -152,11 +163,10 @@ class EventController extends Controller
         ]);
     }
 
-    private function conflict_event_ids($room): array
+    private function conflict_event_ids($events_with_ascending_end_time): array
     {
 
         $conflict_event_ids = array();
-        $events_with_ascending_end_time = $room->events()->orderBy('end_time', 'ASC')->get();
 
         $lastEvent = null;
 
@@ -164,12 +174,11 @@ class EventController extends Controller
 
             if(!blank($lastEvent)) {
 
-                $this_event_start_time = Carbon::parse($event->start_time);
-                $last_event_end_time = Carbon::parse($lastEvent->end_time);
+                $this_event_start_time = Carbon::parse($event['start_time']);
+                $last_event_end_time = Carbon::parse($lastEvent['end_time']);
 
                 if($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
-                    $conflict_event_ids[] = $lastEvent->id;
-                    $conflict_event_ids[] = $event->id;
+                    $conflict_event_ids[] = [$lastEvent['id'], $event['id']];
                 }
 
             }

@@ -48,6 +48,40 @@ class EventController extends Controller
         return $eventsToday;
     }
 
+    private function get_events_for_day_view($date_of_day, $events): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.Y');
+
+        foreach ($events as $event) {
+            if(in_array($today, $event->days_of_event)) {
+                $eventsToday[] = [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    "start_time" => $event->start_time,
+                    "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    "end_time" => $event->end_time,
+                    "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    "occupancy_option" => $event->occupancy_option,
+                    "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->diffInMinutes(Carbon::parse($event->start_time)),
+                    "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                    "audience" => $event->audience,
+                    "is_loud" => $event->is_loud,
+                    "event_type_id" => $event->event_type_id,
+                    "room_id" => $event->room_id,
+                    "user_id" => $event->user_id,
+                    "project_id" => $event->project_id,
+                    "created_at" =>  $event->created_at,
+                    "updated_at" => $event->updated_at,
+                ];
+            }
+        }
+
+        return $eventsToday;
+    }
+
     /**
      * Display a listing of the resource.
      * Returns all Events
@@ -147,34 +181,16 @@ class EventController extends Controller
     }
 
     public function day_index(Request $request) {
+
+        $hours = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+
         return inertia('Events/DayManagement', [
-            'day_events' => $this->day_events($request->query('date')),
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
-                'id' => $event_type->id,
-                'name' => $event_type->name,
-                'svg_name' => $event_type->svg_name,
-                'project_mandatory' => $event_type->project_mandatory,
-                'individual_name' => $event_type->individual_name,
-            ]),
-            'areas' => Area::paginate(10)->through(fn($area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-                'rooms' => $area->rooms()->orderBy('order')->get()->map(fn($room) => [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'description' => $room->description,
-                    'temporary' => $room->temporary,
-                    'created_by' => User::where('id', $room->user_id)->first(),
-                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
-                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
-                    'start_date_dt_local' => Carbon::parse($room->start_date)->toDateString(),
-                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
-                    'end_date_dt_local' => Carbon::parse($room->end_date)->toDateString(),
-                    'room_admins' => $room->room_admins->map(fn($room_admin) => [
-                        'id' => $room_admin->id,
-                        'profile_photo_url' => $room_admin->profile_photo_url
-                    ])
-                ])
+            'hours_of_day' => $hours,
+            'rooms' => Room::with('events')->get()->map(fn($room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'area_id' => $room->area_id,
+                'events' => $this->get_events_for_day_view(Carbon::parse($request->query('wanted_day')), $room->events)
             ]),
         ]);
     }

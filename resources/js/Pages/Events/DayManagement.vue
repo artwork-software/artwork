@@ -2,7 +2,7 @@
 
     <div>
         <pre>
-        {{ day_events }}
+        {{ rooms }}
         </pre>
     </div>
 
@@ -11,7 +11,7 @@
 <script>
 export default {
     name: "DayManagement",
-    props: ['day_events'],
+    props: ['hours_of_day','rooms'],
 }
 </script>
 

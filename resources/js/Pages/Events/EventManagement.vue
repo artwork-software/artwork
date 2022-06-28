@@ -449,7 +449,7 @@
                         <p :class="[assignProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                            class="ml-4 my-auto text-sm">Termin einem Projekt zuordnen</p>
                     </div>
-                    <div v-if="assignProject">
+                    <div v-if="assignProject || selectedEventType.project_mandatory">
                         <div class="flex items-center mt-4">
                             <Switch v-model="creatingProject"
                                     :class="[creatingProject ?
@@ -475,7 +475,7 @@
                                    class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                         </div>
                     </div>
-                    <div class="mt-4 flex flex-wrap" v-if="assignProject && !creatingProject">
+                    <div class="mt-4 flex flex-wrap" v-if="(assignProject || selectedEventType.project_mandatory) && !creatingProject">
                         <div class="my-auto w-full" v-if="this.selectedProject === null">
                             <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
                                    @focusout="project_query = ''"
@@ -1177,7 +1177,7 @@ export default defineComponent({
             this.addEventForm.event_type_id = this.selectedEventType.id;
             this.addEventForm.room_id = this.selectedRoom.id;
             this.addEventForm.occupancy_option = isOption;
-            if (this.assignProject) {
+            if (this.assignProject || this.selectedEventType.project_mandatory) {
                 if (this.creatingProject) {
                     this.addEventForm.project_name = this.newProjectName;
                 } else if (this.selectedProject != null) {

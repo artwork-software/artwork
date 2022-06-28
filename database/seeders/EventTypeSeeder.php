@@ -17,7 +17,7 @@ class EventTypeSeeder extends Seeder
     {
         DB::table('event_types')->insert([
             'name' => 'Undefinierter Termin',
-            'svg_name' => 'grey',
+            'svg_name' => 'gray',
             'project_mandatory' => false,
             'individual_name' => true
         ]);

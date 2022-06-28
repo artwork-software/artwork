@@ -24,13 +24,15 @@
                                 </div>
                                 <div class="ml-2 flex items-center">
                                     <!-- TODO: +1 / -1 Tag noch einfügen -->
+                                    <!-- TODO: Tag der Daten aus Backend mitgeben -> hier dann einbauen statt new date und als formattted Day displayen -->
                                     <Link
-                                        :href="route('events.daily_management',{wanted_day: new Date()})">
+                                        :href="route('events.daily_management',{wanted_day: new Date(new Date().setDate(new Date().getDate() - 1))})">
                                         <ChevronLeftIcon class="h-5 w-5"/>
                                     </Link>
-                                    <CalendarIcon @click="openChangeDateModal" class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
+                                    <CalendarIcon @click="openChangeDateModal"
+                                                  class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                     <Link
-                                        :href="route('events.daily_management',{wanted_day: new Date()})">
+                                        :href="route('events.daily_management',{wanted_day: new Date(new Date().setDate(new Date().getDate()-1))})">
                                         <ChevronRightIcon class="h-5 w-5"/>
                                     </Link>
                                 </div>
@@ -217,65 +219,137 @@
                                 <div class="flex">
                                     <div v-if="this.roomsToShow.length > 0"
                                          v-for="room in roomsToShow.sort((a,b) => a.area_id - b.area_id)"
-                                         class="inline-flex flex-col pl-3"
+                                         class="inline-flex flex-col pl-3 w-56"
                                          :class="room.area_id !== getLastRoom().area_id ? 'border-l-8 border-white' : ''">
                                         <h2 class="text-lg text-secondary subpixel-antialiased mt-4 mb-4 ">
                                             {{ room.name }}
                                         </h2>
-                                        <ol class="col-start-1 col-end-2 row-start-1 grid grid-cols-1" style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
-                                            <!-- TODO: HIER grid-row: event.minutes_from_day_start / span event.duration_in_minutes -->
-                                            <li v-for="event in room.events" class="relative mt-px flex" :style="{'grid-row': event.minutes_from_day_start / 'span' + event.duration_in_minutes }">
-
-                                            <div @click="openDayDetailModal(event)"
-                                                 v-if="checkEventType(event) && checkAttribute(event)"
-                                                 :class="[{'stripes': event.occupancy_option }, 'bg-white m-0.5 h-36 mr-4 border border-gray-100 cursor-pointer']">
-                                                <div>
-                                                    <!-- Icons -->
-                                                    <div class="flex p-1 ml-1 mt-1">
-                                                        <UserGroupIcon v-if="event.audience"
-                                                                       class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
-                                                        <VolumeUpIcon v-if="event.is_loud"
-                                                                      :class="event.audience ? 'ml-1' : ''"
-                                                                      class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
-                                                        <div v-if="!event.audience && event.is_loud"
-                                                             class="h-5 w-5">
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <!-- Individual Eventname -->
-                                                        <div v-if="event.project_id === null"
-                                                             class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
-                                                            {{ event.name }}
-                                                        </div>
-                                                        <!-- Name of connected Project -->
-                                                        <div
-                                                            v-else
-                                                            class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
-                                                            {{
-                                                                projects.data.find(x => x.id === event.project_id).name
-                                                            }}
-                                                        </div>
-                                                        <!-- Time of Event -->
-                                                        <div class="ml-2 text-sm text-secondary subpixel-antialiased">
-                                                            {{ event.start_time }}
-                                                            - {{ event.end_time }}
+                                        <ol class="h-full grid grid-cols-1 sm:pr-8"
+                                            style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
+                                            <li v-for="event in room.events" class="relative mt-px flex"
+                                                :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
+                                                <div
+                                                    class="group h-full rounded-lg leading-5 border-l-2 border-{{this.event_types.data.find(x => x.id === event.event_type_id).svg_name}}-400"
+                                                    :class="{'border-': 'blue' + '-400' }">
+                                                    <div @click="openDayDetailModal(event)"
+                                                         v-if="checkEventType(event) && checkAttribute(event)"
+                                                         :class="[{'stripes': event.occupancy_option }, 'bg-white h-full w-40 m-0.5 mr-4 border border-gray-100 cursor-pointer']">
+                                                        <!-- Inhalt einer Terminkachel -->
+                                                        <div>
+                                                            <!-- Icons -->
+                                                            <div class="flex p-1 ml-1 mt-1">
+                                                                <UserGroupIcon v-if="event.audience"
+                                                                               class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                                <VolumeUpIcon v-if="event.is_loud"
+                                                                              :class="event.audience ? 'ml-1' : ''"
+                                                                              class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                                <div v-if="!event.audience && !event.is_loud"
+                                                                     class="h-5 w-5">
+                                                                </div>
+                                                            </div>
+                                                            <div
+                                                                class="text-secondary subpixel-antialiased text-sm ml-2 mt-1">
+                                                                {{
+                                                                    this.event_types.data.find(x => x.id === event.event_type_id).name
+                                                                }}
+                                                            </div>
+                                                            <div>
+                                                                <!-- Individual Eventname -->
+                                                                <div v-if="event.project_id === null"
+                                                                     class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                                    {{ event.name }}
+                                                                </div>
+                                                                <!-- Name of connected Project -->
+                                                                <div
+                                                                    v-else
+                                                                    class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                                    {{
+                                                                        projects.data.find(x => x.id === event.project_id).name
+                                                                    }}
+                                                                </div>
+                                                                <!-- Time of Event -->
+                                                                <div
+                                                                    class="ml-2 mt-1 text-sm flex text-secondary subpixel-antialiased">
+                                                                    {{ event.start_time.substring(11, 16) }} -
+                                                                    <div v-if="event.duration_in_minutes > 1439">23:59
+                                                                    </div>
+                                                                    <div v-else>{{ event.end_time.substring(11, 16) }}
+                                                                    </div>
+                                                                </div>
+                                                                <!-- Project Leader Icons -->
+                                                                <div class="ml-1 mt-2 flex" v-if="event.project_id">
+                                                                    <div
+                                                                        v-if="projects.data.find(x => x.id === event.project_id).project_leaders.length <= 3"
+                                                                        class="flex mt-2 -mr-3"
+                                                                        v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders">
+                                                                        <img :data-tooltip-target="user.id"
+                                                                             :src="user.profile_photo_url"
+                                                                             :alt="user.name"
+                                                                             class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                                                        <UserTooltip :user="user"/>
+                                                                    </div>
+                                                                    <div class="flex" v-else>
+                                                                        <div class=" mt-2 -mr-3"
+                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders.slice(0,2)">
+                                                                            <img :data-tooltip-target="user.id"
+                                                                                 :src="user.profile_photo_url"
+                                                                                 :alt="user.name"
+                                                                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                                                            <UserTooltip :user="user"/>
+                                                                        </div>
+                                                                        <Menu as="div" class="relative mt-3 -mr-3">
+                                                                            <div>
+                                                                                <MenuButton
+                                                                                    class="flex items-center rounded-full focus:outline-none">
+                                                                                    <ChevronDownIcon
+                                                                                        class="ml-1 flex-shrink-0 h-10 w-10 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                                                </MenuButton>
+                                                                            </div>
+                                                                            <transition
+                                                                                enter-active-class="transition ease-out duration-100"
+                                                                                enter-from-class="transform opacity-0 scale-95"
+                                                                                enter-to-class="transform opacity-100 scale-100"
+                                                                                leave-active-class="transition ease-in duration-75"
+                                                                                leave-from-class="transform opacity-100 scale-100"
+                                                                                leave-to-class="transform opacity-0 scale-95">
+                                                                                <MenuItems
+                                                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                                                    <MenuItem
+                                                                                        v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders"
+                                                                                        v-slot="{ active }">
+                                                                                        <Link href="#"
+                                                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                            <img
+                                                                                                class="h-9 w-9 rounded-full"
+                                                                                                :src="user.profile_photo_url"
+                                                                                                alt=""/>
+                                                                                            <span class="ml-4">
+                                                                                                {{ user.first_name }} {{ user.last_name }}
+                                                                                            </span>
+                                                                                        </Link>
+                                                                                    </MenuItem>
+                                                                                </MenuItems>
+                                                                            </transition>
+                                                                        </Menu>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </li>
+                                            </li>
                                         </ol>
                                     </div>
-                                    </div>
                                 </div>
-
                             </div>
+
                         </div>
                     </div>
-
                 </div>
 
             </div>
+
+        </div>
         <!-- Termin erstellen Modal-->
         <jet-dialog-modal :show="addingEvent" @close="closeAddEventModal">
             <template #content>
@@ -392,7 +466,7 @@
                         <p :class="[assignProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                            class="ml-4 my-auto text-sm">Termin einem Projekt zuordnen</p>
                     </div>
-                    <div v-if="assignProject">
+                    <div v-if="assignProject || selectedEventType.project_mandatory">
                         <div class="flex items-center mt-4">
                             <Switch v-model="creatingProject"
                                     :class="[creatingProject ?
@@ -418,7 +492,8 @@
                                    class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
                         </div>
                     </div>
-                    <div class="mt-4 flex flex-wrap" v-if="assignProject && !creatingProject">
+                    <div class="mt-4 flex flex-wrap"
+                         v-if="(assignProject || selectedEventType.project_mandatory) && !creatingProject">
                         <div class="my-auto w-full" v-if="this.selectedProject === null">
                             <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
                                    @focusout="project_query = ''"
@@ -545,7 +620,7 @@
                 <div v-for="event in wantedDay.events" class="mx-4 border-b-2 pb-8">
                     <div>
 
-                        {{hasConflict(event.id)}}
+                        {{ hasConflict(event.id) }}
 
                         <div class="mt-2">
                             <Listbox as="div" class="flex" v-model="event.event_type_id">
@@ -792,7 +867,8 @@
                         </div>
                     </div>
                     <div v-else>
-                        <Datepicker v-model="wantedDayDate" locale="de" inline autoApply :enableTimePicker="false"></Datepicker>
+                        <Datepicker v-model="wantedDayDate" locale="de" inline autoApply
+                                    :enableTimePicker="false"></Datepicker>
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -848,6 +924,7 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -856,7 +933,7 @@ const attributeFilters = [
 ]
 
 const dateTypes = [
-    {name: 'Monatsansicht', id:1},
+    {name: 'Monatsansicht', id: 1},
     {name: 'Tagesansicht', id: 2}
 ]
 export default defineComponent({
@@ -895,10 +972,10 @@ export default defineComponent({
         ChevronLeftIcon,
         ChevronRightIcon,
         CalendarIcon,
-        Datepicker
-
+        Datepicker,
+        UserTooltip,
     },
-    props: ['hours_of_day','rooms','projects','event_types','areas'],
+    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -908,34 +985,6 @@ export default defineComponent({
                 })
             })
             return allRoomsArray;
-        },
-        formattedMonth: function () {
-            switch (this.rooms[0].days_in_month[0].date_local.slice(5, 7)) {
-                case '01':
-                    return 'Januar';
-                case '02':
-                    return 'Februar';
-                case '03':
-                    return 'März';
-                case '04':
-                    return 'April';
-                case '05':
-                    return 'Mai';
-                case '06':
-                    return 'Juni';
-                case '07':
-                    return 'Juli';
-                case '08':
-                    return 'August';
-                case '09':
-                    return 'September';
-                case '10':
-                    return 'Oktober';
-                case '11':
-                    return 'November';
-                case '12':
-                    return 'Dezember';
-            }
         },
         eventTypeFilters: function () {
             let filters = [];
@@ -955,8 +1004,8 @@ export default defineComponent({
     methods: {
         hasConflict(event_id) {
 
-            for(let conflict of this.wantedDay.conflicts) {
-                if(conflict.includes(event_id)) {
+            for (let conflict of this.wantedDay.conflicts) {
+                if (conflict.includes(event_id)) {
                     return true;
                 }
             }
@@ -1000,33 +1049,6 @@ export default defineComponent({
 
                 })
             }
-        },
-        getTimespan(day) {
-            let startOfDayInMillis = new Date(day.date_local).getTime();
-            let endOfDayInMillis = new Date(new Date(day.date_local).setMinutes(1439)).getTime();
-            let earliestStart = new Date(day.events[0].start_time_dt_local).getTime() < startOfDayInMillis ? startOfDayInMillis : new Date(day.events[0].start_time_dt_local).getTime();
-            let latestEnd = new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis ? endOfDayInMillis : new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis;
-            day.events.forEach((event) => {
-                let startTimeInMillis = new Date(event.start_time_dt_local).getTime();
-                if (startTimeInMillis < earliestStart) {
-                    if (startTimeInMillis < startOfDayInMillis) {
-                        earliestStart = startOfDayInMillis;
-                    } else {
-                        earliestStart = startTimeInMillis;
-                    }
-                }
-                let endTimeInMillis = new Date(event.end_time_dt_local).getTime();
-                if (endTimeInMillis > latestEnd) {
-                    if (endTimeInMillis > endOfDayInMillis) {
-                        latestEnd = endOfDayInMillis;
-                    } else {
-                        latestEnd = endTimeInMillis;
-                    }
-                }
-            })
-            let earliestStartDate = new Date(earliestStart);
-            let latestEndDate = new Date(latestEnd);
-            return [earliestStartDate, latestEndDate]
         },
         getEventTypes(events) {
             let eventTypesToDisplay = [];
@@ -1077,7 +1099,7 @@ export default defineComponent({
             this.addEventForm.event_type_id = this.selectedEventType.id;
             this.addEventForm.room_id = this.selectedRoom.id;
             this.addEventForm.occupancy_option = isOption;
-            if (this.assignProject) {
+            if (this.assignProject || this.selectedEventType.project_mandatory) {
                 if (this.creatingProject) {
                     this.addEventForm.project_name = this.newProjectName;
                 } else if (this.selectedProject != null) {
@@ -1134,11 +1156,14 @@ export default defineComponent({
         closeChangeDateModal() {
             this.showChangeDateModal = false;
         },
-        changeWantedDate(){
-            if(this.wantedDateType.id === 1){
-                Inertia.visit(route('events.monthly_management',{month_start: this.wantedStartDate ,month_end: this.wantedEndDate}))
-            }else{
-                Inertia.visit(route('events.daily_management',{wanted_day:this.wantedDayDate}))
+        changeWantedDate() {
+            if (this.wantedDateType.id === 1) {
+                Inertia.visit(route('events.monthly_management', {
+                    month_start: this.wantedStartDate,
+                    month_end: this.wantedEndDate
+                }))
+            } else {
+                Inertia.visit(route('events.daily_management', {wanted_day: this.wantedDayDate}))
             }
         }
     },
@@ -1163,9 +1188,9 @@ export default defineComponent({
             lastRoomIndex: 0,
             showChangeDateModal: false,
             wantedDateType: dateTypes[0],
-            wantedStartDate:null,
+            wantedStartDate: null,
             wantedEndDate: null,
-            wantedDayDate:null,
+            wantedDayDate: null,
             assignProject: false,
             selectedProject: null,
             showAddHoverDate: null,

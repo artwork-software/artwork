@@ -23,7 +23,7 @@ class EventController extends Controller
         $today = $date_of_day->format('d.m.Y');
 
         foreach ($events as $event) {
-            if(in_array($today, $event->days_of_event)) {
+            if (in_array($today, $event->days_of_event)) {
                 $eventsToday[] = [
                     'id' => $event->id,
                     'name' => $event->name,
@@ -39,12 +39,11 @@ class EventController extends Controller
                     "room_id" => $event->room_id,
                     "user_id" => $event->user_id,
                     "project_id" => $event->project_id,
-                    "created_at" =>  $event->created_at,
+                    "created_at" => $event->created_at,
                     "updated_at" => $event->updated_at,
                 ];
             }
         }
-
 
 
         return $eventsToday;
@@ -57,7 +56,7 @@ class EventController extends Controller
         $today = $date_of_day->format('d.m.Y');
 
         foreach ($events as $event) {
-            if(in_array($today, $event->days_of_event)) {
+            if (in_array($today, $event->days_of_event)) {
                 $eventsToday[] = [
                     'id' => $event->id,
                     'name' => $event->name,
@@ -67,7 +66,7 @@ class EventController extends Controller
                     "end_time" => $event->end_time,
                     "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
                     "occupancy_option" => $event->occupancy_option,
-                    "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->diffInMinutes(Carbon::parse($event->start_time)),
+                    "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)),
                     "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
                     "audience" => $event->audience,
                     "is_loud" => $event->is_loud,
@@ -75,7 +74,7 @@ class EventController extends Controller
                     "room_id" => $event->room_id,
                     "user_id" => $event->user_id,
                     "project_id" => $event->project_id,
-                    "created_at" =>  $event->created_at,
+                    "created_at" => $event->created_at,
                     "updated_at" => $event->updated_at,
                 ];
             }
@@ -178,7 +177,7 @@ class EventController extends Controller
 
         foreach ($room->events as $event) {
 
-            if(Carbon::parse($start_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
+            if (Carbon::parse($start_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
 
                 $conflicting_events[] = [
                     'event_name' => $event->name,
@@ -202,7 +201,7 @@ class EventController extends Controller
 
         foreach ($room->events as $event) {
 
-            if(Carbon::parse($end_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
+            if (Carbon::parse($end_time)->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time))) {
 
                 $conflicting_events[] = [
                     'event_name' => $event->name,
@@ -225,14 +224,14 @@ class EventController extends Controller
 
         $lastEvent = null;
 
-        foreach($events_with_ascending_end_time as $event) {
+        foreach ($events_with_ascending_end_time as $event) {
 
-            if(!blank($lastEvent)) {
+            if (!blank($lastEvent)) {
 
                 $this_event_start_time = Carbon::parse($event['start_time']);
                 $last_event_end_time = Carbon::parse($lastEvent['end_time']);
 
-                if($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
+                if ($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
                     $conflict_event_ids[] = [$lastEvent['id'], $event['id']];
                 }
 
@@ -245,7 +244,8 @@ class EventController extends Controller
         return $conflict_event_ids;
     }
 
-    public function day_index(Request $request) {
+    public function day_index(Request $request)
+    {
 
         $hours = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
 
@@ -260,6 +260,9 @@ class EventController extends Controller
             'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
+                'project_leaders' => User::whereHas('projects', function ($q) use ($project) {
+                    $q->where('is_manager', 1);
+                })->get(),
             ]),
             'event_types' => EventType::paginate(10)->through(fn($event_type) => [
                 'id' => $event_type->id,
@@ -303,7 +306,7 @@ class EventController extends Controller
                     ->whereDate('start_time', '<=', $date)
                     ->whereDate('end_time', '>=', $date)
                     ->whereTime('start_time', '<=', Carbon::parse($hour)->toTimeString())
-                    ->whereTime('end_time', '>=',  Carbon::parse($hour)->toTimeString())
+                    ->whereTime('end_time', '>=', Carbon::parse($hour)->toTimeString())
                     ->get()
             ])
         ]);
@@ -361,21 +364,20 @@ class EventController extends Controller
         $start_time_parse = Carbon::parse($request->start_time);
         $end_time_parse = Carbon::parse($request->end_time);
 
-        if($start_time_parse->lessThan($end_time_parse)) {
-            if($request->project_name == null) {
+        if ($start_time_parse->lessThan($end_time_parse)) {
+            if ($request->project_name == null) {
                 $this->store_on_existing_project($request);
-            }
-            else {
+            } else {
                 $this->store_on_new_project($request);
             }
             return Redirect::back()->with('success', 'Event created.');
-        }
-        else {
+        } else {
             return response()->json(['error' => 'Start date has to be before end date.'], 403);
         }
     }
 
-    private function store_on_existing_project(Request $request) {
+    private function store_on_existing_project(Request $request)
+    {
         Event::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -391,7 +393,8 @@ class EventController extends Controller
         ]);
     }
 
-    private function store_on_new_project(Request $request) {
+    private function store_on_new_project(Request $request)
+    {
         $project = Project::create([
             'name' => $request->project_name
         ]);

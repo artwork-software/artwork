@@ -1,4 +1,5 @@
 <template>
+    <!-- Important: iconName must be the same as the name of the color in tailwind css to be shown correctly in calendars -->
     <svg v-if="iconName === 'orange'" xmlns="http://www.w3.org/2000/svg" :width="width !== 0 ? width : 24" :height="height !== 0 ? height : 24" viewBox="0 0 100 100">
         <g id="abteilung_pic" transform="translate(6.629 10.449)" style="isolation: isolate">
             <circle id="Ellipse_48" data-name="Ellipse 48" cx="50" cy="50" r="50" transform="translate(-6.629 -10.449)" fill="#f79256"/>
@@ -14,7 +15,7 @@
             <circle id="Ellipse_48" data-name="Ellipse 48" cx="50" cy="50" r="50" transform="translate(-6.629 -10.449)" fill="#8cbc54"/>
         </g>
     </svg>
-    <svg v-if="iconName === 'grey'" xmlns="http://www.w3.org/2000/svg" :width="width !== 0 ? width : 24" :height="height !== 0 ? height : 24" viewBox="0 0 100 100">
+    <svg v-if="iconName === 'gray'" xmlns="http://www.w3.org/2000/svg" :width="width !== 0 ? width : 24" :height="height !== 0 ? height : 24" viewBox="0 0 100 100">
         <g id="abteilung_pic" transform="translate(6.629 10.449)" style="isolation: isolate">
             <circle id="Ellipse_48" data-name="Ellipse 48" cx="50" cy="50" r="50" transform="translate(-6.629 -10.449)" fill="#C4C4CC"/>
         </g>

@@ -228,9 +228,10 @@
                                             style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
                                             <li v-for="event in room.events" class="relative mt-px flex"
                                                 :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
+
                                                 <div
-                                                    class="group h-full rounded-lg leading-5 border-l-2 border-{{this.event_types.data.find(x => x.id === event.event_type_id).svg_name}}-400"
-                                                    :class="{'border-': 'blue' + '-400' }">
+                                                    class="group h-full rounded-lg leading-5 border-l-4"
+                                                    :class="`border-${event.event_type.svg_name}-400`">
                                                     <div @click="openDayDetailModal(event)"
                                                          v-if="checkEventType(event) && checkAttribute(event)"
                                                          :class="[{'stripes': event.occupancy_option }, 'bg-white h-full w-40 m-0.5 mr-4 border border-gray-100 cursor-pointer']">
@@ -249,9 +250,7 @@
                                                             </div>
                                                             <div
                                                                 class="text-secondary subpixel-antialiased text-sm ml-2 mt-1">
-                                                                {{
-                                                                    this.event_types.data.find(x => x.id === event.event_type_id).name
-                                                                }}
+                                                                {{event.event_type.name}}
                                                             </div>
                                                             <div>
                                                                 <!-- Individual Eventname -->

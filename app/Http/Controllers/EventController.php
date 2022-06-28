@@ -71,6 +71,7 @@ class EventController extends Controller
                     "audience" => $event->audience,
                     "is_loud" => $event->is_loud,
                     "event_type_id" => $event->event_type_id,
+                    "event_type" => $event->event_type,
                     "room_id" => $event->room_id,
                     "user_id" => $event->user_id,
                     "project_id" => $event->project_id,
@@ -251,7 +252,7 @@ class EventController extends Controller
 
         return inertia('Events/DayManagement', [
             'hours_of_day' => $hours,
-            'rooms' => Room::with('events')->get()->map(fn($room) => [
+            'rooms' => Room::with('events.event_type')->get()->map(fn($room) => [
                 'id' => $room->id,
                 'name' => $room->name,
                 'area_id' => $room->area_id,

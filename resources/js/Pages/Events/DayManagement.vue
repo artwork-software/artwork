@@ -20,7 +20,7 @@
 
                             <div class="flex w-full items-center ml-20">
                                 <div class="text-xl font-black">
-                                    HIER NOCH formatted DAY
+                                    {{ day_formatted }}
                                 </div>
                                 <div class="ml-2 flex items-center">
                                     <!-- TODO: +1 / -1 Tag noch einfügen -->
@@ -228,6 +228,8 @@
                                             style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
                                             <li v-for="event in room.events" class="relative mt-px flex"
                                                 :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
+
+                                                {{event.conflicts}}
 
                                                 <div
                                                     class="group h-full rounded-lg leading-5 border-l-4"
@@ -449,6 +451,8 @@
                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                       <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
+                                                        <ExclamationIcon v-if="room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0" class="h-5 w-5 flex text-error"
+                                                                         aria-hidden="true"/>
                                                 </span>
                                                 </li>
                                             </ListboxOption>
@@ -546,6 +550,7 @@
                             <label for="startTime">Terminstart*</label>
                             <input
                                 v-model="addEventForm.start_time" id="startTime"
+                                @change="getStartTimeConflicts"
                                 placeholder="Terminstart" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
@@ -553,6 +558,7 @@
                             <label for="endTime">Terminende*</label>
                             <input
                                 v-model="addEventForm.end_time" id="endTime"
+                                @change="getEndTimeConflicts"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary w-full"/>
                         </div>
@@ -897,6 +903,7 @@ import {
     UserGroupIcon,
     VolumeUpIcon,
     XIcon,
+    ExclamationIcon
 } from '@heroicons/vue/outline'
 import {CalendarIcon, CheckIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
@@ -973,8 +980,9 @@ export default defineComponent({
         CalendarIcon,
         Datepicker,
         UserTooltip,
+        ExclamationIcon
     },
-    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas'],
+    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas', 'day_formatted', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1001,6 +1009,38 @@ export default defineComponent({
         },
     },
     methods: {
+        getStartTimeConflicts() {
+            if(this.selectedRoom) {
+                axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+                    params: {
+                        start_time: this.addEventForm.start_time
+                    }}).then( response => {
+                    console.log(response.data)
+                });
+
+            } else {
+                Inertia.get(route('events.daily_management'), {
+                    wanted_day: this.requested_wanted_day,
+                    start_time: this.addEventForm.start_time
+                }, {only: ['areas'], preserveState: true});
+            }
+        },
+        getEndTimeConflicts() {
+            if(this.selectedRoom) {
+                axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
+                    params: {
+                        wanted_day: this.requested_wanted_day,
+                        end_time: this.addEventForm.end_time
+                    }}).then( response => {
+                    console.log(response.data)
+                });
+
+            } else {
+                Inertia.get(route('events.daily_management'), {
+                    end_time: this.addEventForm.end_time
+                }, {only: ['areas'], preserveState: true});
+            }
+        },
         hasConflict(event_id) {
 
             for (let conflict of this.wantedDay.conflicts) {
@@ -1206,8 +1246,8 @@ export default defineComponent({
             project_search_results: [],
             addEventForm: useForm({
                 name: '',
-                start_time: null,
-                end_time: null,
+                start_time: this.start_time_of_new_event,
+                end_time: this.end_time_of_new_event,
                 description: '',
                 occupancy_option: false,
                 is_loud: false,

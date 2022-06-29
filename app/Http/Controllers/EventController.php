@@ -8,6 +8,7 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
@@ -51,14 +52,30 @@ class EventController extends Controller
 
     private function get_events_for_day_view($date_of_day, $events): array
     {
-
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
+        $lastEvent = null;
+
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
+
+                $conflicts = [];
+
+                if (!blank($lastEvent)) {
+
+                    $this_event_start_time = Carbon::parse($event['start_time']);
+                    $last_event_end_time = Carbon::parse($lastEvent['end_time']);
+
+                    if ($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
+                        $conflicts[] = $lastEvent['id'];
+                    }
+
+                }
+
                 $eventsToday[] = [
                     'id' => $event->id,
+                    'conflicts' => $conflicts,
                     'name' => $event->name,
                     'description' => $event->description,
                     "start_time" => $event->start_time,
@@ -78,6 +95,8 @@ class EventController extends Controller
                     "created_at" => $event->created_at,
                     "updated_at" => $event->updated_at,
                 ];
+
+                $lastEvent = $event;
             }
         }
 
@@ -250,13 +269,21 @@ class EventController extends Controller
 
         $hours = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
 
+        $wanted_day = Carbon::parse($request->query('wanted_day'));
+
         return inertia('Events/DayManagement', [
+            'start_time_of_new_event' => $request->query('start_time'),
+            'end_time_of_new_event' => $request->query('end_time'),
+            'requested_wanted_day' => $request->query('wanted_day'),
+            'day_formatted' => $wanted_day->isoFormat('dd DD.MM.YYYY'),
             'hours_of_day' => $hours,
-            'rooms' => Room::with('events.event_type')->get()->map(fn($room) => [
+            'rooms' => Room::with(['events' => function ($query) {
+                $query->orderBy('end_time', 'ASC')->with('event_type');
+            }])->get()->map(fn($room) => [
                 'id' => $room->id,
                 'name' => $room->name,
                 'area_id' => $room->area_id,
-                'events' => $this->get_events_for_day_view(Carbon::parse($request->query('wanted_day')), $room->events)
+                'events' => $this->get_events_for_day_view($wanted_day, $room->events)
             ]),
             'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
@@ -275,7 +302,9 @@ class EventController extends Controller
             'areas' => Area::paginate(10)->through(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => $area->rooms()->with('room_admins')->orderBy('order')->get()->map(fn($room) => [
+                'rooms' => $area->rooms()->with('room_admins', 'events.event_type')->orderBy('order')->get()->map(fn($room) => [
+                    'conflicts_start_time' => $this->get_conflicts_in_room_for_start_time($room),
+                    'conflicts_end_time' => $this->get_conflicts_in_room_for_end_time($room),
                     'id' => $room->id,
                     'name' => $room->name,
                     'description' => $room->description,

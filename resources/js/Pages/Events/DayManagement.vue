@@ -20,19 +20,17 @@
 
                             <div class="flex w-full items-center ml-20">
                                 <div class="text-xl font-black">
-                                    {{ day_formatted }}
+                                    {{this.formattedWeekday}}  {{this.shown_day_formatted.split(' ')[1]}}
                                 </div>
                                 <div class="ml-2 flex items-center">
-                                    <!-- TODO: +1 / -1 Tag noch einfügen -->
-                                    <!-- TODO: Tag der Daten aus Backend mitgeben -> hier dann einbauen statt new date und als formattted Day displayen -->
                                     <Link
-                                        :href="route('events.daily_management',{wanted_day: new Date(new Date().setDate(new Date().getDate() - 1))})">
+                                        :href="route('events.daily_management',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1))})">
                                         <ChevronLeftIcon class="h-5 w-5"/>
                                     </Link>
                                     <CalendarIcon @click="openChangeDateModal"
                                                   class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                     <Link
-                                        :href="route('events.daily_management',{wanted_day: new Date(new Date().setDate(new Date().getDate()-1))})">
+                                        :href="route('events.daily_management',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1))})">
                                         <ChevronRightIcon class="h-5 w-5"/>
                                     </Link>
                                 </div>
@@ -226,17 +224,28 @@
                                         </h2>
                                         <ol class="h-full grid grid-cols-1 sm:pr-8"
                                             style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
+                                            <!-- Listobject on hover when there is no event on that day -->
+                                                <li @mouseover="activateHover(room.id)"
+                                                    @click="openAddEventModal(room.id)"
+                                                    @mouseout="deactivateHover()" v-if="room.events.length === 0"
+                                                    :class="showAddHoverRoomId === room.id ? 'bg-secondary' : ''"
+                                                    class="relative mt-px flex hover:bg-secondary cursor-pointer" style="grid-row: 1 / span 1439">
+                                                    <button v-show="showAddHoverRoomId === room.id"
+                                                        type="button"
+                                                        class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
+                                                        <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
+                                                    </button>
+                                                </li>
                                             <li v-for="event in room.events" class="relative mt-px flex"
                                                 :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
-
-                                                {{event.conflicts}}
-
+                                                <div v-if="checkEventType(event) && checkAttribute(event)">
+                                                    {{event.conflicts}}
                                                 <div
                                                     class="group h-full rounded-lg leading-5 border-l-4"
                                                     :class="`border-${event.event_type.svg_name}-400`">
                                                     <div @click="openDayDetailModal(event)"
-                                                         v-if="checkEventType(event) && checkAttribute(event)"
-                                                         :class="[{'stripes': event.occupancy_option }, 'bg-white h-full w-40 m-0.5 mr-4 border border-gray-100 cursor-pointer']">
+
+                                                         :class="[{'stripes': event.occupancy_option }, 'bg-white h-full w-40 m-0.5 mr-4 cursor-pointer']">
                                                         <!-- Inhalt einer Terminkachel -->
                                                         <div>
                                                             <!-- Icons -->
@@ -337,6 +346,7 @@
                                                             </div>
                                                         </div>
                                                     </div>
+                                                </div>
                                                 </div>
                                             </li>
                                         </ol>
@@ -876,7 +886,8 @@
                                     :enableTimePicker="false"></Datepicker>
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button :class="[wantedDateType.id === 1 && (wantedStartDate === null || wantedEndDate === null) ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']" class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="changeWantedDate()">
                             Anzeigen
@@ -982,7 +993,7 @@ export default defineComponent({
         UserTooltip,
         ExclamationIcon
     },
-    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas', 'day_formatted', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event'],
+    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas','shown_day_formatted','shown_day_local','requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1006,6 +1017,24 @@ export default defineComponent({
                 return roomsCopy.filter(room => room.area_id === this.wantedArea.id)
             }
             return this.rooms
+        },
+        formattedWeekday: function () {
+            switch (this.shown_day_formatted.split(' ')[0]) {
+                case 'Monday':
+                    return 'MO';
+                case 'Tuesday':
+                    return 'DI';
+                case 'Wednesday':
+                    return 'MI';
+                case 'Thursday':
+                    return 'DO';
+                case 'Friday':
+                    return 'FR';
+                case 'Saturday':
+                    return 'SA';
+                case 'Sunday':
+                    return 'SO';
+            }
         },
     },
     methods: {
@@ -1156,15 +1185,13 @@ export default defineComponent({
         deleteSelectedProject() {
             this.selectedProject = null;
         },
-        activateHover(date, roomId) {
-            this.showAddHoverDate = date;
+        activateHover(roomId) {
             this.showAddHoverRoomId = roomId;
         },
         deactivateHover() {
-            this.showAddHoverDate = null;
             this.showAddHoverRoomId = null;
         },
-        openDayDetailModal(wantedDay) {
+        openDayDetailModal(event) {
             this.wantedDay = wantedDay;
             this.showDayDetailModal = true;
         },
@@ -1232,7 +1259,7 @@ export default defineComponent({
             wantedDayDate: null,
             assignProject: false,
             selectedProject: null,
-            showAddHoverDate: null,
+            showAddHoverDate: new Date(this.shown_day_local).setHours(0,0,0,0),
             showAddHoverRoomId: null,
             wantedEventType: null,
             newProjectName: "",

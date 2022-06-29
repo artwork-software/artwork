@@ -117,6 +117,8 @@ class EventController extends Controller
         $eventsWithoutRoom = Event::whereNull('room_id')->get();
         $eventsWithoutRoomCount = Event::whereNull('room_id')->count();
 
+
+
         return inertia('Events/EventManagement', [
             'start_time_of_new_event' => $request->query('start_time'),
             'end_time_of_new_event' => $request->query('end_time'),
@@ -131,6 +133,10 @@ class EventController extends Controller
                 'id' => $room->id,
                 'name' => $room->name,
                 'area_id' => $room->area_id,
+                'room_admins' => $room->room_admins->map(fn($room_admin) => [
+                    'id' => $room_admin->id,
+                    'profile_photo_url' => $room_admin->profile_photo_url
+                ]),
                 'days_in_month' => collect($period)->map(function ($date_of_day) use ($room) {
                     $events = $this->get_events_of_day($date_of_day, $room->events);
 
@@ -184,6 +190,12 @@ class EventController extends Controller
             'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
+                /*'project_admins' => User::whereHas('projects', function ($q) use ($project) {
+                    $q->where('is_admin', 1);
+                }),
+                'project_managers' => User::whereHas('projects', function ($q) use ($project) {
+                    $q->where('is_manager', 1);
+                }),*/
             ]),
         ]);
     }
@@ -275,8 +287,9 @@ class EventController extends Controller
             'start_time_of_new_event' => $request->query('start_time'),
             'end_time_of_new_event' => $request->query('end_time'),
             'requested_wanted_day' => $request->query('wanted_day'),
-            'day_formatted' => $wanted_day->isoFormat('dd DD.MM.YYYY'),
             'hours_of_day' => $hours,
+            'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
+            'shown_day_local' => Carbon::parse($request->query('wanted_day')),
             'rooms' => Room::with(['events' => function ($query) {
                 $query->orderBy('end_time', 'ASC')->with('event_type');
             }])->get()->map(fn($room) => [

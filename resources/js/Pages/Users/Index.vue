@@ -329,7 +329,7 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: "", tooltipText: "Keine vorausgewählten Rechte"},
+    {name: 'Keine Rollenrechte', roleName: '', tooltipText: "Keine vorausgewählten Rechte"},
     {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lege- und Schreibrechte - weitere Einstellungen entfallen"},
 ]
 
@@ -409,7 +409,7 @@ export default defineComponent({
                 user_emails: [],
                 permissions: [],
                 departments: [],
-                role:"",
+                role:null,
             }),
         }
     },

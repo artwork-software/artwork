@@ -12,6 +12,7 @@ use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class EventController extends Controller
@@ -440,6 +441,11 @@ class EventController extends Controller
     {
         $project = Project::create([
             'name' => $request->project_name
+        ]);
+
+        $project->project_histories()->create([
+            "user_id" => Auth::id(),
+            "description" => "Projekt angelegt"
         ]);
 
         Event::create([

@@ -15,7 +15,7 @@ test('users can view users if they have the right to', function () {
     $response = $this->get('/users')
         ->assertInertia(fn(AssertableInertia $page) => $page
             ->component('Users/Index')
-            ->has('users.data', 1)
+            ->has('users.data', 2)
             ->has('users.data.0', fn(AssertableInertia $page) => $page
                 ->hasAll([
                         'first_name',
@@ -38,7 +38,7 @@ test('users can view users if they have the right to', function () {
     $response = $this->get('/users')
         ->assertInertia(fn(AssertableInertia $page) => $page
             ->component('Users/Index')
-            ->has('users.data', 1)
+            ->has('users.data', 2)
             ->has('users.data.0', fn(AssertableInertia $page) => $page
                 ->hasAll([
                     'first_name',
@@ -188,6 +188,22 @@ test('users can delete other users', function () {
 
     $this->assertDatabaseMissing('users', [
         "id" => $user_to_edit->id,
+    ]);
+
+});
+
+test('users can delete their own accounts', function () {
+
+    $user = User::factory()->create();
+
+    $this->actingAs($user);
+
+    $response = $this->delete("/users/{$user->id}");
+
+    $response->assertStatus(302);
+
+    $this->assertDatabaseMissing('users', [
+        "id" => $user->id,
     ]);
 
 });

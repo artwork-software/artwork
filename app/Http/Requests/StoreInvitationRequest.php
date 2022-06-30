@@ -26,7 +26,7 @@ class StoreInvitationRequest extends FormRequest
         return [
             'user_emails' => 'required|array',
             'permissions' => 'array',
-            'role' => 'string'
+            'role' => 'sometimes'
         ];
     }
 }

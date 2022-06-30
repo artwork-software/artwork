@@ -215,6 +215,135 @@
                                     </div>
                                 </div>
                                 <div class="flex">
+                                    <div v-if="events_without_room.count > 0"
+                                         class="inline-flex flex-col pl-3 w-56 bg-error border-r-8 border-white">
+                                        <h2 class="px-2 text-white uppercase  cursor-pointer subpixel-antialiased mt-4 mb-4 ">
+                                            Termine ohne Raum
+                                        </h2>
+                                        <ol class="h-full grid grid-cols-1 sm:pr-8"
+                                            style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
+                                            <li v-for="event in sortedEvents(events_without_room.events)" class="mt-px flex"
+                                                :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
+                                                <div v-if="checkEventType(event) && checkAttribute(event)">
+                                                    <div :class="`border-${event.event_type.svg_name}-400`"
+                                                         class="group h-full rounded-lg leading-5 border-l-4">
+                                                        <div @click="openDayDetailModal(room,event)"
+
+                                                             :class="[{'stripes': event.occupancy_option }, 'bg-white relative h-full w-40 m-0.5 mr-4 cursor-pointer']">
+                                                            <!-- Inhalt einer Terminkachel -->
+                                                            <div>
+                                                                <!-- Icons -->
+                                                                <div class="flex p-1 ml-1 mt-1">
+                                                                    <UserGroupIcon v-if="event.audience"
+                                                                                   class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                                    <VolumeUpIcon v-if="event.is_loud"
+                                                                                  :class="event.audience ? 'ml-1' : ''"
+                                                                                  class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
+                                                                    <div v-if="!event.audience && !event.is_loud"
+                                                                         class="h-5 w-5">
+                                                                    </div>
+                                                                </div>
+                                                                <div v-if="event.conflicts.length > 0"
+                                                                     class="h-5 flex right-0 top-0 bg-error items-center absolute">
+                                                                    <ExclamationIcon class="h-5 w-5 flex text-white"
+                                                                                     aria-hidden="true"/>
+                                                                    <span class="text-white ml-1 flex items-center mr-0.5">
+                                                                {{ event.conflicts.length }}
+                                                            </span>
+                                                                </div>
+                                                                <div
+                                                                    class="text-secondary subpixel-antialiased text-sm ml-2 mt-1">
+                                                                    {{event.event_type.name}}
+                                                                </div>
+                                                                <div>
+                                                                    <!-- Individual Eventname -->
+                                                                    <div v-if="event.project_id === null"
+                                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                                        {{ event.name }}
+                                                                    </div>
+                                                                    <!-- Name of connected Project -->
+                                                                    <div
+                                                                        v-else
+                                                                        class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                                        {{
+                                                                            projects.data.find(x => x.id === event.project_id).name
+                                                                        }}
+                                                                    </div>
+                                                                    <!-- Time of Event -->
+                                                                    <div
+                                                                        class="ml-2 mt-1 text-sm flex text-secondary subpixel-antialiased">
+                                                                        {{ event.start_time.substring(11, 16) }} -
+                                                                        <div v-if="event.duration_in_minutes > 1439">23:59
+                                                                        </div>
+                                                                        <div v-else>{{ event.end_time.substring(11, 16) }}
+                                                                        </div>
+                                                                    </div>
+                                                                    <!-- Project Leader Icons -->
+                                                                    <div class="ml-1 mt-2 flex" v-if="event.project_id">
+                                                                        <div
+                                                                            v-if="projects.data.find(x => x.id === event.project_id).project_leaders.length <= 3"
+                                                                            class="flex mt-2 -mr-3"
+                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders">
+                                                                            <img :data-tooltip-target="user.id"
+                                                                                 :src="user.profile_photo_url"
+                                                                                 :alt="user.name"
+                                                                                 class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                                                            <UserTooltip :user="user"/>
+                                                                        </div>
+                                                                        <div class="flex" v-else>
+                                                                            <div class=" mt-2 -mr-3"
+                                                                                 v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders.slice(0,2)">
+                                                                                <img :data-tooltip-target="user.id"
+                                                                                     :src="user.profile_photo_url"
+                                                                                     :alt="user.name"
+                                                                                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                                                                <UserTooltip :user="user"/>
+                                                                            </div>
+                                                                            <Menu as="div" class="relative mt-3 -mr-3">
+                                                                                <div>
+                                                                                    <MenuButton
+                                                                                        class="flex items-center rounded-full focus:outline-none">
+                                                                                        <ChevronDownIcon
+                                                                                            class="ml-1 flex-shrink-0 h-10 w-10 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                                                    </MenuButton>
+                                                                                </div>
+                                                                                <transition
+                                                                                    enter-active-class="transition ease-out duration-100"
+                                                                                    enter-from-class="transform opacity-0 scale-95"
+                                                                                    enter-to-class="transform opacity-100 scale-100"
+                                                                                    leave-active-class="transition ease-in duration-75"
+                                                                                    leave-from-class="transform opacity-100 scale-100"
+                                                                                    leave-to-class="transform opacity-0 scale-95">
+                                                                                    <MenuItems
+                                                                                        class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                                                        <MenuItem
+                                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_leaders"
+                                                                                            v-slot="{ active }">
+                                                                                            <Link href="#"
+                                                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                                <img
+                                                                                                    class="h-9 w-9 rounded-full"
+                                                                                                    :src="user.profile_photo_url"
+                                                                                                    alt=""/>
+                                                                                                <span class="ml-4">
+                                                                                                {{ user.first_name }} {{ user.last_name }}
+                                                                                            </span>
+                                                                                            </Link>
+                                                                                        </MenuItem>
+                                                                                    </MenuItems>
+                                                                                </transition>
+                                                                            </Menu>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ol>
+                                    </div>
+
                                     <div v-if="this.roomsToShow.length > 0"
                                          v-for="room in roomsToShow.sort((a,b) => a.area_id - b.area_id)"
                                          class="inline-flex flex-col pl-3 w-56"
@@ -236,16 +365,14 @@
                                                         <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
                                                     </button>
                                                 </li>
-                                            <li v-for="event in room.events" class="relative mt-px flex"
+                                            <li v-for="event in sortedEvents(room.events)" class="mt-px flex"
                                                 :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
                                                 <div v-if="checkEventType(event) && checkAttribute(event)">
-                                                    {{event.conflicts}}
-                                                <div
-                                                    class="group h-full rounded-lg leading-5 border-l-4"
-                                                    :class="`border-${event.event_type.svg_name}-400`">
-                                                    <div @click="openDayDetailModal(event)"
+                                                <div :class="`border-${event.event_type.svg_name}-400`"
+                                                    class="group h-full rounded-lg leading-5 border-l-4">
+                                                    <div @click="openDayDetailModal(room,event)"
 
-                                                         :class="[{'stripes': event.occupancy_option }, 'bg-white h-full w-40 m-0.5 mr-4 cursor-pointer']">
+                                                         :class="[{'stripes': event.occupancy_option }, 'bg-white relative h-full w-40 m-0.5 mr-4 cursor-pointer']">
                                                         <!-- Inhalt einer Terminkachel -->
                                                         <div>
                                                             <!-- Icons -->
@@ -258,6 +385,14 @@
                                                                 <div v-if="!event.audience && !event.is_loud"
                                                                      class="h-5 w-5">
                                                                 </div>
+                                                            </div>
+                                                            <div v-if="event.conflicts.length > 0"
+                                                                class="h-5 flex right-0 top-0 bg-error items-center absolute">
+                                                                <ExclamationIcon class="h-5 w-5 flex text-white"
+                                                                                 aria-hidden="true"/>
+                                                                <span class="text-white ml-1 flex items-center mr-0.5">
+                                                                {{ event.conflicts.length }}
+                                                            </span>
                                                             </div>
                                                             <div
                                                                 class="text-secondary subpixel-antialiased text-sm ml-2 mt-1">
@@ -632,12 +767,14 @@
             <template #content>
                 <XIcon @click="closeDayDetailModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div v-for="event in wantedDay.events" class="mx-4 border-b-2 pb-8">
+                <div v-for="event in wantedEvents" class="mx-4 border-b-2 pb-8">
                     <div>
-
-                        {{ hasConflict(event.id) }}
-
-                        <div class="mt-2">
+                        <div class="mt-2 flex">
+                            <div v-if="event.conflicts.length > 0 || wantedEvents.find(wantedEvent => wantedEvent.conflicts.includes(event.id)) !== null" class="bg-error flex h-8 w-8 mt-6 mr-2">
+                                <ExclamationIcon
+                                    class="h-8 w-8 p-1 my-auto flex text-white"
+                                    aria-hidden="true"/>
+                            </div>
                             <Listbox as="div" class="flex" v-model="event.event_type_id">
                                 <div class="relative">
                                     <ListboxButton
@@ -911,10 +1048,10 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     DotsVerticalIcon,
+    ExclamationIcon,
     UserGroupIcon,
     VolumeUpIcon,
-    XIcon,
-    ExclamationIcon
+    XIcon
 } from '@heroicons/vue/outline'
 import {CalendarIcon, CheckIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
@@ -993,7 +1130,7 @@ export default defineComponent({
         UserTooltip,
         ExclamationIcon
     },
-    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas','shown_day_formatted','shown_day_local','requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event'],
+    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas','shown_day_formatted','shown_day_local','requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event','events_without_room'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1053,6 +1190,23 @@ export default defineComponent({
                     start_time: this.addEventForm.start_time
                 }, {only: ['areas'], preserveState: true});
             }
+        },
+        sortedEvents: function (events) {
+            function compare(a, b) {
+                if (b.duration_in_minutes === null) {
+                    return -1;
+                }
+                if (a.duration_in_minutes === null) {
+                    return 1;
+                }
+                if (a.duration_in_minutes < b.duration_in_minutes)
+                    return 1;
+                if (a.duration_in_minutes > b.duration_in_minutes)
+                    return -1;
+                return 0;
+            }
+
+            return events.sort(compare);
         },
         getEndTimeConflicts() {
             if(this.selectedRoom) {
@@ -1191,13 +1345,17 @@ export default defineComponent({
         deactivateHover() {
             this.showAddHoverRoomId = null;
         },
-        openDayDetailModal(event) {
-            this.wantedDay = wantedDay;
+        openDayDetailModal: function (room, event) {
+            this.wantedEvents = [];
+            this.wantedEvents.push(event);
+            event.conflicts.forEach((conflictEventId) => {
+                this.wantedEvents.push(room.events.find(roomEvent => roomEvent.id === conflictEventId))
+            })
             this.showDayDetailModal = true;
         },
         closeDayDetailModal() {
             this.showDayDetailModal = false;
-            this.wantedDay = null;
+            this.wantedEvents = null;
         },
         updateEvent(event) {
             if (event.name !== null) {
@@ -1265,7 +1423,7 @@ export default defineComponent({
             newProjectName: "",
             wantedAttribute: null,
             showDayDetailModal: false,
-            wantedDay: null,
+            wantedEvents: [],
             selectedRoom: null,
             creatingProject: false,
             project_query: "",

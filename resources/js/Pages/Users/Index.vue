@@ -329,7 +329,7 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: '', tooltipText: "Keine vorausgewählten Rechte"},
+    {name: 'Keine Rollenrechte', roleName: null, tooltipText: "Keine vorausgewählten Rechte"},
     {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lege- und Schreibrechte - weitere Einstellungen entfallen"},
 ]
 
@@ -464,7 +464,6 @@ export default defineComponent({
                 }
             })
             this.form.role = this.selected.roleName;
-            console.log(this.form.role);
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();
             this.openSuccessModal();

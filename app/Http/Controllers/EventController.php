@@ -116,7 +116,9 @@ class EventController extends Controller
         $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
 
         $eventsWithoutRoom = Event::whereNull('room_id')->get();
-        $eventsWithoutRoomCount = Event::whereNull('room_id')->count();
+        $eventsWithoutRoomCount = Event::whereNull('room_id')
+            ->whereDate('start_time' ,'<=', Carbon::parse($request->query('month_end')))
+            ->whereDate('end_time', '>=', Carbon::parse($request->query('month_start')))->count();
 
 
 
@@ -193,10 +195,10 @@ class EventController extends Controller
                 'name' => $project->name,
                 'project_admins' => User::whereHas('projects', function ($q) use ($project) {
                     $q->where('is_admin', 1);
-                }),
+                })->get(),
                 'project_managers' => User::whereHas('projects', function ($q) use ($project) {
                     $q->where('is_manager', 1);
-                }),
+                })->get(),
             ]),
         ]);
     }
@@ -284,6 +286,11 @@ class EventController extends Controller
 
         $wanted_day = Carbon::parse($request->query('wanted_day'));
 
+        $eventsWithoutRoom = Event::whereNull('room_id')->get();
+        $eventsWithoutRoomCount = Event::whereNull('room_id')
+            ->whereDate('start_time' ,'<=', Carbon::parse($request->query('wanted_day'))->startOfDay())
+            ->whereDate('end_time', '>=', Carbon::parse($request->query('wanted_day'))->endOfDay())->count();
+
         return inertia('Events/DayManagement', [
             'start_time_of_new_event' => $request->query('start_time'),
             'end_time_of_new_event' => $request->query('end_time'),
@@ -313,6 +320,10 @@ class EventController extends Controller
                 'project_mandatory' => $event_type->project_mandatory,
                 'individual_name' => $event_type->individual_name,
             ]),
+            'events_without_room' => [
+                "count" => $eventsWithoutRoomCount,
+                'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
+            ],
             'areas' => Area::paginate(10)->through(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,

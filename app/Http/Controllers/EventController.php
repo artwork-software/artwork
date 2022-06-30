@@ -191,12 +191,12 @@ class EventController extends Controller
             'projects' => Project::paginate(10)->through(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
-                /*'project_admins' => User::whereHas('projects', function ($q) use ($project) {
+                'project_admins' => User::whereHas('projects', function ($q) use ($project) {
                     $q->where('is_admin', 1);
                 }),
                 'project_managers' => User::whereHas('projects', function ($q) use ($project) {
                     $q->where('is_manager', 1);
-                }),*/
+                }),
             ]),
         ]);
     }

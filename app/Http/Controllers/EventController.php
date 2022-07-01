@@ -454,6 +454,8 @@ class EventController extends Controller
             'name' => $request->project_name
         ]);
 
+        $project->users()->save(Auth::user(), ['is_admin' => true]);
+
         $project->project_histories()->create([
             "user_id" => Auth::id(),
             "description" => "Projekt angelegt"

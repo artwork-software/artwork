@@ -119,6 +119,12 @@ test('users with the permission can create events on new projects', function() {
         'start_time' => null,
         'project_id' => $project->id
     ]);
+
+    $this->assertDatabaseHas('project_user', [
+        'project_id' => $project->id,
+        'user_id' => $this->auth_user->id,
+        'is_admin' => true,
+    ]);
 });
 
 test('users with the permission can update events', function() {

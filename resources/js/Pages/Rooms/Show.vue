@@ -166,7 +166,7 @@
                                 </div>
                             </div>
                             <div class="flex items-center w-full ml-24 ">
-                                <div v-if="eventRequest.project" class="w-80">
+                                <div v-if="eventRequest.project" class="w-64">
                                     <div class="text-secondary text-sm flex items-center">
                                         Zugeordnet zu
                                         <Link :href="route('projects.show',{project: eventRequest.project.id})"
@@ -213,15 +213,13 @@
             </div>
         </div>
         <!-- Raumkalender -->
-        <div class="bg-stone-50 w-full flex pl-20">
-            <div class="mt-16 w-36">
-                <div v-for="day in days_this_month"
-                     class="w-40 inline-flex mt-1 h-36 w-full text-lg text-secondary subpixel-antialiased">
-                    {{ day.date_formatted }}
-                </div>
-            </div>
-
+        <div v-if="!calendarType || calendarType === 'monthly'">
+            <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="{data: [room.area]}" :month_events="month_events" :projects="projects" :rooms="[room]" :days_this_month="days_this_month" :events_without_room="events_without_room"></MonthlyCalendar>
         </div>
+        <div v-else>
+            <DailyCalendar calendar-type="room"  :hours_of_day="hours_of_day" :rooms="[room]" :projects="projects" :event_types="event_types" :areas="{data: [room.area]}" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
+        </div>
+
         <!-- Change RoomAdmins Modal -->
         <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
             <template #content>
@@ -606,7 +604,16 @@
 <script>
 
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
 import {
     PencilAltIcon,
     TrashIcon,
@@ -623,14 +630,30 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
+import DailyCalendar from "@/Layouts/Components/DailyCalendar";
+
+
+const attributeFilters = [
+    {name: 'Nur Anfragen', id: 1},
+    {name: 'Nur laute Termine', id: 2},
+    {name: 'Nur Termine mit Publikum', id: 3}
+]
+
+const dateTypes = [
+    {name: 'Monatsansicht', id: 1},
+    {name: 'Tagesansicht', id: 2}
+]
 
 export default {
     name: "Show",
-    props: ['room', 'event_types','days_this_month'],
+    props: ['calendarType','room', 'event_types','days_this_month','areas','projects','month_events','events_without_room','hours_of_day','shown_day_formatted','shown_day_local'],
     components: {
+        MonthlyCalendar,
+        DailyCalendar,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -656,6 +679,20 @@ export default {
         VolumeUpIcon,
         UserGroupIcon,
         PlusSmIcon,
+        Link,
+        Listbox,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
+    },
+    computed: {
+        eventTypeFilters: function () {
+            let filters = [];
+            this.event_types.data.forEach((eventType) => {
+                filters.push({eventTypeId: eventType.id, name: eventType.name});
+            })
+            return filters;
+        },
     },
     data() {
         return {
@@ -936,6 +973,12 @@ export default {
             deep: true
         }
     },
+    setup(){
+        return{
+            attributeFilters,
+            dateTypes
+        }
+    }
 }
 </script>
 

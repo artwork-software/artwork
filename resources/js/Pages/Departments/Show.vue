@@ -21,7 +21,7 @@
                                 leave-from-class="transform opacity-100 scale-100"
                                 leave-to-class="transform opacity-0 scale-95">
                         <MenuItems
-                            class="z-40 origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                            class="z-40 overflow-y-auto origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                             <MenuItem v-for="item in iconMenuItems"  v-slot="{ active }">
                                 <Link href="#" @click="teamForm.svg_name = item.iconName"
                                       :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -245,6 +245,7 @@
 const iconMenuItems = [
     {iconName: 'departmentImagePlaceholder'},
     {iconName: 'teamIconTech'},
+    {iconName: 'vermietung'},
 ]
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";

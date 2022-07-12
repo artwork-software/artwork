@@ -364,6 +364,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 const iconMenuItems = [
     {iconName: 'departmentImagePlaceholder'},
     {iconName: 'teamIconTech'},
+    {iconName: 'vermietung'},
 ]
 
 export default defineComponent({

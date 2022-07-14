@@ -129,7 +129,7 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal title="Nutzer*innen einladen" modal_id="invite-user" @close="closeAddUserModal">
+        <flowbite-modal title="Nutzer*innen einladen" modal_id="invite-user" @close="closeAddUserModal"  >
             <div class="mx-3">
                 <div class="text-secondary tracking-tight leading-6 sub">
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
@@ -250,10 +250,29 @@
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
-                    <div v-if="showUserPermissions" class="flex flex-col">
-                        <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
-                                  :item=permission />
+                    <div v-if="showUserPermissions" class="flex flex-col max-h-96 overflow-y-auto">
+
+                        <div v-for="(permissions, group) in all_permissions">
+
+                            <h3 class="text-secondary mt-3">{{group}}</h3>
+
+                            <div class="relative flex items-center" v-for="(permission, index) in permissions" :key=index>
+                                <div class="flex items-center h-7">
+                                    <input :id="permission.name"
+                                           v-model="form.permissions"
+                                           :value="permission.name"
+                                           name="permissions" type="checkbox"
+                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="permissions" class="text-primary">{{ permission.name_de }}</label>
+                                </div>
+                            </div>
+
+                        </div>
+
                     </div>
+
                 </div>
                 </div>
 
@@ -396,7 +415,7 @@ export default defineComponent({
         RadioGroupOption,
         Link,
     },
-    props: ['users', 'departments'],
+    props: ['users', 'departments','all_permissions'],
     data() {
         return {
             showUserPermissions: true,
@@ -458,11 +477,6 @@ export default defineComponent({
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
             }
-            userPermissionCheckboxes.forEach((item) => {
-                if (item.checked) {
-                    this.form.permissions.push(item.permissionName);
-                }
-            })
             this.form.role = this.selected.roleName;
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();

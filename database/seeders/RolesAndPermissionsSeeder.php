@@ -18,43 +18,182 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        //Invitations
-        Permission::create(['name' => 'invite users']);
+        //System
+
+        //Tool
+        Permission::create([
+            'name' => 'change tool settings',
+            'name_de' => "Tooleinstellungen editieren",
+            'group' => 'System'
+        ]);
 
         //Users
-        Permission::create(['name' => 'view users']);
-        Permission::create(['name' => 'update users']);
-        Permission::create(['name' => 'delete users']);
+        Permission::create([
+            'name' => 'invite users',
+            'name_de' => "Nutzer*innen einladen",
+            'group' => 'System'
+        ]);
+        Permission::create([
+            'name' => 'view users',
+            'name_de' => "Nutzer*innen sehen",
+            'group' => 'System'
+        ]);
+        Permission::create([
+            'name' => 'update users',
+            'name_de' =>  "Nutzer*innen bearbeiten",
+            'group' => 'System'
+        ]);
+        Permission::create([
+            'name' => 'delete users',
+            'name_de' =>  "Nutzer*innen löschen",
+            'group' => 'System'
+        ]);
+        Permission::create([
+            'name' => 'update user permissions',
+            'name_de' => "Rechte ändern",
+            'group' => 'System'
+        ]);
 
-        //Departments
-        Permission::create(['name' => 'create departments']);
-        Permission::create(['name' => 'view departments']);
-        Permission::create(['name' => 'update departments']);
-        Permission::create(['name' => 'delete departments']);
+        //Räume
+        Permission::create([
+            'name' => 'create rooms',
+            'name_de' => "Räume anlegen",
+            'group' => 'System'
+        ]);
 
-        //Projects
-        Permission::create(['name' => 'create projects']);
-        Permission::create(['name' => 'update projects']);
-        Permission::create(['name' => 'delete projects']);
+        Permission::create([
+            'name' => 'edit rooms',
+            'name_de' => "Räume editieren",
+            'group' => 'System'
+        ]);
+
+        //Areas
+        Permission::create([
+            'name' => 'create areas',
+            'name_de' => "Areale anlegen",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'edit areas',
+            'name_de' => "Areale editieren",
+            'group' => 'System'
+        ]);
+
+        //occupancy requests
+        Permission::create([
+            'name' => 'confirm occupancy requests',
+            'name_de' => "Belegungssanfragen bestätigen",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'reject occupancy requests',
+            'name_de' => "Belegungssanfragen ablehnen",
+            'group' => 'System'
+        ]);
+
+        //Projekt genre bereiche kategorien
+        Permission::create([
+            'name' => 'create project properties',
+            'name_de' => "Projekteigenschaften definieren",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'update project properties',
+            'name_de' => "Projekteigenschaften bearbeiten",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'delete project properties',
+            'name_de' => "Projekteigenschaften löschen",
+            'group' => 'System'
+        ]);
+
+        //Termine
+        Permission::create([
+            'name' => 'create event type',
+            'name_de' => "Termintypen definieren",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'update event type',
+            'name_de' => "Termintypen editieren",
+            'group' => 'System'
+        ]);
+
+        Permission::create([
+            'name' => 'delete event type',
+            'name_de' => "Termintypen löschen",
+            'group' => 'System'
+        ]);
 
         //Checklists
-        Permission::create(['name' => 'create checklists']);
-        Permission::create(['name' => 'view checklists']);
-        Permission::create(['name' => 'update checklists']);
-        Permission::create(['name' => 'delete checklists']);
+        Permission::create([
+            'name' => 'create checklist template',
+            'name_de' => "Checklisten-Vorlage erstellen",
+            'group' => 'System'
+        ]);
 
-        //ChecklistTemplates
-        Permission::create(['name' => 'create checklist_templates']);
-        Permission::create(['name' => 'view checklist_templates']);
-        Permission::create(['name' => 'update checklist_templates']);
-        Permission::create(['name' => 'delete checklist_templates']);
+        Permission::create([
+            'name' => 'update checklist template',
+            'name_de' => "Checklisten-Vorlage bearbeiten",
+            'group' => 'System'
+        ]);
 
-        //Categories, Genres etc.
-        Permission::create(['name' => 'manage categories_etc']);
+        Permission::create([
+            'name' => 'delete checklist template',
+            'name_de' => "Checklisten-Vorlage löschen",
+            'group' => 'System'
+        ]);
 
-        //Areas & Rooms
-        Permission::create(['name' => 'manage areas']);
+        //Rooms/Occupancy
+        Permission::create([
+            'name' => 'request room occupancy',
+            'name_de' => "Raumbelegung anfragen",
+            'group' => 'Räume/Belegung'
+        ]);
 
+        Permission::create([
+            'name' => 'view occupancy requests',
+            'name_de' => "Belegungs-Anfragen einsehen",
+            'group' => 'Räume/Belegung'
+        ]);
+
+        //Projekte
+        Permission::create([
+            'name' => 'view projects',
+            'name_de' => "Leserechte für alle Projekte",
+            'group' => 'Projekte'
+        ]);
+
+        Permission::create([
+            'name' => 'create projects',
+            'name_de' => "Eigene Projekte anlegen & bearbeiten",
+            'group' => 'Projekte'
+        ]);
+
+        Permission::create([
+            'name' => 'update projects',
+            'name_de' => "Schreibrechte alle Projekte",
+            'group' => 'Projekte'
+        ]);
+
+        Permission::create([
+            'name' => 'delete projects',
+            'name_de' => "Löschrecht alle Projekte",
+            'group' => 'Projekte'
+        ]);
+
+        //Sichtbarkeit
+        Permission::create([
+            'name' => 'view system settings',
+            'name_de' => "Systemeinstellungen einsehen",
+            'group' => 'Sichtbarkeit'
+        ]);
 
         //Has every permission because of the gate in AuthServiceProvider
         Role::create(['name' => 'admin']);

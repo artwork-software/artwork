@@ -71,6 +71,7 @@ class UserController extends Controller
                 "business" => $user->business,
                 "phone_number" => $user->phone_number
             ]),
+            "all_permissions" => Permission::all()->groupBy('group'),
             "departments" => Department::all()
         ]);
     }

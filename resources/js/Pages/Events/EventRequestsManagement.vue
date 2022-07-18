@@ -58,7 +58,7 @@
                                     <div v-if="eventRequest.project" class="w-80">
                                         <div class="ml-16 text-secondary text-sm flex items-center">
                                             Zugeordnet zu
-                                            <Link :href="route('projects.show',{project: eventRequest.project.id})"
+                                            <Link :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                                   class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project.name }}
                                             </Link>

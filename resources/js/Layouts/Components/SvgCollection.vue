@@ -198,7 +198,6 @@
 </g>
 </svg>
 
-
 </template>
 
 <script>

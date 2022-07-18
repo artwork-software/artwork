@@ -46,6 +46,18 @@
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
+                            <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
+                                <Link
+                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects.data[0], calendarType: 'monthly'})">
+                                    <ChevronLeftIcon class="h-5 w-5"/>
+                                </Link>
+                                <CalendarIcon @click="openChangeDateModal"
+                                              class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
+                                <Link
+                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects.data[0], calendarType: 'monthly'})">
+                                    <ChevronRightIcon class="h-5 w-5"/>
+                                </Link>
+                            </div>
                             <div class="flex my-auto items-center ml-6 mt-5 ml-20">
                                 <Listbox v-if="this.rooms.length > 1" as="div"
                                          class="sm:col-span-3 mb-8 flex mr-4 items-center my-auto"
@@ -682,7 +694,7 @@
                     <div v-if="this.conflictData.length === 1" class="text-error text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
-                            <Link :href="route('projects.show',{project: this.conflictData[0].project.project_id})"
+                            <Link :href="route('projects.show',{project: this.conflictData[0].project.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                   class="font-black flex cursor-pointer ml-1">
                                 {{ this.conflictData[0].project.name }}
                             </Link>
@@ -885,8 +897,7 @@
                             <div v-if="event.project_id !== null" class="flex items-center">
                                 <div>Zugeordnet zu</div>
                                 <div>
-                                    <Link
-                                        :href="route('projects.show',{project: event.project_id})"
+                                    <Link :href="route('projects.show',{project: this.conflictData[0].project.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                         class="ml-3 text-lg flex font-bold font-lexend text-primary">
                                         {{ projects.data.find(x => x.id === event.project_id).name }}
                                     </Link>
@@ -1526,6 +1537,13 @@ export default defineComponent({
                         room: this.rooms[0],
                         calendarType: 'monthly'
                     }))
+                } else if (this.calendarType === 'project') {
+                    Inertia.visit(route('projects.show', {
+                        month_start: this.wantedStartDate,
+                        month_end: this.wantedEndDate,
+                        project: this.projects.data[0],
+                        calendarType: 'monthly'
+                    }))
                 }else{
                     Inertia.visit(route('events.monthly_management', {
                         month_start: this.wantedStartDate,
@@ -1535,6 +1553,12 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'room') {
                     Inertia.visit(route('rooms.show', {wanted_day: this.wantedDayDate,room: this.rooms[0], calendarType: 'daily'}))
+                }else if (this.calendarType === 'project') {
+                    Inertia.visit(route('projects.show', {
+                        wanted_day: this.wantedDayDate,
+                        project: this.projects.data[0],
+                        calendarType: 'daily'
+                    }))
                 }else{
                     Inertia.visit(route('events.daily_management', {wanted_day: this.wantedDayDate}))
                 }

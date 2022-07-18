@@ -45,6 +45,18 @@
                                         <ChevronRightIcon class="h-5 w-5"/>
                                     </Link>
                                 </div>
+                                <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
+                                    <Link
+                                        :href="route('projects.show',{project: projects.data[0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),calendarType: 'daily'})">
+                                        <ChevronLeftIcon class="h-5 w-5"/>
+                                    </Link>
+                                    <CalendarIcon @click="openChangeDateModal"
+                                                  class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
+                                    <Link
+                                        :href="route('projects.show',{project: projects.data[0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1)), calendarType: 'daily'})">
+                                        <ChevronRightIcon class="h-5 w-5"/>
+                                    </Link>
+                                </div>
                                 <div class="flex my-auto items-center ml-6 mt-5 ml-20">
                                     <Listbox v-if="this.rooms.length > 1" as="div" class="sm:col-span-3 mb-8 flex mr-4 items-center my-auto"
                                              v-model="wantedArea">
@@ -938,7 +950,7 @@
                                     <div>Zugeordnet zu</div>
                                     <div>
                                         <Link
-                                            :href="route('projects.show',{project: event.project_id})"
+                                            :href="route('projects.show',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate())),project:event.project_id, calendarType: 'daily'})"
                                             class="ml-3 text-lg flex font-bold font-lexend text-primary">
                                             {{ projects.data.find(x => x.id === event.project_id).name }}
                                         </Link>
@@ -1541,6 +1553,13 @@ export default defineComponent({
                         room: this.rooms[0],
                         calendarType: 'monthly'
                     }))
+                }else if (this.calendarType === 'project') {
+                    Inertia.visit(route('projects.show', {
+                        month_start: this.wantedStartDate,
+                        month_end: this.wantedEndDate,
+                        project: this.projects.data[0],
+                        calendarType: 'monthly'
+                    }))
                 }else{
                     Inertia.visit(route('events.monthly_management', {
                         month_start: this.wantedStartDate,
@@ -1550,6 +1569,12 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'room') {
                     Inertia.visit(route('rooms.show', {wanted_day: this.wantedDayDate,room: this.rooms[0], calendarType: 'daily'}))
+                }else if (this.calendarType === 'project') {
+                    Inertia.visit(route('projects.show', {
+                        wanted_day: this.wantedDayDate,
+                        project: this.projects.data[0],
+                        calendarType: 'daily'
+                    }))
                 }else{
                     Inertia.visit(route('events.daily_management', {wanted_day: this.wantedDayDate}))
                 }

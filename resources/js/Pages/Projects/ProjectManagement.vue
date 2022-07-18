@@ -626,7 +626,7 @@ export default defineComponent({
             this.closeAddProjectModal();
         },
         getEditHref(project) {
-            return route('projects.show', {project: project.id});
+            return route('projects.show', {project: project.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly' });
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

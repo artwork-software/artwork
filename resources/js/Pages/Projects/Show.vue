@@ -238,6 +238,15 @@
                 </div>
             </div>
             <div class="max-w-screen-2xl">
+                <!-- Calendar Tab -->
+                <div v-if="isScheduleTab">
+                    <div v-if="!calendarType || calendarType === 'monthly'">
+                        <MonthlyCalendar calendar-type="project" :event_types="event_types" :areas="areas" :month_events="month_events" :projects="{data: [project]}" :rooms="project.rooms" :days_this_month="days_this_month" :events_without_room="events_without_room"></MonthlyCalendar>
+                    </div>
+                    <div v-else-if="calendarType === 'daily'">
+                        <DailyCalendar calendar-type="project"  :hours_of_day="hours_of_day" :rooms="project.rooms" :projects="{data: [project]}" :event_types="event_types" :areas="areas" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
+                    </div>
+                </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
                     <div class="col-span-2">
@@ -1621,6 +1630,8 @@ import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
+import DailyCalendar from "@/Layouts/Components/DailyCalendar";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -1630,7 +1641,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates','calendarType', 'event_types','days_this_month','areas','month_events','events_without_room','hours_of_day','shown_day_formatted','shown_day_local'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1667,7 +1678,9 @@ export default {
         UserTooltip,
         EyeIcon,
         ExclamationIcon,
-        Link
+        Link,
+        MonthlyCalendar,
+        DailyCalendar
     },
     computed: {
         tabs() {

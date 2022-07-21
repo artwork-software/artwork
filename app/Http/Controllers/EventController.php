@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\OccupancyUpdated;
 use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
@@ -428,6 +429,9 @@ class EventController extends Controller
             } else {
                 $this->store_on_new_project($request);
             }
+
+            broadcast(new OccupancyUpdated())->toOthers();
+
             return Redirect::back()->with('success', 'Event created.');
         } else {
             return response()->json(['error' => 'Start date has to be before end date.'], 403);
@@ -547,6 +551,7 @@ class EventController extends Controller
      */
     public function destroy(Event $event)
     {
+        broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
         return Redirect::back()->with('success', 'Event deleted');
     }

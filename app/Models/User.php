@@ -80,6 +80,10 @@ class User extends Authenticatable
         return $this->hasMany(event::class);
     }
 
+    public function getPermissionAttribute()
+    {
+        return $this->getAllPermissions();
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -109,6 +113,10 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+    ];
+
+    protected $with =[
+        'permissions',
     ];
 
     public function toSearchableArray(): array

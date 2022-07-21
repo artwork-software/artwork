@@ -132,10 +132,25 @@
                         <h3 class="text-2xl mt-16 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
 
                         <div class="mb-8">
-                            <Checkbox v-for="role in roleCheckboxes" class="justify-between" :item=role></Checkbox>
+
+                                <div class="relative flex items-center" v-for="(role, index) in available_roles" :key=index>
+                                    <div class="flex items-center h-7">
+                                        <input :id="role.name"
+                                               v-model="userForm.roles"
+                                               :value="role.name"
+                                               name="permissions" type="checkbox"
+                                               class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
+                                    </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="permissions" class="text-primary">{{ role.name_de }}</label>
+                                    </div>
+                                </div>
+
                         </div>
 
                     </div>
+
+
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 mb-2">
                             Nutzer*innen
@@ -144,10 +159,29 @@
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
+
                     <div v-if="showUserPermissions" class="flex flex-col">
-                        <Checkbox v-for="permission in userPermissionCheckboxes" class="justify-between"
-                                  :item=permission />
+
+                        <div v-for="(permissions, group) in all_permissions">
+
+                            <h3 class="text-secondary mt-3">{{group}}</h3>
+
+                            <div class="relative flex items-center" v-for="(permission, index) in permissions" :key=index>
+                                <div class="flex items-center h-7">
+                                    <input :id="permission.name"
+                                           v-model="userForm.permissions"
+                                           :value="permission.name"
+                                           name="permissions" type="checkbox"
+                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
+                                </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="permissions" class="text-primary">{{ permission.name_de }}</label>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
+
                     <div class="mt-8">
                         <div class="flex">
                             <button @click="editUser"
@@ -240,10 +274,6 @@
 
 import {Inertia} from "@inertiajs/inertia";
 
-const roleCheckboxes = [
-    {name: 'Adminrechte', checked: false, roleName: "admin", showIcon: true},
-]
-
 
 import {computed, defineComponent} from 'vue'
 import JetActionMessage from '@/Jetstream/ActionMessage.vue'
@@ -275,36 +305,6 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 
 export default defineComponent({
-    computed: {
-        userPermissionCheckboxes() {
-            return [
-                {
-                    name: 'Nutzer*innen einladen',
-                    checked: this.userForm.permissions.includes("invite users"),
-                    permissionName: "invite users",
-                    showIcon: true
-                },
-                {
-                    name: 'Nutzerprofile ansehen',
-                    checked: this.userForm.permissions.includes("view users"),
-                    permissionName: "view users",
-                    showIcon: true
-                },
-                {
-                    name: 'Nutzerprofile bearbeiten',
-                    checked: this.userForm.permissions.includes("update users"),
-                    permissionName: "update users",
-                    showIcon: true
-                },
-                {
-                    name: 'Nutzer*innen löschen',
-                    checked: this.userForm.permissions.includes("delete users"),
-                    permissionName: "delete users",
-                    showIcon: true
-                }
-            ]
-        },
-    },
     name: 'Edit',
     components: {
         DotsVerticalIcon,
@@ -336,7 +336,7 @@ export default defineComponent({
         TeamIconCollection,
         JetValidationErrors
     },
-    props: ['user_to_edit', 'permissions', 'departments', 'password_reset_status'],
+    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles'],
     data() {
         return {
             showUserPermissions: true,
@@ -352,13 +352,13 @@ export default defineComponent({
                 phone_number: this.user_to_edit.phone_number,
                 description: this.user_to_edit.description,
                 permissions: this.user_to_edit.permissions,
+                roles: this.user_to_edit.roles
             }),
             resetPasswordForm: this.$inertia.form({
               email: this.user_to_edit.email
             }),
         }
     },
-
     methods: {
         openDeleteUserModal() {
             this.deletingUser = true;
@@ -383,19 +383,6 @@ export default defineComponent({
             this.closeDeleteUserModal()
         },
         editUser() {
-            this.userPermissionCheckboxes.forEach((item) => {
-                if (item.checked) {
-                    if (this.userForm.permissions.includes(item.permissionName)) {
-                        // do nothing if already in permissions array
-                    } else {
-                        this.userForm.permissions.push(item.permissionName);
-                    }
-                } else {
-                    if (this.userForm.permissions.includes(item.permissionName)) {
-                        this.userForm.permissions.splice(this.userForm.permissions.indexOf(item.permissionName), 1);
-                    }
-                }
-            })
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
         },
         deleteTeamFromDepartmentsArray(index) {
@@ -418,11 +405,5 @@ export default defineComponent({
             this.resetPasswordForm.post(route('user.reset.password'));
         }
     },
-    setup() {
-
-        return {
-            roleCheckboxes
-        }
-    }
 })
 </script>

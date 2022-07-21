@@ -97,12 +97,12 @@ class UserController extends Controller
                 'description' => $user->description,
                 'departments' => $user->departments,
                 'roles' => $user->getRoleNames(),
-                'available_roles' => Role::all()->pluck('name'),
                 'permissions' => $user->getPermissionNames(),
-                'available_permissions' => Permission::all()->pluck('name'),
             ],
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
+            'available_roles' => Role::all(),
+            "all_permissions" => Permission::all()->groupBy('group'),
         ]);
     }
 
@@ -128,7 +128,7 @@ class UserController extends Controller
         );
 
         $user->syncPermissions($request->permissions);
-        $user->assignRole($request->role);
+        $user->syncRoles($request->roles);
 
         return Redirect::route('users')->with('success', 'Benutzer aktualisiert');
     }

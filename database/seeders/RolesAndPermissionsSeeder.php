@@ -196,6 +196,9 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         //Has every permission because of the gate in AuthServiceProvider
-        Role::create(['name' => 'admin']);
+        Role::create([
+            'name' => 'admin',
+            'name_de' => "Adminrechte",
+        ]);
     }
 }

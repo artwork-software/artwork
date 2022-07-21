@@ -382,9 +382,9 @@ class ProjectController extends Controller
                 'genre' => $project->genre,
                 'project_admins' => $project_admins,
                 'project_managers' => $project_managers,
-                'rooms' => Room::with(['events' => function ($query) {
-                    $query->orderBy('end_time', 'ASC')->with('event_type');
-                }])->get()->map(fn($room) => $request->query('calendarType') === 'monthly' ? [
+                'rooms' => Room::whereHas('events', function ($query) use ($project) {
+                    $query->where('project_id', $project->id)->orderBy('end_time', 'ASC')->with('event_type');
+                })->get()->map(fn($room) => $request->query('calendarType') === 'monthly' ? [
                     'id' => $room->id,
                     'name' => $room->name,
                     'area_id' => $room->area_id,
@@ -393,7 +393,7 @@ class ProjectController extends Controller
                         'profile_photo_url' => $room_admin->profile_photo_url
                     ]),
                     'days_in_month' => collect($period)->map(function ($date_of_day) use ($project, $room) {
-                        $events = $this->get_events_of_day($date_of_day, $room->events->where('project_id' === $project->id));
+                        $events = $this->get_events_of_day($date_of_day, $room->events);
 
                         $conflicts = $this->conflict_event_ids($events);
 
@@ -408,7 +408,7 @@ class ProjectController extends Controller
                     'id' => $room->id,
                     'name' => $room->name,
                     'area_id' => $room->area_id,
-                    'events' => $this->get_events_for_day_view($wanted_day, $room->events->where('project_id' === $project->id))
+                    'events' => $this->get_events_for_day_view($wanted_day, $room->events)
                 ]),
                 'events' => $project->events->map(fn($event) => [
                     'id' => $event->id,

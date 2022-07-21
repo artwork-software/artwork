@@ -619,7 +619,6 @@
                      v-if="(assignProject || selectedEventType.project_mandatory) && !creatingProject">
                     <div class="my-auto w-full" v-if="this.selectedProject === null">
                         <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
-                               @focusout="project_query = ''"
                                class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "
                                placeholder="Zu welchem bestehendem Projekt zuordnen?*"
                                :disabled="this.selectedProject"/>

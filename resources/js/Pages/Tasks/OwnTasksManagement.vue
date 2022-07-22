@@ -75,7 +75,7 @@
                                     </div>
                                 </div>
                                 <div class="flex text-sm mt-0.5 w-full items-center ml-10">
-                                    <Link :href="route('projects.show',{project: task.project.id})"
+                                    <Link :href="route('projects.show',{project: task.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
                                           class="cursor-pointer text-secondary flex subpixel-antialiased">
                                         {{ task.project.name }}
                                         <ChevronRightIcon class="h-5 w-5 my-auto text-secondary subpixel-antialiased"

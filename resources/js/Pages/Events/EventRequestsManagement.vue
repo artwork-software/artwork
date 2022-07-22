@@ -16,10 +16,10 @@
                             <div class="flex w-full items-center flex-wrap">
 
                                 <div class="flex items-center w-full mt-4">
-                                    <div class="text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                    <div class=" w-1/4 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ eventRequest.room.name }}:
                                     </div>
-                                    <div class="flex items-center ml-12 w-full">
+                                    <div class="flex items-center w-full">
                                         <EventTypeIconCollection :height="26" :width="26"
                                                                  :iconName="eventRequest.event_type.svg_name"/>
                                         <div
@@ -54,16 +54,16 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="flex items-center w-full ml-24 justify-between">
+                                <div class="flex items-center w-full ml-44 justify-between">
                                     <div v-if="eventRequest.project" class="w-80">
                                         <div class="ml-16 text-secondary text-sm flex items-center">
                                             Zugeordnet zu
-                                            <Link :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                            <Link :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
                                                   class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project.name }}
                                             </Link>
                                         </div>
-                                        <!--
+
                                         <div v-for="projectLeader in eventRequest.project.project_managers">
                                             <img :data-tooltip-target="projectLeader.id"
                                                  :src="projectLeader.profile_photo_url"
@@ -71,7 +71,7 @@
                                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                             <UserTooltip :user="projectLeader"/>
                                         </div>
-                                        -->
+
                                     </div>
                                     <div class="text-secondary text-sm w-64 ml-16" v-else>
                                         Keinem Projekt zugeordnet
@@ -99,11 +99,7 @@
                             </div>
                         </div>
                     </div>
-                    {{ event_requests.data }}
-
                 </div>
-
-
             </div>
         </div>
         <!-- Approve Request Modal -->

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#86c554"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_340" data-name="Rechteck 340" width="28.161" height="21.697" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#86c554"/>
+    <g id="Gruppe_maskieren_399" data-name="Gruppe maskieren 399" clip-path="url(#clip-path)">
+      <g id="Gruppe_472" data-name="Gruppe 472" transform="translate(-27.78 13.235) rotate(-14)">
+        <g id="Gruppe_471" data-name="Gruppe 471" transform="translate(0 0)">
+          <g id="Gruppe_470" data-name="Gruppe 470" clip-path="url(#clip-path-2)">
+            <path id="Pfad_798" data-name="Pfad 798" d="M1,21.5H27.966V1H1Zm23.869-2.688H4.1V3.687H24.869Z" transform="translate(-0.403 -0.403)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          </g>
+        </g>
+        <path id="Pfad_799" data-name="Pfad 799" d="M15.826,26.95H6.185l5.1-5.747,2.268,2.874Z" transform="translate(-2.491 -8.537)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_800" data-name="Pfad 800" d="M26.957,5.5V17.753L20.232,9.9l-6.675,7.852L11.29,14.88l-5.1,5.747V5.5Z" transform="translate(-2.491 -2.214)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_801" data-name="Pfad 801" d="M31.927,20.721v2.873H20.8l-2.268-2.873L25.2,12.869Z" transform="translate(-7.46 -5.182)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

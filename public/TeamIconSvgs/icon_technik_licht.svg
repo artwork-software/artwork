@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_314" data-name="Rechteck 314" width="24.482" height="25.01" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    <g id="Gruppe_maskieren_383" data-name="Gruppe maskieren 383" clip-path="url(#clip-path)">
+      <g id="Gruppe_535" data-name="Gruppe 535" transform="translate(-15.807 -3.429) rotate(19)">
+        <path id="Pfad_703" data-name="Pfad 703" d="M25.464,19.7,20.77,30.985l-5.09-3.873,3.462-8.318Z" transform="translate(-7.252 -8.692)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <g id="Gruppe_421" data-name="Gruppe 421" transform="translate(0 0)">
+          <g id="Gruppe_420" data-name="Gruppe 420" clip-path="url(#clip-path-2)">
+            <path id="Pfad_704" data-name="Pfad 704" d="M12.352,16.653,8.889,24.972l-5.114-2.13a4.5,4.5,0,0,1,1.406-8.65v1.964a.974.974,0,0,0,.969.969h.086a.975.975,0,0,0,.976-.969V14.517a.041.041,0,0,1,.026.006Z" transform="translate(-0.463 -6.564)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_705" data-name="Pfad 705" d="M33.883,33.4c.255,0,4.2,1.962,4.2,1.962" transform="translate(-15.671 -15.449)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <line id="Linie_159" data-name="Linie 159" x2="4.82" transform="translate(19.124 14.285)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <line id="Linie_160" data-name="Linie 160" x2="3.122" y2="3.36" transform="translate(16.714 21.111)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_706" data-name="Pfad 706" d="M10.808,1.969v8.086a.976.976,0,0,1-.975.969H9.746a.974.974,0,0,1-.968-.969V1.969A.969.969,0,0,1,9.746,1h.087A.971.971,0,0,1,10.808,1.969Z" transform="translate(-4.06 -0.462)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

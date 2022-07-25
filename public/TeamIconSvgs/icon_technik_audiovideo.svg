@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.971" viewBox="0 0 29.824 29.971">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.165)" fill="#eb7a3d"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_312" data-name="Rechteck 312" width="24.457" height="23.681" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    <g id="Gruppe_maskieren_384" data-name="Gruppe maskieren 384" clip-path="url(#clip-path)">
+      <g id="Gruppe_417" data-name="Gruppe 417" transform="matrix(0.951, -0.309, 0.309, 0.951, -26.979, 9.468)">
+        <g id="Gruppe_416" data-name="Gruppe 416" transform="translate(0 0)" clip-path="url(#clip-path-2)">
+          <rect id="Rechteck_310" data-name="Rechteck 310" width="17.036" height="12.162" rx="5.041" transform="translate(0.717 11.009)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <path id="Pfad_700" data-name="Pfad 700" d="M41.033,24.266v8.486l-6.2-1.445v-5.79Z" transform="translate(-17.085 -11.9)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <path id="Pfad_701" data-name="Pfad 701" d="M25.193,6.2A5.195,5.195,0,1,1,20,1,5.2,5.2,0,0,1,25.193,6.2Z" transform="translate(-7.26 -0.49)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <circle id="Ellipse_102" data-name="Ellipse 102" cx="3.586" cy="3.586" r="3.586" transform="translate(0.51 3.836)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <circle id="Ellipse_103" data-name="Ellipse 103" cx="1.327" cy="1.327" r="1.327" transform="translate(11.411 4.378)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <circle id="Ellipse_104" data-name="Ellipse 104" cx="1.196" cy="1.196" r="1.196" transform="translate(2.9 6.227)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <rect id="Rechteck_311" data-name="Rechteck 311" width="3.681" height="2.077" transform="translate(10.898 13.25)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

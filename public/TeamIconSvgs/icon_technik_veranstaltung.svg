@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_319" data-name="Rechteck 319" width="16.365" height="14.787" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    <g id="Gruppe_maskieren_386" data-name="Gruppe maskieren 386" clip-path="url(#clip-path)">
+      <g id="Gruppe_426" data-name="Gruppe 426" transform="translate(-15.271 9.536)">
+        <g id="Gruppe_425" data-name="Gruppe 425" transform="translate(0 0)" clip-path="url(#clip-path-2)">
+          <path id="Pfad_716" data-name="Pfad 716" d="M14.762,22.477a1.627,1.627,0,1,0,1.629,1.629A1.629,1.629,0,0,0,14.762,22.477Zm-5.724,0a1.627,1.627,0,1,0,1.629,1.629A1.629,1.629,0,0,0,9.037,22.477Zm-5.977,0a1.627,1.627,0,1,0,1.629,1.629A1.629,1.629,0,0,0,3.06,22.477Z" transform="translate(-0.728 -11.435)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <path id="Pfad_717" data-name="Pfad 717" d="M2.431,15.921a1.614,1.614,0,0,1-1.181-1.212,1.63,1.63,0,1,1,1.181,1.212Zm2.25-5.9H1v-1.5H4.681Zm3.727,5.9a1.614,1.614,0,0,1-1.181-1.212,1.63,1.63,0,1,1,1.181,1.212ZM10.658,4.8H6.977v-1.5h3.681Zm3.563,11.142a1.628,1.628,0,1,1,1.92-1.91A1.626,1.626,0,0,1,14.221,15.941Zm2.162-8.427H12.7v-1.5h3.681Z" transform="translate(-0.509 -1.676)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <rect id="Rechteck_316" data-name="Rechteck 316" width="3.681" height="1.505" transform="translate(0.491 6.841)" fill="#fcfcfb"/>
+          <rect id="Rechteck_317" data-name="Rechteck 317" width="3.681" height="1.505" transform="translate(6.469 1.618)" fill="#fcfcfb"/>
+          <rect id="Rechteck_318" data-name="Rechteck 318" width="3.681" height="1.505" transform="translate(12.193 4.334)" fill="#fcfcfb"/>
+          <path id="Pfad_718" data-name="Pfad 718" d="M4.689,24.106A1.629,1.629,0,1,1,3.06,22.477,1.628,1.628,0,0,1,4.689,24.106Z" transform="translate(-0.728 -11.435)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <path id="Pfad_719" data-name="Pfad 719" d="M16.856,24.106a1.629,1.629,0,1,1-1.629-1.629A1.628,1.628,0,0,1,16.856,24.106Z" transform="translate(-6.918 -11.435)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <path id="Pfad_720" data-name="Pfad 720" d="M28.508,24.106a1.629,1.629,0,1,1-1.629-1.629A1.625,1.625,0,0,1,28.508,24.106Z" transform="translate(-12.845 -11.435)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <line id="Linie_162" data-name="Linie 162" y1="5.223" transform="translate(8.309 3.123)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <line id="Linie_163" data-name="Linie 163" y1="1.127" transform="translate(8.309 0.491)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <line id="Linie_164" data-name="Linie 164" y1="2.508" transform="translate(14.033 5.838)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <line id="Linie_165" data-name="Linie 165" y1="3.842" transform="translate(14.033 0.491)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          <line id="Linie_166" data-name="Linie 166" y1="6.35" transform="translate(2.332 0.491)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

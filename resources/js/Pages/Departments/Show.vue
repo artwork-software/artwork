@@ -243,10 +243,36 @@
 <script>
 
 const iconMenuItems = [
-    {iconName: 'departmentImagePlaceholder'},
-    {iconName: 'teamIconTech'},
-    {iconName: 'vermietung'},
+    {iconName: 'icon_ausstellung'},
+    {iconName: 'icon_ausstellung_foto'},
+    {iconName: 'icon_bildung_bibliothek'},
+    {iconName: 'icon_bildung_kulturell'},
+    {iconName: 'icon_dienst_abend'},
+    {iconName: 'icon_dienst_kasse'},
+    {iconName: 'icon_dienst_reinigung'},
+    {iconName: 'icon_dienst_sicherheit'},
+    {iconName: 'icon_dramaturgie'},
+    {iconName: 'icon_dramaturgie_kurator'},
+    {iconName: 'icon_dramaturgie_tanz'},
+    {iconName: 'icon_einhorn'},
+    {iconName: 'icon_festival'},
+    {iconName: 'icon_kommunikation_marketing'},
+    {iconName: 'icon_kommunikation_vertrieb'},
+    {iconName: 'icon_orga_finanzen'},
+    {iconName: 'icon_orga_kuenstlerischesbuero'},
+    {iconName: 'icon_orga_leitung'},
+    {iconName: 'icon_orga_personal'},
+    {iconName: 'icon_orga_sekretariat'},
+    {iconName: 'icon_orga_verwaltung'},
+    {iconName: 'icon_technik'},
+    {iconName: 'icon_technik_audiovideo'},
+    {iconName: 'icon_technik_buehne'},
+    {iconName: 'icon_technik_haus'},
+    {iconName: 'icon_technik_licht'},
+    {iconName: 'icon_technik_veranstaltung'},
+    {iconName: 'icon_vermietung'},
 ]
+
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";

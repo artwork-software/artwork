@@ -51,7 +51,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
-    Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
+    Route::get('/dashboard', [EventController::class, 'dashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
     Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
     Route::put('/tool/settings', [AppController::class, 'update_tool'])->name('tool.update');

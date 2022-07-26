@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\OccupancyUpdated;
 use App\Models\Area;
+use App\Models\Checklist;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
@@ -13,6 +14,7 @@ use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
@@ -350,6 +352,112 @@ class EventController extends Controller
                     ])
                 ])
             ]),
+        ]);
+    }
+
+    public function dashboard(Request $request)
+    {
+        $own_tasks = new Collection();
+
+        foreach (Checklist::all() as $checklist) {
+            foreach ($checklist->departments as $department) {
+                if ($department->users->contains(Auth::id())) {
+                    foreach ($checklist->tasks as $task) {
+                        if (!$own_tasks->contains($task)) {
+                            $own_tasks->push($task);
+                        }
+                    }
+                }
+            }
+            if ($checklist->user_id == Auth::id()) {
+                foreach ($checklist->tasks as $task) {
+                    if (!$own_tasks->contains($task)) {
+                        $own_tasks->push($task);
+                    }
+                }
+            }
+        }
+        $hours = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
+
+        $wanted_day = Carbon::today(0);
+
+        $eventsWithoutRoom = Event::whereNull('room_id')->get();
+        $eventsWithoutRoomCount = Event::whereNull('room_id')
+            ->whereDate('start_time' ,'<=', Carbon::parse(Carbon::now()->toDateTimeLocalString())->startOfDay())
+            ->whereDate('end_time', '>=', Carbon::parse(Carbon::now()->toDateTimeLocalString())->endOfDay())->count();
+
+        return inertia('Dashboard', [
+            'start_time_of_new_event' => $request->query('start_time'),
+            'end_time_of_new_event' => $request->query('end_time'),
+            'requested_wanted_day' => Carbon::now()->toDateTimeLocalString(),
+            'hours_of_day' => $hours,
+            'shown_day_formatted' => Carbon::parse(Carbon::now()->toDateTimeLocalString())->format('l d.m.Y'),
+            'shown_day_local' => Carbon::parse(Carbon::now()->toDateTimeLocalString()),
+            'rooms' => Room::with(['events' => function ($query) {
+                $query->orderBy('end_time', 'ASC')->with('event_type');
+            }])->get()->map(fn($room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'area_id' => $room->area_id,
+                'events' => $this->get_events_for_day_view($wanted_day, $room->events)
+            ]),
+            'projects' => Project::paginate(10)->through(fn($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'project_admins' => User::whereHas('projects', function ($q) use ($project) {
+                    $q->where('is_admin', 1);
+                })->get(),
+                'project_managers' => User::whereHas('projects', function ($q) use ($project) {
+                    $q->where('is_manager', 1);
+                })->get(),
+            ]),
+            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+                'id' => $event_type->id,
+                'name' => $event_type->name,
+                'svg_name' => $event_type->svg_name,
+                'project_mandatory' => $event_type->project_mandatory,
+                'individual_name' => $event_type->individual_name,
+            ]),
+            'events_without_room' => [
+                "count" => $eventsWithoutRoomCount,
+                'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
+            ],
+            'areas' => Area::paginate(10)->through(fn($area) => [
+                'id' => $area->id,
+                'name' => $area->name,
+                'rooms' => $area->rooms()->with('room_admins', 'events.event_type')->orderBy('order')->get()->map(fn($room) => [
+                    'conflicts_start_time' => $this->get_conflicts_in_room_for_start_time($room),
+                    'conflicts_end_time' => $this->get_conflicts_in_room_for_end_time($room),
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'description' => $room->description,
+                    'temporary' => $room->temporary,
+                    'created_by' => User::where('id', $room->user_id)->first(),
+                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
+                    'start_date_dt_local' => Carbon::parse($room->start_date)->toDateString(),
+                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
+                    'end_date_dt_local' => Carbon::parse($room->end_date)->toDateString(),
+                    'room_admins' => $room->room_admins->map(fn($room_admin) => [
+                        'id' => $room_admin->id,
+                        'profile_photo_url' => $room_admin->profile_photo_url
+                    ])
+                ])
+            ]),
+            'tasks' => $own_tasks->map(fn($task) => [
+                'id' => $task->id,
+                'name' => $task->name,
+                'description' => $task->description,
+                'deadline' => $task->deadline === null ? null : Carbon::parse($task->deadline)->format('d.m.Y, H:i'),
+                'deadline_dt_local' => $task->deadline === null ? null : Carbon::parse($task->deadline)->toDateTimeLocalString(),
+                'done' => $task->done,
+                'checklist' => $task->checklist,
+                'project' => $task->checklist->project,
+                'departments' => $task->checklist->departments,
+                'done_by_user' => $task->user_who_done,
+                'done_at' => Carbon::parse($task->done_at)->format('d.m.Y, H:i'),
+                'done_at_dt_local' => Carbon::parse($task->done_at)->toDateTimeLocalString()
+            ])
         ]);
     }
 

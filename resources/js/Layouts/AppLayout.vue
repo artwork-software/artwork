@@ -80,7 +80,9 @@
                                        aria-hidden="true"/>
                             {{ item.name }}
                         </a>
-                        <h2 v-if="$page.props.can.view_users || $page.props.can.view_departments" @click="showSystemSettings = !showSystemSettings"
+                        <!-- TODO: Hier alle Rechte abfragen -->
+                        <div v-if="$page.props.can.view_users || $page.props.can.view_departments">
+                        <h2 @click="showSystemSettings = !showSystemSettings"
                             class="text-md pt-4 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
                             System
                             <ChevronUpIcon v-if="showSystemSettings"
@@ -98,6 +100,7 @@
                                 {{ item.name }}
                             </Link>
                         </template>
+                        </div>
 
                     </div>
                 </div>
@@ -224,7 +227,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 const navigation = [
     {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
     {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
-    {name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2)}), route: ['/events/management'], icon: CalendarIcon,},
+    {name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,1)}), route: ['/events/management'], icon: CalendarIcon,},
     {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], icon: ClipboardCheckIcon,},
 ]
 

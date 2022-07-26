@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#4d908e"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_330" data-name="Rechteck 330" width="25.933" height="20.53" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#4d908e"/>
+    <g id="Gruppe_maskieren_404" data-name="Gruppe maskieren 404" clip-path="url(#clip-path)">
+      <g id="Gruppe_453" data-name="Gruppe 453" transform="translate(-20.055 7.562)">
+        <line id="Linie_176" data-name="Linie 176" x2="2.156" y2="1.905" transform="translate(15.097 16.386)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <line id="Linie_177" data-name="Linie 177" x2="2.156" y2="1.905" transform="translate(16.714 14.602)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <line id="Linie_178" data-name="Linie 178" x2="2.156" y2="1.905" transform="translate(18.284 12.863)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <g id="Gruppe_452" data-name="Gruppe 452" transform="translate(0 0)">
+          <g id="Gruppe_451" data-name="Gruppe 451" clip-path="url(#clip-path-2)">
+            <path id="Pfad_759" data-name="Pfad 759" d="M24.98,17.219l-2.614,2.886L20.751,21.89,19.59,23.165a.782.782,0,0,1-1.1.058l-1.552-1.412-3.678-3.335-1.763-1.595L9.823,15.359l-3.2-2.881,5.133-5.664,4.361,1.313.011.005.136.126L14.319,10.4v.006a2.354,2.354,0,0,0,.654,2.521l2.809-3.29,5.593,5.071,1.552,1.407A.777.777,0,0,1,24.98,17.219Z" transform="translate(-3.496 -3.597)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_760" data-name="Pfad 760" d="M35.387,10.192l-3.565,3.933L26.229,9.054l-2.809,3.29a2.355,2.355,0,0,1-.654-2.522V9.816L24.71,7.673l1.166-1.285h.005l4.559-.681Z" transform="translate(-11.941 -3.012)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_761" data-name="Pfad 761" d="M16.5,29.728l-1.964,2.239-1.769-1.6,1.97-2.234Z" transform="translate(-6.739 -14.85)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_762" data-name="Pfad 762" d="M13.238,26.432l-1.97,2.234-1.052-.957a.878.878,0,0,1-.06-1.242l1.411-1.557Z" transform="translate(-5.24 -13.149)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_763" data-name="Pfad 763" d="M22.155,34.845,20.744,36.4a.882.882,0,0,1-1.241.06l-1.2-1.087-1.79-1.626,1.964-2.239Z" transform="translate(-8.716 -16.632)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <line id="Linie_179" data-name="Linie 179" x1="1.962" y2="2.231" transform="translate(9.589 16.513)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_764" data-name="Pfad 764" d="M41.2,1l4.943,4.5L44.125,7.708,39.177,3.221Z" transform="translate(-20.679 -0.528)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_765" data-name="Pfad 765" d="M6.145,1.715,8.789,4.123,3.655,9.787,1,7.372Z" transform="translate(-0.528 -0.906)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

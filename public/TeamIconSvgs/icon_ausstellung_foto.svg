@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#86c554"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_341" data-name="Rechteck 341" width="26.649" height="22.089" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#86c554"/>
+    <g id="Gruppe_maskieren_400" data-name="Gruppe maskieren 400" clip-path="url(#clip-path)">
+      <g id="Gruppe_473" data-name="Gruppe 473" transform="matrix(0.978, -0.208, 0.208, 0.978, -26.559, 10.656)" clip-path="url(#clip-path-2)">
+        <path id="Pfad_802" data-name="Pfad 802" d="M23.945,4.237H3.4A2.4,2.4,0,0,0,1,6.64V20.516a2.4,2.4,0,0,0,2.4,2.4H23.945a2.4,2.4,0,0,0,2.4-2.4V6.64A2.4,2.4,0,0,0,23.945,4.237ZM13.672,19.531a5.95,5.95,0,1,1,5.95-5.95A5.95,5.95,0,0,1,13.672,19.531Z" transform="translate(-0.35 -1.482)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_803" data-name="Pfad 803" d="M31.012,2.778V3.1H25.081V2.778A1.779,1.779,0,0,1,26.859,1h2.375A1.779,1.779,0,0,1,31.012,2.778Z" transform="translate(-8.772 -0.35)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_804" data-name="Pfad 804" d="M17.288,9.458a5.95,5.95,0,1,0,5.95,5.95A5.947,5.947,0,0,0,17.288,9.458Zm0,9.671a3.724,3.724,0,1,1,3.727-3.721A3.723,3.723,0,0,1,17.288,19.129Z" transform="translate(-3.966 -3.308)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_805" data-name="Pfad 805" d="M22.21,16.6a3.726,3.726,0,1,1-3.727-3.727A3.723,3.723,0,0,1,22.21,16.6Z" transform="translate(-5.162 -4.504)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

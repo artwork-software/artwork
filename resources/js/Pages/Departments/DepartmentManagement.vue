@@ -27,7 +27,7 @@
                         <li v-for="(department,index) in departments.data" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName="department.svg_name"/>
+                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
                                 <div class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
@@ -161,7 +161,7 @@
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="form.svg_name === ''"
                                                          class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <TeamIconCollection v-else class="h-16 w-16" :iconName="form.svg_name"/>
+                                        <TeamIconCollection class="h-16 w-16" v-if="form.svg_name !== ''" :iconName=form.svg_name alt="TeamIcon" />
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -171,12 +171,12 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                        class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div @click="form.svg_name = item.iconName"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary',
-                                                  'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TeamIconCollection class="h-16 w-16" :iconName="item.iconName"/>
+                                                  'group px-3 py-2 text-sm subpixel-antialiased']">
+                                                <TeamIconCollection class="h-14 w-14" :iconName=item.iconName alt="TeamIcon" />
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -355,22 +355,47 @@ import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import {useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import {forEach} from "lodash";
 import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 
 const iconMenuItems = [
-    {iconName: 'departmentImagePlaceholder'},
-    {iconName: 'teamIconTech'},
-    {iconName: 'vermietung'},
+    {iconName: 'icon_ausstellung'},
+    {iconName: 'icon_ausstellung_foto'},
+    {iconName: 'icon_bildung_bibliothek'},
+    {iconName: 'icon_bildung_kulturell'},
+    {iconName: 'icon_dienst_abend'},
+    {iconName: 'icon_dienst_kasse'},
+    {iconName: 'icon_dienst_reinigung'},
+    {iconName: 'icon_dienst_sicherheit'},
+    {iconName: 'icon_dramaturgie'},
+    {iconName: 'icon_dramaturgie_kurator'},
+    {iconName: 'icon_dramaturgie_tanz'},
+    {iconName: 'icon_einhorn'},
+    {iconName: 'icon_festival'},
+    {iconName: 'icon_kommunikation_marketing'},
+    {iconName: 'icon_kommunikation_vertrieb'},
+    {iconName: 'icon_orga_finanzen'},
+    {iconName: 'icon_orga_kuenstlerischesbuero'},
+    {iconName: 'icon_orga_leitung'},
+    {iconName: 'icon_orga_personal'},
+    {iconName: 'icon_orga_sekretariat'},
+    {iconName: 'icon_orga_verwaltung'},
+    {iconName: 'icon_technik'},
+    {iconName: 'icon_technik_audiovideo'},
+    {iconName: 'icon_technik_buehne'},
+    {iconName: 'icon_technik_haus'},
+    {iconName: 'icon_technik_licht'},
+    {iconName: 'icon_technik_veranstaltung'},
+    {iconName: 'icon_vermietung'},
 ]
 
 export default defineComponent({
     components: {
-        UserTooltip,
         TeamIconCollection,
+        UserTooltip,
         SvgCollection,
         Button,
         AppLayout,

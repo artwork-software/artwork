@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_338" data-name="Rechteck 338" width="27.754" height="27.754" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    <g id="Gruppe_maskieren_397" data-name="Gruppe maskieren 397" clip-path="url(#clip-path)">
+      <g id="Gruppe_466" data-name="Gruppe 466" transform="translate(-18.042 -1.785)" clip-path="url(#clip-path-2)">
+        <path id="Pfad_789" data-name="Pfad 789" d="M27.463,16.076V12.388H24.63a10.458,10.458,0,0,0-1.739-4.211l2.006-2-2.614-2.6L20.3,5.563a10.6,10.6,0,0,0-4.22-1.749V1H12.388V3.8a10.424,10.424,0,0,0-4.249,1.73L6.18,3.576l-2.6,2.6L5.525,8.129a10.6,10.6,0,0,0-1.768,4.259H1v3.688H3.757a10.59,10.59,0,0,0,1.768,4.258L3.576,22.282,6.18,24.9l1.967-1.967a10.313,10.313,0,0,0,4.24,1.739v2.794h3.688v-2.8A10.434,10.434,0,0,0,20.286,22.9l2,2L24.9,22.282l-2.006-2a10.405,10.405,0,0,0,1.739-4.211Zm-13.269,3.5a5.336,5.336,0,1,1,5.329-5.343A5.334,5.334,0,0,1,14.193,19.572Z" transform="translate(-0.354 -0.354)" fill="none" stroke="#fcfcfb" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

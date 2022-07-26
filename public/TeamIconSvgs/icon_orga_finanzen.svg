@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_337" data-name="Rechteck 337" width="24.297" height="25.169" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    <g id="Gruppe_maskieren_396" data-name="Gruppe maskieren 396" clip-path="url(#clip-path)">
+      <g id="Gruppe_465" data-name="Gruppe 465" transform="translate(-15.283 4.827) rotate(20)">
+        <g id="Gruppe_464" data-name="Gruppe 464" transform="translate(0 0)" clip-path="url(#clip-path-2)">
+          <path id="Pfad_786" data-name="Pfad 786" d="M20.41,28.84H4.69c-2.427,0-3.934-2.263-3.658-4.732.432-3.868,1.262-6.892,7.676-13.447h7.72c6.108,6.055,7.145,9.561,7.631,13.408C24.36,26.449,22.854,28.84,20.41,28.84Z" transform="translate(-0.401 -4.271)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+          <path id="Pfad_787" data-name="Pfad 787" d="M20.458,6.791h-7.72L11.08,2.115A.91.91,0,0,1,11.967,1h9.365a.91.91,0,0,1,.891,1.1Z" transform="translate(-4.429 -0.4)" fill="none" stroke="#fcfcfb" stroke-miterlimit="10" stroke-width="1"/>
+          <path id="Pfad_788" data-name="Pfad 788" d="M16.556,27.369h2.113c2.709,0,3.331-3.905,0-3.905s-3.322-3.764.059-3.764h1.608" transform="translate(-6.482 -7.892)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+          <line id="Linie_181" data-name="Linie 181" y2="1.97" transform="translate(12.155 9.838)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+          <line id="Linie_182" data-name="Linie 182" y1="2.125" transform="translate(12.155 19.476)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

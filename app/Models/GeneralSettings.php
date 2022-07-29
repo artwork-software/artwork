@@ -16,6 +16,12 @@ class GeneralSettings extends Settings
 
     public string $small_logo_path;
 
+    public string $impressum_link;
+
+    public string $privacy_link;
+
+    public string $email_footer;
+
     public static function group(): string
     {
         return 'general';

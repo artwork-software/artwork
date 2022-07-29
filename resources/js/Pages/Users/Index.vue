@@ -241,16 +241,16 @@
                         </div>
 
                     </div>
-                    <div v-if="selected !== 'admin'">
+                    <div v-if="selected.roleName !== 'admin'">
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
-                            Nutzer*innen
+                            Nutzerrechte
                             <ChevronUpIcon v-if="showUserPermissions"
                                            class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
-                    <div v-if="showUserPermissions" class="flex flex-col max-h-96 overflow-y-auto">
+                    <div v-if="showUserPermissions && selected.roleName !== 'admin'" class="flex flex-col max-h-96 overflow-y-auto">
 
                         <div v-for="(permissions, group) in all_permissions">
 

@@ -88,7 +88,10 @@ class HandleInertiaRequests extends Middleware
             'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin'),
             'small_logo' => $this->small_logo(),
             'big_logo' => $this->big_logo(),
-            'banner' => $this->banner()
+            'banner' => $this->banner(),
+            'impressumLink' => app(GeneralSettings::class)->impressum_link,
+            'privacyLink' => app(GeneralSettings::class)->privacy_link,
+            'emailFooter' => app(GeneralSettings::class)->email_footer
         ]);
     }
 }

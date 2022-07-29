@@ -55,6 +55,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
     Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
     Route::put('/tool/settings', [AppController::class, 'update_tool'])->name('tool.update');
+    Route::put('/tool/settings/email', [AppController::class, 'update_EmailSettings'])->name('tool.updateMail');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

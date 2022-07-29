@@ -258,9 +258,9 @@
                                                             <div>
                                                                 <!-- Icons -->
                                                                 <div class="flex p-1 ml-1 mt-1">
-                                                                    <UserGroupIcon v-if="event.audience"
+                                                                    <img src="/Svgs/IconSvgs/icon_public.svg" v-if="event.audience"
                                                                                    class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
-                                                                    <VolumeUpIcon v-if="event.is_loud"
+                                                                    <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="event.is_loud"
                                                                                   :class="event.audience ? 'ml-1' : ''"
                                                                                   class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
                                                                     <div v-if="!event.audience && !event.is_loud"
@@ -269,7 +269,7 @@
                                                                 </div>
                                                                 <div v-if="event.conflicts.length > 0"
                                                                      class="h-5 flex right-0 top-0 bg-error items-center absolute">
-                                                                    <ExclamationIcon class="h-5 w-5 flex text-white"
+                                                                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-4 w-4 ml-1 flex text-white"
                                                                                      aria-hidden="true"/>
                                                                     <span
                                                                         class="text-white ml-1 flex items-center mr-0.5">
@@ -410,9 +410,9 @@
                                                             <div>
                                                                 <!-- Icons -->
                                                                 <div class="flex p-1 ml-1 mt-1">
-                                                                    <UserGroupIcon v-if="event.audience"
+                                                                    <img src="/Svgs/IconSvgs/icon_public.svg" v-if="event.audience"
                                                                                    class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
-                                                                    <VolumeUpIcon v-if="event.is_loud"
+                                                                    <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="event.is_loud"
                                                                                   :class="event.audience ? 'ml-1' : ''"
                                                                                   class="h-5 w-5 my-auto text-secondary subpixel-antialiased"/>
                                                                     <div v-if="!event.audience && !event.is_loud"
@@ -422,7 +422,7 @@
                                                                 <div
                                                                     v-if="event.conflicts.length > 0 || room.events.find(roomEvent => roomEvent.conflicts.includes(event.id))"
                                                                     class="h-5 flex right-0 top-0 bg-error items-center absolute">
-                                                                    <ExclamationIcon class="h-5 w-5 flex text-white"
+                                                                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-4 w-4 ml-1 flex text-white"
                                                                                      aria-hidden="true"/>
                                                                     <span
                                                                         v-if="!room.events.find(roomEvent => roomEvent.conflicts.includes(event.id))"
@@ -643,9 +643,9 @@
                                                         :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                       <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
-                                                        <ExclamationIcon
+                                                        <img src="/Svgs/IconSvgs/icon_warning_white.svg"
                                                             v-if="room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0"
-                                                            class="h-5 w-5 flex text-error"
+                                                            class="h-4 w-4 ml-1 flex text-error"
                                                             aria-hidden="true"/>
                                                 </span>
                                                 </li>
@@ -762,7 +762,7 @@
                             <input v-model="addEventForm.audience"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <UserGroupIcon class="h-5 w-5 ml-2 my-auto"
+                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
                                            :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1 my-auto text-sm">Publikum</p>
@@ -771,7 +771,7 @@
                             <input v-model="addEventForm.is_loud"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <VolumeUpIcon class="h-5 w-5 ml-2 my-auto"
+                            <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                                           :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1 my-auto text-sm">Es wird laut</p>
@@ -822,7 +822,7 @@
                             <div
                                 v-if="event.conflicts.length > 0 || rooms.find(room => room.id === event.room_id).events.find(wantedEvent => wantedEvent.conflicts.includes(event.id))"
                                 class="bg-error flex h-8 w-8 mt-6 mr-2">
-                                <ExclamationIcon
+                                <img src="/Svgs/IconSvgs/icon_warning_white.svg"
                                     class="h-8 w-8 p-1 my-auto flex text-white"
                                     aria-hidden="true"/>
                             </div>
@@ -1049,7 +1049,7 @@
                                 <input v-model="event.audience"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <UserGroupIcon class="h-5 w-5 ml-2 my-auto"
+                                <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
                                                :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                                 <p :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1 my-auto text-sm">Publikum</p>
@@ -1058,7 +1058,7 @@
                                 <input v-model="event.is_loud"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <VolumeUpIcon class="h-5 w-5 ml-2 my-auto"
+                                <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                                               :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                                 <p :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1 my-auto text-sm">Es wird laut</p>
@@ -1191,9 +1191,6 @@ import {
     ChevronLeftIcon,
     ChevronRightIcon,
     DotsVerticalIcon,
-    ExclamationIcon,
-    UserGroupIcon,
-    VolumeUpIcon,
     XIcon,
     PencilAltIcon,
     TrashIcon
@@ -1265,15 +1262,12 @@ export default defineComponent({
         Link,
         EventTypeIconCollection,
         AdjustmentsIcon,
-        UserGroupIcon,
-        VolumeUpIcon,
         Switch,
         ChevronLeftIcon,
         ChevronRightIcon,
         CalendarIcon,
         Datepicker,
         UserTooltip,
-        ExclamationIcon,
         PencilAltIcon,
         TrashIcon
     },

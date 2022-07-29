@@ -26,7 +26,7 @@
             <!-- Task Div -->
             <div class=" col-span-2 px-4 mt-20 overflow-y-auto">
                 <div class="flex w-full">
-                <h2 class="font-bold font-lexend text-2xl flex w-full">Meine Aufgaben</h2>
+                <h2 class="font-bold font-lexend text-2xl w-full">Meine Aufgaben</h2>
                     <Link :href="route('tasks.own')" class="flex justify-end uppercase text-sm text-secondary w-full items-end subpixel-antialiased">Alle Ansehen</Link>
                 </div>
                     <div class="mt-10" v-for="task in tasks">

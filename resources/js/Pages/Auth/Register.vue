@@ -2,7 +2,7 @@
     <div class="py-8 px-64">
         <form class="space-y-6" @submit.prevent="submit">
             <div class="text-2xl font-bold text-black">
-                <p>ArtWork.tools</p>
+                <img src="/Svgs/Logos/artwork_logo_big.svg"/>
             </div>
             <div class="flex items-center">
                 <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Registrierung</h2>

@@ -6,10 +6,10 @@
             <div class="mx-auto  w-full max-w-sm lg:w-96">
 
                 <div>
-                    <div class="text-2xl mb-12 font-bold text-black">
-                        <p>ArtWork.tools</p>
+                    <div class="text-2xl mb-8 font-bold text-black">
+                        <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                     </div>
-                    <div class="flex items-center">
+                    <div class="flex items-center mb-12">
                     <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Login</h2>
                         <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
                     </div>

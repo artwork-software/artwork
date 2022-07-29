@@ -27,8 +27,8 @@
                                             {{ eventRequest.event_type.name }}
                                             <AdjustmentsIcon v-if="eventRequest.occupancy_option"
                                                              class="h-5 w-5 ml-2 my-auto"/>
-                                            <UserGroupIcon v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                            <VolumeUpIcon v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                            <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                            <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
                                         </div>
 
                                         <div class="flex w-full whitespace-nowrap ml-3"
@@ -127,8 +127,8 @@
                                         {{ requestToApprove.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <UserGroupIcon v-if="requestToApprove.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <VolumeUpIcon v-if="requestToApprove.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud" class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -224,8 +224,8 @@
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <UserGroupIcon v-if="requestToDecline.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <VolumeUpIcon v-if="requestToDecline.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud" class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -307,8 +307,6 @@ import {
     DotsVerticalIcon,
     ChevronDownIcon,
     AdjustmentsIcon,
-    UserGroupIcon,
-    VolumeUpIcon
 } from '@heroicons/vue/outline'
 import {ChevronUpIcon, PlusSmIcon, CheckIcon, XCircleIcon, XIcon} from '@heroicons/vue/solid'
 
@@ -365,8 +363,6 @@ export default defineComponent({
         Link,
         EventTypeIconCollection,
         AdjustmentsIcon,
-        UserGroupIcon,
-        VolumeUpIcon,
         Switch,
         UserTooltip
     },

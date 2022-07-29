@@ -17,28 +17,25 @@
                         ArtWork tool Logos und deine Login-Illustration hoch.
                     </div>
                 </div>
-
+                {{$page.props}}
                 <label class="block mt-6 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
-                    Logo groß (Upload per Klick)
+                    Logo groß (Upload per Klick oder Drag & Drop)
                 </label>
 
                 <div class="grid grid-cols-6 gap-x-12 items-center">
-                    <div class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 border-dashed rounded-md p-2" @click="selectNewBigLogo">
+                    <div
+                        class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 bg-stone-50 border-dashed rounded-md p-2"
+                        @click="selectNewBigLogo">
                         <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo"
                              class="rounded-md h-40 w-40 object-cover">
                         <input type="file" class="hidden"
                                ref="bigLogo"
                                @change="updateBigLogoPreview">
-                        <div v-if="$page.props.big_logo === null">
-                        <svg v-show="!bigLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
-                             fill="none"
-                             viewBox="0 0 48 48" aria-hidden="true">
-                            <path
-                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                             v-if="$page.props.big_logo === null && bigLogoPreview === null">
+                            Ziehe hier dein großes <br/> ArtWork tool Logo hin
                         </div>
-                        <div class="cursor-pointer" v-else-if="!bigLogoPreview" >
+                        <div class="cursor-pointer" v-else-if="!bigLogoPreview">
                             <img :src="$page.props.big_logo" alt="Logo"
                                  class="rounded-md h-40 w-40 object-cover">
                             <input type="file" class="hidden"
@@ -56,23 +53,21 @@
                 </div>
 
                 <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
-                    Logo klein (Upload per Klick)
+                    Logo klein (Upload per Klick oder Drag & Drop)
                 </label>
                 <div class="grid grid-cols-6 gap-x-12 items-center">
-                    <div class="flex col-span-2 justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewSmallLogo">
+                    <div
+                        class="flex col-span-2 justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                        @click="selectNewSmallLogo">
                         <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo"
                              class="rounded-md h-40 w-40 object-cover">
                         <input type="file" class="hidden"
                                ref="smallLogo"
                                @change="updateSmallLogoPreview">
-                        <div v-if="$page.props.small_logo === null">
-                        <svg v-show="!smallLogoPreview" class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor"
-                             fill="none"
-                             viewBox="0 0 48 48" aria-hidden="true">
-                            <path
-                                d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+                        <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                             v-if="$page.props.small_logo === null && smallLogoPreview === null">
+                            Ziehe hier dein kleines <br/> ArtWork tool Logo hin
+
                             <input type="file" class="hidden"
                                    ref="smallLogo"
                                    @change="updateSmallLogoPreview">
@@ -93,35 +88,35 @@
                 </div>
                 <div>
 
-                    <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased"> Illustration (Upload per Klick) </label>
+                    <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                        Login-Illustration </label>
                     <div class="grid grid-cols-6 gap-x-12 items-center">
-                    <div class="flex col-span-2 w-full justify-center border-2 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2" @click="selectNewBanner">
-                        <div v-show="!bannerPreview" class="space-y-1 text-center">
-                            <div v-if="$page.props.banner === null">
-                                <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
-                                     viewBox="0 0 48 48" aria-hidden="true">
-                                    <path
-                                        d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                                </svg>
-                                <input id="banner-upload" ref="banner" @change="updateBannerPreview"
-                                       name="file-upload" type="file" class="sr-only"/>
+                        <div
+                            class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                            @click="selectNewBanner">
+                            <div v-show="!bannerPreview" class="space-y-1 text-center">
+                                <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                                     v-if="$page.props.banner === null && bannerPreview === null">
+                                    Ziehe hier deine <br/> Login-Illustration hin
+                                    <input id="banner-upload" ref="banner" @change="updateBannerPreview"
+                                           name="file-upload" type="file" class="sr-only"/>
+                                </div>
+                                <div class="cursor-pointer" v-else>
+                                    <img :src="$page.props.banner" alt="Aktuelles Banner"
+                                         class="rounded-md h-40 w-40 object-cover">
+                                    <input type="file" class="hidden"
+                                           ref="banner"
+                                           @change="updateBannerPreview">
+                                </div>
                             </div>
-                            <div class="cursor-pointer" v-else>
-                                <img :src="$page.props.banner" alt="Aktuelles Banner"
+                            <div class="cursor-pointer">
+                                <img v-show="bannerPreview" :src="bannerPreview" alt="Aktuelles Banner"
                                      class="rounded-md h-40 w-40 object-cover">
                                 <input type="file" class="hidden"
                                        ref="banner"
                                        @change="updateBannerPreview">
                             </div>
                         </div>
-                        <div class="cursor-pointer">
-                            <img v-show="bannerPreview" :src="bannerPreview" alt="Aktuelles Banner" class="rounded-md h-40 w-40 object-cover">
-                            <input type="file" class="hidden"
-                                   ref="banner"
-                                   @change="updateBannerPreview">
-                        </div>
-                    </div>
                         <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                             <span
@@ -131,7 +126,49 @@
                     </div>
 
                     <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
-                        <button type="submit" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                        <button @click="changeLogos()" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                                        font-bold text-lg uppercase shadow-sm text-secondaryHover">
+                            Änderungen speichern
+                        </button>
+                    </div>
+
+                    <div class="mt-20">
+                        <h2 class="font-bold font-lexend text-xl mb-2">Kommunikation & Rechtliches</h2>
+                        <div class="text-secondary tracking-tight leading-6 sub">
+                            Definiere hier den Footer-Text für sämtliche System-E-Mails und gib' die Links zur
+                            Impressum- und Datenschutzseite deines Unternehmens an.
+                        </div>
+                        <div class="mt-8">
+                            <div class="col-span-9 grid grid-cols-9">
+                                <div class="sm:col-span-3">
+                                    <div class="mt-1">
+                                        <input type="text" v-model="mailForm.impressumLink"
+                                               placeholder="Link zum Impressum"
+                                               class="text-primary placeholder-secondary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 col-span-9 grid grid-cols-9">
+                                <div class="sm:col-span-3">
+                                    <div class="mt-1">
+                                        <input type="text" v-model="mailForm.privacyLink"
+                                               placeholder="Link zum Datenschutz"
+                                               class="text-primary placeholder-secondary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-4 col-span-9 grid grid-cols-9">
+                                <div class="sm:col-span-8">
+                                            <textarea
+                                                placeholder="E-Mail-Footer"
+                                                v-model="mailForm.emailFooter" rows="4"
+                                                class="focus:border-black placeholder-secondary focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
+                        <button @click="changeEmailData" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
                                         font-bold text-lg uppercase shadow-sm text-secondaryHover">
                             Änderungen speichern
                         </button>
@@ -165,6 +202,12 @@ export default defineComponent({
                 bigLogo: null,
                 smallLogo: null,
                 banner: null,
+            }),
+            mailForm: this.$inertia.form({
+                _method: 'PUT',
+                impressumLink: this.$page.props.impressumLink,
+                privacyLink: this.$page.props.privacyLink,
+                emailFooter: this.$page.props.emailFooter,
             })
         }
     },
@@ -217,7 +260,7 @@ export default defineComponent({
 
             reader.readAsDataURL(bigLogo);
         },
-        submit() {
+        changeLogos() {
 
             if (this.$refs.bigLogo) {
                 this.form.bigLogo = this.$refs.bigLogo.files[0]
@@ -231,6 +274,9 @@ export default defineComponent({
 
             this.form.post(route('tool.update'))
 
+        },
+        changeEmailData(){
+            this.mailForm.post(route('tool.updateMail'))
         }
     },
 })

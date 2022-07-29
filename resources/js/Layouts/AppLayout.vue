@@ -26,7 +26,7 @@
                             </div>
                         </TransitionChild>
                         <div class="text-2xl ml-4 font-bold text-secondary">
-                            <p>ArtWork.tools</p>
+                            <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                         </div>
                         <div class="mt-5 flex-1 h-0 overflow-y-auto">
                             <nav class="px-2 space-y-1">
@@ -69,7 +69,7 @@
             <div class="hidden w-28 bg-primary md:block bottom-0 top-0 fixed">
                 <div class="w-full py-2 mt-3 flex flex-col items-center">
                     <div v-if="$page.props.big_logo === null" class="text-2xl font-bold text-secondaryHover">
-                        <p>ArtWork</p>
+                        <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-20 w-20 -mb-4" />
                     </div>
                     <img v-else :src="$page.props.small_logo" class="rounded-full h-20 w-20"/>
                     <div class="flex-1 mt-8 w-full px-2 space-y-1">

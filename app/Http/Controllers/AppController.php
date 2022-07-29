@@ -118,6 +118,30 @@ class AppController extends Controller
 
     }
 
+    public function update_EmailSettings(Request $request, GeneralSettings $settings) {
+
+        if(!Auth::user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        if($request->impressumLink != $settings-> impressum_link){
+            $settings->impressum_link = $request->impressumLink;
+        }
+
+        if($request->privacyLink != $settings-> privacy_link){
+            $settings->privacy_link = $request->privacyLink;
+        }
+
+        if($request->emailFooter != $settings-> email_footer){
+            $settings->email_footer = $request->emailFooter;
+        }
+
+        $settings->save();
+
+        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
+
+    }
+
     public function create_admin(Request $request, GeneralSettings $settings) {
 
         $logo = $request->file('logo');

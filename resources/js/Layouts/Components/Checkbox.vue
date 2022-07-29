@@ -13,6 +13,8 @@
                     </div>
                 </div>
             </div>
+            <img src="/IconSvgs/icon_vermietung.svg" :data-tooltip-target="item.name" v-if="item.showIcon" class="h-7 w-7 flex text-gray-400"
+                 aria-hidden="true" />
             <InformationCircleIcon :data-tooltip-target="item.name" v-if="item.showIcon" class="h-7 w-7 flex text-gray-400"
                                    aria-hidden="true"/>
             <div :id="item.name" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">

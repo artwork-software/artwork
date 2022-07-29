@@ -3,7 +3,7 @@
 
     <jet-authentication-card>
         <div class="text-4xl my-6 flex justify-center font-bold text-black">
-            <h2>ArtWork.tools LOGO</h2>
+            <img src="/Svgs/Logos/artwork_logo_big.svg"/>
         </div>
         <h2 class="my-6 text-2xl text-center font-bold text-gray-900">
         Passwort vergessen

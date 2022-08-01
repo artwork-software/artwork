@@ -16,7 +16,7 @@
 
             <!-- Calendar Div -->
             <div class="relative">
-                <Link :href="route('events.daily_management', {wanted_day:new Date()})" class="flex justify-end uppercase text-sm text-secondary w-full items-end subpixel-antialiased absolute mt-14">Alle Ansehen</Link>
+                <Link :href="route('events.daily_management', {wanted_day:new Date()})" class="flex justify-end uppercase text-sm text-secondary right-0 items-end subpixel-antialiased absolute mt-14">Alle Ansehen</Link>
                 <DailyCalendar calendar-type="dashboard" :hours_of_day="hours_of_day" :rooms="rooms"
                                :projects="projects" :event_types="event_types" :areas="areas"
                                :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"

@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
-                            <h2 class="text-2xl flex w-full">Belegungsanfragen</h2>
+                            <h2 class="text-3xl font-black flex w-full">Belegungsanfragen</h2>
                             <div class="text-secondary subpixel-antialiased flex mt-4">
                                 Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
                             </div>
@@ -105,6 +105,7 @@
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung zusagen
@@ -202,6 +203,7 @@
         <!-- Decline Request Modal -->
         <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung absagen

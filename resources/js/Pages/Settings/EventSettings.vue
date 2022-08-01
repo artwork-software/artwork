@@ -54,7 +54,7 @@
                     </div>
                     <div class="flex">
                         <Menu as="div" class="my-auto relative">
-                            <div class="flex">
+                            <div class="flex" v-if="index !== 0">
                                 <MenuButton
                                     class="flex">
                                     <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
@@ -64,7 +64,7 @@
                                     <div>
                                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     </div>
-                                    <div class="flex">
+                                    <div class="flex" v-if="index === 1">
                                         <span
                                             class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Termintypen</span>
                                     </div>

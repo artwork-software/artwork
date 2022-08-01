@@ -815,7 +815,7 @@
         <!-- Projekt bearbeiten Modal-->
         <jet-dialog-modal :show="editingProject" @close="closeEditProjectModal">
             <template #content>
-                <SvgCollection svg-name="stampBrown"></SvgCollection>
+                <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Basisdaten bearbeiten
@@ -1029,6 +1029,7 @@
         <!-- Checkliste Hinzufügen-->
         <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Neue Checkliste
@@ -1144,6 +1145,7 @@
         <!-- Change Project Team Modal -->
         <jet-dialog-modal :show="editingTeam" @close="closeEditProjectTeamModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Team bearbeiten
@@ -1268,6 +1270,7 @@
         <!-- Change Checklist Teams Modal -->
         <jet-dialog-modal :show="editingChecklistTeams" @close="closeEditChecklistTeamsModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teams zuweisen
@@ -1339,6 +1342,7 @@
         <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neue Aufgabe
@@ -1388,6 +1392,7 @@
         <!-- Edit Task Modal-->
         <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Aufgabe bearbeiten
@@ -1437,6 +1442,7 @@
         <!-- Delete Checklist Modal -->
         <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Checkliste löschen
@@ -1466,6 +1472,7 @@
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Projekt löschen
@@ -1495,6 +1502,7 @@
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Projektverlauf
@@ -1531,6 +1539,7 @@
         <!-- Checkliste Bearbeiten-->
         <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Checkliste bearbeiten

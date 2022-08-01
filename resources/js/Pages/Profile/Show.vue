@@ -304,6 +304,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Konto endgültig löschen

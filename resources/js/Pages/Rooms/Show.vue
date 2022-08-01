@@ -223,6 +223,7 @@
         <!-- Change RoomAdmins Modal -->
         <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Raumadmin bearbeiten
@@ -295,6 +296,7 @@
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Raum bearbeiten
@@ -356,6 +358,7 @@
         <!-- Delete Room Modal -->
         <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Raum in den Papierkorb
@@ -383,6 +386,7 @@
         <!-- Success Modal -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         {{ successHeading }}
@@ -407,6 +411,7 @@
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung zusagen
@@ -504,6 +509,7 @@
         <!-- Decline Request Modal -->
         <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung absagen

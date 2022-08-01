@@ -217,6 +217,7 @@
         <!-- Projekt erstellen Modal-->
         <jet-dialog-modal :show="addingProject" @close="closeAddProjectModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neues Projekt
@@ -430,6 +431,7 @@
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Projekt löschen
@@ -459,6 +461,7 @@
         <!-- Success Modal - Delete project -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Projekt gelöscht
@@ -483,6 +486,7 @@
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Projektverlauf

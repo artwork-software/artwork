@@ -145,6 +145,7 @@
         <!-- Team erstellen Modal-->
         <jet-dialog-modal :show="addingTeam" @close="closeAddTeamModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neues Team erstellen

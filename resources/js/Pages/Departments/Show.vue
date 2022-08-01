@@ -116,6 +116,7 @@
         <!-- Team löschen Modal -->
         <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Team löschen
@@ -142,6 +143,7 @@
         <!--Alle Nutzer aus Team löschen Modal -->
         <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Alle Teammitglieder entfernen
@@ -168,6 +170,7 @@
         <!-- Change TeamMember Modal -->
         <jet-dialog-modal :show="showChangeTeamMemberModal" @close="closeChangeTeamMembersModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_team_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teammitglieder bearbeiten

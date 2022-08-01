@@ -471,6 +471,7 @@
     <!-- Termin erstellen Modal-->
     <jet-dialog-modal :show="addingEvent" @close="closeAddEventModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-4">
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     Neue Raumbelegung

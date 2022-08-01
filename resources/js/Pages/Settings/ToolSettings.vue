@@ -17,7 +17,6 @@
                         ArtWork tool Logos und deine Login-Illustration hoch.
                     </div>
                 </div>
-                {{$page.props}}
                 <label class="block mt-6 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
                     Logo groß (Upload per Klick oder Drag & Drop)
                 </label>
@@ -162,7 +161,7 @@
                                             <textarea
                                                 placeholder="E-Mail-Footer"
                                                 v-model="mailForm.emailFooter" rows="4"
-                                                class="focus:border-black placeholder-secondary focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none focus:border-black placeholder-secondary focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
                                 </div>
                             </div>
                         </div>

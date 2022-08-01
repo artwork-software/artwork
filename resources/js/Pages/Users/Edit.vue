@@ -199,6 +199,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Nutzer*in löschen
@@ -229,6 +230,7 @@
         <!-- Change Teams Modal -->
         <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_team_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teamzugehörigkeit

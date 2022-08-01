@@ -129,8 +129,13 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal title="Nutzer*innen einladen" modal_id="invite-user" @close="closeAddUserModal"  >
+        <flowbite-modal modal_id="invite-user" @close="closeAddUserModal"  >
+            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6" />
             <div class="mx-3">
+
+                <div class="mt-4 text-2xl font-black">
+                    Nutzer*innen einladen
+                </div>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                     einladen.
@@ -288,6 +293,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Nutzer*in löschen

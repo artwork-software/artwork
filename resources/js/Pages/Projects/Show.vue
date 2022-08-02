@@ -65,7 +65,7 @@
                     <span>
                     zuletzt geändert:
                     </span>
-                    <img  :data-tooltip-target="project.project_history[0].user.id"
+                    <img :data-tooltip-target="project.project_history[0].user.id"
                          :src="project.project_history[0].user.profile_photo_url"
                          :alt="project.project_history[0].user.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
@@ -135,41 +135,45 @@
                 <div class="flex w-full mt-2 flex-wrap">
                     <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
-                        <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
-                            <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name"
-                                                :alt="department.name"
-                                                class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                            <TeamTooltip :team="department"/>
-                        </div>
-                        <div v-if="this.project.departments.length >= 5" class="my-auto">
-                            <Menu as="div" class="relative">
-                                <div>
-                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                        <ChevronDownIcon
-                                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-for="department in this.project.departments" v-slot="{ active }">
-                                            <Link href="#"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <TeamIconCollection class="h-10 w-10 rounded-full"
-                                                                    :iconName="department.svg_name"/>
-                                                <span class="ml-4">
+                        <div v-if="this.project.departments !== []">
+                            <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
+                                <TeamIconCollection :data-tooltip-target="department.name"
+                                                    :iconName="department.svg_name"
+                                                    :alt="department.name"
+                                                    class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                <TeamTooltip :team="department"/>
+                            </div>
+                            <div v-if="this.project.departments.length >= 5" class="my-auto">
+                                <Menu as="div" class="relative">
+                                    <div>
+                                        <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                            <ChevronDownIcon
+                                                class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                            <MenuItem v-for="department in this.project.departments"
+                                                      v-slot="{ active }">
+                                                <Link href="#"
+                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <TeamIconCollection class="h-10 w-10 rounded-full"
+                                                                        :iconName="department.svg_name"/>
+                                                    <span class="ml-4">
                                                                 {{ department.name }}
                                                             </span>
-                                            </Link>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
+                                                </Link>
+                                            </MenuItem>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                            </div>
                         </div>
                         <div class="flex -mr-3 mt-2" v-for="user in projectMembers.slice(0,5)">
                             <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
@@ -241,10 +245,16 @@
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab">
                     <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :event_types="event_types" :areas="areas" :month_events="month_events" :projects="{data: [project]}" :rooms="project.rooms" :days_this_month="days_this_month" :events_without_room="events_without_room"></MonthlyCalendar>
+                        <MonthlyCalendar calendar-type="project" :event_types="event_types" :areas="areas"
+                                         :month_events="month_events" :projects="{data: [project]}"
+                                         :rooms="project.rooms" :days_this_month="days_this_month"
+                                         :events_without_room="events_without_room"></MonthlyCalendar>
                     </div>
                     <div v-else-if="calendarType === 'daily'">
-                        <DailyCalendar calendar-type="project"  :hours_of_day="hours_of_day" :rooms="project.rooms" :projects="{data: [project]}" :event_types="event_types" :areas="areas" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
+                        <DailyCalendar calendar-type="project" :hours_of_day="hours_of_day" :rooms="project.rooms"
+                                       :projects="{data: [project]}" :event_types="event_types" :areas="areas"
+                                       :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
+                                       :events_without_room="events_without_room"/>
                     </div>
                 </div>
                 <!-- Checklist Tab -->
@@ -815,7 +825,7 @@
         <!-- Projekt bearbeiten Modal-->
         <jet-dialog-modal :show="editingProject" @close="closeEditProjectModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Basisdaten bearbeiten
@@ -1029,7 +1039,7 @@
         <!-- Checkliste Hinzufügen-->
         <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Neue Checkliste
@@ -1145,7 +1155,7 @@
         <!-- Change Project Team Modal -->
         <jet-dialog-modal :show="editingTeam" @close="closeEditProjectTeamModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Team bearbeiten
@@ -1270,7 +1280,7 @@
         <!-- Change Checklist Teams Modal -->
         <jet-dialog-modal :show="editingChecklistTeams" @close="closeEditChecklistTeamsModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Teams zuweisen
@@ -1342,7 +1352,7 @@
         <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neue Aufgabe
@@ -1392,7 +1402,7 @@
         <!-- Edit Task Modal-->
         <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Aufgabe bearbeiten
@@ -1442,7 +1452,7 @@
         <!-- Delete Checklist Modal -->
         <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Checkliste löschen
@@ -1472,7 +1482,7 @@
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary text-2xl my-2">
                         Projekt löschen
@@ -1502,7 +1512,7 @@
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Projektverlauf
@@ -1539,7 +1549,7 @@
         <!-- Checkliste Bearbeiten-->
         <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Checkliste bearbeiten
@@ -1650,7 +1660,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates','calendarType', 'event_types','days_this_month','areas','month_events','events_without_room','hours_of_day','shown_day_formatted','shown_day_local'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1758,8 +1768,8 @@ export default {
             showDetails: false,
             checklistToEdit: null,
             editingChecklist: false,
-            assignedUsers: this.project.users,
-            assignedDepartments: this.project.departments,
+            assignedUsers: this.project.users ? this.project.users : [],
+            assignedDepartments: this.project.departments ? this.project.departments : [],
             deletingChecklist: false,
             checklistToDelete: {},
             editingTask: false,
@@ -2016,15 +2026,19 @@ export default {
             this.department_and_user_query = ""
         },
         addDepartmentToProjectTeamArray(departmentToAdd) {
-            for (let assignedDepartment of this.assignedDepartments) {
-                if (departmentToAdd.id === assignedDepartment.id) {
-                    this.department_and_user_query = ""
-                    return;
+            if (this.assignedDepartments !== []) {
+                for (let assignedDepartment of this.assignedDepartments) {
+                    if (departmentToAdd.id === assignedDepartment.id) {
+                        this.department_and_user_query = ""
+                        return;
+                    }
                 }
+            } else {
+                this.assignedDepartments = [departmentToAdd];
             }
-
-            this.assignedDepartments.push(departmentToAdd);
             this.department_and_user_query = ""
+            this.assignedDepartments.push(departmentToAdd);
+
         },
         editProjectTeam() {
             this.form.assigned_user_ids = {};

@@ -75,8 +75,8 @@
                     <div class="flex-1 mt-8 w-full px-2 space-y-1">
                         <a v-for="item in navigation" :key="item.name" :href="item.href"
                            :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', ' font-semibold group w-full p-3 rounded-md flex flex-col items-center text-sm']">
-                            <component :is="item.icon"
-                                       :class="[isCurrent(item.route) ? 'text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
+                            <img :src="item.svgSrc"
+                                       :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
                                        aria-hidden="true"/>
                             {{ item.name }}
                         </a>
@@ -94,9 +94,6 @@
                             <Link v-if="showSystemSettings && item.has_permission"
                                   :href="item.href"
                                   :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center text-sm font-semibold']">
-                                <component :is="item.icon"
-                                           :class="[isCurrent(item.route) ? 'text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
-                                           aria-hidden="true"/>
                                 {{ item.name }}
                             </Link>
                         </template>
@@ -225,10 +222,10 @@ import {Link} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
-    {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], icon: HomeIcon},
-    {name: 'Projekte', href: route('projects'), route: ['/projects'], icon: ArrowCircleRightIcon},
-    {name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,1)}), route: ['/events/management'], icon: CalendarIcon,},
-    {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], icon: ClipboardCheckIcon,},
+    {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], svgSrc: '/Svgs/Sidebar/icon_dashboard.svg'},
+    {name: 'Projekte', href: route('projects'), route: ['/projects'], svgSrc: '/Svgs/Sidebar/icon_projects.svg'},
+    {name: 'Raumbelegung', href: route('events.monthly_management',{month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,1)}), route: ['/events/management'], svgSrc: '/Svgs/Sidebar/icon_calendar.svg'},
+    {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], svgSrc: '/Svgs/Sidebar/icon_tasks.svg'},
 ]
 
 const userNavigation = [
@@ -264,57 +261,49 @@ export default {
                 has_permission: true,
                 name: 'Tool',
                 href: route('tool.settings'),
-                route: ['/tool/settings'],
-                icon: ArrowCircleRightIcon
+                route: ['/tool/settings']
                 },
                 {
                     has_permission: this.$page.props.can.view_users,
                     name: 'Nutzer*innen',
                     href: route('users'),
-                    route: ['/users'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/users']
                 },
                 {
                     name: 'Teams',
                     has_permission: this.$page.props.can.view_departments,
                     href: route('departments'),
-                    route: ['/departments'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/departments']
                 },
                 {
                     name: 'Räume',
                     has_permission: true,
                     href: route('areas.management'),
-                    route: ['/areas'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
                     has_permission: true,
                     href: route('events.requests'),
-                    route: ['/events/requests'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/events/requests']
                 },
                 {
                     name: 'Projekte',
                     has_permission: true,
                     href: route('project.settings'),
-                    route: ['/settings/projects'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/settings/projects']
                 },
                 {
                     name: 'Termine',
                     has_permission: true,
                     href: route('event_types.management'),
-                    route: ['/event_types'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/event_types']
                 },
                 {
                     name: 'Checklisten',
                     has_permission: true,
                     href: route('checklist_templates.management'),
-                    route: ['/checklists/management'],
-                    icon: ArrowCircleRightIcon
+                    route: ['/checklists/management']
                 },
             ]
         }

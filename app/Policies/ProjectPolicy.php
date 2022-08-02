@@ -30,7 +30,13 @@ class ProjectPolicy
      */
     public function view(User $user, Project $project)
     {
-        return ($user->projects->contains($project->id) && $project->users->contains($user->id));
+        $isTeamMember = false;
+        foreach ($project->departments as $department) {
+            if($department->users->contains($user->id)) {
+                $isTeamMember = true;
+            }
+        }
+        return ($user->projects->contains($project->id) && $project->users->contains($user->id) || $isTeamMember);
     }
 
     /**

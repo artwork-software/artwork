@@ -61,6 +61,7 @@ class ProjectController extends Controller
                     'business' => $user->business,
                     'description' => $user->description,
                 ]),
+                'user_can_view_project' => Auth::user()->can('view',$project),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map(fn($history_entry) => [
                     'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
                         Carbon::parse($history_entry->created_at)->diffForHumans() :

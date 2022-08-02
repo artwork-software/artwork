@@ -6,8 +6,8 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-2xl flex">Meine Projekte</h2>
-                            <!-- TODO: PERMISSION CHECK -->
-                            <button v-if="this.$page.props.user.can.create_projects" @click="openAddProjectModal" type="button"
+                            <!-- TODO: PERMISSION CHECK v-if="this.$page.props.user.can.create_projects" -->
+                            <button  @click="openAddProjectModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
@@ -119,8 +119,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-
-                                <Menu v-if="$page.props.permissions.includes('edit projects') || $page.props.is_admin || isTeamMember(project.departments)" as="div" class="my-auto relative">
+                                <Menu v-if="$page.props.permissions.includes('edit projects') || $page.props.is_admin || project.user_can_view_project" as="div" class="my-auto relative">
                                     <div class="flex">
                                         <MenuButton
                                             class="flex">

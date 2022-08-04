@@ -6,15 +6,14 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-2xl flex">Meine Projekte</h2>
-                            <!-- TODO: PERMISSION CHECK v-if="this.$page.props.user.can.create_projects" -->
-                            <button  @click="openAddProjectModal" type="button"
+
+                            <button v-if="can.create_projects" @click="openAddProjectModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
+                                <span class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
                             </div>
                         </div>
                         <div class="flex items-center">
@@ -602,7 +601,7 @@ export default defineComponent({
         Link,
         UserTooltip
     },
-    props: ['projects', 'users', 'categories', 'genres', 'sectors'],
+    props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can'],
     methods: {
         openAddProjectModal() {
             this.addingProject = true;

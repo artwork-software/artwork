@@ -102,7 +102,10 @@ class ProjectController extends Controller
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
-            ])
+            ]),
+            'can' => [
+                'create_projects' => Auth::user()->can('create projects'),
+            ]
         ]);
     }
 

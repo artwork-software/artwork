@@ -146,8 +146,7 @@
                                                                              :iconName="item.iconName"/>
                                                 </div>
                                             </div>
-                                            <div v-else class="text-secondary p-2">
-                                                {{ item.iconName }} schon vergeben
+                                            <div v-else>
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -412,8 +411,8 @@ export default {
             this.editEventTypeForm.svg_name = eventType.svg_name;
             this.editEventTypeForm.name = eventType.name;
             this.editEventTypeForm.id = eventType.id;
-            this.editEventTypeForm.project_mandatory = eventType.project_mandatory === 1;
-            this.editEventTypeForm.individual_name = eventType.individual_name === 1;
+            this.editEventTypeForm.project_mandatory = eventType.project_mandatory;
+            this.editEventTypeForm.individual_name = eventType.individual_name;
             this.editingEventType = true;
         },
         closeEditEventTypeModal() {

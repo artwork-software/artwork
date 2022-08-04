@@ -130,7 +130,7 @@ class UserController extends Controller
         $user->syncPermissions($request->permissions);
         $user->syncRoles($request->roles);
 
-        return Redirect::route('users')->with('success', 'Benutzer aktualisiert');
+        return Redirect::route('user.edit',$user)->with('success', 'Benutzer aktualisiert');
     }
 
     /**

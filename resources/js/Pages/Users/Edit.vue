@@ -10,20 +10,13 @@
                                      :src="user_to_edit.profile_photo_url"
                                      alt=""/>
                                 <div class="mt-6 flex flex-grow w-full">
-                                    <div class="relative flex w-5/12 ml-6 mr-4">
-                                        <input id="first_name" v-model="userForm.first_name" type="text"
-                                               class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                               placeholder="placeholder"/>
-                                        <label for="first_name"
-                                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                    <div class="text-3xl  font-lexend font-black flex my-auto ml-6">
+                                        {{userForm.first_name}}
                                     </div>
-                                    <div class="relative flex-grow w-6/12">
-                                        <input id="last_name" v-model="userForm.last_name" type="text"
-                                               class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                               placeholder="placeholder"/>
-                                        <label for="last_name"
-                                               class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
+                                    <div class="text-3xl  font-lexend font-black flex my-auto ml-2">
+                                        {{userForm.last_name}}
                                     </div>
+
                                 </div>
                             </div>
                             <div class="pt-4">
@@ -66,7 +59,7 @@
                                     </div>
                                     <div class="sm:col-span-6 mt-4 flex inline-flex">
                                         <span v-if="userForm.departments.length === 0"
-                                              class="text-secondary subpixel-antialiased my-auto ml-2 mr-4">In keinem Team</span>
+                                              class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
                                         <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
@@ -102,7 +95,7 @@
                                                             </a>
                                                         </MenuItem>
                                                         <MenuItem v-slot="{ active }">
-                                                            <a href="#"
+                                                            <a href="#" @click="deleteFromAllDepartments"
                                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                 <TrashIcon
                                                                     class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -129,7 +122,7 @@
                     <jet-validation-errors class="mb-4" />
 
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="text-2xl mt-16 mb-8 leading-6 font-bold text-gray-900">Nutzerrechte</h3>
+                        <h2 class="text-xl mt-16 mb-8 leading-6 font-black text-gray-900">Nutzerrechte</h2>
 
                         <div class="mb-8">
 
@@ -148,16 +141,6 @@
 
                         </div>
 
-                    </div>
-
-
-                    <div v-on:click="showUserPermissions = !showUserPermissions">
-                        <h2 class="text-sm flex text-gray-400 mb-2">
-                            Nutzer*innen
-                            <ChevronUpIcon v-if="showUserPermissions"
-                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                        </h2>
                     </div>
 
                     <div v-if="showUserPermissions" class="flex flex-col">
@@ -269,6 +252,30 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Nutzer*in erfolgreich bearbeitet
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success">
+                        Die Änderungen wurden erfolgreich gespeichert.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -299,7 +306,8 @@ import {
     TrashIcon,
     ChevronDownIcon,
     ChevronUpIcon,
-    XIcon
+    XIcon,
+    CheckIcon
 } from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
@@ -336,7 +344,8 @@ export default defineComponent({
         JetDialogModal,
         XIcon,
         TeamIconCollection,
-        JetValidationErrors
+        JetValidationErrors,
+        CheckIcon
     },
     props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles'],
     data() {
@@ -345,6 +354,7 @@ export default defineComponent({
             deletingUser: false,
             showChangeTeamsModal: false,
             teamCheckboxes: [],
+            showSuccessModal: false,
             userForm: this.$inertia.form({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
@@ -368,6 +378,9 @@ export default defineComponent({
         closeDeleteUserModal() {
             this.deletingUser = false;
         },
+        closeSuccessModal(){
+            this.showSuccessModal = false;
+        },
         openChangeTeamsModal() {
             this.departments.forEach((team) =>{
                 this.userForm.departments.forEach((userTeam) => {
@@ -386,6 +399,10 @@ export default defineComponent({
         },
         editUser() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.showSuccessModal = true;
+            setTimeout(function(){
+                this.showSuccessModal = false;
+            },1500)
         },
         deleteTeamFromDepartmentsArray(index) {
             this.userForm.departments.splice(index, 1);
@@ -402,6 +419,14 @@ export default defineComponent({
         },
         saveNewTeams() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.closeChangeTeamsModal();
+            this.openSuccessModal()
+        },
+        openSuccessModal(){
+            this.showSuccessModal = true;
+            setTimeout(function(){
+                this.showSuccessModal = false;
+            },2000)
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));

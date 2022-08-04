@@ -28,8 +28,8 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <p class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
-                                            {{ user.last_name }}, {{ user.first_name }} </p>
+                                        <Link :href="getEditHref(user)" class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
+                                            {{ user.last_name }}, {{ user.first_name }} </Link>
                                         <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
                                     </div>
@@ -143,7 +143,7 @@
                 <div class="mt-4">
                     <div class="flex mt-8">
                         <div class="relative w-72 mr-4">
-                            <input id="email" v-model="emailInput" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                            <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
                             <label for="email" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
                         </div>
                         <jet-input-error :message="form.error" class="mt-2"/>
@@ -208,11 +208,17 @@
                             </DisclosurePanel>
                         </transition>
                     </Disclosure>
+
+                    {{this.form.roles}}
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
                             definieren</h3>
 
                         <div class="mb-8">
+                            <div v-for="role in roleCheckboxes">
+                            <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
+                            </div>
+                            <!--
                             <RadioGroup v-model="selected">
                                 <div class="bg-white rounded-md -space-y-px">
                                     <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role" v-slot="{ checked, active }">
@@ -243,10 +249,11 @@
                                     </RadioGroupOption>
                                 </div>
                             </RadioGroup>
+                            -->
                         </div>
 
                     </div>
-                    <div v-if="selected.roleName !== 'admin'">
+                    <div v-if="!this.form.roles.includes('admin')">
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
                             Nutzerrechte
@@ -255,7 +262,7 @@
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
-                    <div v-if="showUserPermissions && selected.roleName !== 'admin'" class="flex flex-col max-h-96 overflow-y-auto">
+                    <div v-if="showUserPermissions && !this.form.roles.includes('admin')" class="flex flex-col max-h-96 overflow-y-auto">
 
                         <div v-for="(permissions, group) in all_permissions">
 
@@ -281,11 +288,11 @@
                 </div>
                 </div>
 
-                <button :class="[form.user_emails.length === 0 ?
+                <button :class="[form.user_emails.length === 0 && emailInput.length < 3 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                         class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                        @click="addUser" :disabled="form.user_emails.length === 0">
+                        @click="addUser" :disabled="form.user_emails.length === 0 && emailInput.length < 3">
                     Einladen
                 </button>
             </div>
@@ -354,8 +361,8 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Keine Rollenrechte', roleName: null, tooltipText: "Keine vorausgewählten Rechte"},
-    {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lege- und Schreibrechte - weitere Einstellungen entfallen"},
+    {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen", showIcon: true, checked:false},
+
 ]
 
 const userPermissionCheckboxes = [
@@ -434,7 +441,7 @@ export default defineComponent({
                 user_emails: [],
                 permissions: [],
                 departments: [],
-                role:null,
+                roles:[],
             }),
         }
     },
@@ -460,6 +467,16 @@ export default defineComponent({
         openAddUserModal() {
             this.addingUser = true
         },
+        changeRole(role){
+            if(!role.checked){
+                this.form.roles.push(role.roleName);
+            }else{
+                if(this.form.roles.includes(role.roleName)){
+                 this.form.roles = this.form.roles.filter(roleName => roleName !== role.roleName);
+                }
+            }
+
+        },
         teamChecked(team) {
             if (team.checked) {
                 this.form.departments.push(team);
@@ -483,7 +500,6 @@ export default defineComponent({
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
             }
-            this.form.role = this.selected.roleName;
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();
             this.openSuccessModal();
@@ -505,12 +521,10 @@ export default defineComponent({
         }
     },
     setup() {
-        const selected = ref(roleCheckboxes[0])
 
         return {
             userPermissionCheckboxes,
             roleCheckboxes,
-            selected
         }
     }
 })

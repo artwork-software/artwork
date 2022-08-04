@@ -200,5 +200,16 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => 'admin',
             'name_de' => "Adminrechte",
         ]);
+
+        Role::create([
+            'name' => 'user',
+            'name_de' => "Standarduser"
+        ])->givePermissionTo([
+            'request room occupancy',
+            'view occupancy requests',
+            'view projects'
+        ]);
+
+
     }
 }

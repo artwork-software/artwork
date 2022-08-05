@@ -28,11 +28,11 @@
                             class="py-5 flex justify-between">
                             <div class="flex">
                                 <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
-                                <div class="ml-5 my-auto w-full justify-start mr-6">
+                                <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
                                     </div>
-                                </div>
+                                </Link>
                             </div>
                             <div class="flex">
                                 <div class="flex mr-8">
@@ -264,14 +264,16 @@
         <!-- Alle Mitglieder aus Team löschen Modal -->
         <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="font-black text-primary font-lexend text-3xl my-2">
                         Alle Teammitglieder löschen
                     </div>
+
                     <XIcon @click="closeDeleteAllTeamMembersModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased mt-4">
                         Bist du sicher, dass du alle Mitglieder des Teams {{ teamToDeleteAllMembers.name }} entfernen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -293,14 +295,15 @@
         <!-- Team löschen Modal -->
         <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
             <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <div class="mx-4 bg-secondaryHover">
+                    <div class="font-black font-lexend text-primary text-3xl mt-6 my-2">
                         Team löschen
                     </div>
-                    <XIcon @click="closeDeleteAllTeamMembersModal"
+                    <XIcon @click="closeDeleteTeamModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du das Team {{ teamToDelete.name }} aus dem System löschen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -318,6 +321,30 @@
 
             </template>
 
+        </jet-dialog-modal>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccess" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Team erfolgreich bearbeitet.
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success">
+                        Die Änderungen wurden erfolgreich gespeichert.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
         </jet-dialog-modal>
     </app-layout>
 </template>
@@ -439,6 +466,15 @@ export default defineComponent({
             this.form.name = "";
             this.form.svg_name = "";
         },
+        showSuccessModal() {
+            this.showSuccess = true;
+            setTimeout(() => {
+                this.showSuccess = false
+            }, 2000)
+        },
+        closeSuccessModal(){
+            this.showSuccess = false;
+        },
         addUserToAssignedUsersArray(user) {
             for(let assigned_user of this.form.assigned_users) {
                 if(user.id === assigned_user.id) {
@@ -478,7 +514,8 @@ export default defineComponent({
         },
         deleteTeam(){
             Inertia.delete(`/departments/${this.teamToDelete.id}`);
-            this.closeDeleteTeamModal()
+            this.closeDeleteTeamModal();
+            this.showSuccessModal();
         },
         deleteAllTeamMembers() {
             this.deleteMembersForm.patch(route('departments.edit', {department: this.teamToDeleteAllMembers.id}));
@@ -509,6 +546,7 @@ export default defineComponent({
             teamToDelete:null,
             teamToDeleteAllMembers: null,
             deletingAllTeamMembers: false,
+            showSuccess: false,
             form: useForm({
                 svg_name: "",
                 name: "",

@@ -4,14 +4,14 @@
             <div class="max-w-screen-xl my-8 ml-20 mr-40">
 
                 <div class="">
-                    <h2 class="font-bold font-lexend text-3xl mb-2">Tooleinstellungen</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <h2 class="font-black font-lexend text-3xl mb-2">Tooleinstellungen</h2>
+                    <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub">
                         Definiere globale Einstellungen für dein ArtWork tool.
                     </div>
                 </div>
-                <div class="mt-6 max-w-2xl">
+                <div class="mt-32 max-w-2xl">
                     <h2 class="font-bold font-lexend text-xl my-2">Branding</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub">
                         Damit dein ArtWork tool eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine
                         eigenen
                         ArtWork tool Logos und deine Login-Illustration hoch.
@@ -51,7 +51,7 @@
                     </div>
                 </div>
 
-                <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                <label class="block mt-12 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
                     Logo klein (Upload per Klick oder Drag & Drop)
                 </label>
                 <div class="grid grid-cols-6 gap-x-12 items-center">
@@ -87,7 +87,7 @@
                 </div>
                 <div>
 
-                    <label class="block mt-4 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                    <label class="block mt-12 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
                         Login-Illustration </label>
                     <div class="grid grid-cols-6 gap-x-12 items-center">
                         <div
@@ -124,8 +124,8 @@
                         </div>
                     </div>
 
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
-                        <button @click="changeLogos()" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                    <div class="mt-6 grid gap-y-4 gap-x-4 items-center grid-cols-9">
+                        <button @click="changeLogos()" class="col-span-3 py-2.5 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
                                         font-bold text-lg uppercase shadow-sm text-secondaryHover">
                             Änderungen speichern
                         </button>
@@ -143,7 +143,7 @@
                                     <div class="mt-1">
                                         <input type="text" v-model="mailForm.impressumLink"
                                                placeholder="Link zum Impressum"
-                                               class="text-primary placeholder-secondary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
+                                               class="text-primary placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
                                     </div>
                                 </div>
                             </div>
@@ -152,7 +152,7 @@
                                     <div class="mt-1">
                                         <input type="text" v-model="mailForm.privacyLink"
                                                placeholder="Link zum Datenschutz"
-                                               class="text-primary placeholder-secondary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
+                                               class="text-primary placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
                                     </div>
                                 </div>
                             </div>
@@ -161,7 +161,7 @@
                                             <textarea
                                                 placeholder="E-Mail-Footer"
                                                 v-model="mailForm.emailFooter" rows="4"
-                                                class="resize-none focus:border-black placeholder-secondary focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
                                 </div>
                             </div>
                         </div>

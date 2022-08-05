@@ -24,20 +24,20 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="this.user_to_edit.email" :disabled="!$page.props.is_admin" :class="$page.props.is_admin ? '' : 'bg-gray-100'"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
                                     </div>
@@ -45,7 +45,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                    placeholder="Telefonnummer"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                                         </div>
                                     </div>
 
@@ -54,7 +54,7 @@
                                         <div class="mt-1">
                                             <textarea placeholder="Was sollten die anderen ArtWork.tool-User wissen?"
                                                       v-model="userForm.description" rows="5"
-                                                      class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border border-gray-300"/>
+                                                      class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border border-gray-300"/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6 mt-4 flex inline-flex">

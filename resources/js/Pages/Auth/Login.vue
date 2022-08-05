@@ -20,12 +20,12 @@
                         <form class="space-y-6" @submit.prevent="submit">
                             <div class="relative w-full mr-4">
                                 <input id="email" v-model="form.email" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="email" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
+                                <label for="email" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
                             </div>
 
                             <div class="relative w-full mr-4">
                                 <input id="password" v-model="form.password" type="password" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                                <label for="password" class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Passwort</label>
+                                <label for="password" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Passwort</label>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -43,7 +43,7 @@
                             <div>
                                 <button type="submit"
                                         :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-sm font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                         :disabled="this.form.email === '' || this.form.password === ''">Login
                                 </button>
                             </div>

@@ -27,7 +27,7 @@
                                                        class="peer pl-0 h-16 w-full focus:border-t-transparent focus:border-black focus:ring-black focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                        placeholder="placeholder"/>
                                                 <label for="first_name"
-                                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                                             </div>
                                         </div>
 
@@ -38,7 +38,7 @@
                                                    border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
                                                        placeholder="placeholder"/>
                                                 <label for="last_name"
-                                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
+                                                       class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased
                                                    focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Nachname</label>
                                             </div>
                                         </div>
@@ -144,7 +144,7 @@
                                             ? 'border-error'
                                             : passwordForm.current_password.length > 0 && passwordForm.hasErrors
                                             ? 'border-success' : '',
-                                    'placeholder-secondary subpixel-antialiased border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"/>
+                                    'placeholder-secondary subpixel-antialiased border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                     <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
                                          class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -171,7 +171,7 @@
                                     id="password_confirmation1" name="password" type="password"
                                     autocomplete="new-password" required placeholder="Neues Passwort"
                                     :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"/>
+                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"/>
                                 <div v-if="passwordForm.hasErrors"
                                      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -206,7 +206,7 @@
                                         id="password_confirmation2" name="password" type="password"
                                         autocomplete="new-password" required placeholder="Neues Passwort wiederholen"
                                         :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"
+                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full']"
                                     />
                                     <div v-if="passwordForm.hasErrors"
                                          class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">

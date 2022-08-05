@@ -3,7 +3,7 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
             <div class="flex">
-                <h2 class="font-bold font-lexend text-2xl">Teamprofil</h2>
+                <h2 class="font-bold font-lexend text-3xl">Teamprofil</h2>
             </div>
             <div class="flex mt-12">
                 <Menu as="div" class=" relative">
@@ -33,12 +33,12 @@
                 </Menu>
                 <div class="relative w-full ml-8 mt-8 w-3/4 max-w-xl">
                     <input id="teamName" v-model="teamForm.name" type="text" class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                    <label for="teamName" class="absolute left-0 text-base -top-7 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                    <label for="teamName" class="absolute left-0 text-sm -top-7 text-gray-600 -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                 </div>
             </div>
             <div class="flex items-center mt-16 mr-8">
-                <div v-if="teamForm.users.length === 0">
-                    <span class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Team-Mitglieder hinzugefügt</span>
+                <div class="mt-3" v-if="teamForm.users.length === 0">
+                    <span class="text-secondary subpixel-antialiased">Noch keine Team-Mitglieder hinzugefügt</span>
                 </div>
                 <div v-else class="mt-3 -mr-3" v-for="user in teamForm.users">
                     <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
@@ -95,13 +95,13 @@
                 </Menu>
             </div>
                 <div class="pt-12">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
+                    <div class="mt-4 grid grid-cols-7 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
                         <button v-if="!showSuccess" @click="editTeam"
-                                class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class=" col-span-3 py-2.5 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >Änderungen speichern
                         </button>
                         <button v-else type="submit"
-                                class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class="col-span-3 items-center py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >
                             <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
                         </button>

@@ -24,20 +24,20 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="this.user_to_edit.email" :disabled="!$page.props.is_admin" :class="$page.props.is_admin ? '' : 'bg-gray-100'"
-                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
                                     </div>
@@ -45,7 +45,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                    placeholder="Telefonnummer"
-                                                   class="shadow-sm placeholder-secondary focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border-gray-300"/>
                                         </div>
                                     </div>
 
@@ -54,7 +54,7 @@
                                         <div class="mt-1">
                                             <textarea placeholder="Was sollten die anderen ArtWork.tool-User wissen?"
                                                       v-model="userForm.description" rows="5"
-                                                      class="shadow-sm placeholder-secondary p-4 focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300"/>
+                                                      class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm border border-gray-300"/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6 mt-4 flex inline-flex">
@@ -64,7 +64,6 @@
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
                                         </span>
-                                        <!-- TODO: FUNKTIONEN einfügen für aus allen Teams entfernen Befehle  -->
                                         <Menu as="div" class="my-auto relative">
                                             <div>
                                                 <MenuButton
@@ -430,6 +429,11 @@ export default defineComponent({
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));
+        },
+        deleteFromAllDepartments(){
+            this.userForm.departments = [];
+            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.openSuccessModal();
         }
     },
 })

@@ -17,14 +17,14 @@ class RolesAndPermissionsSeeder extends Seeder
     {
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
-
         //System
 
         //Tool
         Permission::create([
             'name' => 'change tool settings',
             'name_de' => "Tooleinstellungen editieren",
-            'group' => 'System'
+            'group' => 'System',
+            'tooltipText' => ''
         ]);
 
         //Users

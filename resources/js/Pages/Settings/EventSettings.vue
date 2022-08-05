@@ -25,6 +25,7 @@
                     Terminnamen bekommen können.
                 </div>
             </div>
+            {{event_types.data}}
             <ul role="list" class="mt-5 mb-20 w-full">
                 <li v-for="(eventType,index) in event_types.data" :key="eventType.id"
                     class="flex justify-between">
@@ -56,7 +57,7 @@
                         <Menu as="div" class="my-auto relative">
                             <div class="flex" v-if="index !== 0">
                                 <MenuButton
-                                    class="flex">
+                                    class="flex z-0">
                                     <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                       aria-hidden="true"/>
                                 </MenuButton>
@@ -77,7 +78,7 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <MenuItems
-                                    class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                    class="z-10 origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <a href="#" @click="openEditEventTypeModal(eventType)"
@@ -345,16 +346,44 @@ export default {
             })
             return [
                 {
-                    iconName: 'orange',
-                    taken: this.takenEventTypeColors.includes('orange'),
+                    iconName: 'eventType1',
+                    taken: this.takenEventTypeColors.includes('eventType1'),
                 },
                 {
-                    iconName: 'turquoise',
-                    taken: this.takenEventTypeColors.includes('turquoise'),
+                    iconName: 'eventType2',
+                    taken: this.takenEventTypeColors.includes('eventType2'),
                 },
                 {
-                    iconName: 'green',
-                    taken: this.takenEventTypeColors.includes('green'),
+                    iconName: 'eventType3',
+                    taken: this.takenEventTypeColors.includes('eventType3'),
+                },
+                {
+                    iconName: 'eventType4',
+                    taken: this.takenEventTypeColors.includes('eventType4'),
+                },
+                {
+                    iconName: 'eventType5',
+                    taken: this.takenEventTypeColors.includes('eventType5'),
+                },
+                {
+                    iconName: 'eventType6',
+                    taken: this.takenEventTypeColors.includes('eventType6'),
+                },
+                {
+                    iconName: 'eventType7',
+                    taken: this.takenEventTypeColors.includes('eventType7'),
+                },
+                {
+                    iconName: 'eventType8',
+                    taken: this.takenEventTypeColors.includes('eventType8'),
+                },
+                {
+                    iconName: 'eventType9',
+                    taken: this.takenEventTypeColors.includes('eventType9'),
+                },
+                {
+                    iconName: 'eventType10',
+                    taken: this.takenEventTypeColors.includes('eventType10'),
                 },
             ]
         }

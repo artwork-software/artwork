@@ -53,21 +53,21 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="text-primary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300 "/>
+                                                   class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="text-primary focus:border-black focus:ring-black border-2 w-full font-semibold border-gray-300"/>
+                                                   class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300"/>
                                         </div>
                                     </div>
 
                                     <div class="sm:col-span-3">
                                         <div class="mt-1 relative">
                                             <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
-                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:border-black focus:ring-black']"/>
+                                                   :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
 
                                             <div v-if="!email_validation.email" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -82,7 +82,7 @@
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.phone_number"
                                                    placeholder="Telefonnummer"
-                                                   class="text-primary border-2 w-full focus:border-black focus:ring-black font-semibold border-gray-300 "/>
+                                                   class="text-primary border-2 w-full focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 font-semibold border-gray-300 "/>
                                         </div>
                                     </div>
 
@@ -92,13 +92,13 @@
                                             <textarea
                                                 placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?"
                                                 v-model="userForm.description" rows="3"
-                                                class="focus:border-black focus:ring-black border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
                                         </div>
                                     </div>
                                     <div class="sm:col-span-6">
                                         <div class="sm:col-span-6 ml-3 flex inline-flex">
                                             <span v-if="userForm.departments.length === 0"
-                                                  class="text-secondary subpixel-antialiased my-auto">In keinem Team </span>
+                                                  class="text-secondary subpixel-antialiased my-auto -ml-3">In keinem Team </span>
                                             <span v-else class="flex mt-3 -ml-4"
                                                   v-for="(team,index) in userForm.departments">
                                             <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
@@ -144,7 +144,7 @@
                                             ? 'border-error'
                                             : passwordForm.current_password.length > 0 && passwordForm.hasErrors
                                             ? 'border-success' : '',
-                                    'placeholder-secondary subpixel-antialiased border-gray-200 focus:ring-black focus:border-black border-2 block w-full sm:text-sm']"/>
+                                    'placeholder-secondary subpixel-antialiased border-gray-200 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"/>
                                     <div v-if="passwordForm.hasErrors && passwordForm.errors.current_password"
                                          class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                         <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -171,7 +171,7 @@
                                     id="password_confirmation1" name="password" type="password"
                                     autocomplete="new-password" required placeholder="Neues Passwort"
                                     :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm']"/>
+                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"/>
                                 <div v-if="passwordForm.hasErrors"
                                      class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                     <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
@@ -206,7 +206,7 @@
                                         id="password_confirmation2" name="password" type="password"
                                         autocomplete="new-password" required placeholder="Neues Passwort wiederholen"
                                         :class="[passwordForm.hasErrors ? 'border-error' : 'border-gray-200',
-                                    'placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm']"
+                                    'placeholder-secondary subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full sm:text-sm']"
                                     />
                                     <div v-if="passwordForm.hasErrors"
                                          class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -246,7 +246,7 @@
 
                 </div>
             </div>
-            <div class="flex ml-12 mt-12">
+            <div class="flex ml-20 mt-12">
                 <span @click="openDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Konto endgültig löschen</span>
             </div>
         </div>
@@ -258,11 +258,11 @@
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Profilbild ändern
                     </div>
+                    <span class="text-secondary subpixel-antialiased my-auto">Wähle hier dein Profilbild aus. Es sollte die Größe von 1024 KB nicht überschreiten. </span>
                     <XIcon @click="closeChangePictureModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <!-- New Profile Photo Preview -->
-
                     <h2 class="" v-show="photoPreview">Vorschau neues Profilbild:</h2>
                     <div class="flex">
                         <div class="mt-1 flex items-center">
@@ -272,12 +272,12 @@
                             </span>
                             </div>
                         </div>
-                        <div class="flex mt-4">
+                        <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
                             <button
-                                class="mr-1 my-auto ml-3 inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
+                                class="my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
                                 type="button"
                                 @click.prevent="selectNewPhoto">
-                                Profilbild ändern
+                                Datei auswählen
                             </button>
                             <button type="button"
                                     class=" ml-3 my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"

@@ -850,7 +850,7 @@
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                                         <ListboxOptions
-                                            class="absolute w-full z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                            class="absolute w-full w-72 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
                                                            v-for="eventType in event_types.data"
                                                            :key="eventType.name"

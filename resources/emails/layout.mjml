@@ -1,0 +1,56 @@
+<mjml>
+    <mj-head>
+        <mj-font name="Inter" href="https://fonts.googleapis.com/css?family=Inter" />
+
+        <mj-attributes>
+            <mj-all font-family="Inter, arial, sans-serif" ico-font-family="Nunito, arial, sans-serif" />
+            <mj-text font-family="Inter" />
+        </mj-attributes>
+    </mj-head>
+    <mj-body>
+        <!-- HEADER-->
+        <mj-section padding="0 25px">
+            <mj-column padding="0" width="50%" vertical-align="middle">
+                <mj-image width="200px" src="{{ asset('Svgs/Logos/artwork_logo_big.svg') }}"></mj-image>
+            </mj-column>
+            <mj-column padding="0" width="50%" vertical-align="middle">
+                <mj-image width="150px" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}"></mj-image>
+            </mj-column>
+        </mj-section>
+
+        <!-- CONTENT-->
+        <mj-section padding="0 25px">
+
+            <mj-column>
+                <mj-button border-radius="0" padding="5px" href="#verify-link" background-color="#27233C" color="#A7A6B1">
+                    E-Mail verifzieren
+                </mj-button>
+            </mj-column>
+
+        </mj-section>
+
+        <!-- FOOTER -->
+        <mj-section padding="0" background-color="#27233C">
+            <mj-column padding="0" width="100%" vertical-align="middle">
+                <mj-image width="150px" src="{{ asset('Svgs/Logos/artwork_logo_small.svg') }}"></mj-image>
+            </mj-column>
+
+            <mj-column width="100%">
+                <mj-text font-size="16px" color="#A7A6B1" align="left">
+                    Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci alias amet architecto corporis debitis dicta dignissimos distinctio dolores ea inventore iste molestias officiis rem sint, sunt suscipit ullam velit vero.
+                </mj-text>
+            </mj-column>
+
+            <mj-column>
+                <mj-text font-size="16px" color="#A7A6B1" align="left">
+                    Impressum
+                </mj-text>
+            </mj-column>
+            <mj-column>
+                <mj-text font-size="16px" color="#A7A6B1" align="left">
+                    Datenschutz
+                </mj-text>
+            </mj-column>
+        </mj-section>
+    </mj-body>
+</mjml>

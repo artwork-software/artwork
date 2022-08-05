@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto">
-                            <h2 class="text-2xl">Alle Nutzer*innen</h2>
+                            <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
                             <button data-modal-toggle="invite-user" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -302,13 +302,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Nutzer*in löschen
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du {{ userToDelete.last_name + "," }} {{ userToDelete.first_name }} aus dem
                         System löschen möchtest?
                     </div>

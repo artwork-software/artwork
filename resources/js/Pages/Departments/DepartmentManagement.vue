@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
-                            <h2 class="text-2xl flex">Alle Teams</h2>
+                            <h2 class="text-3xl font-black font-lexend flex">Alle Teams</h2>
                             <button @click="openAddTeamModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -147,7 +147,7 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Neues Team erstellen
                     </div>
                     <XIcon @click="closeAddTeamModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -161,7 +161,7 @@
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon v-if="form.svg_name === ''"
-                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                         class="ml-1 p-3 flex-shrink-0 mt-1 h-12 w-12 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                         <TeamIconCollection class="h-16 w-16" v-if="form.svg_name !== ''" :iconName=form.svg_name alt="TeamIcon" />
                                     </MenuButton>
                                 </div>
@@ -192,7 +192,7 @@
                             </div>
                         </div>
                         <div class="mt-12">
-                            <div class="font-bold font-lexend text-primary text-2xl my-2">
+                            <div class="font-bold font-lexend text-primary text-xl my-2">
                                 Nutzer*innen hinzufügen
                             </div>
                             <div class="text-secondary tracking-tight leading-6 subpixel-antialiased">
@@ -250,7 +250,7 @@
                         </div>
                         <button
                             :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
                             @click="addTeam"
                             :disabled="this.form.name === '' || this.form.svg_name === ''">
                             Team erstellen
@@ -266,7 +266,7 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-black text-primary font-lexend text-3xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Alle Teammitglieder löschen
                     </div>
 

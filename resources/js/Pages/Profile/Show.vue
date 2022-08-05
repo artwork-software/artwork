@@ -48,6 +48,7 @@
                                 </div>
 
                             </div>
+                            {{userForm.errors}}
                             <div>
                                 <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                                     <div class="sm:col-span-3">
@@ -306,13 +307,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Konto endgültig löschen
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du dein ArtWork-Konto endgültig löschen möchtest? Sämtliche Einstellungen
                         gehen verloren.
                     </div>

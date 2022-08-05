@@ -2,7 +2,7 @@
     <app-layout title="Projekteinstellungen">
         <div class="max-w-screen-lg my-8 ml-20 mr-40">
             <div class="">
-                <h2 class="font-bold font-lexend text-3xl my-2">Projekteinstellungen</h2>
+                <h2 class="text-3xl font-black font-lexend my-2">Projekteinstellungen</h2>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     Definiere globale Einstellungen für Projekte.
                 </div>

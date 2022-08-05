@@ -4,7 +4,7 @@
             <div class="flex flex-1 flex-wrap">
                 <div class="flex justify-between w-full">
                     <div class="flex">
-                        <h2 class="text-3xl font-bold font-lexend flex">Checklistenvorlagen</h2>
+                        <h2 class="text-3xl font-black font-lexend flex">Checklistenvorlagen</h2>
                         <Link :href="route('checklist_templates.create')" type="button"
                               class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                             <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>

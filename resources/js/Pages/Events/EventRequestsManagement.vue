@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
-                            <h2 class="text-3xl font-black flex w-full">Belegungsanfragen</h2>
+                            <h2 class="text-3xl font-black font-lexend flex w-full">Belegungsanfragen</h2>
                             <div class="text-secondary subpixel-antialiased flex mt-4">
                                 Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
                             </div>
@@ -205,13 +205,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Raumbelegung absagen
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du die Raumbelegung absagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">

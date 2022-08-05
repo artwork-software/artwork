@@ -5,7 +5,7 @@
                 <div class="flex">
                     <h2 class="font-bold mb-6 font-lexend text-3xl">Checklistenvorlage</h2>
                 </div>
-                <div class="text-secondary tracking-tight leading-6 sub max-w-screen-sm">
+                <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub max-w-screen-sm">
                     Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
                     Projekt genutzt werden.
                 </div>
@@ -20,7 +20,7 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.departments.length === 0">
+                    <div class="mt-3" v-if="templateForm.departments.length === 0">
                         <span
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>

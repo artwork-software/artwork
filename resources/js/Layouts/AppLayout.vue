@@ -111,11 +111,11 @@
                         <span class="sr-only">Open sidebar</span>
                         <MenuAlt2Icon class="h-6 w-6" aria-hidden="true"/>
                     </button>
-                    <div class="flex-1 px-4 flex justify-end">
+                    <div class="flex-1 px-4 flex justify-end bg-white">
                         <div class="ml-4 flex items-center md:ml-6">
                             <div class="flex items-center mr-6">
 
-                                <Link class="inset-y-0 mr-3"
+                                <Link class="inset-y-0 mr-5"
                                       :href="getTrashRoute()">
                                     <TrashIcon class="h-5 w-5" aria-hidden="true"/>
                                 </Link>

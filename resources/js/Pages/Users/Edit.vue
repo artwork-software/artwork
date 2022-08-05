@@ -183,13 +183,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
                         Nutzer*in löschen
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du {{ user_to_edit.last_name + "," }} {{ user_to_edit.first_name }} aus dem
                         System löschen möchtest?
                     </div>
@@ -212,19 +212,19 @@
         <!-- Change Teams Modal -->
         <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_team_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
+                    <div class="font-black font-lexend text-primary mt-10 text-3xl my-2">
                         Teamzugehörigkeit
                     </div>
                     <XIcon @click="closeChangeTeamsModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <div class="mt-4 text-secondary subpixel-antialiased leading-6 sub">
                         Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle
                         den Teams zugeordneten <br/>Projekte einzusehen.
                     </div>
-                    <div class="mt-4">
+                    <div class="mt-8 mb-8">
                         <span v-if="departments.length === 0"
                               class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
                         <div v-for="team in departments">

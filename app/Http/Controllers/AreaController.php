@@ -24,7 +24,7 @@ class AreaController extends Controller
     public function index()
     {
         return inertia('Areas/AreaManagement', [
-            'areas' => Area::paginate(10)->through(fn($area) => [
+            'areas' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->rooms()->orderBy('order')->get()->map(fn($room) => [
@@ -139,7 +139,7 @@ class AreaController extends Controller
     public function getTrashed()
     {
         return inertia('Trash/Areas', [
-            'trashed_areas' => Area::onlyTrashed()->paginate(10)->through(fn($area) => [
+            'trashed_areas' => Area::onlyTrashed()->get()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->rooms->map(fn($room) => [

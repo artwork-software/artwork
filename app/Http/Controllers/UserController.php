@@ -60,7 +60,7 @@ class UserController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Users/Index', [
-            'users' => User::paginate(15)->through( fn($user) => [
+            'users' => User::all()->map(fn($user) => [
                 'id' => $user->id,
                 'first_name' => $user->first_name,
                 'last_name' => $user->last_name,

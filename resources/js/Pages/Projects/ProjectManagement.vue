@@ -23,7 +23,7 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="projects.data.length > 0" v-for="(project,index) in projects.data" :key="project.id"
+                    <div v-if="projects.length > 0" v-for="(project,index) in projects" :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-5 flex">
@@ -311,7 +311,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="genre in genres.data"
+                                                           v-for="genre in genres"
                                                            :key="genre.name"
                                                            :value="genre"
                                                            v-slot="{ active, selected }">
@@ -353,7 +353,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="sector in sectors.data"
+                                                           v-for="sector in sectors"
                                                            :key="sector.name"
                                                            :value="sector"
                                                            v-slot="{ active, selected }">
@@ -393,7 +393,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="category in categories.data"
+                                                           v-for="category in categories"
                                                            :key="category.name"
                                                            :value="category"
                                                            v-slot="{ active, selected }">

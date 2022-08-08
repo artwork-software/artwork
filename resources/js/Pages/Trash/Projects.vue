@@ -1,5 +1,5 @@
 <template>
-    <div v-if="trashed_projects.data.length > 0" v-for="(project,index) in trashed_projects.data" :key="project.id"
+    <div v-if="trashed_projects.length > 0" v-for="(project,index) in trashed_projects" :key="project.id"
          class="mt-5 border-b-2 border-gray-200 w-full">
         <div
             class="py-5 flex justify-between">

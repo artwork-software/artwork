@@ -164,14 +164,14 @@ class EventController extends Controller
                     'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom),
                 ]),
             ],
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,
                 'project_mandatory' => $event_type->project_mandatory,
                 'individual_name' => $event_type->individual_name,
             ]),
-            'areas' => Area::paginate(10)->through(fn($area) => [
+            'areas' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->rooms()->with('room_admins', 'events')->orderBy('order')->get()->map(fn($room) => [
@@ -193,7 +193,7 @@ class EventController extends Controller
                     ])
                 ])
             ]),
-            'projects' => Project::paginate(10)->through(fn($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'project_admins' => User::whereHas('projects', function ($q) use ($project) {
@@ -309,7 +309,7 @@ class EventController extends Controller
                 'area_id' => $room->area_id,
                 'events' => $this->get_events_for_day_view($wanted_day, $room->events)
             ]),
-            'projects' => Project::paginate(10)->through(fn($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'project_admins' => User::whereHas('projects', function ($q) use ($project) {
@@ -319,7 +319,7 @@ class EventController extends Controller
                     $q->where('is_manager', 1);
                 })->get(),
             ]),
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,
@@ -330,7 +330,7 @@ class EventController extends Controller
                 "count" => $eventsWithoutRoomCount,
                 'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
             ],
-            'areas' => Area::paginate(10)->through(fn($area) => [
+            'areas' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->rooms()->with('room_admins', 'events.event_type')->orderBy('order')->get()->map(fn($room) => [
@@ -401,7 +401,7 @@ class EventController extends Controller
                 'area_id' => $room->area_id,
                 'events' => $this->get_events_for_day_view($wanted_day, $room->events)
             ]),
-            'projects' => Project::paginate(10)->through(fn($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'project_admins' => User::whereHas('projects', function ($q) use ($project) {
@@ -411,7 +411,7 @@ class EventController extends Controller
                     $q->where('is_manager', 1);
                 })->get(),
             ]),
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,
@@ -422,7 +422,7 @@ class EventController extends Controller
                 "count" => $eventsWithoutRoomCount,
                 'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
             ],
-            'areas' => Area::paginate(10)->through(fn($area) => [
+            'areas' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->rooms()->with('room_admins', 'events.event_type')->orderBy('order')->get()->map(fn($room) => [
@@ -489,7 +489,7 @@ class EventController extends Controller
     public function requests_index()
     {
         return inertia('Events/EventRequestsManagement', [
-            'event_requests' => Event::where('occupancy_option', true)->paginate(10)->through(fn($event) => [
+            'event_requests' => Event::where('occupancy_option', true)->get()->map(fn($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
                 'description' => $event->description,

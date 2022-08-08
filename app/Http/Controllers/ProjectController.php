@@ -41,7 +41,7 @@ class ProjectController extends Controller
     public function index()
     {
         return inertia('Projects/ProjectManagement', [
-            'projects' => Project::paginate(10)->through(fn($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'description' => $project->description,
@@ -88,17 +88,17 @@ class ProjectController extends Controller
                 'events' => $project->events
             ]),
             'users' => User::all(),
-            'categories' => Category::paginate(10)->through(fn($category) => [
+            'categories' => Category::all()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
-            'genres' => Genre::paginate(10)->through(fn($genre) => [
+            'genres' => Genre::all()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
-            'sectors' => Sector::paginate(10)->through(fn($sector) => [
+            'sectors' => Sector::all()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
@@ -506,22 +506,22 @@ class ProjectController extends Controller
                     'user' => $comment->user
                 ])
             ],
-            'categories' => Category::paginate(10)->through(fn($category) => [
+            'categories' => Category::all()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
-            'genres' => Genre::paginate(10)->through(fn($genre) => [
+            'genres' => Genre::all()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
-            'sectors' => Sector::paginate(10)->through(fn($sector) => [
+            'sectors' => Sector::all()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
             ]),
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,
@@ -539,7 +539,7 @@ class ProjectController extends Controller
                 "count" => $eventsWithoutRoomCount,
                 'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
             ],
-            'checklist_templates' => ChecklistTemplate::paginate(10)->through(fn($checklist_template) => [
+            'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
                 'id' => $checklist_template->id,
                 'name' => $checklist_template->name,
                 'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
@@ -855,7 +855,7 @@ class ProjectController extends Controller
     public function getTrashed()
     {
         return inertia('Trash/Projects', [
-            'trashed_projects' => Project::onlyTrashed()->paginate(10)->through(fn($project) => [
+            'trashed_projects' => Project::onlyTrashed()->get()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'description' => $project->description,

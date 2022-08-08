@@ -920,7 +920,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="genre in genres.data"
+                                                           v-for="genre in genres"
                                                            :key="genre.name"
                                                            :value="genre"
                                                            v-slot="{ active, selected }">
@@ -962,7 +962,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="sector in sectors.data"
+                                                           v-for="sector in sectors"
                                                            :key="sector.name"
                                                            :value="sector"
                                                            v-slot="{ active, selected }">
@@ -1002,7 +1002,7 @@
                                         <ListboxOptions
                                             class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="category in categories.data"
+                                                           v-for="category in categories"
                                                            :key="category.name"
                                                            :value="category"
                                                            v-slot="{ active, selected }">
@@ -1088,7 +1088,7 @@
                                             </li>
                                         </ListboxOption>
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="template in checklist_templates.data"
+                                                       v-for="template in checklist_templates"
                                                        :key="template.id"
                                                        :value="template"
                                                        v-slot="{ active, selected }">

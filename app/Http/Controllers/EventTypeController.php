@@ -17,7 +17,7 @@ class EventTypeController extends Controller
     public function index()
     {
         return inertia('Settings/EventSettings', [
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,

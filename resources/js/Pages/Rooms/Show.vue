@@ -690,7 +690,7 @@ export default {
     computed: {
         eventTypeFilters: function () {
             let filters = [];
-            this.event_types.data.forEach((eventType) => {
+            this.event_types.forEach((eventType) => {
                 filters.push({eventTypeId: eventType.id, name: eventType.name});
             })
             return filters;

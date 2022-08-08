@@ -32,7 +32,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="genre in genres.data"
+                        <span v-for="genre in genres"
                               class=" mt-4 mr-4 rounded-full font-bold text-primary">
                             <div class="flex">
                                 <span class="">
@@ -71,7 +71,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="category in categories.data"
+                        <span v-for="category in categories"
                               class=" mt-4 mr-4 rounded-full font-bold text-primary">
                             <div class="flex">
                                 <span class="">
@@ -110,7 +110,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="sector in sectors.data"
+                        <span v-for="sector in sectors"
                               class=" mt-4 mr-4 rounded-full font-bold text-primary">
                             <div class="flex">
                                 <span class="">

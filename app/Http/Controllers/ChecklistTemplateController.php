@@ -26,7 +26,7 @@ class ChecklistTemplateController extends Controller
     public function index()
     {
         return inertia('ChecklistTemplates/ChecklistTemplateManagement', [
-            'checklist_templates' => ChecklistTemplate::paginate(10)->through(fn($checklist_template) => [
+            'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
                 'id' => $checklist_template->id,
                 'name' => $checklist_template->name,
                 'user' => $checklist_template->user,

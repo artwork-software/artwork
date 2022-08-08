@@ -25,7 +25,7 @@
                                 </div>
                             </div>
                             <div class="flex w-full flex-wrap mt-10">
-                                <div v-for="area in areas.data"
+                                <div v-for="area in areas"
                                      class="flex w-full bg-white my-2 border border-gray-200">
                                     <button class="bg-black flex" @click="area.showContent = !area.showContent">
                                         <ChevronUpIcon v-if="area.showContent === true"
@@ -456,6 +456,7 @@
     <!-- Raum Bearbeiten-->
     <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Raum bearbeiten

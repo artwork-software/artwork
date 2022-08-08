@@ -1,5 +1,5 @@
 <template>
-    <div v-for="area in trashed_rooms.data" class="w-full">
+    <div v-for="area in trashed_rooms" class="w-full">
         <div v-if="area.rooms.length > 0" class="flex w-full bg-white my-2 border border-gray-200">
             <button class="bg-black flex" @click="area.hidden = !area.hidden">
                 <ChevronUpIcon v-if="area.hidden !== true"

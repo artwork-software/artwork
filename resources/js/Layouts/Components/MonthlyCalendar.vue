@@ -48,13 +48,13 @@
                             </div>
                             <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
                                 <Link
-                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects.data[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronLeftIcon class="h-5 w-5"/>
                                 </Link>
                                 <CalendarIcon @click="openChangeDateModal"
                                               class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                 <Link
-                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects.data[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
@@ -96,7 +96,7 @@
                                                     </li>
                                                 </ListboxOption>
                                                 <ListboxOption as="template" class="max-h-8"
-                                                               v-for="area in areas.data"
+                                                               v-for="area in areas"
                                                                :key="area.name"
                                                                :value="area"
                                                                v-slot="{ active, selected }">
@@ -276,7 +276,7 @@
                                                         v-else
                                                         class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                         {{
-                                                            projects.data.find(x => x.id === day.events[0].project_id).name
+                                                            projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
                                                     </div>
                                                     <!-- Time of Event -->
@@ -288,7 +288,7 @@
                                                     <!-- EventType -->
                                                     <div class="mt-8 ml-2 mb-1">
                                                         <EventTypeIconCollection :height="20" :width="20"
-                                                                                 :iconName="this.event_types.data.find(x => x.id === day.events[0].event_type_id).svg_name"/>
+                                                                                 :iconName="this.event_types.find(x => x.id === day.events[0].event_type_id).svg_name"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -381,7 +381,7 @@
                                                         v-else
                                                         class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                         {{
-                                                            projects.data.find(x => x.id === day.events[0].project_id).name
+                                                            projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
                                                     </div>
                                                     <!-- Time of Event -->
@@ -393,7 +393,7 @@
                                                     <!-- EventType -->
                                                     <div class="mt-8 ml-2 mb-1">
                                                         <EventTypeIconCollection :height="20" :width="20"
-                                                                                 :iconName="this.event_types.data.find(x => x.id === day.events[0].event_type_id).svg_name"/>
+                                                                                 :iconName="this.event_types.find(x => x.id === day.events[0].event_type_id).svg_name"/>
                                                     </div>
                                                 </div>
                                             </div>
@@ -509,7 +509,7 @@
                                 <ListboxOptions
                                     class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="eventType in event_types.data"
+                                                   v-for="eventType in event_types"
                                                    :key="eventType.name"
                                                    :value="eventType"
                                                    v-slot="{ active, selected }">
@@ -553,7 +553,7 @@
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                    <div v-for="area in areas.data">
+                                    <div v-for="area in areas">
                                         <p class="text-secondary mt-1 text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                             {{ area.name }}</p>
                                         <ListboxOption as="template" class="max-h-8"
@@ -784,10 +784,10 @@
                                     class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
                                     <div class="flex items-center">
                                         <EventTypeIconCollection :height="24" :width="24"
-                                                                 :iconName="event_types.data.find(x => x.id === event.event_type_id).svg_name"/>
+                                                                 :iconName="event_types.find(x => x.id === event.event_type_id).svg_name"/>
                                         <span class="block truncate items-center text-2xl font-black ml-3 flex">
                                                 <span>
-                                                    {{ event_types.data.find(x => x.id === event.event_type_id).name }}
+                                                    {{ event_types.find(x => x.id === event.event_type_id).name }}
                                                 </span>
                                             </span>
                                         <span
@@ -803,7 +803,7 @@
                                     <ListboxOptions
                                         class="absolute w-full z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="eventType in event_types.data"
+                                                       v-for="eventType in event_types"
                                                        :key="eventType.name"
                                                        :value="eventType.id"
                                                        v-slot="{ active, selected }">
@@ -828,10 +828,10 @@
                         <div v-else
                              class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none flex items-center">
                             <EventTypeIconCollection :height="24" :width="24"
-                                                     :iconName="event_types.data.find(x => x.id === event.event_type_id).svg_name"/>
+                                                     :iconName="event_types.find(x => x.id === event.event_type_id).svg_name"/>
                             <span class="block truncate items-center text-2xl font-black ml-3 flex">
                                         <span>
-                                            {{ event_types.data.find(x => x.id === event.event_type_id).name }}
+                                            {{ event_types.find(x => x.id === event.event_type_id).name }}
                                         </span>
                                     </span>
                         </div>
@@ -900,9 +900,9 @@
                             <div v-if="event.project_id !== null" class="flex items-center">
                                 <div>Zugeordnet zu</div>
                                 <div>
-                                    <Link :href="route('projects.show',{project: projects.data.find(x => x.id === event.project_id).id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                    <Link :href="route('projects.show',{project: projects.find(x => x.id === event.project_id).id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                         class="ml-3 text-lg flex font-bold font-lexend text-primary">
-                                        {{ projects.data.find(x => x.id === event.project_id).name }}
+                                        {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
                                 </div>
                             </div>
@@ -929,7 +929,7 @@
                                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                                             <ListboxOptions
                                                 class="absolute z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                                <div v-for="area in areas.data">
+                                                <div v-for="area in areas">
                                                     <p class="text-secondary mt-1 text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                         {{ area.name }}</p>
                                                     <ListboxOption as="template" class="max-h-8"
@@ -1238,7 +1238,7 @@ export default defineComponent({
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
-            this.areas.data.forEach((area) => {
+            this.areas.forEach((area) => {
                 area.rooms.forEach((room) => {
                     allRoomsArray.push(room);
                 })
@@ -1277,7 +1277,7 @@ export default defineComponent({
         },
         eventTypeFilters: function () {
             let filters = [];
-            this.event_types.data.forEach((eventType) => {
+            this.event_types.forEach((eventType) => {
                 filters.push({eventTypeId: eventType.id, name: eventType.name});
             })
             return filters;
@@ -1294,7 +1294,7 @@ export default defineComponent({
     methods: {
         checkProjectPermission(wantedProjectId, userId) {
             if (wantedProjectId) {
-                return (this.projects.data.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.data.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
+                return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
             } else {
                 return true;
             }
@@ -1379,7 +1379,7 @@ export default defineComponent({
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
             if (roomId !== null) {
-                this.areas.data.forEach((area) => {
+                this.areas.forEach((area) => {
                     area.rooms.forEach((room) => {
                         if (room.id === roomId) {
                             this.selectedRoom = room;
@@ -1419,7 +1419,7 @@ export default defineComponent({
         getEventTypes(events) {
             let eventTypesToDisplay = [];
             events.forEach((event) => {
-                let wantedEventType = this.event_types.data.find(x => x.id === event.event_type_id);
+                let wantedEventType = this.event_types.find(x => x.id === event.event_type_id);
                 if (!eventTypesToDisplay.includes(wantedEventType)) {
                     eventTypesToDisplay.push(wantedEventType);
                 }
@@ -1462,7 +1462,7 @@ export default defineComponent({
             this.selectedRoom = null;
             this.addEventForm.project = null;
             this.conflictData = null;
-            this.selectedEventType = this.event_types.data[0];
+            this.selectedEventType = this.event_types[0];
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1538,7 +1538,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.projects.data[0],
+                        project: this.projects[0],
                         calendarType: 'monthly'
                     }))
                 }else{
@@ -1553,7 +1553,7 @@ export default defineComponent({
                 }else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.projects.data[0],
+                        project: this.projects[0],
                         calendarType: 'daily'
                     }))
                 }else{
@@ -1625,7 +1625,7 @@ export default defineComponent({
     data() {
         return {
             addingEvent: false,
-            selectedEventType: this.event_types.data[0],
+            selectedEventType: this.event_types[0],
             lastRoomIndex: 0,
             showChangeDateModal: false,
             wantedDateType: dateTypes[0],

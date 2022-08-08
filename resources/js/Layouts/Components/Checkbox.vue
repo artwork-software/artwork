@@ -5,7 +5,10 @@
                 <input @change="changeStyle(item)" :key="item.name" v-model="item.checked" type="checkbox"
                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                 <p :class="[checkedStyle ? 'text-primary font-black' : 'text-secondary']"
-                   class="ml-4 my-auto text-sm">{{ item.name }}</p>
+                   class="ml-4 my-auto text-sm" v-if="!item.name_de">{{ item.name }}</p>
+                <p :class="[checkedStyle ? 'text-primary font-black' : 'text-secondary']"
+                   class="ml-4 my-auto text-sm" v-else>{{item.name_de}}</p>
+
                 <div v-if="type === 'role'">
                     <div v-if="$page.props.can.show_hints" class="flex ml-2 mt-2">
                         <SvgCollection svgName="arrowLeft" class="mt-5 ml-2"/>
@@ -13,7 +16,7 @@
                     </div>
                 </div>
             </div>
-            <div :data-tooltip-target="item.name" v-if="item.showIcon">
+            <div :data-tooltip-target="item.name">
             <InformationCircleIcon  class="h-7 w-7 flex text-gray-400"
                                    aria-hidden="true"/>
             </div>

@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::table('permissions', function (Blueprint $table) {
             $table->string('name_de')->nullable();
             $table->string('group')->nullable();
-            $table->string('tooltipText')->nullable();
+            $table->longText('tooltipText')->nullable();
         });
     }
 

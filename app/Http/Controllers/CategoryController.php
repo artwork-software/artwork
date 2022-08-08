@@ -25,17 +25,17 @@ class CategoryController extends Controller
     public function index()
     {
         return inertia('Settings/ProjectSettings', [
-            'categories' => Category::paginate(10)->through(fn($category) => [
+            'categories' => Category::all()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
-            'genres' => Genre::paginate(10)->through(fn($genre) => [
+            'genres' => Genre::all()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
-            'sectors' => Sector::paginate(10)->through(fn($sector) => [
+            'sectors' => Sector::all()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects

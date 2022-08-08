@@ -24,7 +24,7 @@
                         </div>
                     </div>
                     <ul role="list" class="mt-5 w-full">
-                        <li v-for="(department,index) in departments.data" :key="department.id"
+                        <li v-for="(department,index) in departments" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
                                 <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />

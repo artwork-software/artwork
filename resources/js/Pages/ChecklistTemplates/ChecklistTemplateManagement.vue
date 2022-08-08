@@ -23,7 +23,7 @@
                 </div>
             </div>
             <ul role="list" class="mt-6 mb-32 w-full">
-                <li v-for="(template,index) in checklist_templates.data" :key="template.email"
+                <li v-for="(template,index) in checklist_templates" :key="template.email"
                     class="py-6 flex justify-between">
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">

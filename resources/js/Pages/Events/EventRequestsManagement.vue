@@ -12,7 +12,7 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap">
-                        <div v-for="eventRequest in event_requests.data" class="flex flex-wrap w-full items-center">
+                        <div v-for="eventRequest in event_requests" class="flex flex-wrap w-full items-center">
                             <div class="flex w-full items-center flex-wrap">
 
                                 <div class="flex items-center w-full mt-4">

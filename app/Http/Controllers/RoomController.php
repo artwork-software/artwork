@@ -263,7 +263,7 @@ class RoomController extends Controller
                 ]) : [],
                 'area' => $room->area
             ],
-            'event_types' => EventType::paginate(10)->through(fn($event_type) => [
+            'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,
                 'svg_name' => $event_type->svg_name,
@@ -273,7 +273,7 @@ class RoomController extends Controller
             'days_this_month' => $request->query('calendarType') === 'monthly' ? collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
             ]) : [],
-            'projects' => Project::paginate(10)->through(fn($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
                 'project_admins' => User::whereHas('projects', function ($q) use ($project) {
@@ -372,7 +372,7 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        return Redirect::route('rooms.show', $new_room->id)->with('success', 'Room created.');
+        return Redirect::route('areas.management')->with('success', 'Room created.');
 
     }
 
@@ -396,7 +396,7 @@ class RoomController extends Controller
     public function getTrashed()
     {
         return inertia('Trash/Rooms', [
-            'trashed_rooms' => Area::paginate(10)->through(fn($area) => [
+            'trashed_rooms' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => $area->trashed_rooms->map(fn($room) => [

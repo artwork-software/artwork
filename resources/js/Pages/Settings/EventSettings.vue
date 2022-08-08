@@ -25,9 +25,8 @@
                     Terminnamen bekommen können.
                 </div>
             </div>
-            {{event_types.data}}
             <ul role="list" class="mt-5 mb-20 w-full">
-                <li v-for="(eventType,index) in event_types.data" :key="eventType.id"
+                <li v-for="(eventType,index) in event_types" :key="eventType.id"
                     class="flex justify-between">
                     <div class="flex my-4">
                         <EventTypeIconCollection :height="64" :width="64"
@@ -337,7 +336,7 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 export default {
     computed: {
         iconMenuItems() {
-            this.event_types.data.forEach((eventType) => {
+            this.event_types.forEach((eventType) => {
                 if (this.takenEventTypeColors.includes(eventType.svg_name)) {
                     //do nothing
                 } else {

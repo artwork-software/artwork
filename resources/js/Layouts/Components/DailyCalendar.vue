@@ -47,13 +47,15 @@
                                 </div>
                                 <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
                                     <Link
-                                        :href="route('projects.show',{project: projects.data[0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),calendarType: 'daily'})">
+                                        :href="route('projects.show',{project: projects
+                                       [0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),calendarType: 'daily'})">
                                         <ChevronLeftIcon class="h-5 w-5"/>
                                     </Link>
                                     <CalendarIcon @click="openChangeDateModal"
                                                   class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                     <Link
-                                        :href="route('projects.show',{project: projects.data[0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1)), calendarType: 'daily'})">
+                                        :href="route('projects.show',{project: projects
+                                       [0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1)), calendarType: 'daily'})">
                                         <ChevronRightIcon class="h-5 w-5"/>
                                     </Link>
                                 </div>
@@ -94,7 +96,8 @@
                                                         </li>
                                                     </ListboxOption>
                                                     <ListboxOption as="template" class="max-h-8"
-                                                                   v-for="area in areas.data"
+                                                                   v-for="area in areas
+                                                                  "
                                                                    :key="area.name"
                                                                    :value="area"
                                                                    v-slot="{ active, selected }">
@@ -291,7 +294,7 @@
                                                                         v-else
                                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                                         {{
-                                                                            projects.data.find(x => x.id === event.project_id).name
+                                                                            projects.find(x => x.id === event.project_id).name
                                                                         }}
                                                                     </div>
                                                                     <!-- Time of Event -->
@@ -309,9 +312,11 @@
                                                                     <!-- Project Leader Icons -->
                                                                     <div class="ml-1 mt-2 flex" v-if="event.project_id">
                                                                         <div
-                                                                            v-if="projects.data.find(x => x.id === event.project_id).project_managers.length <= 3"
+                                                                            v-if="projects
+                                                                           .find(x => x.id === event.project_id).project_managers.length <= 3"
                                                                             class="flex mt-2 -mr-3"
-                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_managers">
+                                                                            v-for="user in projects
+                                                                           .find(x => x.id === event.project_id).project_managers">
                                                                             <img :data-tooltip-target="user.id"
                                                                                  :src="user.profile_photo_url"
                                                                                  :alt="user.name"
@@ -320,7 +325,8 @@
                                                                         </div>
                                                                         <div class="flex" v-else>
                                                                             <div class=" mt-2 -mr-3"
-                                                                                 v-for="user in projects.data.find(x => x.id === event.project_id).project_managers.slice(0,2)">
+                                                                                 v-for="user in projects
+                                                                                .find(x => x.id === event.project_id).project_managers.slice(0,2)">
                                                                                 <img :data-tooltip-target="user.id"
                                                                                      :src="user.profile_photo_url"
                                                                                      :alt="user.name"
@@ -345,7 +351,8 @@
                                                                                     <MenuItems
                                                                                         class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                                                         <MenuItem
-                                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_managers"
+                                                                                            v-for="user in projects
+                                                                                           .find(x => x.id === event.project_id).project_managers"
                                                                                             v-slot="{ active }">
                                                                                             <Link href="#"
                                                                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -449,7 +456,7 @@
                                                                         v-else
                                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                                         {{
-                                                                            projects.data.find(x => x.id === event.project_id).name
+                                                                            projects.find(x => x.id === event.project_id).name
                                                                         }}
                                                                     </div>
                                                                     <!-- Time of Event -->
@@ -467,9 +474,11 @@
                                                                     <!-- Project Leader Icons -->
                                                                     <div class="ml-1 mt-2 flex" v-if="event.project_id">
                                                                         <div
-                                                                            v-if="projects.data.find(x => x.id === event.project_id).project_managers.length <= 3"
+                                                                            v-if="projects
+                                                                           .find(x => x.id === event.project_id).project_managers.length <= 3"
                                                                             class="flex mt-2 -mr-3"
-                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_managers">
+                                                                            v-for="user in projects
+                                                                           .find(x => x.id === event.project_id).project_managers">
                                                                             <img :data-tooltip-target="user.id"
                                                                                  :src="user.profile_photo_url"
                                                                                  :alt="user.name"
@@ -478,7 +487,8 @@
                                                                         </div>
                                                                         <div class="flex" v-else>
                                                                             <div class=" mt-2 -mr-3"
-                                                                                 v-for="user in projects.data.find(x => x.id === event.project_id).project_managers.slice(0,2)">
+                                                                                 v-for="user in projects
+                                                                                .find(x => x.id === event.project_id).project_managers.slice(0,2)">
                                                                                 <img :data-tooltip-target="user.id"
                                                                                      :src="user.profile_photo_url"
                                                                                      :alt="user.name"
@@ -503,7 +513,8 @@
                                                                                     <MenuItems
                                                                                         class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                                                         <MenuItem
-                                                                                            v-for="user in projects.data.find(x => x.id === event.project_id).project_managers"
+                                                                                            v-for="user in projects
+                                                                                           .find(x => x.id === event.project_id).project_managers"
                                                                                             v-slot="{ active }">
                                                                                             <Link href="#"
                                                                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -584,7 +595,7 @@
                                     <ListboxOptions
                                         class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="eventType in event_types.data"
+                                                       v-for="eventType in event_types"
                                                        :key="eventType.name"
                                                        :value="eventType"
                                                        v-slot="{ active, selected }">
@@ -627,7 +638,7 @@
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
                                         class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                        <div v-for="area in areas.data">
+                                        <div v-for="area in areas">
                                             <p class="text-secondary mt-1 text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                 {{ area.name }}</p>
                                             <ListboxOption as="template" class="max-h-8"
@@ -834,10 +845,11 @@
                                         class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
                                         <div class="flex items-center">
                                             <EventTypeIconCollection :height="24" :width="24"
-                                                                     :iconName="event_types.data.find(x => x.id === event.event_type_id).svg_name"/>
+                                                                     :iconName="event_types
+                                                                    .find(x => x.id === event.event_type_id).svg_name"/>
                                             <span class="block truncate items-center text-2xl font-black ml-3 flex">
                                             <span>{{
-                                                    event_types.data.find(x => x.id === event.event_type_id).name
+                                                    event_types.find(x => x.id === event.event_type_id).name
                                                 }}</span>
                                         </span>
                                             <span
@@ -852,7 +864,7 @@
                                         <ListboxOptions
                                             class="absolute w-full w-72 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                             <ListboxOption as="template" class="max-h-8"
-                                                           v-for="eventType in event_types.data"
+                                                           v-for="eventType in event_types"
                                                            :key="eventType.name"
                                                            :value="eventType.id"
                                                            v-slot="{ active, selected }">
@@ -877,10 +889,11 @@
                             <div v-else
                                  class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none flex items-center">
                                 <EventTypeIconCollection :height="24" :width="24"
-                                                         :iconName="event_types.data.find(x => x.id === event.event_type_id).svg_name"/>
+                                                         :iconName="event_types
+                                                        .find(x => x.id === event.event_type_id).svg_name"/>
                                 <span class="block truncate items-center text-2xl font-black ml-3 flex">
                                         <span>
-                                            {{ event_types.data.find(x => x.id === event.event_type_id).name }}
+                                            {{ event_types.find(x => x.id === event.event_type_id).name }}
                                         </span>
                                     </span>
                             </div>
@@ -953,7 +966,7 @@
                                         <Link
                                             :href="route('projects.show',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate())),project:event.project_id, calendarType: 'daily'})"
                                             class="ml-3 text-lg flex font-bold font-lexend text-primary">
-                                            {{ projects.data.find(x => x.id === event.project_id).name }}
+                                            {{ projects.find(x => x.id === event.project_id).name }}
                                         </Link>
                                     </div>
                                 </div>
@@ -980,7 +993,7 @@
                                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                 <ListboxOptions
                                                     class="absolute z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                                    <div v-for="area in areas.data">
+                                                    <div v-for="area in areas">
                                                         <p class="text-secondary mt-1 text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                             {{ area.name }}</p>
                                                         <ListboxOption as="template" class="max-h-8"
@@ -1276,7 +1289,7 @@ export default defineComponent({
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
-            this.areas.data.forEach((area) => {
+            this.areas.forEach((area) => {
                 area.rooms.forEach((room) => {
                     allRoomsArray.push(room);
                 })
@@ -1285,7 +1298,7 @@ export default defineComponent({
         },
         eventTypeFilters: function () {
             let filters = [];
-            this.event_types.data.forEach((eventType) => {
+            this.event_types.forEach((eventType) => {
                 filters.push({eventTypeId: eventType.id, name: eventType.name});
             })
             return filters;
@@ -1320,8 +1333,8 @@ export default defineComponent({
         checkProjectPermission(wantedProjectId, userId) {
 
             if (wantedProjectId) {
-                console.log(this.projects.data.find(project => project.id === wantedProjectId))
-                return (this.projects.data.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.data.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
+                console.log(this.projects.find(project => project.id === wantedProjectId))
+                return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
             } else {
                 return true;
             }
@@ -1416,7 +1429,7 @@ export default defineComponent({
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
             if (roomId !== null) {
-                this.areas.data.forEach((area) => {
+                this.areas.forEach((area) => {
                     area.rooms.forEach((room) => {
                         if (room.id === roomId) {
                             this.selectedRoom = room;
@@ -1429,7 +1442,7 @@ export default defineComponent({
         getEventTypes(events) {
             let eventTypesToDisplay = [];
             events.forEach((event) => {
-                let wantedEventType = this.event_types.data.find(x => x.id === event.event_type_id);
+                let wantedEventType = this.event_types.find(x => x.id === event.event_type_id);
                 if (!eventTypesToDisplay.includes(wantedEventType)) {
                     eventTypesToDisplay.push(wantedEventType);
                 }
@@ -1469,7 +1482,7 @@ export default defineComponent({
             this.addEventForm.audience = false;
             this.selectedRoom = null;
             this.addEventForm.project = null;
-            this.selectedEventType = this.event_types.data[0];
+            this.selectedEventType = this.event_types[0];
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1552,7 +1565,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.projects.data[0],
+                        project: this.projects[0],
                         calendarType: 'monthly'
                     }))
                 }else{
@@ -1567,7 +1580,7 @@ export default defineComponent({
                 }else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.projects.data[0],
+                        project: this.projects[0],
                         calendarType: 'daily'
                     }))
                 }else{
@@ -1630,7 +1643,7 @@ export default defineComponent({
     data() {
         return {
             addingEvent: false,
-            selectedEventType: this.event_types.data[0],
+            selectedEventType: this.event_types[0],
             lastRoomIndex: 0,
             showChangeDateModal: false,
             wantedDateType: dateTypes[0],

@@ -24,143 +24,56 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => 'change tool settings',
             'name_de' => "Tooleinstellungen editieren",
             'group' => 'System',
-            'tooltipText' => ''
+            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, Impressum definieren etc.'
         ]);
-
         //Users
         Permission::create([
-            'name' => 'invite users',
-            'name_de' => "Nutzer*innen einladen",
-            'group' => 'System'
+            'name' => 'usermanagement',
+            'name_de' => "Nutzer*innenverwaltung",
+            'group' => 'System',
+            'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.'
         ]);
+        //Projektsettings
         Permission::create([
-            'name' => 'view users',
-            'name_de' => "Nutzer*innen sehen",
-            'group' => 'System'
+            'name' => 'admin projectSettings',
+            'name_de' => "Systemeinstellungen für Projekte definieren",
+            'group' => 'System',
+            'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche definieren, bearbeiten & löschen.'
         ]);
-        Permission::create([
-            'name' => 'update users',
-            'name_de' =>  "Nutzer*innen bearbeiten",
-            'group' => 'System'
-        ]);
-        Permission::create([
-            'name' => 'delete users',
-            'name_de' =>  "Nutzer*innen löschen",
-            'group' => 'System'
-        ]);
-        Permission::create([
-            'name' => 'update user permissions',
-            'name_de' => "Rechte ändern",
-            'group' => 'System'
-        ]);
-
-        //Räume
-        Permission::create([
-            'name' => 'create rooms',
-            'name_de' => "Räume anlegen",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'edit rooms',
-            'name_de' => "Räume editieren",
-            'group' => 'System'
-        ]);
-
-        //Areas
-        Permission::create([
-            'name' => 'create areas',
-            'name_de' => "Areale anlegen",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'edit areas',
-            'name_de' => "Areale editieren",
-            'group' => 'System'
-        ]);
-
-        //occupancy requests
-        Permission::create([
-            'name' => 'confirm occupancy requests',
-            'name_de' => "Belegungssanfragen bestätigen",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'reject occupancy requests',
-            'name_de' => "Belegungssanfragen ablehnen",
-            'group' => 'System'
-        ]);
-
-        //Projekt genre bereiche kategorien
-        Permission::create([
-            'name' => 'create project properties',
-            'name_de' => "Projekteigenschaften definieren",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'update project properties',
-            'name_de' => "Projekteigenschaften bearbeiten",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'delete project properties',
-            'name_de' => "Projekteigenschaften löschen",
-            'group' => 'System'
-        ]);
-
         //Termine
         Permission::create([
-            'name' => 'create event type',
-            'name_de' => "Termintypen definieren",
-            'group' => 'System'
+            'name' => 'admin eventTypeSettings',
+            'name_de' => "Systemeinstellungen für Termine definieren",
+            'group' => 'System',
+            'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen definieren, editieren & löschen.'
         ]);
-
+        //Checklistenvorlagen
         Permission::create([
-            'name' => 'update event type',
-            'name_de' => "Termintypen editieren",
-            'group' => 'System'
+            'name' => 'admin checklistTemplates',
+            'name_de' => "Verwaltung von Checklisten-Vorlagen",
+            'group' => 'System',
+            'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen können anschließend von allen anderen Usern verwendet werden.'
         ]);
-
-        Permission::create([
-            'name' => 'delete event type',
-            'name_de' => "Termintypen löschen",
-            'group' => 'System'
-        ]);
-
-        //Checklists
-        Permission::create([
-            'name' => 'create checklist template',
-            'name_de' => "Checklisten-Vorlage erstellen",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'update checklist template',
-            'name_de' => "Checklisten-Vorlage bearbeiten",
-            'group' => 'System'
-        ]);
-
-        Permission::create([
-            'name' => 'delete checklist template',
-            'name_de' => "Checklisten-Vorlage löschen",
-            'group' => 'System'
-        ]);
-
         //Rooms/Occupancy
         Permission::create([
-            'name' => 'request room occupancy',
-            'name_de' => "Raumbelegung anfragen",
-            'group' => 'Räume/Belegung'
+            'name' => 'admin rooms',
+            'name_de' => "Super-Raumadmin/Dispo",
+            'group' => 'Räume/Belegung',
+            'tooltipText' => 'Nutzer*in darf alle Räume & Areale anlegen, bearbeiten und löschen. Nutzer*in hat für sämtliche Räume Raumadminrechte – darf
+             also Belegungsanfragen zusagen oder ablehnen. Er/sie darf zusätzlich Projekte in andere Räume verlegen und Räume direkt buchen – ohne vorherige Anfrage.
+              Nutzer*in darf Raumadmin-Rechte für einzelne Räume an andere Nutzer*innen vergeben.'
         ]);
-
+        Permission::create([
+            'name' => 'request room occupancy',
+            'name_de' => "Raumbelegungen anfragen",
+            'group' => 'Räume/Belegung',
+            'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die eigenen Anfragen editieren & löschen.'
+        ]);
         Permission::create([
             'name' => 'view occupancy requests',
             'name_de' => "Belegungs-Anfragen einsehen",
-            'group' => 'Räume/Belegung'
+            'group' => 'Räume/Belegung',
+            'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.'
         ]);
 
         //Projekte
@@ -169,30 +82,23 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "Leserechte für alle Projekte",
             'group' => 'Projekte'
         ]);
-
         Permission::create([
-            'name' => 'create projects',
+            'name' => 'create and edit projects',
             'name_de' => "Eigene Projekte anlegen & bearbeiten",
-            'group' => 'Projekte'
+            'group' => 'Projekte',
+            'tooltipText' => 'Nutzer*in darf Projekte anlegen, bearbeiten & löschen – dadurch ist er/sie automatisch Projektadmin des neu angelegten Projekts.'
         ]);
-
         Permission::create([
-            'name' => 'update projects',
-            'name_de' => "Schreibrechte alle Projekte",
-            'group' => 'Projekte'
+            'name' => 'admin projects',
+            'name_de' => "Schreibrechte für alle Projekte",
+            'group' => 'Projekte',
+            'tooltipText' => 'Nutzer*in hat auf alle Projekte Projektadmin-Rechte, auch wenn er/sie nicht zum Projektteam gehört.'
         ]);
-
         Permission::create([
             'name' => 'delete projects',
-            'name_de' => "Löschrecht alle Projekte",
-            'group' => 'Projekte'
-        ]);
-
-        //Sichtbarkeit
-        Permission::create([
-            'name' => 'view system settings',
-            'name_de' => "Systemeinstellungen einsehen",
-            'group' => 'Sichtbarkeit'
+            'name_de' => "Löschrechte für alle Projekte",
+            'group' => 'Projekte',
+            'tooltipText' => 'Nutzer*in darf alle Projekte löschen, auch wenn er/sie nicht zum Projektteam gehört.'
         ]);
 
         //Has every permission because of the gate in AuthServiceProvider

@@ -22,7 +22,7 @@
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-for="(user,index) in users.data" :key="user.email" class="py-6 flex justify-between">
+                        <li v-for="(user,index) in users" :key="user.email" class="py-6 flex justify-between">
                             <div class="flex">
                                 <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start" :src="user.profile_photo_url"
                                      alt=""/>
@@ -268,17 +268,8 @@
 
                             <h3 class="text-secondary mt-3">{{group}}</h3>
 
-                            <div class="relative flex items-center" v-for="(permission, index) in permissions" :key=index>
-                                <div class="flex items-center h-7">
-                                    <input :id="permission.name"
-                                           v-model="form.permissions"
-                                           :value="permission.name"
-                                           name="permissions" type="checkbox"
-                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
-                                </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="permissions" class="text-primary">{{ permission.name_de }}</label>
-                                </div>
+                            <div class="relative w-full flex items-center" v-for="(permission, index) in permissions" :key=index>
+                                <Checkbox class="w-full" :item="permission"></Checkbox>
                             </div>
 
                         </div>

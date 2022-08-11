@@ -193,7 +193,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //RoomFiles
     Route::post('/rooms/{room}/files', [RoomFileController::class, 'store']);
-    Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');;
+    Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 

@@ -5,7 +5,8 @@
                 <div class="flex">
                     <h2 class="font-bold font-lexend text-3xl">{{ room.name }}</h2>
                     <Menu as="div" class="my-auto relative">
-                        <div class="flex">
+                        <div class="flex"
+                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                             <MenuButton
                                 class="flex ml-6">
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
@@ -77,22 +78,24 @@
                         <div class="flex w-full mt-6 items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
-                        <input
-                            @change="uploadChosenDocuments"
-                            class="hidden"
-                            ref="room_files"
-                            id="file"
-                            type="file"
-                            multiple
-                        />
-                        <div @click="selectNewFiles" @dragover.prevent
-                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+                            <input
+                                @change="uploadChosenDocuments"
+                                class="hidden"
+                                ref="room_files"
+                                id="file"
+                                type="file"
+                                multiple
+                            />
+                            <div @click="selectNewFiles" @dragover.prevent
+                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
                         border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
-                            <p class="text-secondary text-center">Ziehe Dokumente hier her
-                                <br>oder klicke ins Feld
-                            </p>
+                                <p class="text-secondary text-center">Ziehe Dokumente hier her
+                                    <br>oder klicke ins Feld
+                                </p>
+                            </div>
+                            <jet-input-error :message="uploadDocumentFeedback"/>
                         </div>
-                        <jet-input-error :message="uploadDocumentFeedback"/>
                         <div class="space-y-1">
                             <div v-for="room_file in room.room_files"
                                  class="cursor-pointer group flex items-center">
@@ -100,7 +103,7 @@
                                 <p @click="downloadFile(room_file)" class="ml-2 truncate flex-grow">{{
                                         room_file.name
                                     }}</p>
-                                <XCircleIcon @click="removeFile(room_file)"
+                                <XCircleIcon v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin" @click="removeFile(room_file)"
                                              class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
                                              aria-hidden="true"/>
                             </div>
@@ -120,13 +123,13 @@
                              alt=""/>
                         <UserTooltip :user="user"/>
                     </div>
-                    <button @click="openChangeRoomAdminsModal">
+                    <button v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                         <PencilAltIcon class="mt-4 ml-6 h-6 w-6"/>
                     </button>
                 </div>
 
                 <div class="flex flex-wrap">
-                    <span class="font-bold mt-12 font-lexend text-2xl w-full" v-if="room.event_requests.length > 0">
+                    <span class="font-bold mt-12 font-lexend text-2xl w-full" v-if="room.event_requests.length !== 0">
                     Offene Belegungsanfragen
                     </span>
                     <div v-for="eventRequest in room.event_requests" class="flex flex-wrap w-full items-center">
@@ -138,8 +141,10 @@
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ eventRequest.event_type.name }}
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
+                                             class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
+                                             class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -212,18 +217,26 @@
                 </div>
             </div>
         </div>
-        <!-- Raumkalender -->
-        <div v-if="!calendarType || calendarType === 'monthly'">
-            <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="{data: [room.area]}" :month_events="month_events" :projects="projects" :rooms="[room]" :days_this_month="days_this_month" :events_without_room="events_without_room"></MonthlyCalendar>
-        </div>
-        <div v-else>
-            <DailyCalendar calendar-type="room"  :hours_of_day="hours_of_day" :rooms="[room]" :projects="projects" :event_types="event_types" :areas="{data: [room.area]}" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
+        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+            <!-- Raumkalender -->
+            <div v-if="!calendarType || calendarType === 'monthly'">
+                <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="{data: [room.area]}"
+                                 :month_events="month_events" :projects="projects" :rooms="[room]"
+                                 :days_this_month="days_this_month"
+                                 :events_without_room="events_without_room"></MonthlyCalendar>
+            </div>
+            <div v-else>
+                <DailyCalendar calendar-type="room" :hours_of_day="hours_of_day" :rooms="[room]" :projects="projects"
+                               :event_types="event_types" :areas="{data: [room.area]}"
+                               :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
+                               :events_without_room="events_without_room"/>
+            </div>
         </div>
 
         <!-- Change RoomAdmins Modal -->
         <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Raumadmin bearbeiten
@@ -296,7 +309,7 @@
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Raum bearbeiten
@@ -358,7 +371,7 @@
         <!-- Delete Room Modal -->
         <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Raum in den Papierkorb
@@ -386,7 +399,7 @@
         <!-- Success Modal -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         {{ successHeading }}
@@ -411,7 +424,7 @@
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung zusagen
@@ -434,8 +447,10 @@
                                         {{ requestToApprove.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
+                                             class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud"
+                                             class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -509,7 +524,7 @@
         <!-- Decline Request Modal -->
         <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Raumbelegung absagen
@@ -532,8 +547,10 @@
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
+                                             class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud"
+                                             class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -654,7 +671,7 @@ const dateTypes = [
 
 export default {
     name: "Show",
-    props: ['calendarType','room', 'event_types','days_this_month','areas','projects','month_events','events_without_room','hours_of_day','shown_day_formatted','shown_day_local'],
+    props: ['calendarType', 'room', 'event_types', 'days_this_month', 'areas', 'projects', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'is_room_admin'],
     components: {
         MonthlyCalendar,
         DailyCalendar,
@@ -975,8 +992,8 @@ export default {
             deep: true
         }
     },
-    setup(){
-        return{
+    setup() {
+        return {
             attributeFilters,
             dateTypes
         }

@@ -61,7 +61,6 @@ class ProjectController extends Controller
                     'business' => $user->business,
                     'description' => $user->description,
                 ]),
-                'user_can_view_project' => Auth::user()->can('view',$project),
                 'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map(fn($history_entry) => [
                     'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
                         Carbon::parse($history_entry->created_at)->diffForHumans() :
@@ -103,9 +102,6 @@ class ProjectController extends Controller
                 'name' => $sector->name,
                 'projects' => $sector->projects
             ]),
-            'can' => [
-                'create_projects' => Auth::user()->can('create projects'),
-            ]
         ]);
     }
 
@@ -731,7 +727,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign departments to a project.'], 403);
         }
 
-        return Redirect::route('projects.update', $project->id)->with('success', 'Project updated');
+        return Redirect::back();
     }
 
     /**

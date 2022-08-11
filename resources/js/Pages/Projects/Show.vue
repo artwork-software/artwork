@@ -243,16 +243,16 @@
             </div>
             <div class="max-w-screen-2xl">
                 <!-- Calendar Tab -->
-                <div v-if="isScheduleTab">
+                <div v-if="isScheduleTab && project.rooms">
                     <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :event_types="event_types" :areas="areas"
-                                         :month_events="month_events" :projects="{data: [project]}"
+                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types" :areas="areas"
+                                         :month_events="month_events" :projects="[project]"
                                          :rooms="project.rooms" :days_this_month="days_this_month"
                                          :events_without_room="events_without_room"></MonthlyCalendar>
                     </div>
                     <div v-else-if="calendarType === 'daily'">
-                        <DailyCalendar calendar-type="project" :hours_of_day="hours_of_day" :rooms="project.rooms"
-                                       :projects="{data: [project]}" :event_types="event_types" :areas="areas"
+                        <DailyCalendar calendar-type="project" :project_id="project.id" :hours_of_day="hours_of_day" :rooms="project.rooms"
+                                       :projects="[project]" :event_types="event_types" :areas="areas"
                                        :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
                                        :events_without_room="events_without_room"/>
                     </div>
@@ -807,7 +807,7 @@
                             </p>
                         </div>
                         <jet-input-error :message="uploadDocumentFeedback"/>
-                        <div class="space-y-1">
+                        <div class="space-y-1" v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>

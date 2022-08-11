@@ -129,6 +129,7 @@
 
                 </div>
             </div>
+            {{form.errors}}
 
             <div>
 

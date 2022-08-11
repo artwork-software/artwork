@@ -1,6 +1,6 @@
 <template>
     <div v-if="rooms.length > 0" class="bg-stone-50 pb-20">
-        <div class="flex flex-row bg-white">
+        <div :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white' " class="flex flex-row">
             <div class="flex flex-1 flex-wrap">
                 <div class="w-full flex my-auto justify-between">
                     <div class="flex flex-wrap items-center">
@@ -48,13 +48,13 @@
                             </div>
                             <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
                                 <Link
-                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{project: project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronLeftIcon class="h-5 w-5"/>
                                 </Link>
                                 <CalendarIcon @click="openChangeDateModal"
                                               class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                 <Link
-                                    :href="route('projects.show',{month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{project: project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
@@ -63,8 +63,8 @@
                                          class="sm:col-span-3 mb-8 flex mr-4 items-center my-auto"
                                          v-model="wantedArea">
                                     <div class="relative">
-                                        <ListboxButton
-                                            class="ml-4 cursor-pointer bg-white relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
+                                            class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedArea" class="block truncate items-center">
                                             <span>{{ wantedArea.name }}</span>
                                         </span>
@@ -119,8 +119,8 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 mr-4 flex items-center my-auto"
                                          v-model="wantedEventType">
                                     <div class="relative">
-                                        <ListboxButton
-                                            class="ml-4 cursor-pointer bg-white relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
+                                            class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedEventType" class="block truncate items-center">
                                             <span>{{ wantedEventType.name }}</span>
                                         </span>
@@ -176,8 +176,8 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedAttribute">
                                     <div class="relative">
-                                        <ListboxButton
-                                            class="ml-4 cursor-pointer bg-white relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
+                                            class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedAttribute" class="block truncate items-center">
                                             <span>{{ wantedAttribute.name }}</span>
                                         </span>
@@ -346,7 +346,7 @@
                                      class="inline-flex flex-col pl-3"
                                      :class="room.area_id !== getLastRoom().area_id ? 'border-l-8 border-white' : ''">
                                     <Link
-                                        :href="route('rooms.show',{room: room.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2)})"
+                                        :href="route('rooms.show',{room: room.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
                                         class="text-lg text-secondary cursor-pointer subpixel-antialiased mt-4 mb-4 ">
                                         {{ room.name }}
                                     </Link>
@@ -900,7 +900,7 @@
                             <div v-if="event.project_id !== null" class="flex items-center">
                                 <div>Zugeordnet zu</div>
                                 <div>
-                                    <Link :href="route('projects.show',{project: projects.find(x => x.id === event.project_id).id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                    <Link :href="route('projects.show',{project: event.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                         class="ml-3 text-lg flex font-bold font-lexend text-primary">
                                         {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
@@ -1234,7 +1234,7 @@ export default defineComponent({
         TrashIcon
 
     },
-    props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event'],
+    props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event','project_id'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1538,7 +1538,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.projects[0],
+                        project: this.project_id,
                         calendarType: 'monthly'
                     }))
                 }else{
@@ -1553,7 +1553,7 @@ export default defineComponent({
                 }else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.projects[0],
+                        project: this.project_id,
                         calendarType: 'daily'
                     }))
                 }else{

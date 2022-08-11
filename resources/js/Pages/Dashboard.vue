@@ -12,6 +12,12 @@
                     Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
                 </p>
                 <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
+                <pre>
+                    {{this.$page.props.permissions.includes('change tool settings')}}
+                    {{this.$page.props.permissions}}
+                    {{this.$page.props.is_admin}}
+                    {{this.$page.props}}
+                </pre>
             </div>
 
             <!-- Calendar Div -->

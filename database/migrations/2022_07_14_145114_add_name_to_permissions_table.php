@@ -17,8 +17,10 @@ return new class extends Migration
             $table->string('name_de')->nullable();
             $table->string('group')->nullable();
             $table->longText('tooltipText')->nullable();
+            $table->boolean('checked')->nullable();
         });
     }
+
 
     /**
      * Reverse the migrations.

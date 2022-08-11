@@ -140,6 +140,8 @@
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                     einladen.
                 </div>
+                {{this.form.permissions}}
+                {{this.form.role}}
                 <div class="mt-4">
                     <div class="flex mt-8">
                         <div class="relative w-72 mr-4">
@@ -208,8 +210,6 @@
                             </DisclosurePanel>
                         </transition>
                     </Disclosure>
-
-                    {{this.form.roles}}
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
                             definieren</h3>
@@ -253,7 +253,7 @@
                         </div>
 
                     </div>
-                    <div v-if="!this.form.roles.includes('admin')">
+                    <div v-if="this.form.role !== 'admin'">
                     <div v-on:click="showUserPermissions = !showUserPermissions">
                         <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
                             Nutzerrechte
@@ -262,14 +262,14 @@
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </h2>
                     </div>
-                    <div v-if="showUserPermissions && !this.form.roles.includes('admin')" class="flex flex-col max-h-96 overflow-y-auto">
+                    <div v-if="showUserPermissions && this.form.role !== 'admin'" class="flex flex-col max-h-96 overflow-y-auto">
 
                         <div v-for="(permissions, group) in all_permissions">
 
-                            <h3 class="text-secondary mt-3">{{group}}</h3>
+                            <h3 class="text-secondary uppercase text-xs mb-2 mt-6">{{group}}</h3>
 
                             <div class="relative w-full flex items-center" v-for="(permission, index) in permissions" :key=index>
-                                <Checkbox class="w-full" :item="permission"></Checkbox>
+                                <Checkbox @click="changePermission(permission)" class="w-full" :item="permission"></Checkbox>
                             </div>
 
                         </div>
@@ -352,15 +352,9 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
+    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked:false},
     {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen", showIcon: true, checked:false},
 
-]
-
-const userPermissionCheckboxes = [
-    {name: 'Nutzer*innen einladen', checked: false, permissionName: "invite users", showIcon: true, tooltipText:"HIHI"},
-    {name: 'Nutzerprofile ansehen', checked: false, permissionName: "view users", showIcon: true},
-    {name: 'Nutzerprofile bearbeiten', checked: false, permissionName: "update users", showIcon: true},
-    {name: 'Nutzer*innen löschen', checked: false, permissionName: "delete users", showIcon: true}
 ]
 
 import {defineComponent} from 'vue'
@@ -432,7 +426,7 @@ export default defineComponent({
                 user_emails: [],
                 permissions: [],
                 departments: [],
-                roles:[],
+                role:'',
             }),
         }
     },
@@ -460,13 +454,66 @@ export default defineComponent({
         },
         changeRole(role){
             if(!role.checked){
-                this.form.roles.push(role.roleName);
+                this.form.role = role.roleName;
+                this.uncheckRolesAndPermissions();
+                role.checked = true;
+                if(role.roleName === "user"){
+                    this.all_permissions.Projekte.forEach(permission => {
+                        if(permission.name === 'view projects'){
+                            permission.checked = true;
+                        }
+                    })
+                    this.all_permissions.Raumbelegungen.forEach(permission => {
+                        if(permission.name === 'request room occupancy' || permission.name === 'view occupancy requests'){
+                            permission.checked = true;
+                        }
+                    })
+                }
             }else{
-                if(this.form.roles.includes(role.roleName)){
-                 this.form.roles = this.form.roles.filter(roleName => roleName !== role.roleName);
+                if(this.form.role === role.roleName){
+                 this.form.role = '';
+                 role.checked = false;
+                    if(role.roleName === "user"){
+                        this.all_permissions.Projekte.forEach(permission => {
+                            if(permission.name === 'view projects'){
+                                permission.checked = false;
+                            }
+                        })
+                        this.all_permissions.Raumbelegungen.forEach(permission => {
+                            if(permission.name === 'request room occupancy' || permission.name === 'view occupancy requests'){
+                                permission.checked = false;
+                            }
+                        })
+                    }
                 }
             }
 
+        },
+        changePermission(permission){
+            if(!permission.checked){
+                this.form.permissions.push(permission.name);
+                permission.checked = true;
+            }else{
+                if(this.form.permissions.includes(permission.name)){
+                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
+                    permission.checked = false;
+                }
+            }
+
+        },
+        uncheckRolesAndPermissions(){
+            this.roleCheckboxes.forEach((role) => {
+                role.checked = false;
+            })
+            this.all_permissions.Projekte.forEach((permission) => {
+                permission.checked = false;
+            })
+            this.all_permissions.Raumbelegungen.forEach((permission) => {
+                permission.checked = false;
+            })
+            this.all_permissions.Systemeinstellungen.forEach((permission) => {
+                permission.checked = false;
+            })
         },
         teamChecked(team) {
             if (team.checked) {
@@ -491,6 +538,7 @@ export default defineComponent({
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
             }
+            this.form.permissions.push()
             this.form.post(route('invitations.store'));
             this.closeAddUserModal();
             this.openSuccessModal();
@@ -501,10 +549,11 @@ export default defineComponent({
             this.form.user_emails = [];
             this.form.permissions = [];
             this.form.departments = [];
-            this.form.roles = [];
+            this.form.role = '';
             this.departments.forEach((team) => {
                 team.checked = false;
             })
+            this.uncheckRolesAndPermissions();
 
         },
         getEditHref(user) {
@@ -514,7 +563,6 @@ export default defineComponent({
     setup() {
 
         return {
-            userPermissionCheckboxes,
             roleCheckboxes,
         }
     }

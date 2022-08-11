@@ -204,7 +204,7 @@ class RoomController extends Controller
                 $calendarType = '';
             }
         }
-        if ($room->room_admins->contains(Auth::id())) {
+        if ($room->room_admins->contains(Auth::id()) || Auth::user()->can("admin rooms") || Auth::user()->hasRole('admin')) {
             $events = $room->events;
             $event_requests = $room->events->where('occupancy_option', true)->map(fn($event) => [
                 'id' => $event->id,
@@ -263,6 +263,7 @@ class RoomController extends Controller
                 ]) : [],
                 'area' => $room->area
             ],
+            'is_room_admin' => $room->room_admins->contains(Auth::id()),
             'event_types' => EventType::all()->map(fn($event_type) => [
                 'id' => $event_type->id,
                 'name' => $event_type->name,

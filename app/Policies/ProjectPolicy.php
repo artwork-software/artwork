@@ -36,7 +36,7 @@ class ProjectPolicy
                 $isTeamMember = true;
             }
         }
-        return ($user->projects->contains($project->id) && $project->users->contains($user->id) || $isTeamMember);
+        return ($user->projects->contains($project->id) && $project->users->contains($user->id) || $isTeamMember || $user->can('view projects'));
     }
 
     /**

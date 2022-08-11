@@ -92,7 +92,7 @@ class AppController extends Controller
 
     public function update_tool(Request $request, GeneralSettings $settings) {
 
-        if(!Auth::user()->hasRole('admin')) {
+        if(!Auth::user()->hasRole('admin') && !Auth::user()->can("change tool settings")) {
             abort(403);
         }
 

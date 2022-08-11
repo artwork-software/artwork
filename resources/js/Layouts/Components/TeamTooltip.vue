@@ -17,7 +17,7 @@
                          alt=""/>
                     <div v-if="team.users.length > 9" class="flex items-center rounded-full focus:outline-none">
                         <ChevronDownIcon
-                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                            class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
                     </div>
                 </div>
 

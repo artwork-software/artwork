@@ -6,14 +6,15 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-2xl flex">Meine Projekte</h2>
-
-                            <button v-if="can.create_projects" @click="openAddProjectModal" type="button"
+                            <button v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin"
+                                    @click="openAddProjectModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
                             </div>
                         </div>
                         <div class="flex items-center">
@@ -29,18 +30,20 @@
                             class="py-5 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <div class="flex w-full my-auto">
+                                    <Link :href="getEditHref(project)" class="flex w-full my-auto">
                                         <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
-                                    </div>
+                                    </Link>
                                 </div>
                             </div>
                             <div class="flex w-full justify-end">
                                 <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
-                                    <TeamIconCollection :data-tooltip-target="department.name" class="h-9 w-9 rounded-full ring-2 ring-white"
+                                    <TeamIconCollection :data-tooltip-target="department.name"
+                                                        class="h-9 w-9 rounded-full ring-2 ring-white"
                                                         :iconName="department.svg_name"
                                                         alt=""/>
-                                    <div :id="department.name" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                        {{department.name}}
+                                    <div :id="department.name" role="tooltip"
+                                         class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                        {{ department.name }}
                                         <div class="tooltip-arrow" data-popper-arrow></div>
                                     </div>
                                 </div>
@@ -118,7 +121,9 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu v-if="$page.props.permissions.includes('edit projects') || $page.props.is_admin || project.user_can_view_project" as="div" class="my-auto relative">
+                                <Menu
+                                    v-if="$page.props.permissions.includes('edit projects') || $page.props.is_admin || project.user_can_view_project"
+                                    as="div" class="my-auto relative">
                                     <div class="flex">
                                         <MenuButton
                                             class="flex">
@@ -180,27 +185,29 @@
                             </div>
 
                         </div>
-                        <div class="mb-12 text-secondary flex items-center">
+                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 text-secondary flex items-center">
                             <span class="subpixel-antialiased">
                                   zuletzt geändert:
                             </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
-                                <img
-                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
-                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
-                                    :alt="project.project_history[project.project_history.length -1].user.name"
-                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="project.project_history[project.project_history.length -1].user"/>
-                                <span class="ml-2 subpixel-antialiased">
+
+                                    <img
+                                        :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
+                                        :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
+                                        :alt="project.project_history[project.project_history.length -1].user.name"
+                                        class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip
+                                        :user="project.project_history[project.project_history.length -1].user"/>
+                                    <span class="ml-2 subpixel-antialiased">
                                     {{ project.project_history[project.project_history.length - 1].created_at }}
                                 </span>
-                                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                                        @click="openProjectHistoryModal(project.project_history)">
-                                    <ChevronRightIcon
-                                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Verlauf ansehen
-                                </button>
+                                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                                            @click="openProjectHistoryModal(project.project_history)">
+                                        <ChevronRightIcon
+                                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Verlauf ansehen
+                                    </button>
                             </div>
                             <div v-else class="ml-2 text-secondary subpixel-antialiased">
                                 Noch kein Verlauf verfügbar
@@ -216,7 +223,7 @@
         <!-- Projekt erstellen Modal-->
         <jet-dialog-modal :show="addingProject" @close="closeAddProjectModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_project_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Neues Projekt
@@ -416,7 +423,7 @@
                         </div>
                         <button
                             :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="addProject"
                             :disabled="this.form.name === ''">
                             Anlegen
@@ -430,7 +437,7 @@
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Projekt löschen
@@ -460,7 +467,7 @@
         <!-- Success Modal - Delete project -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Projekt gelöscht
@@ -485,7 +492,7 @@
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                         Projektverlauf
@@ -629,7 +636,12 @@ export default defineComponent({
             this.closeAddProjectModal();
         },
         getEditHref(project) {
-            return route('projects.show', {project: project.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly' });
+            return route('projects.show', {
+                project: project.id,
+                month_start: new Date((new Date).getFullYear(), (new Date).getMonth(), 1, 0, 120),
+                month_end: new Date((new Date).getFullYear(), (new Date).getMonth() + 1, 2),
+                calendarType: 'monthly'
+            });
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);
@@ -664,17 +676,18 @@ export default defineComponent({
             this.showProjectHistory = false;
             this.projectHistoryToDisplay = [];
         },
-        isTeamMember(departments){
+        isTeamMember(departments) {
             departments.forEach((department) => {
                 department.users.forEach((user) => {
-                    if(user.id === this.$page.props.user.id){
+                    if (user.id === this.$page.props.user.id) {
                         console.log("moin");
                         return true;
                     }
                 })
             })
             return false;
-        }
+        },
+
     },
     data() {
         return {

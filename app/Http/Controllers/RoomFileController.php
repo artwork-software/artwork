@@ -52,7 +52,7 @@ class RoomFileController extends Controller
      */
     public function download(RoomFile $roomFile): StreamedResponse
     {
-        $this->authorize('view', $roomFile->room->area);
+        $this->authorize('view projects');
 
         return Storage::download('room_files/'. $roomFile->basename, $roomFile->name);
     }

@@ -21,17 +21,6 @@ module.exports = {
                 secondary:'#A7A6B1',
                 secondaryHover:'#FCFCFB',
                 help: '#93929D',
-                eventType0:'#A7A6B1',
-                eventType1:'#641A54',
-                eventType2:'#DA3F87',
-                eventType3:'#EB7A3D',
-                eventType4:'#F1B640',
-                eventType5:'#86C554',
-                eventType6:'#2EAA63',
-                eventType7:'#3DC3CB',
-                eventType8:'#168FC3',
-                eventType9:'#4D908E',
-                eventType10:'#21485C'
 
             },
             fontFamily: {

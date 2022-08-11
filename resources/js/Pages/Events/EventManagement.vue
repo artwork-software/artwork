@@ -9,6 +9,7 @@
                          :requested_end_time="requested_end_time"
                          :rooms="rooms"
                          :days_this_month="days_this_month"
+                         :my-rooms="myRooms"
                          :events_without_room="events_without_room">
 
         </MonthlyCalendar>
@@ -34,6 +35,6 @@ export default defineComponent({
                 Inertia.reload({only: ['rooms']})
             });
     },
-    props: ['event_types', 'areas', 'month_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event'],
+    props: ['event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event'],
 })
 </script>

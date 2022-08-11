@@ -1,6 +1,6 @@
 <template>
     <app-layout title="Event Management">
-        <DailyCalendar calendarType="main" :hours_of_day="hours_of_day" :rooms="rooms" :projects="projects" :event_types="event_types" :areas="areas" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
+        <DailyCalendar calendarType="main" :my-rooms="myRooms" :hours_of_day="hours_of_day" :rooms="rooms" :projects="projects" :event_types="event_types" :areas="areas" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
     </app-layout>
 </template>
 <script>
@@ -14,6 +14,6 @@ export default defineComponent({
         DailyCalendar,
         AppLayout,
     },
-    props: ['hours_of_day', 'rooms', 'projects', 'event_types', 'areas', 'shown_day_formatted', 'shown_day_local', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event', 'events_without_room'],
+    props: ['hours_of_day', 'myRooms', 'rooms', 'projects', 'event_types', 'areas', 'shown_day_formatted', 'shown_day_local', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event', 'events_without_room'],
 })
 </script>

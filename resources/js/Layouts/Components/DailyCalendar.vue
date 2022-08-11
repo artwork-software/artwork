@@ -1286,7 +1286,7 @@ export default defineComponent({
         PencilAltIcon,
         TrashIcon
     },
-    props: ['calendarType','hours_of_day', 'rooms', 'projects', 'event_types', 'areas', 'shown_day_formatted', 'shown_day_local', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event', 'events_without_room'],
+    props: ['calendarType', 'hours_of_day', 'myRooms', 'rooms', 'projects', 'event_types', 'areas', 'shown_day_formatted', 'shown_day_local', 'requested_wanted_day', 'start_time_of_new_event', 'end_time_of_new_event', 'events_without_room'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];

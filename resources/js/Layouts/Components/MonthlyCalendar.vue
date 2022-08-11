@@ -1234,7 +1234,7 @@ export default defineComponent({
         TrashIcon
 
     },
-    props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event','project_id'],
+    props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event','project_id'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];

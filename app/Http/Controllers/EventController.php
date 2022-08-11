@@ -133,6 +133,7 @@ class EventController extends Controller
             'days_this_month' => collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),
             ]),
+            'myRooms' => Auth::user()->admin_rooms->pluck('id'),
             'rooms' => Room::with(['events' => function ($query) {
                 $query->orderBy('end_time', 'ASC');
             }])->get()->map(fn($room) => [
@@ -301,6 +302,7 @@ class EventController extends Controller
             'hours_of_day' => $hours,
             'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
             'shown_day_local' => Carbon::parse($request->query('wanted_day')),
+            'myRooms' => Auth::user()->admin_rooms->pluck('id'),
             'rooms' => Room::with(['events' => function ($query) {
                 $query->orderBy('end_time', 'ASC')->with('event_type');
             }])->get()->map(fn($room) => [

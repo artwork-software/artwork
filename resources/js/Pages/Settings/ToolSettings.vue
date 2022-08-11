@@ -34,7 +34,7 @@
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedBigLogo($event)">
                         <img v-show="bigLogoPreview" :src="bigLogoPreview" alt="Logo"
-                             class="rounded-md h-40 w-40 object-cover">
+                             class="rounded-md h-40 w-40">
                         <input type="file" class="hidden"
                                ref="bigLogo"
                                @change="updateBigLogoPreview">
@@ -44,7 +44,7 @@
                         </div>
                         <div class="cursor-pointer" v-else-if="!bigLogoPreview">
                             <img :src="$page.props.big_logo" alt="Logo"
-                                 class="rounded-md h-40 w-40 object-cover">
+                                 class="rounded-md h-40 w-40">
                         </div>
                     </div>
 
@@ -67,7 +67,7 @@
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedSmallLogo($event)">
                         <img v-show="smallLogoPreview" :src="smallLogoPreview" alt="Logo"
-                             class="rounded-md h-40 w-40 object-cover">
+                             class="rounded-md h-40 w-40">
                         <input type="file" class="hidden"
                                ref="smallLogo"
                                @change="updateSmallLogoPreview">
@@ -78,7 +78,7 @@
                         </div>
                         <div class="cursor-pointer" v-else-if="!smallLogoPreview">
                             <img :src="$page.props.small_logo" alt="Logo"
-                                 class="rounded-md h-40 w-40 object-cover">
+                                 class="rounded-md h-40 w-40">
 
                         </div>
                     </div>
@@ -108,12 +108,12 @@
                             </div>
                             <div class="cursor-pointer" v-else>
                                 <img :src="$page.props.banner" alt="Aktuelles Banner"
-                                     class="rounded-md h-40 w-40 object-cover">
+                                     class="rounded-md h-40 w-40">
                             </div>
                         </div>
                         <div class="cursor-pointer">
                             <img v-show="bannerPreview" :src="bannerPreview" alt="Aktuelles Banner"
-                                 class="rounded-md h-40 w-40 object-cover">
+                                 class="rounded-md h-40 w-40">
                             <input type="file" class="hidden"
                                    ref="banner"
                                    @change="updateBannerPreview">

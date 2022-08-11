@@ -123,7 +123,7 @@
                              alt=""/>
                         <UserTooltip :user="user"/>
                     </div>
-                    <button v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+                    <button @click="openChangeRoomAdminsModal()" v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                         <PencilAltIcon class="mt-4 ml-6 h-6 w-6"/>
                     </button>
                 </div>

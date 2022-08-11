@@ -21,7 +21,8 @@ class DatabaseSeeder extends Seeder
             AreaSeeder::class,
             //ProjectSeeder::class,
             RoomSeeder::class,
-            EventSeeder::class
+            EventSeeder::class,
+            SettingsSeeder::class
         ]);
     }
 }

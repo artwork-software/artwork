@@ -408,7 +408,8 @@
                                             <li v-for="event in sortedEvents(room.events)" class="mt-px flex"
                                                 :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
                                                 <div v-if="checkEventType(event) && checkAttribute(event)">
-                                                    <div :style="{'border-color': event.event_type.svg_name}"
+
+                                                    <div :style="{'border-color': $svgColors[event.event_type.svg_name]}"
                                                          class="group h-full rounded-lg leading-5 border-l-4">
                                                         <div @click="openDayDetailModal(room,event)"
 

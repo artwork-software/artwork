@@ -458,6 +458,7 @@ class ProjectController extends Controller
                         'description' => $user->description,
                     ]),
                 ]),
+                'isMemberOfADepartment' => $project->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,

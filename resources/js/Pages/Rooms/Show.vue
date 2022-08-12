@@ -220,14 +220,14 @@
         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
             <!-- Raumkalender -->
             <div v-if="!calendarType || calendarType === 'monthly'">
-                <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="{data: [room.area]}"
+                <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="areas"
                                  :month_events="month_events" :projects="projects" :rooms="[room]"
                                  :days_this_month="days_this_month"
                                  :events_without_room="events_without_room"></MonthlyCalendar>
             </div>
             <div v-else>
                 <DailyCalendar calendar-type="room" :hours_of_day="hours_of_day" :rooms="[room]" :projects="projects"
-                               :event_types="event_types" :areas="{data: [room.area]}"
+                               :event_types="event_types" :areas="areas"
                                :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
                                :events_without_room="events_without_room"/>
             </div>

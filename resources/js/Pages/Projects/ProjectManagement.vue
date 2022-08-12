@@ -5,8 +5,9 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
-                            <h2 class="text-2xl flex">Meine Projekte</h2>
-                            <button v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin"
+                            <h2 class="text-3xl font-lexend font-black flex">Projekte</h2>
+                            <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
+                            <button
                                     @click="openAddProjectModal" type="button"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -15,6 +16,7 @@
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
+                            </div>
                             </div>
                         </div>
                         <div class="flex items-center">

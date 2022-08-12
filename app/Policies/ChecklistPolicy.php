@@ -30,7 +30,7 @@ class ChecklistPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create checklists');
+        return true;
     }
 
     /**

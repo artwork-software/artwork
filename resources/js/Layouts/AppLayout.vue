@@ -257,7 +257,7 @@ export default {
         managementNavigation() {
             return [
                 {
-                has_permission: true,
+                has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings,
                 name: 'Tool',
                 href: route('tool.settings'),
                 route: ['/tool/settings']
@@ -342,7 +342,7 @@ export default {
     },
     data() {
         return {
-            showSystemSettings: true,
+            showSystemSettings: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.usermanagement || this.$page.props.can.teammanagement || this.$page.props.can.admin_rooms || this.$page.props.can.view_occupancy_requests || this.$page.props.can.admin_projectSettings || this.$page.props.can.admin_eventTypeSettings || this.$page.props.can.admin_checklistTemplates,
             showUserMenu: false,
         }
     },

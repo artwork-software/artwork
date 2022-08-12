@@ -490,27 +490,76 @@ class EventController extends Controller
      */
     public function requests_index()
     {
-        return inertia('Events/EventRequestsManagement', [
-            'event_requests' => Event::where('occupancy_option', true)->get()->map(fn($event) => [
-                'id' => $event->id,
-                'name' => $event->name,
-                'description' => $event->description,
-                'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
-                'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
-                'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
-                'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
-                'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
-                'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
-                'occupancy_option' => $event->occupancy_option,
-                'audience' => $event->audience,
-                'is_loud' => $event->is_loud,
-                'event_type' => $event->event_type,
-                'room' => $event->room,
-                'project' => $event->project,
-                'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
-                'created_by' => $event->creator
-            ]),
-        ]);
+        if(Auth::user()->hasRole('admin') || Auth::user()->can("admin rooms")) {
+            //get all Requests
+            return inertia('Events/EventRequestsManagement', [
+                'event_requests' => Event::where('occupancy_option', true)->get()->map(fn($event) => [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                    'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
+                    'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
+                    'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                    'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience' => $event->audience,
+                    'is_loud' => $event->is_loud,
+                    'event_type' => $event->event_type,
+                    'room' => $event->room,
+                    'project' => $event->project,
+                    'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
+                    'created_by' => $event->creator
+                ]),
+            ]);
+        }else{
+            return inertia('Events/EventRequestsManagement', [
+                'event_requests' => Event::where('occupancy_option', true)->get()->map(fn($event) => [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                    'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
+                    'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
+                    'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                    'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience' => $event->audience,
+                    'is_loud' => $event->is_loud,
+                    'event_type' => $event->event_type,
+                    'room' => $event->room,
+                    'project' => $event->project,
+                    'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
+                    'created_by' => $event->creator
+                ]),
+            ]);
+            /*
+            // HIER NUR REQUESTS ZURÜCKGEBEN VON DENEN DER Auth::user der raumadmin ist, zweite where abfrage war mein versuch, geht logischerweise nicht
+            return inertia('Events/EventRequestsManagement', [
+                'event_requests' => Event::where('occupancy_option', true)->get()->where($event->room->room_admins->contains(Auth::id()))->map(fn($event) => [
+                    'id' => $event->id,
+                    'name' => $event->name,
+                    'description' => $event->description,
+                    'start_time' => Carbon::parse($event->start_time)->format('d.m.Y, H:i'),
+                    'start_time_weekday' => Carbon::parse($event->start_time)->format('l'),
+                    'end_time' => Carbon::parse($event->end_time)->format('d.m.Y, H:i'),
+                    'end_time_weekday' => Carbon::parse($event->end_time)->format('l'),
+                    'start_time_dt_local' => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                    'end_time_dt_local' => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                    'occupancy_option' => $event->occupancy_option,
+                    'audience' => $event->audience,
+                    'is_loud' => $event->is_loud,
+                    'event_type' => $event->event_type,
+                    'room' => $event->room,
+                    'project' => $event->project,
+                    'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
+                    'created_by' => $event->creator
+                ]),
+            ]);
+            */
+        }
     }
 
     /**

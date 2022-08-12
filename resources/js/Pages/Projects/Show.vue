@@ -4,8 +4,8 @@
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-bold font-lexend text-3xl">{{ project.name }}</h2>
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex">
+                    <Menu as="div" class="my-auto mt-3 relative" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                        <div class="flex items-center">
                             <MenuButton
                                 class="flex ml-6">
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
@@ -27,7 +27,7 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openEditProjectModal"
@@ -47,7 +47,7 @@
                                             Duplizieren
                                         </a>
                                     </MenuItem>
-                                    <MenuItem v-slot="{ active }">
+                                    <MenuItem v-if="this.$page.props.can.delete_projects || this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
@@ -108,7 +108,8 @@
             <div class="flex flex-wrap">
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
-                    <div class="cursor-pointer" @click="openEditProjectTeamModal">
+                    <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                    <div  class="cursor-pointer" @click="openEditProjectTeamModal">
                         <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
                                           aria-hidden="true"/>
                     </div>
@@ -121,6 +122,7 @@
                                 <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Stelle dein Team zusammen</span>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
                 <div class="flex flex-wrap w-full">
@@ -262,7 +264,8 @@
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Checklisten </h3>
-                            <button @click="openAddChecklistModal" type="button"
+                            <div class="flex items-center" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                            <button  @click="openAddChecklistModal" type="button"
                                     class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
@@ -271,6 +274,7 @@
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
                             </div>
+                                </div>
                         </div>
                         <div class="w-full">
                         <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
@@ -337,12 +341,12 @@
                                                             </transition>
                                                         </Menu>
                                                     </div>
-                                                    <Menu as="div" class="my-auto relative">
+                                                    <Menu v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" as="div" class="my-auto relative">
                                                         <div class="flex">
                                                             <MenuButton
                                                                 class="flex ml-9">
                                                                 <DotsVerticalIcon
-                                                                    class="flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                                    class="z-2 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                                     aria-hidden="true"/>
                                                             </MenuButton>
                                                         </div>
@@ -354,7 +358,7 @@
                                                             leave-from-class="transform opacity-100 scale-100"
                                                             leave-to-class="transform opacity-0 scale-95">
                                                             <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                class="z-40 origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openEditChecklistTeamsModal(checklist)"
@@ -378,12 +382,12 @@
                                                                         <a @click="checkAllTasks(checklist.tasks)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
                                                                             Alle Aufgaben als erledigt markieren
                                                                         </a>
                                                                     </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
+                                                                    <MenuItem v-if="this.$page.props.is_admin || this.$page.props.admin_checklistTemplates" v-slot="{ active }">
                                                                         <a @click="createTemplateFromChecklist(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
@@ -418,7 +422,8 @@
                                                 </div>
                                             </div>
                                             <div class="flex w-full mt-6" v-if="checklist.showContent">
-                                                <div class="">
+                                                <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                                <div>
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                                         <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -428,6 +433,7 @@
                                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                                     <span
                                                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                                </div>
                                                 </div>
                                             </div>
                                             <div class="mt-6 mb-12" v-if="checklist.showContent">
@@ -472,7 +478,7 @@
                                                                         <UserTooltip :user="element.done_by_user"/>
                                                                         {{ element.done_at }}
                                                                     </span>
-                                                                    <Menu as="div" class="my-auto relative"
+                                                                    <Menu v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" as="div" class="my-auto relative"
                                                                           v-show="showMenu === element.id">
                                                                         <div class="flex">
                                                                             <MenuButton
@@ -490,7 +496,7 @@
                                                                             leave-from-class="transform opacity-100 scale-100"
                                                                             leave-to-class="transform opacity-0 scale-95">
                                                                             <MenuItems
-                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                                 <div class="py-1">
                                                                                     <MenuItem v-slot="{ active }">
                                                                                         <a @click="openEditTaskModal(element)"
@@ -742,12 +748,13 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
                                 Informationen </h3>
                         </div>
-                        <div class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
+                        <!-- TODO: HIER NOCH ABFRAGE OB TEAMMITLGIED von TEAM IM PROJEKTTEAM IST -->
+                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
                             class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-stone-50 border-0  w-full"/>
-                            <div class="absolute bottom-0 right-0 flex">
+                            <div  class="absolute bottom-0 right-0 flex">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
@@ -791,6 +798,7 @@
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
+                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                         <input
                             @change="uploadChosenDocuments"
                             class="hidden"
@@ -807,13 +815,14 @@
                             </p>
                         </div>
                         <jet-input-error :message="uploadDocumentFeedback"/>
+                            </div>
                         <div class="space-y-1" v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
                                 <p @click="downloadFile(project_file)" class="ml-2 flex-grow truncate">
                                     {{ project_file.name }}</p>
-                                <XCircleIcon @click="removeFile(project_file)"
+                                <XCircleIcon v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" @click="removeFile(project_file)"
                                              class="ml-2 hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                              aria-hidden="true"/>
                             </div>
@@ -1742,6 +1751,20 @@ export default {
 
             return commentCopy.sort(compare);
         },
+        projectAdminIds: function () {
+            let adminIdArray = [];
+            this.project.project_admins.forEach(admin => {
+                adminIdArray.push(admin.id)}
+            )
+            return adminIdArray;
+        },
+        projectManagerIds: function () {
+            let managerIdArray = [];
+            this.project.project_managers.forEach(manager => {
+                managerIdArray.push(manager.id)}
+            )
+            return managerIdArray;
+        }
     },
     data() {
         return {

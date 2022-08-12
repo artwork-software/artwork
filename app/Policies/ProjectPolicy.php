@@ -36,7 +36,7 @@ class ProjectPolicy
                 $isTeamMember = true;
             }
         }
-        return ($user->projects->contains($project->id) && $project->users->contains($user->id) || $isTeamMember || $user->can('view projects'));
+        return ($user->projects->contains($project->id) || $project->users->contains($user->id) || $isTeamMember || $user->can('view projects'));
     }
 
     /**
@@ -48,6 +48,23 @@ class ProjectPolicy
     public function create(User $user)
     {
         return $user->can('create projects');
+    }
+
+    /**
+     * Determine whether the user can create models.
+     *
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Auth\Access\Response|bool
+     */
+    public function createProperties(User $user,Project $project)
+    {
+        $isTeamMember = false;
+        foreach ($project->departments as $department) {
+            if($department->users->contains($user->id)) {
+                $isTeamMember = true;
+            }
+        }
+        return $user->can('create_and_edit_projects') || $project->users->contains($user->id) || $isTeamMember || $user->projects()->find($project->id)->pivot->is_admin == 1 || $user->projects()->find($project->id)->pivot->is_manager == 1;
     }
 
     /**

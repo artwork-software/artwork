@@ -3,7 +3,7 @@
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
-                    <h2 class="flex font-bold font-lexend text-3xl">{{ project.name }}</h2>
+                    <h2 class="flex font-black font-lexend tracking-wide text-3xl">{{ project.name }}</h2>
                     <Menu as="div" class="my-auto mt-3 relative" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center">
                             <MenuButton
@@ -61,10 +61,10 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 text-secondary text-xs flex items-center">
-                    <span>
+                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                    <div>
                     zuletzt geändert:
-                    </span>
+                    </div>
                     <img :data-tooltip-target="project.project_history[0].user.id"
                          :src="project.project_history[0].user.profile_photo_url"
                          :alt="project.project_history[0].user.name"
@@ -85,36 +85,34 @@
                     {{ project.description }}
                 </div>
                 <div class="mt-4 text-xs text-secondary">
-                    Kostenträger: <span class="text-primary font-bold">{{
+                    <span class="subpixel-antialiased">Kostenträger: </span><span class="text-primary font-bold">{{
                         project.cost_center ? project.cost_center : 'noch nicht definiert'
-                    }} </span> | Anzahl
-                    Teilnehmer*innen:
+                    }} </span><span class="subpixel-antialiased"> | Anzahl
+                    Teilnehmer*innen: </span>
                     <span class="text-primary font-bold">{{
                             project.number_of_participants ? project.number_of_participants : 'noch nicht definiert'
                         }} </span>
                 </div>
                 <div class="mt-3 flex text-secondary text-xs">
-                    <span class="mr-2">Kategorie: </span>
+                    <span class="mr-2 subpixel-antialiased">Kategorie: </span>
                     <span class="ml-1 mr-1 text-primary font-bold">{{
                             project.category ? project.category.name : 'noch nicht definiert'
-                        }} </span> | Genre:<span class="text-primary font-bold ml-1 mr-1 ">
-                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> | Bereich: <span
+                        }} </span> <span class="subpixel-antialiased"> | Genre: </span><span class="text-primary font-bold ml-1 mr-1 ">
+                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> <span class="subpixel-antialiased"> | Bereich:  </span><span
                     class="text-primary font-bold ml-1">
                     {{ project.sector ? project.sector.name : 'noch nicht definiert' }} </span>
                 </div>
-                <h3 class="text-xl mt-12 mb-4 leading-6 font-bold font-lexend text-gray-900">Wann und wo?</h3>
-                <span class="text-secondary text-sm">Termin & Raum noch nicht definiert</span>
             </div>
             <div class="flex flex-wrap">
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
-                    <h2 class="font-bold font-lexend text-2xl">Projektteam</h2>
+                    <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
                     <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects">
                     <div  class="cursor-pointer" @click="openEditProjectTeamModal">
-                        <DotsVerticalIcon class="ml-2 mr-1 mt-2 flex-shrink-0 h-6 w-6 text-gray-600"
+                        <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
                                           aria-hidden="true"/>
                     </div>
                     <div>
-                        <div v-if="$page.props.can.show_hints" class="absolute flex w-48 mt-2">
+                        <div v-if="$page.props.can.show_hints" class="absolute flex w-48">
                             <div>
                                 <SvgCollection svgName="arrowLeft" class="mt-1"/>
                             </div>
@@ -126,7 +124,7 @@
                     </div>
                 </div>
                 <div class="flex flex-wrap w-full">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
+                    <span class="flex font-black text-sm text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
@@ -135,7 +133,7 @@
 
                 </div>
                 <div class="flex w-full mt-2 flex-wrap">
-                    <span class="flex text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
+                    <span class="flex font-black text-sm text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
                         <div v-if="this.project.departments !== []">
                             <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
@@ -224,18 +222,11 @@
         <!-- Div with Bg-Color -->
         <div class="bg-stone-50 w-full h-full">
             <div class="ml-20">
-                <div class="sm:hidden">
-                    <label for="tabs" class="sr-only">Select a tab</label>
-                    <select id="tabs" name="tabs"
-                            class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                        <option v-for="tab in tabs" :key="tab.name" :selected="tab.current">{{ tab.name }}</option>
-                    </select>
-                </div>
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
-                        <nav class="-mb-px pt-4 flex space-x-8" aria-label="Tabs">
+                        <nav class="-mb-px uppercase tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                               :class="[tab.current ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg font-semibold']"
+                               :class="[tab.current ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                :aria-current="tab.current ? 'page' : undefined">
                                 {{ tab.name }}
                             </a>
@@ -263,7 +254,7 @@
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
-                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Checklisten </h3>
+                            <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
                             <div class="flex items-center" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                             <button  @click="openAddChecklistModal" type="button"
                                     class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -294,7 +285,7 @@
                                         <div class="flex w-full ml-4 flex-wrap p-4">
                                             <div class="flex justify-between w-full my-auto">
                                                 <div class="">
-                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                        <span class="text-xl leading-6 font-bold font-lexend text-primary">
                                         {{ checklist.name }}
                                         </span>
                                                 </div>
@@ -449,17 +440,20 @@
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
-                                                                    <div class="flex -mt-1 items-center">
+                                                                    <div v-if="showMenu === element.id" class="flex -mt-1 items-center">
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 text-secondary"></DotsVerticalIcon>
                                                                     </div>
+                                                                    <div v-else class="h-5 w-6 flex">
+
+                                                                    </div>
                                                                     <input @change="updateTaskStatus(element)"
                                                                            v-model="element.done"
                                                                            type="checkbox"
                                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                                    <p class="ml-4 my-auto text-lg font-black text-sm"
+                                                                    <p class="ml-4 my-auto text-lg font-black"
                                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
@@ -521,7 +515,7 @@
                                                                         </transition>
                                                                     </Menu>
                                                                 </div>
-                                                                <div v-if="!element.done" class="ml-10 text-secondary">
+                                                                <div v-if="!element.done" class="ml-16 text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -545,7 +539,7 @@
                                         <div class="flex w-full ml-4 flex-wrap p-4">
                                             <div class="flex justify-between w-full">
                                                 <div class="my-auto">
-                                        <span class="text-2xl leading-6 flex font-bold font-lexend text-gray-900">
+                                        <span class="text-xl leading-6 flex font-bold font-lexend text-primary">
                                         {{ checklist.name }} <EyeIcon class="h-7 w-7 ml-3 text-secondary"></EyeIcon> <p
                                             class="text-secondary text-lg ml-1">Privat</p>
                                         </span>
@@ -586,7 +580,7 @@
                                                                         <a @click="checkAllTasks(checklist.tasks)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
                                                                             Alle Aufgaben als erledigt markieren
                                                                         </a>
@@ -652,11 +646,14 @@
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full" :key="element.id">
-                                                                    <div class="flex -mt-1 items-center">
+                                                                    <div v-if="showMenu === element.id" class="flex -mt-1 items-center">
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 text-secondary"></DotsVerticalIcon>
+                                                                    </div>
+                                                                    <div v-else class="h-5 w-6 flex">
+
                                                                     </div>
                                                                     <input @change="updateTaskStatus(element)"
                                                                            v-model="element.done"
@@ -725,7 +722,7 @@
                                                                         </transition>
                                                                     </Menu>
                                                                 </div>
-                                                                <div v-if="!element.done" class="ml-10 text-secondary">
+                                                                <div v-if="!element.done" class="ml-16 text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -740,7 +737,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14">
                     <div class="col-span-2 mr-8">
@@ -748,8 +744,7 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
                                 Informationen </h3>
                         </div>
-                        <!-- TODO: HIER NOCH ABFRAGE OB TEAMMITLGIED von TEAM IM PROJEKTTEAM IST -->
-                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
+                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment" class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
@@ -1669,7 +1664,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local','isMemberOfADepartment'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1799,6 +1794,7 @@ export default {
             showMenu: null,
             showProjectHistory: false,
             commentHovered: null,
+            allDoneTasks: [],
             projectToDelete: {},
             deletingProject: false,
             form: useForm({

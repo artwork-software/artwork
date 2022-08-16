@@ -54,7 +54,7 @@
                                 <div class="flex w-full ml-8">
                                     <span v-if="!task.done && task.deadline"
                                           class="ml-2 my-auto text-sm subpixel-antialiased"
-                                          :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                          :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                             task.deadline
                                         }}</span>
                                 </div>

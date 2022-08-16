@@ -462,6 +462,7 @@ class ProjectController extends Controller
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
+                    'showContent' => true,
                     'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,

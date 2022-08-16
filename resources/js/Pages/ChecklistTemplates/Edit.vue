@@ -3,19 +3,19 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-bold mb-6 font-lexend text-3xl">Checklistenvorlage</h2>
+                    <h2 class="font-black text-primary mb-4 font-lexend text-3xl">Checklistenvorlage</h2>
                 </div>
-                <div class="text-secondary tracking-tight leading-6 sub max-w-screen-sm">
+                <div class="text-secondary subpixel-antialiased max-w-screen-sm">
                     Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
                     Projekt genutzt werden.
                 </div>
-                <div class="flex mt-12">
+                <div class="flex mt-14">
                     <div class="relative w-full max-w-2xl">
                         <input id="teamName" v-model="templateForm.name" type="text"
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="teamName"
-                               class="absolute left-0 -top-7 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                               class="absolute left-0 text-gray-600 text-sm -top-2.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
                             der Checklistenvorlage</label>
                     </div>
                 </div>
@@ -71,7 +71,7 @@
                     <div class="flex w-full mt-12">
                         <div class="ml-0.5">
                             <button @click="openAddTaskModal()" type="button"
-                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -89,28 +89,30 @@
                             <div class="flex">
                             <div class="flex mt-6 flex-wrap"
                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex w-full">
+                                <div class="flex w-full group">
                                     <input v-model="element.done"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p class="ml-4 my-auto text-lg font-black text-sm"
+                                    <p class="ml-4 my-auto font-black"
                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                         {{ element.name }}</p>
+                                    <button type="button" @click="deleteTaskFromTemplate(element)">
+                                        <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
+                                        <XCircleIcon class="ml-4 mt-1 h-5 w-5 hover:text-error group-hover:block hidden "/>
+                                    </button>
                                 </div>
-                                <div class="ml-10 text-secondary">
+                                <div class="ml-10 text-secondary text-sm">
                                     {{ element.description }}
                                 </div>
+
                             </div>
-                                <button type="button" @click="deleteTaskFromTemplate(element)">
-                                    <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
-                                    <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                                </button>
+
                             </div>
                         </template>
                     </draggable>
                 </div>
                 <div class="pt-12">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
+                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-8">
                         <button v-if="!showSuccess" @click="editChecklistTemplate"
                                 class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >Speichern
@@ -241,8 +243,8 @@
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon, PlusSmIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";

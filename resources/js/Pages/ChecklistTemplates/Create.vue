@@ -3,13 +3,13 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-bold mb-6 font-lexend text-3xl">Checklistenvorlage</h2>
+                    <h2 class="font-black text-primary mb-4 font-lexend text-3xl">Checklistenvorlage</h2>
                 </div>
-                <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub max-w-screen-sm">
+                <div class="text-secondary subpixel-antialiased max-w-screen-sm">
                     Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
                     Projekt genutzt werden.
                 </div>
-                <div class="flex mt-12">
+                <div class="flex mt-14">
                     <div class="relative w-full max-w-2xl">
                         <input id="teamName" v-model="templateForm.name" type="text"
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -27,51 +27,19 @@
                     <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
                     </div>
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex mt-3">
-                            <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
-                            </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-80 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="font-nanum -mt-4 ml-2 text-secondary tracking-tight tracking-tight text-lg">Teile der Vorlage Teams zu, diese sind dann bei Benutzung der Vorlage automatisch zugewiesen</span>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openChangeTeamsModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            Zugewiesene Teams bearbeiten
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                    <button @click="openChangeTeamsModal"
+                       :class="['flex items-center my-auto text-sm subpixel-antialiased']">
+                        <PencilAltIcon
+                            class="mr-3 h-5 w-5 ml-6 mt-3 text-primaryText"
+                            aria-hidden="true"/>
+                    </button>
 
                 </div>
                 <div class="flex">
                     <div class="flex w-full mt-12">
                         <div class="">
                             <button @click="openAddTaskModal()" type="button"
-                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -82,29 +50,33 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-6 mb-6">
+                <div class="mt-6">
                     <draggable ghost-class="opacity-50" tag="transition-group" item-key="draggableID"
                                v-model="templateForm.task_templates" @start="dragging=true" @end="dragging=false">
                         <template #item="{element}">
                             <div class="flex mt-6 flex-wrap w-full"
                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                <div class="flex w-full">
+                                <div class="flex w-full group">
                                     <input v-model="element.done"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p class="ml-4 my-auto text-lg font-black text-sm"
+                                    <p class="ml-4 my-auto font-black"
                                        :class="element.done ? 'text-secondary' : 'text-primary'">
                                         {{ element.name }}</p>
+                                    <button type="button" @click="deleteTaskFromTemplate(element)">
+                                        <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
+                                        <XCircleIcon class="ml-4 h-5 w-5 hover:text-error group-hover:block hidden "/>
+                                    </button>
                                 </div>
-                                <div class="ml-10 text-secondary">
+                                <div class="ml-10 text-secondary text-sm">
                                     {{ element.description }}
                                 </div>
                             </div>
                         </template>
                     </draggable>
                 </div>
-                <div class="pt-12">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
+                <div class="pt-8">
+                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-8">
                         <button v-if="!showSuccess" @click="createChecklistTemplate"
                                 class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >Vorlage anlegen
@@ -235,8 +207,8 @@
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {PencilAltIcon, TrashIcon, XIcon, PlusSmIcon} from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, XCircleIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -246,11 +218,13 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
+import Button from "@/Jetstream/Button";
 
 export default {
     name: "Template Create",
     props: [],
     components: {
+        Button,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -341,6 +315,9 @@ export default {
         createChecklistTemplate() {
             this.templateForm.post(route('checklist_templates.store'));
             this.showSuccessButton();
+        },
+        deleteTaskFromTemplate(taskToDelete){
+            this.templateForm.task_templates.splice(this.templateForm.task_templates.indexOf(taskToDelete), 1);
         }
     },
     watch: {

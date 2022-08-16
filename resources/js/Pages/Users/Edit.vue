@@ -261,7 +261,7 @@
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         Die Änderungen wurden erfolgreich gespeichert.
                     </div>
                     <div class="mt-6">

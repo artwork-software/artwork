@@ -24,7 +24,7 @@
             </div>
             <ul role="list" class="mt-6 mb-32 w-full">
                 <li v-for="(template,index) in checklist_templates" :key="template.email"
-                    class="py-6 flex justify-between">
+                    class="py-3 flex justify-between">
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
@@ -109,14 +109,15 @@
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="showDeleteTemplateModal" @close="closeDeleteTemplateModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Checklistenvorlage löschen
                     </div>
                     <XIcon @click="closeDeleteTemplateModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du die Checklistenvorlage {{ templateToDelete.name }} löschen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -135,14 +136,38 @@
             </template>
 
         </jet-dialog-modal>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <div class="mx-4">
+                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                        Checklistenvorlage erfolgreich bearbeitet
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success subpixel-antialiased">
+                        Die Änderungen wurden erfolgreich gespeichert.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
 <script>
 
-import {Inertia} from "@inertiajs/inertia";
+import  {Inertia} from "@inertiajs/inertia";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
-import {PlusSmIcon} from "@heroicons/vue/outline";
+import {PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -175,6 +200,7 @@ export default {
         return {
             templateToDelete: null,
             showDeleteTemplateModal: false,
+            showSuccessModal: false,
             duplicateForm: this.$inertia.form({
                 _method: 'POST',
                 name: "",
@@ -196,17 +222,26 @@ export default {
         closeDeleteTemplateModal(){
             this.showDeleteTemplateModal = false;
             this.templateToDelete = null;
+            this.openSuccessModal()
         },
         deleteTemplate(){
             Inertia.delete(`/checklist_templates/${this.templateToDelete.id}`);
             this.closeDeleteTemplateModal();
         },
         duplicateTemplate(templateToDuplicate){
-            console.log(templateToDuplicate);
             this.duplicateForm.name = templateToDuplicate.name + ' (Kopie)';
             this.duplicateForm.task_templates = templateToDuplicate.task_templates;
             this.duplicateForm.departments = templateToDuplicate.departments
             this.duplicateForm.post(route('checklist_templates.store'));
+        },
+        openSuccessModal(){
+            this.showSuccessModal = true;
+            setTimeout(function(){
+                this.showSuccessModal = false;
+            },2000)
+        },
+        closeSuccessModal(){
+            this.showSuccessModal = false;
         },
     },
     setup() {

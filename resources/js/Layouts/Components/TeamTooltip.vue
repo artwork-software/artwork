@@ -7,7 +7,9 @@
                     <TeamIconCollection class="ml-2  h-14 w-14" :iconName="team.svg_name"/>
                     <div class="ml-5 my-auto w-full justify-start mr-6">
                         <div class="flex my-auto">
-                            <p class="text-lg subpixel-antialiased text-white font-lexend font-semibold">{{ team.name }}</p>
+                            <p class="text-lg subpixel-antialiased text-white font-lexend font-semibold">{{
+                                    team.name
+                                }}</p>
                         </div>
                     </div>
                 </div>
@@ -22,9 +24,9 @@
                 </div>
 
             </div>
-                <div class="tooltip-arrow" data-popper-arrow></div>
-            </div>
+            <div class="tooltip-arrow" data-popper-arrow></div>
         </div>
+    </div>
 </template>
 
 <script>

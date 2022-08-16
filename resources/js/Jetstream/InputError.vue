@@ -1,6 +1,6 @@
 <template>
     <div v-show="message">
-        <p class="text-xs text-error">
+        <p class="text-xs text-error subpixel-antialiased">
             {{ message }}
         </p>
     </div>

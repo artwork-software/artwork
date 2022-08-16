@@ -327,6 +327,7 @@
     <!-- Areal Hinzufügen-->
     <jet-dialog-modal :show="showAddAreaModal" @close="closeAddAreaModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_area_new.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Neues Areal
@@ -361,6 +362,7 @@
     <!-- Areal Bearbeiten-->
     <jet-dialog-modal :show="showEditAreaModal" @close="closeEditAreaModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_area_edit.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Areal bearbeiten
@@ -383,10 +385,10 @@
                     <button :class="[editAreaForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                             class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base tracking-wider font-bold uppercase shadow-sm text-secondaryHover"
                             @click="editArea"
                             :disabled="editAreaForm.name.length === 0">
-                        Anlegen
+                        Speichern
                     </button>
                 </div>
             </div>
@@ -395,6 +397,7 @@
     <!-- Raum Hinzufügen-->
     <jet-dialog-modal :show="showAddRoomModal" @close="closeAddRoomModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Neuer Raum
@@ -520,14 +523,16 @@
     <!-- Delete Area Modal -->
     <jet-dialog-modal :show="showSoftDeleteAreaModal" @close="closeSoftDeleteAreaModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-4">
+
                 <div class="font-bold text-primary text-2xl my-2">
                     Areal in den Papierkorb
                 </div>
                 <XIcon @click="closeSoftDeleteAreaModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error">
+                <div class="text-error subpixel-antialiased">
                     Bist du sicher,dass du das Areal {{ areaToSoftDelete.name }} mit allen Räumen in den Papierkorb
                     legen möchtest?
                 </div>
@@ -548,14 +553,16 @@
     <!-- Delete Room Modal -->
     <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-4">
-                <div class="font-bold text-primary text-2xl my-2">
+
+                <div class="font-bold text-primary text-3xl my-2">
                     Raum in den Papierkorb
                 </div>
                 <XIcon @click="closeSoftDeleteRoomModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error">
+                <div class="text-error subpixel-antialiased">
                     Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
@@ -575,14 +582,16 @@
     <!-- Delete All Rooms from Area Modal -->
     <jet-dialog-modal :show="showDeleteAllRoomsModal" @close="closeDeleteAllRoomsModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-4">
-                <div class="font-bold text-primary text-2xl my-2">
+
+                <div class="font-black text-primary text-3xl my-2">
                     Alle Räume entfernen
                 </div>
-                <XIcon @click="closeSoftDeleteAreaModal"
+                <XIcon @click="closeDeleteAllRoomsModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error">
+                <div class="text-error subpixel-antialiased">
                     Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
@@ -602,14 +611,16 @@
     <!-- Success Modal -->
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
+            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
             <div class="mx-4">
-                <div class="font-bold text-primary font-lexend text-2xl my-2">
+
+                <div class="font-black text-primary font-lexend text-3xl my-2">
                     {{ successHeading }}
                 </div>
                 <XIcon @click="closeSuccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-success">
+                <div class="text-success subpixel-antialiased">
                     {{ successDescription }}
                 </div>
                 <div class="mt-6">
@@ -631,14 +642,13 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Button from "@/Jetstream/Button";
 import {
-    ChevronDownIcon,
     DotsVerticalIcon,
     InformationCircleIcon,
     PencilAltIcon,
     SearchIcon, TrashIcon,
     XIcon, DuplicateIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronUpIcon,ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetButton from "@/Jetstream/Button";
 import {defineComponent} from 'vue'
@@ -819,10 +829,7 @@ export default defineComponent({
         closeDeleteAllRoomsModal() {
             this.showDeleteAllRoomsModal = false;
             this.areaToDeleteRoomsFrom = null;
-            this.successHeading = "Raum im Papierkorb"
-            this.successDescription = "Die Räume wurden erfolgreich in den Papierkorb gelegt."
-            this.showSuccessModal = true;
-            setTimeout(() => this.closeSuccessModal(), 2000)
+
         },
         closeSuccessModal() {
             this.showSuccessModal = false;
@@ -834,6 +841,10 @@ export default defineComponent({
                 this.$inertia.delete(`/rooms/${room.id}`);
             })
             this.closeDeleteAllRoomsModal();
+            this.successHeading = "Raum im Papierkorb"
+            this.successDescription = "Die Räume wurden erfolgreich in den Papierkorb gelegt."
+            this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         openEditRoomModal(room) {
             this.editRoomForm.id = room.id;

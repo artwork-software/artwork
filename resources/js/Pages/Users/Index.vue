@@ -140,8 +140,6 @@
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                     einladen.
                 </div>
-                {{this.form.permissions}}
-                {{this.form.role}}
                 <div class="mt-4">
                     <div class="flex mt-8">
                         <div class="relative w-72 mr-4">
@@ -329,7 +327,7 @@
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         Die Nutzer*innen haben eine Einladungs-E-Mail erhalten.
                     </div>
                     <div class="mt-6">

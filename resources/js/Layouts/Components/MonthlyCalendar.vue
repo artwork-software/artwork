@@ -480,7 +480,7 @@
 
         </div>
     </div>
-    <div v-else class="ml-20 mt-10 text-secondary">
+    <div v-else class="ml-20 mt-10 text-secondary subpixel-antialiased text-xs">
         Bisher wurden keine Termine für dieses Projekt angelegt.
     </div>
     <!-- Termin erstellen Modal-->
@@ -709,7 +709,7 @@
                     </div>
                 </div>
                 <div class="mt-1" v-if="conflictData !== null">
-                    <div v-if="this.conflictData.length === 1" class="text-error text-sm flex">
+                    <div v-if="this.conflictData.length === 1" class="text-error subpixel-antialiased text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
                             <Link
@@ -722,7 +722,7 @@
                             mit Namen "{{ this.conflictData[0].event_name }}"
                         </div>
                     </div>
-                    <div class="text-error text-sm flex" v-else-if="this.conflictData.length > 1">
+                    <div class="text-error subpixel-antialiased text-sm flex" v-else-if="this.conflictData.length > 1">
                         Dieser Termin kollidiert mit {{ this.conflictData.length }} anderen Terminen.
                     </div>
                 </div>

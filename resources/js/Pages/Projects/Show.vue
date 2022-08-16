@@ -3,9 +3,11 @@
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
-                    <h2 class="flex font-black font-lexend tracking-wide text-3xl">{{ project.name }}</h2>
-                    <Menu as="div" class="my-auto mt-3 relative" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                        <div class="flex items-center">
+                    <h2 class="flex font-black font-lexend subpixel-antialiased text-primary tracking-wide text-3xl">
+                        {{ project.name }}</h2>
+                    <Menu as="div" class="my-auto mt-3 relative"
+                          v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                        <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex ml-6">
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
@@ -47,7 +49,9 @@
                                             Duplizieren
                                         </a>
                                     </MenuItem>
-                                    <MenuItem v-if="this.$page.props.can.delete_projects || this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" v-slot="{ active }">
+                                    <MenuItem
+                                        v-if="this.$page.props.can.delete_projects || this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
@@ -63,7 +67,7 @@
                 </div>
                 <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
-                    zuletzt geändert:
+                        zuletzt geändert:
                     </div>
                     <img :data-tooltip-target="project.project_history[0].user.id"
                          :src="project.project_history[0].user.profile_photo_url"
@@ -97,8 +101,10 @@
                     <span class="mr-2 subpixel-antialiased">Kategorie: </span>
                     <span class="ml-1 mr-1 text-primary font-bold">{{
                             project.category ? project.category.name : 'noch nicht definiert'
-                        }} </span> <span class="subpixel-antialiased"> | Genre: </span><span class="text-primary font-bold ml-1 mr-1 ">
-                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> <span class="subpixel-antialiased"> | Bereich:  </span><span
+                        }} </span> <span class="subpixel-antialiased"> | Genre: </span><span
+                    class="text-primary font-bold ml-1 mr-1 ">
+                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> <span
+                    class="subpixel-antialiased"> | Bereich:  </span><span
                     class="text-primary font-bold ml-1">
                     {{ project.sector ? project.sector.name : 'noch nicht definiert' }} </span>
                 </div>
@@ -106,25 +112,26 @@
             <div class="flex flex-wrap">
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
-                    <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects">
-                    <div  class="cursor-pointer" @click="openEditProjectTeamModal">
-                        <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
-                                          aria-hidden="true"/>
-                    </div>
-                    <div>
-                        <div v-if="$page.props.can.show_hints" class="absolute flex w-48">
-                            <div>
-                                <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                            </div>
-                            <div class="flex">
-                                <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Stelle dein Team zusammen</span>
+                    <div class="flex"
+                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                        <div class="cursor-pointer" @click="openEditProjectTeamModal">
+                            <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
+                                              aria-hidden="true"/>
+                        </div>
+                        <div>
+                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48">
+                                <div>
+                                    <SvgCollection svgName="arrowLeft" class="mt-1"/>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Stelle dein Team zusammen</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    </div>
                 </div>
                 <div class="flex flex-wrap w-full">
-                    <span class="flex font-black text-sm text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
+                    <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
                         <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
@@ -133,7 +140,7 @@
 
                 </div>
                 <div class="flex w-full mt-2 flex-wrap">
-                    <span class="flex font-black text-sm text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
+                    <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
                         <div v-if="this.project.departments !== []">
                             <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
@@ -148,7 +155,7 @@
                                     <div>
                                         <MenuButton class="flex items-center rounded-full focus:outline-none">
                                             <ChevronDownIcon
-                                                class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
                                         </MenuButton>
                                     </div>
                                     <transition enter-active-class="transition ease-out duration-100"
@@ -185,7 +192,7 @@
                                 <div>
                                     <MenuButton class="flex items-center rounded-full focus:outline-none">
                                         <ChevronDownIcon
-                                            class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                            class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -224,7 +231,7 @@
             <div class="ml-20">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
-                        <nav class="-mb-px uppercase tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
+                        <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
                                :class="[tab.current ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                :aria-current="tab.current ? 'page' : undefined">
@@ -238,13 +245,15 @@
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab && project.rooms">
                     <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types" :areas="areas"
+                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types"
+                                         :areas="areas"
                                          :month_events="month_events" :projects="[project]"
                                          :rooms="project.rooms" :days_this_month="days_this_month"
                                          :events_without_room="events_without_room"></MonthlyCalendar>
                     </div>
                     <div v-else-if="calendarType === 'daily'">
-                        <DailyCalendar calendar-type="project" :project_id="project.id" :hours_of_day="hours_of_day" :rooms="project.rooms"
+                        <DailyCalendar calendar-type="project" :project_id="project.id" :hours_of_day="hours_of_day"
+                                       :rooms="project.rooms"
                                        :projects="[project]" :event_types="event_types" :areas="areas"
                                        :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
                                        :events_without_room="events_without_room"/>
@@ -255,27 +264,28 @@
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
-                            <div class="flex items-center" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                            <button  @click="openAddChecklistModal" type="button"
-                                    class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
-                            <div v-if="$page.props.can.show_hints" class="flex">
-                                <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
-                            </div>
+                            <div class="flex items-center"
+                                 v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                <button @click="openAddChecklistModal" type="button"
+                                        class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                </button>
+                                <div v-if="$page.props.can.show_hints" class="flex">
+                                    <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                    <span
+                                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
                                 </div>
+                            </div>
                         </div>
                         <div class="w-full">
                         <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
-                              class="text-secondary subpixel-antialiased font-semibold text-sm mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
+                              class="text-secondary subpixel-antialiased text-xs mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
                             <div v-else>
                                 <div class="flex w-full flex-wrap">
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
                                          class="flex w-full bg-white my-2">
-                                        <button class="bg-black flex"
+                                        <button class="bg-primary flex"
                                                 @click="checklist.showContent = !checklist.showContent">
                                             <ChevronUpIcon v-if="checklist.showContent === true"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
@@ -302,7 +312,7 @@
                                                                 <MenuButton
                                                                     class="flex items-center rounded-full focus:outline-none">
                                                                     <ChevronDownIcon
-                                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
                                                                 </MenuButton>
                                                             </div>
                                                             <transition
@@ -332,7 +342,9 @@
                                                             </transition>
                                                         </Menu>
                                                     </div>
-                                                    <Menu v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" as="div" class="my-auto relative">
+                                                    <Menu
+                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                        as="div" class="my-auto relative">
                                                         <div class="flex">
                                                             <MenuButton
                                                                 class="flex ml-9">
@@ -378,7 +390,9 @@
                                                                             Alle Aufgaben als erledigt markieren
                                                                         </a>
                                                                     </MenuItem>
-                                                                    <MenuItem v-if="this.$page.props.is_admin || this.$page.props.admin_checklistTemplates" v-slot="{ active }">
+                                                                    <MenuItem
+                                                                        v-if="this.$page.props.is_admin || this.$page.props.admin_checklistTemplates"
+                                                                        v-slot="{ active }">
                                                                         <a @click="createTemplateFromChecklist(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
@@ -413,18 +427,19 @@
                                                 </div>
                                             </div>
                                             <div class="flex w-full mt-6" v-if="checklist.showContent">
-                                                <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                                <div>
-                                                    <button @click="openAddTaskModal(checklist)" type="button"
-                                                            class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                        <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                                    </button>
-                                                </div>
-                                                <div v-if="$page.props.can.show_hints" class="flex">
-                                                    <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                                    <span
-                                                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
-                                                </div>
+                                                <div class="flex"
+                                                     v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                                    <div>
+                                                        <button @click="openAddTaskModal(checklist)" type="button"
+                                                                class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                                            <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                                                        </button>
+                                                    </div>
+                                                    <div v-if="$page.props.can.show_hints" class="flex">
+                                                        <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                                        <span
+                                                            class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div class="mt-6 mb-12" v-if="checklist.showContent">
@@ -440,7 +455,8 @@
                                                             <div class="flex mt-6 flex-wrap w-full"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full">
-                                                                    <div v-if="showMenu === element.id" class="flex -mt-1 items-center">
+                                                                    <div v-if="showMenu === element.id"
+                                                                         class="flex -mt-1 items-center">
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
                                                                         <DotsVerticalIcon
@@ -458,7 +474,7 @@
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
                                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
                                                                     <span v-if="element.done"
@@ -472,8 +488,10 @@
                                                                         <UserTooltip :user="element.done_by_user"/>
                                                                         {{ element.done_at }}
                                                                     </span>
-                                                                    <Menu v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" as="div" class="my-auto relative"
-                                                                          v-show="showMenu === element.id">
+                                                                    <Menu
+                                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                                        as="div" class="my-auto relative"
+                                                                        v-show="showMenu === element.id">
                                                                         <div class="flex">
                                                                             <MenuButton
                                                                                 class="flex ml-6">
@@ -515,7 +533,8 @@
                                                                         </transition>
                                                                     </Menu>
                                                                 </div>
-                                                                <div v-if="!element.done" class="ml-16 text-secondary subpixel-antialiased">
+                                                                <div v-if="!element.done"
+                                                                     class="ml-16 text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -529,7 +548,7 @@
                                     </div>
                                     <div v-for="checklist in project.private_checklists"
                                          class="flex w-full bg-white my-2">
-                                        <button class="bg-black flex"
+                                        <button class="bg-primary flex"
                                                 @click="checklist.showContent = !checklist.showContent">
                                             <ChevronUpIcon v-if="checklist.showContent === true"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
@@ -540,8 +559,8 @@
                                             <div class="flex justify-between w-full">
                                                 <div class="my-auto">
                                         <span class="text-xl leading-6 flex font-bold font-lexend text-primary">
-                                        {{ checklist.name }} <EyeIcon class="h-7 w-7 ml-3 text-secondary"></EyeIcon> <p
-                                            class="text-secondary text-lg ml-1">Privat</p>
+                                        {{ checklist.name }} <EyeIcon class="h-6 w-6 ml-3 text-primary"></EyeIcon> <p
+                                            class="text-primary text-sm my-auto ml-1">Privat</p>
                                         </span>
                                                 </div>
                                                 <div class="flex items-center -mr-3">
@@ -646,7 +665,8 @@
                                                             <div class="flex mt-6 flex-wrap w-full" :key="element.id"
                                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                                 <div class="flex w-full" :key="element.id">
-                                                                    <div v-if="showMenu === element.id" class="flex -mt-1 items-center">
+                                                                    <div v-if="showMenu === element.id"
+                                                                         class="flex -mt-1 items-center">
                                                                         <DotsVerticalIcon
                                                                             class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
                                                                         <DotsVerticalIcon
@@ -664,7 +684,7 @@
                                                                         {{ element.name }}</p>
                                                                     <span v-if="!element.done && element.deadline"
                                                                           class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error' : ''">bis {{
+                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
                                                                     <span v-if="element.done"
@@ -722,7 +742,8 @@
                                                                         </transition>
                                                                     </Menu>
                                                                 </div>
-                                                                <div v-if="!element.done" class="ml-16 text-secondary subpixel-antialiased">
+                                                                <div v-if="!element.done"
+                                                                     class="ml-16 text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -744,12 +765,14 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
                                 Informationen </h3>
                         </div>
-                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment" class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
+                        <div
+                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                            class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
                             class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-stone-50 border-0  w-full"/>
-                            <div  class="absolute bottom-0 right-0 flex">
+                            <div class="absolute bottom-0 right-0 flex">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
@@ -793,34 +816,50 @@
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
-                        <div v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                        <input
-                            @change="uploadChosenDocuments"
-                            class="hidden"
-                            ref="project_files"
-                            id="file"
-                            type="file"
-                            multiple
-                        />
-                        <div @click="selectNewFiles" @dragover.prevent
-                             @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
-                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
-                            <p class="text-secondary text-center">Ziehe Dokumente hier her
-                                <br>oder klicke ins Feld
-                            </p>
-                        </div>
-                        <jet-input-error :message="uploadDocumentFeedback"/>
+                        <div
+                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                            <input
+                                @change="uploadChosenDocuments"
+                                class="hidden"
+                                ref="project_files"
+                                id="file"
+                                type="file"
+                                multiple
+                            />
+                            <div @click="selectNewFiles" @dragover.prevent
+                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                        border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
+                                <p class="text-secondary text-center">Ziehe Dokumente hier her
+                                    <br>oder klicke ins Feld
+                                </p>
                             </div>
-                        <div class="space-y-1" v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
+                            <jet-input-error :message="uploadDocumentFeedback"/>
+                        </div>
+                        <div class="space-y-1"
+                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
-                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p @click="downloadFile(project_file)" class="ml-2 flex-grow truncate">
-                                    {{ project_file.name }}</p>
-                                <XCircleIcon v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" @click="removeFile(project_file)"
-                                             class="ml-2 hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
-                                             aria-hidden="true"/>
+                                <div :data-tooltip-target="project_file.name" class="flex truncate">
+                                    <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
+                                    <p @click="downloadFile(project_file)" class="ml-2 truncate">
+                                        {{ project_file.name }}</p>
+
+                                    <XCircleIcon
+                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        @click="removeFile(project_file)"
+                                        class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
+                                        aria-hidden="true"/>
+                                </div>
+                                <div :id="project_file.name" role="tooltip"
+                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                    <div class="flex flex-wrap">
+                                        Um die Datei herunterzuladen, klicke auf den Dateinamen
+                                    </div>
+                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                </div>
                             </div>
+
+
                         </div>
                     </div>
                 </div>
@@ -1529,20 +1568,18 @@
                     </div>
                     <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
                         <div class="flex w-full my-1" v-for="historyItem in project.project_history">
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
-                                 :alt="historyItem.user.name"
-                                 class="mr-2 rounded-full h-7 w-7 object-cover"/>
-                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
-                        {{ historyItem.created_at }}:
-                    </span>
-
-                            <UserTooltip :user="historyItem.user"/>
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
-                                 :alt="historyItem.user.name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user"/>
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{ historyItem.description }}
+                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                {{ historyItem.created_at }}:
+                            </span>
+                            <div class="flex w-full">
+                                <img :data-tooltip-target="historyItem.user.id"
+                                     :src="historyItem.user.profile_photo_url"
+                                     :alt="historyItem.user.name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip :user="historyItem.user"/>
+                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                    {{ historyItem.description }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1590,7 +1627,7 @@
                             <div class="flex ml-2">
                                 <ExclamationIcon class="my-auto h-5 w-5 text-error"></ExclamationIcon>
                                 <span
-                                    class="text-error text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
+                                    class="text-error subpixel-antialiased text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
                             </div>
                         </div>
 
@@ -1664,7 +1701,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local','isMemberOfADepartment'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1749,14 +1786,16 @@ export default {
         projectAdminIds: function () {
             let adminIdArray = [];
             this.project.project_admins.forEach(admin => {
-                adminIdArray.push(admin.id)}
+                    adminIdArray.push(admin.id)
+                }
             )
             return adminIdArray;
         },
         projectManagerIds: function () {
             let managerIdArray = [];
             this.project.project_managers.forEach(manager => {
-                managerIdArray.push(manager.id)}
+                    managerIdArray.push(manager.id)
+                }
             )
             return managerIdArray;
         }

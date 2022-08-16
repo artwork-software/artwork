@@ -9,7 +9,7 @@
                 <p :class="[item.checked ? 'text-primary font-black' : 'text-secondary']"
                    class="ml-4 my-auto text-sm" v-else>{{item.name_de}}</p>
             </div>
-            <div :data-tooltip-target="item.name">
+            <div v-if="item.showIcon !== false" :data-tooltip-target="item.name">
             <InformationCircleIcon  class="h-7 w-7 flex text-gray-400"
                                    aria-hidden="true"/>
             </div>

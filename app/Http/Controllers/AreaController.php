@@ -27,6 +27,8 @@ class AreaController extends Controller
             'areas' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
+                // showContent declares if the area should be showing all details when loading the page
+                'showContent' => true,
                 'rooms' => $area->rooms()->orderBy('order')->get()->map(fn($room) => [
                     'id' => $room->id,
                     'name' => $room->name,
@@ -97,6 +99,7 @@ class AreaController extends Controller
 
         foreach($area->rooms as $room) {
             $new_room = $room->replicate();
+            $new_room->name = '(Kopie) ' . $room->name;
             $new_room->created_at = Carbon::now();
             $new_area->rooms()->save($new_room);
             $new_area->save();

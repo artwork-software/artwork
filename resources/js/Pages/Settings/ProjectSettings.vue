@@ -17,7 +17,7 @@
                 </div>
                 <div class="mt-8 flex w-full flex-wrap">
                     <div class="relative flex max-w-lg w-full">
-                        <input id="genre" v-model="genreInput" type="text"
+                        <input id="genre" v-model="genreInput" type="text" @keyup.enter="addGenre"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="genre"
@@ -56,10 +56,10 @@
                 </div>
                 <div class="mt-8 flex w-full flex-wrap">
                     <div class="relative flex max-w-lg w-full">
-                        <input id="category" v-model="categoryInput" type="text"
+                        <input id="category" v-model="categoryInput" type="text" @keyup.enter="addCategory"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
-                        <label for="genre"
+                        <label for="category"
                                class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Kategorie
                             eingeben</label>
                         <div class="m-2 -ml-8 -mt-1">
@@ -95,10 +95,10 @@
                 </div>
                 <div class="mt-8 flex w-full flex-wrap">
                     <div class="relative flex max-w-lg w-full">
-                        <input id="sector" v-model="sectorInput" type="text"
+                        <input id="sector" v-model="sectorInput" type="text" @keyup.enter="addSector"
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
-                        <label for="genre"
+                        <label for="sector"
                                class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Bereich
                             eingeben</label>
                         <div class="m-2 -ml-8 -mt-1">
@@ -137,7 +137,7 @@
                     <XIcon @click="closeDeleteSectorModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du den Bereich {{ sectorToDelete.name }} aus dem System löschen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -164,7 +164,7 @@
                     <XIcon @click="closeDeleteGenreModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du das Genre {{ genreToDelete.name }} aus dem System löschen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -191,7 +191,7 @@
                     <XIcon @click="closeDeleteCategoryModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du die Kategorie {{ categoryToDelete.name }} aus dem System löschen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -257,8 +257,10 @@ export default {
     },
     methods: {
         addCategory() {
-            this.$inertia.post(route('categories.store'), {name: this.categoryInput});
-            this.categoryInput = "";
+            if(this.categoryInput !== ''){
+                this.$inertia.post(route('categories.store'), {name: this.categoryInput});
+                this.categoryInput = "";
+            }
         },
         openDeleteGenreModal(genre) {
             this.genreToDelete = genre;
@@ -273,8 +275,10 @@ export default {
             this.closeDeleteGenreModal();
         },
         addGenre() {
+            if(this.genreInput !== ''){
             this.$inertia.post(route('genres.store'), {name: this.genreInput});
             this.genreInput = '';
+            }
         },
         openDeleteSectorModal(sector) {
             this.sectorToDelete = sector;
@@ -289,8 +293,10 @@ export default {
             this.closeDeleteSectorModal();
         },
         addSector() {
+            if(this.sectorInput !== ''){
             this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
             this.sectorInput = '';
+            }
         },
         openDeleteCategoryModal(category) {
             this.categoryToDelete = category;

@@ -668,7 +668,7 @@
                                                                  aria-hidden="true"/>
                                                         <img src="/Svgs/IconSvgs/icon_warning_white.svg"
                                                              v-if="room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0"
-                                                             class="h-4 w-4 ml-1 flex text-error"
+                                                             class="h-4 w-4 ml-1 flex text-error subpixel-antialiased"
                                                              aria-hidden="true"/>
                                                 </span>
                                             </li>

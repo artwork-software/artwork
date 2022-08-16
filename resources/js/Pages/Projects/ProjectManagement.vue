@@ -9,7 +9,7 @@
                             <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
                             <button
                                     @click="openAddProjectModal" type="button"
-                                    class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex my-auto ml-14 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
@@ -33,7 +33,7 @@
                             <div class="flex w-full">
                                 <div class="mr-6">
                                     <Link :href="getEditHref(project)" class="flex w-full my-auto">
-                                        <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
                                     </Link>
                                 </div>
                             </div>
@@ -43,11 +43,7 @@
                                                         class="h-9 w-9 rounded-full ring-2 ring-white"
                                                         :iconName="department.svg_name"
                                                         alt=""/>
-                                    <div :id="department.name" role="tooltip"
-                                         class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                        {{ department.name }}
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                    </div>
+                                    <TeamTooltip :team="department"/>
                                 </div>
                                 <div v-if="project.departments.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
@@ -183,12 +179,10 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
-
                             </div>
-
                         </div>
-                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 text-secondary flex items-center">
-                            <span class="subpixel-antialiased">
+                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 -mt-2 text-secondary flex items-center">
+                            <span class=" text-xs subpixel-antialiased">
                                   zuletzt geändert:
                             </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
@@ -200,13 +194,13 @@
                                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip
                                         :user="project.project_history[project.project_history.length -1].user"/>
-                                    <span class="ml-2 subpixel-antialiased">
+                                    <span class="ml-2 text-xs subpixel-antialiased">
                                     {{ project.project_history[project.project_history.length - 1].created_at }}
                                 </span>
-                                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                                    <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
                                             @click="openProjectHistoryModal(project.project_history)">
                                         <ChevronRightIcon
-                                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                                            class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         Verlauf ansehen
                                     </button>
@@ -477,7 +471,7 @@
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         Das Projekt {{ nameOfDeletedProject }} wurde gelöscht.
                     </div>
                     <div class="mt-6">
@@ -507,15 +501,17 @@
                     </div>
                     <div class="flex w-full flex-wrap mt-4">
                         <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
-                        {{ historyItem.created_at }}:
-                    </span>
+                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                {{ historyItem.created_at }}:
+                            </span>
+                            <div class="flex w-full">
                             <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
                                  :alt="historyItem.user.name"
                                  class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                             <UserTooltip :user="historyItem.user"/>
                             <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                 {{ historyItem.description }}
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -565,6 +561,7 @@ import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection
 import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 
 const number_of_participants = [
     {number: '100-1000'},
@@ -608,7 +605,8 @@ export default defineComponent({
         DuplicateIcon,
         ChevronRightIcon,
         Link,
-        UserTooltip
+        UserTooltip,
+        TeamTooltip
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can'],
     methods: {

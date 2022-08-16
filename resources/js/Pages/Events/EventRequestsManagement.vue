@@ -113,7 +113,7 @@
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         Bist du sicher, dass du die Raumbelegung zusagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">

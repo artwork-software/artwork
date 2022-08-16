@@ -74,7 +74,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Entgültig löschen
+                                                            Endgültig löschen
                                                         </Link>
                                                     </MenuItem>
                                                 </div>
@@ -160,7 +160,7 @@
                                                             <TrashIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Entgültig löschen
+                                                            Endgültig löschen
                                                         </Link>
                                                     </MenuItem>
                                                 </div>

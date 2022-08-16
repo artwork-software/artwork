@@ -281,7 +281,7 @@
                     <XIcon @click="closeDeleteEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du den Termintyp {{ eventTypeToDelete.name }} löschen möchtest?
                         Alle Termine, die diesem Typen zugeordnet sind, werden auf "undefiniert" gesetzt.
                     </div>
@@ -308,7 +308,7 @@
                     <XIcon @click="closeDeletingUndefined"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error">
+                    <div class="text-error subpixel-antialiased">
                         Der Termintyp {{ eventTypeToDelete.name }} kann nicht gelöscht werden, da er der
                         Standard-Termintyp ist.
                     </div>

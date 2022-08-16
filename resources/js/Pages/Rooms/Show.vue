@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Teamprofil">
+    <app-layout>
         <div class="max-w-screen-xl my-12 ml-20 mr-10">
             <div class="flex-wrap">
                 <div class="flex">
@@ -62,7 +62,7 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.temporary === 1" class="font-lexend text-lg my-4 font-semibold">
+                <div v-if="room.temporary === 1" class="font-lexend my-4 font-semibold">
                     {{ room.start_date }} - {{ room.end_date }}
                 </div>
                 <div class="grid grid-cols-7 mt-6">
@@ -76,7 +76,7 @@
                     </div>
                     <div class="col-span-2">
                         <div class="flex w-full mt-6 items-center mb-8">
-                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
+                            <h3 class="text-xl leading-6 font-bold font-lexend text-primary"> Dokumente </h3>
                         </div>
                         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                             <input
@@ -89,7 +89,7 @@
                             />
                             <div @click="selectNewFiles" @dragover.prevent
                                  @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
-                        border-secondary border-dotted border-4 h-40 bg-stone-100 p-2 cursor-pointer">
+                        border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
                                 <p class="text-secondary text-center">Ziehe Dokumente hier her
                                     <br>oder klicke ins Feld
                                 </p>
@@ -100,12 +100,22 @@
                             <div v-for="room_file in room.room_files"
                                  class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p @click="downloadFile(room_file)" class="ml-2 truncate flex-grow">{{
+                                <p :data-tooltip-target="room_file.name" @click="downloadFile(room_file)" class="ml-2 truncate hover:font-bold">{{
                                         room_file.name
                                     }}</p>
                                 <XCircleIcon v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin" @click="removeFile(room_file)"
                                              class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
                                              aria-hidden="true"/>
+                                <div>
+                                    <div :id="room_file.name" role="tooltip"
+                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                        <div class="flex flex-wrap">
+                                            Um die Datei herunterzuladen, klicke auf den Dateinamen
+                                        </div>
+                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -309,7 +319,7 @@
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Raum bearbeiten
@@ -323,7 +333,7 @@
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="roomNameEdit"
-                                   class="absolute left-0 -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
                             </label>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
@@ -345,25 +355,27 @@
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
                             </div>
                         </div>
-                        <div class="flex" v-if="editRoomForm.temporary">
+                        <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
                             <input
-                                v-model="editRoomForm.start_date" id="startDateEdit"
+                                v-model="editRoomForm.start_date_dt_local" id="startDateEdit"
                                 placeholder="Zu erledigen bis?" type="date"
-                                class="border-gray-300 placeholder-secondary mr-2 w-full"/>
+                                class="border-gray-300 col-span-1 placeholder-secondary mr-2 w-full"/>
                             <input
-                                v-model="editRoomForm.end_date" id="endDateEdit"
+                                v-model="editRoomForm.end_date_dt_local" id="endDateEdit"
                                 placeholder="Zu erledigen bis?" type="date"
-                                class="border-gray-300 placeholder-secondary w-full"/>
+                                class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
+                        </div>
+                        <div class="grid grid-cols-2">
+                            <button :class="[editRoomForm.name.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                    class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                    @click="editRoom"
+                                    :disabled="editRoomForm.name.length === 0">
+                                Speichern
+                            </button>
                         </div>
 
-                        <button :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="editRoom"
-                                :disabled="editRoomForm.name.length === 0">
-                            Speichern
-                        </button>
                     </div>
                 </div>
             </template>
@@ -407,7 +419,7 @@
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         {{ successDescription }}
                     </div>
                     <div class="mt-6">
@@ -432,7 +444,7 @@
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success">
+                    <div class="text-success subpixel-antialiased">
                         Bist du sicher, dass du die Raumbelegung zusagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">
@@ -735,11 +747,14 @@ export default {
                 room_admins: this.room.room_admins,
             }),
             editRoomForm: useForm({
+                id: null,
                 name: '',
                 description: '',
                 temporary: false,
                 start_date: null,
+                start_date_dt_local: null,
                 end_date: null,
+                end_date_dt_local: null,
                 area_id: null,
                 user_id: null,
             }),
@@ -950,16 +965,27 @@ export default {
             this.$inertia.post(`/rooms/${room.id}/duplicate`);
         },
         openEditRoomModal(room) {
-            this.editRoomForm = room;
+            this.editRoomForm.id = room.id;
+            this.editRoomForm.name = room.name;
+            this.editRoomForm.description = room.description;
+            this.editRoomForm.start_date = room.start_date;
+            this.editRoomForm.end_date = room.end_date;
+            this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
+            this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
             if (room.temporary === 1) {
                 this.editRoomForm.temporary = true;
-                this.editRoomForm.start_date = room.start_date_dt_local;
-                this.editRoomForm.end_date = room.end_date_dt_local;
             }
             this.showEditRoomModal = true;
         },
         closeEditRoomModal() {
             this.showEditRoomModal = false;
+            this.editRoomForm.id = null;
+            this.editRoomForm.name = null;
+            this.editRoomForm.description = null;
+            this.editRoomForm.start_date = null;
+            this.editRoomForm.end_date = null;
+            this.editRoomForm.start_date_dt_local = null;
+            this.editRoomForm.end_date_dt_local = null;
         },
         openSoftDeleteRoomModal(room) {
             this.roomToSoftDelete = room;
@@ -977,6 +1003,12 @@ export default {
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000);
         },
+        editRoom() {
+            this.editRoomForm.start_date = this.editRoomForm.start_date_dt_local;
+            this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
+            this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
+            this.closeEditRoomModal();
+        }
     },
     watch: {
         user_query: {

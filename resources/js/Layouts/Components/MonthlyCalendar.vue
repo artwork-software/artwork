@@ -1,11 +1,11 @@
 <template>
-    <div v-if="rooms.length > 0" class="bg-stone-50 pb-20">
-        <div :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white' " class="flex flex-row">
+    <div v-if="rooms.length > 0" class="bg-backgroundGray pb-20">
+        <div :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white' " class="flex flex-row">
             <div class="flex flex-1 flex-wrap">
                 <div class="w-full flex my-auto justify-between">
                     <div class="flex flex-wrap items-center">
                         <div class="flex items-center mb-4 ml-20 mt-10">
-                            <h2 class="text-3xl font-black flex">Raumbelegungen</h2>
+                            <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
                                 <button @click="openAddEventModal" type="button"
@@ -20,7 +20,7 @@
                             </div>
                         </div>
                         <div class="flex w-full items-center ml-20">
-                            <div class="text-xl font-black">
+                            <div class="text-xl leading-6 font-bold font-lexend text-primary">
                                 {{ formattedMonth }}
                                 {{ rooms[0].days_in_month[0].date_local.substring(0, 4) }}
                             </div>
@@ -60,13 +60,13 @@
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
-                            <div class="flex my-auto items-center ml-6 mt-5 ml-20">
+                            <div class="flex my-auto items-center ml-6 mt-5">
                                 <Listbox v-if="this.rooms.length > 1" as="div"
                                          class="sm:col-span-3 mb-8 flex mr-4 items-center my-auto"
                                          v-model="wantedArea">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
-                                                       class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                                       class=" flex ml-4 cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedArea" class="block truncate items-center">
                                             <span>{{ wantedArea.name }}</span>
                                         </span>
@@ -74,8 +74,8 @@
                                             <span>Alle Areale</span>
                                         </span>
                                             <span
-                                                class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                                class="ml-2 inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                         </ListboxButton>
 
@@ -121,8 +121,8 @@
                                 <Listbox  as="div" class="sm:col-span-3 mb-8 mr-4 flex items-center my-auto"
                                          v-model="wantedEventType">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
-                                                       class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                                       class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedEventType" class="block truncate items-center">
                                             <span>{{ wantedEventType.name }}</span>
                                         </span>
@@ -130,8 +130,8 @@
                                             <span>Alle Terminarten</span>
                                         </span>
                                             <span
-                                                class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                                class="inset-y-0 ml-2 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                         </ListboxButton>
 
@@ -178,8 +178,8 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedAttribute">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-stone-50' : 'bg-white'"
-                                                       class="ml-4 cursor-pointer relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                                       class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedAttribute" class="block truncate items-center">
                                             <span>{{ wantedAttribute.name }}</span>
                                         </span>
@@ -187,8 +187,8 @@
                                             <span>Alle Eigenschaften</span>
                                         </span>
                                             <span
-                                                class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                                class="ml-2 inset-y-0flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                         </ListboxButton>
 
@@ -234,10 +234,10 @@
                                 </Listbox>
                             </div>
                         </div>
-                        <div class="bg-stone-50 w-full flex pl-20">
+                        <div class="bg-backgroundGray w-full flex pl-20">
                             <div class="mt-16 w-36">
                                 <div v-for="day in days_this_month"
-                                     class="w-40 inline-flex mt-1 h-36 w-full text-lg text-secondary subpixel-antialiased">
+                                     class="w-40 inline-flex mt-1 h-36 w-full text-secondary subpixel-antialiased">
                                     {{ day.date_formatted }}
                                 </div>
                             </div>
@@ -245,7 +245,7 @@
                                 <!-- Events without Room Column -->
                                 <div class="bg-error border-r-8 border-white" v-if="events_without_room.count > 0">
                                     <div
-                                        class="px-2 text-white uppercase  cursor-pointer subpixel-antialiased mt-4 mb-4 ">
+                                        class="px-2 text-white uppercase cursor-pointer subpixel-antialiased mt-4 mb-4 ">
                                         Termine ohne Raum
                                     </div>
                                     <div v-for="day in events_without_room.days_in_month">
@@ -353,7 +353,7 @@
                                      :class="room.area_id !== getLastRoom().area_id ? 'border-l-8 border-white' : ''">
                                     <Link
                                         :href="route('rooms.show',{room: room.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
-                                        class="text-lg text-secondary cursor-pointer subpixel-antialiased mt-4 mb-4 ">
+                                        class="uppercase text-secondary cursor-pointer subpixel-antialiased mt-4 mb-4 ">
                                         {{ room.name }}
                                     </Link>
                                     <div v-for="day in room.days_in_month">
@@ -480,15 +480,30 @@
 
         </div>
     </div>
-    <div v-else class="ml-20 mt-10 text-secondary subpixel-antialiased text-xs">
-        Bisher wurden keine Termine für dieses Projekt angelegt.
+    <div v-else>
+        <div class="flex items-center ml-14 mt-6"
+             v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+            <button @click="openAddEventModal" type="button"
+                    class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+            </button>
+            <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
+                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                <span
+                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
+            </div>
+        </div>
+        <div  class="ml-20 mt-10 text-secondary subpixel-antialiased text-xs">
+            Bisher wurden keine Termine für dieses Projekt angelegt.
+        </div>
     </div>
+
     <!-- Termin erstellen Modal-->
     <jet-dialog-modal :show="addingEvent" @close="closeAddEventModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
-                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                <div class="font-black font-lexend text-primary tracking-wide text-2xl my-2">
                     Neue Raumbelegung
                 </div>
                 <XIcon @click="closeAddEventModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -496,7 +511,7 @@
                 <div class="text-secondary subpixel-antialiased">
                     Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                 </div>
-                <div v-if="$page.props.can.show_hints" class="mt-6 ml-4 flex">
+                <div v-if="$page.props.can.show_hints" class="mt-6 flex">
                     <SvgCollection svgName="arrowLeft" class="mt-3 ml-2 flex-shrink-0"/>
                     <span
                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Hier kannst du die Art des Termins definieren. ihn einem Projekt zuordnen und weitere Infos mit deinem Team teilen. Anschließend kannst du dafür die Raumbelegung anfragen.</span>
@@ -513,8 +528,8 @@
                                             <span>{{ selectedEventType.name }}</span>
                                 </span>
                                     <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        class="ml-2 inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                 </div>
                             </ListboxButton>
@@ -532,7 +547,7 @@
                                             <EventTypeIconCollection :height="20" :width="20"
                                                                      :iconName="eventType.svg_name"/>
                                             <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
                                                     </span>
                                             <span
@@ -551,16 +566,16 @@
                         <div class="relative">
                             <ListboxButton
                                 class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                <div class="flex items-center my-auto">
-                                        <span v-if="selectedRoom" class="block truncate items-center flex">
+                                <div class="flex items-center my-auto justify-end">
+                                        <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
                                             <span>{{ selectedRoom.name }}</span>
 
                                         </span>
                                     <span v-if="!selectedRoom"
                                           class="block truncate">Raum definieren*</span>
                                     <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                          </span>
                                 </div>
                             </ListboxButton>
@@ -938,7 +953,7 @@
                                                       class="block truncate">Raum definieren*</span>
                                                 <span
                                                     class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                          </span>
                                             </div>
                                         </ListboxButton>
@@ -1095,7 +1110,7 @@
                                         </span>
                                 <span
                                     class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                             </ListboxButton>
 

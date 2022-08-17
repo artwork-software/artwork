@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Models\Area;
 use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
@@ -462,6 +463,7 @@ class ProjectController extends Controller
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
+                    //determines if the checklist is already opened by default
                     'showContent' => true,
                     'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
@@ -484,6 +486,8 @@ class ProjectController extends Controller
                 'private_checklists' => $private_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
+                    //determines if the checklist is already opened by default
+                    'showContent' => true,
                     'tasks' => $checklist->tasks()->orderBy('order')->get()->map(fn($task) => [
                         'id' => $task->id,
                         'name' => $task->name,
@@ -545,6 +549,28 @@ class ProjectController extends Controller
                     'name' => $task_template->name,
                     'description' => $task_template->description
                 ]),
+            ]),
+            'areas' => Area::all()->map(fn($area) => [
+                'id' => $area->id,
+                'name' => $area->name,
+                'rooms' => $area->rooms()->with('room_admins', 'events.event_type')->orderBy('order')->get()->map(fn($room) => [
+                    'conflicts_start_time' => $this->get_conflicts_in_room_for_start_time($room),
+                    'conflicts_end_time' => $this->get_conflicts_in_room_for_end_time($room),
+                    'id' => $room->id,
+                    'name' => $room->name,
+                    'description' => $room->description,
+                    'temporary' => $room->temporary,
+                    'created_by' => User::where('id', $room->user_id)->first(),
+                    'created_at' => Carbon::parse($room->created_at)->format('d.m.Y, H:i'),
+                    'start_date' => Carbon::parse($room->start_date)->format('d.m.Y'),
+                    'start_date_dt_local' => Carbon::parse($room->start_date)->toDateString(),
+                    'end_date' => Carbon::parse($room->end_date)->format('d.m.Y'),
+                    'end_date_dt_local' => Carbon::parse($room->end_date)->toDateString(),
+                    'room_admins' => $room->room_admins->map(fn($room_admin) => [
+                        'id' => $room_admin->id,
+                        'profile_photo_url' => $room_admin->profile_photo_url
+                    ])
+                ])
             ]),
             'days_this_month' => $request->query('calendarType') === 'monthly' ? collect($period)->map(fn($date_of_day) => [
                 'date_formatted' => strtoupper($date_of_day->isoFormat('dd DD.MM.')),

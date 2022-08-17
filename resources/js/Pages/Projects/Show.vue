@@ -3,7 +3,7 @@
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
-                    <h2 class="flex font-black font-lexend subpixel-antialiased text-primary tracking-wide text-3xl">
+                    <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ project.name }}</h2>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
@@ -227,7 +227,7 @@
 
         </div>
         <!-- Div with Bg-Color -->
-        <div class="bg-stone-50 w-full h-full">
+        <div class="bg-backgroundGray w-full h-full">
             <div class="ml-20">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
@@ -534,7 +534,7 @@
                                                                     </Menu>
                                                                 </div>
                                                                 <div v-if="!element.done"
-                                                                     class="ml-16 text-secondary subpixel-antialiased">
+                                                                     class="ml-16 text-sm text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -584,7 +584,7 @@
                                                             leave-from-class="transform opacity-100 scale-100"
                                                             leave-to-class="transform opacity-0 scale-95">
                                                             <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                         <a @click="openEditChecklistModal(checklist)"
@@ -716,7 +716,7 @@
                                                                             leave-from-class="transform opacity-100 scale-100"
                                                                             leave-to-class="transform opacity-0 scale-95">
                                                                             <MenuItems
-                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                                 <div class="py-1">
                                                                                     <MenuItem v-slot="{ active }">
                                                                                 <span
@@ -743,7 +743,7 @@
                                                                     </Menu>
                                                                 </div>
                                                                 <div v-if="!element.done"
-                                                                     class="ml-16 text-secondary subpixel-antialiased">
+                                                                     class="ml-16 text-sm text-secondary subpixel-antialiased">
                                                                     {{ element.description }}
                                                                 </div>
                                                             </div>
@@ -771,7 +771,7 @@
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
-                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-stone-50 border-0  w-full"/>
+                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-backgroundGray border-0  w-full"/>
                             <div class="absolute bottom-0 right-0 flex">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span
@@ -791,7 +791,7 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img :data-tooltip-target="comment.user.id"
+                                        <img :data-tooltip-target="comment.user"
                                              :src="comment.user.profile_photo_url" :alt="comment.user.name"
                                              class="rounded-full h-7 w-7 object-cover"/>
                                         <UserTooltip :user="comment.user"/>
@@ -904,13 +904,13 @@
                             <div class="sm:col-span-3">
                                 <div>
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
+                                           class="text-primary h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
                                 </div>
                             </div>
                             <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
                                 <div class="relative">
                                     <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate">{{ selectedParticipantNumber }}</span>
                                         <span v-if="selectedParticipantNumber === ''" class="block truncate">Anzahl Teilnehmer*innen</span>
                                         <span
@@ -946,7 +946,7 @@
                             <Listbox as="div" class="sm:col-span-3" v-model="selectedGenre">
                                 <div class="relative">
                                     <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center">
                                             <span>{{ selectedGenre.name }}</span>
                                         </span>
@@ -986,7 +986,7 @@
                             <Listbox as="div" class="sm:col-span-3" v-model="selectedSector">
                                 <div class="relative">
                                     <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center">
                                             <span>{{ selectedSector.name }}</span>
                                         </span>
@@ -1028,7 +1028,7 @@
                             <Listbox as="div" class="sm:col-span-3" v-model="selectedCategory">
                                 <div class="relative">
                                     <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
+                                        class="bg-white relative focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
                                         <span class="block truncate items-center flex">
                                             <span>{{ selectedCategory.name }}</span>
                                         </span>
@@ -1200,8 +1200,8 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Team bearbeiten
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                        Projektteam zuweisen
                     </div>
                     <XIcon @click="closeEditProjectTeamModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
@@ -1311,7 +1311,7 @@
                         </span>
                     </div>
                     <button @click="editProjectTeam"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
                     >Speichern
                     </button>
 
@@ -1334,7 +1334,7 @@
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
                     </div>
-                    <div class="mt-6 relative">
+                    <div class="mt-10 relative">
                         <div class="my-auto w-full">
                             <input id="userSearch" v-model="department_query" type="text" autocomplete="off"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -1383,7 +1383,7 @@
                         </span>
                     </div>
                     <button @click="saveChecklistTeams"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
                     >Zuweisen
                     </button>
 
@@ -1397,20 +1397,21 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                    <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
                         Neue Aufgabe
                     </div>
                     <XIcon @click="closeAddTaskModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="mt-12">
+                    <div class="text-secondary tracking-tight leading-6 sub">
+                        Lege eine neue Aufgabe an. Du kannst sie zudem mit einer Deadline
+                        und einem Kommentar versehen.
+                    </div>
+                    <div class="mt-6">
                         <div class="flex">
-                            <div class="relative flex w-full mr-4">
-                                <input id="task_name" v-model="taskForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="task_name"
-                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                            <div class="mt-1 w-full mr-4">
+                                <input type="text" v-model="taskForm.name" placeholder="Aufgabe"
+                                       class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                             </div>
                         </div>
                         <div class="mt-4 mr-4">
@@ -1421,17 +1422,17 @@
                             <input
                                 v-model="taskForm.deadline" id="datePicker"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="border-gray-300 placeholder-secondary w-full"/>
+                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 w-full"/>
                         </div>
                         <div class="mt-4 mr-4">
                                             <textarea
                                                 placeholder="Kommentar"
                                                 v-model="taskForm.description" rows="3"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                         </div>
                         <button
                             :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
                             @click="addTask"
                             :disabled="this.taskForm.name === ''">
                             Hinzufügen
@@ -1694,8 +1695,11 @@ import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
 import DailyCalendar from "@/Layouts/Components/DailyCalendar";
 
 const number_of_participants = [
-    {number: '100-1000'},
-    {number: '1000-10000'},
+    {number: '1-10'},
+    {number: '10-50'},
+    {number: '50-100'},
+    {number: '100-500'},
+    {number: '>500'}
 ]
 
 

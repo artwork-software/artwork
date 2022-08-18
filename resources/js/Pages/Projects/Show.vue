@@ -246,7 +246,7 @@
                 <div v-if="isScheduleTab && project.rooms">
                     <div v-if="!calendarType || calendarType === 'monthly'">
                         <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types"
-                                         :areas="areas"
+                                         :areas="areas" :requested_start_time="requested_start_time" :requested_end_time="requested_end_time"
                                          :month_events="month_events" :projects="[project]"
                                          :rooms="project.rooms" :days_this_month="days_this_month"
                                          :events_without_room="events_without_room"></MonthlyCalendar>
@@ -1705,7 +1705,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment'],
+    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,

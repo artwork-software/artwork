@@ -578,6 +578,8 @@ class ProjectController extends Controller
             'start_time_of_new_event' => $request->query('start_time'),
             'end_time_of_new_event' => $request->query('end_time'),
             'requested_wanted_day' => $request->query('wanted_day'),
+            'requested_start_time' => $request->query('month_start'),
+            'requested_end_time' => $request->query('month_end'),
             'hours_of_day' => $hours,
             'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
             'shown_day_local' => Carbon::parse($request->query('wanted_day')),

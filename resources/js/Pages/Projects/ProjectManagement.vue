@@ -465,7 +465,7 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="font-black text-primary font-lexend text-3xl my-2">
                         Projekt gelöscht
                     </div>
                     <XIcon @click="closeSuccessModal"
@@ -475,10 +475,10 @@
                         Das Projekt {{ nameOfDeletedProject }} wurde gelöscht.
                     </div>
                     <div class="mt-6">
-                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="closeSuccessModal">
-                            <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
                         </button>
                     </div>
                 </div>

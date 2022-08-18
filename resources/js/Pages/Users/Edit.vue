@@ -24,7 +24,7 @@
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
                                             <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                                         </div>
                                     </div>
 

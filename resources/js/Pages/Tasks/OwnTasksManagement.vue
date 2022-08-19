@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Meine Aufgaben">
+    <app-layout>
         <div class="max-w-screen-xl my-12 ml-20 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">

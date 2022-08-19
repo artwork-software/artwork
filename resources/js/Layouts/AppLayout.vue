@@ -1,7 +1,7 @@
 <template>
-    <div>
+    <div class="z-auto">
         <TransitionRoot as="template" :show="sidebarOpen">
-            <Dialog as="div" class="fixed inset-0 flex z-40 md:hidden" @close="sidebarOpen = false">
+            <Dialog as="div" class="inset-0 flex z-100 md:hidden" @close="sidebarOpen = false">
                 <TransitionChild as="template" enter="transition-opacity ease-linear duration-300"
                                  enter-from="opacity-0" enter-to="opacity-100"
                                  leave="transition-opacity ease-linear duration-300" leave-from="opacity-100"
@@ -65,8 +65,8 @@
 
         <!-- Static sidebar for desktop -->
         <!-- Sidebar component, swap this element with another sidebar if you like -->
-        <div class="flex">
-            <div class="hidden w-28 bg-primary md:block bottom-0 top-0 fixed">
+        <div class="flex h-full">
+            <div class="block w-28 h-full bg-primary inset-y-0 left-0 absolute z-100">
                 <div class="w-full py-2 mt-3 flex flex-col items-center">
                     <div v-if="$page.props.big_logo === null" class="text-2xl font-bold text-secondaryHover">
                         <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-20 w-20 -mb-4" />

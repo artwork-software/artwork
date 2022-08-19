@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Areal Management">
+    <app-layout>
         <div class="py-4">
             <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">

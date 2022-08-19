@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Projekteinstellungen">
+    <app-layout>
         <div class="max-w-screen-lg my-8 ml-20 mr-40">
             <div class="">
                 <h2 class="text-3xl font-black font-lexend my-2">Termineinstellungen</h2>
@@ -19,7 +19,7 @@
                         <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Erstelle neue Termintypen</span>
                     </div>
                 </div>
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <div class="text-secondary tracking-tight leading-6 subpixel-antialiased">
                     Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem
                     definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen
                     Terminnamen bekommen können.
@@ -77,7 +77,7 @@
                                         leave-from-class="transform opacity-100 scale-100"
                                         leave-to-class="transform opacity-0 scale-95">
                                 <MenuItems
-                                    class="z-10 origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                    class="z-10 origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                     <div class="py-1">
                                         <MenuItem v-slot="{ active }">
                                             <a href="#" @click="openEditEventTypeModal(eventType)"

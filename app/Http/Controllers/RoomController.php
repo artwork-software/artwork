@@ -142,6 +142,13 @@ class RoomController extends Controller
                     }
 
                 }
+                if(Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2)){
+                    $minutes_from_start = 1;
+                }else if(Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)) < 1440){
+                    $minutes_from_start = Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time));
+                }else{
+                    $minutes_from_start = 1;
+                }
 
                 $eventsToday[] = [
                     'id' => $event->id,
@@ -153,8 +160,8 @@ class RoomController extends Controller
                     "end_time" => $event->end_time,
                     "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
                     "occupancy_option" => $event->occupancy_option,
-                    "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)),
-                    "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                    "minutes_from_day_start" => $minutes_from_start,
+                    "duration_in_minutes" => Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2) ? Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->end_time)) : Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
                     "audience" => $event->audience,
                     "is_loud" => $event->is_loud,
                     "event_type_id" => $event->event_type_id,

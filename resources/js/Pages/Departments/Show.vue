@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Teamprofil">
+    <app-layout>
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
             <div class="flex">

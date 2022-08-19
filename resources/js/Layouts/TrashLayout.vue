@@ -2,23 +2,23 @@
     <div class="max-w-screen-xl">
         <div class="flex-wrap max-w-5xl">
             <div class="flex flex-wrap mx-10">
-                <h2 class="font-bold font-lexend text-3xl w-full">Papierkorb</h2>
-                <p class="text-secondary mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
+                <h2 class="font-black text-primary font-lexend text-3xl w-full">Papierkorb</h2>
+                <p class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">Du kannst Objekte aus deinem Papierkorb wieder herstellen oder endgültig
                     löschen. Nach 30 Tagen werden Objekte automatisch endgültig gelöscht.</p>
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
                         <Listbox as="div" class="sm:col-span-3 mb-8" v-model="selectedTrash">
                             <div class="relative">
-                                <ListboxButton class="bg-white relative w-full pr-14 font-semibold py-2 mt-4 text-left
-                                cursor-default focus:outline-none focus:ring-0 focus:ring-primary
+                                <ListboxButton class="flex cursor-pointer bg-white relative pr-14 font-semibold py-2 mt-4 text-left
+                                focus:outline-none focus:ring-0 focus:ring-primary
                                 focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
+                                        <span class="block truncate items-center primary">
                                             <span>{{ selectedTrash.name }}</span>
                                         </span>
                                     <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                        class="relative flex items-center pr-2">
+                                     <ChevronDownIcon class="ml-2 h-5 w-5 text-primary" aria-hidden="true"/>
                                     </span>
                                 </ListboxButton>
 

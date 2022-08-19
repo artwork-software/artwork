@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Projects">
+    <app-layout>
         <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">

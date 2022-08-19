@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Projekteinstellungen">
+    <app-layout>
         <div class="max-w-screen-lg my-8 ml-20 mr-40">
             <div class="">
                 <h2 class="text-3xl font-black font-lexend my-2">Projekteinstellungen</h2>

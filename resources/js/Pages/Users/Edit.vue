@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Edit Profile">
+    <app-layout>
         <div>
             <div class="max-w-screen-lg py-4 pl-20 pr-4">
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">

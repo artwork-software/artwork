@@ -4,8 +4,9 @@
             <div class="flex flex-1 flex-wrap">
                 <div class="w-full flex my-auto justify-between">
                     <div class="flex flex-wrap items-center">
-                        <div v-if="calendarType !== 'project'"  class="flex items-center mb-4 ml-20 mt-10">
-                            <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">Raumbelegungen</h2>
+                        <div v-if="calendarType !== 'project'" class="flex items-center mb-4 ml-20 mt-10">
+                            <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
+                                Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
                                 <button @click="openAddEventModal" type="button"
@@ -65,8 +66,9 @@
                                          class="sm:col-span-3 mb-8 flex mr-4 items-center my-auto"
                                          v-model="wantedArea">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
-                                                       class=" flex ml-4 cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                            class=" flex ml-4 cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedArea" class="block truncate items-center">
                                             <span>{{ wantedArea.name }}</span>
                                         </span>
@@ -118,11 +120,12 @@
                                         </transition>
                                     </div>
                                 </Listbox>
-                                <Listbox  as="div" class="sm:col-span-3 mb-8 mr-4 flex items-center my-auto"
+                                <Listbox as="div" class="sm:col-span-3 mb-8 mr-4 flex items-center my-auto"
                                          v-model="wantedEventType">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
-                                                       class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                            class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedEventType" class="block truncate items-center">
                                             <span>{{ wantedEventType.name }}</span>
                                         </span>
@@ -178,8 +181,9 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedAttribute">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
-                                                       class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                            class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedAttribute" class="block truncate items-center">
                                             <span>{{ wantedAttribute.name }}</span>
                                         </span>
@@ -232,7 +236,7 @@
                                         </transition>
                                     </div>
                                 </Listbox>
-                                <div v-if="calendarType === 'project'"  class="flex items-center my-auto mt-4">
+                                <div v-if="calendarType === 'project'" class="flex items-center my-auto mt-4">
                                     <div class="flex items-center"
                                          v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
                                         <button @click="openAddEventModal" type="button"
@@ -293,9 +297,15 @@
                                                         }}
                                                     </div>
                                                     <!-- Individual Eventname -->
-                                                    <div
-                                                        class="my-1 ml-2 text-xs flex font-lexend text-secondary">
-                                                        {{ day.events[0].name }}
+                                                    <div v-if="day.events[0].name">
+                                                        <div v-if="day.events[0].project_id !== null"
+                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                            {{ day.events[0].name }}
+                                                        </div>
+                                                        <div v-else
+                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                            {{ day.events[0].name }}
+                                                        </div>
                                                     </div>
                                                     <!-- Time of Event -->
                                                     <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -304,7 +314,9 @@
                                                     </div>
 
                                                     <!-- EventType -->
-                                                    <div class="mt-2 ml-2 mb-1">
+                                                    <div
+                                                        :class="day.events[0].project_id !== null ? day.events[0].name ? 'mt-2' : 'mt-6' : 'mt-6'"
+                                                        class="ml-2 mb-1">
                                                         <EventTypeIconCollection :height="20" :width="20"
                                                                                  :iconName="this.event_types.find(x => x.id === day.events[0].event_type_id).svg_name"/>
                                                     </div>
@@ -374,7 +386,7 @@
                                     <div v-for="day in room.days_in_month">
                                         <div @click="openDayDetailModal(day)"
                                              v-if="day.events.length > 0 && checkEventType(day.events) && checkAttribute(day.events)"
-                                             :class="[{'stripes': day.events[0].occupancy_option }, 'bg-white m-0.5 h-36 mr-4 border border-gray-100 cursor-pointer']">
+                                             :class="[{'stripes': day.events[0].occupancy_option }, 'bg-white m-0.5 h-36 w-44 mr-4 border border-gray-100 cursor-pointer']">
                                             <!-- If only 1 event on that day-->
                                             <div
                                                 v-if="day.events.length === 1">
@@ -393,19 +405,24 @@
                                                     </div>
                                                 </div>
                                                 <div>
-
                                                     <!-- Name of connected Project -->
                                                     <div
-                                                        v-if="day.events[0].project_id !== null"
+                                                        v-if="day.events[0].project_id !== null && projects.find(x => x.id === day.events[0].project_id)"
                                                         class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                         {{
                                                             projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
                                                     </div>
                                                     <!-- Individual Eventname -->
-                                                    <div
-                                                        class="my-1 ml-2 text-xs flex font-lexend text-secondary">
-                                                        {{ day.events[0].name }}
+                                                    <div v-if="day.events[0].name">
+                                                        <div v-if="day.events[0].project_id !== null"
+                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                            {{ day.events[0].name }}
+                                                        </div>
+                                                        <div v-else
+                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                            {{ day.events[0].name }}
+                                                        </div>
                                                     </div>
                                                     <!-- Time of Event -->
                                                     <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -414,7 +431,9 @@
                                                     </div>
 
                                                     <!-- EventType -->
-                                                    <div class="mt-2 ml-2 mb-1">
+                                                    <div
+                                                        :class="day.events[0].project_id !== null ? day.events[0].name ? 'mt-2' : 'mt-6' : 'mt-6'"
+                                                        class="ml-2 mb-1">
                                                         <EventTypeIconCollection :height="20" :width="20"
                                                                                  :iconName="this.event_types.find(x => x.id === day.events[0].event_type_id).svg_name"/>
                                                     </div>
@@ -466,20 +485,21 @@
                                             </div>
 
                                         </div>
-                                        <div v-else-if="day.events.length < 1 && this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
-                                        <div  @mouseover="activateHover(day.date_local, room.id)"
-                                             @click="openAddEventModal(room.id)"
-                                             @mouseout="deactivateHover()"
-                                             class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer"
-                                             :class="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
-                                            <button
-                                                v-show="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id"
-                                                type="button"
-                                                class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
-                                                <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
-                                            </button>
+                                        <div
+                                            v-else-if="day.events.length < 1 && this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                            <div @mouseover="activateHover(day.date_local, room.id)"
+                                                 @click="openAddEventModal(room.id)"
+                                                 @mouseout="deactivateHover()"
+                                                 class="m-0.5 h-36 mr-4 w-44 flex cursor-pointer"
+                                                 :class="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id ? 'bg-secondary' : ''">
+                                                <button
+                                                    v-show="showAddHoverDate === day.date_local && showAddHoverRoomId === room.id"
+                                                    type="button"
+                                                    class="m-auto border border-transparent rounded-full shadow-sm text-white bg-primary bg-primaryHover focus:outline-none">
+                                                    <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
+                                                </button>
 
-                                        </div>
+                                            </div>
                                         </div>
                                         <div v-else class="h-36 w-44">
 
@@ -509,7 +529,7 @@
                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Frage neue Raumbelegungen an</span>
             </div>
         </div>
-        <div  class="ml-20 mt-10 text-secondary subpixel-antialiased text-xs">
+        <div class="ml-20 mt-10 text-secondary subpixel-antialiased text-xs">
             Bisher wurden keine Termine für dieses Projekt angelegt.
         </div>
     </div>
@@ -600,7 +620,8 @@
                                 <ListboxOptions
                                     class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <div v-for="(area,index) in areas">
-                                        <p :class="index === 0 ? 'mt-1': 'mt-4'" class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
+                                        <p :class="index === 0 ? 'mt-1': 'mt-4'"
+                                           class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                             {{ area.name }}</p>
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="room in area.rooms"
@@ -676,7 +697,7 @@
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                 class="absolute z-10 w-full max-h-60 bg-primary shadow-lg
+                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
@@ -768,10 +789,10 @@
                         <input v-model="addEventForm.audience"
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
+                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto mt-1"
                              :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                         <p :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1 my-auto text-sm">Publikum</p>
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Publikum</p>
                     </div>
                     <div class="flex ml-12">
                         <input v-model="addEventForm.is_loud"
@@ -780,7 +801,7 @@
                         <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                              :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                         <p :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1 my-auto text-sm">Es wird laut</p>
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
                     </div>
                 </div>
                 <div class="mt-4">
@@ -828,7 +849,8 @@
             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8"/>
             <XIcon @click="closeDayDetailModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
-            <div v-for="(event,index) in wantedDay.events" :class="wantedDay.events.length -1 === index ? '' : 'border-b-2'" class="mx-4 pb-8">
+            <div v-for="(event,index) in wantedDay.events"
+                 :class="wantedDay.events.length -1 === index ? '' : 'border-b-2'" class="mx-4 pb-8">
                 <div>
                     <div class="mt-2 flex items-center w-full">
                         <div v-if="hasConflict(event.id)" class="bg-error absolute left-0 flex h-8 w-8 mt-4 mr-2">
@@ -836,8 +858,10 @@
                                  class="h-8 w-8 p-1 my-auto flex text-white"
                                  aria-hidden="true"/>
                         </div>
-                        <Listbox v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin" as="div"
-                                 class="flex w-full" v-model="event.event_type_id">
+                        <Listbox
+                            v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                            as="div"
+                            class="flex w-full" v-model="event.event_type_id">
                             <div class="relative">
                                 <ListboxButton
                                     class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
@@ -952,18 +976,22 @@
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center justify-between">
-                            <div v-if="event.project_id !== null" class="flex items-center">
-                                <div>Zugeordnet zu</div>
+                            <div v-if="event.project_id !== null" class="flex items-center text-sm">
+                                <div class="my-auto">Zugeordnet zu</div>
                                 <div>
                                     <Link
                                         :href="route('projects.show',{project: event.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
-                                        class="ml-3 text-lg flex font-bold font-lexend text-primary">
+                                        class="ml-3 text-md flex font-bold font-lexend text-primary">
                                         {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
                                 </div>
                             </div>
-                            <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0"
-                                 class="w-1/3">
+                            <div v-else class="flex font-lexend text-secondary subpixel-antialiased text-sm">
+                                <div>Keinem Projekt zugeordnet</div>
+                            </div>
+                            <div
+                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0"
+                                class="w-1/3">
                                 <Listbox as="div" class="flex items-center my-auto w-full " v-model="event.room_id">
                                     <div class="relative w-full">
                                         <ListboxButton
@@ -986,7 +1014,8 @@
                                             <ListboxOptions
                                                 class="absolute z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                                 <div v-for="(area,index) in areas">
-                                                    <p :class="index === 0 ? 'mt-1': 'mt-4'" class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
+                                                    <p :class="index === 0 ? 'mt-1': 'mt-4'"
+                                                       class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                         {{ area.name }}</p>
                                                     <ListboxOption as="template" class="max-h-8"
                                                                    v-for="room in area.rooms"
@@ -1020,8 +1049,9 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="event.name !== null">
-                        <div class="mt-4 w-full" v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                    <div>
+                        <div class="mt-4 w-full"
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <input type="text" v-model="event.name" placeholder="Terminname"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         </div>
@@ -1031,7 +1061,9 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms" class="flex mt-4">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        class="flex mt-4">
                         <div class="text-secondary mr-2">
                             <label for="startDate" class="text-xs subpixel-antialiased">Terminstart*</label>
                             <input
@@ -1061,16 +1093,17 @@
                         }}.{{ event.end_time.toLocaleString().split('-')[0] }},
                         {{ event.end_time.split('-')[2].split(' ')[1] }}
                     </div>
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
-                         class="flex mt-4 items-center">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                        class="flex mt-4 items-center">
                         <div class="flex items-center">
                             <input v-model="event.audience"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
+                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 mt-1"
                                  :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1 my-auto text-sm">Publikum</p>
+                               class="ml-1.5 mt-1.5 text-sm text-xs subpixel-antialiased text-secondary">Publikum</p>
                         </div>
                         <div class="flex ml-12">
                             <input v-model="event.is_loud"
@@ -1079,10 +1112,11 @@
                             <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                                  :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1 my-auto text-sm">Es wird laut</p>
+                               class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
                         </div>
                     </div>
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="event.description" rows="4"
@@ -1358,6 +1392,7 @@ export default defineComponent({
     },
     methods: {
         checkProjectPermission(wantedProjectId, userId) {
+            console.log(this.projects.find(project => project.id === wantedProjectId));
             if (wantedProjectId) {
                 return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
             } else {
@@ -1377,7 +1412,7 @@ export default defineComponent({
                 });
 
             } else {
-                if(this.calendarType === 'project') {
+                if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: project_id,
                         calendarType: 'monthly',
@@ -1385,12 +1420,12 @@ export default defineComponent({
                         month_end: this.requested_end_time,
                         start_time: this.addEventForm.start_time
                     }, {only: ['areas'], preserveState: true});
-                }else{
+                } else {
                     Inertia.get(route('events.monthly_management'), {
-                    month_start: this.requested_start_time,
-                    month_end: this.requested_end_time,
-                    start_time: this.addEventForm.start_time
-                }, {only: ['areas'], preserveState: true});
+                        month_start: this.requested_start_time,
+                        month_end: this.requested_end_time,
+                        start_time: this.addEventForm.start_time
+                    }, {only: ['areas'], preserveState: true});
                 }
             }
         },
@@ -1433,7 +1468,7 @@ export default defineComponent({
                 });
 
             } else {
-                if(this.calendarType === 'project'){
+                if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: project_id,
                         calendarType: 'monthly',
@@ -1441,12 +1476,12 @@ export default defineComponent({
                         month_end: this.requested_end_time,
                         end_time: this.addEventForm.end_time
                     }, {only: ['areas'], preserveState: true});
-                }else{
+                } else {
                     Inertia.get(route('events.monthly_management'), {
-                    month_start: this.requested_start_time,
-                    month_end: this.requested_end_time,
-                    end_time: this.addEventForm.end_time
-                }, {only: ['areas'], preserveState: true});
+                        month_start: this.requested_start_time,
+                        month_end: this.requested_end_time,
+                        end_time: this.addEventForm.end_time
+                    }, {only: ['areas'], preserveState: true});
                 }
             }
         },
@@ -1679,7 +1714,7 @@ export default defineComponent({
         },
         deleteEvent(eventId) {
             Inertia.delete(`/events/${eventId}`);
-            this.closeDayDetailModal()
+            this.closeDayDetailModal();
         },
         approveRequest(event) {
             if (event.name !== null) {

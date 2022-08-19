@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Dashboard">
+    <app-layout>
         <div class="py-4">
             <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -57,7 +57,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
                                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -100,7 +100,7 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }">
                                                     <a :href="getEditHref(department)"

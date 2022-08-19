@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Event Management">
+    <app-layout>
         <MonthlyCalendar calendarType="main"
                          :event_types="event_types"
                          :areas="areas"

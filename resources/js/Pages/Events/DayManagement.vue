@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Event Management">
+    <app-layout>
         <DailyCalendar calendarType="main" :my-rooms="myRooms" :hours_of_day="hours_of_day" :rooms="rooms" :projects="projects" :event_types="event_types" :areas="areas" :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local" :events_without_room="events_without_room"/>
     </app-layout>
 </template>

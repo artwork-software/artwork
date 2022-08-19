@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Tooleinstellungen">
+    <app-layout>
 
         <div class="max-w-screen-xl my-8 ml-20 mr-40">
 

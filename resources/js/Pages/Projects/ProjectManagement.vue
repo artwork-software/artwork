@@ -1,5 +1,5 @@
 <template>
-    <app-layout title="Meine Projekte">
+    <app-layout>
         <div class="py-4">
             <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-20 mr-40">
                 <div class="flex flex-1 flex-wrap">

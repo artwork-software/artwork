@@ -146,6 +146,8 @@ class ProjectController extends Controller
             'genre_id' => $request->genre_id,
         ]);
 
+        $project->users()->save(Auth::user(), ['is_admin' => true]);
+
         if ($request->assigned_user_ids) {
             if (Auth::user()->can('update users')) {
                 $project->users()->sync(
@@ -177,12 +179,13 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
-    private function get_events_of_day($date_of_day, $events): array
+    private function get_events_of_day($date_of_day, $events, $project_id = null): array
     {
 
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
+        if(!$project_id){
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
                 $eventsToday[] = [
@@ -205,17 +208,44 @@ class ProjectController extends Controller
                 ];
             }
         }
+        }else{
+            foreach ($events as $event) {
+                if (in_array($today, $event->days_of_event) && $project_id === $event->project_id) {
+                    $eventsToday[] = [
+                        'id' => $event->id,
+                        'name' => $event->name,
+                        'description' => $event->description,
+                        "start_time" => $event->start_time,
+                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                        "end_time" => $event->end_time,
+                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                        "occupancy_option" => $event->occupancy_option,
+                        "audience" => $event->audience,
+                        "is_loud" => $event->is_loud,
+                        "event_type_id" => $event->event_type_id,
+                        "room_id" => $event->room_id,
+                        "user_id" => $event->user_id,
+                        "project_id" => $event->project_id,
+                        "created_at" => $event->created_at,
+                        "updated_at" => $event->updated_at,
+                    ];
+                }
+            }
+        }
 
 
         return $eventsToday;
     }
 
-    private function get_events_for_day_view($date_of_day, $events): array
+    private function get_events_for_day_view($date_of_day, $events, $project_id = null): array
     {
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
         $lastEvent = null;
+
+        if(!$project_id){
+
 
         foreach ($events as $event) {
             if (in_array($today, $event->days_of_event)) {
@@ -233,6 +263,14 @@ class ProjectController extends Controller
 
                 }
 
+                if(Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2)){
+                    $minutes_from_start = 1;
+                }else if(Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)) < 1440){
+                    $minutes_from_start = Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time));
+                }else{
+                    $minutes_from_start = 1;
+                }
+
                 $eventsToday[] = [
                     'id' => $event->id,
                     'conflicts' => $conflicts,
@@ -243,8 +281,8 @@ class ProjectController extends Controller
                     "end_time" => $event->end_time,
                     "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
                     "occupancy_option" => $event->occupancy_option,
-                    "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)),
-                    "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                    "minutes_from_day_start" => $minutes_from_start,
+                    "duration_in_minutes" => Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2) ? Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->end_time)) : Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
                     "audience" => $event->audience,
                     "is_loud" => $event->is_loud,
                     "event_type_id" => $event->event_type_id,
@@ -257,6 +295,50 @@ class ProjectController extends Controller
                 ];
 
                 $lastEvent = $event;
+            }
+        }
+        }else{
+            foreach ($events as $event) {
+                if (in_array($today, $event->days_of_event) && $project_id === $event->project_id) {
+
+                    $conflicts = [];
+
+                    if (!blank($lastEvent)) {
+
+                        $this_event_start_time = Carbon::parse($event['start_time']);
+                        $last_event_end_time = Carbon::parse($lastEvent['end_time']);
+
+                        if ($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
+                            $conflicts[] = $lastEvent['id'];
+                        }
+
+                    }
+
+                    $eventsToday[] = [
+                        'id' => $event->id,
+                        'conflicts' => $conflicts,
+                        'name' => $event->name,
+                        'description' => $event->description,
+                        "start_time" => $event->start_time,
+                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                        "end_time" => $event->end_time,
+                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                        "occupancy_option" => $event->occupancy_option,
+                        "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)),
+                        "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                        "audience" => $event->audience,
+                        "is_loud" => $event->is_loud,
+                        "event_type_id" => $event->event_type_id,
+                        "event_type" => $event->event_type,
+                        "room_id" => $event->room_id,
+                        "user_id" => $event->user_id,
+                        "project_id" => $event->project_id,
+                        "created_at" => $event->created_at,
+                        "updated_at" => $event->updated_at,
+                    ];
+
+                    $lastEvent = $event;
+                }
             }
         }
 
@@ -394,7 +476,7 @@ class ProjectController extends Controller
                         'profile_photo_url' => $room_admin->profile_photo_url
                     ]),
                     'days_in_month' => collect($period)->map(function ($date_of_day) use ($project, $room) {
-                        $events = $this->get_events_of_day($date_of_day, $room->events);
+                        $events = $this->get_events_of_day($date_of_day, $room->events, $project->id);
 
                         $conflicts = $this->conflict_event_ids($events);
 
@@ -409,7 +491,7 @@ class ProjectController extends Controller
                     'id' => $room->id,
                     'name' => $room->name,
                     'area_id' => $room->area_id,
-                    'events' => $this->get_events_for_day_view($wanted_day, $room->events)
+                    'events' => $this->get_events_for_day_view($wanted_day, $room->events, $project->id)
                 ]),
                 'events' => $project->events->map(fn($event) => [
                     'id' => $event->id,
@@ -536,11 +618,11 @@ class ProjectController extends Controller
                 'days_in_month' => collect($period)->map(fn($date_of_day) => [
                     'date_local' => $date_of_day->toDateTimeLocalString(),
                     'date' => $date_of_day->format('d.m.Y'),
-                    'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom),
+                    'events' => $this->get_events_of_day($date_of_day, $eventsWithoutRoom, $project->id),
                 ]),
             ] : [
                 "count" => $eventsWithoutRoomCount,
-                'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom),
+                'events' => $this->get_events_for_day_view($wanted_day, $eventsWithoutRoom, $project->id),
             ],
             'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
                 'id' => $checklist_template->id,

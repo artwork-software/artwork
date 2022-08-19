@@ -67,7 +67,8 @@
                                          class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedArea">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
                                             class="flex ml-4 cursor-pointer  relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedArea" class="block truncate items-center">
                                             <span>{{ wantedArea.name }}</span>
@@ -124,7 +125,8 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedEventType">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
                                             class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedEventType" class="block truncate items-center">
                                             <span>{{ wantedEventType.name }}</span>
@@ -181,7 +183,8 @@
                                 <Listbox as="div" class="sm:col-span-3 mb-8 flex items-center my-auto"
                                          v-model="wantedAttribute">
                                     <div class="relative">
-                                        <ListboxButton :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
+                                        <ListboxButton
+                                            :class="calendarType === 'project' ? 'bg-backgroundGray' : 'bg-white'"
                                             class="flex cursor-pointer relative w-full font-semibold pr-10 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
                                         <span v-if="wantedAttribute" class="block truncate items-center">
                                             <span>{{ wantedAttribute.name }}</span>
@@ -235,7 +238,7 @@
                                         </transition>
                                     </div>
                                 </Listbox>
-                                <div v-if="calendarType === 'project'"  class="flex items-center my-auto mt-4">
+                                <div v-if="calendarType === 'project'" class="flex items-center my-auto mt-4">
                                     <div class="flex items-center"
                                          v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
                                         <button @click="openAddEventModal" type="button"
@@ -264,7 +267,7 @@
                                     <h2 class="px-2 text-white uppercase cursor-pointer subpixel-antialiased mt-4 mb-4 ">
                                         Termine ohne Raum
                                     </h2>
-                                    <ol class="h-full grid grid-cols-1 sm:pr-8"
+                                    <ol class="h-full w-54 grid grid-cols-1 sm:pr-8"
                                         style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
                                         <li v-for="event in sortedEvents(events_without_room.events)"
                                             class="mt-px flex"
@@ -406,12 +409,12 @@
 
                                 <div v-if="this.roomsToShow.length > 0"
                                      v-for="room in roomsToShow.sort((a,b) => a.area_id - b.area_id)"
-                                     class="inline-flex flex-col pl-3 w-56"
-                                     :class="room.area_id !== getLastRoom().area_id ? 'border-l-8 border-white' : ''">
+                                     class="inline-flex flex-col pl-3 shrink-0 bg-backgroundGray"
+                                     :class="[room.area_id !== getLastRoom().area_id ? 'border-l-8 border-white' : '', room.events.length === 0 ? 'w-56': '']">
                                     <h2 class="uppercase text-secondary subpixel-antialiased mt-4 mb-4 ">
                                         {{ room.name }}
                                     </h2>
-                                    <ol class="h-full grid grid-cols-1 sm:pr-8"
+                                    <ol class="h-full grid pr-8 grid-cols-1"
                                         style="grid-template-rows: 1.75rem repeat(1440, minmax(0, 1fr)) auto">
                                         <!-- Listobject on hover when there is no event on that day -->
                                         <li @mouseover="activateHover(room.id)"
@@ -429,7 +432,6 @@
                                         <li v-for="event in sortedEvents(room.events)" class="mt-px flex"
                                             :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
                                             <div v-if="checkEventType(event) && checkAttribute(event)">
-
                                                 <div :style="{'border-color': $svgColors[event.event_type.svg_name]}"
                                                      class="group h-full rounded-lg leading-5 border-l-4">
                                                     <div @click="openDayDetailModal(room,event)"
@@ -480,14 +482,23 @@
                                                                     }}
                                                                 </div>
                                                                 <!-- Individual Eventname -->
-                                                                <div
-                                                                    class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                                <div v-if="event.project_id !== null"
+                                                                     class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                                    {{ event.name }}
+                                                                </div>
+                                                                <div v-else
+                                                                     class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                                     {{ event.name }}
                                                                 </div>
                                                                 <!-- Time of Event -->
                                                                 <div
                                                                     class="ml-2 mt-1 text-sm flex text-secondary subpixel-antialiased">
+                                                                    <div v-if="event.minutes_from_day_start === 1">
+                                                                        00:00 -
+                                                                    </div>
+                                                                    <div v-else>
                                                                     {{ event.start_time.substring(11, 16) }} -
+                                                                    </div>
                                                                     <div v-if="event.duration_in_minutes > 1439">
                                                                         23:59
                                                                     </div>
@@ -664,7 +675,8 @@
                                 <ListboxOptions
                                     class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <div v-for="(area,index) in areas">
-                                        <p :class="index === 0 ? 'mt-1': 'mt-4'" class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
+                                        <p :class="index === 0 ? 'mt-1': 'mt-4'"
+                                           class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                             {{ area.name }}</p>
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="room in area.rooms"
@@ -723,7 +735,7 @@
                     <div class="flex mt-4" v-if="creatingProject">
                         <input type="text" v-model="newProjectName"
                                placeholder="Projektname von neuem Projekt*"
-                               class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm "/>
                     </div>
                 </div>
                 <div class="mt-4 flex flex-wrap"
@@ -731,14 +743,14 @@
                     <div class="my-auto w-full" v-if="this.selectedProject === null">
                         <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
                                @focusout="project_query = ''"
-                               class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
                                placeholder="Zu welchem bestehendem Projekt zuordnen?*"
                                :disabled="this.selectedProject"/>
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                 class="absolute z-10 w-full max-h-60 bg-primary shadow-lg
+                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
@@ -774,16 +786,16 @@
                 </div>
                 <div class="mt-4" v-if="!selectedEventType.project_mandatory">
                     <input type="text" v-model="addEventForm.name" placeholder="Terminname"
-                           class="text-primary h-10 focus:border-black border-2 w-full text-sm border-gray-300 "/>
+                           class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm "/>
                 </div>
                 <div class="flex mt-4">
                     <div class="text-secondary mr-2">
-                        <label for="startTime" class="text-xs subpixel-antialiased">Terminstart*</label>
+                        <label for="startTime" class="text-xs subpixel-antialiased ">Terminstart*</label>
                         <input
                             v-model="addEventForm.start_time" id="startTime"
                             @blur="validateStartTime(addEventForm)"
                             placeholder="Terminstart" type="datetime-local"
-                            class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                     </div>
                     <div class="text-secondary ml-2">
                         <label for="endTime" class="text-xs subpixel-antialiased">Terminende*</label>
@@ -791,7 +803,7 @@
                             v-model="addEventForm.end_time" id="endTime"
                             @blur="validateEndTime(addEventForm)"
                             placeholder="Zu erledigen bis?" type="datetime-local"
-                            class="border-gray-300 text-primary placeholder-secondary w-full"/>
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
                 </div>
                 <div class="mt-1" v-if="conflictData !== null">
@@ -826,7 +838,7 @@
                         <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
                              :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                         <p :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1 my-auto text-sm">Publikum</p>
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Publikum</p>
                     </div>
                     <div class="flex ml-12">
                         <input v-model="addEventForm.is_loud"
@@ -835,13 +847,13 @@
                         <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                              :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                         <p :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1 my-auto text-sm">Es wird laut</p>
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
                     </div>
                 </div>
                 <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="addEventForm.description" rows="4"
-                                  class="resize-none shadow-sm placeholder-secondary p-4 focus:ring-black focus:border-black border-2 block w-full sm:text-sm border border-gray-300"/>
+                                  class="resize-none shadow-sm placeholder-secondary p-4 block w-full sm:text-sm border placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300"/>
                 </div>
                 <div>
                     <div v-if="selectedRoom">
@@ -878,7 +890,8 @@
             <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8"/>
             <XIcon @click="closeDayDetailModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
-            <div v-for="(event,index) in wantedEvents" :class="wantedEvents.length -1 === index ? '' : 'border-b-2'" class="mx-4 pb-8">
+            <div v-for="(event,index) in wantedEvents" :class="wantedEvents.length -1 === index ? '' : 'border-b-2'"
+                 class="mx-4 pb-8">
                 <div>
                     <div class="mt-2 flex">
                         <div
@@ -888,8 +901,10 @@
                                  class="h-8 w-8 p-1 my-auto flex text-white"
                                  aria-hidden="true"/>
                         </div>
-                        <Listbox v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin" as="div"
-                                 class="flex w-full" v-model="event.event_type_id">
+                        <Listbox
+                            v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                            as="div"
+                            class="flex w-full" v-model="event.event_type_id">
                             <div class="relative">
                                 <ListboxButton
                                     class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
@@ -1016,8 +1031,12 @@
                                     </Link>
                                 </div>
                             </div>
-                            <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
-                                 class="w-1/3">
+                            <div v-else class="flex font-lexend text-secondary subpixel-antialiased text-sm">
+                                <div>Keinem Projekt zugeordnet</div>
+                            </div>
+                            <div
+                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                                class="w-1/3">
                                 <Listbox as="div" class="flex items-center my-auto w-full " v-model="event.room_id">
                                     <div class="relative w-full">
                                         <ListboxButton
@@ -1040,7 +1059,8 @@
                                             <ListboxOptions
                                                 class="absolute z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                                 <div v-for="(area,index) in areas">
-                                                    <p :class="index === 0 ? 'mt-1': 'mt-4'" class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
+                                                    <p :class="index === 0 ? 'mt-1': 'mt-4'"
+                                                       class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
                                                         {{ area.name }}</p>
                                                     <ListboxOption as="template" class="max-h-8"
                                                                    v-for="room in area.rooms"
@@ -1073,8 +1093,9 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="event.name !== null">
-                        <div class="mt-4 w-full" v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                    <div>
+                        <div class="mt-4 w-full"
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <input type="text" v-model="event.name" placeholder="Terminname"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         </div>
@@ -1085,7 +1106,9 @@
                         </div>
                     </div>
 
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms" class="flex mt-1">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        class="flex mt-1">
                         <div class="text-secondary mr-2">
                             <label for="startDate" class="text-xs subpixel-antialiased">Terminstart*</label>
                             <input
@@ -1115,16 +1138,17 @@
                         }}.{{ event.end_time.toLocaleString().split('-')[0] }},
                         {{ event.end_time.split('-')[2].split(' ')[1] }}
                     </div>
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
-                         class="flex mt-4 items-center">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                        class="flex mt-4 items-center">
                         <div class="flex items-center">
                             <input v-model="event.audience"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto"
+                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto mt-1"
                                  :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1 my-auto text-sm">Publikum</p>
+                               class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Publikum</p>
                         </div>
                         <div class="flex ml-12">
                             <input v-model="event.is_loud"
@@ -1133,10 +1157,11 @@
                             <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
                                  :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
                             <p :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1 my-auto text-sm">Es wird laut</p>
+                               class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
                         </div>
                     </div>
-                    <div v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
+                    <div
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
                         <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="event.description" rows="4"
@@ -1434,14 +1459,14 @@ export default defineComponent({
                 });
 
             } else {
-                if(this.calendarType === 'project'){
+                if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: project_id,
                         calendarType: 'daily',
-                        wanted_day:new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
+                        wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         start_time: this.addEventForm.start_time
                     }, {only: ['areas'], preserveState: true});
-                } else{
+                } else {
                     Inertia.get(route('events.daily_management'), {
                         wanted_day: this.requested_wanted_day,
                         start_time: this.addEventForm.start_time
@@ -1462,11 +1487,11 @@ export default defineComponent({
                 });
 
             } else {
-                if(this.calendarType === 'project'){
+                if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: project_id,
                         calendarType: 'daily',
-                        wanted_day:new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
+                        wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         end_time: this.addEventForm.end_time
                     }, {only: ['areas'], preserveState: true});
                 } else {
@@ -1698,6 +1723,7 @@ export default defineComponent({
         },
         deleteEvent(eventId) {
             Inertia.delete(`/events/${eventId}`);
+            this.closeDayDetailModal();
         },
         approveRequest(event) {
             if (event.name !== null) {
@@ -1758,8 +1784,8 @@ export default defineComponent({
             wantedStartDate: null,
             wantedEndDate: null,
             wantedDayDate: null,
-            assignProject: false,
-            selectedProject: null,
+            assignProject: this.calendarType === 'project',
+            selectedProject: this.calendarType === 'project' ? this.projects[0] : null,
             showAddHoverDate: new Date(this.shown_day_local).setHours(0, 0, 0, 0),
             showAddHoverRoomId: null,
             wantedEventType: null,

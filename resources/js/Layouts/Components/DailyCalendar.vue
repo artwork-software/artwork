@@ -781,7 +781,7 @@
                         <label for="startTime" class="text-xs subpixel-antialiased">Terminstart*</label>
                         <input
                             v-model="addEventForm.start_time" id="startTime"
-                            @change="getStartTimeConflicts"
+                            @blur="validateStartTime(addEventForm)"
                             placeholder="Terminstart" type="datetime-local"
                             class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                     </div>
@@ -789,9 +789,33 @@
                         <label for="endTime" class="text-xs subpixel-antialiased">Terminende*</label>
                         <input
                             v-model="addEventForm.end_time" id="endTime"
-                            @change="getEndTimeConflicts"
+                            @blur="validateEndTime(addEventForm)"
                             placeholder="Zu erledigen bis?" type="datetime-local"
                             class="border-gray-300 text-primary placeholder-secondary w-full"/>
+                    </div>
+                </div>
+                <div class="mt-1" v-if="conflictData !== null">
+                    <div v-if="this.conflictData.length === 1" class="text-error subpixel-antialiased text-sm flex">
+                        Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
+                        <div class="flex ml-1" v-if="this.conflictData[0].project"> von
+                            <Link
+                                :href="route('projects.show',{project: this.conflictData[0].project.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                class="font-black flex cursor-pointer ml-1">
+                                {{ this.conflictData[0].project.name }}
+                            </Link>
+                        </div>
+                        <div class="flex ml-2" v-if="this.conflictData[0].event_name !== null">
+                            mit Namen "{{ this.conflictData[0].event_name }}"
+                        </div>
+                    </div>
+                    <div class="text-error subpixel-antialiased text-sm flex" v-else-if="this.conflictData.length > 1">
+                        Dieser Termin kollidiert mit {{ this.conflictData.length }} anderen Terminen.
+                    </div>
+                </div>
+
+                <div class="mt-1" v-if="startTimeError">
+                    <div class="text-error subpixel-antialiased text-sm flex">
+                        {{ startTimeError.start_time }}
                     </div>
                 </div>
                 <div class="flex mt-4 items-center">
@@ -823,24 +847,24 @@
                     <div v-if="selectedRoom">
                         <div
                             v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
-                            <button :class="[this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '')  || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                            <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '')  || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                     @click="addEvent(false)"
-                                    :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
+                                    :disabled="startTimeError || addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
                                 Belegen
                             </button>
                         </div>
                     </div>
                     <div
                         v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
-                        <button :class="[this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent(true)"
-                                :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
+                                :disabled="startTimeError || addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
                             Raum anfragen
                         </button>
                     </div>
@@ -1372,9 +1396,36 @@ export default defineComponent({
             }
 
         },
-        getStartTimeConflicts() {
+        validateStartBeforeEndTime(form) {
+
+            if(form.start_time && form.end_time) {
+                Inertia.post(route('events.store'), {
+                    start_time: form.start_time,
+                    end_time: form.end_time,
+                }, {
+                    headers: { 'X-Dry-Run': 'true' },
+                    onError: (errors) => {
+                        this.startTimeError = errors
+                    },
+                    onSuccess: () => {
+                        this.startTimeError = null
+                    }
+                })
+            }
+        },
+        async validateStartTime(form) {
+            await this.getStartTimeConflicts()
+
+            this.validateStartBeforeEndTime(form)
+        },
+        async validateEndTime(form) {
+            await this.getEndTimeConflicts()
+
+            this.validateStartBeforeEndTime(form)
+        },
+        async getStartTimeConflicts() {
             if (this.selectedRoom) {
-                axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+               await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
                     params: {
                         start_time: this.addEventForm.start_time
                     }
@@ -1399,26 +1450,9 @@ export default defineComponent({
 
             }
         },
-        sortedEvents: function (events) {
-            function compare(a, b) {
-                if (b.duration_in_minutes === null) {
-                    return -1;
-                }
-                if (a.duration_in_minutes === null) {
-                    return 1;
-                }
-                if (a.duration_in_minutes < b.duration_in_minutes)
-                    return 1;
-                if (a.duration_in_minutes > b.duration_in_minutes)
-                    return -1;
-                return 0;
-            }
-
-            return events.sort(compare);
-        },
-        getEndTimeConflicts() {
+        async getEndTimeConflicts() {
             if (this.selectedRoom) {
-                axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
+               await axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
                     params: {
                         wanted_day: this.requested_wanted_day,
                         end_time: this.addEventForm.end_time
@@ -1442,6 +1476,24 @@ export default defineComponent({
                 }
             }
         },
+        sortedEvents: function (events) {
+            function compare(a, b) {
+                if (b.duration_in_minutes === null) {
+                    return -1;
+                }
+                if (a.duration_in_minutes === null) {
+                    return 1;
+                }
+                if (a.duration_in_minutes < b.duration_in_minutes)
+                    return 1;
+                if (a.duration_in_minutes > b.duration_in_minutes)
+                    return -1;
+                return 0;
+            }
+
+            return events.sort(compare);
+        },
+
         hasConflict(event_id) {
 
             for (let conflict of this.wantedDay.conflicts) {
@@ -1534,6 +1586,7 @@ export default defineComponent({
             this.selectedRoom = null;
             this.addEventForm.project = null;
             this.selectedEventType = this.event_types[0];
+            this.startTimeError = null
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1719,6 +1772,8 @@ export default defineComponent({
             project_query: "",
             wantedArea: null,
             project_search_results: [],
+            startTimeError: null,
+            conflictData: null,
             addEventForm: useForm({
                 name: '',
                 start_time: this.start_time_of_new_event,

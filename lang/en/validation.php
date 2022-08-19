@@ -22,7 +22,7 @@ return [
     'alpha_dash' => ':attribute sollte nur Buchstaben, Nummern, Striche und Unterstriche enthalten.',
     'alpha_num' => ':attribute sollte nur Buchstaben und Nummern enthalten.',
     'array' => ':attribute muss ein Array sein.',
-    'before' => ':attribute muss ein Datum vor :date sein.',
+    'before' => ':attribute sollte ein Datum vor :date sein.',
     'before_or_equal' => ':attribute sollte ein Datum vor oder am :date sein.',
     'between' => [
         'numeric' => ':attribute muss zwischen :min und :max liegen.',
@@ -159,7 +159,9 @@ return [
         'email' => 'Email',
         'password' => 'Passwort',
         'photo' => 'Bild',
-        'current_password' => 'Aktuelles Passwort'
+        'current_password' => 'Aktuelles Passwort',
+        'start_time' => 'Terminstart',
+        'end_time' => 'Terminende'
     ],
 
 ];

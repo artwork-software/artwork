@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Events\OccupancyUpdated;
+use App\Http\Requests\StoreOrUpdateEvent;
 use App\Models\Area;
 use App\Models\Checklist;
 use App\Models\Event;
@@ -577,8 +578,11 @@ class EventController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      */
-    public function store(Request $request)
+    public function store(StoreOrUpdateEvent $request)
     {
+
+        $request->validated();
+
         $start_time_parse = Carbon::parse($request->start_time);
         $end_time_parse = Carbon::parse($request->end_time);
 

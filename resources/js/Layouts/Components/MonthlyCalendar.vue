@@ -725,16 +725,16 @@
                     <div class="text-secondary mr-2">
                         <label for="startTime" class="text-xs subpixel-antialiased">Terminstart*</label>
                         <input
+                            @blur="validateStartTime(addEventForm)"
                             v-model="addEventForm.start_time" id="startTime"
-                            @change="getStartTimeConflicts"
                             placeholder="Terminstart" type="datetime-local"
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                     </div>
                     <div class="text-secondary ml-2">
                         <label for="endTime" class="text-xs subpixel-antialiased">Terminende*</label>
                         <input
+                            @blur="validateEndTime(addEventForm)"
                             v-model="addEventForm.end_time" id="endTime"
-                            @change="getEndTimeConflicts"
                             placeholder="Zu erledigen bis?" type="datetime-local"
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
@@ -755,6 +755,12 @@
                     </div>
                     <div class="text-error subpixel-antialiased text-sm flex" v-else-if="this.conflictData.length > 1">
                         Dieser Termin kollidiert mit {{ this.conflictData.length }} anderen Terminen.
+                    </div>
+                </div>
+
+                <div class="mt-1" v-if="startTimeError">
+                    <div class="text-error subpixel-antialiased text-sm flex">
+                       {{ startTimeError.start_time }}
                     </div>
                 </div>
                 <div class="flex mt-4 items-center">
@@ -786,24 +792,29 @@
                     <div v-if="selectedRoom">
                         <div
                             v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
-                            <button :class="[this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                            <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                     @click="addEvent(false)"
-                                    :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
+                                    :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) || startTimeError">
                                 Belegen
                             </button>
                         </div>
                     </div>
                     <div
                         v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
-                        <button :class="[this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent(true)"
-                                :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
+                                :disabled="addEventForm.start_time === null
+                                && addEventForm.end_time === null || (selectedEventType.project_mandatory
+                                && selectedProject === null && newProjectName === '') || (addEventForm.name === ''
+                                && newProjectName === ''
+                                && selectedProject === null)
+                                || startTimeError">
                             Raum anfragen
                         </button>
                     </div>
@@ -1354,10 +1365,10 @@ export default defineComponent({
             }
 
         },
-        getStartTimeConflicts() {
+        async getStartTimeConflicts() {
             if (this.selectedRoom) {
 
-                axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+               await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
                     params: {
                         start_time: this.addEventForm.start_time
                     }
@@ -1381,13 +1392,39 @@ export default defineComponent({
                     start_time: this.addEventForm.start_time
                 }, {only: ['areas'], preserveState: true});
                 }
-
             }
         },
-        getEndTimeConflicts() {
+        validateStartBeforeEndTime(form) {
+
+            if(form.start_time && form.end_time) {
+                Inertia.post(route('events.store'), {
+                    start_time: form.start_time,
+                    end_time: form.end_time,
+                }, {
+                    headers: { 'X-Dry-Run': 'true' },
+                    onError: (errors) => {
+                        this.startTimeError = errors
+                    },
+                    onSuccess: () => {
+                        this.startTimeError = null
+                    }
+                })
+            }
+        },
+        async validateStartTime(form) {
+           await this.getStartTimeConflicts()
+
+            this.validateStartBeforeEndTime(form)
+        },
+        async validateEndTime(form) {
+            await this.getEndTimeConflicts()
+
+            this.validateStartBeforeEndTime(form)
+        },
+        async getEndTimeConflicts() {
             if (this.selectedRoom) {
 
-                axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
+                await axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
                     params: {
                         end_time: this.addEventForm.end_time
                     }
@@ -1536,6 +1573,7 @@ export default defineComponent({
             this.addEventForm.project = null;
             this.conflictData = null;
             this.selectedEventType = this.event_types[0];
+            this.startTimeError = null;
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1550,6 +1588,7 @@ export default defineComponent({
             }
 
             this.addEventForm.post(route('events.store'), {});
+
             this.closeAddEventModal();
         },
         addProjectToEvent(project) {
@@ -1724,6 +1763,7 @@ export default defineComponent({
             project_query: "",
             wantedArea: null,
             conflictData: null,
+            startTimeError: null,
             project_search_results: [],
             addEventForm: useForm({
                 name: '',

@@ -1640,6 +1640,7 @@ export default defineComponent({
         },
         deleteEvent(eventId) {
             Inertia.delete(`/events/${eventId}`);
+            this.closeDayDetailModal()
         },
         approveRequest(event) {
             if (event.name !== null) {

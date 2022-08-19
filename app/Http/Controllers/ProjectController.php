@@ -459,6 +459,7 @@ class ProjectController extends Controller
                         'description' => $user->description,
                     ]),
                 ]),
+
                 'isMemberOfADepartment' => $project->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
@@ -849,7 +850,13 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
+
+        $project->load('events');
+
+        $project->events()->delete();
+
         $project->delete();
+
         return Redirect::route('projects')->with('success', 'Project moved to trash');
     }
 
@@ -859,6 +866,7 @@ class ProjectController extends Controller
         $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->forceDelete();
+        $project->events()->withTrashed()->forceDelete();
         return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 
@@ -867,6 +875,8 @@ class ProjectController extends Controller
         $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->restore();
+        $project->events()->withTrashed()->restore();
+
         return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 

@@ -16,17 +16,18 @@ return new class extends Migration
         Schema::create('events', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
-            $table->string('description')->nullable(true);
-            $table->timestamp('start_time')->nullable(true);
-            $table->timestamp('end_time')->nullable(true);
-            $table->boolean('occupancy_option')->default(false)->nullable(true);;
-            $table->boolean('audience')->default(false)->nullable(true);;
-            $table->boolean('is_loud')->default(false)->nullable(true);
+            $table->string('description')->nullable();
+            $table->timestamp('start_time')->nullable();
+            $table->timestamp('end_time')->nullable();
+            $table->boolean('occupancy_option')->default(false)->nullable();
+            $table->boolean('audience')->default(false)->nullable();
+            $table->boolean('is_loud')->default(false)->nullable();
             $table->unsignedBigInteger('event_type_id');
             $table->unsignedBigInteger('room_id')->nullable();
             $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('project_id')->nullable(true);
+            $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

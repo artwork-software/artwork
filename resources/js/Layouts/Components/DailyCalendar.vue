@@ -21,7 +21,7 @@
                         </div>
 
                         <div class="flex w-full items-center ml-20">
-                            <div class="text-xl font-black">
+                            <div class="text-xl font-black w-40">
                                 {{ this.formattedWeekday }} {{ this.shown_day_formatted.split(' ')[1] }}
                             </div>
                             <div v-if="calendarType === 'main'" class="ml-2 flex items-center">

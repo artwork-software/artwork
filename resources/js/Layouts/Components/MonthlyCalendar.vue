@@ -21,7 +21,7 @@
                             </div>
                         </div>
                         <div class="flex w-full items-center ml-20">
-                            <div class="text-xl leading-6 font-bold font-lexend text-primary">
+                            <div class="text-xl leading-6 font-bold font-lexend text-primary w-40">
                                 {{ formattedMonth }}
                                 {{ rooms[0].days_in_month[0].date_local.substring(0, 4) }}
                             </div>

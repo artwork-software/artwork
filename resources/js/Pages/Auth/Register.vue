@@ -15,7 +15,7 @@
                         <input
                             v-model="form.first_name"
                             id="first_name" name="name" type="text" required placeholder="Vorname"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -23,7 +23,7 @@
                         <input
                             v-model="form.last_name"
                             id="last_name" name="name" type="text" required placeholder="Name"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -31,7 +31,7 @@
                         <input
                             v-model="form.email"
                             id="email" name="email" type="email" autocomplete="email" required placeholder="E-Mail"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -39,7 +39,7 @@
                         <input
                             v-model="form.phone_number"
                             id="phoneNumber" type="text" placeholder="Telefonnummer"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
                 <div class="sm:col-span-3">
@@ -47,7 +47,7 @@
                         <input
                             v-model="form.business"
                             id="business" type="text" required placeholder="Unternehmen"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
 
@@ -56,7 +56,7 @@
                         <input
                             v-model="form.position"
                             id="position" type="text" required placeholder="Position"
-                            class="shadow-sm placeholder-secondary subpixel-antialiased focus:ring-black focus:border-black border-2 block w-full sm:text-sm border-gray-200"/>
+                            class="shadow-sm placeholder-secondary subpixel-antialiased placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm"/>
                     </div>
                 </div>
 

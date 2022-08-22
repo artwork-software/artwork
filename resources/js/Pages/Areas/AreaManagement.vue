@@ -18,7 +18,7 @@
                                         <div v-if="$page.props.can.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                             <span
-                                                class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
+                                                class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Areale an</span>
                                         </div>
                                     </div>
 

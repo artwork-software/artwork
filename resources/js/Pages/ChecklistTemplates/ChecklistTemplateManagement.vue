@@ -139,15 +139,16 @@
         <!-- Success Modal -->
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        Checklistenvorlage erfolgreich bearbeitet
+                        {{this.successHeading}}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-success subpixel-antialiased">
-                        Die Änderungen wurden erfolgreich gespeichert.
+                        {{this.successText}}
                     </div>
                     <div class="mt-6">
                         <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -167,7 +168,7 @@
 
 import  {Inertia} from "@inertiajs/inertia";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
-import {PlusSmIcon} from "@heroicons/vue/solid";
+import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
@@ -194,13 +195,16 @@ export default {
         Link,
         JetDialogModal,
         XIcon,
-        UserTooltip
+        UserTooltip,
+        CheckIcon
     },
     data() {
         return {
             templateToDelete: null,
             showDeleteTemplateModal: false,
             showSuccessModal: false,
+            successHeading: '',
+            successText:'',
             duplicateForm: this.$inertia.form({
                 _method: 'POST',
                 name: "",
@@ -222,7 +226,7 @@ export default {
         closeDeleteTemplateModal(){
             this.showDeleteTemplateModal = false;
             this.templateToDelete = null;
-            this.openSuccessModal()
+            this.openSuccessModal('delete')
         },
         deleteTemplate(){
             Inertia.delete(`/checklist_templates/${this.templateToDelete.id}`);
@@ -234,11 +238,16 @@ export default {
             this.duplicateForm.departments = templateToDuplicate.departments
             this.duplicateForm.post(route('checklist_templates.store'));
         },
-        openSuccessModal(){
+        openSuccessModal(type){
+            if(type === 'delete'){
+                this.successHeading = 'Löschen erfolgreich';
+                this.successText = 'Die Checklistenvorlage wurde erfolgreich gelöscht.';
+            }else if(type === 'edit'){
+                this.successHeading = 'Checklistenvorlage erfolgreich bearbeitet';
+                this.successText = 'Die Änderungen wurden erfolgreich gespeichert.';
+            }
             this.showSuccessModal = true;
-            setTimeout(function(){
-                this.showSuccessModal = false;
-            },2000)
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal(){
             this.showSuccessModal = false;

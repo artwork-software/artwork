@@ -1,7 +1,7 @@
 <template>
     <div>
         <div :id="user.id" role="tooltip"
-             class="w-72 inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+             class="min-w-72 inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
             <div class="grid grid-cols-4 gap-x-2">
                 <div class="col-span-1">
                     <img class="mx-auto  h-14 w-14 mt-2 rounded-full"

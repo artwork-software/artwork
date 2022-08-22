@@ -1596,6 +1596,8 @@ export default defineComponent({
             this.addingEvent = false;
             this.assignProject = false;
             this.selectedProject = null;
+            this.newProjectName = '';
+            this.creatingProject = false;
             this.addEventForm.eventType = null;
             this.addEventForm.name = '';
             this.addEventForm.start_time = null;

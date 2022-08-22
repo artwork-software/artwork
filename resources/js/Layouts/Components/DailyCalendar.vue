@@ -858,7 +858,7 @@
                 <div>
                     <div v-if="selectedRoom">
                         <div
-                            v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                            v-if="(selectedRoom.room_admins && selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id)) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '')  || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
@@ -870,7 +870,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
+                        v-if=" !selectedRoom || (selectedRoom.room_admins && !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id)) && !$page.props.is_admin">
                         <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
@@ -895,7 +895,7 @@
                 <div>
                     <div class="mt-2 flex">
                         <div
-                            v-if="event.conflicts.length > 0 || rooms.find(room => room.id === event.room_id).events.find(wantedEvent => wantedEvent.conflicts.includes(event.id))"
+                            v-if="event.conflicts.length > 0 || (rooms.find(room => room.id === event.room_id) && rooms.find(room => room.id === event.room_id).events.find(wantedEvent => wantedEvent.conflicts.includes(event.id)))"
                             class="bg-error flex h-8 w-8 mt-6 mr-2">
                             <img src="/Svgs/IconSvgs/icon_warning_white.svg"
                                  class="h-8 w-8 p-1 my-auto flex text-white"
@@ -963,7 +963,7 @@
                                     </span>
                         </div>
                         <div class="flex justify-end"
-                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms">
                             <Menu as="div" class="my-auto w-full relative">
                                 <div class="flex justify-end">
                                     <MenuButton
@@ -982,7 +982,7 @@
                                         class="origin-top-right absolute z-40 right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                         <div class="py-1">
                                             <MenuItem
-                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id))) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="approveRequest(event)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -993,7 +993,7 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem
-                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id))) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="declineRequest(event)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -1161,7 +1161,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms">
                         <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="event.description" rows="4"
@@ -1178,7 +1178,7 @@
                             </button>
                         </div>
                     </div>
-                    <div v-else class="subpixel-antialiased mt-4">
+                    <div v-else class="subpixel-antialiased mt-4 w-80">
                         {{ event.description }}
                     </div>
                 </div>
@@ -1600,6 +1600,10 @@ export default defineComponent({
         },
         closeAddEventModal() {
             this.addingEvent = false;
+            this.assignProject = false;
+            this.selectedProject = null;
+            this.newProjectName = '';
+            this.creatingProject = false;
             this.addEventForm.eventType = null;
             this.addEventForm.name = '';
             this.addEventForm.start_time = null;
@@ -1610,8 +1614,9 @@ export default defineComponent({
             this.addEventForm.audience = false;
             this.selectedRoom = null;
             this.addEventForm.project = null;
+            this.conflictData = null;
             this.selectedEventType = this.event_types[0];
-            this.startTimeError = null
+            this.startTimeError = null;
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1644,6 +1649,7 @@ export default defineComponent({
         openDayDetailModal: function (room, event) {
             this.wantedEvents = [];
             this.wantedEvents.push(event);
+            if(room){
             event.conflicts.forEach((conflictEventId) => {
                 this.wantedEvents.push(room.events.find(roomEvent => roomEvent.id === conflictEventId))
             })
@@ -1652,6 +1658,7 @@ export default defineComponent({
                     this.wantedEvents.push(roomEvent);
                 }
             })
+            }
             this.showDayDetailModal = true;
         },
         closeDayDetailModal() {

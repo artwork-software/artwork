@@ -399,9 +399,7 @@ export default defineComponent({
         editUser() {
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
             this.showSuccessModal = true;
-            setTimeout(function(){
-                this.showSuccessModal = false;
-            },1500)
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         deleteTeamFromDepartmentsArray(index) {
             this.userForm.departments.splice(index, 1);
@@ -423,9 +421,7 @@ export default defineComponent({
         },
         openSuccessModal(){
             this.showSuccessModal = true;
-            setTimeout(function(){
-                this.showSuccessModal = false;
-            },2000)
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));

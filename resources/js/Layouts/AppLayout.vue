@@ -80,7 +80,7 @@
                                        aria-hidden="true"/>
                             {{ item.name }}
                         </a>
-                        <div v-if="$page.props.can.change_tool_settings || $page.props.can.usermanagement || $page.props.can.teammanagement || $page.props.can.admin_projectSettings || $page.props.can.admin_eventTypeSettings || $page.props.can.admin_checklistTemplates || $page.props.can.admin_rooms || $page.props.can.view_occupancy_requests  || this.$page.props.is_admin">
+                        <div v-if="$page.props.can.change_tool_settings || $page.props.can.usermanagement || $page.props.can.teammanagement || $page.props.can.admin_projectSettings || $page.props.can.admin_eventTypeSettings || $page.props.can.admin_checklistTemplates || $page.props.can.admin_rooms || this.$page.props.is_admin">
                         <h2 @click="showSystemSettings = !showSystemSettings"
                             class="text-md pt-4 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
                             System
@@ -282,7 +282,7 @@ export default {
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$page.props.can.view_occupancy_requests || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.admin_rooms || this.$page.props.is_admin,
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
@@ -342,7 +342,7 @@ export default {
     },
     data() {
         return {
-            showSystemSettings: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.usermanagement || this.$page.props.can.teammanagement || this.$page.props.can.admin_rooms || this.$page.props.can.view_occupancy_requests || this.$page.props.can.admin_projectSettings || this.$page.props.can.admin_eventTypeSettings || this.$page.props.can.admin_checklistTemplates,
+            showSystemSettings: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.usermanagement || this.$page.props.can.teammanagement || this.$page.props.can.admin_rooms || this.$page.props.can.admin_projectSettings || this.$page.props.can.admin_eventTypeSettings || this.$page.props.can.admin_checklistTemplates,
             showUserMenu: false,
         }
     },

@@ -27,7 +27,7 @@ class StoreInvitationRequest extends FormRequest
             'user_emails' => 'required|array',
             'permissions' => 'array',
             'role' => 'sometimes',
-            'user_emails.*' => 'email|unique:users,email'
+            'user_emails.*' => 'email|unique:users,email|unique:invitations,email'
         ];
     }
 }

@@ -1472,13 +1472,13 @@
                             <input
                                 v-model="taskToEditForm.deadline" id="datePickerEdit"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="border-gray-300 placeholder-secondary w-full"/>
+                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full"/>
                         </div>
                         <div class="mt-4 mr-4">
                                             <textarea
                                                 placeholder="Kommentar"
                                                 v-model="taskToEditForm.description" rows="3"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                         </div>
                         <button
                             :class="[taskToEditForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"

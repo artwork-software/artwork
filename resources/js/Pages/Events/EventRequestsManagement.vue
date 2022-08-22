@@ -23,15 +23,13 @@
                                         <EventTypeIconCollection :height="26" :width="26"
                                                                  :iconName="eventRequest.event_type.svg_name"/>
                                         <div
-                                            class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                            class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900 mr-8">
                                             {{ eventRequest.event_type.name }}
-                                            <AdjustmentsIcon v-if="eventRequest.occupancy_option"
-                                                             class="h-5 w-5 ml-2 my-auto"/>
                                             <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                            <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                            <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud" class="h-5 w-5 ml-2  my-auto"/>
                                         </div>
 
-                                        <div class="flex w-full whitespace-nowrap ml-3"
+                                        <div class="flex w-full whitespace-nowrap ml-4"
                                              v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                             {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                                 eventRequest.start_time.split(',')[0]
@@ -90,7 +88,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex ml-40 mt-2 text-sm text-secondary items-center w-full"
+                                <div class="flex ml-60 mt-2 text-sm text-secondary items-center w-full"
                                      v-if="eventRequest.description">
                                     {{ eventRequest.description }}
                                 </div>

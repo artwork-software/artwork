@@ -115,7 +115,7 @@
                                             <textarea
                                                 placeholder="Kommentar"
                                                 v-model="newTaskDescription" rows="3"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                         </div>
                         <button
                             :class="[this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"

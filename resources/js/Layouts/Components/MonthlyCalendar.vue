@@ -818,7 +818,7 @@
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                     @click="addEvent(false)"
-                                    :disabled="addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) || startTimeError">
+                                    :disabled="addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) || startTimeError">
                                 Belegen
                             </button>
                         </div>
@@ -831,7 +831,7 @@
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent(true)"
                                 :disabled="addEventForm.start_time === null
-                                && addEventForm.end_time === null || (selectedEventType.project_mandatory
+                                || addEventForm.end_time === null || (selectedEventType.project_mandatory
                                 && selectedProject === null && newProjectName === '') || (addEventForm.name === ''
                                 && newProjectName === ''
                                 && selectedProject === null)

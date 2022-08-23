@@ -51,13 +51,13 @@
                             </div>
                             <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
                                 <Link
-                                    :href="route('projects.show',{project: project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{project: project_id,openTab:'calendar', month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronLeftIcon class="h-5 w-5"/>
                                 </Link>
                                 <CalendarIcon @click="openChangeDateModal"
                                               class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                 <Link
-                                    :href="route('projects.show',{project: project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
+                                    :href="route('projects.show',{project: project_id,openTab:'calendar', month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
@@ -1392,7 +1392,6 @@ export default defineComponent({
     },
     methods: {
         checkProjectPermission(wantedProjectId, userId) {
-            console.log(this.projects.find(project => project.id === wantedProjectId));
             if (wantedProjectId) {
                 return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
             } else {
@@ -1687,6 +1686,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
+                        openTab:'calendar',
                         project: this.project_id,
                         calendarType: 'monthly'
                     }))
@@ -1706,6 +1706,7 @@ export default defineComponent({
                 } else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
+                        openTab:'calendar',
                         project: this.project_id,
                         calendarType: 'daily'
                     }))

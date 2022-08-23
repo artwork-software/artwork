@@ -146,7 +146,7 @@
 
                         <div v-for="(permissions, group) in all_permissions">
 
-                            <h3 class="text-secondary mt-3">{{group}}</h3>
+                            <h3 class="text-secondary mt-3 mb-1">{{group}}</h3>
 
                             <div class="relative flex items-center" v-for="(permission, index) in permissions" :key=index>
                                 <div class="flex items-center h-7">

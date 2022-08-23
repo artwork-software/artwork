@@ -17,14 +17,132 @@
                             </div>
                         </div>
                         <div class="flex items-center">
-
-                            <div class="inset-y-0 mr-3 pointer-events-none">
+                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                                 class="cursor-pointer inset-y-0 mr-3">
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                            </div>
+                            <div v-else class="flex items-center w-full w-64 mr-2">
+                                <input id="departmentSearch" v-model="department_query" type="text" autocomplete="off"
+                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
+                                       placeholder="Suche nach Teams"/>
+                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
                     </div>
                     <ul role="list" class="mt-5 w-full">
-                        <li v-for="(department,index) in departments" :key="department.id"
+                        <li v-if="department_query.length < 1" v-for="(department,index) in departments" :key="department.id"
+                            class="py-5 flex justify-between">
+                            <div class="flex">
+                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
+                                <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
+                                    <div class="flex my-auto">
+                                        <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
+                                    </div>
+                                </Link>
+                            </div>
+                            <div class="flex">
+                                <div class="flex mr-8">
+                                    <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
+                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                        <UserTooltip :user="user" />
+                                    </div>
+                                    <div v-if="department.users.length >= 9" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon
+                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="user in department.users" v-slot="{ active }">
+                                                        <Link href="#"
+                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <img class="h-9 w-9 rounded-full"
+                                                                 :src="user.profile_photo_url"
+                                                                 alt=""/>
+                                                            <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                                        </Link>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
+                                    </div>
+                                </div>
+
+                                <Menu as="div" class="my-auto relative">
+                                    <div class="flex">
+                                        <MenuButton
+                                            class="flex">
+                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                              aria-hidden="true"/>
+                                        </MenuButton>
+                                        <div v-if="$page.props.can.show_hints && index === 0"
+                                             class="absolute flex w-40 ml-6">
+                                            <div>
+                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                            </div>
+                                            <div class="flex">
+                                                <span
+                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite dein Team</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem v-slot="{ active }">
+                                                    <a :href="getEditHref(department)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <PencilAltIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Team bearbeiten
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" @click="openDeleteAllTeamMembersModal(department)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Alle Teammitglieder entfernen
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" @click="openDeleteTeamModal(department)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Team löschen
+                                                    </a>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+
+                            </div>
+                        </li>
+                        <li v-else v-for="(department,index) in department_search_results" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
                                 <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
@@ -457,6 +575,10 @@ export default defineComponent({
     },
     props: ['departments', 'users'],
     methods: {
+        closeSearchbar() {
+            this.showSearchbar = !this.showSearchbar;
+            this.department_query = ''
+        },
         openAddTeamModal() {
             this.addingTeam = true;
         },
@@ -526,13 +648,13 @@ export default defineComponent({
         }
     },
     watch: {
-        user_query: {
+        department_query: {
             handler() {
-                if(this.user_query.length > 0) {
-                    axios.get('/users/search', {
-                        params: {query: this.user_query}
+                if(this.department_query.length > 0) {
+                    axios.get('/departments/search', {
+                        params: {query: this.department_query}
                     }).then( response => {
-                        this.user_search_results = response.data
+                        this.department_search_results = response.data
                     })
                 }
             },
@@ -547,13 +669,14 @@ export default defineComponent({
             teamToDeleteAllMembers: null,
             deletingAllTeamMembers: false,
             showSuccess: false,
+            showSearchbar: false,
             form: useForm({
                 svg_name: "",
                 name: "",
                 assigned_users: [],
             }),
-            user_query: "",
-            user_search_results: [],
+            department_query: "",
+            department_search_results: [],
             deleteMembersForm: this.$inertia.form({
                 _method: 'PUT',
                 users: [],

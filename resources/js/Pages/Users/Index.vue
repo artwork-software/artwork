@@ -6,7 +6,7 @@
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
-                            <button data-modal-toggle="invite-user" type="button"
+                            <button data-modal-toggle="invite-user" type="button" id="invite-users"
                                     class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
@@ -17,19 +17,30 @@
                         </div>
                     </div>
                     <div class="flex items-center">
-                        <div @click="search()" class="inset-y-0 mr-3">
+                        <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                             class="cursor-pointer inset-y-0 mr-3">
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                        </div>
+                        <div v-else class="flex items-center w-full w-64 mr-2">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
+                                   placeholder="Suche nach Nutzer*innen"/>
+                            <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
                     <ul role="list" class="mt-6 w-full">
-                        <li v-for="(user,index) in users" :key="user.email" class="py-6 flex justify-between">
+                        <li v-if="user_query.length < 1" v-for="(user,index) in users" :key="user.email"
+                            class="py-6 flex justify-between">
                             <div class="flex">
-                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start" :src="user.profile_photo_url"
+                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start"
+                                     :src="user.profile_photo_url"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)" class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
-                                            {{ user.last_name }}, {{ user.first_name }} </Link>
+                                        <Link :href="getEditHref(user)"
+                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
+                                            {{ user.last_name }}, {{ user.first_name }}
+                                        </Link>
                                         <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
                                     </div>
@@ -38,9 +49,12 @@
                             <div class="flex">
                                 <div class="flex mr-8 items-center">
                                     <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
-                                        <TeamIconCollection :data-tooltip-target="department.id" class="h-10 w-10 rounded-full ring-2 ring-white" :iconName="department.svg_name" />
-                                        <div :id="department.id" role="tooltip" class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                            {{department.name}}
+                                        <TeamIconCollection :data-tooltip-target="department.id"
+                                                            class="h-10 w-10 rounded-full ring-2 ring-white"
+                                                            :iconName="department.svg_name"/>
+                                        <div :id="department.id" role="tooltip"
+                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                            {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
                                     </div>
@@ -48,7 +62,8 @@
                                         <Menu as="div" class="relative">
                                             <div>
                                                 <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                                    <ChevronDownIcon  class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                    <ChevronDownIcon
+                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
                                                 </MenuButton>
                                             </div>
                                             <transition enter-active-class="transition ease-out duration-100"
@@ -59,12 +74,14 @@
                                                         leave-to-class="transform opacity-0 scale-95">
                                                 <MenuItems
                                                     class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem v-for="department in user.departments" v-slot="{ active }">
+                                                    <MenuItem v-for="department in user.departments"
+                                                              v-slot="{ active }">
                                                         <Link href="#"
                                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TeamIconCollection class="h-10 w-10 rounded-full" :iconName="department.svg_name" />
+                                                            <TeamIconCollection class="h-10 w-10 rounded-full"
+                                                                                :iconName="department.svg_name"/>
                                                             <span class="ml-4">
-                                                                {{department.name}}
+                                                                {{ department.name }}
                                                             </span>
                                                         </Link>
                                                     </MenuItem>
@@ -76,19 +93,137 @@
                                 <Menu as="div" class="my-auto relative">
                                     <div>
                                         <div class="flex">
-                                        <MenuButton
-                                            class="flex">
-                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                              aria-hidden="true"/>
-                                        </MenuButton>
-                                        <div v-if="$page.props.can.show_hints && index === 0" class="absolute flex w-40 ml-6">
-                                            <div>
-                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
-                                            </div>
-                                            <div class="flex">
-                                                <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                            <MenuButton
+                                                class="flex">
+                                                <DotsVerticalIcon
+                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+                                            <div v-if="$page.props.can.show_hints && index === 0"
+                                                 class="absolute flex w-40 ml-6">
+                                                <div>
+                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                                </div>
+                                                <div class="flex">
+                                                    <span
+                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem v-slot="{ active }">
+                                                    <a :href="getEditHref(user)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <PencilAltIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Profil bearbeiten
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a @click="openDeleteUserModal(user)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Nutzer*in löschen
+                                                    </a>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                            </div>
+                        </li>
+                        <li v-else v-for="(user,index) in user_search_results" :key="user.email"
+                            class="py-6 flex justify-between">
+                            <div class="flex">
+                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                <div class="ml-3 my-auto w-full justify-start mr-6">
+                                    <div class="flex my-auto">
+                                        <Link :href="getEditHref(user)"
+                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
+                                            {{ user.last_name }}, {{ user.first_name }}
+                                        </Link>
+                                        <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
+                                            {{ user.position }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex">
+                                <div class="flex mr-8 items-center">
+                                    <div class="-mr-3" v-for="department in user.departments.slice(0,2)">
+                                        <TeamIconCollection :data-tooltip-target="department.id"
+                                                            class="h-10 w-10 rounded-full ring-2 ring-white"
+                                                            :iconName="department.svg_name"/>
+                                        <div :id="department.id" role="tooltip"
+                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                            {{ department.name }}
+                                            <div class="tooltip-arrow" data-popper-arrow></div>
+                                        </div>
+                                    </div>
+                                    <div v-if="user.departments.length >= 3" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon
+                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="department in user.departments"
+                                                              v-slot="{ active }">
+                                                        <Link href="#"
+                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TeamIconCollection class="h-10 w-10 rounded-full"
+                                                                                :iconName="department.svg_name"/>
+                                                            <span class="ml-4">
+                                                                {{ department.name }}
+                                                            </span>
+                                                        </Link>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
+                                    </div>
+                                </div>
+                                <Menu as="div" class="my-auto relative">
+                                    <div>
+                                        <div class="flex">
+                                            <MenuButton
+                                                class="flex">
+                                                <DotsVerticalIcon
+                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+                                            <div v-if="$page.props.can.show_hints && index === 0"
+                                                 class="absolute flex w-40 ml-6">
+                                                <div>
+                                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-1"/>
+                                                </div>
+                                                <div class="flex">
+                                                    <span
+                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                     <transition enter-active-class="transition ease-out duration-100"
@@ -129,8 +264,8 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal modal_id="invite-user" @close="closeAddUserModal"  >
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6" />
+        <flowbite-modal class="px-12" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
+            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6"/>
             <div class="mx-3">
 
                 <div class="mt-4 text-2xl font-black">
@@ -143,8 +278,12 @@
                 <div class="mt-4">
                     <div class="flex mt-8">
                         <div class="relative w-72 mr-4">
-                            <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
-                            <label for="email" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
+                            <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput"
+                                   type="text"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="email"
+                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail</label>
                         </div>
                         <jet-input-error :message="form.error" class="mt-2"/>
 
@@ -157,7 +296,6 @@
                         </div>
 
                     </div>
-                    <jet-input-error :message="duplicateMailError" class="mt-2"/>
                     <span v-for="(email,index) in form.user_emails"
                           class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             {{ email }}
@@ -167,11 +305,17 @@
                             class="ml-1 mt-1 h-5 w-5 hover:text-error "/>
                     </button>
                     </span>
+                    <ul>
+                        <li class="text-error text-sm subpixel-antialiased" v-for="(error,key) in errors" :key="key">
+                            {{ error }}
+                        </li>
+                    </ul>
                     <span v-if="form.departments.length === 0" class="flex inline-flex mt-16 pt-1 -mr-3">
 
                         </span>
                     <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
-                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white" :iconName="team.svg_name" />
+                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
+                                                    :iconName="team.svg_name"/>
                         </span>
                     <Disclosure as="div">
                         <div class="flex mt-4 mb-10">
@@ -202,7 +346,7 @@
                                             <input :key="team.name" v-model="team.checked" type="checkbox"
                                                    @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
-                                            <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name" />
+                                            <TeamIconCollection class="h-9 w-9 rounded-full" :iconName="team.svg_name"/>
                                             <span class="ml-2">
                                             {{ team.name }}
                                             </span>
@@ -217,7 +361,7 @@
 
                         <div class="mb-8">
                             <div v-for="role in roleCheckboxes">
-                            <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
+                                <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
                             </div>
                             <!--
                             <RadioGroup v-model="selected">
@@ -255,36 +399,40 @@
 
                     </div>
                     <div v-if="this.form.role !== 'admin'">
-                    <div v-on:click="showUserPermissions = !showUserPermissions">
-                        <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
-                            Nutzerrechte
-                            <ChevronUpIcon v-if="showUserPermissions"
-                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                        </h2>
-                    </div>
-                    <div v-if="showUserPermissions && this.form.role !== 'admin'" class="flex flex-col max-h-96 overflow-y-auto">
+                        <div v-on:click="showUserPermissions = !showUserPermissions">
+                            <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
+                                Nutzerrechte
+                                <ChevronUpIcon v-if="showUserPermissions"
+                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                            </h2>
+                        </div>
+                        <div v-if="showUserPermissions && this.form.role !== 'admin'"
+                             class="flex flex-col max-h-96 overflow-y-auto">
 
-                        <div v-for="(permissions, group) in all_permissions">
+                            <div v-for="(permissions, group) in all_permissions">
 
-                            <h3 class="text-secondary uppercase text-xs mb-2 mt-6">{{group}}</h3>
+                                <h3 class="text-secondary uppercase text-xs mb-2 mt-6">{{ group }}</h3>
 
-                            <div class="relative w-full flex items-center" v-for="(permission, index) in permissions" :key=index>
-                                <Checkbox @click="changePermission(permission)" class="w-full" :item="permission"></Checkbox>
+                                <div class="relative w-full flex items-center"
+                                     v-for="(permission, index) in permissions" :key=index>
+                                    <Checkbox @click="changePermission(permission)" class="w-full"
+                                              :item="permission"></Checkbox>
+                                </div>
+
                             </div>
 
                         </div>
 
                     </div>
-
-                </div>
                 </div>
 
-                <button :class="[form.user_emails.length === 0 && emailInput.length < 3 ?
+                <button :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                         class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                        @click="addUser" :disabled="form.user_emails.length === 0 && emailInput.length < 3">
+                        @click="addUser"
+                        :disabled=" form.processing || (form.user_emails.length === 0 && emailInput.length < 3)">
                     Einladen
                 </button>
             </div>
@@ -292,7 +440,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Nutzer*in löschen
@@ -353,18 +501,36 @@
 import {Inertia} from "@inertiajs/inertia";
 
 const roleCheckboxes = [
-    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked:false},
-    {name: 'Adminrechte', roleName: "admin", tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen", showIcon: true, checked:false},
+    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked: false},
+    {
+        name: 'Adminrechte',
+        roleName: "admin",
+        tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen",
+        showIcon: true,
+        checked: false
+    },
 
 ]
 
 import {defineComponent} from 'vue'
-import { ref } from 'vue'
-import {Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems, RadioGroup, RadioGroupDescription, RadioGroupLabel, RadioGroupOption } from "@headlessui/vue";
+import {ref} from 'vue'
+import {
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems,
+    RadioGroup,
+    RadioGroupDescription,
+    RadioGroupLabel,
+    RadioGroupOption
+} from "@headlessui/vue";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {DotsVerticalIcon, PencilAltIcon, TrashIcon} from '@heroicons/vue/outline'
-import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon,CheckIcon} from '@heroicons/vue/solid'
-import {SearchIcon } from "@heroicons/vue/outline";
+import {ChevronDownIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon, CheckIcon} from '@heroicons/vue/solid'
+import {SearchIcon} from "@heroicons/vue/outline";
 import JetButton from '@/Jetstream/Button.vue'
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInput from '@/Jetstream/Input.vue'
@@ -375,7 +541,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import { Link } from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/inertia-vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 
 export default defineComponent({
@@ -414,7 +580,7 @@ export default defineComponent({
         RadioGroupOption,
         Link,
     },
-    props: ['users', 'departments','all_permissions'],
+    props: ['users', 'departments', 'all_permissions'],
     data() {
         return {
             showUserPermissions: true,
@@ -423,18 +589,30 @@ export default defineComponent({
             showSuccessModal: false,
             userToDelete: {},
             emailInput: "",
-            duplicateMailError:'',
+            showSearchbar: false,
+            user_query: "",
+            user_search_results: [],
             form: useForm({
                 user_emails: [],
                 permissions: [],
                 departments: [],
-                role:'',
+                role: '',
             }),
         }
     },
+    computed: {
+        errors() {
+            return this.$page.props.errors;
+        }
+    },
     methods: {
+        closeSearchbar() {
+            this.showSearchbar = !this.showSearchbar;
+            this.user_query = ''
+        },
         openSuccessModal() {
             this.showSuccessModal = true;
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal() {
             this.showSuccessModal = false;
@@ -454,35 +632,35 @@ export default defineComponent({
         openAddUserModal() {
             this.addingUser = true
         },
-        changeRole(role){
-            if(!role.checked){
+        changeRole(role) {
+            if (!role.checked) {
                 this.form.role = role.roleName;
                 this.uncheckRolesAndPermissions();
                 role.checked = true;
-                if(role.roleName === "user"){
+                if (role.roleName === "user") {
                     this.all_permissions.Projekte.forEach(permission => {
-                        if(permission.name === 'view projects'){
+                        if (permission.name === 'view projects') {
                             permission.checked = true;
                         }
                     })
                     this.all_permissions.Raumbelegungen.forEach(permission => {
-                        if(permission.name === 'request room occupancy' || permission.name === 'view occupancy requests'){
+                        if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
                             permission.checked = true;
                         }
                     })
                 }
-            }else{
-                if(this.form.role === role.roleName){
-                 this.form.role = '';
-                 role.checked = false;
-                    if(role.roleName === "user"){
+            } else {
+                if (this.form.role === role.roleName) {
+                    this.form.role = '';
+                    role.checked = false;
+                    if (role.roleName === "user") {
                         this.all_permissions.Projekte.forEach(permission => {
-                            if(permission.name === 'view projects'){
+                            if (permission.name === 'view projects') {
                                 permission.checked = false;
                             }
                         })
                         this.all_permissions.Raumbelegungen.forEach(permission => {
-                            if(permission.name === 'request room occupancy' || permission.name === 'view occupancy requests'){
+                            if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
                                 permission.checked = false;
                             }
                         })
@@ -491,19 +669,19 @@ export default defineComponent({
             }
 
         },
-        changePermission(permission){
-            if(!permission.checked){
+        changePermission(permission) {
+            if (!permission.checked) {
                 this.form.permissions.push(permission.name);
                 permission.checked = true;
-            }else{
-                if(this.form.permissions.includes(permission.name)){
+            } else {
+                if (this.form.permissions.includes(permission.name)) {
                     this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
                     permission.checked = false;
                 }
             }
 
         },
-        uncheckRolesAndPermissions(){
+        uncheckRolesAndPermissions() {
             this.roleCheckboxes.forEach((role) => {
                 role.checked = false;
             })
@@ -539,18 +717,15 @@ export default defineComponent({
         addUser() {
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
+                this.emailInput = '';
             }
-            this.form.permissions.push()
-            this.form.post(route('invitations.store'));
-
-            if(this.form.hasErrors){
-                this.duplicateMailError = '';
-                this.closeAddUserModal();
-                this.openSuccessModal();
-            }else{
-                this.duplicateMailError = 'Eine der eingegebenen Mails wurde schon registriert. Bitte entferne die bereits eingegebene Email.'
-                this.form.errors.user_emails = '';
-            }
+            this.form.post(route('invitations.store'), {
+                onSuccess: () => {
+                    document.getElementById('invite-users').click();
+                    this.closeAddUserModal();
+                    this.openSuccessModal();
+                }
+            });
         },
         closeAddUserModal() {
             this.addingUser = false;
@@ -569,10 +744,24 @@ export default defineComponent({
             return route('user.edit', {user: user.id});
         }
     },
+    watch: {
+        user_query: {
+            handler() {
+                if (this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
+                    }).then(response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        }
+    },
     setup() {
 
         return {
-            roleCheckboxes,
+            roleCheckboxes
         }
     }
 })

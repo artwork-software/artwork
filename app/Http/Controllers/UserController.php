@@ -34,7 +34,17 @@ class UserController extends Controller
 
         $this->authorize('viewAny',User::class);
 
-        return User::search($request->input('query'))->get();
+        return User::search($request->input('query'))->get()->map(fn($user) => [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+            "profile_photo_url" => $user->profile_photo_url,
+            "email" => $user->email,
+            'departments' => $user->departments,
+            "position" => $user->position,
+            "business" => $user->business,
+            "phone_number" => $user->phone_number
+        ]);
     }
 
     public function reset_user_password(Request $request) {
@@ -72,7 +82,7 @@ class UserController extends Controller
                 "phone_number" => $user->phone_number
             ]),
             "all_permissions" => Permission::all()->groupBy('group'),
-            "departments" => Department::all()
+            "departments" => Department::all(),
         ]);
     }
 

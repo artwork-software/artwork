@@ -127,6 +127,7 @@ return [
     'url' => ':attribute Format ist ungültig.',
     'uuid' => ':attribute muss eine gültige UUID sein.',
 
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -142,6 +143,7 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'user_emails.*' => 'Eine der Mails wurde schon registriert. Entferne sie und versuche es dann erneut.',
     ],
 
     /*

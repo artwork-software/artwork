@@ -477,7 +477,7 @@
                                                                           :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
-                                                                    <span v-if="element.done"
+                                                                    <span v-if="element.done && element.done_by_user"
                                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                                         <img
                                                                             :data-tooltip-target="element.done_by_user.id"
@@ -687,7 +687,7 @@
                                                                           :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                                                             element.deadline
                                                                         }}</span>
-                                                                    <span v-if="element.done"
+                                                                    <span v-if="element.done && element.done_by_user"
                                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                                         <img
                                                                             :data-tooltip-target="element.done_by_user.id"
@@ -1705,7 +1705,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
+    props: ['project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1812,9 +1812,9 @@ export default {
             dragging: false,
             selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             addingChecklist: false,
-            isScheduleTab: false,
-            isChecklistTab: true,
-            isInfoTab: false,
+            isScheduleTab: this.openTab ? this.openTab === 'calendar': false,
+            isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
+            isInfoTab: this.openTab ? this.openTab === 'info' : false,
             editingTeam: false,
             editingChecklistTeams: false,
             department_query: "",
@@ -1875,6 +1875,7 @@ export default {
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
+                id:'',
                 name: "",
                 description: "",
                 deadline: null,
@@ -1899,7 +1900,8 @@ export default {
                 user_id: this.$page.props.user.id,
             }),
             doneTaskForm: useForm({
-                done: false
+                done: false,
+                user_id: this.$page.props.user.id
             }),
         }
     },
@@ -2253,7 +2255,9 @@ export default {
                 task.done_at = null;
                 task.done_at_dt_local = null;
             }
-            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}),{
+                preserveScroll: true,
+            });
         }
     },
     watch: {

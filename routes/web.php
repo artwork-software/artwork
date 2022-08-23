@@ -116,6 +116,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //ChecklistTemplates
     Route::get('/checklist_templates', [ChecklistTemplateController::class, 'index'])->name('checklist_templates.management');
     Route::get('/checklist_templates/create', [ChecklistTemplateController::class, 'create'])->name('checklist_templates.create');
+    Route::get('/checklist_templates/search', [ChecklistTemplateController::class, 'search'])->name('checklist_templates.search');
     Route::post('/checklist_templates', [ChecklistTemplateController::class, 'store'])->name('checklist_templates.store');
     Route::get('/checklist_templates/{checklist_template}', [ChecklistTemplateController::class, 'show']);
     Route::get('/checklist_templates/{checklist_template}/edit', [ChecklistTemplateController::class, 'edit'])->name('checklist_templates.edit');

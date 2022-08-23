@@ -119,6 +119,57 @@ class ProjectController extends Controller
 
     }
 
+    public function search(SearchRequest $request)
+    {
+        $this->authorize('viewAny', Project::class);
+
+        return Project::search($request->input('query'))->get()->map(fn($project) => [
+            'id' => $project->id,
+            'name' => $project->name,
+            'description' => $project->description,
+            'number_of_participants' => $project->number_of_participants,
+            'cost_center' => $project->cost_center,
+            'sector' => $project->sector,
+            'category' => $project->category,
+            'genre' => $project->genre,
+            'users' => $project->users->map(fn($user) => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'profile_photo_url' => $user->profile_photo_url,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'position' => $user->position,
+                'business' => $user->business,
+                'description' => $user->description,
+            ]),
+            'project_history' => $project->project_histories()->with('user')->orderByDesc('created_at')->get()->map(fn($history_entry) => [
+                'created_at' => Carbon::parse($history_entry->created_at)->diffInHours() < 24 ?
+                    Carbon::parse($history_entry->created_at)->diffForHumans() :
+                    Carbon::parse($history_entry->created_at)->format('d.m.Y, H:i'),
+                'user' => $history_entry->user,
+                'description' => $history_entry->description
+            ]),
+            'departments' => $project->departments->map(fn($department) => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'svg_name' => $department->svg_name,
+                'users' => $department->users->map(fn($user) => [
+                    'id' => $user->id,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
+                    'profile_photo_url' => $user->profile_photo_url,
+                    'email' => $user->email,
+                    'phone_number' => $user->phone_number,
+                    'position' => $user->position,
+                    'business' => $user->business,
+                    'description' => $user->description,
+                ]),
+            ]),
+            'events' => $project->events
+        ]);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -185,30 +236,30 @@ class ProjectController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        if(!$project_id){
-        foreach ($events as $event) {
-            if (in_array($today, $event->days_of_event)) {
-                $eventsToday[] = [
-                    'id' => $event->id,
-                    'name' => $event->name,
-                    'description' => $event->description,
-                    "start_time" => $event->start_time,
-                    "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
-                    "end_time" => $event->end_time,
-                    "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
-                    "occupancy_option" => $event->occupancy_option,
-                    "audience" => $event->audience,
-                    "is_loud" => $event->is_loud,
-                    "event_type_id" => $event->event_type_id,
-                    "room_id" => $event->room_id,
-                    "user_id" => $event->user_id,
-                    "project_id" => $event->project_id,
-                    "created_at" => $event->created_at,
-                    "updated_at" => $event->updated_at,
-                ];
+        if (!$project_id) {
+            foreach ($events as $event) {
+                if (in_array($today, $event->days_of_event)) {
+                    $eventsToday[] = [
+                        'id' => $event->id,
+                        'name' => $event->name,
+                        'description' => $event->description,
+                        "start_time" => $event->start_time,
+                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                        "end_time" => $event->end_time,
+                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                        "occupancy_option" => $event->occupancy_option,
+                        "audience" => $event->audience,
+                        "is_loud" => $event->is_loud,
+                        "event_type_id" => $event->event_type_id,
+                        "room_id" => $event->room_id,
+                        "user_id" => $event->user_id,
+                        "project_id" => $event->project_id,
+                        "created_at" => $event->created_at,
+                        "updated_at" => $event->updated_at,
+                    ];
+                }
             }
-        }
-        }else{
+        } else {
             foreach ($events as $event) {
                 if (in_array($today, $event->days_of_event) && $project_id === $event->project_id) {
                     $eventsToday[] = [
@@ -244,60 +295,60 @@ class ProjectController extends Controller
 
         $lastEvent = null;
 
-        if(!$project_id){
+        if (!$project_id) {
 
 
-        foreach ($events as $event) {
-            if (in_array($today, $event->days_of_event)) {
+            foreach ($events as $event) {
+                if (in_array($today, $event->days_of_event)) {
 
-                $conflicts = [];
+                    $conflicts = [];
 
-                if (!blank($lastEvent)) {
+                    if (!blank($lastEvent)) {
 
-                    $this_event_start_time = Carbon::parse($event['start_time']);
-                    $last_event_end_time = Carbon::parse($lastEvent['end_time']);
+                        $this_event_start_time = Carbon::parse($event['start_time']);
+                        $last_event_end_time = Carbon::parse($lastEvent['end_time']);
 
-                    if ($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
-                        $conflicts[] = $lastEvent['id'];
+                        if ($last_event_end_time->greaterThanOrEqualTo($this_event_start_time)) {
+                            $conflicts[] = $lastEvent['id'];
+                        }
+
                     }
 
+                    if (Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2)) {
+                        $minutes_from_start = 1;
+                    } else if (Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)) < 1440) {
+                        $minutes_from_start = Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time));
+                    } else {
+                        $minutes_from_start = 1;
+                    }
+
+                    $eventsToday[] = [
+                        'id' => $event->id,
+                        'conflicts' => $conflicts,
+                        'name' => $event->name,
+                        'description' => $event->description,
+                        "start_time" => $event->start_time,
+                        "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
+                        "end_time" => $event->end_time,
+                        "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
+                        "occupancy_option" => $event->occupancy_option,
+                        "minutes_from_day_start" => $minutes_from_start,
+                        "duration_in_minutes" => Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2) ? Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->end_time)) : Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                        "audience" => $event->audience,
+                        "is_loud" => $event->is_loud,
+                        "event_type_id" => $event->event_type_id,
+                        "event_type" => $event->event_type,
+                        "room_id" => $event->room_id,
+                        "user_id" => $event->user_id,
+                        "project_id" => $event->project_id,
+                        "created_at" => $event->created_at,
+                        "updated_at" => $event->updated_at,
+                    ];
+
+                    $lastEvent = $event;
                 }
-
-                if(Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2)){
-                    $minutes_from_start = 1;
-                }else if(Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)) < 1440){
-                    $minutes_from_start = Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time));
-                }else{
-                    $minutes_from_start = 1;
-                }
-
-                $eventsToday[] = [
-                    'id' => $event->id,
-                    'conflicts' => $conflicts,
-                    'name' => $event->name,
-                    'description' => $event->description,
-                    "start_time" => $event->start_time,
-                    "start_time_dt_local" => Carbon::parse($event->start_time)->toDateTimeLocalString(),
-                    "end_time" => $event->end_time,
-                    "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
-                    "occupancy_option" => $event->occupancy_option,
-                    "minutes_from_day_start" => $minutes_from_start,
-                    "duration_in_minutes" => Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2) ? Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->end_time)) : Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
-                    "audience" => $event->audience,
-                    "is_loud" => $event->is_loud,
-                    "event_type_id" => $event->event_type_id,
-                    "event_type" => $event->event_type,
-                    "room_id" => $event->room_id,
-                    "user_id" => $event->user_id,
-                    "project_id" => $event->project_id,
-                    "created_at" => $event->created_at,
-                    "updated_at" => $event->updated_at,
-                ];
-
-                $lastEvent = $event;
             }
-        }
-        }else{
+        } else {
             foreach ($events as $event) {
                 if (in_array($today, $event->days_of_event) && $project_id === $event->project_id) {
 
@@ -444,6 +495,10 @@ class ProjectController extends Controller
         if ($request->query('calendarType') === 'monthly') {
             $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
         }
+        $openTab = $request->openTab;
+        if(!$openTab){
+            $openTab = 'checklist';
+        }
 
         $hours = ['0:00', '1:00', '2:00', '3:00', '4:00', '5:00', '6:00', '7:00', '8:00', '9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'];
         $wanted_day = Carbon::parse($request->query('wanted_day'));
@@ -542,7 +597,7 @@ class ProjectController extends Controller
                     ]),
                 ]),
 
-                'isMemberOfADepartment' => $project->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
+                'isMemberOfADepartment' => $project->departments->contains(fn($department) => $department->users->contains(Auth::user())),
                 'public_checklists' => $public_checklists->map(fn($checklist) => [
                     'id' => $checklist->id,
                     'name' => $checklist->name,
@@ -666,7 +721,8 @@ class ProjectController extends Controller
             'hours_of_day' => $hours,
             'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
             'shown_day_local' => Carbon::parse($request->query('wanted_day')),
-            'calendarType' => $request->query('calendarType') === 'daily' ? 'daily' : 'monthly'
+            'calendarType' => $request->query('calendarType') === 'daily' ? 'daily' : 'monthly',
+            'openTab'=> $openTab
         ]);
     }
 
@@ -962,13 +1018,7 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed')->with('success', 'Room restored');
     }
 
-    public function search(SearchRequest $request)
-    {
 
-        $this->authorize('viewAny', Project::class);
-
-        return Project::search($request->input('query'))->get();
-    }
 
     public function getTrashed()
     {

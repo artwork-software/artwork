@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchRequest;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
@@ -44,6 +45,28 @@ class ChecklistTemplateController extends Controller
                 'updated_at' => $checklist_template->updated_at,
                 'created_at' => Carbon::parse($checklist_template->created_at)->format('d.m.Y, H:i')
             ]),
+        ]);
+    }
+
+    public function search(SearchRequest $request) {
+
+        return ChecklistTemplate::search($request->input('query'))->get()->map(fn($checklist_template) => [
+            'id' => $checklist_template->id,
+            'name' => $checklist_template->name,
+            'user' => $checklist_template->user,
+            'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
+                'id' => $task_template->id,
+                'name' => $task_template->name,
+                'description' => $task_template->description,
+                'done' => $task_template->done,
+            ]),
+            'departments' => $checklist_template->departments->map(fn($department) => [
+                'id' => $department->id,
+                'name' => $department->name,
+                'svg_name' => $department->svg_name,
+            ]),
+            'updated_at' => $checklist_template->updated_at,
+            'created_at' => Carbon::parse($checklist_template->created_at)->format('d.m.Y, H:i')
         ]);
     }
 

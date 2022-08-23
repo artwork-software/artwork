@@ -26,7 +26,22 @@ class DepartmentController extends Controller
 
         $this->authorize('viewAny',Department::class);
 
-        return Department::search($request->input('query'))->get();
+        return Department::search($request->input('query'))->get()->map(fn($department) => [
+            'id' => $department->id,
+            'name' => $department->name,
+            'svg_name' => $department->svg_name,
+            'users' => $department->users->map(fn($user) => [
+                'id' => $user->id,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
+                'profile_photo_url' => $user->profile_photo_url,
+                'email' => $user->email,
+                'phone_number' => $user->phone_number,
+                'position' => $user->position,
+                'business' => $user->business,
+                'description' => $user->description,
+            ])
+        ]);
     }
 
     /**

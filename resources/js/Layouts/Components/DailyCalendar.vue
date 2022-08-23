@@ -51,14 +51,14 @@
                             <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
                                 <Link
                                     :href="route('projects.show',{project: projects
-                                       [0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),calendarType: 'daily'})">
+                                       [0],openTab:'calendar', wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),calendarType: 'daily'})">
                                     <ChevronLeftIcon class="h-5 w-5"/>
                                 </Link>
                                 <CalendarIcon @click="openChangeDateModal"
                                               class="h-6 w-6 cursor-pointer ml-2 mr-2"/>
                                 <Link
                                     :href="route('projects.show',{project: projects
-                                       [0], wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1)), calendarType: 'daily'})">
+                                       [0],openTab:'calendar', wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() + 1)), calendarType: 'daily'})">
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
@@ -429,6 +429,8 @@
                                                 <PlusSmIcon class="h-6 w-6" aria-hidden="true"/>
                                             </button>
                                         </li>
+
+
                                         <li v-for="event in sortedEvents(room.events)" class="mt-px flex"
                                             :style="event.minutes_from_day_start !== 0 ? {'grid-row': event.minutes_from_day_start + '/ span ' + event.duration_in_minutes} : {'grid-row': 1 + '/ span ' + event.duration_in_minutes}">
                                             <div v-if="checkEventType(event) && checkAttribute(event)">
@@ -1702,6 +1704,7 @@ export default defineComponent({
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
                         project: this.projects[0],
+                        openTab:'calendar',
                         calendarType: 'monthly'
                     }))
                 } else {
@@ -1721,6 +1724,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
                         project: this.projects[0],
+                        openTab:'calendar',
                         calendarType: 'daily'
                     }))
                 } else {

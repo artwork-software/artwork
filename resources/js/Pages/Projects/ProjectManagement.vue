@@ -20,13 +20,19 @@
                             </div>
                         </div>
                         <div class="flex items-center">
-
-                            <div class="inset-y-0 mr-3 pointer-events-none">
+                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
+                                 class="cursor-pointer inset-y-0 mr-3">
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                            </div>
+                            <div v-else class="flex items-center w-full w-64 mr-2">
+                                <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
+                                       placeholder="Suche nach Projekten"/>
+                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
                     </div>
-                    <div v-if="projects.length > 0" v-for="(project,index) in projects" :key="project.id"
+                    <div v-if="projects.length > 0 && project_query < 1" v-for="(project,index) in projects" :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-5 flex">
@@ -204,6 +210,191 @@
                                             aria-hidden="true"/>
                                         Verlauf ansehen
                                     </button>
+                            </div>
+                            <div v-else class="ml-2 text-secondary subpixel-antialiased">
+                                Noch kein Verlauf verfügbar
+                            </div>
+
+                        </div>
+                    </div>
+                    <div v-else v-for="(project,index) in project_search_results" :key="project.id"
+                         class="mt-5 border-b-2 border-gray-200 w-full">
+                        <div
+                            class="py-5 flex">
+                            <div class="flex w-full">
+                                <div class="mr-6">
+                                    <Link :href="getEditHref(project)" class="flex w-full my-auto">
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                    </Link>
+                                </div>
+                            </div>
+                            <div class="flex w-full justify-end">
+                                <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
+                                    <TeamIconCollection :data-tooltip-target="department.name"
+                                                        class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                        :iconName="department.svg_name"
+                                                        alt=""/>
+                                    <TeamTooltip :team="department"/>
+                                </div>
+                                <div v-if="project.departments.length >= 4" class="my-auto">
+                                    <Menu as="div" class="relative">
+                                        <div>
+                                            <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                <ChevronDownIcon
+                                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                            </MenuButton>
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                <MenuItem v-for="department in project.departments" v-slot="{ active }">
+                                                    <div
+                                                        :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TeamIconCollection
+                                                            class="h-9 w-9 rounded-full"
+                                                            :iconName="department.svg_name"
+                                                            alt=""/>
+                                                        <span class="ml-4">
+                                                                {{ department.name }}
+                                                            </span>
+                                                    </div>
+                                                </MenuItem>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
+                            </div>
+                            <div class="flex w-full justify-end">
+                                <div class="flex mr-6">
+                                    <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
+                                        <img :data-tooltip-target="user.id"
+                                             class="h-9 w-9 rounded-full ring-2 ring-white"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                        <UserTooltip :user="user"/>
+                                    </div>
+                                    <div v-if="project.users.length >= 4" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon
+                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="user in project.users" v-slot="{ active }">
+                                                        <div
+                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <img class="h-9 w-9 rounded-full"
+                                                                 :src="user.profile_photo_url"
+                                                                 alt=""/>
+                                                            <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                                        </div>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
+                                    </div>
+                                </div>
+                                <Menu
+                                    v-if="$page.props.permissions.includes('edit projects') || $page.props.is_admin || project.user_can_view_project"
+                                    as="div" class="my-auto relative">
+                                    <div class="flex">
+                                        <MenuButton
+                                            class="flex">
+                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                              aria-hidden="true"/>
+                                        </MenuButton>
+                                        <div v-if="$page.props.can.show_hints && index === 0"
+                                             class="absolute flex w-40 ml-6">
+                                            <div>
+                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                            </div>
+                                            <div class="flex">
+                                                <span
+                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Projekte</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            <div class="py-1">
+                                                <MenuItem v-slot="{ active }">
+                                                    <a :href="getEditHref(project)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <PencilAltIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Bearbeiten
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" @click="duplicateProject(project)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <DuplicateIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        Duplizieren
+                                                    </a>
+                                                </MenuItem>
+                                                <MenuItem v-slot="{ active }">
+                                                    <a href="#" @click="openDeleteProjectModal(project)"
+                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <TrashIcon
+                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                            aria-hidden="true"/>
+                                                        In den Papierkorb legen
+                                                    </a>
+                                                </MenuItem>
+                                            </div>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                            </div>
+                        </div>
+                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 -mt-2 text-secondary flex items-center">
+                            <span class=" text-xs subpixel-antialiased">
+                                  zuletzt geändert:
+                            </span>
+                            <div class="flex items-center" v-if="project.project_history.length !== 0">
+
+                                <img
+                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
+                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
+                                    :alt="project.project_history[project.project_history.length -1].user.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip
+                                    :user="project.project_history[project.project_history.length -1].user"/>
+                                <span class="ml-2 text-xs subpixel-antialiased">
+                                    {{ project.project_history[project.project_history.length - 1].created_at }}
+                                </span>
+                                <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
+                                        @click="openProjectHistoryModal(project.project_history)">
+                                    <ChevronRightIcon
+                                        class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Verlauf ansehen
+                                </button>
                             </div>
                             <div v-else class="ml-2 text-secondary subpixel-antialiased">
                                 Noch kein Verlauf verfügbar
@@ -610,6 +801,10 @@ export default defineComponent({
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can'],
     methods: {
+        closeSearchbar() {
+            this.showSearchbar = !this.showSearchbar;
+            this.project_query = ''
+        },
         openAddProjectModal() {
             this.addingProject = true;
         },
@@ -659,14 +854,16 @@ export default defineComponent({
             Inertia.delete(`/projects/${this.projectToDelete.id}`);
             this.closeDeleteProjectModal();
             this.openSuccessModal();
+
         },
         openSuccessModal() {
             this.showSuccessModal = true;
-
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal() {
             this.showSuccessModal = false;
             this.nameOfDeletedProject = "";
+            this.closeSearchbar()
         },
         openProjectHistoryModal(projectHistory) {
             this.projectHistoryToDisplay = projectHistory;
@@ -689,8 +886,25 @@ export default defineComponent({
         },
 
     },
+    watch: {
+        project_query: {
+            handler() {
+                if (this.project_query.length > 0) {
+                    axios.get('/projects/search', {
+                        params: {query: this.project_query}
+                    }).then(response => {
+                        this.project_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        }
+    },
     data() {
         return {
+            showSearchbar: false,
+            project_query:'',
+            project_search_results: [],
             addingProject: false,
             deletingProject: false,
             showDetails: false,

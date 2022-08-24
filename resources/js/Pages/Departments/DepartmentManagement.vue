@@ -587,12 +587,11 @@ export default defineComponent({
             this.form.assigned_users = [];
             this.form.name = "";
             this.form.svg_name = "";
+            this.showSuccessModal()
         },
         showSuccessModal() {
             this.showSuccess = true;
-            setTimeout(() => {
-                this.showSuccess = false
-            }, 2000)
+            setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal(){
             this.showSuccess = false;
@@ -617,6 +616,7 @@ export default defineComponent({
         addTeam() {
             this.form.post(route('departments.store'))
             this.closeAddTeamModal();
+
         },
         openDeleteAllTeamMembersModal(team){
             this.teamToDeleteAllMembers = team;

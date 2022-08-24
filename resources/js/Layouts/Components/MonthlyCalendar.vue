@@ -1413,7 +1413,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: project_id,
+                        project: this.project_id,
                         calendarType: 'monthly',
                         month_start: this.requested_start_time,
                         month_end: this.requested_end_time,
@@ -1469,7 +1469,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: project_id,
+                        project: this.project_id,
                         calendarType: 'monthly',
                         month_start: this.requested_start_time,
                         month_end: this.requested_end_time,

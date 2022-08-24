@@ -1463,7 +1463,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: project_id,
+                        project: this.project_id,
                         calendarType: 'daily',
                         wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         start_time: this.addEventForm.start_time
@@ -1491,7 +1491,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: project_id,
+                        project: this.project_id,
                         calendarType: 'daily',
                         wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         end_time: this.addEventForm.end_time
@@ -1703,7 +1703,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.projects[0],
+                        project: this.project_id,
                         openTab:'calendar',
                         calendarType: 'monthly'
                     }))
@@ -1723,7 +1723,7 @@ export default defineComponent({
                 } else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.projects[0],
+                        project: this.project_id,
                         openTab:'calendar',
                         calendarType: 'daily'
                     }))

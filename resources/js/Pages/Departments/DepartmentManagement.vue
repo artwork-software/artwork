@@ -659,6 +659,18 @@ export default defineComponent({
                 }
             },
             deep: true
+        },
+        user_query: {
+            handler() {
+                if(this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
+                    }).then( response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
         }
     },
     data() {
@@ -677,6 +689,8 @@ export default defineComponent({
             }),
             department_query: "",
             department_search_results: [],
+            user_query: "",
+            user_search_results: [],
             deleteMembersForm: this.$inertia.form({
                 _method: 'PUT',
                 users: [],

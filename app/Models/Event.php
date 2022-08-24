@@ -6,6 +6,7 @@ use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 class Event extends Model
 {
@@ -37,7 +38,9 @@ class Event extends Model
 
     public function getDaysOfEventAttribute(): array
     {
-        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days_period = CarbonPeriod::create(Carbon::parse($this->start_time)->format('d.m.Y'), Carbon::parse($this->end_time)->format('d.m.Y'));
+
+
         $days = [];
 
         foreach ($days_period as $day) {

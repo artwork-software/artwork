@@ -142,7 +142,7 @@
                 <div class="flex w-full mt-2 flex-wrap">
                     <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
                     <div class="flex w-full">
-                        <div v-if="this.project.departments !== []">
+                        <div class="flex" v-if="this.project.departments !== []">
                             <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
                                 <TeamIconCollection :data-tooltip-target="department.name"
                                                     :iconName="department.svg_name"

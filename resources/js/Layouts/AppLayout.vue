@@ -1,5 +1,5 @@
 <template>
-    <div class="z-auto">
+    <div class="z-100">
         <TransitionRoot as="template" :show="sidebarOpen">
             <Dialog as="div" class="inset-0 flex z-100 md:hidden" @close="sidebarOpen = false">
                 <TransitionChild as="template" enter="transition-opacity ease-linear duration-300"
@@ -66,7 +66,7 @@
         <!-- Static sidebar for desktop -->
         <!-- Sidebar component, swap this element with another sidebar if you like -->
         <div class="flex h-full">
-            <div class="block w-28 h-full bg-primary inset-y-0 left-0 absolute z-100">
+            <div class="w-28 h-full bg-primary fixed z-100">
                 <div class="w-full py-2 mt-3 flex flex-col items-center">
                     <div v-if="$page.props.big_logo === null" class="text-2xl font-bold text-secondaryHover">
                         <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-20 w-20 -mb-4" />
@@ -114,7 +114,7 @@
                         <div class="ml-4 flex items-center md:ml-6">
                             <div class="flex items-center mr-6">
 
-                                <Link class="inset-y-0 mr-5"
+                                <Link v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms" class="inset-y-0 mr-5"
                                       :href="getTrashRoute()">
                                     <TrashIcon class="h-5 w-5" aria-hidden="true"/>
                                 </Link>
@@ -131,7 +131,7 @@
                                     <span class="text-md font-nanum tracking-tight text-lg text-secondary">Hilfe einblenden </span>
                                 </span>
                             </div>
-                            <button type="button"
+                            <button v-if="false" type="button"
                                     class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
                                 <span class="sr-only">View notifications</span>
                                 <BellIcon class="h-6 w-6" aria-hidden="true"/>
@@ -183,7 +183,8 @@
                         </div>
                     </div>
                 </div>
-                <main class="flex-1 h-full w-full">
+
+                <main class="flex-1 h-full w-full z-10">
                     <slot></slot>
                 </main>
             </div>

@@ -46,11 +46,10 @@
                                 <p class="ml-4 my-auto text-lg font-black text-sm w-full"
                                    :class="task.done ? 'text-secondary line-through' : 'text-primary'">
                                     {{ task.name }}</p>
-
-                                <div v-show="task.departments.length > 0" class="my-autoflex -mr-3"
+                                <div v-show="task.departments.length > 0" class="my-auto shrink-0 -mr-3"
                                      v-for="department in task.departments">
                                     <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
-                                                        class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                                        class="shrink-0 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
                                 </div>
                                 <div v-show="task.checklist.user_id !== null" class="my-auto">
                                     <img class="h-9 w-9 rounded-full"

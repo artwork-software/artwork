@@ -254,8 +254,8 @@
                         </div>
                         <div class="bg-backgroundGray w-full flex pl-20">
                             <div class="mt-16 w-36">
-                                <div v-for="day in days_this_month"
-                                     class="w-40 inline-flex mt-1 h-36 w-full text-secondary subpixel-antialiased">
+                                <div @click="goToDailyCalendar(index)" v-for="(day,index) in days_this_month"
+                                     class="cursor-pointer w-40 inline-flex mt-1 h-36 w-full text-secondary subpixel-antialiased">
                                     {{ day.date_formatted }}
                                 </div>
                             </div>
@@ -1522,6 +1522,10 @@ export default defineComponent({
                 endDate.setMinutes(endDate.getMinutes() + 1559);
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
+            if(this.calendarType === 'project'){
+                this.assignProject = true;
+                this.selectedProject = this.projects[0];
+            }
             if (roomId !== null) {
                 this.areas.forEach((area) => {
                     area.rooms.forEach((room) => {
@@ -1714,6 +1718,11 @@ export default defineComponent({
                     Inertia.visit(route('events.daily_management', {wanted_day: this.wantedDayDate}))
                 }
             }
+        },
+        goToDailyCalendar(index){
+            this.wantedDateType.id = 2;
+            this.wantedDayDate = new Date(new Date(this.roomsToShow[0].days_in_month[index].date_local).setHours(new Date(this.roomsToShow[0].days_in_month[index].date_local).getHours() + 2));
+            this.changeWantedDate();
         },
         deleteEvent(eventId) {
             Inertia.delete(`/events/${eventId}`);

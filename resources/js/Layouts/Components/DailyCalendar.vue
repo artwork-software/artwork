@@ -338,14 +338,14 @@
                                                                     <div
                                                                         v-if="projects
                                                                            .find(x => x.id === event.project_id).project_managers.length <= 3"
-                                                                        class="flex mt-2 -mr-3"
+                                                                        class="flex shrink-0 mt-2 -mr-3"
                                                                         v-for="user in projects
                                                                            .find(x => x.id === event.project_id).project_managers">
                                                                         <img :data-tooltip-target="user.id"
                                                                              :src="user.profile_photo_url"
                                                                              :alt="user.name"
-                                                                             class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                                                                        <UserTooltip :user="user"/>
+                                                                             class="shrink-0 ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                                                                        <UserTooltip class="shrink-0" :user="user"/>
                                                                     </div>
                                                                     <div class="flex" v-else>
                                                                         <div class=" mt-2 -mr-3"
@@ -808,6 +808,9 @@
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
                 </div>
+                <pre>
+                    {{this.conflictData}}
+                </pre>
                 <div class="mt-1" v-if="conflictData !== null">
                     <div v-if="this.conflictData.length === 1" class="text-error subpixel-antialiased text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"

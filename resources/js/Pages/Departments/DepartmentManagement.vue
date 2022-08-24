@@ -445,7 +445,7 @@
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        Team erfolgreich bearbeitet.
+                        {{this.successHeading}}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -587,9 +587,15 @@ export default defineComponent({
             this.form.assigned_users = [];
             this.form.name = "";
             this.form.svg_name = "";
-            this.showSuccessModal()
         },
-        showSuccessModal() {
+        showSuccessModal(type) {
+            if(type === 'add'){
+                this.successHeading = 'Team erfolgreich erstellt'
+            }else if(type === 'delete'){
+                this.successHeading = 'Team erfolgreich gelöscht'
+            }else{
+                this.successHeading = 'Team erfolgreich bearbeitet'
+            }
             this.showSuccess = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
@@ -616,6 +622,7 @@ export default defineComponent({
         addTeam() {
             this.form.post(route('departments.store'))
             this.closeAddTeamModal();
+            this.showSuccessModal('add');
 
         },
         openDeleteAllTeamMembersModal(team){
@@ -637,7 +644,7 @@ export default defineComponent({
         deleteTeam(){
             Inertia.delete(`/departments/${this.teamToDelete.id}`);
             this.closeDeleteTeamModal();
-            this.showSuccessModal();
+            this.showSuccessModal('delete');
         },
         deleteAllTeamMembers() {
             this.deleteMembersForm.patch(route('departments.edit', {department: this.teamToDeleteAllMembers.id}));
@@ -682,6 +689,7 @@ export default defineComponent({
             deletingAllTeamMembers: false,
             showSuccess: false,
             showSearchbar: false,
+            successHeading: '',
             form: useForm({
                 svg_name: "",
                 name: "",

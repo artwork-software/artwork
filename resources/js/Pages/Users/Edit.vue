@@ -130,18 +130,17 @@
                                         <input :id="role.name"
                                                v-model="userForm.roles"
                                                :value="role.name"
-                                               name="permissions" type="checkbox"
+                                               name="roles" type="checkbox"
                                                class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
                                     </div>
                                     <div class="ml-3 text-sm">
-                                        <label for="permissions" class="text-primary">{{ role.name_de }}</label>
+                                        <label for="roles" class="text-primary">{{ role.name_de }}</label>
                                     </div>
                                 </div>
 
                         </div>
 
                     </div>
-
                     <div v-if="showUserPermissions" class="flex flex-col">
 
                         <div v-for="(permissions, group) in all_permissions">

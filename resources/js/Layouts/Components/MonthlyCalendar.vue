@@ -8,7 +8,7 @@
                             <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                                 Raumbelegungen</h2>
                             <div class="flex items-center"
-                                 v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                 v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
                                 <button @click="openAddEventModal" type="button"
                                         class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                     <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -291,7 +291,7 @@
                                                     <!-- Name of connected Project -->
                                                     <div
                                                         v-if="day.events[0].project_id !== null"
-                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate">
                                                         {{
                                                             projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
@@ -348,7 +348,7 @@
 
                                                 <div
                                                     class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
-                                                    {{ day.events.length }} Projekte
+                                                    {{ day.events.length }} Termine
                                                 </div>
 
                                                 <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -408,7 +408,7 @@
                                                     <!-- Name of connected Project -->
                                                     <div
                                                         v-if="day.events[0].project_id !== null && projects.find(x => x.id === day.events[0].project_id)"
-                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate">
                                                         {{
                                                             projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
@@ -465,7 +465,7 @@
 
                                                 <div
                                                     class="mt-2 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
-                                                    {{ day.events.length }} Projekte
+                                                    {{ day.events.length }} Termine
                                                 </div>
 
                                                 <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -485,8 +485,9 @@
                                             </div>
 
                                         </div>
+
                                         <div
-                                            v-else-if="day.events.length < 1 && this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                            v-else-if="day.events.length < 1 && (this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy)">
                                             <div @mouseover="activateHover(day.date_local, room.id)"
                                                  @click="openAddEventModal(room.id)"
                                                  @mouseout="deactivateHover()"
@@ -760,8 +761,9 @@
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
                 </div>
+
                 <div class="mt-1" v-if="conflictData !== null">
-                    <div v-if="this.conflictData.length === 1" class="text-error subpixel-antialiased text-sm flex">
+                    <div v-if="this.conflictData.length === 1 && this.conflictData[0].event_type" class="text-error subpixel-antialiased text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
                             <Link
@@ -976,8 +978,8 @@
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center justify-between">
-                            <div v-if="event.project_id !== null" class="flex items-center text-sm">
-                                <div class="my-auto">Zugeordnet zu</div>
+                            <div v-if="event.project_id !== null" class="flex items-center w-2/3 text-sm">
+                                <div class="my-auto flex w-28">Zugeordnet zu</div>
                                 <div>
                                     <Link
                                         :href="route('projects.show',{project: event.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
@@ -1407,7 +1409,15 @@ export default defineComponent({
                         start_time: this.addEventForm.start_time
                     }
                 }).then(response => {
-                    this.conflictData = response.data;
+                   if(this.conflictData === null){
+                       if(response.data !== null && response.data.length !== 0) {
+                           this.conflictData = response.data;
+                       }
+                   }else{
+                       if(response.data !== null && response.data.length !== 0){
+                           this.conflictData.push(response.data);
+                       }
+                   }
                 });
 
             } else {
@@ -1463,7 +1473,15 @@ export default defineComponent({
                         end_time: this.addEventForm.end_time
                     }
                 }).then(response => {
-                    this.conflictData = response.data;
+                    if(this.conflictData === null){
+                        if(response.data !== null && response.data.length !== 0) {
+                            this.conflictData = response.data;
+                        }
+                    }else{
+                        if(response.data !== null && response.data.length !== 0){
+                            this.conflictData.push(response.data);
+                        }
+                    }
                 });
 
             } else {
@@ -1611,6 +1629,7 @@ export default defineComponent({
             this.addEventForm.audience = false;
             this.selectedRoom = null;
             this.addEventForm.project = null;
+            this.addEventForm.project_name = null;
             this.conflictData = null;
             this.selectedEventType = this.event_types[0];
             this.startTimeError = null;

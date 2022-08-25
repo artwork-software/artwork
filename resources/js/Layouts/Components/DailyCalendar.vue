@@ -7,7 +7,7 @@
                         <div v-if="calendarType !== 'project'" class="flex items-center mb-4 ml-20 mt-10">
                             <h2 class="text-3xl font-black flex">Raumbelegungen</h2>
                             <div class="flex items-center"
-                                 v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                 v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
                                 <button @click="openAddEventModal" type="button"
                                         class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                     <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -419,7 +419,7 @@
                                         <!-- Listobject on hover when there is no event on that day -->
                                         <li @mouseover="activateHover(room.id)"
                                             @click="openAddEventModal(room.id)"
-                                            @mouseout="deactivateHover()" v-if="room.events.length === 0"
+                                            @mouseout="deactivateHover()" v-if="room.events.length === 0 && (this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy)"
                                             :class="showAddHoverRoomId === room.id ? 'bg-secondary' : ''"
                                             class="relative mt-px flex hover:bg-secondary cursor-pointer"
                                             style="grid-row: 1 / span 1439">
@@ -1026,12 +1026,12 @@
                     </div>
                     <div>
                         <div class="flex flex-wrap items-center justify-between">
-                            <div v-if="event.project_id !== null" class="flex items-center">
-                                <div>Zugeordnet zu</div>
+                            <div v-if="event.project_id !== null" class="flex items-center w-2/3 text-sm">
+                                <div class="my-auto flex w-28">Zugeordnet zu</div>
                                 <div>
                                     <Link
                                         :href="route('projects.show',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate())),project:event.project_id, calendarType: 'daily'})"
-                                        class="ml-3 text-lg flex font-bold font-lexend text-primary">
+                                        class="ml-3 text-md flex font-bold font-lexend text-primary">
                                         {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
                                 </div>
@@ -1460,7 +1460,15 @@ export default defineComponent({
                         start_time: this.addEventForm.start_time
                     }
                 }).then(response => {
-                    this.conflictData = response.data;
+                   if(this.conflictData === null){
+                       if(response.data !== null && response.data.length !== 0) {
+                           this.conflictData = response.data;
+                       }
+                   }else{
+                       if(response.data !== null && response.data.length !== 0){
+                           this.conflictData.push(response.data);
+                       }
+                   }
                 });
 
             } else {
@@ -1488,7 +1496,15 @@ export default defineComponent({
                         end_time: this.addEventForm.end_time
                     }
                 }).then(response => {
-                    this.conflictData = response.data;
+                   if(this.conflictData === null){
+                       if(response.data !== null && response.data.length !== 0) {
+                           this.conflictData = response.data;
+                       }
+                   }else{
+                       if(response.data !== null && response.data.length !== 0){
+                           this.conflictData.push(response.data);
+                       }
+                   }
                 });
 
             } else {
@@ -1619,6 +1635,7 @@ export default defineComponent({
             this.addEventForm.audience = false;
             this.selectedRoom = null;
             this.addEventForm.project = null;
+            this.addEventForm.project_name = null;
             this.conflictData = null;
             this.selectedEventType = this.event_types[0];
             this.startTimeError = null;

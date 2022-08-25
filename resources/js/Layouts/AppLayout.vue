@@ -168,12 +168,6 @@
                                             </Link>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }">
-                                            <Link :href="route('profile.show')"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                Benachrichtigungen
-                                            </Link>
-                                        </MenuItem>
-                                        <MenuItem v-slot="{ active }">
                                             <a @click="logout"
                                                :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased cursor cursor-pointer']">Ausloggen</a>
                                         </MenuItem>

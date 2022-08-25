@@ -184,7 +184,7 @@
                     </div>
                 </div>
 
-                <main class="flex-1 h-full w-full z-10">
+                <main class="flex-1 h-full w-full">
                     <slot></slot>
                 </main>
             </div>

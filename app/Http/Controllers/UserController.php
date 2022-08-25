@@ -107,7 +107,7 @@ class UserController extends Controller
                 'description' => $user->description,
                 'departments' => $user->departments,
                 'roles' => $user->getRoleNames(),
-                'permissions' => $user->getPermissionNames(),
+                'permissions' => $user->getAllPermissions()->pluck('name')
             ],
             "departments" => Department::all(),
             "password_reset_status" => session('status'),

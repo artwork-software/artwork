@@ -264,7 +264,7 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal class="px-12" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
+        <flowbite-modal style="margin-top: 2rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
             <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6"/>
             <div class="mx-3">
 

@@ -302,9 +302,11 @@
                                                 <div class="flex">
                                                     <div class="flex -mr-3"
                                                          v-for="department in checklist.departments.slice(0,9)">
-                                                        <TeamIconCollection :iconName="department.svg_name"
+                                                        <TeamIconCollection :data-tooltip-target="department.name"
+                                                                            :iconName="department.svg_name"
                                                                             :alt="department.name"
                                                                             class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                                        <TeamTooltip :team="department"/>
                                                     </div>
                                                     <div v-if="checklist.departments.length >= 10" class="my-auto">
                                                         <Menu as="div" class="relative">
@@ -1116,7 +1118,7 @@
                                         class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        :key="'keineVorlage'"
-                                                       :value="{name:''}"
+                                                       :value="{name:'',id:null}"
                                                        v-slot="{ active, selected }">
                                             <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                                     <span
@@ -1825,7 +1827,7 @@ export default {
             selectedCategory: this.project.category ? this.project.category : {name: ''},
             selectedSector: this.project.sector ? this.project.sector : {name: ''},
             selectedGenre: this.project.genre ? this.project.genre : {name: ''},
-            selectedTemplate: {name: ''},
+            selectedTemplate: {name: '',id:null},
             showDetails: false,
             checklistToEdit: null,
             editingChecklist: false,
@@ -1993,17 +1995,24 @@ export default {
         },
         closeAddChecklistModal() {
             this.addingChecklist = false;
+            this.checklistForm.name = '';
+            this.checklistForm.tasks = [];
+            this.checklistForm.private = false;
+            this.checklistForm.template_id = null;
+            this.checklistForm.user_id = null;
+            this.selectedTemplate = {name: '',id:null};
         },
         addChecklist() {
-            if (this.checklistForm.private === true) {
-                this.checklistForm.user_id = this.$page.props.user.id
-            }
+
             if (this.selectedTemplate.id !== null) {
                 this.checklistForm.template_id = this.selectedTemplate.id;
                 this.checklistForm.post(route('checklists.store'), {});
                 this.checklistForm.template_id = null;
                 this.closeAddChecklistModal();
             } else {
+                if (this.checklistForm.private === true) {
+                    this.checklistForm.user_id = this.$page.props.user.id;
+                }
                 this.checklistForm.post(route('checklists.store'), {});
                 this.closeAddChecklistModal();
             }

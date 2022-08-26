@@ -5,6 +5,7 @@ namespace App\Policies;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
+use Illuminate\Support\Facades\Auth;
 
 class ProjectPolicy
 {
@@ -47,7 +48,7 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create projects');
+        return ($user->can("create and edit projects") || $user->can("admin projects"));
     }
 
     /**

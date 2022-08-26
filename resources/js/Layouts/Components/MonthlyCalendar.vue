@@ -238,7 +238,7 @@
                                 </Listbox>
                                 <div v-if="calendarType === 'project'" class="flex items-center my-auto mt-4">
                                     <div class="flex items-center"
-                                         v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                         v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
                                         <button @click="openAddEventModal" type="button"
                                                 class="flex items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                             <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -733,7 +733,9 @@
                     </div>
                 </div>
                 <div class="mt-4" v-if="!selectedEventType.project_mandatory">
-                    <input type="text" v-model="addEventForm.name" placeholder="Terminname"
+                    <input v-if="selectedEventType.individual_name" type="text" v-model="addEventForm.name" placeholder="Terminname*"
+                           class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
+                    <input v-else type="text" v-model="addEventForm.name" placeholder="Terminname"
                            class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
                 </div>
                 <div class="flex mt-4 items-center">
@@ -815,26 +817,26 @@
                     <div v-if="selectedRoom">
                         <div
                             v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
-                            <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                            <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                     @click="addEvent(false)"
-                                    :disabled="addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) || startTimeError">
+                                    :disabled="addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) || startTimeError">
                                 Belegen
                             </button>
                         </div>
                     </div>
                     <div
                         v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
-                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent(true)"
                                 :disabled="addEventForm.start_time === null
                                 || addEventForm.end_time === null || (selectedEventType.project_mandatory
-                                && selectedProject === null && newProjectName === '') || (addEventForm.name === ''
+                                && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name)
                                 && newProjectName === ''
                                 && selectedProject === null)
                                 || startTimeError">

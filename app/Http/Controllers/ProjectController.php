@@ -197,10 +197,26 @@ class ProjectController extends Controller
             'genre_id' => $request->genre_id,
         ]);
 
-        $project->users()->save(Auth::user(), ['is_admin' => true]);
+        $project->users()->save(Auth::user(), ['is_admin' => true,'is_manager' => false]);
+
+        $project_admins = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_admin', 1);
+        })->get();
+        $project_managers = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_manager', 1);
+        })->get();
+
+        $adminIds = [];
+        $managerIds = [];
+        foreach($project_admins as $admin){
+            $adminIds[] = $admin->id;
+        }
+        foreach($project_managers as $manager){
+            $managerIds[] = $manager->id;
+        }
 
         if ($request->assigned_user_ids) {
-            if (Auth::user()->can('update users')) {
+            if (Auth::user()->can('update users') || Auth::user()->can("create and edit projects") || Auth::user()->can("admin projects") || in_array(Auth::user()->id, $adminIds) || in_array(Auth::user()->id, $managerIds)) {
                 $project->users()->sync(
                     collect($request->assigned_user_ids)
                         ->map(function ($user) {
@@ -861,6 +877,22 @@ class ProjectController extends Controller
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
 
+        $project_admins = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_admin', 1);
+        })->get();
+        $project_managers = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_manager', 1);
+        })->get();
+
+        $adminIds = [];
+        $managerIds = [];
+        foreach($project_admins as $admin){
+            $adminIds[] = $admin->id;
+        }
+        foreach($project_managers as $manager){
+            $managerIds[] = $manager->id;
+        }
+
         $project->fill($update_properties);
 
         $this->add_to_history($project);
@@ -872,7 +904,7 @@ class ProjectController extends Controller
         }
 
         if ($request->assigned_user_ids) {
-            if (Auth::user()->can('update users')) {
+            if (Auth::user()->can('update users') || Auth::user()->can("create and edit projects") || Auth::user()->can("admin projects") || in_array(Auth::user()->id, $adminIds) || in_array(Auth::user()->id, $managerIds)) {
                 $project->users()->sync(
                     collect($request->assigned_user_ids)
                         ->map(function ($user_id) {
@@ -885,7 +917,7 @@ class ProjectController extends Controller
         }
 
 
-        if (Auth::user()->can('update departments')) {
+        if (Auth::user()->can('update departments') || Auth::user()->can("create and edit projects") || Auth::user()->can("admin projects") || in_array(Auth::user()->id, $adminIds) || in_array(Auth::user()->id, $managerIds)) {
             $project->departments()->sync(
                 collect($request->assigned_departments)
                     ->map(function ($department) {
@@ -915,6 +947,22 @@ class ProjectController extends Controller
             'genre_id' => $project->genre_id,
         ]);
 
+        $project_admins = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_admin', 1);
+        })->get();
+        $project_managers = User::whereHas('projects', function ($q) use ($project) {
+            $q->where('is_manager', 1);
+        })->get();
+
+        $adminIds = [];
+        $managerIds = [];
+        foreach($project_admins as $admin){
+            $adminIds[] = $admin->id;
+        }
+        foreach($project_managers as $manager){
+            $managerIds[] = $manager->id;
+        }
+
         foreach ($project->checklists as $checklist) {
             $replicated_checklist = $checklist->replicate()->fill([
                 'project_id' => $new_project->id
@@ -941,7 +989,7 @@ class ProjectController extends Controller
         $new_project->users()->attach([Auth::id() => ['is_admin' => true]]);
 
         if ($project->users) {
-            if (Auth::user()->can('update users')) {
+            if (Auth::user()->can('update users') || Auth::user()->can("create and edit projects") || Auth::user()->can("admin projects") || in_array(Auth::user()->id, $adminIds) || in_array(Auth::user()->id, $managerIds)) {
                 $new_project->users()->sync(
                     collect($project->users)
                         ->map(function ($user) {

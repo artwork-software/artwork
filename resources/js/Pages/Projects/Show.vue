@@ -31,7 +31,7 @@
                             <MenuItems
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
+                                    <MenuItem v-if="this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" v-slot="{ active }">
                                         <a @click="openEditProjectModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <PencilAltIcon

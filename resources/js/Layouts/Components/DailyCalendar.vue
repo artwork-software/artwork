@@ -19,7 +19,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <div class="flex w-full items-center ml-20">
                             <div class="text-xl font-black w-40">
                                 {{ this.formattedWeekday }} {{ this.shown_day_formatted.split(' ')[1] }}
@@ -240,7 +239,7 @@
                                 </Listbox>
                                 <div v-if="calendarType === 'project'" class="flex items-center my-auto mt-4">
                                     <div class="flex items-center"
-                                         v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                                         v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
                                         <button @click="openAddEventModal" type="button"
                                                 class="flex items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                             <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
@@ -808,9 +807,6 @@
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
                 </div>
-                <pre>
-                    {{this.conflictData}}
-                </pre>
                 <div class="mt-1" v-if="conflictData !== null">
                     <div v-if="this.conflictData.length === 1" class="text-error subpixel-antialiased text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
@@ -1474,7 +1470,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: this.project_id,
+                        project: this.projects[0],
                         calendarType: 'daily',
                         wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         start_time: this.addEventForm.start_time
@@ -1510,7 +1506,7 @@ export default defineComponent({
             } else {
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
-                        project: this.project_id,
+                        project: this.projects[0],
                         calendarType: 'daily',
                         wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate() - 1)),
                         end_time: this.addEventForm.end_time
@@ -1723,7 +1719,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.project_id,
+                        project: this.projects[0],
                         openTab:'calendar',
                         calendarType: 'monthly'
                     }))
@@ -1743,7 +1739,7 @@ export default defineComponent({
                 } else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.project_id,
+                        project: this.projects[0],
                         openTab:'calendar',
                         calendarType: 'daily'
                     }))

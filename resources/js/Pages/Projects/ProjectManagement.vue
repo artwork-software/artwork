@@ -38,9 +38,12 @@
                             class="py-5 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link :href="getEditHref(project)" class="flex w-full my-auto">
+                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)" class="flex w-full my-auto">
                                         <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
                                     </Link>
+                                    <div v-else class="flex w-full my-auto">
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                    </div>
                                 </div>
                             </div>
                             <div class="flex w-full justify-end">
@@ -223,9 +226,13 @@
                             class="py-5 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link :href="getEditHref(project)" class="flex w-full my-auto">
+                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)" class="flex w-full my-auto">
                                         <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
                                     </Link>
+                                    <div v-else class="flex w-full my-auto">
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                    </div>
+
                                 </div>
                             </div>
                             <div class="flex w-full justify-end">
@@ -431,11 +438,11 @@
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="form.description" rows="4"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
 
                         <div v-on:click="showDetails = !showDetails">
-                            <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-4 ">
+                            <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-6 ">
                                 Weitere Angaben
                                 <ChevronUpIcon v-if="showDetails"
                                                class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
@@ -446,7 +453,7 @@
                             <div class="sm:col-span-3">
                                 <div class="">
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary h-10 focus:border-primary border-2 w-full text-sm border-gray-300 "/>
+                                           class="text-primary h-10 w-full text-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full  "/>
                                 </div>
                             </div>
                             <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
@@ -676,6 +683,31 @@
 
             </template>
         </jet-dialog-modal>
+        <!-- Success Modal -->
+        <jet-dialog-modal :show="showSuccessModal2" @close="closeSuccessModal2">
+            <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+                <div class="mx-4">
+                    <div class="font-black text-primary font-lexend text-3xl my-2">
+                        Projekt erstellt
+                    </div>
+                    <XIcon @click="closeSuccessModal2"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success subpixel-antialiased">
+                        Das Projekt wurde erfolgreich angelegt.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal2">
+                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
         <!-- Project History Modal-->
         <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
             <template #content>
@@ -755,8 +787,11 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 
 const number_of_participants = [
-    {number: '100-1000'},
-    {number: '1000-10000'},
+    {number: '1-10'},
+    {number: '10-50'},
+    {number: '50-100'},
+    {number: '100-500'},
+    {number: '>500'}
 ]
 
 export default defineComponent({
@@ -829,6 +864,7 @@ export default defineComponent({
             this.form.genre_id = this.selectedGenre.id;
             this.form.post(route('projects.store'), {})
             this.closeAddProjectModal();
+            this.openSuccessModal2();
         },
         getEditHref(project) {
             return route('projects.show', {
@@ -863,6 +899,14 @@ export default defineComponent({
         closeSuccessModal() {
             this.showSuccessModal = false;
             this.nameOfDeletedProject = "";
+            this.closeSearchbar()
+        },
+        openSuccessModal2() {
+            this.showSuccessModal2 = true;
+            setTimeout(() => this.closeSuccessModal2(), 2000)
+        },
+        closeSuccessModal2() {
+            this.showSuccessModal2 = false;
             this.closeSearchbar()
         },
         openProjectHistoryModal(projectHistory) {
@@ -910,6 +954,7 @@ export default defineComponent({
             showDetails: false,
             projectToDelete: null,
             showSuccessModal: false,
+            showSuccessModal2: false,
             selectedParticipantNumber: "",
             nameOfDeletedProject: "",
             selectedCategory: {name: ''},

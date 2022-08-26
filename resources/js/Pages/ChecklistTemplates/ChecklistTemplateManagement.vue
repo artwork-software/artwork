@@ -35,8 +35,8 @@
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
-                                <p class="text-lg mr-3 font-bold font-lexend text-primary">
-                                    {{ template.name }} </p>
+                                <Link :href="getEditHref(template)" class="text-lg mr-3 font-bold font-lexend text-primary">
+                                    {{ template.name }} </Link>
                                 <p class="ml-1 text-sm font-medium text-secondary my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>

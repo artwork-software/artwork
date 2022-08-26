@@ -663,7 +663,7 @@
                 </div>
                 <div v-if="assignProject || selectedEventType.project_mandatory">
                     <div class="flex items-center mt-4">
-                        <Switch v-model="creatingProject"
+                        <Switch @click="newProjectName = ''" v-model="creatingProject"
                                 :class="[creatingProject ?
                                         'bg-success' :
                                         'bg-gray-300',
@@ -733,7 +733,8 @@
                     </div>
                 </div>
                 <div class="mt-4" v-if="!selectedEventType.project_mandatory">
-                    <input v-if="selectedEventType.individual_name" type="text" v-model="addEventForm.name" placeholder="Terminname*"
+                    <input v-if="selectedEventType.individual_name && !selectedProject && !newProjectName" type="text"
+                           v-model="addEventForm.name" placeholder="Terminname*"
                            class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
                     <input v-else type="text" v-model="addEventForm.name" placeholder="Terminname"
                            class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
@@ -765,7 +766,8 @@
                 </div>
 
                 <div class="mt-1" v-if="conflictData !== null">
-                    <div v-if="this.conflictData.length === 1 && this.conflictData[0].event_type" class="text-error subpixel-antialiased text-sm flex">
+                    <div v-if="this.conflictData.length === 1 && this.conflictData[0].event_type"
+                         class="text-error subpixel-antialiased text-sm flex">
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
                             <Link
@@ -785,7 +787,7 @@
 
                 <div class="mt-1" v-if="startTimeError">
                     <div class="text-error subpixel-antialiased text-sm flex">
-                       {{ startTimeError.start_time }}
+                        {{ startTimeError.start_time }}
                     </div>
                 </div>
                 <div class="flex mt-4 items-center">
@@ -829,7 +831,7 @@
                     </div>
                     <div
                         v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
-                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && selectedProject === null) ?
+                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
@@ -1406,20 +1408,20 @@ export default defineComponent({
         async getStartTimeConflicts() {
             if (this.selectedRoom) {
 
-               await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+                await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
                     params: {
                         start_time: this.addEventForm.start_time
                     }
                 }).then(response => {
-                   if(this.conflictData === null){
-                       if(response.data !== null && response.data.length !== 0) {
-                           this.conflictData = response.data;
-                       }
-                   }else{
-                       if(response.data !== null && response.data.length !== 0){
-                           this.conflictData.push(response.data);
-                       }
-                   }
+                    if (this.conflictData === null) {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData = response.data;
+                        }
+                    } else {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData.push(response.data);
+                        }
+                    }
                 });
 
             } else {
@@ -1442,12 +1444,12 @@ export default defineComponent({
         },
         validateStartBeforeEndTime(form) {
 
-            if(form.start_time && form.end_time) {
+            if (form.start_time && form.end_time) {
                 Inertia.post(route('events.store'), {
                     start_time: form.start_time,
                     end_time: form.end_time,
                 }, {
-                    headers: { 'X-Dry-Run': 'true' },
+                    headers: {'X-Dry-Run': 'true'},
                     onError: (errors) => {
                         this.startTimeError = errors
                     },
@@ -1458,7 +1460,7 @@ export default defineComponent({
             }
         },
         async validateStartTime(form) {
-           await this.getStartTimeConflicts()
+            await this.getStartTimeConflicts()
 
             this.validateStartBeforeEndTime(form)
         },
@@ -1475,12 +1477,12 @@ export default defineComponent({
                         end_time: this.addEventForm.end_time
                     }
                 }).then(response => {
-                    if(this.conflictData === null){
-                        if(response.data !== null && response.data.length !== 0) {
+                    if (this.conflictData === null) {
+                        if (response.data !== null && response.data.length !== 0) {
                             this.conflictData = response.data;
                         }
-                    }else{
-                        if(response.data !== null && response.data.length !== 0){
+                    } else {
+                        if (response.data !== null && response.data.length !== 0) {
                             this.conflictData.push(response.data);
                         }
                     }
@@ -1542,7 +1544,7 @@ export default defineComponent({
                 endDate.setMinutes(endDate.getMinutes() + 1559);
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
-            if(this.calendarType === 'project'){
+            if (this.calendarType === 'project') {
                 this.assignProject = true;
                 this.selectedProject = this.projects[0];
             }
@@ -1711,7 +1713,7 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        openTab:'calendar',
+                        openTab: 'calendar',
                         project: this.project_id,
                         calendarType: 'monthly'
                     }))
@@ -1731,7 +1733,7 @@ export default defineComponent({
                 } else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        openTab:'calendar',
+                        openTab: 'calendar',
                         project: this.project_id,
                         calendarType: 'daily'
                     }))
@@ -1740,7 +1742,7 @@ export default defineComponent({
                 }
             }
         },
-        goToDailyCalendar(index){
+        goToDailyCalendar(index) {
             this.wantedDateType.id = 2;
             this.wantedDayDate = new Date(new Date(this.roomsToShow[0].days_in_month[index].date_local).setHours(new Date(this.roomsToShow[0].days_in_month[index].date_local).getHours() + 2));
             this.changeWantedDate();

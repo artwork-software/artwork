@@ -877,7 +877,7 @@
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="addEvent(true)"
-                                :disabled="startTimeError || addEventForm.start_time === null && addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
+                                :disabled="startTimeError || addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null)">
                             Raum anfragen
                         </button>
                     </div>

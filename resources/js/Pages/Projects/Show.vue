@@ -1707,7 +1707,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
+    props: ['project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -2081,10 +2081,14 @@ export default {
         saveChecklistTeams() {
             this.checklist_assigned_departments.forEach((department) => {
                 this.checklistForm.assigned_department_ids.push(department.id);
+                if(!this.assignedDepartments.includes(department)){
+                    this.assignedDepartments.push(department);
+                }
             })
             this.checklistForm.name = this.checklistToEdit.name;
 
             this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id})));
+            this.editProject();
             this.closeEditChecklistTeamsModal();
         },
         addUserToProjectTeamArray(userToAdd) {

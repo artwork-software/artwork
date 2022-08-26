@@ -199,12 +199,30 @@ class ProjectController extends Controller
 
         $project->users()->save(Auth::user(), ['is_admin' => true,'is_manager' => false]);
 
-        $project_admins = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_admin', 1);
-        })->get();
-        $project_managers = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_manager', 1);
-        })->get();
+        $project_users = [];
+        foreach (User::all() as $user){
+            $user_projects = [];
+            foreach ($user->projects as $user_project){
+                $user_projects[] = $user_project->id;
+            }
+            if(in_array($project->id,$user_projects)){
+                $project_users[] = $user;
+            }
+        }
+        $project_admins = [];
+        $project_managers = [];
+        foreach ($project_users as $p_user){
+            foreach($p_user->projects as $project_of_user){
+                if($project->id === $project_of_user->id){
+                    if($project_of_user->pivot->is_admin){
+                        $project_admins[] = $p_user;
+                    }
+                    if($project_of_user->pivot->is_manager){
+                        $project_managers[] = $p_user;
+                    }
+                }
+            }
+        }
 
         $adminIds = [];
         $managerIds = [];
@@ -500,12 +518,38 @@ class ProjectController extends Controller
         $public_checklists = Checklist::where('project_id', $project->id)->where('user_id', null)->get();
         $private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
 
+        $project_users = [];
+        foreach (User::all() as $user){
+            $user_projects = [];
+            foreach ($user->projects as $user_project){
+                $user_projects[] = $user_project->id;
+            }
+            if(in_array($project->id,$user_projects)){
+                $project_users[] = $user;
+            }
+        }
+        $project_admins = [];
+        $project_managers = [];
+        foreach ($project_users as $p_user){
+            foreach($p_user->projects as $project_of_user){
+                if($project->id === $project_of_user->id){
+                    if($project_of_user->pivot->is_admin){
+                        $project_admins[] = $p_user;
+                    }
+                    if($project_of_user->pivot->is_manager){
+                        $project_managers[] = $p_user;
+                    }
+                }
+            }
+        }
+        /*
         $project_admins = User::whereHas('projects', function ($q) use ($project) {
             $q->where('is_admin', 1);
         })->get();
         $project_managers = User::whereHas('projects', function ($q) use ($project) {
             $q->where('is_manager', 1);
         })->get();
+        */
 
         $events = [];
         if ($request->query('calendarType') === 'monthly') {
@@ -877,12 +921,30 @@ class ProjectController extends Controller
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
 
-        $project_admins = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_admin', 1);
-        })->get();
-        $project_managers = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_manager', 1);
-        })->get();
+        $project_users = [];
+        foreach (User::all() as $user){
+            $user_projects = [];
+            foreach ($user->projects as $user_project){
+                $user_projects[] = $user_project->id;
+            }
+            if(in_array($project->id,$user_projects)){
+                $project_users[] = $user;
+            }
+        }
+        $project_admins = [];
+        $project_managers = [];
+        foreach ($project_users as $p_user){
+            foreach($p_user->projects as $project_of_user){
+                if($project->id === $project_of_user->id){
+                    if($project_of_user->pivot->is_admin){
+                        $project_admins[] = $p_user;
+                    }
+                    if($project_of_user->pivot->is_manager){
+                        $project_managers[] = $p_user;
+                    }
+                }
+            }
+        }
 
         $adminIds = [];
         $managerIds = [];
@@ -947,12 +1009,30 @@ class ProjectController extends Controller
             'genre_id' => $project->genre_id,
         ]);
 
-        $project_admins = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_admin', 1);
-        })->get();
-        $project_managers = User::whereHas('projects', function ($q) use ($project) {
-            $q->where('is_manager', 1);
-        })->get();
+        $project_users = [];
+        foreach (User::all() as $user){
+            $user_projects = [];
+            foreach ($user->projects as $user_project){
+                $user_projects[] = $user_project->id;
+            }
+            if(in_array($project->id,$user_projects)){
+                $project_users[] = $user;
+            }
+        }
+        $project_admins = [];
+        $project_managers = [];
+        foreach ($project_users as $p_user){
+            foreach($p_user->projects as $project_of_user){
+                if($project->id === $project_of_user->id){
+                    if($project_of_user->pivot->is_admin){
+                        $project_admins[] = $p_user;
+                    }
+                    if($project_of_user->pivot->is_manager){
+                        $project_managers[] = $p_user;
+                    }
+                }
+            }
+        }
 
         $adminIds = [];
         $managerIds = [];

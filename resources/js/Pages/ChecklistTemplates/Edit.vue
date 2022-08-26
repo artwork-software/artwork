@@ -27,45 +27,12 @@
                     <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9 rounded-full ring-white ring-2" :iconName="team.svg_name"/>
                     </div>
-                    <Menu as="div" class="my-auto relative">
-                        <div class="flex mt-3">
-                            <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
-                            </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-80 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="font-nanum -mt-4 ml-2 text-secondary tracking-tight tracking-tight text-lg">Teile der Vorlage Teams zu, diese sind dann bei Benutzung der Vorlage automatisch zugewiesen</span>
-                                </div>
-                            </div>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <div class="py-1">
-                                    <MenuItem v-slot="{ active }">
-                                        <a @click="openChangeTeamsModal"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <PencilAltIcon
-                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                aria-hidden="true"/>
-                                            Zugewiesene Teams bearbeiten
-                                        </a>
-                                    </MenuItem>
-                                </div>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
-
+                    <div @click="openChangeTeamsModal"
+                         class="text-secondary flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
+                        <PencilAltIcon
+                            class="h-5 w-5 text-primaryText group-hover:text-white"
+                            aria-hidden="true"/>
+                    </div>
                 </div>
                 <div class="flex">
                     <div class="flex w-full mt-12">

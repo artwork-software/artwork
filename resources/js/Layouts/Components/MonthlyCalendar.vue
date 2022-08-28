@@ -519,7 +519,7 @@
     </div>
     <div v-else>
         <div class="flex items-center ml-14 mt-6"
-             v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+             v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
             <button @click="openAddEventModal" type="button"
                     class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>

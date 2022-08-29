@@ -996,7 +996,7 @@
                                 <div>Keinem Projekt zugeordnet</div>
                             </div>
                             <div
-                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0"
+                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms ? this.myRooms.length > 0 : false"
                                 class="w-1/3">
                                 <Listbox as="div" class="flex items-center my-auto w-full " v-model="event.room_id">
                                     <div class="relative w-full">
@@ -1122,7 +1122,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms.length > 0">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms ? this.myRooms.length > 0 : false">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="event.description" rows="4"

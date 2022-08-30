@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('task_templates', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description')->nullable();
+            $table->longText('description')->nullable();
             $table->boolean('done')->default(false);
             $table->unsignedBigInteger('checklist_template_id');
             $table->timestamps();

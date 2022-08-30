@@ -519,7 +519,7 @@ class EventController extends Controller
                     'room' => $event->room,
                     'project' => $event->project,
                     'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
-                    'created_by' => $event->creator
+                    'created_by' => $event->user_id
                 ]),
             ]);
         }else{
@@ -541,7 +541,7 @@ class EventController extends Controller
                     'room' => $event->room,
                     'project' => $event->project,
                     'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
-                    'created_by' => $event->creator
+                    'created_by' => $event->user_id
                 ]),
             ]);
             /*
@@ -674,7 +674,8 @@ class EventController extends Controller
                 'is_loud' => $event->is_loud,
                 'event_type' => $event->event_type,
                 'room' => $event->room,
-                'project' => $event->project
+                'project' => $event->project,
+                'created_by' => $event->user_id
             ]
         ]);
     }

@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('project_id');
             $table->bigInteger('user_id');
-            $table->string('description');
+            $table->longText('description');
             $table->timestamps();
         });
     }

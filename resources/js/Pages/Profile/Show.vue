@@ -69,14 +69,17 @@
                                             <input type="email" v-model="userForm.email" placeholder="E-Mail-Adresse"
                                                    :class="[email_validation_classes,'text-primary border-2 w-full font-semibold focus:outline-none focus:ring-0 focus:border-secondary focus:border-1']"/>
 
-                                            <div v-if="!email_validation.email" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <div v-if="!email_validation.email"
+                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <CheckIcon class="h-5 w-5 text-success" aria-hidden="true"/>
                                             </div>
-                                            <div v-if="email_validation.email && email_validation.email.length > 0" class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                            <div v-if="email_validation.email && email_validation.email.length > 0"
+                                                 class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                                                 <XIcon class="h-5 w-5 text-error" aria-hidden="true"/>
                                             </div>
                                         </div>
-                                        <jet-input-error :message="email_validation.email && email_validation.email[0]" class="mt-2"/>
+                                        <jet-input-error :message="email_validation.email && email_validation.email[0]"
+                                                         class="mt-2"/>
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
@@ -288,11 +291,13 @@
                         </div>
                     </div>
 
+                    <jet-input-error :message="updateProfilePictureFeedback" class="mt-2"/>
+
                     <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                     <div class="mt-6">
                         <button
                             class="inline-flex items-center px-8 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg uppercase shadow-sm text-secondaryHover"
-                            @click="changeProfilePicture">
+                            @click="validateTypeAndChange">
                             Neues Profilbild speichern
                         </button>
                     </div>
@@ -304,7 +309,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Konto endgültig löschen
@@ -400,6 +405,7 @@ export default defineComponent({
                 password: '',
                 password_confirmation: '',
             }),
+            updateProfilePictureFeedback: "",
             photoPreview: null,
             showSuccess: false,
             showChangePictureModal: false,
@@ -411,22 +417,22 @@ export default defineComponent({
         }
     },
     computed: {
-      email_validation_classes() {
-          if(this.email_validation.email) {
-              if(this.email_validation.email.length > 0) {
-                  return 'border-error';
-              } else {
-                  return 'border-gray-300'
-              }
-          } else {
-              return 'border-success';
-          }
-      }
+        email_validation_classes() {
+            if (this.email_validation.email) {
+                if (this.email_validation.email.length > 0) {
+                    return 'border-error';
+                } else {
+                    return 'border-gray-300'
+                }
+            } else {
+                return 'border-success';
+            }
+        }
     },
     watch: {
         'passwordForm.password': {
             handler() {
-                if(this.passwordForm.password.length > 0) {
+                if (this.passwordForm.password.length > 0) {
                     this.password_feedback()
                 }
             },
@@ -434,7 +440,7 @@ export default defineComponent({
         },
         'userForm.email': {
             handler() {
-                if(this.userForm.email.length > 0) {
+                if (this.userForm.email.length > 0) {
                     this.validate_email()
                 }
             },
@@ -447,18 +453,18 @@ export default defineComponent({
                 params: {
                     email: this.userForm.email
                 }
-            }).then( response => {
+            }).then(response => {
                 this.email_validation = response.data
             })
         },
         password_feedback() {
-          axios.get('/password_feedback', {
-              params: {
-                  password: this.passwordForm.password
-              }
-          }).then( response => {
-              this.pw_feedback = response.data
-          })
+            axios.get('/password_feedback', {
+                params: {
+                    password: this.passwordForm.password
+                }
+            }).then(response => {
+                this.pw_feedback = response.data
+            })
         },
         openDeleteUserModal() {
             this.deletingUser = true;
@@ -496,6 +502,22 @@ export default defineComponent({
         selectNewPhoto() {
             this.$refs.photo.click();
         },
+        validateTypeAndChange() {
+            this.updateProfilePictureFeedback = "";
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
+            ]
+
+            if (forbiddenTypes.includes(this.$refs.photo.files[0].type)
+                || this.$refs.photo.files[0].type.match('video.*')
+                || this.$refs.photo.files[0].type === "") {
+                this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+            } else {
+                this.changeProfilePicture()
+            }
+
+        },
         changeProfilePicture() {
             if (this.$refs.photo) {
                 this.userForm.photo = this.$refs.photo.files[0]
@@ -515,7 +537,12 @@ export default defineComponent({
             const reader = new FileReader();
 
             reader.onload = (e) => {
-                this.photoPreview = e.target.result;
+                if(e.target.result.includes("data:image/png") || e.target.result.includes("data:image/jpeg")) {
+                    this.photoPreview = e.target.result;
+                }
+                else {
+                    this.updateProfilePictureFeedback = "Es werden nur .png und .jpeg Dateien unterstützt"
+                }
             };
 
             reader.readAsDataURL(photo);

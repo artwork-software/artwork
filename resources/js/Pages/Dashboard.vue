@@ -48,8 +48,9 @@
                                     {{ task.name }}</p>
                                 <div v-show="task.departments.length > 0" class="my-auto shrink-0 -mr-3"
                                      v-for="department in task.departments">
-                                    <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
+                                    <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name" :alt="department.name"
                                                         class="shrink-0 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                    <TeamTooltip :team="department"/>
                                 </div>
                                 <div v-show="task.checklist.user_id !== null" class="my-auto">
                                     <img class="h-9 w-9 rounded-full"
@@ -108,6 +109,7 @@ import {
 import DailyCalendar from "@/Layouts/Components/DailyCalendar";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 
 
 const container = ref(null)
@@ -138,7 +140,8 @@ export default defineComponent({
         ChevronDownIcon,
         DailyCalendar,
         TeamIconCollection,
-        Link
+        Link,
+        TeamTooltip
     },
     computed: {
         sortedTasksDeadline: function () {

@@ -299,11 +299,11 @@
                                                     <!-- Individual Eventname -->
                                                     <div v-if="day.events[0].name">
                                                         <div v-if="day.events[0].project_id !== null"
-                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                         <div v-else
-                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                     </div>
@@ -408,7 +408,7 @@
                                                     <!-- Name of connected Project -->
                                                     <div
                                                         v-if="day.events[0].project_id !== null && projects.find(x => x.id === day.events[0].project_id)"
-                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate">
+                                                        class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                         {{
                                                             projects.find(x => x.id === day.events[0].project_id).name
                                                         }}
@@ -416,11 +416,11 @@
                                                     <!-- Individual Eventname -->
                                                     <div v-if="day.events[0].name">
                                                         <div v-if="day.events[0].project_id !== null"
-                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                         <div v-else
-                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                     </div>
@@ -771,7 +771,7 @@
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
                             <Link
-                                :href="route('projects.show',{project: this.conflictData[0].project.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                :href="route('projects.show',{project: this.conflictData[0].project.id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                 class="font-black flex cursor-pointer ml-1">
                                 {{ this.conflictData[0].project.name }}
                             </Link>
@@ -996,7 +996,7 @@
                                 <div>Keinem Projekt zugeordnet</div>
                             </div>
                             <div
-                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms ? this.myRooms.length > 0 : false"
+                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)"
                                 class="w-1/3">
                                 <Listbox as="div" class="flex items-center my-auto w-full " v-model="event.room_id">
                                     <div class="relative w-full">
@@ -1122,7 +1122,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms ? this.myRooms.length > 0 : false">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="event.description" rows="4"
@@ -1425,7 +1425,10 @@ export default defineComponent({
                 });
 
             } else {
+                /* hier gibt es einen Fehler wegen falschem Parameter für die Route -> soll überarbeitet werden, deswegen erstmal kein fix
+                Code hier ist dazu da um in der Listbox zur Auswahl des Raumes richtig anzuzeigen,ob der Raum zu den gewählten Zeitpunkten belegt ist.
                 if (this.calendarType === 'project') {
+                    console.log(this.project_id);
                     Inertia.get(route('projects.show'), {
                         project: this.project_id,
                         calendarType: 'monthly',
@@ -1440,6 +1443,7 @@ export default defineComponent({
                         start_time: this.addEventForm.start_time
                     }, {only: ['areas'], preserveState: true});
                 }
+                 */
             }
         },
         validateStartBeforeEndTime(form) {
@@ -1489,6 +1493,8 @@ export default defineComponent({
                 });
 
             } else {
+                /* hier gibt es einen Fehler wegen falschem Parameter für die Route -> soll überarbeitet werden, deswegen erstmal kein fix
+                   Code hier ist dazu da um in der Listbox zur Auswahl des Raumes richtig anzuzeigen,ob der Raum zu den gewählten Zeitpunkten belegt ist.
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: this.project_id,
@@ -1504,6 +1510,7 @@ export default defineComponent({
                         end_time: this.addEventForm.end_time
                     }, {only: ['areas'], preserveState: true});
                 }
+                 */
             }
         },
         hasConflict(event_id) {

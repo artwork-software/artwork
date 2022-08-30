@@ -50,7 +50,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem
-                                        v-if="this.$page.props.can.delete_projects || this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -113,7 +113,7 @@
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
                     <div class="flex"
-                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects">
+                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                         <div class="cursor-pointer" @click="openEditProjectTeamModal">
                             <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
                                               aria-hidden="true"/>
@@ -1984,12 +1984,6 @@ export default {
         closeEditChecklistTeamsModal() {
             this.editingChecklistTeams = false;
         },
-        openEditProjectModal() {
-            this.editingProject = true;
-        },
-        closeEditProjectModal() {
-            this.editingProject = false;
-        },
         openAddChecklistModal() {
             this.addingChecklist = true;
         },
@@ -2001,6 +1995,8 @@ export default {
             this.checklistForm.template_id = null;
             this.checklistForm.user_id = null;
             this.selectedTemplate = {name: '',id:null};
+            this.checklist_assigned_departments = [];
+            this.checklistForm.assigned_department_ids = [];
         },
         addChecklist() {
 
@@ -2030,6 +2026,14 @@ export default {
             this.nameOfDeletedProject = this.projectToDelete.name;
             Inertia.delete(`/projects/${this.projectToDelete.id}`);
             this.closeDeleteProjectModal();
+        },
+        openEditProjectModal() {
+            this.editingProject = true;
+        },
+        closeEditProjectModal() {
+            this.editingProject = false;
+            this.form.assigned_departments = [];
+            this.form.assigned_user_ids = {};
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
@@ -2069,19 +2073,28 @@ export default {
             this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
         },
         addDepartmentToChecklistTeamArray(department) {
-            for (let assigned_department of this.checklist_assigned_departments) {
-                if (department === assigned_department) {
-                    this.department_query = ""
-                    return;
+            let assignedIDs = [];
+            this.checklist_assigned_departments.forEach((assignedDepartment) => {
+                if(!assignedIDs.includes(assignedDepartment.id)){
+                    assignedIDs.push(assignedDepartment.id);
                 }
+            })
+            if(!assignedIDs.includes(department.id)){
+                this.checklist_assigned_departments.push(department);
+                this.department_query = ""
+            }else{
+                this.department_query = "";
             }
-            this.checklist_assigned_departments.push(department);
-            this.department_query = ""
         },
         saveChecklistTeams() {
+            let assignedIDs = [];
+            this.assignedDepartments.forEach((assignedDepartment) => {
+                assignedIDs.push(assignedDepartment.id);
+            })
             this.checklist_assigned_departments.forEach((department) => {
                 this.checklistForm.assigned_department_ids.push(department.id);
-                if(!this.assignedDepartments.includes(department)){
+
+                if(!assignedIDs.includes(department.id)){
                     this.assignedDepartments.push(department);
                 }
             })
@@ -2090,6 +2103,7 @@ export default {
             this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id})));
             this.editProject();
             this.closeEditChecklistTeamsModal();
+            this.closeAddChecklistModal();
         },
         addUserToProjectTeamArray(userToAdd) {
             for (let assignedUser of this.assignedUsers) {

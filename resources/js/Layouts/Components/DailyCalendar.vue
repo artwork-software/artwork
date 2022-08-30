@@ -418,7 +418,8 @@
                                         <!-- Listobject on hover when there is no event on that day -->
                                         <li @mouseover="activateHover(room.id)"
                                             @click="openAddEventModal(room.id)"
-                                            @mouseout="deactivateHover()" v-if="room.events.length === 0 && (this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy)"
+                                            @mouseout="deactivateHover()"
+                                            v-if="room.events.length === 0 && (this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy)"
                                             :class="showAddHoverRoomId === room.id ? 'bg-secondary' : ''"
                                             class="relative mt-px flex hover:bg-secondary cursor-pointer"
                                             style="grid-row: 1 / span 1439">
@@ -498,7 +499,7 @@
                                                                         00:00 -
                                                                     </div>
                                                                     <div v-else>
-                                                                    {{ event.start_time.substring(11, 16) }} -
+                                                                        {{ event.start_time.substring(11, 16) }} -
                                                                     </div>
                                                                     <div v-if="event.duration_in_minutes > 1439">
                                                                         23:59
@@ -812,7 +813,7 @@
                         Dieser Termin kollidiert mit "{{ this.conflictData[0].event_type.name }}"
                         <div class="flex ml-1" v-if="this.conflictData[0].project"> von
                             <Link
-                                :href="route('projects.show',{project: this.conflictData[0].project.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                :href="route('projects.show',{project: this.conflictData[0].project.id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                 class="font-black flex cursor-pointer ml-1">
                                 {{ this.conflictData[0].project.name }}
                             </Link>
@@ -964,7 +965,7 @@
                                     </span>
                         </div>
                         <div class="flex justify-end"
-                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms">
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)">
                             <Menu as="div" class="my-auto w-full relative">
                                 <div class="flex justify-end">
                                     <MenuButton
@@ -1162,7 +1163,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.myRooms">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)">
                         <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="event.description" rows="4"
@@ -1424,12 +1425,12 @@ export default defineComponent({
         },
         validateStartBeforeEndTime(form) {
 
-            if(form.start_time && form.end_time) {
+            if (form.start_time && form.end_time) {
                 Inertia.post(route('events.store'), {
                     start_time: form.start_time,
                     end_time: form.end_time,
                 }, {
-                    headers: { 'X-Dry-Run': 'true' },
+                    headers: {'X-Dry-Run': 'true'},
                     onError: (errors) => {
                         this.startTimeError = errors
                     },
@@ -1451,23 +1452,25 @@ export default defineComponent({
         },
         async getStartTimeConflicts() {
             if (this.selectedRoom) {
-               await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
+                await axios.get(`/room/${this.selectedRoom.id}/start_time_conflicts`, {
                     params: {
                         start_time: this.addEventForm.start_time
                     }
                 }).then(response => {
-                   if(this.conflictData === null){
-                       if(response.data !== null && response.data.length !== 0) {
-                           this.conflictData = response.data;
-                       }
-                   }else{
-                       if(response.data !== null && response.data.length !== 0){
-                           this.conflictData.push(response.data);
-                       }
-                   }
+                    if (this.conflictData === null) {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData = response.data;
+                        }
+                    } else {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData.push(response.data);
+                        }
+                    }
                 });
 
             } else {
+                /* hier gibt es einen Fehler wegen falschem Parameter für die Route -> soll überarbeitet werden, deswegen erstmal kein fix
+                Code hier ist dazu da um in der Listbox zur Auswahl des Raumes richtig anzuzeigen,ob der Raum zu den gewählten Zeitpunkten belegt ist.
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: this.projects[0],
@@ -1481,29 +1484,33 @@ export default defineComponent({
                         start_time: this.addEventForm.start_time
                     }, {only: ['areas'], preserveState: true});
                 }
+
+                 */
 
             }
         },
         async getEndTimeConflicts() {
             if (this.selectedRoom) {
-               await axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
+                await axios.get(`/room/${this.selectedRoom.id}/end_time_conflicts`, {
                     params: {
                         wanted_day: this.requested_wanted_day,
                         end_time: this.addEventForm.end_time
                     }
                 }).then(response => {
-                   if(this.conflictData === null){
-                       if(response.data !== null && response.data.length !== 0) {
-                           this.conflictData = response.data;
-                       }
-                   }else{
-                       if(response.data !== null && response.data.length !== 0){
-                           this.conflictData.push(response.data);
-                       }
-                   }
+                    if (this.conflictData === null) {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData = response.data;
+                        }
+                    } else {
+                        if (response.data !== null && response.data.length !== 0) {
+                            this.conflictData.push(response.data);
+                        }
+                    }
                 });
 
             } else {
+                /* hier gibt es einen Fehler wegen falschem Parameter für die Route -> soll überarbeitet werden, deswegen erstmal kein fix
+                Code hier ist dazu da um in der Listbox zur Auswahl des Raumes richtig anzuzeigen,ob der Raum zu den gewählten Zeitpunkten belegt ist.
                 if (this.calendarType === 'project') {
                     Inertia.get(route('projects.show'), {
                         project: this.projects[0],
@@ -1516,6 +1523,8 @@ export default defineComponent({
                         end_time: this.addEventForm.end_time
                     }, {only: ['areas'], preserveState: true});
                 }
+
+                 */
             }
         },
         sortedEvents: function (events) {
@@ -1667,15 +1676,15 @@ export default defineComponent({
         openDayDetailModal: function (room, event) {
             this.wantedEvents = [];
             this.wantedEvents.push(event);
-            if(room){
-            event.conflicts.forEach((conflictEventId) => {
-                this.wantedEvents.push(room.events.find(roomEvent => roomEvent.id === conflictEventId))
-            })
-            room.events.forEach((roomEvent) => {
-                if (roomEvent.conflicts.includes(event.id)) {
-                    this.wantedEvents.push(roomEvent);
-                }
-            })
+            if (room) {
+                event.conflicts.forEach((conflictEventId) => {
+                    this.wantedEvents.push(room.events.find(roomEvent => roomEvent.id === conflictEventId))
+                })
+                room.events.forEach((roomEvent) => {
+                    if (roomEvent.conflicts.includes(event.id)) {
+                        this.wantedEvents.push(roomEvent);
+                    }
+                })
             }
             this.showDayDetailModal = true;
         },
@@ -1719,8 +1728,8 @@ export default defineComponent({
                     Inertia.visit(route('projects.show', {
                         month_start: this.wantedStartDate,
                         month_end: this.wantedEndDate,
-                        project: this.projects[0],
-                        openTab:'calendar',
+                        project: this.projects[0].id,
+                        openTab: 'calendar',
                         calendarType: 'monthly'
                     }))
                 } else {
@@ -1739,8 +1748,8 @@ export default defineComponent({
                 } else if (this.calendarType === 'project') {
                     Inertia.visit(route('projects.show', {
                         wanted_day: this.wantedDayDate,
-                        project: this.projects[0],
-                        openTab:'calendar',
+                        project: this.projects[0].id,
+                        openTab: 'calendar',
                         calendarType: 'daily'
                     }))
                 } else {

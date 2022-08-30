@@ -36,7 +36,7 @@
                         Alle Ansehen
                     </Link>
                 </div>
-                <div class="mt-10" v-for="task in tasks">
+                <div class="mt-10" v-for="task in this.sortedTasksDeadline">
                     <div :key="task.id">
                         <div>
                             <div class="flex w-full">
@@ -139,6 +139,26 @@ export default defineComponent({
         DailyCalendar,
         TeamIconCollection,
         Link
+    },
+    computed: {
+        sortedTasksDeadline: function () {
+
+            function compare(a, b) {
+                if (b.deadline === null) {
+                    return -1;
+                }
+                if (a.deadline === null) {
+                    return 1;
+                }
+                if (a.deadline < b.deadline)
+                    return -1;
+                if (a.deadline > b.deadline)
+                    return 1;
+                return 0;
+            }
+
+            return this.tasks.sort(compare);
+        },
     },
     methods: {
         updateTaskStatus(task) {

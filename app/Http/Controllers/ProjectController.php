@@ -782,7 +782,8 @@ class ProjectController extends Controller
             'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
             'shown_day_local' => Carbon::parse($request->query('wanted_day')),
             'calendarType' => $request->query('calendarType') === 'daily' ? 'daily' : 'monthly',
-            'openTab'=> $openTab
+            'openTab'=> $openTab,
+            'project_id' => $project->id,
         ]);
     }
 

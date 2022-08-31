@@ -47,6 +47,7 @@ class EventController extends Controller
                     "project_id" => $event->project_id,
                     "created_at" => $event->created_at,
                     "updated_at" => $event->updated_at,
+                    'created_by' => $event->creator
                 ];
             }
         }
@@ -107,6 +108,7 @@ class EventController extends Controller
                     "project_id" => $event->project_id,
                     "created_at" => $event->created_at,
                     "updated_at" => $event->updated_at,
+                    'created_by' => $event->creator
                 ];
 
                 $lastEvent = $event;

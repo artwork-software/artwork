@@ -290,6 +290,7 @@ class ProjectController extends Controller
                         "project_id" => $event->project_id,
                         "created_at" => $event->created_at,
                         "updated_at" => $event->updated_at,
+                        'created_by' => $event->creator
                     ];
                 }
             }
@@ -313,6 +314,7 @@ class ProjectController extends Controller
                         "project_id" => $event->project_id,
                         "created_at" => $event->created_at,
                         "updated_at" => $event->updated_at,
+                        'created_by' => $event->creator
                     ];
                 }
             }
@@ -377,6 +379,7 @@ class ProjectController extends Controller
                         "project_id" => $event->project_id,
                         "created_at" => $event->created_at,
                         "updated_at" => $event->updated_at,
+                        'created_by' => $event->creator
                     ];
 
                     $lastEvent = $event;
@@ -420,6 +423,7 @@ class ProjectController extends Controller
                         "project_id" => $event->project_id,
                         "created_at" => $event->created_at,
                         "updated_at" => $event->updated_at,
+                        'created_by' => $event->creator
                     ];
 
                     $lastEvent = $event;
@@ -619,7 +623,8 @@ class ProjectController extends Controller
                     'is_loud' => $event->is_loud,
                     'event_type_id' => $event->event_type_id,
                     'room_id' => $event->room_id,
-                    'project_id' => $event->project_id
+                    'project_id' => $event->project_id,
+                    'created_by' => $event->creator
                 ]),
                 'users' => $project->users->map(fn($user) => [
                     'id' => $user->id,

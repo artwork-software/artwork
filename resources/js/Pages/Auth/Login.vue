@@ -48,7 +48,30 @@
                                 </button>
                             </div>
                         </form>
+
                     </div>
+                </div>
+                <div class=" absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
+                    <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
+                        Impressum
+                    </a>
+                    <!-- TODO: Wohin bei Default ? -->
+                    <a target="_blank" v-else :href="this.$page.props.impressumLink">
+                        Impressum
+                    </a>
+                    |
+                    <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
+                        Datenschutz
+                    </a>
+                    <!-- TODO: Wohin bei Default ? -->
+                    <a target="_blank" v-else :href="this.$page.props.privacyLink">
+                        Datenschutz
+                    </a>
+                    |
+                    <!-- TODO: Hier noch Link zu Über uns Page -->
+                    <a href="">
+                        Über das Tool
+                    </a>
                 </div>
             </div>
         </div>

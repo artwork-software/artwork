@@ -904,7 +904,7 @@
                                  aria-hidden="true"/>
                         </div>
                         <Listbox
-                            v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                            v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || event.created_by.id === this.$page.props.user.id"
                             as="div"
                             class="flex w-full" v-model="event.event_type_id">
                             <div class="relative">
@@ -965,7 +965,7 @@
                                     </span>
                         </div>
                         <div class="flex justify-end"
-                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)">
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
                             <Menu as="div" class="my-auto w-full relative">
                                 <div class="flex justify-end">
                                     <MenuButton
@@ -1037,7 +1037,7 @@
                                 <div>Keinem Projekt zugeordnet</div>
                             </div>
                             <div
-                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                                v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id"
                                 class="w-1/3">
                                 <Listbox as="div" class="flex items-center my-auto w-full " v-model="event.room_id">
                                     <div class="relative w-full">
@@ -1097,7 +1097,7 @@
                     </div>
                     <div>
                         <div class="mt-4 w-full"
-                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                             v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id">
                             <input type="text" v-model="event.name" placeholder="Terminname"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         </div>
@@ -1109,7 +1109,7 @@
                     </div>
 
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id"
                         class="flex mt-1">
                         <div class="text-secondary mr-2">
                             <label for="startDate" class="text-xs subpixel-antialiased">Terminstart*</label>
@@ -1141,7 +1141,7 @@
                         {{ event.end_time.split('-')[2].split(' ')[1] }}
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin"
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || event.created_by.id === this.$page.props.user.id"
                         class="flex mt-4 items-center">
                         <div class="flex items-center">
                             <input v-model="event.audience"
@@ -1163,7 +1163,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false)">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
                         <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="event.description" rows="4"

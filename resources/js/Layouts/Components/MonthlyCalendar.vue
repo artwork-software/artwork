@@ -407,7 +407,7 @@
                                                 <div>
                                                     <!-- Name of connected Project -->
                                                     <div
-                                                        v-if="day.events[0].project_id !== null && projects.find(x => x.id === day.events[0].project_id)"
+                                                        v-if="day.events[0].project_id !== null && projects.find(x => x.id === day.events[0].project_id) && this.calendarType !== 'project'"
                                                         class="mt-1 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                         {{
                                                             projects.find(x => x.id === day.events[0].project_id).name
@@ -415,14 +415,19 @@
                                                     </div>
                                                     <!-- Individual Eventname -->
                                                     <div v-if="day.events[0].name">
-                                                        <div v-if="day.events[0].project_id !== null"
-                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
+                                                        <div
+                                                            v-if="day.events[0].project_id !== null && this.calendarType !== 'project'"
+                                                            class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                         <div v-else
                                                              class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
+                                                    </div>
+                                                    <div v-else
+                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
+                                                        {{ this.event_types.find(x => x.id === day.events[0].event_type_id).name }}
                                                     </div>
                                                     <!-- Time of Event -->
                                                     <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -985,7 +990,7 @@
                                 <div class="my-auto flex w-28">Zugeordnet zu</div>
                                 <div>
                                     <Link
-                                        :href="route('projects.show',{project: event.project_id, month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
+                                        :href="route('projects.show',{project: event.project_id,openTab: 'calendar', month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), calendarType: 'monthly'})"
                                         class="ml-3 text-md flex font-bold font-lexend text-primary">
                                         {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
@@ -1052,6 +1057,17 @@
 
                                         </span>
                             </div>
+                        </div>
+                    </div>
+                    <div class="flex font-lexend text-secondary subpixel-antialiased text-xs my-auto">
+                        <div class="my-auto">angelegt von:</div>
+                        <img v-if="event.created_by.profile_photo_url"
+                             :data-tooltip-target="event.created_by.id"
+                             :src="event.created_by.profile_photo_url"
+                             :alt="event.created_by.name"
+                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        <div class="flex ml-2 my-auto">
+                            {{ event.created_by.first_name }} {{ event.created_by.last_name }}
                         </div>
                     </div>
                     <div>
@@ -1290,6 +1306,7 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -1337,7 +1354,8 @@ export default defineComponent({
         CalendarIcon,
         Datepicker,
         PencilAltIcon,
-        TrashIcon
+        TrashIcon,
+        UserTooltip
 
     },
     props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event', 'project_id'],
@@ -1656,7 +1674,7 @@ export default defineComponent({
                 }
             }
 
-            this.addEventForm.post(route('events.store'), {});
+            this.addEventForm.post(route('events.store'), {preserveScroll: true});
 
             this.closeAddEventModal();
         },
@@ -1697,7 +1715,7 @@ export default defineComponent({
             this.updateEventForm.room_id = event.room_id;
             this.updateEventForm.user_id = event.user_id;
             this.updateEventForm.project_id = event.project_id;
-            this.updateEventForm.patch(route('events.update', {event: event.id}));
+            this.updateEventForm.patch(route('events.update', {preserveScroll: true, event: event.id},));
             this.closeDayDetailModal();
         },
         openChangeDateModal() {

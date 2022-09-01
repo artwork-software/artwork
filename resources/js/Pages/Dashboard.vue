@@ -145,6 +145,8 @@ export default defineComponent({
     },
     computed: {
         sortedTasksDeadline: function () {
+            let taskCopy = this.tasks.slice();
+            let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
 
             function compare(a, b) {
                 if (b.deadline === null) {
@@ -160,7 +162,7 @@ export default defineComponent({
                 return 0;
             }
 
-            return this.tasks.sort(compare);
+            return undoneSortedTasksDeadline.sort(compare);
         },
     },
     methods: {

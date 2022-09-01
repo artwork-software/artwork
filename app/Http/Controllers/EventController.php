@@ -521,7 +521,7 @@ class EventController extends Controller
                     'room' => $event->room,
                     'project' => $event->project,
                     'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
-                    'created_by' => $event->user_id
+                    'created_by' => $event->creator
                 ]),
             ]);
         }else{
@@ -543,7 +543,7 @@ class EventController extends Controller
                     'room' => $event->room,
                     'project' => $event->project,
                     'created_at' => Carbon::parse($event->created_at)->format('d.m.Y, H:i'),
-                    'created_by' => $event->user_id
+                    'created_by' => $event->creator
                 ]),
             ]);
             /*

@@ -470,27 +470,34 @@
                                                                 {{ event.conflicts.length + 1 }}
                                                                 </span>
                                                             </div>
-                                                            <div
+                                                            <div v-if="this.calendarType !== 'project'"
                                                                 class="text-secondary subpixel-antialiased text-sm ml-2 mt-1">
                                                                 {{ event.event_type.name }}
                                                             </div>
                                                             <div>
                                                                 <!-- Name of connected Project -->
                                                                 <div
-                                                                    v-if="event.project_id !== null"
+                                                                    v-if="event.project_id !== null && this.calendarType !== 'project'"
                                                                     class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
                                                                     {{
                                                                         projects.find(x => x.id === event.project_id).name
                                                                     }}
                                                                 </div>
                                                                 <!-- Individual Eventname -->
-                                                                <div v-if="event.project_id !== null"
-                                                                     class="my-1 ml-2 text-xs flex font-lexend text-secondary">
-                                                                    {{ event.name }}
+                                                                <div v-if="event.name">
+                                                                    <div
+                                                                        v-if="event.project_id !== null && this.calendarType !== 'project'"
+                                                                        class="my-1 ml-2 text-xs flex font-lexend text-secondary">
+                                                                        {{ event.name }}
+                                                                    </div>
+                                                                    <div v-else
+                                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
+                                                                        {{ event.name }}
+                                                                    </div>
                                                                 </div>
                                                                 <div v-else
-                                                                     class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary">
-                                                                    {{ event.name }}
+                                                                     class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
+                                                                    {{ this.event_types.find(x => x.id === event.event_type_id).name }}
                                                                 </div>
                                                                 <!-- Time of Event -->
                                                                 <div
@@ -1027,7 +1034,7 @@
                                 <div class="my-auto flex w-28">Zugeordnet zu</div>
                                 <div>
                                     <Link
-                                        :href="route('projects.show',{wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate())),project:event.project_id, calendarType: 'daily'})"
+                                        :href="route('projects.show',{openTab: 'calendar',wanted_day: new Date(new Date(this.shown_day_local).setDate(new Date(this.shown_day_local).getDate())),project:event.project_id, calendarType: 'daily'})"
                                         class="ml-3 text-md flex font-bold font-lexend text-primary">
                                         {{ projects.find(x => x.id === event.project_id).name }}
                                     </Link>
@@ -1093,6 +1100,17 @@
 
                                         </span>
                             </div>
+                        </div>
+                    </div>
+                    <div class="flex font-lexend text-secondary subpixel-antialiased text-xs my-auto">
+                        <div class="my-auto">angelegt von:</div>
+                        <img v-if="event.created_by.profile_photo_url"
+                             :data-tooltip-target="event.created_by.id"
+                             :src="event.created_by.profile_photo_url"
+                             :alt="event.created_by.name"
+                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        <div class="flex ml-2 my-auto">
+                            {{ event.created_by.first_name }} {{ event.created_by.last_name }}
                         </div>
                     </div>
                     <div>

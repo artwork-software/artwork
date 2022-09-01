@@ -25,8 +25,10 @@
                                         <div
                                             class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900 mr-8">
                                             {{ eventRequest.event_type.name }}
-                                            <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                            <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud" class="h-5 w-5 ml-2  my-auto"/>
+                                            <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
+                                                 class="h-5 w-5 ml-2 my-auto"/>
+                                            <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
+                                                 class="h-5 w-5 ml-2  my-auto"/>
                                         </div>
 
                                         <div class="flex w-full whitespace-nowrap ml-4"
@@ -56,8 +58,9 @@
                                     <div v-if="eventRequest.project" class="w-80">
                                         <div class="ml-16 text-secondary text-sm flex items-center">
                                             Zugeordnet zu
-                                            <Link :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
-                                                  class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                            <Link
+                                                :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
+                                                class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project.name }}
                                             </Link>
                                         </div>
@@ -75,7 +78,8 @@
                                         Keinem Projekt zugeordnet
                                     </div>
                                     <div class="flex text-sm text-secondary items-center">
-                                        angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
+                                        angefragt:<img v-if="eventRequest.created_by.profile_photo_url"
+                                                       :data-tooltip-target="eventRequest.created_by.id"
                                                        :src="eventRequest.created_by.profile_photo_url"
                                                        :alt="eventRequest.created_by.name"
                                                        class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
@@ -103,7 +107,7 @@
         <!-- Approve Request Modal -->
         <jet-dialog-modal :show="showApproveRequestModal" @close="closeApproveRequestModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
                         Raumbelegung zusagen
@@ -126,8 +130,10 @@
                                         {{ requestToApprove.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
+                                             class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud"
+                                             class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -184,24 +190,24 @@
                             </div>
                         </div>
                     </div>
-                        <div class="flex justify-between mt-6">
-                            <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                    @click="approveRequest">
-                                Zusagen
-                            </button>
-                            <div class="flex my-auto">
+                                @click="approveRequest">
+                            Zusagen
+                        </button>
+                        <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
                                   class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
-                            </div>
                         </div>
                     </div>
+                </div>
             </template>
         </jet-dialog-modal>
         <!-- Decline Request Modal -->
         <jet-dialog-modal :show="showDeclineRequestModal" @close="closeDeclineRequestModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Raumbelegung absagen
@@ -224,8 +230,10 @@
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience" class="h-5 w-5 ml-2 my-auto"/>
-                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud" class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
+                                             class="h-5 w-5 ml-2 my-auto"/>
+                                        <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud"
+                                             class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
@@ -410,10 +418,10 @@ export default defineComponent({
             this.approveRequestForm.occupancy_option = false;
             this.approveRequestForm.is_loud = this.requestToApprove.is_loud;
             this.approveRequestForm.audience = this.requestToApprove.audience;
-            if(this.requestToApprove.room){
+            if (this.requestToApprove.room) {
                 this.approveRequestForm.room_id = this.requestToApprove.room.id;
             }
-            if(this.requestToApprove.project){
+            if (this.requestToApprove.project) {
                 this.approveRequestForm.project_id = this.requestToApprove.project.id;
             }
             this.approveRequestForm.event_type_id = this.requestToApprove.event_type.id;
@@ -429,7 +437,7 @@ export default defineComponent({
             this.approveRequestForm.is_loud = this.requestToDecline.is_loud;
             this.approveRequestForm.audience = this.requestToDecline.audience;
             this.approveRequestForm.room_id = null;
-            if(this.requestToDecline.project){
+            if (this.requestToDecline.project) {
                 this.approveRequestForm.project_id = this.requestToDecline.project.id;
             }
             this.approveRequestForm.event_type_id = this.requestToDecline.event_type.id;

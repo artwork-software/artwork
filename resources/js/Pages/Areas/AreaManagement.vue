@@ -27,8 +27,8 @@
                             <div class="flex w-full flex-wrap mt-10">
                                 <div v-for="area in areas"
                                      class="flex w-full bg-white my-2 border border-gray-200">
-                                    <button class="bg-black flex" @click="area.showContent = !area.showContent">
-                                        <ChevronUpIcon v-if="area.showContent === true"
+                                    <button class="bg-black flex" @click="changeAreaStatus(area)">
+                                        <ChevronUpIcon v-if="this.opened_areas.includes(area.id)"
                                                        class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                         <ChevronDownIcon v-else
                                                          class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
@@ -103,7 +103,7 @@
                                                 </Menu>
                                             </div>
                                         </div>
-                                        <div class="flex w-full mt-6" v-if="area.showContent">
+                                        <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
                                                 <button @click="openAddRoomModal(area)" type="button"
                                                         class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -116,7 +116,7 @@
                                                     class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
                                             </div>
                                         </div>
-                                        <div class="mt-6 mb-12" v-if="area.showContent">
+                                        <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">
                                             <draggable ghost-class="opacity-50"
                                                        key="draggableKey"
                                                        item-key="id" :list="area.rooms"
@@ -691,7 +691,7 @@ export default defineComponent({
         draggable,
     },
     name: 'Area Management',
-    props: ['areas'],
+    props: ['areas', 'opened_areas'],
     data() {
         return {
             dragging: false,
@@ -742,6 +742,20 @@ export default defineComponent({
         }
     },
     methods: {
+        changeAreaStatus(area) {
+            if(!this.opened_areas.includes(area.id)) {
+                const openedAreas = this.opened_areas;
+
+                openedAreas.push(area.id)
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas});
+            }
+            else {
+                const filteredList = this.opened_areas.filter(function(value) {
+                    return value !== area.id;
+                })
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList});
+            }
+        },
         updateRoomOrder(rooms) {
 
             rooms.map((room, index) => {

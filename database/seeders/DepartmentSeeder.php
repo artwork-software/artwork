@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Models\Department;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class AreaSeeder extends Seeder
+class DepartmentSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -15,8 +16,11 @@ class AreaSeeder extends Seeder
      */
     public function run()
     {
-        DB::table('areas')->insert([
-            'name' => 'Areal 1B'
+        $department = Department::create([
+            'name' => 'Festivals Team',
+            'svg_name' => 'icon_festival'
         ]);
+
+        $department->users()->attach(1);
     }
 }

@@ -21,13 +21,16 @@ class UserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Max',
             'last_name' => 'Mustermann',
-            'email' => 'test@test.de',
+            'email' => 'max.mustermann@kampnagel.de',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
-            'position' => 'Tester',
-            'business' => 'TestBusiness',
+            'position' => 'Administrator',
+            'business' => 'Kampnagel',
             'description' => null,
-            'toggle_hints' => true
+            'toggle_hints' => true,
+            'opened_checklists' => [],
+            'opened_areas' => [],
+            'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg'
         ]);
 
         $user->assignRole('admin');

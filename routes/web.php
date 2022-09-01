@@ -70,6 +70,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
     Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
     Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])->name('user.checklists.update');
+    Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
 
     Route::post('/users/reset-password', [UserController::class, 'reset_user_password'])->name('user.reset.password');

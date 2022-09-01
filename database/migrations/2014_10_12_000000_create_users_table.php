@@ -25,6 +25,8 @@ return new class extends Migration
             $table->string('business');
             $table->longText('description')->nullable();
             $table->boolean('toggle_hints')->default(true);
+            $table->json('opened_checklists');
+            $table->json('opened_areas');
             $table->rememberToken();
             $table->foreignId('current_team_id')->nullable();
             $table->string('profile_photo_path', 2048)->nullable();

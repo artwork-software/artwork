@@ -16,7 +16,18 @@ class RoomSeeder extends Seeder
     public function run()
     {
         DB::table('rooms')->insert([
-            'name' => 'TestRoom',
+            'name' => 'Hauptraum',
+            'description' => null,
+            'temporary' => false,
+            'start_date' => null,
+            'end_date' => null,
+            'area_id' => 1,
+            'user_id' => 1,
+            'order' => 1,
+        ]);
+
+        DB::table('rooms')->insert([
+            'name' => 'Raum 2B',
             'description' => null,
             'temporary' => false,
             'start_date' => null,

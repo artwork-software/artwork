@@ -19,10 +19,13 @@ class DatabaseSeeder extends Seeder
             EventTypeSeeder::class,
             UserSeeder::class,
             AreaSeeder::class,
-            //ProjectSeeder::class,
+            ProjectSeeder::class,
             RoomSeeder::class,
             EventSeeder::class,
-            SettingsSeeder::class
+            SettingsSeeder::class,
+            DepartmentSeeder::class,
+            GenreSeeder::class,
+            CategorySeeder::class
         ]);
     }
 }

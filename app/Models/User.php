@@ -39,7 +39,9 @@ class User extends Authenticatable
         'position',
         'business',
         'description',
-        'toggle_hints'
+        'toggle_hints',
+        'opened_checklists',
+        'opened_areas'
     ];
 
     public function departments()
@@ -104,6 +106,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'opened_checklists' => 'array',
+        'opened_areas' => 'array'
     ];
 
     /**

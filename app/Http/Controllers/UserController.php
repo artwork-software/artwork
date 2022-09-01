@@ -8,6 +8,7 @@ use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
@@ -141,6 +142,28 @@ class UserController extends Controller
         $user->syncRoles($request->roles);
 
         return Redirect::route('user.edit',$user)->with('success', 'Benutzer aktualisiert');
+    }
+
+    public function update_checklist_status(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $user->update([
+            'opened_checklists' => $request->opened_checklists
+        ]);
+
+        return Redirect::back()->with('success', 'Checklist status updated');
+    }
+
+    public function update_area_status(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $user->update([
+            'opened_areas' => $request->opened_areas
+        ]);
+
+        return Redirect::back()->with('success', 'Area status updated');
     }
 
     /**

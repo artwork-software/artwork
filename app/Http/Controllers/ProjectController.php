@@ -709,7 +709,7 @@ class ProjectController extends Controller
                     'text' => $comment->text,
                     'created_at' => $comment->created_at->format('d.m.Y, H:i'),
                     'user' => $comment->user
-                ])
+                ]),
             ],
             'categories' => Category::all()->map(fn($category) => [
                 'id' => $category->id,
@@ -789,6 +789,7 @@ class ProjectController extends Controller
             'calendarType' => $request->query('calendarType') === 'daily' ? 'daily' : 'monthly',
             'openTab'=> $openTab,
             'project_id' => $project->id,
+            'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists
         ]);
     }
 
@@ -1127,6 +1128,12 @@ class ProjectController extends Controller
 
         $project->events()->delete();
 
+        foreach($project->checklists() as $checklist) {
+            $checklist->tasks()->delete();
+        }
+
+        $project->checklists()->delete();
+
         $project->delete();
 
         return Redirect::route('projects')->with('success', 'Project moved to trash');
@@ -1139,7 +1146,7 @@ class ProjectController extends Controller
 
         $project->forceDelete();
         $project->events()->withTrashed()->forceDelete();
-        return Redirect::route('projects.trashed')->with('success', 'Room restored');
+        return Redirect::route('projects.trashed')->with('success', 'Project deleted');
     }
 
     public function restore(int $id)
@@ -1149,7 +1156,7 @@ class ProjectController extends Controller
         $project->restore();
         $project->events()->withTrashed()->restore();
 
-        return Redirect::route('projects.trashed')->with('success', 'Room restored');
+        return Redirect::route('projects.trashed')->with('success', 'Project restored');
     }
 
 

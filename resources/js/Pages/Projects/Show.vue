@@ -286,8 +286,8 @@
                                     <div v-for="checklist in project.public_checklists"
                                          class="flex w-full bg-white my-2">
                                         <button class="bg-primary flex"
-                                                @click="checklist.showContent = !checklist.showContent">
-                                            <ChevronUpIcon v-if="checklist.showContent === true"
+                                                @click="changeChecklistStatus(checklist)">
+                                            <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
@@ -428,7 +428,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="checklist.showContent">
+                                            <div class="flex w-full mt-6" v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="flex"
                                                      v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
@@ -444,7 +444,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="checklist.showContent">
+                                            <div class="mt-6 mb-12" v-if="this.opened_checklists.includes(checklist.id)">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="draggableID" :list="checklist.tasks"
@@ -552,7 +552,7 @@
                                          class="flex w-full bg-white my-2">
                                         <button class="bg-primary flex"
                                                 @click="checklist.showContent = !checklist.showContent">
-                                            <ChevronUpIcon v-if="checklist.showContent === true"
+                                            <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
@@ -640,7 +640,7 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="checklist.showContent">
+                                            <div class="flex w-full mt-6" v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -653,7 +653,7 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="checklist.showContent">
+                                            <div class="mt-6 mb-12" v-if="this.opened_checklists.includes(checklist.id)">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="id" :list="checklist.tasks"
@@ -1707,7 +1707,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
+    props: ['opened_checklists','project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1908,6 +1908,22 @@ export default {
         }
     },
     methods: {
+        changeChecklistStatus(checklist) {
+
+            if(!this.opened_checklists.includes(checklist.id)) {
+                const openedChecklists = this.opened_checklists;
+
+                openedChecklists.push(checklist.id)
+
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists});
+            }
+            else {
+                const filteredList = this.opened_checklists.filter(function(value) {
+                    return value !== checklist.id;
+                })
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList});
+            }
+        },
         selectNewFiles() {
             this.$refs.project_files.click();
         },

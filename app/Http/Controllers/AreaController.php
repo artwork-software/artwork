@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class AreaController extends Controller
@@ -46,6 +47,7 @@ class AreaController extends Controller
                     ])
                 ])
             ]),
+            'opened_areas' => User::where('id', Auth::id())->first()->opened_areas
         ]);
     }
 

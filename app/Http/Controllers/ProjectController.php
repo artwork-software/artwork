@@ -197,27 +197,27 @@ class ProjectController extends Controller
             'genre_id' => $request->genre_id,
         ]);
 
-        $project->users()->save(Auth::user(), ['is_admin' => true,'is_manager' => false]);
+        $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
 
         $project_users = [];
-        foreach (User::all() as $user){
+        foreach (User::all() as $user) {
             $user_projects = [];
-            foreach ($user->projects as $user_project){
+            foreach ($user->projects as $user_project) {
                 $user_projects[] = $user_project->id;
             }
-            if(in_array($project->id,$user_projects)){
+            if (in_array($project->id, $user_projects)) {
                 $project_users[] = $user;
             }
         }
         $project_admins = [];
         $project_managers = [];
-        foreach ($project_users as $p_user){
-            foreach($p_user->projects as $project_of_user){
-                if($project->id === $project_of_user->id){
-                    if($project_of_user->pivot->is_admin){
+        foreach ($project_users as $p_user) {
+            foreach ($p_user->projects as $project_of_user) {
+                if ($project->id === $project_of_user->id) {
+                    if ($project_of_user->pivot->is_admin) {
                         $project_admins[] = $p_user;
                     }
-                    if($project_of_user->pivot->is_manager){
+                    if ($project_of_user->pivot->is_manager) {
                         $project_managers[] = $p_user;
                     }
                 }
@@ -226,10 +226,10 @@ class ProjectController extends Controller
 
         $adminIds = [];
         $managerIds = [];
-        foreach($project_admins as $admin){
+        foreach ($project_admins as $admin) {
             $adminIds[] = $admin->id;
         }
-        foreach($project_managers as $manager){
+        foreach ($project_managers as $manager) {
             $managerIds[] = $manager->id;
         }
 
@@ -402,6 +402,14 @@ class ProjectController extends Controller
 
                     }
 
+                    if (Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2)) {
+                        $minutes_from_start = 1;
+                    } else if (Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)) < 1440) {
+                        $minutes_from_start = Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time));
+                    } else {
+                        $minutes_from_start = 1;
+                    }
+
                     $eventsToday[] = [
                         'id' => $event->id,
                         'conflicts' => $conflicts,
@@ -412,8 +420,8 @@ class ProjectController extends Controller
                         "end_time" => $event->end_time,
                         "end_time_dt_local" => Carbon::parse($event->end_time)->toDateTimeLocalString(),
                         "occupancy_option" => $event->occupancy_option,
-                        "minutes_from_day_start" => Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->start_time)),
-                        "duration_in_minutes" => Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
+                        "minutes_from_day_start" => $minutes_from_start,
+                        "duration_in_minutes" => Carbon::parse($event->start_time) < Carbon::parse($date_of_day)->startOfDay()->subHours(2) ? Carbon::parse($date_of_day)->startOfDay()->subHours(2)->diffInMinutes(Carbon::parse($event->end_time)) : Carbon::parse($event->start_time)->diffInMinutes(Carbon::parse($event->end_time)),
                         "audience" => $event->audience,
                         "is_loud" => $event->is_loud,
                         "event_type_id" => $event->event_type_id,
@@ -510,6 +518,32 @@ class ProjectController extends Controller
         return $conflict_event_ids;
     }
 
+    private function get_first_start_time(mixed $events)
+    {
+        $first_start = null;
+        foreach ($events as $event) {
+            if ($first_start !== null) {
+                if ($event->start_time < $first_start) {
+                    $first_start = $event->start_time;
+                }
+            }else{
+                $first_start = $event->start_time;
+            }
+        }
+        return $first_start;
+    }
+
+    private function get_last_end_time(mixed $events)
+    {
+        $last_end = null;
+        foreach ($events as $event) {
+            if ($event->end_time > $last_end) {
+                $last_end = $event->end_time;
+            }
+        }
+        return $last_end;
+    }
+
     /**
      * Display the specified resource.
      *
@@ -523,24 +557,24 @@ class ProjectController extends Controller
         $private_checklists = $project->checklists()->where('user_id', Auth::id())->get();
 
         $project_users = [];
-        foreach (User::all() as $user){
+        foreach (User::all() as $user) {
             $user_projects = [];
-            foreach ($user->projects as $user_project){
+            foreach ($user->projects as $user_project) {
                 $user_projects[] = $user_project->id;
             }
-            if(in_array($project->id,$user_projects)){
+            if (in_array($project->id, $user_projects)) {
                 $project_users[] = $user;
             }
         }
         $project_admins = [];
         $project_managers = [];
-        foreach ($project_users as $p_user){
-            foreach($p_user->projects as $project_of_user){
-                if($project->id === $project_of_user->id){
-                    if($project_of_user->pivot->is_admin){
+        foreach ($project_users as $p_user) {
+            foreach ($p_user->projects as $project_of_user) {
+                if ($project->id === $project_of_user->id) {
+                    if ($project_of_user->pivot->is_admin) {
                         $project_admins[] = $p_user;
                     }
-                    if($project_of_user->pivot->is_manager){
+                    if ($project_of_user->pivot->is_manager) {
                         $project_managers[] = $p_user;
                     }
                 }
@@ -556,11 +590,12 @@ class ProjectController extends Controller
         */
 
         $events = [];
+
         if ($request->query('calendarType') === 'monthly') {
-            $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
+            $period = CarbonPeriod::create(Carbon::parse($this->get_first_start_time($project->events))->startOfDay(), Carbon::parse($this->get_last_end_time($project->events))->startOfDay());
         }
         $openTab = $request->openTab;
-        if(!$openTab){
+        if (!$openTab) {
             $openTab = 'checklist';
         }
 
@@ -573,6 +608,8 @@ class ProjectController extends Controller
             ->whereDate('end_time', '>=', Carbon::parse($request->query('month_start')))->count();
 
         return inertia('Projects/Show', [
+            'first_start' => Carbon::parse($this->get_first_start_time($project->events))->format('d.m.Y'),
+            'last_end' => Carbon::parse($this->get_last_end_time($project->events))->format('d.m.Y'),
             'project' => [
                 'id' => $project->id,
                 'name' => $project->name,
@@ -787,7 +824,7 @@ class ProjectController extends Controller
             'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
             'shown_day_local' => Carbon::parse($request->query('wanted_day')),
             'calendarType' => $request->query('calendarType') === 'daily' ? 'daily' : 'monthly',
-            'openTab'=> $openTab,
+            'openTab' => $openTab,
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists
         ]);
@@ -929,24 +966,24 @@ class ProjectController extends Controller
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
 
         $project_users = [];
-        foreach (User::all() as $user){
+        foreach (User::all() as $user) {
             $user_projects = [];
-            foreach ($user->projects as $user_project){
+            foreach ($user->projects as $user_project) {
                 $user_projects[] = $user_project->id;
             }
-            if(in_array($project->id,$user_projects)){
+            if (in_array($project->id, $user_projects)) {
                 $project_users[] = $user;
             }
         }
         $project_admins = [];
         $project_managers = [];
-        foreach ($project_users as $p_user){
-            foreach($p_user->projects as $project_of_user){
-                if($project->id === $project_of_user->id){
-                    if($project_of_user->pivot->is_admin){
+        foreach ($project_users as $p_user) {
+            foreach ($p_user->projects as $project_of_user) {
+                if ($project->id === $project_of_user->id) {
+                    if ($project_of_user->pivot->is_admin) {
                         $project_admins[] = $p_user;
                     }
-                    if($project_of_user->pivot->is_manager){
+                    if ($project_of_user->pivot->is_manager) {
                         $project_managers[] = $p_user;
                     }
                 }
@@ -955,10 +992,10 @@ class ProjectController extends Controller
 
         $adminIds = [];
         $managerIds = [];
-        foreach($project_admins as $admin){
+        foreach ($project_admins as $admin) {
             $adminIds[] = $admin->id;
         }
-        foreach($project_managers as $manager){
+        foreach ($project_managers as $manager) {
             $managerIds[] = $manager->id;
         }
 
@@ -1017,24 +1054,24 @@ class ProjectController extends Controller
         ]);
 
         $project_users = [];
-        foreach (User::all() as $user){
+        foreach (User::all() as $user) {
             $user_projects = [];
-            foreach ($user->projects as $user_project){
+            foreach ($user->projects as $user_project) {
                 $user_projects[] = $user_project->id;
             }
-            if(in_array($project->id,$user_projects)){
+            if (in_array($project->id, $user_projects)) {
                 $project_users[] = $user;
             }
         }
         $project_admins = [];
         $project_managers = [];
-        foreach ($project_users as $p_user){
-            foreach($p_user->projects as $project_of_user){
-                if($project->id === $project_of_user->id){
-                    if($project_of_user->pivot->is_admin){
+        foreach ($project_users as $p_user) {
+            foreach ($p_user->projects as $project_of_user) {
+                if ($project->id === $project_of_user->id) {
+                    if ($project_of_user->pivot->is_admin) {
                         $project_admins[] = $p_user;
                     }
-                    if($project_of_user->pivot->is_manager){
+                    if ($project_of_user->pivot->is_manager) {
                         $project_managers[] = $p_user;
                     }
                 }
@@ -1043,10 +1080,10 @@ class ProjectController extends Controller
 
         $adminIds = [];
         $managerIds = [];
-        foreach($project_admins as $admin){
+        foreach ($project_admins as $admin) {
             $adminIds[] = $admin->id;
         }
-        foreach($project_managers as $manager){
+        foreach ($project_managers as $manager) {
             $managerIds[] = $manager->id;
         }
 
@@ -1128,7 +1165,7 @@ class ProjectController extends Controller
 
         $project->events()->delete();
 
-        foreach($project->checklists() as $checklist) {
+        foreach ($project->checklists() as $checklist) {
             $checklist->tasks()->delete();
         }
 
@@ -1158,7 +1195,6 @@ class ProjectController extends Controller
 
         return Redirect::route('projects.trashed')->with('success', 'Project restored');
     }
-
 
 
     public function getTrashed()
@@ -1208,4 +1244,6 @@ class ProjectController extends Controller
             ])
         ]);
     }
+
+
 }

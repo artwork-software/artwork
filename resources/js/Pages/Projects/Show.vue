@@ -223,8 +223,6 @@
                 </div>
 
             </div>
-
-
         </div>
         <!-- Div with Bg-Color -->
         <div class="bg-backgroundGray w-full h-full">
@@ -245,7 +243,7 @@
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab && project.rooms">
                     <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types"
+                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types" :first_start="this.first_start" :last_end="this.last_end"
                                          :areas="areas" :requested_start_time="requested_start_time" :requested_end_time="requested_end_time"
                                          :month_events="month_events" :projects="[project]"
                                          :rooms="project.rooms" :days_this_month="days_this_month"
@@ -1707,7 +1705,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['opened_checklists','project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
+    props: ['first_start','last_end','opened_checklists','project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,

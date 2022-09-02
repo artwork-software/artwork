@@ -21,9 +21,12 @@
                             </div>
                         </div>
                         <div class="flex w-full items-center ml-20">
-                            <div class="text-xl leading-6 font-bold font-lexend text-primary w-40">
+                            <div v-if="calendarType !== 'project'" class="text-xl leading-6 font-bold font-lexend text-primary w-40">
                                 {{ formattedMonth }}
                                 {{ rooms[0].days_in_month[0].date_local.substring(0, 4) }}
+                            </div>
+                            <div class="text-xl leading-6 font-bold font-lexend text-primary w-56 flex items-center" v-else>
+                                {{ this.first_start }} - {{ this.last_end }}
                             </div>
                             <div v-if="calendarType === 'main'" class="ml-2 flex items-center">
                                 <Link
@@ -49,7 +52,9 @@
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
                             </div>
-                            <div v-if="calendarType === 'project'" class="ml-2 flex items-center">
+                            <div v-if="calendarType === 'project'" class="flex items-center">
+                                <!--
+                                This would be the Calendar+ Time change buttons, but now that we only show project timerange we dont need it
                                 <Link
                                     :href="route('projects.show',{project: project_id,openTab:'calendar', month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -2, 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) -1, 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'April' ? 60 : formattedMonth === 'November' ? -60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronLeftIcon class="h-5 w-5"/>
@@ -60,6 +65,7 @@
                                     :href="route('projects.show',{project: project_id,openTab:'calendar', month_start: new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7), 1, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ),month_end:new Date(rooms[0].days_in_month[0].date_local.substring(0,4),rooms[0].days_in_month[0].date_local.substring(5,7) - (-1), 0, 0,0 - new Date(rooms[0].days_in_month[0].date_local).getTimezoneOffset() - (formattedMonth === 'März' ? -60 : formattedMonth === 'Oktober' ? 60 : 0) ), project:this.projects[0], calendarType: 'monthly'})">
                                     <ChevronRightIcon class="h-5 w-5"/>
                                 </Link>
+                                -->
                             </div>
                             <div class="flex my-auto items-center ml-6 mt-5">
                                 <Listbox v-if="this.rooms.length > 1" as="div"
@@ -1358,7 +1364,7 @@ export default defineComponent({
         UserTooltip
 
     },
-    props: ['calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event', 'project_id'],
+    props: ['first_start','last_end','calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event', 'project_id'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];

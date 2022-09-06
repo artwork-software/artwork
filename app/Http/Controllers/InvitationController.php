@@ -177,7 +177,9 @@ class InvitationController extends Controller
                 'password' => Hash::make($request->password),
                 'position' => $request->position,
                 'business' => $request->business,
-                'description' => $request->description
+                'description' => $request->description,
+                'opened_checklists' => [],
+                'opened_areas' => []
             ]);
 
             $departments = $invitation->departments;

@@ -20,10 +20,6 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        Storage::put('/public/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
-            File::get(public_path('/profile-photos/photo-1499996860823-5214fcc65f8f.jpg')), 'public');
-        $this->command->info("Profile Photo set");
-
         $user = User::create([
             'first_name' => 'Max',
             'last_name' => 'Mustermann',

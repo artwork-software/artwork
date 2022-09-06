@@ -21,11 +21,13 @@
                             </div>
                         </div>
                         <div class="flex w-full items-center ml-20">
-                            <div v-if="calendarType !== 'project'" class="text-xl leading-6 font-bold font-lexend text-primary w-40">
+                            <div v-if="calendarType !== 'project'"
+                                 class="text-xl leading-6 font-bold font-lexend text-primary w-40">
                                 {{ formattedMonth }}
                                 {{ rooms[0].days_in_month[0].date_local.substring(0, 4) }}
                             </div>
-                            <div class="text-xl leading-6 font-bold font-lexend text-primary w-56 flex items-center" v-else>
+                            <div class="text-xl leading-6 font-bold font-lexend text-primary w-56 flex items-center"
+                                 v-else>
                                 {{ this.first_start }} - {{ this.last_end }}
                             </div>
                             <div v-if="calendarType === 'main'" class="ml-2 flex items-center">
@@ -433,7 +435,9 @@
                                                     </div>
                                                     <div v-else
                                                          class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
-                                                        {{ this.event_types.find(x => x.id === day.events[0].event_type_id).name }}
+                                                        {{
+                                                            this.event_types.find(x => x.id === day.events[0].event_type_id).name
+                                                        }}
                                                     </div>
                                                     <!-- Time of Event -->
                                                     <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -827,7 +831,7 @@
                                   class="resize-none shadow-sm p-4 focus:outline-none placeholder-secondary placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm border"/>
                 </div>
                 <div>
-                    <div v-if="selectedRoom">
+                    <div v-if="selectedRoom" @mouseover="showHints()">
                         <div
                             v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
@@ -841,7 +845,8 @@
                         </div>
                     </div>
                     <div
-                        v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin">
+                        v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin"
+                        @mouseover="showHints()">
                         <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-12 py-3 border border-transparent
@@ -855,6 +860,11 @@
                                 || startTimeError">
                             Raum anfragen
                         </button>
+                    </div>
+                    <div class="mt-1" v-if="newEventError">
+                        <div class="text-error subpixel-antialiased text-sm flex">
+                            {{ this.newEventError }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1364,7 +1374,7 @@ export default defineComponent({
         UserTooltip
 
     },
-    props: ['first_start','last_end','calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event', 'project_id'],
+    props: ['first_start', 'last_end', 'calendarType', 'event_types', 'areas', 'month_events', 'projects', 'myRooms', 'rooms', 'days_this_month', 'events_without_room', 'requested_start_time', 'requested_end_time', 'start_time_of_new_event', 'end_time_of_new_event', 'project_id'],
     computed: {
         allRooms: function () {
             let allRoomsArray = [];
@@ -1420,6 +1430,34 @@ export default defineComponent({
         },
     },
     methods: {
+        showHints() {
+
+            console.log("SelectedRoom:" + this.selectedRoom)
+
+            if(this.selectedRoom === undefined || this.selectedRoom === null) {
+                this.newEventError = 'Wähle zuerst einen Raum aus.';
+            }
+            else if(this.addEventForm.start_time === undefined) {
+                this.newEventError = 'Wähle zuerst eine Startzeit aus.';
+            }
+            else if(this.addEventForm.end_time === undefined) {
+                this.newEventError = 'Wähle zuerst eine Endzeit aus.';
+            }
+            else if(this.selectedEventType.project_mandatory && this.selectedProject === null && this.newProjectName === '') {
+                this.newEventError = 'Gib zuerst einen Projektnamen an.';
+            }
+            else if((this.addEventForm.name === '' && this.selectedEventType.individual_name)
+                && this.newProjectName === ''
+                && this.selectedProject === null) {
+                this.newEventError = 'Gib zuerst einen Terminnamen an.';
+            }
+            else if(this.assignProject && this.selectedProject === null) {
+                this.newEventError = 'Wähle zuerst ein Projekt aus.';
+            }
+            else {
+                this.newEventError = ''
+            }
+        },
         checkProjectPermission(wantedProjectId, userId) {
             if (wantedProjectId) {
                 return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
@@ -1667,6 +1705,7 @@ export default defineComponent({
             this.conflictData = null;
             this.selectedEventType = this.event_types[0];
             this.startTimeError = null;
+            this.newEventError = null;
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1864,6 +1903,7 @@ export default defineComponent({
             wantedArea: null,
             conflictData: null,
             startTimeError: null,
+            newEventError: null,
             project_search_results: [],
             addEventForm: useForm({
                 name: '',

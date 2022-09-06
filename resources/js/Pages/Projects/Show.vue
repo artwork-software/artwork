@@ -381,13 +381,22 @@
                                                                             Bearbeiten
                                                                         </a>
                                                                     </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="checkAllTasks(checklist.tasks)"
+                                                                    <MenuItem v-slot="{ active }" v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
+                                                                        <a @click="checkAllTasks(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
                                                                                 aria-hidden="true"/>
                                                                             Alle Aufgaben als erledigt markieren
+                                                                        </a>
+                                                                    </MenuItem>
+                                                                    <MenuItem v-slot="{ active }" v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
+                                                                        <a @click="uncheckAllTasks(checklist)"
+                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                            <PencilAltIcon
+                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
+                                                                                aria-hidden="true"/>
+                                                                            Alle Aufgaben als unerledigt markieren
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem
@@ -2198,10 +2207,26 @@ export default {
             this.commentForm.post(route('comments.store'), {});
             this.commentForm.text = "";
         },
-        checkAllTasks(tasksToCheck) {
-            tasksToCheck.forEach((task) => {
+        checkAllTasks(checklist) {
+            checklist.tasks.forEach((task) => {
                 task.done = true;
+                this.updateTaskStatus(task)
             })
+        },
+        uncheckAllTasks(checklist) {
+            checklist.tasks.forEach((task) => {
+                task.done = false;
+                this.updateTaskStatus(task)
+            })
+        },
+        allTasksChecked(checklist) {
+            let checked = true;
+            checklist.tasks.forEach((task) => {
+                if(task.done === false) {
+                    checked = false
+                }
+            })
+            return checked
         },
         deleteTask(task) {
             this.$inertia.delete(`/tasks/${task.id}`);

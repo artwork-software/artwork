@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Area;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

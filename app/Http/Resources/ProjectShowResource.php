@@ -44,14 +44,8 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
 
             'rooms' => $rooms->map(fn (Room $room) => $request->query('calendarType') === CalendarTimeEnum::MONTHLY
-                ? [
-                    'id' => $room->id,
-                    'name' => $room->name,
-                    'area_id' => $room->area_id,
-                    'room_admins' => UserIconResource::collection($room->room_admins)->resolve(),
-                    'days_in_month' => new EventCollectionMonthlyResource($this->events),
-                ]
-                : new RoomIndexEventIndexResource($room),
+                ? new RoomIndexEventMonthlyResource($room)
+                : new RoomIndexEventDayResource($room),
             ),
 
             'events' => EventForProjectResource::collection($this->events)->resolve(),

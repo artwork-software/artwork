@@ -10,7 +10,8 @@ use App\Http\Resources\EventIndexResource;
 use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
-use App\Http\Resources\RoomIndexEventIndexResource;
+use App\Http\Resources\RoomIndexEventDayResource;
+use App\Http\Resources\RoomIndexEventMonthlyResource;
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Models\Area;
@@ -45,8 +46,20 @@ class EventController extends Controller
             ->whereOccursBetween($period->start, $period->end)
             ->get();
 
-        $areas = Area::query()->with(['rooms.room_admins', 'rooms.events.creator'])->get();
-        $rooms = Room::query()->with(['events.event_type'])->get();
+        $areas = Area::query()
+            ->with([
+                'rooms.room_admins',
+                'rooms.events.creator',
+                'rooms.creator',
+                'rooms.events.event_type',
+                'rooms.events.room'
+            ])
+            ->get();
+
+        $rooms = Room::query()
+            ->with(['events.event_type', 'events.sameRoomEvents', 'events.creator', 'room_admins'])
+            ->get();
+
         $projects = Project::query()->with(['adminUsers', 'managerUsers'])->get();
 
         return inertia('Events/EventManagement', [
@@ -59,7 +72,7 @@ class EventController extends Controller
 
             'myRooms' => Auth::user()->admin_rooms->pluck('id'),
 
-            'rooms' => RoomIndexEventIndexResource::collection($rooms)->resolve(),
+            'rooms' => RoomIndexEventMonthlyResource::collection($rooms)->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
             'events_without_room' => new EventCollectionForMonthlyCalendarResource($eventsWithoutRoom),
@@ -107,7 +120,7 @@ class EventController extends Controller
 
             'myRooms' => Auth::user()->admin_rooms->pluck('id'),
 
-            'rooms' => RoomIndexEventIndexResource::collection(Room::query()->with(['events.event_type'])->get())->resolve(),
+            'rooms' => RoomIndexEventDayResource::collection(Room::query()->with(['events.event_type'])->get())->resolve(),
 
             'projects' => ProjectIndexAdminResource::collection(Project::all())->resolve(),
 
@@ -165,7 +178,7 @@ class EventController extends Controller
             'shown_day_formatted' => $today->format('l d.m.Y'),
             'shown_day_local' => $today,
 
-            'rooms' => RoomIndexEventIndexResource::collection($rooms)->resolve(),
+            'rooms' => RoomIndexEventDayResource::collection($rooms)->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
             'events_without_room' => new EventCollectionForDailyCalendarResource($eventsWithoutRoom),

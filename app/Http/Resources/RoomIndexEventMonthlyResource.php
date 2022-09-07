@@ -9,7 +9,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * @mixin \App\Models\Room
  */
-class RoomIndexEventIndexResource extends JsonResource
+class RoomIndexEventMonthlyResource extends JsonResource
 {
     public static $wrap = null;
 
@@ -21,17 +21,12 @@ class RoomIndexEventIndexResource extends JsonResource
      */
     public function toArray($request)
     {
-        $today = Carbon::parse($request->query('wanted_day'));
-        $events = $this->events
-            ->filter(fn (Event $event) => $event->occursAtTime($today))
-            ->map(fn (Event $event) => $event->setAttribute('metaDate', $today));
-
         return [
-            'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
             'area_id' => $this->area_id,
-            'events' => EventCalendarDayResource::collection($events)->resolve(),
+            'room_admins' => UserIconResource::collection($this->room_admins)->resolve(),
+            'days_in_month' => new EventCollectionMonthlyResource($this->events),
         ];
     }
 }

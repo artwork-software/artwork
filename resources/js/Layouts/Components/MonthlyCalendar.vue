@@ -1168,7 +1168,7 @@
                         </div>
                         <div>
                             <button
-                                v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && ((rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin)"
+                                v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && (rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin)"
                                 :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-20 py-3 border border-transparent

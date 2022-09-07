@@ -24,6 +24,7 @@ class RoomSeeder extends Seeder
             'area_id' => 1,
             'user_id' => 1,
             'order' => 1,
+            'everyone_can_book' => false
         ]);
 
         DB::table('rooms')->insert([
@@ -35,6 +36,7 @@ class RoomSeeder extends Seeder
             'area_id' => 1,
             'user_id' => 1,
             'order' => 1,
+            'everyone_can_book' => false
         ]);
     }
 }

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->longText('description')->nullable();
             $table->integer('order');
             $table->boolean('temporary')->default(false);
+            $table->boolean('everyone_can_book')->default(false);
             $table->timestamp('start_date')->nullable();
             $table->timestamp('end_date')->nullable();
             $table->unsignedBigInteger('area_id');

@@ -1432,7 +1432,7 @@ export default defineComponent({
     methods: {
         showHints() {
 
-            console.log("SelectedRoom:" + this.selectedRoom)
+            console.log(this.addEventForm.start_time)
 
             if(this.selectedRoom === undefined || this.selectedRoom === null) {
                 this.newEventError = 'Wähle zuerst einen Raum aus.';
@@ -1446,13 +1446,13 @@ export default defineComponent({
             else if(this.selectedEventType.project_mandatory && this.selectedProject === null && this.newProjectName === '') {
                 this.newEventError = 'Gib zuerst einen Projektnamen an.';
             }
+            else if(this.assignProject && (this.selectedProject === null && this.newProjectName === '')) {
+                this.newEventError = 'Gib zuerst einen Projektnamen ein';
+            }
             else if((this.addEventForm.name === '' && this.selectedEventType.individual_name)
                 && this.newProjectName === ''
                 && this.selectedProject === null) {
                 this.newEventError = 'Gib zuerst einen Terminnamen an.';
-            }
-            else if(this.assignProject && this.selectedProject === null) {
-                this.newEventError = 'Wähle zuerst ein Projekt aus.';
             }
             else {
                 this.newEventError = ''

@@ -19,7 +19,12 @@ class Room extends Model
         'end_date',
         'area_id',
         'user_id',
-        'order'
+        'order',
+        'everyone_can_book'
+    ];
+
+    protected $casts = [
+        'everyone_can_book' => 'boolean'
     ];
 
     public function area()

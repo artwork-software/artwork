@@ -202,7 +202,7 @@ class EventController extends Controller
      *
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function eventRequestsIndex()
+    public function indexEventRequests()
     {
         // Todo: filter room for visible for authenticated user
         // should be like: Event::where($event->room->room_admins->contains(Auth::id()))->map(fn($event) => [

@@ -42,6 +42,7 @@ class ProjectShowResource extends JsonResource
             'genre' => $this->genre,
             'project_admins' => $this->adminUsers,
             'project_managers' => $this->managerUsers,
+            'curr_user_is_related' => $this->users->contains(Auth::id()),
 
             'rooms' => $rooms->map(fn (Room $room) => $request->query('calendarType') === CalendarTimeEnum::MONTHLY
                 ? new RoomIndexEventMonthlyResource($room)

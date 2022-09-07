@@ -833,7 +833,7 @@
                 <div>
                     <div v-if="selectedRoom" @mouseover="showHints()">
                         <div
-                            v-if="selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                            v-if="(selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
@@ -845,7 +845,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="!selectedRoom || !selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) && !$page.props.is_admin"
+                        v-if="!selectedRoom || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) && !$page.props.is_admin"
                         @mouseover="showHints()">
                         <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
@@ -964,7 +964,7 @@
                                         class="origin-top-right absolute z-40 right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                         <div class="py-1">
                                             <MenuItem
-                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                                v-if="event.occupancy_option && ((rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="approveRequest(event)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -975,7 +975,7 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem
-                                                v-if="event.occupancy_option && (rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                                v-if="event.occupancy_option && ((rooms.find(room => room.id === event.room_id).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="declineRequest(event)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -1161,7 +1161,7 @@
                         </div>
                         <div>
                             <button
-                                v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && (rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin)"
+                                v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && ((rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin)"
                                 :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-4 flex items-center px-20 py-3 border border-transparent
@@ -1172,7 +1172,7 @@
                             </button>
                         </div>
                         <div
-                            v-if="rooms.find(room => room.id === event.room_id) ? (!rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) && !this.$page.props.is_admin) : false">
+                            v-if="rooms.find(room => room.id === event.room_id) ? ((!rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
                             <button :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 flex items-center px-12 py-3 border border-transparent

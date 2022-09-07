@@ -306,14 +306,21 @@
                                                     </div>
                                                     <!-- Individual Eventname -->
                                                     <div v-if="day.events[0].name">
-                                                        <div v-if="day.events[0].project_id !== null"
-                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate">
+                                                        <div
+                                                            v-if="day.events[0].project_id !== null && this.calendarType !== 'project'"
+                                                            class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
                                                         <div v-else
-                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate">
+                                                             class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
+                                                    </div>
+                                                    <div v-if="this.calendarType === 'project'"
+                                                         class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
+                                                        {{
+                                                            this.event_types.find(x => x.id === day.events[0].event_type_id).name
+                                                        }}
                                                     </div>
                                                     <!-- Time of Event -->
                                                     <div class="ml-2 text-sm text-secondary subpixel-antialiased">
@@ -433,7 +440,7 @@
                                                             {{ day.events[0].name }}
                                                         </div>
                                                     </div>
-                                                    <div v-else
+                                                    <div v-if="this.calendarType === 'project'"
                                                          class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                         {{
                                                             this.event_types.find(x => x.id === day.events[0].event_type_id).name

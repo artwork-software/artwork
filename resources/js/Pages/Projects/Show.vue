@@ -31,7 +31,9 @@
                             <MenuItems
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
-                                    <MenuItem v-if="this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)" v-slot="{ active }">
+                                    <MenuItem
+                                        v-if="this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-slot="{ active }">
                                         <a @click="openEditProjectModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <PencilAltIcon
@@ -243,8 +245,10 @@
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab && project.rooms">
                     <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types" :first_start="this.first_start" :last_end="this.last_end"
-                                         :areas="areas" :requested_start_time="requested_start_time" :requested_end_time="requested_end_time"
+                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types"
+                                         :first_start="this.first_start" :last_end="this.last_end"
+                                         :areas="areas" :requested_start_time="requested_start_time"
+                                         :requested_end_time="requested_end_time"
                                          :month_events="month_events" :projects="[project]"
                                          :rooms="project.rooms" :days_this_month="days_this_month"
                                          :events_without_room="events_without_room"></MonthlyCalendar>
@@ -381,7 +385,8 @@
                                                                             Bearbeiten
                                                                         </a>
                                                                     </MenuItem>
-                                                                    <MenuItem v-slot="{ active }" v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
+                                                                    <MenuItem v-slot="{ active }"
+                                                                              v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
                                                                         <a @click="checkAllTasks(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
@@ -390,7 +395,8 @@
                                                                             Alle Aufgaben als erledigt markieren
                                                                         </a>
                                                                     </MenuItem>
-                                                                    <MenuItem v-slot="{ active }" v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
+                                                                    <MenuItem v-slot="{ active }"
+                                                                              v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
                                                                         <a @click="uncheckAllTasks(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
@@ -435,7 +441,8 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="this.opened_checklists.includes(checklist.id)">
+                                            <div class="flex w-full mt-6"
+                                                 v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="flex"
                                                      v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
@@ -451,7 +458,8 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="this.opened_checklists.includes(checklist.id)">
+                                            <div class="mt-6 mb-12"
+                                                 v-if="this.opened_checklists.includes(checklist.id)">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="draggableID" :list="checklist.tasks"
@@ -647,7 +655,8 @@
                                                     </Menu>
                                                 </div>
                                             </div>
-                                            <div class="flex w-full mt-6" v-if="this.opened_checklists.includes(checklist.id)">
+                                            <div class="flex w-full mt-6"
+                                                 v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="">
                                                     <button @click="openAddTaskModal(checklist)" type="button"
                                                             class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
@@ -660,7 +669,8 @@
                                                         class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
                                                 </div>
                                             </div>
-                                            <div class="mt-6 mb-12" v-if="this.opened_checklists.includes(checklist.id)">
+                                            <div class="mt-6 mb-12"
+                                                 v-if="this.opened_checklists.includes(checklist.id)">
                                                 <draggable ghost-class="opacity-50"
                                                            key="draggableKey"
                                                            item-key="id" :list="checklist.tasks"
@@ -844,6 +854,25 @@
                             </div>
                             <jet-input-error :message="uploadDocumentFeedback"/>
                         </div>
+
+                        <!-- Confirm File Delete Modal -->
+                        <jet-dialog-modal :show="deletingFile" @close="closeConfirmDeleteModal">
+                            <template #content>
+                                <p class="my-auto text-md">Datei "{{ this.project_file.name }}" wirklich
+                                    löschen?</p>
+                                <button class="mt-4 inline-flex items-center px-12 py-3 border
+                            text-base font-bold uppercase shadow-sm font-black font-lexend"
+                                        @click="closeConfirmDeleteModal">
+                                    Abbrechen
+                                </button>
+                                <button class="ml-4 bg-error focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                        @click="removeFile(project_file)">
+                                    Löschen
+                                </button>
+                            </template>
+                        </jet-dialog-modal>
+
                         <div class="space-y-1"
                              v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
                             <div v-for="project_file in project.project_files"
@@ -855,7 +884,7 @@
 
                                     <XCircleIcon
                                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                        @click="removeFile(project_file)"
+                                        @click="openConfirmDeleteModal(project_file)"
                                         class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                         aria-hidden="true"/>
                                 </div>
@@ -1714,7 +1743,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['first_start','last_end','opened_checklists','project_users','project','openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment','requested_start_time', 'requested_end_time'],
+    props: ['first_start', 'last_end', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment', 'requested_start_time', 'requested_end_time'],
     components: {
         TeamTooltip,
         CategoryIconCollection,
@@ -1815,13 +1844,15 @@ export default {
     },
     data() {
         return {
+            deletingFile: false,
+            project_file: null,
             uploadDocumentFeedback: "",
             editingProject: false,
             addingTask: false,
             dragging: false,
             selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             addingChecklist: false,
-            isScheduleTab: this.openTab ? this.openTab === 'calendar': false,
+            isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             editingTeam: false,
@@ -1834,7 +1865,7 @@ export default {
             selectedCategory: this.project.category ? this.project.category : {name: ''},
             selectedSector: this.project.sector ? this.project.sector : {name: ''},
             selectedGenre: this.project.genre ? this.project.genre : {name: ''},
-            selectedTemplate: {name: '',id:null},
+            selectedTemplate: {name: '', id: null},
             showDetails: false,
             checklistToEdit: null,
             editingChecklist: false,
@@ -1884,7 +1915,7 @@ export default {
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
-                id:'',
+                id: '',
                 name: "",
                 description: "",
                 deadline: null,
@@ -1917,15 +1948,14 @@ export default {
     methods: {
         changeChecklistStatus(checklist) {
 
-            if(!this.opened_checklists.includes(checklist.id)) {
+            if (!this.opened_checklists.includes(checklist.id)) {
                 const openedChecklists = this.opened_checklists;
 
                 openedChecklists.push(checklist.id)
 
                 this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists});
-            }
-            else {
-                const filteredList = this.opened_checklists.filter(function(value) {
+            } else {
+                const filteredList = this.opened_checklists.filter(function (value) {
                     return value !== checklist.id;
                 })
                 this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList});
@@ -1948,10 +1978,19 @@ export default {
             })
 
         },
+        openConfirmDeleteModal(project_file) {
+            this.deletingFile = true;
+            this.project_file = project_file
+        },
+        closeConfirmDeleteModal() {
+            this.deletingFile = false;
+            this.project_file = null
+        },
         removeFile(project_file) {
             this.$inertia.delete(`/project_files/${project_file.id}`, {
                 preserveState: true,
             })
+            this.closeConfirmDeleteModal();
         },
         downloadFile(project_file) {
             let link = document.createElement('a');
@@ -2017,7 +2056,7 @@ export default {
             this.checklistForm.private = false;
             this.checklistForm.template_id = null;
             this.checklistForm.user_id = null;
-            this.selectedTemplate = {name: '',id:null};
+            this.selectedTemplate = {name: '', id: null};
             this.checklist_assigned_departments = [];
             this.checklistForm.assigned_department_ids = [];
         },
@@ -2098,14 +2137,14 @@ export default {
         addDepartmentToChecklistTeamArray(department) {
             let assignedIDs = [];
             this.checklist_assigned_departments.forEach((assignedDepartment) => {
-                if(!assignedIDs.includes(assignedDepartment.id)){
+                if (!assignedIDs.includes(assignedDepartment.id)) {
                     assignedIDs.push(assignedDepartment.id);
                 }
             })
-            if(!assignedIDs.includes(department.id)){
+            if (!assignedIDs.includes(department.id)) {
                 this.checklist_assigned_departments.push(department);
                 this.department_query = ""
-            }else{
+            } else {
                 this.department_query = "";
             }
         },
@@ -2117,7 +2156,7 @@ export default {
             this.checklist_assigned_departments.forEach((department) => {
                 this.checklistForm.assigned_department_ids.push(department.id);
 
-                if(!assignedIDs.includes(department.id)){
+                if (!assignedIDs.includes(department.id)) {
                     this.assignedDepartments.push(department);
                 }
             })
@@ -2222,7 +2261,7 @@ export default {
         allTasksChecked(checklist) {
             let checked = true;
             checklist.tasks.forEach((task) => {
-                if(task.done === false) {
+                if (task.done === false) {
                     checked = false
                 }
             })
@@ -2321,7 +2360,7 @@ export default {
                 task.done_at = null;
                 task.done_at_dt_local = null;
             }
-            this.doneTaskForm.patch(route('tasks.update', {task: task.id}),{
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}), {
                 preserveScroll: true,
             });
         }

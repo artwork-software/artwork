@@ -1441,27 +1441,21 @@ export default defineComponent({
 
             console.log(this.addEventForm.start_time)
 
-            if(this.selectedRoom === undefined || this.selectedRoom === null) {
+            if (this.selectedRoom === undefined || this.selectedRoom === null) {
                 this.newEventError = 'Wähle zuerst einen Raum aus.';
-            }
-            else if(this.addEventForm.start_time === undefined) {
+            } else if (this.addEventForm.start_time === undefined) {
                 this.newEventError = 'Wähle zuerst eine Startzeit aus.';
-            }
-            else if(this.addEventForm.end_time === undefined) {
+            } else if (this.addEventForm.end_time === undefined) {
                 this.newEventError = 'Wähle zuerst eine Endzeit aus.';
-            }
-            else if(this.selectedEventType.project_mandatory && this.selectedProject === null && this.newProjectName === '') {
+            } else if (this.selectedEventType.project_mandatory && this.selectedProject === null && this.newProjectName === '') {
                 this.newEventError = 'Gib zuerst einen Projektnamen an.';
-            }
-            else if(this.assignProject && (this.selectedProject === null && this.newProjectName === '')) {
+            } else if (this.assignProject && (this.selectedProject === null && this.newProjectName === '')) {
                 this.newEventError = 'Gib zuerst einen Projektnamen ein';
-            }
-            else if((this.addEventForm.name === '' && this.selectedEventType.individual_name)
+            } else if ((this.addEventForm.name === '' && this.selectedEventType.individual_name)
                 && this.newProjectName === ''
                 && this.selectedProject === null) {
                 this.newEventError = 'Gib zuerst einen Terminnamen an.';
-            }
-            else {
+            } else {
                 this.newEventError = ''
             }
         },

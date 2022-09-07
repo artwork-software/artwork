@@ -46,10 +46,7 @@ class Room extends Model
     ];
 
     protected $casts = [
-        'everyone_can_book' => 'boolean'
-    ];
-
-    protected $casts = [
+        'everyone_can_book' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
     ];

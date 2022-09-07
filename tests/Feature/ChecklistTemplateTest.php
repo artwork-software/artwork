@@ -155,6 +155,7 @@ test('users with the permission can see all checklist_templates', function () {
     $this->checklist_template->departments()->attach($this->assigned_department);
     $this->actingAs($this->auth_user);
 
+    $this->withoutExceptionHandling();
     $response = $this->get('/checklist_templates')
         ->assertInertia(fn(Assert $page) => $page
             ->component('ChecklistTemplates/ChecklistTemplateManagement')

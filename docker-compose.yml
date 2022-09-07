@@ -9,6 +9,7 @@ services:
                 WWWGROUP: '${WWWGROUP}'
                 XDEBUG: ${SAIL_DEBUG}
         image: sail-8.1/app
+        container_name: artwork_tools-laravel
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
@@ -29,6 +30,7 @@ services:
             - mailhog
     mysql:
         image: 'mysql/mysql-server:8.0'
+        container_name: artwork_tools-db
         ports:
             - '${FORWARD_DB_PORT:-3306}:3306'
         environment:
@@ -49,6 +51,7 @@ services:
             timeout: 5s
     mysql-testing:
         image: 'mysql/mysql-server:8.0'
+        container_name: artwork_tools-db-testing
         ports:
             - '${FORWARD_DB_TESTING_PORT:-3307}:3306'
         environment:
@@ -66,6 +69,7 @@ services:
             timeout: 5s
     redis:
         image: 'redis:alpine'
+        container_name: artwork_tools-redis
         ports:
             - '${FORWARD_REDIS_PORT:-6379}:6379'
         volumes:
@@ -78,11 +82,25 @@ services:
             timeout: 5s
     mailhog:
         image: 'mailhog/mailhog:latest'
+        container_name: artwork_tools-mailhog
         ports:
             - '${FORWARD_MAILHOG_PORT:-1025}:1025'
             - '${FORWARD_MAILHOG_DASHBOARD_PORT:-8025}:8025'
         networks:
             - sail
+    meilisearch:
+        image: getmeili/meilisearch:latest
+        container_name: artwork_tools-meilisearch
+        volumes:
+            - ./data.ms:/data.ms
+        ports:
+            - "7700:7700"
+        networks:
+            - sail
+        healthcheck:
+            test: ['CMD', 'wget', '--spider', 'http://meilisearch:7700/health']
+            retries: 3
+            timeout: 5s
 networks:
     sail:
         driver: bridge

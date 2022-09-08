@@ -565,7 +565,7 @@
                                     <div v-for="checklist in project.private_checklists"
                                          class="flex w-full bg-white my-2">
                                         <button class="bg-primary flex"
-                                                @click="checklist.showContent = !checklist.showContent">
+                                                @click="changeChecklistStatus(checklist)">
                                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else
@@ -857,6 +857,28 @@
                         <!-- Confirm File Delete Modal -->
                         <jet-dialog-modal :show="deletingFile" @close="closeConfirmDeleteModal">
                             <template #content>
+                                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                                <div class="mx-4">
+                                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                                        Datei löschen
+                                    </div>
+                                    <XIcon @click="closeConfirmDeleteModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                                    <div class="text-error subpixel-antialiased">
+                                        Bist du sicher, dass du "{{project_file.name}}" aus dem System löschen möchtest?
+                                    </div>
+                                    <div class="flex justify-between mt-6">
+                                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                                @click="removeFile(project_file)">
+                                            Löschen
+                                        </button>
+                                        <div class="flex my-auto">
+                                            <span @click="closeConfirmDeleteModal" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!--
                                 <p class="my-auto text-md">Datei "{{ this.project_file.name }}" wirklich
                                     löschen?</p>
                                 <button class="mt-4 inline-flex items-center px-12 py-3 border
@@ -869,6 +891,7 @@
                                         @click="removeFile(project_file)">
                                     Löschen
                                 </button>
+                                -->
                             </template>
                         </jet-dialog-modal>
 

@@ -20,10 +20,7 @@ class ProjectIndexResource extends JsonResource
      */
     public function toArray($request)
     {
-        $projectHistory = $this->project_histories()
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->get();
+        $projectHistory = $this->project_histories->sortByDesc('created_at');
 
         return [
             'resource' => class_basename($this),

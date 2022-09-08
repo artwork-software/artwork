@@ -2,6 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Models\Category;
+use App\Models\Genre;
+use App\Models\Sector;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,13 +20,13 @@ class ProjectFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name,
+            'name' => $this->faker->domainWord . ' ' . $this->faker->colorName,
             'description' => $this->faker->paragraph,
             'cost_center' => $this->faker->name,
-            'number_of_participants' => '1',
-            'sector_id' => 1,
-            'category_id' => 1,
-            'genre_id' => 1
+            'number_of_participants' => $this->faker->numberBetween(5, 500),
+            'sector_id' => Sector::factory(),
+            'category_id' => Category::factory(),
+            'genre_id' => Genre::factory(),
         ];
     }
 }

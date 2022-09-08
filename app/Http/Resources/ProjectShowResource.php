@@ -27,8 +27,11 @@ class ProjectShowResource extends JsonResource
             ->orderByDesc('created_at')
             ->get();
 
-        $rooms = Room::whereHas('events', fn ($query) => $query->where('project_id', $this->id)
-            ->orderBy('end_time', 'ASC')->with('event_type'))
+        $rooms = Room::query()
+            ->with(['events.event_type', 'room_admins', 'events.sameRoomEvents', 'events.creator'])
+            ->whereHas('events', fn ($query) => $query
+                ->where('project_id', $this->id)
+                ->orderBy('end_time', 'ASC'))
             ->get();
 
         return [

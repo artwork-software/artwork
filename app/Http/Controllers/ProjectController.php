@@ -22,7 +22,6 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
-use App\Models\Room;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
@@ -50,24 +49,36 @@ class ProjectController extends Controller
      */
     public function index()
     {
+        $projects = Project::query()
+            ->with([
+                'project_histories.user',
+                'sector',
+                'category',
+                'genre',
+                'users.departments',
+                'departments.users.departments',
+                'events'
+            ])
+            ->get();
+
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectIndexResource::collection(Project::all())->resolve(),
+            'projects' => ProjectIndexResource::collection($projects)->resolve(),
 
             'users' => User::all(),
 
-            'categories' => Category::all()->map(fn ($category) => [
+            'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
 
-            'genres' => Genre::all()->map(fn ($genre) => [
+            'genres' => Genre::query()->with('projects')->get()->map(fn ($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
 
-            'sectors' => Sector::all()->map(fn ($sector) => [
+            'sectors' => Sector::query()->with('projects')->get()->map(fn ($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
@@ -157,11 +168,21 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
-        if ($request->query('calendarType') === CalendarTimeEnum::MONTHLY) {
+        $calendarType = $request->query('calendarType');
+
+        if ($calendarType === CalendarTimeEnum::MONTHLY) {
             $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
         }
 
-        $calendarType = $request->query('calendarType');
+        $areas = Area::query()
+            ->with([
+                'rooms.room_admins',
+                'rooms.events.creator',
+                'rooms.creator',
+                'rooms.events.event_type',
+                'rooms.events.room'
+            ])
+            ->get();
 
         $eventsWithoutRoom = Event::query()
             ->with('sameRoomEvents')
@@ -170,24 +191,24 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->get();
 
-        $project->load('events.sameRoomEvents');
+        $project->load(['events.sameRoomEvents', 'events.creator', 'comments.user']);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 
-            'categories' => Category::all()->map(fn ($category) => [
+            'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
 
-            'genres' => Genre::all()->map(fn ($genre) => [
+            'genres' => Genre::query()->with('projects')->get()->map(fn ($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
 
-            'sectors' => Sector::all()->map(fn ($sector) => [
+            'sectors' => Sector::query()->with('projects')->get()->map(fn ($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
@@ -209,10 +230,10 @@ class ProjectController extends Controller
                 ]),
             ]),
 
-            'areas' => Area::all()->map(fn ($area) => [
+            'areas' => $areas->map(fn (Area $area) => [
                 'id' => $area->id,
                 'name' => $area->name,
-                'rooms' => RoomIndexResource::collection($area->rooms()->with('room_admins', 'events')->orderBy('order')->get())->resolve(),
+                'rooms' => RoomIndexResource::collection($area->rooms->sortBy('order'))->resolve(),
             ]),
 
             'days_this_month' => $calendarType === CalendarTimeEnum::MONTHLY
@@ -244,10 +265,11 @@ class ProjectController extends Controller
                 if ($event->start_time < $first_start) {
                     $first_start = $event->start_time;
                 }
-            }else{
+            } else {
                 $first_start = $event->start_time;
             }
         }
+
         return $first_start;
     }
 
@@ -259,6 +281,7 @@ class ProjectController extends Controller
                 $last_end = $event->end_time;
             }
         }
+
         return $last_end;
     }
 

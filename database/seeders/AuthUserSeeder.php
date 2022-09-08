@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
+use App\Models\Checklist;
+use App\Models\Department;
 use App\Models\GeneralSettings;
+use App\Models\Project;
 use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Storage;
 
-class UserSeeder extends Seeder
+class AuthUserSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -23,7 +23,7 @@ class UserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Max',
             'last_name' => 'Mustermann',
-            'email' => 'max.mustermann@kampnagel.de',
+            'email' => 'test@test.de',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
             'position' => 'Administrator',
@@ -38,9 +38,7 @@ class UserSeeder extends Seeder
         $user->assignRole('admin');
 
         $settings = app(GeneralSettings::class);
-
         $settings->setup_finished = true;
-
         $settings->save();
     }
 }

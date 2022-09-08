@@ -8,6 +8,7 @@ use App\Models\Checklist;
 use App\Models\Task;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -28,29 +29,19 @@ class TaskController extends Controller
 
     public function index_own()
     {
-        $own_tasks = new Collection();
-
-        foreach (Checklist::all() as $checklist) {
-            foreach ($checklist->departments as $department) {
-                if ($department->users->contains(Auth::id())) {
-                    foreach ($checklist->tasks as $task) {
-                        if (! $own_tasks->contains($task)) {
-                            $own_tasks->push($task);
-                        }
-                    }
-                }
-            }
-            if ($checklist->user_id == Auth::id()) {
-                foreach ($checklist->tasks as $task) {
-                    if (! $own_tasks->contains($task)) {
-                        $own_tasks->push($task);
-                    }
-                }
-            }
-        }
+        $tasks = Task::query()
+            ->with('')
+            ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
+                ->where('user_id', Auth::id())
+            )
+            ->orWhereHas('checklistDepartments', fn (Builder $departmentBuilder) => $departmentBuilder
+                ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
+                    ->where('users.id', Auth::id()))
+            )
+            ->get();
 
         return inertia('Tasks/OwnTasksManagement', [
-            'tasks' => TaskIndexResource::collection($own_tasks)->resolve()
+            'tasks' => TaskIndexResource::collection($tasks)->resolve()
         ]);
     }
 

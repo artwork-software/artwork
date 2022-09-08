@@ -19,7 +19,8 @@ After that run the following scripts to install dependencies and compile inertia
 To migrate and seed the roles
 
 ```
-./vendor/bin/sail artisan migrate:fresh --seed
+./vendor/bin/sail artisan migrate:fresh
+./vendor/bin/sail artisan db:seed --class=TestDatabaseSeeder
 ```
 
 Visit local development on http://localhost 

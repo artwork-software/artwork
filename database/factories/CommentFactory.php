@@ -17,7 +17,7 @@ class CommentFactory extends Factory
     public function definition()
     {
         return [
-            'text' =>  $this->faker->paragraph,
+            'text' =>  $this->faker->emoji . ' ' . $this->faker->text,
             'project_id' => 1,
             'user_id' => 1
         ];

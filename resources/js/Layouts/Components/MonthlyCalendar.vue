@@ -9,10 +9,10 @@
                                 Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
-                                <button @click="openAddEventModal" type="button"
-                                        class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                <AddButton @click="openAddEventModal">
                                     <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                </button>
+                                    <p class="ml-1">Neue Belegung</p>
+                                </AddButton>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span
@@ -1330,6 +1330,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import AddButton from "@/Layouts/Components/AddButton";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -1343,6 +1344,7 @@ const dateTypes = [
 ]
 export default defineComponent({
     components: {
+        AddButton,
         ListboxLabel,
         SvgCollection,
         Button,

@@ -27,13 +27,6 @@ class ProjectShowResource extends JsonResource
             ->orderByDesc('created_at')
             ->get();
 
-        $rooms = Room::query()
-            ->with(['events.event_type', 'room_admins', 'events.sameRoomEvents', 'events.creator'])
-            ->whereHas('events', fn ($query) => $query
-                ->where('project_id', $this->id)
-                ->orderBy('end_time', 'ASC'))
-            ->get();
-
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -47,10 +40,9 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
 
-            'rooms' => $rooms->map(fn (Room $room) => $request->query('calendarType') === CalendarTimeEnum::MONTHLY
-                ? new RoomIndexEventMonthlyResource($room)
-                : new RoomIndexEventDayResource($room),
-            ),
+            'rooms' => $request->query('calendarType') === CalendarTimeEnum::MONTHLY
+                ? RoomIndexEventMonthlyResource::collection($this->rooms)->resolve()
+                : RoomIndexEventDayResource::collection($this->rooms)->resolve(),
 
             'events' => EventForProjectResource::collection($this->events)->resolve(),
             'users' => UserIndexResource::collection($this->users)->resolve(),

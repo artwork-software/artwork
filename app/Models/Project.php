@@ -30,6 +30,7 @@ use Laravel\Scout\Searchable;
  * @property \Illuminate\Database\Eloquent\Collection<Checklist> $checklists
  * @property \Illuminate\Database\Eloquent\Collection<ProjectFile> $project_files
  * @property \Illuminate\Database\Eloquent\Collection<Comment> $comments
+ * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
  * @property Sector $sector
  * @property Category $category
  * @property Genre $genre
@@ -109,6 +110,11 @@ class Project extends Model
     public function genre()
     {
         return $this->belongsTo(Genre::class, 'genre_id');
+    }
+
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class, 'events');
     }
 
     public function prunable()

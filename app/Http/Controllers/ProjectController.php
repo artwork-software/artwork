@@ -191,7 +191,15 @@ class ProjectController extends Controller
             ->where('project_id', $project->id)
             ->get();
 
-        $project->load(['events.sameRoomEvents', 'events.creator', 'comments.user']);
+        $project->load([
+            'events.sameRoomEvents',
+            'events.creator',
+            'comments.user',
+            'users.departments',
+            'departments.users.departments',
+            'rooms.events.event_type',
+            'rooms.room_admins',
+        ]);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),

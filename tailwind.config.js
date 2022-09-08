@@ -21,7 +21,10 @@ module.exports = {
                 secondary:'#A7A6B1',
                 secondaryHover:'#FCFCFB',
                 help: '#93929D',
-                backgroundGray: '#F5F5F3'
+                backgroundGray: '#F5F5F3',
+                buttonBlue:'#3017AD',
+                buttonHover:'#2D1FDE'
+
 
             },
             fontFamily: {

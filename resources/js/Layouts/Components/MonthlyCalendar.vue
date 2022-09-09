@@ -260,6 +260,7 @@
                                 </div>
                             </div>
                         </div>
+                        {{days_this_month}}
                         <div class="bg-backgroundGray w-full flex pl-20">
                             <div class="mt-16 w-36">
                                 <div @click="goToDailyCalendar(index)" v-for="(day,index) in days_this_month"
@@ -311,7 +312,7 @@
                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
-                                                        <div v-else
+                                                        <div v-if="this.calendarType !== 'project'"
                                                              class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
@@ -435,7 +436,7 @@
                                                             class="my-1 ml-2 text-xs flex font-lexend text-secondary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
-                                                        <div v-else
+                                                        <div v-if="this.calendarType !== 'project' && day.events[0].project_id === null"
                                                              class="mt-3 ml-2 text-lg flex leading-6 font-bold font-lexend text-primary truncate mr-3">
                                                             {{ day.events[0].name }}
                                                         </div>
@@ -579,7 +580,7 @@
                     <Listbox as="div" class="flex" v-model="selectedEventType">
                         <div class="relative">
                             <ListboxButton
-                                class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer sm:text-sm">
                                 <div class="flex items-center my-auto">
                                     <EventTypeIconCollection :height="20" :width="20"
                                                              :iconName="selectedEventType.svg_name"/>

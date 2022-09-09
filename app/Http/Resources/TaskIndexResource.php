@@ -30,8 +30,8 @@ class TaskIndexResource extends JsonResource
             'order' => $this->order,
             'done' => $this->done,
             'done_by_user' => $this->user_who_done,
-            'done_at' => $this->done_at->format('d.m.Y, H:i'),
-            'done_at_dt_local' => $this->done_at->toDateTimeLocalString()
+            'done_at' => $this->done_at?->format('d.m.Y, H:i'),
+            'done_at_dt_local' => $this->done_at?->toDateTimeLocalString()
         ];
     }
 }

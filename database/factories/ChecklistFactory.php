@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Project;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -17,8 +18,8 @@ class ChecklistFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name,
-            'project_id' => 1
+            'name' => $this->faker->domainWord,
+            'project_id' => Project::factory(),
         ];
     }
 }

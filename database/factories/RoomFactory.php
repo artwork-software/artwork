@@ -23,7 +23,8 @@ class RoomFactory extends Factory
             'start_date' => null,
             'end_date' => null,
             'area_id' => 1,
-            'user_id' => 1
+            'user_id' => 1,
+            'order' => 1,
         ];
     }
 }

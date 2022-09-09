@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\ChecklistShowResource;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Project;
@@ -32,11 +33,11 @@ class ChecklistController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param  \Illuminate\Http\Request  $request
      */
     public function store(Request $request)
     {
-        $this->authorize('createProperties',$request->project_id);
+        $this->authorize('createProperties', $request->project_id);
         //Check whether checklist should be created on basis of a template
         if ($request->template_id) {
             $this->createFromTemplate($request);
@@ -55,7 +56,7 @@ class ChecklistController extends Controller
 
     /**
      * Creates a checklist on basis of a ChecklistTemplate
-     * @param Request $request
+     * @param  Request  $request
      */
     protected function createFromTemplate(Request $request)
     {
@@ -79,9 +80,8 @@ class ChecklistController extends Controller
         }
 
         if (Auth::user()->can('update departments')) {
-
             foreach ($template->departments as $department) {
-                if (!$project->departments->contains($department)) {
+                if (! $project->departments->contains($department)) {
                     $project->departments()->attach($department);
                 }
             }
@@ -99,7 +99,7 @@ class ChecklistController extends Controller
 
     /**
      * Default creation of a checklist without a template
-     * @param Request $request
+     * @param  Request  $request
      * @return \Illuminate\Http\JsonResponse|void
      */
     protected function createWithoutTemplate(Request $request)
@@ -136,68 +136,37 @@ class ChecklistController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param \App\Models\Checklist $checklist
+     * @param  \App\Models\Checklist  $checklist
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(Checklist $checklist)
     {
         return inertia('Checklists/Show', [
-            'checklist' => [
-                'id' => $checklist->id,
-                'name' => $checklist->name,
-                'tasks' => $checklist->tasks->map(fn($task) => [
-                    'id' => $task->id,
-                    'name' => $task->name,
-                    'description' => $task->description,
-                    'deadline' => $task->deadline,
-                    'done' => $task->done,
-                ]),
-                'departments' => $checklist->departments->map(fn($department) => [
-                    'id' => $department->id,
-                    'name' => $department->first_name,
-                    'svg_name' => $department->svg_name,
-                ])
-            ]
+            'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      *
-     * @param \App\Models\Checklist $checklist
+     * @param  \App\Models\Checklist  $checklist
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function edit(Checklist $checklist)
     {
         return inertia('Checklists/Edit', [
-            'checklist' => [
-                'id' => $checklist->id,
-                'name' => $checklist->name,
-                'tasks' => $checklist->tasks->map(fn($task) => [
-                    'id' => $task->id,
-                    'name' => $task->name,
-                    'description' => $task->description,
-                    'deadline' => $task->deadline,
-                    'done' => $task->done,
-                ]),
-                'departments' => $checklist->departments->map(fn($department) => [
-                    'id' => $department->id,
-                    'name' => $department->first_name,
-                    'svg_name' => $department->svg_name,
-                ])
-            ]
+            'checklist' => new ChecklistShowResource($checklist),
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param \App\Models\Checklist $checklist
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Checklist  $checklist
      */
     public function update(Request $request, Checklist $checklist)
     {
-
         $checklist->project->project_histories()->create([
             "user_id" => Auth::id(),
             "description" => "Checkliste $checklist->name in $request->name umbenannt"
@@ -213,7 +182,7 @@ class ChecklistController extends Controller
         if (Auth::user()->can('update departments')) {
             if ($request->assigned_department_ids) {
                 foreach ($request->assigned_department_ids as $department_id) {
-                    if (!$checklist->project->departments->contains($department_id)) {
+                    if (! $checklist->project->departments->contains($department_id)) {
                         $checklist->project->departments()->attach($department_id);
                     }
                 }
@@ -224,7 +193,6 @@ class ChecklistController extends Controller
                         return $department_id;
                     })
             );
-
         } else {
             return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
         }
@@ -235,7 +203,7 @@ class ChecklistController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param \App\Models\Checklist $checklist
+     * @param  \App\Models\Checklist  $checklist
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(Checklist $checklist)

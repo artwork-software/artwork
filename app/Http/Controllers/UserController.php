@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserIndexResource;
+use App\Http\Resources\UserShowResource;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -35,17 +37,7 @@ class UserController extends Controller
 
         $this->authorize('viewAny',User::class);
 
-        return User::search($request->input('query'))->get()->map(fn($user) => [
-            'id' => $user->id,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
-            "profile_photo_url" => $user->profile_photo_url,
-            "email" => $user->email,
-            'departments' => $user->departments,
-            "position" => $user->position,
-            "business" => $user->business,
-            "phone_number" => $user->phone_number
-        ]);
+        return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
     }
 
     public function reset_user_password(Request $request) {
@@ -71,17 +63,7 @@ class UserController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Users/Index', [
-            'users' => User::all()->map(fn($user) => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                "profile_photo_url" => $user->profile_photo_url,
-                "email" => $user->email,
-                'departments' => $user->departments,
-                "position" => $user->position,
-                "business" => $user->business,
-                "phone_number" => $user->phone_number
-            ]),
+            'users' => UserIndexResource::collection(User::all())->resolve(),
             "all_permissions" => Permission::all()->groupBy('group'),
             "departments" => Department::all(),
         ]);
@@ -96,20 +78,7 @@ class UserController extends Controller
     public function edit(User $user): Response|ResponseFactory
     {
         return inertia('Users/Edit', [
-            'user_to_edit' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                "profile_photo_url" => $user->profile_photo_url,
-                'email' => $user->email,
-                'phone_number' => $user->phone_number,
-                'position' => $user->position,
-                'business' => $user->business,
-                'description' => $user->description,
-                'departments' => $user->departments,
-                'roles' => $user->getRoleNames(),
-                'permissions' => $user->getAllPermissions()->pluck('name')
-            ],
+            'user_to_edit' => new UserShowResource($user),
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),

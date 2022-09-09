@@ -2,11 +2,11 @@
 
 namespace App\Models;
 
-use  Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Carbon;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Laravel\Jetstream\HasProfilePhoto;
 use Laravel\Sanctum\HasApiTokens;
@@ -14,6 +14,40 @@ use Laravel\Scout\Searchable;
 use Spatie\Permission\Traits\HasPermissions;
 use Spatie\Permission\Traits\HasRoles;
 
+/**
+ *
+ * @property int $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property Carbon $email_verified_at
+ * @property string $phone_number
+ * @property string $password
+ * @property string $two_factor_secret
+ * @property string $two_factor_recovery_codes
+ * @property string $position
+ * @property string $business
+ * @property string $description
+ * @property string $toggle_hints
+ * @property string $remember_token
+ * @property int $current_team_id
+ * @property string $profile_photo_path
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
+ *
+ * @property Collection<\App\Models\Department> departments
+ * @property Collection<\App\Models\Project> projects
+ * @property Collection<\App\Models\Comment> comments
+ * @property Collection<\App\Models\Checklist> private_checklists
+ * @property Collection<\App\Models\Room> created_rooms
+ * @property Collection<\App\Models\Room> admin_rooms
+ * @property Collection<\App\Models\Task> done_tasks
+ * @property Collection<\App\Models\Event> events
+ * @property Collection<\App\Models\Task> $privateTasks
+ *
+ * What is this sorcery?
+ * @property string $profile_photo_url
+ */
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -44,6 +78,38 @@ class User extends Authenticatable
         'opened_areas'
     ];
 
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'opened_checklists' => 'array',
+        'opened_areas' => 'array'
+    ];
+
+    /**
+     * The attributes that should be hidden for serialization.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+        'two_factor_recovery_codes',
+        'two_factor_secret',
+    ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'profile_photo_url',
+    ];
+
     public function departments()
     {
         return $this->belongsToMany(Department::class);
@@ -69,7 +135,8 @@ class User extends Authenticatable
         return $this->hasMany(Room::class);
     }
 
-    public function admin_rooms() {
+    public function admin_rooms()
+    {
         return $this->belongsToMany(Room::class, 'room_user');
     }
 
@@ -78,50 +145,20 @@ class User extends Authenticatable
         return $this->hasMany(Task::class);
     }
 
-    public function events() {
-        return $this->hasMany(event::class);
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    public function privateTasks()
+    {
+        return $this->hasManyThrough(Task::class, Checklist::class);
     }
 
     public function getPermissionAttribute()
     {
         return $this->getAllPermissions();
     }
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-        'two_factor_recovery_codes',
-        'two_factor_secret',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'opened_checklists' => 'array',
-        'opened_areas' => 'array'
-    ];
-
-    /**
-     * The accessors to append to the model's array form.
-     *
-     * @var array
-     */
-    protected $appends = [
-        'profile_photo_url',
-    ];
-
-    protected $with =[
-        'permissions',
-    ];
 
     public function toSearchableArray(): array
     {
@@ -130,6 +167,5 @@ class User extends Authenticatable
             'first_name' => $this->first_name,
             'last_name' => $this->last_name
         ];
-
     }
 }

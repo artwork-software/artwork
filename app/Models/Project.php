@@ -8,6 +8,33 @@ use Illuminate\Database\Eloquent\Prunable;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $description
+ * @property int $number_of_participants
+ * @property string $cost_center
+ * @property int $sector_id
+ * @property int $category_id
+ * @property int $genre_id
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ * @property \Illuminate\Support\Carbon $deleted_at
+ *
+ * @property \Illuminate\Database\Eloquent\Collection<User> $users
+ * @property \Illuminate\Database\Eloquent\Collection<User> $adminUsers
+ * @property \Illuminate\Database\Eloquent\Collection<User> $managerUsers
+ * @property \Illuminate\Database\Eloquent\Collection<event> $events
+ * @property \Illuminate\Database\Eloquent\Collection<Department> $departments
+ * @property \Illuminate\Database\Eloquent\Collection<ProjectHistory> $project_histories
+ * @property \Illuminate\Database\Eloquent\Collection<Checklist> $checklists
+ * @property \Illuminate\Database\Eloquent\Collection<ProjectFile> $project_files
+ * @property \Illuminate\Database\Eloquent\Collection<Comment> $comments
+ * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
+ * @property Sector $sector
+ * @property Category $category
+ * @property Genre $genre
+ */
 class Project extends Model
 {
     use HasFactory, SoftDeletes, Prunable, Searchable;
@@ -22,19 +49,36 @@ class Project extends Model
         'genre_id'
     ];
 
-    public function users() {
-        return $this->belongsToMany(User::class, 'project_user', 'project_id')->withPivot('is_admin', 'is_manager');
+    public function users()
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->withPivot('is_admin', 'is_manager');
     }
 
-    public function events() {
+    public function adminUsers()
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->wherePivot('is_admin', true);
+    }
+
+    public function managerUsers()
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->wherePivot('is_manager', true);
+    }
+
+    public function events()
+    {
         return $this->hasMany(event::class);
     }
 
-    public function departments() {
+    public function departments()
+    {
         return $this->belongsToMany(Department::class);
     }
 
-    public function project_histories() {
+    public function project_histories()
+    {
         return $this->hasMany(ProjectHistory::class);
     }
 
@@ -43,7 +87,8 @@ class Project extends Model
         return $this->hasMany(Checklist::class);
     }
 
-    public function project_files() {
+    public function project_files()
+    {
         return $this->hasMany(ProjectFile::class);
     }
 
@@ -67,6 +112,11 @@ class Project extends Model
         return $this->belongsTo(Genre::class, 'genre_id');
     }
 
+    public function rooms()
+    {
+        return $this->belongsToMany(Room::class, 'events');
+    }
+
     public function prunable()
     {
         return static::where('created_at', '<=', now()->subMonth());
@@ -78,6 +128,5 @@ class Project extends Model
             'id' => $this->id,
             'name' => $this->name,
         ];
-
     }
 }

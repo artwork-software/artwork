@@ -4,7 +4,25 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property  int $id
+ * @property  string $name
+ * @property  string $description
+ * @property  bool $done
+ * @property  string $deadline
+ * @property  \Illuminate\Support\Carbon $done_at
+ * @property  string $order
+ * @property  int $checklist_id
+ * @property  int $user_id
+ * @property  \Illuminate\Support\Carbon $created_at
+ * @property  \Illuminate\Support\Carbon $updated_at
+ *
+ * @property Checklist $checklist
+ * @property User $user_who_done
+ */
 class Task extends Model
 {
     use HasFactory;
@@ -21,15 +39,22 @@ class Task extends Model
     ];
 
     protected $casts = [
-      "done" => 'boolean'
+        'done' => 'boolean',
+        'done_at' => 'datetime',
     ];
 
-    public function checklist()
+    public function checklist(): BelongsTo
     {
         return $this->belongsTo(Checklist::class, 'checklist_id');
     }
 
-    public function user_who_done() {
+    public function user_who_done(): BelongsTo
+    {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function checklistDepartments(): BelongsToMany
+    {
+        return $this->belongsToMany(Department::class, 'checklist_department', 'checklist_id', 'department_id', 'checklist_id');
     }
 }

@@ -51,7 +51,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
-    Route::get('/dashboard', [EventController::class, 'dashboard'])->name('dashboard');
+    Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
     Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
     Route::put('/tool/settings', [AppController::class, 'update_tool'])->name('tool.update');
@@ -187,8 +187,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/rooms/start_time_conflicts', [EventController::class, 'get_start_time_conflicts_for_all_rooms']);
     Route::get('/rooms/end_time_conflicts', [EventController::class, 'get_end_time_conflicts_for_all_rooms']);
 
-    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'get_conflicts_in_room_for_start_time']);
-    Route::get('/room/{room}/end_time_conflicts', [EventController::class, 'get_conflicts_in_room_for_end_time']);
+    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'indexEventsWithStartConflicts']);
+    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'indexEventsWithStartConflicts']);
+    Route::get('/room/{room}/end_time_conflicts', [EventController::class, 'indexEventsWithEndConflicts']);
 
     //Trash
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
@@ -201,9 +202,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
     //Events
-    Route::get('/events/month', [EventController::class, 'month_index'])->name('events.monthly_management');
-    Route::get('/events/day', [EventController::class, 'day_index'])->name('events.daily_management');
-    Route::get('/events/requests', [EventController::class, 'requests_index'])->name('events.requests');
+    Route::get('/events/month', [EventController::class, 'indexEventsInMonth'])->name('events.monthly_management');
+    Route::get('/events/day', [EventController::class, 'indexEventForDay'])->name('events.daily_management');
+    Route::get('/events/requests', [EventController::class, 'indexEventRequests'])->name('events.requests');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');

@@ -6,6 +6,17 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laravel\Scout\Searchable;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property int $user_id
+ * @property \Illuminate\Support\Carbon $created_at
+ * @property \Illuminate\Support\Carbon $updated_at
+ *
+ * @property TaskTemplate $task_templates
+ * @property User $user
+ * @property \Illuminate\Database\Eloquent\Collection<Department> $departments
+ */
 class ChecklistTemplate extends Model
 {
     use HasFactory;
@@ -37,6 +48,5 @@ class ChecklistTemplate extends Model
             'id' => $this->id,
             'name' => $this->name,
         ];
-
     }
 }

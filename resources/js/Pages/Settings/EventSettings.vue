@@ -10,16 +10,13 @@
             <div class="mt-16 max-w-2xl">
                 <div class="flex">
                     <h2 class="font-bold font-lexend text-xl my-2">Termintypen</h2>
-                    <button @click="openAddEventTypeModal" type="button"
-                            class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                        <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                    </button>
+                    <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp"/>
                     <div v-if="$page.props.can.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                         <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Erstelle neue Termintypen</span>
                     </div>
                 </div>
-                <div class="text-secondary tracking-tight leading-6 subpixel-antialiased">
+                <div class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">
                     Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem
                     definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen
                     Terminnamen bekommen können.
@@ -326,6 +323,7 @@
 
 <script>
 import AppLayout from '@/Layouts/AppLayout.vue';
+import AddButton from "@/Layouts/Components/AddButton";
 import {DotsVerticalIcon, TrashIcon, PencilAltIcon, XIcon} from "@heroicons/vue/outline"
 import {CheckIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -388,6 +386,7 @@ export default {
         }
     },
     components: {
+        AddButton,
         AppLayout,
         XCircleIcon,
         PlusSmIcon,

@@ -6,10 +6,7 @@
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
-                            <button data-modal-toggle="invite-user" type="button" id="invite-users"
-                                    class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
+                            <AddButton data-modal-toggle="invite-user" id="invite-users" text="Nutzer einladen"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Lade neue Nutzer*innen ein</span>
@@ -319,10 +316,8 @@
                         </span>
                     <Disclosure as="div">
                         <div class="flex mt-4 mb-10">
-                            <DisclosureButton
-                                class="mt-3 flex my-auto items-center font-bold rounded-full shadow-sm text-white bg-black">
-                                <PlusSmIcon v-if="form.departments.length === 0" class="h-5 w-5" aria-hidden="true"/>
-                                <ChevronDownIcon v-else class="h-5 w-5" aria-hidden="true"/>
+                            <DisclosureButton>
+                                <AddButton text="Zu Teams zuweisen"/>
                             </DisclosureButton>
                             <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
@@ -514,6 +509,7 @@ const roleCheckboxes = [
 
 import {defineComponent} from 'vue'
 import {ref} from 'vue'
+import AddButton from "@/Layouts/Components/AddButton";
 import {
     Disclosure,
     DisclosureButton,
@@ -546,6 +542,7 @@ import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 
 export default defineComponent({
     components: {
+        AddButton,
         FlowbiteModal,
         AppLayout,
         DotsVerticalIcon,

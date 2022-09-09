@@ -5,9 +5,8 @@
                 <div class="flex justify-between w-full">
                     <div class="flex">
                         <h2 class="text-3xl font-black font-lexend flex">Checklistenvorlagen</h2>
-                        <Link :href="route('checklist_templates.create')" type="button"
-                              class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                            <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
+                        <Link :href="route('checklist_templates.create')">
+                            <AddButton text="Neue Vorlage"/>
                         </Link>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -255,6 +254,7 @@
 <script>
 
 import  {Inertia} from "@inertiajs/inertia";
+import AddButton from "@/Layouts/Components/AddButton";
 import {SearchIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, DuplicateIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, PlusSmIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -268,6 +268,7 @@ export default {
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {
+        AddButton,
         PlusSmIcon,
         SvgCollection,
         AppLayout,

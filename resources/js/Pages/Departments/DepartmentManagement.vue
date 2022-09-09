@@ -6,10 +6,7 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-3xl font-black font-lexend flex">Alle Teams</h2>
-                            <button @click="openAddTeamModal" type="button"
-                                    class="flex my-auto ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
+                            <AddButton @click="openAddTeamModal" text="Team erstellen"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
@@ -470,6 +467,7 @@
 <script>
 
 import {defineComponent} from 'vue'
+import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
     DotsVerticalIcon,
@@ -540,6 +538,7 @@ const iconMenuItems = [
 
 export default defineComponent({
     components: {
+        AddButton,
         TeamIconCollection,
         UserTooltip,
         SvgCollection,

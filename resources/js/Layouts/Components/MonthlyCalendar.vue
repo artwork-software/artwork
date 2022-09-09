@@ -9,10 +9,7 @@
                                 Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
-                                <AddButton @click="openAddEventModal">
-                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                    <p class="ml-1">Neue Belegung</p>
-                                </AddButton>
+                                <AddButton @click="openAddEventModal" text="Neue Belegung"/>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span
@@ -542,10 +539,7 @@
     <div v-else>
         <div class="flex items-center ml-14 mt-6"
              v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
-            <button @click="openAddEventModal" type="button"
-                    class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-            </button>
+            <AddButton @click="openAddEventModal" text="Belegung anfragen"/>
             <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                 <span
@@ -575,120 +569,93 @@
                     <span
                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Hier kannst du die Art des Termins definieren. ihn einem Projekt zuordnen und weitere Infos mit deinem Team teilen. Anschließend kannst du dafür die Raumbelegung anfragen.</span>
                 </div>
-                <div class="flex justify-between">
-                    <Listbox as="div" class="flex" v-model="selectedEventType">
-                        <div class="relative">
-                            <ListboxButton
-                                class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                <div class="flex items-center my-auto">
-                                    <EventTypeIconCollection :height="20" :width="20"
-                                                             :iconName="selectedEventType.svg_name"/>
-                                    <span class="block truncate items-center ml-3 flex">
+                <div class="flex">
+                    <Listbox as="div" class="flex mt-6 w-1/2 mr-2" v-model="selectedEventType">
+                        <ListboxButton
+                            class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                            <div class="flex items-center my-auto">
+                                <EventTypeIconCollection :height="20" :width="20"
+                                                         :iconName="selectedEventType.svg_name"/>
+                                <span class="block truncate items-center ml-3 flex">
                                             <span>{{ selectedEventType.name }}</span>
                                 </span>
-                                    <span
-                                        class="ml-2 inset-y-0 flex items-center pr-2 pointer-events-none">
+                                <span
+                                    class="ml-2 inset-y-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
-                                </div>
-                            </ListboxButton>
+                            </div>
+                        </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="eventType in event_types"
-                                                   :key="eventType.name"
-                                                   :value="eventType"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <EventTypeIconCollection :height="20" :width="20"
-                                                                     :iconName="eventType.svg_name"/>
-                                            <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions
+                                class="absolute z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class="max-h-8"
+                                               v-for="eventType in event_types"
+                                               :key="eventType.name"
+                                               :value="eventType"
+                                               v-slot="{ active, selected }">
+                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <EventTypeIconCollection :height="20" :width="20"
+                                                                 :iconName="eventType.svg_name"/>
+                                        <span
+                                            :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
                                                     </span>
-                                            <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                        <span
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                       <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </div>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
                     </Listbox>
 
-                    <Listbox as="div" class="flex" v-model="selectedRoom">
-                        <div class="relative">
-                            <ListboxButton
-                                class="bg-white w-56 relative mt-6 font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                <div class="flex items-center my-auto justify-end">
-                                        <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
-                                            <span>{{ selectedRoom.name }}</span>
+                    <div class="mt-6 flex w-1/2 ml-2" v-if="!selectedEventType.project_mandatory">
+                        <input v-if="selectedEventType.individual_name && !selectedProject && !newProjectName"
+                               type="text"
+                               v-model="addEventForm.name" placeholder="Terminname*"
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
+                        <input v-else type="text" v-model="addEventForm.name" placeholder="Terminname"
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
+                    </div>
 
-                                        </span>
-                                    <span v-if="!selectedRoom"
-                                          class="block truncate">Raum definieren*</span>
-                                    <span
-                                        class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                         </span>
-                                </div>
-                            </ListboxButton>
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                    <div v-for="(area,index) in areas">
-                                        <p :class="index === 0 ? 'mt-1': 'mt-4'"
-                                           class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
-                                            {{ area.name }}</p>
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="room in area.rooms"
-                                                       :key="room.name"
-                                                       :value="room"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ room.name }}
-                                                    </span>
-                                                <span
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                        <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                   aria-hidden="true"/>
 
-                                                        <img src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                                             v-if="(room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0) && (addEventForm.start_time !== null || addEventForm.end_time !== null)"
-                                                             class="h-4 w-4 ml-1 flex text-error"
-                                                             aria-hidden="true"/>
-
-                                                    </span>
-
-                                            </li>
-                                        </ListboxOption>
-                                    </div>
-                                </ListboxOptions>
-                            </transition>
-                        </div>
-                    </Listbox>
                 </div>
-                <div class="flex mt-6" v-if="!selectedEventType.project_mandatory">
-                    <input v-model="assignProject"
-                           type="checkbox"
-                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                    <p :class="[assignProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                       class="ml-4 my-auto text-sm">Termin einem Projekt zuordnen</p>
+
+                <div class="flex mt-4 w-full justify-between">
+                    <div class="flex">
+                        <input v-model="addEventForm.audience"
+                               type="checkbox"
+                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-buttonBlue border-2 border-gray-300"/>
+                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto mt-1"
+                             :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
+                        <p :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Publikum</p>
+                    </div>
+                    <div class="flex">
+                        <input v-model="addEventForm.is_loud"
+                               type="checkbox"
+                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-buttonBlue border-2 border-gray-300"/>
+                        <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
+                             :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
+                        <p :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
+                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
+                    </div>
                 </div>
-                <div v-if="assignProject || selectedEventType.project_mandatory">
+
+                <div>
                     <div class="flex items-center mt-4">
+                        <span class="mr-4 text-sm"
+                              :class="[!creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                Bestehendes Projekt
+                            </span>
                         <Switch @click="newProjectName = ''" v-model="creatingProject"
                                 :class="[creatingProject ?
-                                        'bg-success' :
-                                        'bg-gray-300',
+                                        'bg-buttonBlue' :
+                                        'bg-buttonBlue',
                                         'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
                                 <span aria-hidden="true"
                                       :class="[creatingProject ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
@@ -708,9 +675,37 @@
                                placeholder="Projektname von neuem Projekt*"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                     </div>
+
+                    <div class="my-auto w-full mt-4" v-else>
+                        <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
+                               placeholder="Zu welchem bestehendem Projekt zuordnen?*"
+                               :disabled="this.selectedProject"/>
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="project_search_results.length > 0 && project_query.length > 0"
+                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(project, index) in project_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addProjectToEvent(project)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ project.name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
                 </div>
                 <div class="mt-4 flex flex-wrap"
                      v-if="(assignProject || selectedEventType.project_mandatory) && !creatingProject">
+                    <!--
                     <div class="my-auto w-full" v-if="this.selectedProject === null">
                         <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
@@ -737,6 +732,7 @@
                             </div>
                         </transition>
                     </div>
+                    -->
 
                     <div>
 
@@ -754,13 +750,7 @@
                             </span>
                     </div>
                 </div>
-                <div class="mt-4" v-if="!selectedEventType.project_mandatory">
-                    <input v-if="selectedEventType.individual_name && !selectedProject && !newProjectName" type="text"
-                           v-model="addEventForm.name" placeholder="Terminname*"
-                           class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
-                    <input v-else type="text" v-model="addEventForm.name" placeholder="Terminname"
-                           class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
-                </div>
+
                 <div class="flex mt-4 items-center">
                     <div v-if="conflictData">
                         <div v-if="conflictData.length > 0" class="bg-error absolute left-0 flex p-1 -mt-2 mr-0.5">
@@ -812,26 +802,60 @@
                         {{ startTimeError.start_time }}
                     </div>
                 </div>
-                <div class="flex mt-4 items-center">
-                    <div class="flex items-center">
-                        <input v-model="addEventForm.audience"
-                               type="checkbox"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 my-auto mt-1"
-                             :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
-                        <p :class="[addEventForm.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Publikum</p>
-                    </div>
-                    <div class="flex ml-12">
-                        <input v-model="addEventForm.is_loud"
-                               type="checkbox"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                        <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
-                             :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
-                        <p :class="[addEventForm.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                           class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
-                    </div>
-                </div>
+
+                <Listbox as="div" class="flex" v-model="selectedRoom">
+                    <ListboxButton
+                        class="pl-3 border border-gray-300 bg-white w-full relative mt-6 py-2 cursor-pointer focus:outline-none sm:text-sm">
+                        <div class="flex items-center my-auto">
+                                        <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
+                                            <span>{{ selectedRoom.name }}</span>
+
+                                        </span>
+                            <span v-if="!selectedRoom"
+                                  class="block truncate text-secondary">Raum wählen*</span>
+                            <span
+                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
+                        </div>
+                    </ListboxButton>
+                    <transition leave-active-class="transition ease-in duration-100"
+                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                        <ListboxOptions
+                            class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                            <div v-for="(area,index) in areas">
+                                <p :class="index === 0 ? 'mt-1': 'mt-4'"
+                                   class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
+                                    {{ area.name }}</p>
+                                <ListboxOption as="template" class="max-h-8"
+                                               v-for="room in area.rooms"
+                                               :key="room.name"
+                                               :value="room"
+                                               v-slot="{ active, selected }">
+                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ room.name }}
+                                                    </span>
+                                        <span
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                        <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                   aria-hidden="true"/>
+
+                                                        <img src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                                             v-if="(room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0) && (addEventForm.start_time !== null || addEventForm.end_time !== null)"
+                                                             class="h-4 w-4 ml-1 flex text-error"
+                                                             aria-hidden="true"/>
+
+                                                    </span>
+
+                                    </li>
+                                </ListboxOption>
+                            </div>
+                        </ListboxOptions>
+                    </transition>
+                </Listbox>
+
                 <div class="mt-4">
                         <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                   v-model="addEventForm.description" rows="4"
@@ -851,13 +875,13 @@
                             </button>
                         </div>
                     </div>
-                    <div
+                    <div class="items-center"
                         v-if="!selectedRoom || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) && !$page.props.is_admin"
                         @mouseover="showHints()">
                         <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 flex items-center px-12 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                class="mt-4 px-12 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                 @click="addEvent(true)"
                                 :disabled="addEventForm.start_time === null
                                 || addEventForm.end_time === null || (selectedEventType.project_mandatory
@@ -1138,52 +1162,28 @@
                         {{ event.end_time.split('-')[2].split(' ')[1] }}
                     </div>
                     <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || event.created_by.id === this.$page.props.user.id"
-                        class="flex mt-4 items-center">
-                        <div class="flex items-center">
-                            <input v-model="event.audience"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <img src="/Svgs/IconSvgs/icon_public.svg" class="h-5 w-5 ml-2 mt-1"
-                                 :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
-                            <p :class="[event.audience ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1.5 mt-1.5 text-sm text-xs subpixel-antialiased text-secondary">Publikum</p>
-                        </div>
-                        <div class="flex ml-12">
-                            <input v-model="event.is_loud"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-5 w-5 ml-2 my-auto"
-                                 :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"/>
-                            <p :class="[event.is_loud ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']"
-                               class="ml-1.5 mt-1.5 text-xs subpixel-antialiased text-secondary">Es wird laut</p>
-                        </div>
-                    </div>
-                    <div
-                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
+                         v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="event.description" rows="4"
                                       class="resize-none font-black shadow-sm placeholder-secondary p-4 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm border"/>
                         </div>
-                        <div>
-                            <button
-                                v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && (rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin)"
-                                :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
+                        <button
+                            v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && (rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin)"
+                            :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 flex items-center px-20 py-3 border border-transparent
+                            class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase tracking-wider shadow-sm text-secondaryHover"
-                                @click="updateEvent(event,false)"
-                                :disabled="event.start_time === null && event.end_time === null">
-                                Speichern
-                            </button>
-                        </div>
-                        <div
+                            @click="updateEvent(event,false)"
+                            :disabled="event.start_time === null && event.end_time === null">
+                            Speichern
+                        </button>
+                        <div class="items-center"
                             v-if="rooms.find(room => room.id === event.room_id) ? ((!rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
                             <button :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                    class="mt-4 flex items-center px-12 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                    class="mt-4 px-12 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                     @click="updateEvent(event,true)"
                                     :disabled="event.start_time === null || event.end_time === null || event.selectedRoom === null">
                                 Raum anfragen

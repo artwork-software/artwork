@@ -267,10 +267,7 @@
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                <button @click="openAddChecklistModal" type="button"
-                                        class="flex cursor-pointer ml-4 border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                </button>
+                                <AddButton @click="openAddChecklistModal" text="Neue Checkliste"/>
                                 <div v-if="$page.props.can.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                     <span
@@ -445,10 +442,7 @@
                                                 <div class="flex"
                                                      v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
-                                                        <button @click="openAddTaskModal(checklist)" type="button"
-                                                                class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                            <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                                        </button>
+                                                        <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"/>
                                                     </div>
                                                     <div v-if="$page.props.can.show_hints" class="flex">
                                                         <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -657,10 +651,7 @@
                                             <div class="flex w-full mt-6"
                                                  v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="">
-                                                    <button @click="openAddTaskModal(checklist)" type="button"
-                                                            class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                        <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                                    </button>
+                                                    <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"/>
                                                 </div>
                                                 <div v-if="$page.props.can.show_hints" class="flex">
                                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -1753,6 +1744,7 @@ import {Inertia} from "@inertiajs/inertia";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
 import DailyCalendar from "@/Layouts/Components/DailyCalendar";
+import AddButton from "@/Layouts/Components/AddButton";
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 
@@ -1769,6 +1761,7 @@ export default {
     name: "ProjectShow",
     props: ['first_start', 'last_end', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment', 'requested_start_time', 'requested_end_time'],
     components: {
+        AddButton,
         TeamTooltip,
         CategoryIconCollection,
         Checkbox,

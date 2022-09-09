@@ -32,6 +32,9 @@ module.exports = {
                 nanum: "Nanum Pen Script",
                 lexend: "Lexend"
             },
+            boxShadow: {
+                'buttonBlue': '0 35px 60px -15px #2D1FDE'
+            }
         },
     },
     plugins: [

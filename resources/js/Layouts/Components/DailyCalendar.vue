@@ -8,10 +8,7 @@
                             <h2 class="text-3xl font-black flex">Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
-                                <button @click="openAddEventModal" type="button"
-                                        class="flex mt-2 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                </button>
+                                <AddButton @click="openAddEventModal" text="Neue Belegung"/>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span
@@ -1301,6 +1298,7 @@ import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
+import AddButton from "@/Layouts/Components/AddButton";
 
 import {
     AdjustmentsIcon,
@@ -1351,6 +1349,7 @@ const dateTypes = [
 ]
 export default defineComponent({
     components: {
+        AddButton,
         ListboxLabel,
         SvgCollection,
         Button,

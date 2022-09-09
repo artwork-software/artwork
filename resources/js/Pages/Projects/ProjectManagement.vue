@@ -7,11 +7,7 @@
                         <div class="flex">
                             <h2 class="text-3xl font-lexend font-black flex">Projekte</h2>
                             <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
-                            <button
-                                    @click="openAddProjectModal" type="button"
-                                    class="flex my-auto ml-14 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                            </button>
+                                <AddButton @click="openAddProjectModal" text="Neues Projekt"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
@@ -785,6 +781,7 @@ import {Inertia} from "@inertiajs/inertia";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import AddButton from "@/Layouts/Components/AddButton";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -796,6 +793,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        AddButton,
         CategoryIconCollection,
         TeamIconCollection,
         SvgCollection,

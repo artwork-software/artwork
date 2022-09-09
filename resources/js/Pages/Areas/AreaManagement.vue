@@ -10,10 +10,7 @@
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <button @click="openAddAreaModal()" type="button"
-                                                    class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                            </button>
+                                            <AddButton @click="openAddAreaModal" text="Areal hinzufügen"/>
                                         </div>
                                         <div v-if="$page.props.can.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -105,10 +102,7 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <button @click="openAddRoomModal(area)" type="button"
-                                                        class="flex border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
-                                                    <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
-                                                </button>
+                                                <AddButton @click="openAddRoomModal(area)" text="Raum hinzufügen"/>
                                             </div>
                                             <div v-if="$page.props.can.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -641,6 +635,7 @@
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Button from "@/Jetstream/Button";
+import AddButton from "@/Layouts/Components/AddButton";
 import {
     DotsVerticalIcon,
     InformationCircleIcon,
@@ -662,6 +657,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default defineComponent({
     components: {
+        AddButton,
         UserTooltip,
         SvgCollection,
         Button,

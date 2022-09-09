@@ -23,7 +23,7 @@ class AuthUserSeeder extends Seeder
         $user = User::create([
             'first_name' => 'Max',
             'last_name' => 'Mustermann',
-            'email' => 'test@test.de',
+            'email' => 'max.mustermann@kampnagel.de',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
             'position' => 'Administrator',

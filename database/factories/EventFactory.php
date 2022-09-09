@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,17 +17,20 @@ class EventFactory extends Factory
      */
     public function definition()
     {
+        $startTime = now()->startOfMonth()->addHours($this->faker->numberBetween(1, 24 * 30));
+
         return [
-            'name' => $this->faker->name,
-            'description' => $this->faker->paragraph,
-            'start_time' => $this->faker->dateTime,
-            'end_time' => $this->faker->dateTime,
+            'name' => $this->faker->text(20),
+            'description' => $this->faker->text,
+            'start_time' => $startTime->toDateTimeString(),
+            'end_time' => $startTime->addHours($this->faker->numberBetween(1, 8))->toDateTimeString(),
             'occupancy_option' => $this->faker->boolean(0),
             'audience' => $this->faker->boolean(0),
             'is_loud' => $this->faker->boolean(0),
             'event_type_id' => 1,
             'room_id' => 1,
-            'project_id' => null
+            'project_id' => null,
+            'user_id' => User::factory(),
         ];
     }
 }

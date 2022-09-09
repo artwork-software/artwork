@@ -31,7 +31,7 @@
         "barryvdh/laravel-ide-helper": "^2.12",
         "beyondcode/laravel-query-detector": "^1.6",
         "fakerphp/faker": "^1.9.1",
-        "laravel/sail": "^1.0.1",
+        "laravel/sail": "^1.15",
         "mockery/mockery": "^1.4.4",
         "nunomaduro/collision": "^6.1",
         "pestphp/pest-plugin-faker": "^1.0",

@@ -52,9 +52,8 @@ test('users can delete files from a room', function () {
 
     $this->delete("/room_files/{$this->room_file->id}");
 
-    $this->assertDatabaseHas('room_files', [
+    $this->assertSoftDeleted('room_files', [
         "id" => $this->room_file->id,
-        'deleted_at' => \Carbon\Carbon::now(),
     ]);
 });
 

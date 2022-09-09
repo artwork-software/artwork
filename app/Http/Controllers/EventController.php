@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Events\OccupancyUpdated;
+use App\Http\Requests\EventUpdateRequest;
 use App\Http\Requests\StoreOrUpdateEvent;
+use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventCollectionForDailyCalendarResource;
 use App\Http\Resources\EventCollectionForMonthlyCalendarResource;
 use App\Http\Resources\EventIndexResource;
@@ -371,5 +373,12 @@ class EventController extends Controller
         $event->delete();
 
         return Redirect::back()->with('success', 'Event deleted');
+    }
+
+    public function updateEvent(EventUpdateRequest $request, Event $event)
+    {
+        $event->update($request->data());
+
+        return new CalendarEventResource($event);
     }
 }

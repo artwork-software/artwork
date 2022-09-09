@@ -39,18 +39,8 @@ class Event extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'start_time',
-        'end_time',
-        'occupancy_option',
-        'audience',
-        'is_loud',
-        'event_type_id',
-        'room_id',
-        'project_id',
-        'user_id'
+    protected $guarded = [
+        'id',
     ];
 
     protected $casts = [
@@ -60,24 +50,6 @@ class Event extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
     ];
-
-    protected $appends = [
-        'days_of_event',
-    ];
-
-    public function getDaysOfEventAttribute(): array
-    {
-        $days_period = CarbonPeriod::create(Carbon::parse($this->start_time)->format('d.m.Y'), Carbon::parse($this->end_time)->format('d.m.Y'));
-
-
-        $days = [];
-
-        foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.Y');
-        }
-
-        return $days;
-    }
 
     public function event_type()
     {

@@ -100,6 +100,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
+    Route::get('/projects/{project}/events', [ProjectController::class, 'indexEvents'])->name('projects.events');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
@@ -209,6 +210,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
     Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy']);
+    Route::put('/events/{event}', [EventController::class, 'updateEvent']);
 
 
     //EventTypes

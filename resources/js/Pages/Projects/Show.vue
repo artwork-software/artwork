@@ -244,22 +244,21 @@
             <div class="max-w-screen-2xl">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab && project.rooms">
-                    <div v-if="!calendarType || calendarType === 'monthly'">
-                        <MonthlyCalendar calendar-type="project" :project_id="project.id" :event_types="event_types"
-                                         :first_start="this.first_start" :last_end="this.last_end"
-                                         :areas="areas" :requested_start_time="requested_start_time"
-                                         :requested_end_time="requested_end_time"
-                                         :month_events="month_events" :projects="[project]"
-                                         :rooms="project.rooms" :days_this_month="days_this_month"
-                                         :events_without_room="events_without_room"></MonthlyCalendar>
-                    </div>
-                    <div v-else-if="calendarType === 'daily'">
-                        <DailyCalendar calendar-type="project" :project_id="project.id" :hours_of_day="hours_of_day"
-                                       :rooms="project.rooms"
-                                       :projects="[project]" :event_types="event_types" :areas="areas"
-                                       :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
-                                       :events_without_room="events_without_room"/>
-                    </div>
+                    <vue-cal
+                        style="height: 500px"
+                        today-button
+                        events-on-month-view="short"
+                        locale="de"
+                        :disable-views="['years', 'year']"
+                        :events="events"
+                        :editable-events="{ title: false, drag: true, resize: true, delete: false, create: true }"
+                        :snap-to-time="15"
+
+                        @event-drop="updateEvent($event)"
+
+                        @ready="fetchEvents"
+                        @view-change="fetchEvents"
+                    />
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
@@ -1731,6 +1730,8 @@ import {Inertia} from "@inertiajs/inertia";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
 import DailyCalendar from "@/Layouts/Components/DailyCalendar";
+import VueCal from 'vue-cal'
+import 'vue-cal/dist/vuecal.css'
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1782,7 +1783,8 @@ export default {
         ExclamationIcon,
         Link,
         MonthlyCalendar,
-        DailyCalendar
+        DailyCalendar,
+        VueCal,
     },
     computed: {
         tabs() {
@@ -1943,6 +1945,7 @@ export default {
                 done: false,
                 user_id: this.$page.props.user.id
             }),
+            events: [],
         }
     },
     methods: {
@@ -2363,7 +2366,37 @@ export default {
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}), {
                 preserveScroll: true,
             });
-        }
+        },
+
+        async fetchEvents({view, startDate, endDate}) {
+            await axios.get(`/projects/${this.project.id}/events`, {
+                params: {
+                    start: startDate,
+                    end: endDate,
+                }
+            }).then(response => {
+                console.log(response.data.data)
+                this.events = response.data.data
+            });
+        },
+
+        async updateEvent(event) {
+                console.log(event)
+            const data = {
+            };
+                console.log(data)
+
+            await axios.put(`/events/${event.originalEvent?.id}`, {
+                roomId: event.event.roomId,
+                start: event.event.start,
+                end: event.event.end,
+                title: event.event.title,
+                description: event.event.description,
+            }).then(response => {
+                console.log(response)
+                // success message
+            });
+        },
     },
     watch: {
         department_query: {
@@ -2397,8 +2430,18 @@ export default {
         }
     }
 }
+
 </script>
 
-<style scoped>
-
+<style>
+.vuecal__event {
+    font-size: 1em;
+    margin-top: 3px;
+    border: solid rgba(196, 42, 15, 0.9);
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.leisure {
+    border: solid rgba(15, 164, 196, 0.9);
+    border-width: 0px 0px 0px 3px;
+}
 </style>

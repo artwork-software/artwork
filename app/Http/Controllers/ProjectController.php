@@ -6,6 +6,7 @@ use App\Enums\CalendarTimeEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventCollectionForDailyCalendarResource;
 use App\Http\Resources\EventCollectionForMonthlyCalendarResource;
 use App\Http\Resources\EventTypeResource;
@@ -518,6 +519,15 @@ class ProjectController extends Controller
         return inertia('Trash/Projects', [
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
+    }
+
+    public function indexEvents(Request $request, Project $project)
+    {
+        $events = $project->events()
+            ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
+            ->get();
+
+        return CalendarEventResource::collection($events);
     }
 
 

@@ -24,13 +24,17 @@ module.exports = {
                 backgroundGray: '#F5F5F3',
                 buttonBlue:'#3017AD',
                 buttonHover:'#2D1FDE'
-
-
+            },
+            fontSize: {
+                header: '30px'
             },
             fontFamily: {
                 sans: ['Inter', ...defaultTheme.fontFamily.sans],
                 nanum: "Nanum Pen Script",
                 lexend: "Lexend"
+            },
+            fontWeight: {
+              header: '900'
             },
             boxShadow: {
                 'buttonBlue': '0 35px 60px -15px #2D1FDE'

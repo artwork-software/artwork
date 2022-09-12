@@ -63,7 +63,7 @@ class ProjectController extends Controller
             ->get();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectIndexResource::collection($projects)->resolve(),
+            'projects' => ProjectShowResource::collection($projects)->resolve(),
 
             'users' => User::all(),
 

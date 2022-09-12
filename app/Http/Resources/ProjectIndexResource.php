@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @mixin \App\Models\Project
@@ -32,6 +33,7 @@ class ProjectIndexResource extends JsonResource
             'sector' => $this->sector,
             'category' => $this->category,
             'genre' => $this->genre,
+            'curr_user_is_related' => $this->users->contains(Auth::id()),
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'project_history' => ProjectHistoryResource::collection($projectHistory)->resolve(),
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),

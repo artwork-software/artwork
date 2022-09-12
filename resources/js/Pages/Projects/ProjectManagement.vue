@@ -5,14 +5,44 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
-                            <h2 class="text-3xl font-lexend font-black flex">Projekte</h2>
-                            <div class="flex" v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
+                            <Listbox as="div" class="flex" v-model="projectFilter">
+                                <ListboxButton
+                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm">
+                                    <div class="flex items-center my-auto">
+                                        <p class="block items-center flex mr-2 text-header font-black">{{ projectFilter.name }}</p>
+                                        <span
+                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
+                                    </div>
+                                </ListboxButton>
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-56 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class="max-h-8"
+                                                       v-for="filter in projectFilters"
+                                                       :key="filter.name"
+                                                       :value="filter"
+                                                       v-slot="{ active, selected }">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ filter.name }}
+                                                    </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                            <div class="flex"
+                                 v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
                                 <AddButton @click="openAddProjectModal" text="Neues Projekt"/>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
-                            </div>
+                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                    <span
+                                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
+                                </div>
                             </div>
                         </div>
                         <div class="flex items-center">
@@ -28,17 +58,21 @@
                             </div>
                         </div>
                     </div>
-                    <div v-if="projects.length > 0 && project_query < 1" v-for="(project,index) in projects" :key="project.id"
+                    <div v-if="projects.length > 0 && project_query < 1" v-for="(project,index) in this.currentProjects"
+                         :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-5 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)" class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)"
+                                          class="flex w-full my-auto">
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                            {{ project.name }}</p>
                                     </Link>
                                     <div v-else class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                            {{ project.name }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -186,29 +220,31 @@
                                 </Menu>
                             </div>
                         </div>
-                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 -mt-2 text-secondary flex items-center">
+                        <div
+                            v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin"
+                            class="mb-12 -mt-2 text-secondary flex items-center">
                             <span class=" text-xs subpixel-antialiased">
                                   zuletzt geändert:
                             </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
 
-                                    <img
-                                        :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
-                                        :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
-                                        :alt="project.project_history[project.project_history.length -1].user.name"
-                                        class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip
-                                        :user="project.project_history[project.project_history.length -1].user"/>
-                                    <span class="ml-2 text-xs subpixel-antialiased">
+                                <img
+                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
+                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
+                                    :alt="project.project_history[project.project_history.length -1].user.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip
+                                    :user="project.project_history[project.project_history.length -1].user"/>
+                                <span class="ml-2 text-xs subpixel-antialiased">
                                     {{ project.project_history[project.project_history.length - 1].created_at }}
                                 </span>
-                                    <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
-                                            @click="openProjectHistoryModal(project.project_history)">
-                                        <ChevronRightIcon
-                                            class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
-                                            aria-hidden="true"/>
-                                        Verlauf ansehen
-                                    </button>
+                                <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
+                                        @click="openProjectHistoryModal(project.project_history)">
+                                    <ChevronRightIcon
+                                        class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Verlauf ansehen
+                                </button>
                             </div>
                             <div v-else class="ml-2 text-secondary subpixel-antialiased">
                                 Noch kein Verlauf verfügbar
@@ -222,11 +258,14 @@
                             class="py-5 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)" class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                    <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)"
+                                          class="flex w-full my-auto">
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                            {{ project.name }}</p>
                                     </Link>
                                     <div v-else class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                            {{ project.name }}</p>
                                     </div>
 
                                 </div>
@@ -375,7 +414,9 @@
                                 </Menu>
                             </div>
                         </div>
-                        <div v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin" class="mb-12 -mt-2 text-secondary flex items-center">
+                        <div
+                            v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin"
+                            class="mb-12 -mt-2 text-secondary flex items-center">
                             <span class=" text-xs subpixel-antialiased">
                                   zuletzt geändert:
                             </span>
@@ -724,13 +765,14 @@
                                 {{ historyItem.created_at }}:
                             </span>
                             <div class="flex w-full">
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url"
-                                 :alt="historyItem.user.name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user"/>
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{ historyItem.description }}
-                            </div>
+                                <img :data-tooltip-target="historyItem.user.id"
+                                     :src="historyItem.user.profile_photo_url"
+                                     :alt="historyItem.user.name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip :user="historyItem.user"/>
+                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                    {{ historyItem.description }}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -782,6 +824,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import AddButton from "@/Layouts/Components/AddButton";
+import projects from "@/Pages/Trash/Projects";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -833,6 +876,17 @@ export default defineComponent({
         TeamTooltip
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can'],
+    computed: {
+        currentProjects: function () {
+            if (this.projectFilter.name === 'Alle Projekte') {
+                return this.projects
+            } else {
+                const newProjects = this.projects.filter(project => project.curr_user_is_related === true)
+                console.log(newProjects);
+                return newProjects;
+            }
+        }
+    },
     methods: {
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
@@ -935,7 +989,12 @@ export default defineComponent({
                     axios.get('/projects/search', {
                         params: {query: this.project_query}
                     }).then(response => {
-                        this.project_search_results = response.data
+                        if(this.projectFilter.name === 'Alle Projekte') {
+                            this.project_search_results = response.data
+                        } else {
+                            console.log(response.data)
+                            this.project_search_results = response.data.filter(project => project.curr_user_is_related === true)
+                        }
                     })
                 }
             },
@@ -944,8 +1003,10 @@ export default defineComponent({
     },
     data() {
         return {
+            projectFilters: [{'name': 'Alle Projekte'}, {'name': 'Meine Projekte'}],
+            projectFilter: {'name': 'Alle Projekte'},
             showSearchbar: false,
-            project_query:'',
+            project_query: '',
             project_search_results: [],
             addingProject: false,
             deletingProject: false,

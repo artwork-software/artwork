@@ -9,7 +9,7 @@
             </div>
             <div class="mt-16 max-w-2xl">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-xl my-2">Termintypen</h2>
+                    <h2 class="font-bold font-lexend text-xl my-2">Neuer Termintyp</h2>
                     <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp"/>
                     <div v-if="$page.props.can.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -106,25 +106,26 @@
         <!-- Termintyp erstellen Modal-->
         <jet-dialog-modal :show="addingEventType" @close="closeAddEventTypeModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Neuen Termintyp erstellen
+                        Neuer Termintyp
                     </div>
                     <XIcon @click="closeAddEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary subpixel-antialiased">
-                        Du kannst bis zu 10 Termintypen festlegen
+                        Du kannst bis zu 10 Termintypen festlegen.
                     </div>
                     <div class="mt-4">
                         <div class="flex">
                             <Menu as="div" class=" relative">
                                 <div>
-                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                    <MenuButton :class="[eventTypeForm.svg_name === '' ? 'border border-gray-400' : '']" class="items-center rounded-full focus:outline-none h-14 w-14">
+                                        <label v-if="eventTypeForm.svg_name === ''" class="text-gray-400 text-xs">Farbe*</label>
                                         <ChevronDownIcon v-if="eventTypeForm.svg_name === ''"
-                                                         class="ml-1 flex-shrink-0 mt-1 h-16 w-16 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <EventTypeIconCollection v-else :height="64" :width="64"
-                                                                 :iconName="eventTypeForm.svg_name"/>
+                                                         class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
+                                        <EventTypeIconCollection class="h-12 w-12" v-if="eventTypeForm.svg_name !== ''" :iconName=eventTypeForm.svg_name alt="TeamIcon" />
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -134,7 +135,7 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right h-40 w-24 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
+                                        class="z-40 origin-top-right h-30 w-18 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div v-if="item.taken === false">
                                                 <div class="" @click="eventTypeForm.svg_name = item.iconName"
@@ -155,7 +156,7 @@
                                        placeholder="placeholder"/>
                                 <label for="name"
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                    des Termintyps</label>
+                                    des Termintyps*</label>
                             </div>
                         </div>
                         <div>

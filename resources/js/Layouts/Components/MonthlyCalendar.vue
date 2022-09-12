@@ -618,7 +618,7 @@
                                type="text"
                                v-model="addEventForm.name" placeholder="Terminname*"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
-                        <input v-else type="text" v-model="addEventForm.name" placeholder="Terminname"
+                        <input v-else type="text" v-model="addEventForm.name" :placeholder="[selectedEventType.individual_name ? 'Terminname*' : 'Terminname']"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
                     </div>
 
@@ -760,15 +760,15 @@
                         </div>
                     </div>
                     <div class="text-secondary mr-2">
-                        <label for="startTime" class="text-xs subpixel-antialiased">Terminstart*</label>
+                        <label for="startTime" class="text-xs subpixel-antialiased">Startdatum*</label>
                         <input
                             @blur="validateStartTime(addEventForm)"
                             v-model="addEventForm.start_time" id="startTime"
-                            placeholder="Terminstart" type="datetime-local"
+                            placeholder="Startdatum*" type="datetime-local"
                             class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                     </div>
                     <div class="text-secondary ml-2">
-                        <label for="endTime" class="text-xs subpixel-antialiased">Terminende*</label>
+                        <label for="endTime" class="text-xs subpixel-antialiased">Enddatum*</label>
                         <input
                             @blur="validateEndTime(addEventForm)"
                             v-model="addEventForm.end_time" id="endTime"
@@ -1120,7 +1120,7 @@
                     <div>
                         <div class="mt-4 w-full"
                              v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id">
-                            <input type="text" v-model="event.name" placeholder="Terminname"
+                            <input type="text" v-model="event.name" :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         </div>
                         <div v-else>
@@ -1133,14 +1133,14 @@
                         v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id"
                         class="flex mt-4">
                         <div class="text-secondary mr-2">
-                            <label for="startDate" class="text-xs subpixel-antialiased">Terminstart*</label>
+                            <label for="startDate" class="text-xs subpixel-antialiased">Startdatum*</label>
                             <input
                                 v-model="event.start_time_dt_local" id="startDate"
-                                placeholder="Terminstart" type="datetime-local"
+                                placeholder="Startdatum*" type="datetime-local"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
                         <div class="text-secondary ml-2">
-                            <label for="endDate" class="text-xs subpixel-antialiased">Terminende*</label>
+                            <label for="endDate" class="text-xs subpixel-antialiased">Enddatum*</label>
                             <input
                                 v-model="event.end_time_dt_local" id="endDate"
                                 placeholder="Zu erledigen bis?" type="datetime-local"
@@ -1259,7 +1259,7 @@
                             <label for="changeStartDate">Start-Datum</label>
                             <input
                                 v-model="wantedStartDate" id="changeStartDate"
-                                placeholder="Terminstart" type="date"
+                                placeholder="Startdatum*" type="date"
                                 class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
                         </div>
                         <div class="text-secondary ml-2">

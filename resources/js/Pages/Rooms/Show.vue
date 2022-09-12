@@ -341,7 +341,7 @@
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="editRoomForm.description" rows="4"
-                                                class="focus:border-black placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
                         <div class="flex items-center my-6">
                             <input v-model="editRoomForm.temporary"

@@ -100,12 +100,13 @@
                         </div>
 
                     </div>
-                    <!-- TODO: Hier noch Link zu Über uns Page -->
+                    <!-- TODO: Hier noch Link zu Über uns Page
                     <div class=" absolute bottom-0 mb-10 text-secondary subpixel-antialiased text-sm tracking-wide">
                         <a href="">
                             Über das Tool
                         </a>
                     </div>
+                    -->
                 </div>
             </div>
 

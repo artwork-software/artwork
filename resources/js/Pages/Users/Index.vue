@@ -261,10 +261,13 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal style="margin-top: 2rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6"/>
-            <div class="mx-3">
+        <flowbite-modal style="margin-top: 1rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
 
+            <div class="mx-3">
+                <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-9 mt-48"/>
+                <XIcon @click="closeAddUserModal"
+                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 -mt-12 mr-10"
+                       aria-hidden="true"/>
                 <div class="mt-4 text-2xl font-black">
                     Nutzer*innen einladen
                 </div>
@@ -726,6 +729,7 @@ export default defineComponent({
         },
         closeAddUserModal() {
             this.addingUser = false;
+            document.getElementById('invite-users').click()
             this.emailInput = "";
             this.form.user_emails = [];
             this.form.permissions = [];

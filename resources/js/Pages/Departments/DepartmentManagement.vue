@@ -274,10 +274,11 @@
                         <div class="flex">
                             <Menu as="div" class=" relative">
                                 <div>
-                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                    <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']" class="items-center rounded-full focus:outline-none h-12 w-12">
+                                        <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
                                         <ChevronDownIcon v-if="form.svg_name === ''"
-                                                         class="ml-1 p-3 flex-shrink-0 mt-1 h-12 w-12 flex my-auto items-center rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                        <TeamIconCollection class="h-16 w-16" v-if="form.svg_name !== ''" :iconName=form.svg_name alt="TeamIcon" />
+                                                         class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
+                                        <TeamIconCollection class="h-12 w-12" v-if="form.svg_name !== ''" :iconName=form.svg_name alt="TeamIcon" />
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -303,7 +304,7 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="name"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name des Teams*</label>
                             </div>
                         </div>
                         <div class="mt-12">

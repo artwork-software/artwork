@@ -1212,7 +1212,7 @@
                                        placeholder="placeholder"/>
                                 <label for="checklistName"
                                        class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                    der Checkliste</label>
+                                    der Checkliste*</label>
                             </div>
                             <jet-input-error :message="form.error" class="mt-2"/>
                         </div>
@@ -1462,7 +1462,7 @@
                     <div class="mt-6">
                         <div class="flex">
                             <div class="mt-1 w-full mr-4">
-                                <input type="text" v-model="taskForm.name" placeholder="Aufgabe"
+                                <input type="text" v-model="taskForm.name" placeholder="Aufgabe*"
                                        class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                             </div>
                         </div>

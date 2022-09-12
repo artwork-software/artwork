@@ -580,7 +580,7 @@
                                             <span>{{ selectedEventType.name }}</span>
                                 </span>
                                 <span
-                                    class="ml-2 inset-y-0 flex items-center pr-2 pointer-events-none">
+                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                             </div>
@@ -589,7 +589,7 @@
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions
-                                class="absolute z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                class="absolute w-72 z-10 mt-10 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class="max-h-8"
                                                v-for="eventType in event_types"
                                                :key="eventType.name"
@@ -652,7 +652,7 @@
                               :class="[!creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
                                 Bestehendes Projekt
                             </span>
-                        <Switch @click="newProjectName = ''" v-model="creatingProject"
+                        <Switch @click="switchProjectMode()" v-model="creatingProject"
                                 :class="[creatingProject ?
                                         'bg-buttonBlue' :
                                         'bg-buttonBlue',
@@ -677,64 +677,12 @@
                     </div>
 
                     <div class="my-auto w-full mt-4" v-else>
-                        <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
-                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
-                               placeholder="Zu welchem bestehendem Projekt zuordnen?*"
-                               :disabled="this.selectedProject"/>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(project, index) in project_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addProjectToEvent(project)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ project.name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                </div>
-                <div class="mt-4 flex flex-wrap"
-                     v-if="(assignProject || selectedEventType.project_mandatory) && !creatingProject">
-                    <!--
-                    <div class="my-auto w-full" v-if="this.selectedProject === null">
-                        <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
-                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
-                               placeholder="Zu welchem bestehendem Projekt zuordnen?*"
-                               :disabled="this.selectedProject"/>
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="project_search_results.length > 0 && project_query.length > 0"
-                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(project, index) in project_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addProjectToEvent(project)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ project.name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    -->
 
-                    <div>
+                        <input v-if="selectedProject === null" id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                               class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
+                               placeholder="Zu welchem bestehendem Projekt zuordnen?*"
+                               :disabled="this.selectedProject"/>
+                        <div>
 
                             <span v-if="this.selectedProject !== null"
                                   class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
@@ -748,6 +696,27 @@
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
                             </span>
+                        </div>
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="project_search_results.length > 0 && project_query.length > 0"
+                                 class="absolute z-10 inset-x-0 mx-10 max-h-60 bg-primary shadow-lg
+                                         text-base ring-1 ring-black ring-opacity-5
+                                         overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(project, index) in project_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addProjectToEvent(project)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ project.name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
                     </div>
                 </div>
 
@@ -814,7 +783,7 @@
                             <span v-if="!selectedRoom"
                                   class="block truncate text-secondary">Raum wählen*</span>
                             <span
-                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                class="inset-y-0 right-0 absolute flex items-center pr-2 pointer-events-none">
                                             <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
                                          </span>
                         </div>
@@ -822,7 +791,7 @@
                     <transition leave-active-class="transition ease-in duration-100"
                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                         <ListboxOptions
-                            class="absolute w-56 z-10 mt-1 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                            class="absolute z-10 mt-16 w-5/6 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                             <div v-for="(area,index) in areas">
                                 <p :class="index === 0 ? 'mt-1': 'mt-4'"
                                    class="text-secondary text-sm uppercase ml-3 subpixel-antialiased cursor-pointer">
@@ -863,23 +832,23 @@
                 </div>
                 <div>
                     <div v-if="selectedRoom" @mouseover="showHints()">
-                        <div
+                        <div class="flex items-center w-full justify-center"
                             v-if="(selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
                             <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
-                                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                     @click="addEvent(false)"
                                     :disabled="addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) || startTimeError">
                                 Belegen
                             </button>
                         </div>
                     </div>
-                    <div class="items-center"
+                    <div class="flex items-center w-full justify-center"
                         v-if="!selectedRoom || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) && !$page.props.is_admin"
                         @mouseover="showHints()">
                         <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
-                                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-4 px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                 @click="addEvent(true)"
@@ -889,7 +858,7 @@
                                 && newProjectName === ''
                                 && selectedProject === null)
                                 || startTimeError">
-                            Raum anfragen
+                            Belegung anfragen
                         </button>
                     </div>
                     <div class="mt-1" v-if="newEventError">
@@ -1439,6 +1408,10 @@ export default defineComponent({
         },
     },
     methods: {
+        switchProjectMode(){
+            this.newProjectName = '';
+            this.selectedProject = null;
+        },
         showHints() {
 
             console.log(this.addEventForm.start_time)

@@ -37,6 +37,7 @@ class RoomIndexResource extends JsonResource
             'temporary' => $this->temporary,
             'created_by' => $this->creator,
             'created_at' => $this->created_at?->format('d.m.Y, H:i'),
+            'everyone_can_book' => $this->everyone_can_book,
             'start_date' => Carbon::parse($this->start_date)->format('d.m.Y'),
             'start_date_dt_local' => Carbon::parse($this->start_date)->toDateString(),
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),

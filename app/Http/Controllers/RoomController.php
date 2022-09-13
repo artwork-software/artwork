@@ -42,6 +42,7 @@ class RoomController extends Controller
             'end_date' => $request->end_date,
             'area_id' => $request->area_id,
             'user_id' => $request->user_id,
+            'everyone_can_book' => $request->everyone_can_book,
             'order' => Room::max('order') + 1,
         ]);
 
@@ -109,7 +110,7 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room)
     {
-        $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date'));
+        $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
         $room->room_admins()->sync(
             collect($request->room_admins)

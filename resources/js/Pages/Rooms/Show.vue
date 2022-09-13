@@ -70,6 +70,9 @@
                         <span class="text-secondary subpixel-antialiased">
                             {{ room.area.name }}
                         </span>
+                        <p class="text-secondary subpixel-antialiased mt-4">
+                            Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label> <label v-else >Nein</label>
+                        </p>
                         <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
                             {{ room.description }}
                         </span>
@@ -365,6 +368,20 @@
                                 placeholder="Zu erledigen bis?" type="date"
                                 class="border-gray-300 col-span-1 placeholder-secondary w-full"/>
                         </div>
+
+                        <div class="flex items-center my-6">
+                            <input v-model="editRoomForm.everyone_can_book"
+                                   type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
+                               class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                            </div>
+                        </div>
+
                         <div class="grid grid-cols-2">
                             <button :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
@@ -757,6 +774,7 @@ export default {
                 end_date_dt_local: null,
                 area_id: null,
                 user_id: null,
+                everyone_can_book: this.room.everyone_can_book
             }),
             documentForm: useForm({
                 file: null

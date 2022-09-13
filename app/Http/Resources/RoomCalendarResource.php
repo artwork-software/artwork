@@ -49,6 +49,7 @@ class RoomCalendarResource extends JsonResource
             'end_date_dt_local' => $this->end_date?->toDateString(),
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
+            'everyone_can_book' => $this->everyone_can_book,
             'events' => EventCalendarDayResource::collection($events)->resolve(),
             'room_admins' => UserWithoutApartmentIndexResource::collection($this->room_admins)->resolve(),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),

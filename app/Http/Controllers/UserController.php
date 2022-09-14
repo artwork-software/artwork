@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserIndexResource;
@@ -144,6 +145,8 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $user->delete();
+
+        broadcast(new UserUpdated())->toOthers();
 
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }

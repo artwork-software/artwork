@@ -110,6 +110,7 @@ import DailyCalendar from "@/Layouts/Components/DailyCalendar";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import {Inertia} from "@inertiajs/inertia";
 
 
 const container = ref(null)
@@ -142,6 +143,12 @@ export default defineComponent({
         TeamIconCollection,
         Link,
         TeamTooltip
+    },
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                Inertia.reload({only: ['rooms']})
+            });
     },
     computed: {
         sortedTasksDeadline: function () {

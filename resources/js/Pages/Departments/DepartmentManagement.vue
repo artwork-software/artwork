@@ -574,6 +574,12 @@ export default defineComponent({
         Link
     },
     props: ['departments', 'users'],
+    created() {
+        Echo.private('departments')
+            .listen('DepartmentUpdated', () => {
+                Inertia.reload({only: ['departments']})
+            });
+    },
     methods: {
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;

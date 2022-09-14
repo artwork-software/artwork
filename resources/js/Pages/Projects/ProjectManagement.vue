@@ -887,6 +887,12 @@ export default defineComponent({
             }
         }
     },
+    created() {
+        Echo.private('projects')
+            .listen('ProjectUpdated', () => {
+                Inertia.reload({only: ['projects']})
+            });
+    },
     methods: {
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;

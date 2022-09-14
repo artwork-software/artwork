@@ -1800,6 +1800,12 @@ export default {
         MonthlyCalendar,
         DailyCalendar
     },
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                Inertia.reload({only: ['project']})
+            });
+    },
     computed: {
         tabs() {
             return [

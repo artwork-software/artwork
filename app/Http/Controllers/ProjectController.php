@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\CalendarTimeEnum;
+use App\Events\ProjectUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -156,6 +157,8 @@ class ProjectController extends Controller
             'user_id' => Auth::id(),
             'description' => 'Projekt angelegt'
         ]);
+
+        broadcast(new ProjectUpdated())->toOthers();
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
@@ -407,6 +410,8 @@ class ProjectController extends Controller
             $project->departments()->sync(collect($request->assigned_departments));
         }
 
+        broadcast(new ProjectUpdated())->toOthers();
+
         return Redirect::back();
     }
 
@@ -467,6 +472,8 @@ class ProjectController extends Controller
             'description' => 'Projekt wurde dupliziert'
         ]);
 
+        broadcast(new ProjectUpdated())->toOthers();
+
         return Redirect::route('projects.show', $newProject->id)->with('success', 'Project created.');
     }
 
@@ -489,6 +496,8 @@ class ProjectController extends Controller
         $project->checklists()->delete();
 
         $project->delete();
+
+        broadcast(new ProjectUpdated())->toOthers();
 
         return Redirect::route('projects')->with('success', 'Project moved to trash');
     }

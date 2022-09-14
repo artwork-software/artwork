@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\DepartmentUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Http\Resources\DepartmentIndexResource;
@@ -80,6 +81,8 @@ class DepartmentController extends Controller
                 })
         );
 
+        broadcast(new DepartmentUpdated())->toOthers();
+
         return Redirect::route('departments')->with('success', 'Department created.');
     }
 
@@ -130,6 +133,8 @@ class DepartmentController extends Controller
                 })
         );
 
+        broadcast(new DepartmentUpdated())->toOthers();
+
         return Redirect::route('departments.show', $department->id)->with('success', 'Department updated');
     }
 
@@ -142,6 +147,8 @@ class DepartmentController extends Controller
     public function destroy(Department $department)
     {
         $department->delete();
+
+        broadcast(new DepartmentUpdated())->toOthers();
 
         return Redirect::route('departments')->with('success', 'Department deleted');
     }

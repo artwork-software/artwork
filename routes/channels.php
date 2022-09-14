@@ -17,3 +17,15 @@ use Illuminate\Support\Facades\Broadcast;
 Broadcast::channel('events', function () {
     return Auth::check();
 });
+
+Broadcast::channel('users', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('projects', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('departments', function () {
+    return Auth::check();
+});

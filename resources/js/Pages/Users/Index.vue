@@ -581,6 +581,12 @@ export default defineComponent({
         Link,
     },
     props: ['users', 'departments', 'all_permissions'],
+    created() {
+        Echo.private('users')
+            .listen('UserUpdated', () => {
+                Inertia.reload({only: ['users']})
+            });
+    },
     data() {
         return {
             showUserPermissions: true,

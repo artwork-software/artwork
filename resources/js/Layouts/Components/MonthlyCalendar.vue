@@ -618,7 +618,8 @@
                                type="text"
                                v-model="addEventForm.name" placeholder="Terminname*"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
-                        <input v-else type="text" v-model="addEventForm.name" :placeholder="[selectedEventType.individual_name ? 'Terminname*' : 'Terminname']"
+                        <input v-else type="text" v-model="addEventForm.name"
+                               :placeholder="[selectedEventType.individual_name ? 'Terminname*' : 'Terminname']"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"/>
                     </div>
 
@@ -678,7 +679,8 @@
 
                     <div class="my-auto w-full mt-4" v-else>
 
-                        <input v-if="selectedProject === null" id="projectSearch" v-model="project_query" type="text" autocomplete="off"
+                        <input v-if="selectedProject === null" id="projectSearch" v-model="project_query" type="text"
+                               autocomplete="off"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full text-sm"
                                placeholder="Zu welchem bestehendem Projekt zuordnen?*"
                                :disabled="this.selectedProject"/>
@@ -719,7 +721,6 @@
                         </transition>
                     </div>
                 </div>
-
                 <div class="flex mt-4 items-center">
                     <div v-if="conflictData">
                         <div v-if="conflictData.length > 0" class="bg-error absolute left-0 flex p-1 -mt-2 mr-0.5">
@@ -728,23 +729,34 @@
                                  aria-hidden="true"/>
                         </div>
                     </div>
-                    <div class="text-secondary mr-2">
-                        <label for="startTime" class="text-xs subpixel-antialiased">Startdatum*</label>
+                    <div class="text-secondary mr-2 w-1/2">
+                        <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
+                        <div class="w-full">
+                        <input @blur="validateStartTime(addEventForm)"
+                               v-model="addEventForm.startDate" id="eventStartDate" @change="updateTimes(addEventForm)"
+                               placeholder="Startdatum*" type="date"
+                               class="border-gray-300 text-primary placeholder-secondary"/>
                         <input
-                            @blur="validateStartTime(addEventForm)"
-                            v-model="addEventForm.start_time" id="startTime"
-                            placeholder="Startdatum*" type="datetime-local"
-                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
+                            v-model="addEventForm.startTime" id="changeStartTime" @change="updateTimes(addEventForm)"
+                            placeholder="StartZeit*" type="time"
+                            class="border-gray-300 text-primary placeholder-secondary"/>
+                        </div>
                     </div>
-                    <div class="text-secondary ml-2">
-                        <label for="endTime" class="text-xs subpixel-antialiased">Enddatum*</label>
-                        <input
-                            @blur="validateEndTime(addEventForm)"
-                            v-model="addEventForm.end_time" id="endTime"
-                            placeholder="Zu erledigen bis?" type="datetime-local"
-                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
+                    <div class="text-secondary ml-10 w-1/2">
+                        <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
+                        <div class="w-full">
+                            <input @blur="validateEndTime(addEventForm)"
+                                   v-model="addEventForm.endDate" id="eventEndDate" @change="updateTimes(addEventForm)"
+                                   placeholder="Startdatum*" type="date"
+                                   class="border-gray-300 text-primary placeholder-secondary"/>
+                            <input
+                                v-model="addEventForm.endTime" id="changeEndTime" @change="updateTimes(addEventForm)"
+                                placeholder="StartZeit*" type="time"
+                                class="border-gray-300 text-primary placeholder-secondary"/>
+                        </div>
                     </div>
                 </div>
+
 
                 <div class="mt-1" v-if="conflictData !== null">
                     <div v-if="this.conflictData.length === 1 && this.conflictData[0].event_type"
@@ -812,7 +824,7 @@
                                                                    aria-hidden="true"/>
 
                                                         <img src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                                             v-if="(room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0) && (addEventForm.start_time !== null || addEventForm.end_time !== null)"
+                                                             v-if="(room.conflicts_start_time.length > 0 || room.conflicts_end_time.length > 0) && (addEventForm.startDate !== null || addEventForm.endDate !== null)"
                                                              class="h-4 w-4 ml-1 flex text-error"
                                                              aria-hidden="true"/>
 
@@ -833,27 +845,27 @@
                 <div>
                     <div v-if="selectedRoom" @mouseover="showHints()">
                         <div class="flex items-center w-full justify-center"
-                            v-if="(selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
-                            <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
+                             v-if="(selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                            <button :class="[startTimeError || this.addEventForm.startDate === null || this.addEventForm.endDate === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                     @click="addEvent(false)"
-                                    :disabled="addEventForm.start_time === null || addEventForm.end_time === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) || startTimeError">
+                                    :disabled="addEventForm.startDate === null || addEventForm.endDate === null || (selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name) && newProjectName === '' && selectedProject === null) || startTimeError">
                                 Belegen
                             </button>
                         </div>
                     </div>
                     <div class="flex items-center w-full justify-center"
-                        v-if="!selectedRoom || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) && !$page.props.is_admin"
-                        @mouseover="showHints()">
-                        <button :class="[startTimeError || this.addEventForm.start_time === null || this.addEventForm.end_time === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
+                         v-if="!selectedRoom || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) && !$page.props.is_admin"
+                         @mouseover="showHints()">
+                        <button :class="[startTimeError || this.addEventForm.startDate === null || this.addEventForm.endDate === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && newProjectName === '') || (addEventForm.name === '' && newProjectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-4 px-12 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                                 @click="addEvent(true)"
-                                :disabled="addEventForm.start_time === null
-                                || addEventForm.end_time === null || (selectedEventType.project_mandatory
+                                :disabled="addEventForm.startDate === null
+                                || addEventForm.endDate === null || (selectedEventType.project_mandatory
                                 && selectedProject === null && newProjectName === '') || ((addEventForm.name === '' && selectedEventType.individual_name)
                                 && newProjectName === ''
                                 && selectedProject === null)
@@ -1089,7 +1101,8 @@
                     <div>
                         <div class="mt-4 w-full"
                              v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id">
-                            <input type="text" v-model="event.name" :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
+                            <input type="text" v-model="event.name"
+                                   :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         </div>
                         <div v-else>
@@ -1131,7 +1144,7 @@
                         {{ event.end_time.split('-')[2].split(' ')[1] }}
                     </div>
                     <div
-                         v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
+                        v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || event.created_by.id === this.$page.props.user.id">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="event.description" rows="4"
@@ -1148,7 +1161,7 @@
                             Speichern
                         </button>
                         <div class="items-center"
-                            v-if="rooms.find(room => room.id === event.room_id) ? ((!rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
+                             v-if="rooms.find(room => room.id === event.room_id) ? ((!rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
                             <button :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                     class="mt-4 px-12 py-3 border border-transparent
@@ -1408,14 +1421,11 @@ export default defineComponent({
         },
     },
     methods: {
-        switchProjectMode(){
+        switchProjectMode() {
             this.newProjectName = '';
             this.selectedProject = null;
         },
         showHints() {
-
-            console.log(this.addEventForm.start_time)
-
             if (this.selectedRoom === undefined || this.selectedRoom === null) {
                 this.newEventError = 'Wähle zuerst einen Raum aus.';
             } else if (this.addEventForm.start_time === undefined) {
@@ -1582,10 +1592,14 @@ export default defineComponent({
             if (this.showAddHoverDate !== null) {
                 const startDate = new Date(this.showAddHoverDate);
                 startDate.setMinutes(startDate.getMinutes() + 120);
+                this.addEventForm.startDate = startDate.toISOString().slice(0, 10);
+                this.addEventForm.startTime = startDate.toISOString().slice(11, 16);
                 this.addEventForm.start_time = startDate.toISOString().slice(0, 16);
 
                 const endDate = new Date(this.showAddHoverDate);
                 endDate.setMinutes(endDate.getMinutes() + 1559);
+                this.addEventForm.endDate = endDate.toISOString().slice(0, 10);
+                this.addEventForm.endTime = endDate.toISOString().slice(11, 16);
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
             if (this.calendarType === 'project') {
@@ -1670,6 +1684,10 @@ export default defineComponent({
             this.addEventForm.eventType = null;
             this.addEventForm.name = '';
             this.addEventForm.start_time = null;
+            this.addEventForm.startDate = null;
+            this.addEventForm.startTime = null;
+            this.addEventForm.endDate = null;
+            this.addEventForm.endTime = null;
             this.addEventForm.end_time = null;
             this.addEventForm.description = '';
             this.addEventForm.occupancy_option = false;
@@ -1695,6 +1713,8 @@ export default defineComponent({
                 }
             }
 
+
+            this.updateTimes(this.addEventForm);
             this.addEventForm.post(route('events.store'), {preserveScroll: true});
 
             this.closeAddEventModal();
@@ -1829,7 +1849,61 @@ export default defineComponent({
             this.updateEventForm.project_id = event.project_id;
             this.updateEventForm.patch(route('events.update', {event: event.id}));
             this.closeDayDetailModal();
-        }
+        },
+        updateTimes(form){
+            if(form.startDate){
+                if(!form.endDate){
+                    form.endDate = form.startDate;
+                }
+                if(form.startTime) {
+                    if (!form.endTime) {
+                        if(form.startTime === '23:00'){
+                            form.endTime = '23:59';
+                        }else{
+                        let startHours = form.startTime.slice(0,2);
+                        if(startHours === '23'){
+                            form.endTime = '00:' + form.startTime.slice(3,5);
+                            let date = new Date();
+                            form.endDate = new Date(date.setDate(new Date(form.endDate).getDate() + 1)).toISOString().slice(0, 10);
+                            this.setCombinedTimeString(form.endDate, form.endTime, 'end', form);
+                        }else{
+                            form.endTime = this.getNextHourString(form.startTime)
+                        }
+                        }
+                    }
+                    this.setCombinedTimeString(form.startDate,form.startTime,'start', form);
+                }else{
+                    this.setCombinedTimeString(form.startDate,'00:00','start', form);
+                }
+            }
+            if(form.endDate){
+                if(form.endTime){
+                    this.setCombinedTimeString(form.endDate, form.endTime, 'end', form);
+                }else{
+                    this.setCombinedTimeString(form.endDate, '23:59', 'end', form);
+                }
+
+            }
+        },
+        setCombinedTimeString(date, time, target, form){
+            let combinedDateString = (date.toString() + ' ' + time);
+            if(target === 'start'){
+                form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+            }else if(target === 'end'){
+                form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+            }
+
+        },
+        getNextHourString(timeString){
+            let hours = timeString.slice(0,2);
+            let minutes = timeString.slice(3,5);
+            if((Number(hours) + 1) < 10){
+                return '0' + (Number(hours) + 1) + ':' + minutes;
+            }else{
+                return (Number(hours) + 1) + ':' + minutes;
+            }
+
+        },
     },
     watch: {
         selectedRoom() {
@@ -1883,7 +1957,11 @@ export default defineComponent({
             project_search_results: [],
             addEventForm: useForm({
                 name: '',
+                startDate: null,
+                startTime: null,
                 start_time: this.start_time_of_new_event,
+                endDate: null,
+                endTime: null,
                 end_time: this.end_time_of_new_event,
                 description: '',
                 occupancy_option: false,

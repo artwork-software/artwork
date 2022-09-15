@@ -14,7 +14,6 @@
                     </p>
                     <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
                 </div>
-
                 <!-- Calendar Div -->
                 <div class="relative">
                     <Link :href="route('events.daily_management', {wanted_day:new Date()})"
@@ -176,7 +175,7 @@ export default defineComponent({
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
-        }
+        },
     },
     data() {
         return {

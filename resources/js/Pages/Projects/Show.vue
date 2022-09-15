@@ -1468,13 +1468,20 @@
                         </div>
                         <div class="mt-4 mr-4">
                             <div class="mb-1">
-                                <label for="datePicker" class="text-secondary subpixel-antialiased">Zu erledigen
+                                <label for="deadlineDate" class="text-secondary subpixel-antialiased">Zu erledigen
                                     bis?</label>
                             </div>
-                            <input
-                                v-model="taskForm.deadline" id="datePicker"
-                                placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 w-full"/>
+                            <div class="text-secondary mr-2 w-1/2">
+                                <div class="w-full">
+                                    <input v-model="taskForm.deadlineDate" id="deadlineDate" @change="updateTimes(taskForm)"
+                                           type="date"
+                                           class="border-gray-300 text-primary placeholder-secondary"/>
+                                    <input
+                                        v-model="taskForm.deadlineTime" id="deadlineTime" @change="updateTimes(taskForm)"
+                                        type="time"
+                                        class="border-gray-300 text-primary placeholder-secondary"/>
+                                </div>
+                            </div>
                         </div>
                         <div class="mt-4 mr-4">
                                             <textarea
@@ -1518,13 +1525,18 @@
                         </div>
                         <div class="mt-4 mr-4">
                             <div class="mb-1">
-                                <label for="datePickerEdit" class="text-secondary subpixel-antialiased">Zu erledigen
+                                <label for="deadlineEditDate" class="text-secondary subpixel-antialiased">Zu erledigen
                                     bis?</label>
                             </div>
-                            <input
-                                v-model="taskToEditForm.deadline" id="datePickerEdit"
-                                placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full"/>
+                            <div class="w-full">
+                                <input v-model="taskToEditForm.deadlineDate" id="deadlineEditDate" @change="updateTimes(taskToEditForm)"
+                                       type="date"
+                                       class="border-gray-300 text-primary placeholder-secondary"/>
+                                <input
+                                    v-model="taskToEditForm.deadlineTime" id="deadlineEditTime" @change="updateTimes(taskToEditForm)"
+                                    type="time"
+                                    class="border-gray-300 text-primary placeholder-secondary"/>
+                            </div>
                         </div>
                         <div class="mt-4 mr-4">
                                             <textarea
@@ -1934,6 +1946,8 @@ export default {
                 name: "",
                 description: "",
                 deadline: null,
+                deadlineDate: null,
+                deadlineTime:null,
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
@@ -1941,6 +1955,8 @@ export default {
                 name: "",
                 description: "",
                 deadline: null,
+                deadlineDate: null,
+                deadlineTime:null,
             }),
             commentForm: useForm({
                 text: "",
@@ -1968,6 +1984,19 @@ export default {
         }
     },
     methods: {
+        updateTimes(form){
+            if(form.deadlineDate){
+                if(form.deadlineTime) {
+                    this.setCombinedTimeString(form.deadlineDate,form.deadlineTime,form);
+                }else{
+                    this.setCombinedTimeString(form.deadlineDate,'00:00',form);
+                }
+            }
+        },
+        setCombinedTimeString(date, time, form){
+            let combinedDateString = (date.toString() + ' ' + time);
+            form.deadline = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+        },
         changeChecklistStatus(checklist) {
 
             if (!this.opened_checklists.includes(checklist.id)) {
@@ -2239,6 +2268,8 @@ export default {
             this.taskForm.name = "";
             this.taskForm.description = "";
             this.taskForm.deadline = null;
+            this.taskForm.deadlineDate = null;
+            this.taskForm.deadlineTime = null;
             this.addingTask = false;
         },
         addTask() {
@@ -2253,6 +2284,10 @@ export default {
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;
+            let dateCopy = new Date(task.deadline_dt_local);
+            dateCopy.setMinutes(dateCopy.getMinutes() + 120);
+            this.taskToEditForm.deadlineDate = dateCopy.toISOString().slice(0, 10);
+            this.taskToEditForm.deadlineTime = dateCopy.toISOString().slice(11, 16);
             this.taskToEditForm.description = task.description;
             this.editingTask = true;
         },
@@ -2261,6 +2296,8 @@ export default {
             this.taskToEditForm.id = null;
             this.taskToEditForm.name = "";
             this.taskToEditForm.deadline = null;
+            this.taskToEditForm.deadlineDate = null;
+            this.taskToEditForm.deadlineTime = null;
             this.taskToEditForm.description = "";
 
         },

@@ -729,7 +729,7 @@
                                  aria-hidden="true"/>
                         </div>
                     </div>
-                    <div class="text-secondary mr-2 w-1/2">
+                    <div class="text-secondary w-1/2">
                         <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
                         <div class="w-full">
                         <input @blur="validateStartTime(addEventForm)"
@@ -1114,19 +1114,29 @@
                     <div
                         v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id"
                         class="flex mt-4">
-                        <div class="text-secondary mr-2">
-                            <label for="startDate" class="text-xs subpixel-antialiased">Startdatum*</label>
-                            <input
-                                v-model="event.start_time_dt_local" id="startDate"
-                                placeholder="Startdatum*" type="datetime-local"
-                                class="border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
+                        <div class="text-secondary w-1/2">
+                            <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
+                            <div class="w-full">
+                                <input v-model="event.startDate" id="changeEventStartDate"
+                                       placeholder="Startdatum*" type="date"
+                                       class="border-gray-300 text-primary placeholder-secondary"/>
+                                <input
+                                    v-model="event.startTime" id="eventStartTime"
+                                    placeholder="StartZeit*" type="time"
+                                    class="border-gray-300 text-primary placeholder-secondary"/>
+                            </div>
                         </div>
-                        <div class="text-secondary ml-2">
-                            <label for="endDate" class="text-xs subpixel-antialiased">Enddatum*</label>
-                            <input
-                                v-model="event.end_time_dt_local" id="endDate"
-                                placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="border-gray-300 text-primary placeholder-secondary w-full"/>
+                        <div class="text-secondary ml-10 w-1/2">
+                            <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
+                            <div class="w-full">
+                                <input v-model="event.endDate" id="changeEventEndDate"
+                                       placeholder="Startdatum*" type="date"
+                                       class="border-gray-300 text-primary placeholder-secondary"/>
+                                <input
+                                    v-model="event.endTime" id="eventEndTime"
+                                    placeholder="StartZeit*" type="time"
+                                    class="border-gray-300 text-primary placeholder-secondary"/>
+                            </div>
                         </div>
                     </div>
                     <div v-else class="mt-4 subpixel-antialiased">
@@ -1150,12 +1160,13 @@
                                       v-model="event.description" rows="4"
                                       class="resize-none font-black shadow-sm placeholder-secondary p-4 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm border"/>
                         </div>
+                        <div class="flex items-center w-full justify-center">
                         <button
                             v-if="!rooms.find(room => room.id === event.room_id) || rooms.find(room => room.id === event.room_id) && (rooms.find(room => room.id === event.room_id).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin)"
                             :class="[event.start_time === null || event.end_time === null || event.selectedRoom === null ?
-                                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase tracking-wider shadow-sm text-secondaryHover"
+                                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
+                            class="mt-4 px-12 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
                             @click="updateEvent(event,false)"
                             :disabled="event.start_time === null && event.end_time === null">
                             Speichern
@@ -1170,6 +1181,7 @@
                                     :disabled="event.start_time === null || event.end_time === null || event.selectedRoom === null">
                                 Raum anfragen
                             </button>
+                        </div>
                         </div>
                     </div>
                     <div v-else class="subpixel-antialiased mt-4">
@@ -1747,8 +1759,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.updateEventForm.start_time = event.start_time_dt_local;
-            this.updateEventForm.end_time = event.end_time_dt_local;
+            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
+            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
             this.updateEventForm.occupancy_option = isOption;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1821,8 +1833,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.updateEventForm.start_time = event.start_time_dt_local;
-            this.updateEventForm.end_time = event.end_time_dt_local;
+            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
+            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
             this.updateEventForm.occupancy_option = false;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1838,8 +1850,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.updateEventForm.start_time = event.start_time_dt_local;
-            this.updateEventForm.end_time = event.end_time_dt_local;
+            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
+            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
             this.updateEventForm.occupancy_option = event.false;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1892,7 +1904,6 @@ export default defineComponent({
             }else if(target === 'end'){
                 form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
             }
-
         },
         getNextHourString(timeString){
             let hours = timeString.slice(0,2);

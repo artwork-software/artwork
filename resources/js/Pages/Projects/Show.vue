@@ -2277,6 +2277,7 @@ export default {
             this.closeAddTaskModal();
         },
         editTask() {
+            this.setCombinedTimeString(this.taskToEditForm.deadlineDate,this.taskToEditForm.deadlineTime, this.taskToEditForm);
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
             this.closeEditTaskModal();
         },
@@ -2284,10 +2285,8 @@ export default {
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;
-            let dateCopy = new Date(task.deadline_dt_local);
-            dateCopy.setMinutes(dateCopy.getMinutes() + 120);
-            this.taskToEditForm.deadlineDate = dateCopy.toISOString().slice(0, 10);
-            this.taskToEditForm.deadlineTime = dateCopy.toISOString().slice(11, 16);
+            this.taskToEditForm.deadlineDate = task.deadlineDate;
+            this.taskToEditForm.deadlineTime = task.deadlineTime;
             this.taskToEditForm.description = task.description;
             this.editingTask = true;
         },

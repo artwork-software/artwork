@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -26,7 +27,11 @@ class EventForProjectResource extends JsonResource
             'description' => $this->description,
             'start_time' => $this->start_time,
             'start_time_dt_local' => $this->start_time->toDateTimeLocalString(),
+            'startDate' => Carbon::parse($this->start_time)->format('Y-m-d'),
+            'startTime' => Carbon::parse($this->start_time)->format('H:i'),
             'end_time' => $this->end_time,
+            'endDate' => Carbon::parse($this->end_time)->format('Y-m-d'),
+            'endTime' => Carbon::parse($this->end_time)->format('H:i'),
             'end_time_dt_local' => $this->end_time->toDateTimeLocalString(),
             'occupancy_option' => $this->occupancy_option,
             'audience' => $this->audience,

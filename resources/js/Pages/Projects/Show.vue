@@ -1549,7 +1549,7 @@
                             class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                             @click="editTask"
                             :disabled="taskToEditForm.name === ''">
-                            Hinzufügen
+                            Aktualisieren
                         </button>
                     </div>
 
@@ -1995,7 +1995,13 @@ export default {
         },
         setCombinedTimeString(date, time, form){
             let combinedDateString = (date.toString() + ' ' + time);
-            form.deadline = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+            const offset = new Date(combinedDateString).getTimezoneOffset()
+            if(offset === -60) {
+                form.deadline = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+            }
+            else {
+                form.deadline = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+            }
         },
         changeChecklistStatus(checklist) {
 
@@ -2277,7 +2283,10 @@ export default {
             this.closeAddTaskModal();
         },
         editTask() {
+            console.log("Before Date: " + this.taskToEditForm.deadlineDate)
+            console.log("Before Time: " + this.taskToEditForm.deadlineTime)
             this.setCombinedTimeString(this.taskToEditForm.deadlineDate,this.taskToEditForm.deadlineTime, this.taskToEditForm);
+            console.log("After Combination: " + this.taskToEditForm.deadline);
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
             this.closeEditTaskModal();
         },

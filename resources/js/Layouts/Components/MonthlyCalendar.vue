@@ -1899,10 +1899,22 @@ export default defineComponent({
         },
         setCombinedTimeString(date, time, target, form){
             let combinedDateString = (date.toString() + ' ' + time);
+            const offset = new Date(combinedDateString).getTimezoneOffset()
+
             if(target === 'start'){
-                form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                if(offset === -60) {
+                    form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                }
+                else {
+                    form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                }
             }else if(target === 'end'){
-                form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                if(offset === -60) {
+                    form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                }
+                else {
+                    form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                }
             }
         },
         getNextHourString(timeString){

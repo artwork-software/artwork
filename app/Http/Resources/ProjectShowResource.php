@@ -2,8 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\CalendarTimeEnum;
-use App\Models\Room;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,10 +20,7 @@ class ProjectShowResource extends JsonResource
      */
     public function toArray($request)
     {
-        $projectHistory = $this->project_histories()
-            ->with('user')
-            ->orderByDesc('created_at')
-            ->get();
+        $projectHistory = $this->project_histories->sortByDesc('created_at');
 
         return [
             'id' => $this->id,
@@ -40,23 +35,16 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
 
-            'rooms' => $request->query('calendarType') === CalendarTimeEnum::MONTHLY
-                ? RoomIndexEventMonthlyResource::collection($this->rooms)->resolve()
-                : RoomIndexEventDayResource::collection($this->rooms)->resolve(),
-
-            'events' => EventForProjectResource::collection($this->events)->resolve(),
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'project_history' => ProjectHistoryResource::collection($projectHistory)->resolve(),
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
             'project_files' => $this->project_files,
 
-
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
 
             'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))->resolve(),
-
-            'private_checklists' => ChecklistIndexResource::collection($this->checklists()->where('user_id', Auth::id())->get())->resolve(),
+            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))->resolve(),
 
             'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,

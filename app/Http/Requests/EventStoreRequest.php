@@ -3,9 +3,9 @@
 namespace App\Http\Requests;
 
 use Carbon\Carbon;
-use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
 
-class EventUpdateRequest extends EventStoreOrUpdateRequest
+class EventStoreRequest extends EventStoreOrUpdateRequest
 {
     public function data()
     {
@@ -19,6 +19,7 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'is_loud' => $this->get('isLoud'),
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
+            'user_id' => Auth::id(),
         ];
     }
 }

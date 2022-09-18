@@ -14,17 +14,17 @@ use Illuminate\Support\Collection;
 /**
  *
  * @property int $id
- * @property string $name
- * @property string $description
- * @property Carbon $start_time
- * @property Carbon $end_time
- * @property bool $occupancy_option
- * @property bool $audience
- * @property bool $is_loud
- * @property int $event_type_id
- * @property int $room_id
+ * @property ?string $name
+ * @property ?string $description
+ * @property ?Carbon $start_time
+ * @property ?Carbon $end_time
+ * @property ?bool $occupancy_option
+ * @property ?bool $audience
+ * @property ?bool $is_loud
+ * @property ?int $event_type_id
+ * @property ?int $room_id
  * @property int $user_id
- * @property int $project_id
+ * @property ?int $project_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
@@ -91,7 +91,7 @@ class Event extends Model
 
     /**
      * @param  \Illuminate\Database\Query\Builder  $query
-     * @return EventBuilder<\App\Models\Post>
+     * @return \App\Builders\EventBuilder
      */
     public function newEloquentBuilder($query): EventBuilder
     {

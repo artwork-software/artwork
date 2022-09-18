@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl my-12 ml-20 mr-10 flex flex-row">
+        <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
@@ -243,22 +243,8 @@
             </div>
             <div class="max-w-screen-2xl">
                 <!-- Calendar Tab -->
-                <div v-if="isScheduleTab && project.rooms">
-                    <vue-cal
-                        style="height: 500px"
-                        today-button
-                        events-on-month-view="short"
-                        locale="de"
-                        :disable-views="['years', 'year']"
-                        :events="events"
-                        :editable-events="{ title: false, drag: true, resize: true, delete: false, create: true }"
-                        :snap-to-time="15"
-
-                        @event-drop="updateEvent($event)"
-
-                        @ready="fetchEvents"
-                        @view-change="fetchEvents"
-                    />
+                <div v-if="isScheduleTab" class="p-5">
+                    <CalendarComponent :projectId="project.id"/>
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
@@ -1371,78 +1357,15 @@
             </template>
 
         </jet-dialog-modal>
+
         <!-- Change Checklist Teams Modal -->
-        <jet-dialog-modal :show="editingChecklistTeams" @close="closeEditChecklistTeamsModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
-                        Teams zuweisen
-                    </div>
-                    <XIcon @click="closeEditChecklistTeamsModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
-                    </div>
-                    <div class="mt-10 relative">
-                        <div class="my-auto w-full">
-                            <input id="userSearch" v-model="department_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="userSearch"
-                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                        </div>
+        <ChecklistTeamComponent
+            :checklistId="checklistToEdit?.id"
+            :departments="checklistToEdit?.departments"
+            :editingChecklistTeams="editingChecklistTeams"
+            @closed="closeEditChecklistTeamsModal"
+        />
 
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="department_search_results.length > 0 && department_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(department, index) in department_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addDepartmentToChecklistTeamArray(department)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ department.name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(team,index) in checklist_assigned_departments"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <TeamIconCollection :iconName="team.svg_name"
-                                                    class="rounded-full h-11 w-11 object-cover"/>
-                                <span class="flex ml-4">
-                                {{ team.name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteTeamFromChecklist(team)">
-                                <span class="sr-only">Team aus Checkliste entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                            </button>
-                        </span>
-                    </div>
-                    <button @click="saveChecklistTeams"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
-                    >Zuweisen
-                    </button>
-
-                </div>
-
-            </template>
-
-        </jet-dialog-modal>
         <!-- Add Task Modal-->
         <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
             <template #content>
@@ -1742,11 +1665,9 @@ import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
-import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
-import DailyCalendar from "@/Layouts/Components/DailyCalendar";
 import AddButton from "@/Layouts/Components/AddButton";
-import VueCal from 'vue-cal'
-import 'vue-cal/dist/vuecal.css'
+import CalendarComponent from "@/Layouts/Components/CalendarComponent";
+import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1759,7 +1680,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['first_start', 'last_end', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'calendarType', 'event_types', 'days_this_month', 'areas', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'isMemberOfADepartment', 'requested_start_time', 'requested_end_time'],
+    props: ['opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
     components: {
         AddButton,
         TeamTooltip,
@@ -1798,9 +1719,8 @@ export default {
         EyeIcon,
         ExclamationIcon,
         Link,
-        MonthlyCalendar,
-        DailyCalendar,
-        VueCal,
+        CalendarComponent,
+        ChecklistTeamComponent,
     },
     computed: {
         tabs() {
@@ -1875,7 +1795,6 @@ export default {
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             editingTeam: false,
             editingChecklistTeams: false,
-            department_query: "",
             department_and_user_query: "",
             department_search_results: [],
             department_and_user_search_results: [],
@@ -1961,7 +1880,6 @@ export default {
                 done: false,
                 user_id: this.$page.props.user.id
             }),
-            events: [],
         }
     },
     methods: {
@@ -2047,9 +1965,6 @@ export default {
                     this.documentForm.file = null
                 }
             })
-        },
-        setName(newName) {
-            this.checklistForm.name = newName;
         },
         openEditProjectTeamModal() {
             this.editingTeam = true;
@@ -2153,39 +2068,6 @@ export default {
         deleteDepartmentFromProjectTeam(department) {
             this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
         },
-        addDepartmentToChecklistTeamArray(department) {
-            let assignedIDs = [];
-            this.checklist_assigned_departments.forEach((assignedDepartment) => {
-                if (!assignedIDs.includes(assignedDepartment.id)) {
-                    assignedIDs.push(assignedDepartment.id);
-                }
-            })
-            if (!assignedIDs.includes(department.id)) {
-                this.checklist_assigned_departments.push(department);
-                this.department_query = ""
-            } else {
-                this.department_query = "";
-            }
-        },
-        saveChecklistTeams() {
-            let assignedIDs = [];
-            this.assignedDepartments.forEach((assignedDepartment) => {
-                assignedIDs.push(assignedDepartment.id);
-            })
-            this.checklist_assigned_departments.forEach((department) => {
-                this.checklistForm.assigned_department_ids.push(department.id);
-
-                if (!assignedIDs.includes(department.id)) {
-                    this.assignedDepartments.push(department);
-                }
-            })
-            this.checklistForm.name = this.checklistToEdit.name;
-
-            this.checklistForm.patch((route('checklists.update', {checklist: this.checklistToEdit.id})));
-            this.editProject();
-            this.closeEditChecklistTeamsModal();
-            this.closeAddChecklistModal();
-        },
         addUserToProjectTeamArray(userToAdd) {
             for (let assignedUser of this.assignedUsers) {
                 if (userToAdd.id === assignedUser.id) {
@@ -2223,9 +2105,6 @@ export default {
             })
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectTeamModal();
-        },
-        deleteTeamFromChecklist(team) {
-            this.checklist_assigned_departments.splice(this.checklist_assigned_departments.indexOf(team), 1)
         },
         openAddTaskModal(checklist) {
             this.taskForm.checklist_id = checklist.id;
@@ -2383,50 +2262,8 @@ export default {
                 preserveScroll: true,
             });
         },
-
-        async fetchEvents({view, startDate, endDate}) {
-            await axios.get(`/projects/${this.project.id}/events`, {
-                params: {
-                    start: startDate,
-                    end: endDate,
-                }
-            }).then(response => {
-                console.log(response.data.data)
-                this.events = response.data.data
-            });
-        },
-
-        async updateEvent(event) {
-                console.log(event)
-            const data = {
-            };
-                console.log(data)
-
-            await axios.put(`/events/${event.originalEvent?.id}`, {
-                roomId: event.event.roomId,
-                start: event.event.start,
-                end: event.event.end,
-                title: event.event.title,
-                description: event.event.description,
-            }).then(response => {
-                console.log(response)
-                // success message
-            });
-        },
     },
     watch: {
-        department_query: {
-            handler() {
-                if (this.department_query.length > 0) {
-                    axios.get('/departments/search', {
-                        params: {query: this.department_query}
-                    }).then(response => {
-                        this.department_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        },
         department_and_user_query: {
             handler() {
                 if (this.department_and_user_query.length > 0) {
@@ -2449,15 +2286,5 @@ export default {
 
 </script>
 
-<style>
-.vuecal__event {
-    font-size: 1em;
-    margin-top: 3px;
-    border: solid rgba(196, 42, 15, 0.9);
-    border-width: 0px 0px 0px 3px;
-}
-.vuecal__event.leisure {
-    border: solid rgba(15, 164, 196, 0.9);
-    border-width: 0px 0px 0px 3px;
-}
+<style scoped>
 </style>

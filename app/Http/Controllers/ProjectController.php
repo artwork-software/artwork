@@ -2,38 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\CalendarTimeEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\CalendarEventResource;
-use App\Http\Resources\EventCollectionForDailyCalendarResource;
-use App\Http\Resources\EventCollectionForMonthlyCalendarResource;
-use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
-use App\Http\Resources\RoomIndexResource;
-use App\Models\Area;
 use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
-use App\Models\Event;
-use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
-use Carbon\Carbon;
-use Carbon\CarbonPeriod;
+use App\Support\Services\HistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -52,13 +41,18 @@ class ProjectController extends Controller
     {
         $projects = Project::query()
             ->with([
+                'checklists.tasks.checklist.project',
+                'adminUsers',
+                'category',
+                'checklists.departments',
+                'comments.user',
+                'departments.users.departments',
+                'genre',
+                'managerUsers',
+                'project_files',
                 'project_histories.user',
                 'sector',
-                'category',
-                'genre',
                 'users.departments',
-                'departments.users.departments',
-                'events'
             ])
             ->get();
 
@@ -121,7 +115,7 @@ class ProjectController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      */
-    public function store(StoreProjectRequest $request)
+    public function store(StoreProjectRequest $request, HistoryService $historyService)
     {
         if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -144,6 +138,7 @@ class ProjectController extends Controller
             'category_id' => $request->category_id,
             'genre_id' => $request->genre_id,
         ]);
+        $historyService->projectUpdated($project);
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
 
@@ -152,11 +147,6 @@ class ProjectController extends Controller
         }
 
         $project->departments()->sync($departments->pluck('id'));
-
-        $project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => 'Projekt angelegt'
-        ]);
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
@@ -169,37 +159,20 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
-        $calendarType = $request->query('calendarType');
-
-        if ($calendarType === CalendarTimeEnum::MONTHLY) {
-            $period = CarbonPeriod::create($request->query('month_start'), $request->query('month_end'));
-        }
-
-        $areas = Area::query()
-            ->with([
-                'rooms.room_admins',
-                'rooms.events.creator',
-                'rooms.creator',
-                'rooms.events.event_type',
-                'rooms.events.room'
-            ])
-            ->get();
-
-        $eventsWithoutRoom = Event::query()
-            ->with('sameRoomEvents')
-            ->whereOccursBetween(Carbon::parse($request->query('month_start')), Carbon::parse($request->query('month_end')))
-            ->whereNull('room_id')
-            ->where('project_id', $project->id)
-            ->get();
-
         $project->load([
-            'events.sameRoomEvents',
-            'events.creator',
+            'adminUsers',
+            'category',
+            'checklists.departments',
+            'checklists.tasks.checklist.project',
+            'checklists.tasks.user_who_done',
             'comments.user',
-            'users.departments',
             'departments.users.departments',
-            'rooms.events.event_type',
-            'rooms.room_admins',
+            'genre',
+            'managerUsers',
+            'project_files',
+            'project_histories.user',
+            'sector',
+            'users.departments',
         ]);
 
         return inertia('Projects/Show', [
@@ -223,12 +196,6 @@ class ProjectController extends Controller
                 'projects' => $sector->projects
             ]),
 
-            'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
-
-            'events_without_room' => $calendarType === CalendarTimeEnum::MONTHLY
-                ? new EventCollectionForMonthlyCalendarResource($eventsWithoutRoom)
-                : new EventCollectionForDailyCalendarResource($eventsWithoutRoom),
-
             'checklist_templates' => ChecklistTemplate::all()->map(fn ($checklist_template) => [
                 'id' => $checklist_template->id,
                 'name' => $checklist_template->name,
@@ -239,61 +206,11 @@ class ProjectController extends Controller
                 ]),
             ]),
 
-            'areas' => $areas->map(fn (Area $area) => [
-                'id' => $area->id,
-                'name' => $area->name,
-                'rooms' => RoomIndexResource::collection($area->rooms->sortBy('order'))->resolve(),
-            ]),
-
-            'days_this_month' => $calendarType === CalendarTimeEnum::MONTHLY
-                ? $period->map(fn (Carbon $date) => ['date_formatted' => Str::upper($date->isoFormat('dd DD.MM.'))])
-                : [],
-
-            'start_time_of_new_event' => $request->query('start_time'),
-            'end_time_of_new_event' => $request->query('end_time'),
-            'requested_wanted_day' => $request->query('wanted_day'),
-            'requested_start_time' => $request->query('month_start'),
-            'requested_end_time' => $request->query('month_end'),
-            'hours_of_day' => config('calendar.hours'),
-            'shown_day_formatted' => Carbon::parse($request->query('wanted_day'))->format('l d.m.Y'),
-            'shown_day_local' => Carbon::parse($request->query('wanted_day')),
-            'calendarType' => $calendarType === CalendarTimeEnum::DAILY ?: CalendarTimeEnum::MONTHLY,
             'openTab' => $request->openTab ?: 'checklist',
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
-            'first_start' => Carbon::parse($this->get_first_start_time($project->events))->format('d.m.Y'),
-            'last_end' => Carbon::parse($this->get_last_end_time($project->events))->format('d.m.Y'),
         ]);
     }
-
-    private function get_first_start_time(mixed $events)
-    {
-        $first_start = null;
-        foreach ($events as $event) {
-            if ($first_start !== null) {
-                if ($event->start_time < $first_start) {
-                    $first_start = $event->start_time;
-                }
-            } else {
-                $first_start = $event->start_time;
-            }
-        }
-
-        return $first_start;
-    }
-
-    private function get_last_end_time(mixed $events)
-    {
-        $last_end = null;
-        foreach ($events as $event) {
-            if ($event->end_time > $last_end) {
-                $last_end = $event->end_time;
-            }
-        }
-
-        return $last_end;
-    }
-
 
     /**
      * Show the form for editing the specified resource.
@@ -310,72 +227,6 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function history_description_change($change): string
-    {
-        return match ($change) {
-            'name' => 'Projektname wurde geändert',
-            'description' => 'Kurzbeschreibung wurde geändert',
-            'number_of_participants' => 'Anzahl Teilnehmer:innen geändert',
-            'cost_center' => 'Kostenträger geändert',
-            'sector_id' => 'Bereich geändert',
-            'category_id' => 'Kategorie geändert',
-            'genre_id' => 'Genre geändert',
-        };
-    }
-
-    private function history_description_added($change): string
-    {
-        return match ($change) {
-            'description' => 'Kurzbeschreibung wurde hinzugefügt',
-            'number_of_participants' => 'Anzahl Teilnehmer:innen hinzugefügt',
-            'cost_center' => 'Kostenträger hinzugefügt',
-            'sector_id' => 'Bereich hinzugefügt',
-            'category_id' => 'Kategorie hinzugefügt',
-            'genre_id' => 'Genre hinzugefügt',
-        };
-    }
-
-    private function history_description_removed($change): string
-    {
-        return match ($change) {
-            'description' => 'Kurzbeschreibung wurde gelöscht',
-            'number_of_participants' => 'Anzahl Teilnehmer:innen gelöscht',
-            'cost_center' => 'Kostenträger gelöscht',
-            'sector_id' => 'Bereich gelöscht',
-            'category_id' => 'Kategorie gelöscht',
-            'genre_id' => 'Genre gelöscht',
-        };
-    }
-
-    private function add_to_history($project): void
-    {
-        $original = $project->getOriginal();
-        $changes = $project->getDirty();
-
-        $changed_fields = array_keys($changes);
-
-        foreach ($changed_fields as $change) {
-            if ($original[$change] === null) {
-                $project->project_histories()->create([
-                    'user_id' => Auth::id(),
-                    'description' => $this->history_description_added($change)
-                ]);
-            } else {
-                if ($changes[$change] === null) {
-                    $project->project_histories()->create([
-                        'user_id' => Auth::id(),
-                        'description' => $this->history_description_removed($change)
-                    ]);
-                } else {
-                    $project->project_histories()->create([
-                        'user_id' => Auth::id(),
-                        'description' => $this->history_description_change($change)
-                    ]);
-                }
-            }
-        }
-    }
-
     /**
      * Update the specified resource in storage.
      *
@@ -383,7 +234,7 @@ class ProjectController extends Controller
      * @param  Project  $project
      * @return JsonResponse|RedirectResponse
      */
-    public function update(UpdateProjectRequest $request, Project $project)
+    public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
 
@@ -395,9 +246,7 @@ class ProjectController extends Controller
         }
 
         $project->fill($update_properties);
-
-        $this->add_to_history($project);
-
+        $historyService->projectUpdated($project);
         $project->save();
 
         if ($request->assigned_user_ids) {
@@ -405,7 +254,7 @@ class ProjectController extends Controller
         }
 
         if ($request->assigned_departments) {
-            $project->departments()->sync(collect($request->assigned_departments));
+            $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
         }
 
         return Redirect::back();
@@ -414,7 +263,7 @@ class ProjectController extends Controller
     /**
      * Duplicates the project whose id is passed in the request
      */
-    public function duplicate(Project $project)
+    public function duplicate(Project $project, HistoryService $historyService)
     {
         // authorization
         if ($project->users->isNotEmpty()) {
@@ -438,6 +287,7 @@ class ProjectController extends Controller
             'category_id' => $project->category_id,
             'genre_id' => $project->genre_id,
         ]);
+        $historyService->projectUpdated($newProject);
 
         $project->checklists->map(function (Checklist $checklist) use ($newProject) {
             /** @var \App\Models\Checklist $replicated_checklist */
@@ -458,15 +308,7 @@ class ProjectController extends Controller
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 
-        $newProject->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => 'Projekt angelegt'
-        ]);
-
-        $project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => 'Projekt wurde dupliziert'
-        ]);
+        $historyService->updateHistory($project, config('history.project.duplicated'));
 
         return Redirect::route('projects.show', $newProject->id)->with('success', 'Project created.');
     }
@@ -479,8 +321,6 @@ class ProjectController extends Controller
      */
     public function destroy(Project $project)
     {
-        $project->load('events');
-
         $project->events()->delete();
 
         foreach ($project->checklists() as $checklist) {
@@ -496,10 +336,12 @@ class ProjectController extends Controller
 
     public function forceDelete(int $id)
     {
+        /** @var Project $project */
         $project = Project::onlyTrashed()->findOrFail($id);
 
         $project->forceDelete();
         $project->events()->withTrashed()->forceDelete();
+        $project->project_histories()->delete();
 
         return Redirect::route('projects.trashed')->with('success', 'Project deleted');
     }
@@ -520,15 +362,4 @@ class ProjectController extends Controller
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
     }
-
-    public function indexEvents(Request $request, Project $project)
-    {
-        $events = $project->events()
-            ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
-            ->get();
-
-        return CalendarEventResource::collection($events);
-    }
-
-
 }

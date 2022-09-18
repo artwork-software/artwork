@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\Task;
+use App\Support\Services\HistoryService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -165,39 +168,31 @@ class ChecklistController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Checklist  $checklist
      */
-    public function update(Request $request, Checklist $checklist)
+    public function update(ChecklistUpdateRequest $request, Checklist $checklist, HistoryService $historyService)
     {
-        $checklist->project->project_histories()->create([
-            "user_id" => Auth::id(),
-            "description" => "Checkliste $checklist->name in $request->name umbenannt"
-        ]);
+        $checklist->fill($request->data());
+        $historyService->checklistUpdated($checklist);
+        $checklist->save();
 
-        $checklist->update($request->only('name', 'user_id'));
-
-        if ($request->tasks) {
+        if ($request->get('tasks')) {
             $checklist->tasks()->delete();
             $checklist->tasks()->createMany($request->tasks);
         }
 
-        if (Auth::user()->can('update departments')) {
-            if ($request->assigned_department_ids) {
-                foreach ($request->assigned_department_ids as $department_id) {
-                    if (! $checklist->project->departments->contains($department_id)) {
-                        $checklist->project->departments()->attach($department_id);
-                    }
-                }
-            }
-            $checklist->departments()->sync(
-                collect($request->assigned_department_ids)
-                    ->map(function ($department_id) {
-                        return $department_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
+        if ($request->missing('assigned_department_ids')) {
+            return new JsonResponse(['success' => 'Checklist updated']);
         }
 
-        return Redirect::back()->with('success', 'Checklist updated');
+        $departmentIds = collect($request->get('assigned_department_ids'));
+        if ($departmentIds->isNotEmpty()) {
+            $syncedDepartmentIds = $checklist->project->departments()->pluck('departments.id');
+            $checklist->project->departments()
+                ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
+        }
+
+        $checklist->departments()->sync($departmentIds);
+
+        return new JsonResponse(['success' => 'Checklist updated']);
     }
 
     /**
@@ -206,14 +201,10 @@ class ChecklistController extends Controller
      * @param  \App\Models\Checklist  $checklist
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(Checklist $checklist)
+    public function destroy(Checklist $checklist, HistoryService $historyService)
     {
         $checklist->delete();
-
-        $checklist->project->project_histories()->create([
-            "user_id" => Auth::id(),
-            "description" => "Checkliste $checklist->name gelöscht"
-        ]);
+        $historyService->checklistUpdated($checklist);
 
         return Redirect::back()->with('success', 'Checklist deleted');
     }

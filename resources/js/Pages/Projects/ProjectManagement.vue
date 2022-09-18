@@ -919,12 +919,7 @@ export default defineComponent({
             this.openSuccessModal2();
         },
         getEditHref(project) {
-            return route('projects.show', {
-                project: project.id,
-                month_start: new Date((new Date).getFullYear(), (new Date).getMonth(), 1, 0, 120),
-                month_end: new Date((new Date).getFullYear(), (new Date).getMonth() + 1, 2),
-                calendarType: 'monthly'
-            });
+            return route('projects.show', {project: project.id});
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

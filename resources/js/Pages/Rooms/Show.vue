@@ -6,11 +6,11 @@
                     <h2 class="font-bold font-lexend text-3xl">{{ room.name }}</h2>
                     <Menu as="div" class="my-auto relative">
                         <div class="flex"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+                            v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                             <MenuButton
                                 class="flex ml-6">
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                    aria-hidden="true"/>
                             </MenuButton>
                             <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
                                 <div>
@@ -22,17 +22,17 @@
                             </div>
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
+                            enter-from-class="transform opacity-0 scale-95"
+                            enter-to-class="transform opacity-100 scale-100"
+                            leave-active-class="transition ease-in duration-75"
+                            leave-from-class="transform opacity-100 scale-100"
+                            leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openEditRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <PencilAltIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -41,7 +41,7 @@
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <a href="#" @click="duplicateRoom(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -50,7 +50,7 @@
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
                                         <a @click="openSoftDeleteRoomModal(room)"
-                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
@@ -71,7 +71,8 @@
                             {{ room.area.name }}
                         </span>
                         <p class="text-secondary subpixel-antialiased mt-4">
-                            Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label> <label v-else >Nein</label>
+                            Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label>
+                            <label v-else>Nein</label>
                         </p>
                         <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
                             {{ room.description }}
@@ -91,7 +92,7 @@
                                 multiple
                             />
                             <div @click="selectNewFiles" @dragover.prevent
-                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
+                                @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
                         border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
                                 <p class="text-secondary text-center">Ziehe Dokumente hier her
                                     <br>oder klicke ins Feld
@@ -101,17 +102,18 @@
                         </div>
                         <div class="space-y-1">
                             <div v-for="room_file in room.room_files"
-                                 class="cursor-pointer group flex items-center">
+                                class="cursor-pointer group flex items-center">
                                 <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p :data-tooltip-target="room_file.name" @click="downloadFile(room_file)" class="ml-2 truncate hover:font-bold">{{
+                                <p :data-tooltip-target="room_file.name" @click="downloadFile(room_file)" class="ml-2 truncate hover:font-bold">
+                                    {{
                                         room_file.name
                                     }}</p>
                                 <XCircleIcon v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin" @click="removeFile(room_file)"
-                                             class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
-                                             aria-hidden="true"/>
+                                    class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
+                                    aria-hidden="true"/>
                                 <div>
                                     <div :id="room_file.name" role="tooltip"
-                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                        class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
                                         <div class="flex flex-wrap">
                                             Um die Datei herunterzuladen, klicke auf den Dateinamen
                                         </div>
@@ -132,8 +134,8 @@
                     </div>
                     <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
                         <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
-                             :src="user.profile_photo_url"
-                             alt=""/>
+                            :src="user.profile_photo_url"
+                            alt=""/>
                         <UserTooltip :user="user"/>
                     </div>
                     <button @click="openChangeRoomAdminsModal()" v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
@@ -150,18 +152,18 @@
                             <div class="flex items-center w-full mt-8">
                                 <div class="flex items-center w-full">
                                     <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="eventRequest.event_type.svg_name"/>
+                                        :iconName="eventRequest.event_type.svg_name"/>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ eventRequest.event_type.name }}
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
-                                         v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
+                                        v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                             eventRequest.start_time.split(',')[0]
                                         }},{{ eventRequest.start_time.split(',')[1] }}
@@ -174,11 +176,11 @@
                                         {{ eventRequest.end_time }}
                                     </div>
                                     <button @click="openApproveRequestModal(eventRequest)" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                        class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
                                         <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                     </button>
                                     <button @click="openDeclineRequestModal(eventRequest)" type="button"
-                                            class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                        class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
                                         <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                     </button>
                                 </div>
@@ -188,7 +190,7 @@
                                     <div class="text-secondary text-sm flex items-center">
                                         Zugeordnet zu
                                         <Link :href="route('projects.show',{project: eventRequest.project.id})"
-                                              class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                            class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
                                     </div>
@@ -208,9 +210,9 @@
 
                                 <div class="flex text-sm text-secondary items-center">
                                     angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
-                                                   :src="eventRequest.created_by.profile_photo_url"
-                                                   :alt="eventRequest.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    :src="eventRequest.created_by.profile_photo_url"
+                                    :alt="eventRequest.created_by.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="eventRequest.created_by"/>
                                     <span class="ml-2"> {{ eventRequest.created_at }}</span>
                                 </div>
@@ -220,7 +222,7 @@
                             </div>
 
                             <div class="flex ml-40 mt-2 text-sm text-secondary items-center w-full"
-                                 v-if="eventRequest.description">
+                                v-if="eventRequest.description">
                                 {{ eventRequest.description }}
                             </div>
 
@@ -230,20 +232,9 @@
                 </div>
             </div>
         </div>
+
         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-            <!-- Raumkalender -->
-            <div v-if="!calendarType || calendarType === 'monthly'">
-                <MonthlyCalendar calendar-type="room" :event_types="event_types" :areas="areas"
-                                 :month_events="month_events" :projects="projects" :rooms="[room]"
-                                 :days_this_month="days_this_month"
-                                 :events_without_room="events_without_room"></MonthlyCalendar>
-            </div>
-            <div v-else>
-                <DailyCalendar calendar-type="room" :hours_of_day="hours_of_day" :rooms="[room]" :projects="projects"
-                               :event_types="event_types" :areas="areas"
-                               :shown_day_formatted="shown_day_formatted" :shown_day_local="shown_day_local"
-                               :events_without_room="events_without_room"/>
-            </div>
+            <CalendarComponent :roomId="room.id"/>
         </div>
 
         <!-- Change RoomAdmins Modal -->
@@ -255,33 +246,33 @@
                         Raumadmin bearbeiten
                     </div>
                     <XIcon @click="closeChangeRoomAdminsModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
                         Tippe den Namen der Nutzer*innen ein, welche den Raum bearbeiten und direkt belegen dürfen.
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
+                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                placeholder="placeholder"/>
                             <label for="userSearch"
-                                   class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
+                                class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                         </div>
 
                         <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
+                            leave-from-class="opacity-100"
+                            leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
                                     <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
+                                        class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4">
                                             <p @click="addUserToRoomAdminsArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
                                             </p>
                                         </div>
@@ -294,11 +285,11 @@
                         <div class="flex">
                         </div>
                         <span v-for="(user,index) in roomForm.room_admins"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                            class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
                                 <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
+                                    :src="user.profile_photo_url"
+                                    alt=""/>
                                 <span class="flex ml-4">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
@@ -310,7 +301,7 @@
                         </span>
                     </div>
                     <button @click="editRoomAdmins"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                     >Speichern
                     </button>
 
@@ -322,21 +313,21 @@
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-3xl my-2">
                         Raum bearbeiten
                     </div>
                     <XIcon @click="closeEditRoomModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="mt-4">
                         <div class="flex mt-10 relative">
                             <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
+                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                placeholder="placeholder"/>
                             <label for="roomNameEdit"
-                                   class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                                class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
                             </label>
                             <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                         </div>
@@ -348,10 +339,10 @@
                         </div>
                         <div class="flex items-center my-6">
                             <input v-model="editRoomForm.temporary"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                type="checkbox"
+                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Temporärer Raum</p>
+                                class="ml-4 my-auto text-sm">Temporärer Raum</p>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
                                 <span
@@ -371,10 +362,10 @@
 
                         <div class="flex items-center my-6">
                             <input v-model="editRoomForm.everyone_can_book"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                type="checkbox"
+                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
-                               class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
+                                class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
                                 <span
@@ -385,10 +376,10 @@
                         <div class="grid grid-cols-2">
                             <button :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                    class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
+                                class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                    @click="editRoom"
-                                    :disabled="editRoomForm.name.length === 0">
+                                @click="editRoom"
+                                :disabled="editRoomForm.name.length === 0">
                                 Speichern
                             </button>
                         </div>
@@ -406,20 +397,20 @@
                         Raum in den Papierkorb
                     </div>
                     <XIcon @click="closeSoftDeleteRoomModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="softDeleteRoom()">
+                            @click="softDeleteRoom()">
                             Entfernen
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeSoftDeleteRoomModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -434,15 +425,15 @@
                         {{ successHeading }}
                     </div>
                     <XIcon @click="closeSuccessModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-success subpixel-antialiased">
                         {{ successDescription }}
                     </div>
                     <div class="mt-6">
                         <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="closeSuccessModal">
+                            @click="closeSuccessModal">
                             <CheckIcon class="h-6 w-6 text-secondaryHover"/>
                         </button>
                     </div>
@@ -459,8 +450,8 @@
                         Raumbelegung zusagen
                     </div>
                     <XIcon @click="closeApproveRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-success subpixel-antialiased">
                         Bist du sicher, dass du die Raumbelegung zusagen möchtest?
                     </div>
@@ -470,20 +461,20 @@
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
                                     <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToApprove.event_type.svg_name"/>
+                                        :iconName="requestToApprove.event_type.svg_name"/>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToApprove.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToApprove.occupancy_option"
-                                                         class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToApprove.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToApprove.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
-                                         v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
+                                        v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
@@ -520,9 +511,9 @@
                                 </div>
                                 <div class="flex text-sm text-secondary items-center">
                                     angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
-                                                   :src="requestToApprove.created_by.profile_photo_url"
-                                                   :alt="requestToApprove.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    :src="requestToApprove.created_by.profile_photo_url"
+                                    :alt="requestToApprove.created_by.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="requestToApprove.created_by"/>
                                     <span class="ml-2"> {{ requestToApprove.created_at }}</span>
                                 </div>
@@ -531,7 +522,7 @@
                                 </div>
                             </div>
                             <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
-                                 v-if="requestToApprove.description">
+                                v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
                         </div>
@@ -539,12 +530,12 @@
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="approveRequest">
+                            @click="approveRequest">
                             Zusagen
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -559,8 +550,8 @@
                         Raumbelegung absagen
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
+                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                        aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
                         Bist du sicher, dass du die Raumbelegung absagen möchtest?
                     </div>
@@ -570,20 +561,20 @@
                             <div class="flex items-center w-full mt-4">
                                 <div class="flex items-center ml-12 w-full">
                                     <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="requestToDecline.event_type.svg_name"/>
+                                        :iconName="requestToDecline.event_type.svg_name"/>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
                                         {{ requestToDecline.event_type.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
-                                                         class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="requestToDecline.is_loud"
-                                             class="h-5 w-5 ml-2 my-auto"/>
+                                            class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
                                     <div class="flex w-full whitespace-nowrap ml-3"
-                                         v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
+                                        v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
@@ -620,9 +611,9 @@
                                 </div>
                                 <div class="flex text-sm text-secondary items-center">
                                     angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
-                                                   :src="requestToDecline.created_by.profile_photo_url"
-                                                   :alt="requestToDecline.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    :src="requestToDecline.created_by.profile_photo_url"
+                                    :alt="requestToDecline.created_by.name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="requestToDecline.created_by"/>
                                     <span class="ml-2"> {{ requestToDecline.created_at }}</span>
                                 </div>
@@ -631,7 +622,7 @@
                                 </div>
                             </div>
                             <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
-                                 v-if="requestToDecline.description">
+                                v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>
                         </div>
@@ -639,12 +630,12 @@
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="declineRequest">
+                            @click="declineRequest">
                             Absagen
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -666,13 +657,7 @@ import {
     MenuItem,
     MenuItems
 } from "@headlessui/vue";
-import {
-    PencilAltIcon,
-    TrashIcon,
-    XIcon,
-    DocumentTextIcon,
-    DuplicateIcon
-} from "@heroicons/vue/outline";
+import {DocumentTextIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
 import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
@@ -683,9 +668,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import MonthlyCalendar from "@/Layouts/Components/MonthlyCalendar";
-import DailyCalendar from "@/Layouts/Components/DailyCalendar";
-
+import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -693,17 +676,10 @@ const attributeFilters = [
     {name: 'Nur Termine mit Publikum', id: 3}
 ]
 
-const dateTypes = [
-    {name: 'Monatsansicht', id: 1},
-    {name: 'Tagesansicht', id: 2}
-]
-
 export default {
     name: "Show",
-    props: ['calendarType', 'room', 'event_types', 'days_this_month', 'areas', 'projects', 'month_events', 'events_without_room', 'hours_of_day', 'shown_day_formatted', 'shown_day_local', 'is_room_admin'],
+    props: ['room', 'event_types', 'projects', 'is_room_admin'],
     components: {
-        MonthlyCalendar,
-        DailyCalendar,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -732,6 +708,7 @@ export default {
         ListboxButton,
         ListboxOption,
         ListboxOptions,
+        CalendarComponent,
     },
     computed: {
         eventTypeFilters: function () {
@@ -826,33 +803,7 @@ export default {
                     return 'So';
             }
         },
-        getTimespan(day) {
-            let startOfDayInMillis = new Date(day.date_local).getTime();
-            let endOfDayInMillis = new Date(new Date(day.date_local).setMinutes(1439)).getTime();
-            let earliestStart = new Date(day.events[0].start_time_dt_local).getTime() < startOfDayInMillis ? startOfDayInMillis : new Date(day.events[0].start_time_dt_local).getTime();
-            let latestEnd = new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis ? endOfDayInMillis : new Date(day.events[0].end_time_dt_local).getTime() > endOfDayInMillis;
-            day.events.forEach((event) => {
-                let startTimeInMillis = new Date(event.start_time_dt_local).getTime();
-                if (startTimeInMillis < earliestStart) {
-                    if (startTimeInMillis < startOfDayInMillis) {
-                        earliestStart = startOfDayInMillis;
-                    } else {
-                        earliestStart = startTimeInMillis;
-                    }
-                }
-                let endTimeInMillis = new Date(event.end_time_dt_local).getTime();
-                if (endTimeInMillis > latestEnd) {
-                    if (endTimeInMillis > endOfDayInMillis) {
-                        latestEnd = endOfDayInMillis;
-                    } else {
-                        latestEnd = endTimeInMillis;
-                    }
-                }
-            })
-            let earliestStartDate = new Date(earliestStart);
-            let latestEndDate = new Date(latestEnd);
-            return [earliestStartDate, latestEndDate]
-        },
+
         openApproveRequestModal(eventRequest) {
             this.requestToApprove = eventRequest;
             this.showApproveRequestModal = true;
@@ -1045,7 +996,6 @@ export default {
     setup() {
         return {
             attributeFilters,
-            dateTypes
         }
     }
 }

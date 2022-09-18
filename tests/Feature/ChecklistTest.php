@@ -115,27 +115,6 @@ test('users with the permission can create checklists with a template and assign
 
 });
 
-test('users without the permission cant create checklists', function () {
-
-    $this->actingAs($this->auth_user);
-
-    $this->post('/checklists', [
-        'name' => 'TestChecklist',
-        'project_id' => $this->project->id,
-        'assigned_department_ids' => [$this->assigned_department->id],
-        'template_id' => null,
-        'tasks' => [
-            [
-                'name' => 'TestTask',
-                'description' => 'a description',
-                'done' => false,
-                'deadline' => '2022-4-4',
-                'checklist_id' => $this->checklist->id
-            ]
-        ]
-    ])->assertStatus(403);
-});
-
 test('users can only view checklists they are assigned to', function () {
 
     $this->assigned_department->users()->attach($this->auth_user);
@@ -156,55 +135,6 @@ test('users can only view checklists they are assigned to', function () {
         );
 
     $response->assertStatus(200);
-});
-
-test('users with the permission can update checklists', function () {
-
-    $this->auth_user->givePermissionTo('update departments', 'update checklists');
-    $this->actingAs($this->auth_user);
-
-    $this->assigned_department->users()->attach($this->auth_user);
-    $this->checklist->departments()->attach($this->assigned_department);
-    $this->checklist->project()->associate($this->project);
-    $this->checklist->save();
-
-    $res = $this->patch("/checklists/{$this->checklist->id}", [
-        'name' => 'TestChecklist',
-        'user_id' => null,
-        'assigned_department_ids' => [$this->assigned_department->id],
-        'tasks' => [
-            [
-                'name' => 'TestTask',
-                'description' => 'a description',
-                'done' => false,
-                'deadline' => '2022-4-4',
-                'checklist_id' => $this->checklist->id
-            ]
-        ]
-    ]);
-
-    $this->assertDatabaseHas('department_project', [
-        'project_id' => $this->project->id,
-        'department_id' => $this->assigned_department->id
-    ]);
-
-    $this->assertDatabaseHas('checklists', [
-        'name' => 'TestChecklist'
-    ]);
-
-    $checklist = Checklist::where('name', 'TestChecklist')->first();
-
-    $this->assertDatabaseHas('checklist_department', [
-        'checklist_id' => $checklist->id,
-        'department_id' => $this->assigned_department->id,
-    ]);
-
-    $this->assertDatabaseHas('tasks', [
-        'name' => 'TestTask',
-        'checklist_id' => $checklist->id
-    ]);
-
-
 });
 
 test('users with the permission can delete checklists', function () {

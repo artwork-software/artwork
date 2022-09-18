@@ -6,90 +6,79 @@
                     <h2 class="font-bold font-lexend text-3xl w-full">Meine Aufgaben</h2>
                     <Listbox as="div" class="sm:col-span-3 mb-8" @click="changeTasksToDisplay" v-model="selectedFilter">
                         <div class="relative">
-                            <ListboxButton
-                                class="w-56 bg-white relative w-full font-semibold pr-20 py-2 mt-4 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedFilter.name }}</span>
-                                        </span>
-                                <span
-                                    class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
+                            <ListboxButton class="w-56 flex justify-between font-semibold py-2">
+                                <div> {{ selectedFilter.name }}</div>
+                                <div>
+                                    <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                </div>
                             </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="filter in filters"
-                                                   :key="filter.name"
-                                                   :value="filter"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ filter.name }}
-                                                    </span>
-                                            <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
+                            <ListboxOptions class="bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
+                                <ListboxOption as="template" class="p-2 text-sm"
+                                    v-for="filter in filters"
+                                    :key="filter.name"
+                                    :value="filter"
+                                    v-slot="{ active, selected }">
+                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
+                                        <div :class="[selected ? 'font-bold text-white' : '', 'truncate']">
+                                            {{ filter.name }}
+                                        </div>
+                                        <div v-if="selected">
+                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                        </div>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
                         </div>
                     </Listbox>
-                    <div class="flex flex-wrap w-full">
-                        <div class="flex w-full" v-for="task in tasksToDisplay">
-                            <div class="flex w-full flex-wrap" :key="task.id">
-                                <div class="flex w-full grid grid-cols-6">
 
-                                    <div class="flex w-full col-span-5 w-full">
-                                        <input @change="updateTaskStatus(task)" v-model="task.done"
-                                               type="checkbox"
-                                               class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                        <p class="ml-4 my-auto text-lg font-black text-sm"
-                                           :class="task.done ? 'text-secondary line-through' : 'text-primary'">
-                                            {{ task.name }}</p>
-                                        <span v-if="!task.done && task.deadline"
-                                              class="ml-2 my-auto text-sm subpixel-antialiased"
-                                              :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                                task.deadline
-                                            }}</span>
+                    <!--     Task Index   -->
+                    <div class="w-full">
+                        <div v-for="task in tasksToDisplay" :key="task.id">
 
+                            <div class="flex w-full flex-wrap md:flex-nowrap align-baseline">
+                                <div class="flex w-full flex-grow">
+                                    <input @change="updateTaskStatus(task)"
+                                        v-model="task.done"
+                                        type="checkbox"
+                                        class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
+                                    <div class="ml-4 my-auto text-lg font-bold"
+                                        :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                        {{ task.name }}
                                     </div>
-                                    <div class="col-span-1 flex">
-                                        <div v-show="task.departments.length > 0" class="my-auto flex -mr-3"
-                                             v-for="department in task.departments">
-                                            <TeamIconCollection :iconName="department.svg_name" :alt="department.name"
-                                                                class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                        </div>
-                                        <div v-show="task.checklist.user_id !== null" class="my-auto">
-                                            <img class="h-9 w-9 rounded-full"
-                                                 :src="$page.props.user.profile_photo_url"
-                                                 alt=""/>
-                                        </div>
+                                    <div v-if="!task.done && task.deadline"
+                                        class="ml-2 my-auto text-sm "
+                                        :class="task.isDeadlineInFuture ? 'text-error ' : ''">
+                                        bis {{ task.humanDeadline }}
                                     </div>
                                 </div>
-                                <div class="flex text-sm mt-0.5 w-full items-center ml-10">
-                                    <Link :href="route('projects.show',{project: task.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
-                                          class="cursor-pointer text-secondary flex subpixel-antialiased">
-                                        {{ task.project.name }}
-                                        <ChevronRightIcon class="h-5 w-5 my-auto text-secondary subpixel-antialiased"
-                                                          aria-hidden="true"/>
-                                        <span class="text-sm ml-4 subpixel-antialiased text-secondary flex">
-                                        {{ task.checklist.name }}
-                                        </span>
-                                    </Link>
-                                </div>
 
-                                <div class="ml-10 my-3 text-secondary">
-                                    {{ task.description }}
+                                <div class="my-auto flex mr-3"
+                                    v-for="department in task.departments">
+                                    <TeamIconCollection
+                                        :iconName="department.svg_name"
+                                        :alt="department.name"
+                                        class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                </div>
+                                <div v-show="! task.isPrivate"
+                                    class="my-auto">
+                                    <img class="h-9 w-9 rounded-full"
+                                        :src="$page.props.user.profile_photo_url"
+                                        alt=""/>
                                 </div>
                             </div>
+
+                            <Link :href="route('projects.show',{project: task.projectId})"
+                                class="text-sm my-1 flex ml-10">
+                                {{ task.projectName }}
+                                <ChevronRightIcon class="h-5 w-5 my-auto mx-3 text-secondary " aria-hidden="true"/>
+                                {{ task.checklistName }}
+                            </Link>
+
+                            <div class="ml-10 my-3 text-secondary">
+                                {{ task.description }}
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -115,32 +104,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 export default {
     name: "OwnTasksManagement",
     props: ['tasks'],
-    computed: {
-        sortedTasksDeadline: function () {
-            let taskCopy = this.tasks.slice();
-            let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
-
-            function compare(a, b) {
-                if (b.deadline === null) {
-                    return -1;
-                }
-                if (a.deadline === null) {
-                    return 1;
-                }
-                if (a.deadline < b.deadline)
-                    return -1;
-                if (a.deadline > b.deadline)
-                    return 1;
-                return 0;
-            }
-
-            return undoneSortedTasksDeadline.sort(compare);
-        },
-        doneTasks: function () {
-            let filteredTasks = this.tasks.filter(task => task.done === true);
-            return filteredTasks;
-        },
-    },
+    computed: {},
     components: {
         AppLayout,
         ChevronRightIcon,
@@ -155,12 +119,22 @@ export default {
     },
     methods: {
         changeTasksToDisplay() {
-            if (this.selectedFilter.name === 'Nach Deadline') {
-                this.tasksToDisplay = this.sortedTasksDeadline;
-            } else if (this.selectedFilter.name === 'Nach Checklisten') {
-                this.tasksToDisplay = this.tasks.filter(task => task.done === false);
-            } else if (this.selectedFilter.name === 'Erledigte Aufgaben') {
-                this.tasksToDisplay = this.doneTasks;
+            switch (this.selectedFilter.name) {
+                case 'Nach Deadline':
+                    this.tasksToDisplay = this.tasks.data.filter(task => !task.done);
+                    console.log(this.tasksToDisplay)
+                    this.tasksToDisplay = this.tasksToDisplay.sort(function (a, b) {
+                        return a.deadline > b.deadline
+                    });
+                    break;
+                case 'Erledigte Aufgaben':
+                    this.tasksToDisplay = this.tasks.data.filter(task => task.done);
+                    break;
+                default:
+                    this.tasksToDisplay = this.tasks.data.filter(task => !task.done);
+                    this.tasksToDisplay = this.tasksToDisplay.sort(function (a, b) {
+                        return a.checklistId > b.checklistId
+                    });
             }
         },
         updateTaskStatus(task) {
@@ -170,8 +144,8 @@ export default {
     },
     data() {
         return {
-            selectedFilter: {name: 'Nach Checklisten'},
-            tasksToDisplay: this.tasks.filter(task => task.done === false),
+            selectedFilter: filters[0],
+            tasksToDisplay: this.tasks.data.filter(task => !task.done),
             doneTaskForm: useForm({
                 done: false
             }),

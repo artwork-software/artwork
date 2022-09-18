@@ -125,7 +125,7 @@
                                                              :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
                                                             <div class="flex w-full">
                                                                 <div class="flex">
-                                                                    <Link :href="route('rooms.show',{room: element.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
+                                                                    <Link :href="route('rooms.show',{room: element.id})"
                                                                           class="ml-4 my-auto text-lg font-black text-sm"
                                                                     >
                                                                         {{ element.name }}
@@ -229,7 +229,7 @@
                                                                 <div class="flex w-full">
                                                                     <div class="flex">
                                                                         <Link
-                                                                            :href="route('rooms.show',{room: element.id,month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
+                                                                            :href="route('rooms.show',{room: element.id})"
                                                                             class="ml-4 my-auto text-lg font-black text-sm"
                                                                         >
                                                                             {{ element.name }} ({{ element.start_date }}

@@ -2,7 +2,6 @@
 
 namespace App\Http\Resources;
 
-use App\Enums\CalendarTimeEnum;
 use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
@@ -23,9 +22,6 @@ class RoomCalendarResource extends JsonResource
     public function toArray($request)
     {
         $requestedDay = Carbon::parse($request->query('wanted_day'));
-        $startTime = Carbon::parse($request->get('start_time'));
-        $endTime = Carbon::parse($request->get('end_time'));
-        $calendarType = $request->query('calendarType');
 
         /** @var \Illuminate\Database\Eloquent\Collection $events */
         $events = $this->events()
@@ -36,8 +32,6 @@ class RoomCalendarResource extends JsonResource
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
-            'conflicts_start_time' => EventShowResource::collection($this->events()->occursAt($startTime)->get())->resolve(),
-            'conflicts_end_time' => EventShowResource::collection($this->events()->occursAt($endTime)->get())->resolve(),
             'name' => $this->name,
             'description' => $this->description,
             'temporary' => $this->temporary,
@@ -50,12 +44,8 @@ class RoomCalendarResource extends JsonResource
             'room_files' => $this->room_files,
             'area_id' => $this->area_id,
             'everyone_can_book' => $this->everyone_can_book,
-            'events' => EventCalendarDayResource::collection($events)->resolve(),
             'room_admins' => UserWithoutApartmentIndexResource::collection($this->room_admins)->resolve(),
             'event_requests' => EventShowResource::collection($events->where('occupancy_option', true))->resolve(),
-            'days_in_month' => $calendarType === CalendarTimeEnum::MONTHLY
-                ? new EventCollectionMonthlyResource($this->events)
-                : [],
             'area' => $this->area,
         ];
     }

@@ -2,14 +2,12 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Event;
-use Carbon\Carbon;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * @mixin \App\Models\Room
+ * @mixin \App\Models\Department
  */
-class RoomIndexEventMonthlyResource extends JsonResource
+class DepartmentIconResource extends JsonResource
 {
     public static $wrap = null;
 
@@ -22,11 +20,10 @@ class RoomIndexEventMonthlyResource extends JsonResource
     public function toArray($request)
     {
         return [
+            'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
-            'area_id' => $this->area_id,
-            'room_admins' => UserIconResource::collection($this->room_admins)->resolve(),
-            'days_in_month' => new EventCollectionMonthlyResource($this->events),
+            'svg_name' => $this->svg_name ?? 'icon_ausstellung',
         ];
     }
 }

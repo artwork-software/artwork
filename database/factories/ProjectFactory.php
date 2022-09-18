@@ -20,7 +20,7 @@ class ProjectFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->domainWord . ' ' . $this->faker->colorName,
+            'name' => 'Project ' . $this->faker->firstNameFemale,
             'description' => $this->faker->paragraph,
             'cost_center' => $this->faker->name,
             'number_of_participants' => $this->faker->numberBetween(5, 500),

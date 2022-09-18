@@ -6,6 +6,8 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * @mixin \App\Models\Event
+ * @property mixed $collision_count
+ * @see \App\Builders\EventBuilder::withCollisionCount()
  */
 class CalendarEventResource extends JsonResource
 {
@@ -22,15 +24,24 @@ class CalendarEventResource extends JsonResource
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
-            'roomId' => $this->room_id,
-            'start' => $this->start_time->toDateTimeString(),
-            'end' => $this->end_time->toDateTimeString(),
+
+            'start' => $this->start_time->utc()->toIso8601String(),
+            'end' => $this->end_time->utc()->toIso8601String(),
             'title' => $this->name,
+            'description' => $this->description,
+            'audience' => $this->audience,
+            'isLoud' => $this->is_loud,
+            'projectId' => $this->project_id,
+            'roomId' => $this->room_id,
+            'eventTypeId' => $this->event_type_id,
+            'areaId' => $this->room?->area_id,
 
-            // vue infos
-            'class' => 'leisure',
+            'collisionCount'=> $this->collision_count,
 
-            // calendar edit authorization
+            // to display rooms as split
+            'split' => $this->room_id,
+
+            // Todo Add Authorization
             'resizable' => true,
             'draggable' => true,
         ];

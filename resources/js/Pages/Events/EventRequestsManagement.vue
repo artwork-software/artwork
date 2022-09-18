@@ -59,7 +59,7 @@
                                         <div class="ml-16 text-secondary text-sm flex items-center">
                                             Zugeordnet zu
                                             <Link
-                                                :href="route('projects.show',{project: eventRequest.project.id, month_start: new Date((new Date).getFullYear(),(new Date).getMonth(),1,0,120),month_end:new Date((new Date).getFullYear(),(new Date).getMonth() + 1,2), calendarType: 'monthly'})"
+                                                :href="route('projects.show',{project: eventRequest.project.id})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project.name }}
                                             </Link>

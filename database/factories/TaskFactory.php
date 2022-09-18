@@ -18,11 +18,11 @@ class TaskFactory extends Factory
     {
         return [
             'name' => $this->faker->name,
-            'description' => $this->faker->paragraph,
+            'description' => $this->faker->text,
             'deadline' => $this->faker->date,
             'done' => $this->faker->boolean(50),
             'order' => 1,
-            'checklist_id' => 1
+            'checklist_id' => 1,
         ];
     }
 }

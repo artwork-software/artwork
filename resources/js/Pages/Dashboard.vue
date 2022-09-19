@@ -20,7 +20,7 @@
                         class="flex justify-end uppercase text-sm text-secondary right-0 items-end subpixel-antialiased absolute mt-14">
                         Alle Ansehen
                     </Link>
-                    <CalendarComponent initial-view="day"/>
+                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
                 </div>
             </div>
             <!-- Task Div -->
@@ -103,7 +103,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
-    props: ['tasks', 'projects'],
+    props: ['tasks', 'projects','eventTypes'],
     components: {
         AppLayout,
         CalendarIcon,

@@ -244,7 +244,7 @@
             <div class="max-w-screen-2xl">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="p-5">
-                    <CalendarComponent :projectId="project.id"/>
+                    <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
@@ -1692,7 +1692,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
+    props: ['eventTypes','opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
     components: {
         AddButton,
         TeamTooltip,

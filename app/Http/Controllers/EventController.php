@@ -10,9 +10,11 @@ use App\Http\Requests\EventUpdateRequest;
 use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventShowResource;
+use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\TaskIndexResource;
 use App\Models\Event;
+use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Task;
 use Carbon\Carbon;
@@ -26,7 +28,9 @@ class EventController extends Controller
 {
     public function viewEventIndex(Request $request): Response
     {
-        return inertia('Events/EventManagement', []);
+        return inertia('Events/EventManagement', [
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve()
+        ]);
     }
 
     public function showDashboardPage(Request $request): Response
@@ -46,6 +50,7 @@ class EventController extends Controller
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
         ]);
     }
 

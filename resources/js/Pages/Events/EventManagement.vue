@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <CalendarComponent/>
+        <CalendarComponent :eventTypes=this.eventTypes />
     </app-layout>
 </template>
 <script>
@@ -15,6 +15,6 @@ export default defineComponent({
         CalendarComponent,
         AppLayout
     },
-    props: [],
+    props: ['eventTypes'],
 })
 </script>

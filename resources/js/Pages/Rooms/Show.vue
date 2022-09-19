@@ -234,7 +234,7 @@
         </div>
 
         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-            <CalendarComponent :roomId="room.id"/>
+            <CalendarComponent :eventTypes="this.event_types" :room="room"/>
         </div>
 
         <!-- Change RoomAdmins Modal -->

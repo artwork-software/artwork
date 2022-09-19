@@ -1415,8 +1415,6 @@ export default defineComponent({
         },
         showHints() {
 
-            console.log(this.addEventForm.start_time)
-
             if (this.selectedRoom === undefined || this.selectedRoom === null) {
                 this.newEventError = 'Wähle zuerst einen Raum aus.';
             } else if (this.addEventForm.start_time === undefined) {

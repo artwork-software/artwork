@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
@@ -12,6 +13,7 @@ use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Department;
+use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Sector;
@@ -205,6 +207,7 @@ class ProjectController extends Controller
                     'description' => $task_template->description
                 ]),
             ]),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
 
             'openTab' => $request->openTab ?: 'checklist',
             'project_id' => $project->id,

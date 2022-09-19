@@ -26,7 +26,7 @@ class HistoryService
         ]);
     }
 
-    public function taskUpdated(Task $task): Collection
+    public function taskUpdated(Task $task): ProjectHistory|Collection
     {
         $wildCards = ['{name}' => $task->name, '{checklistName}' => $task->checklist->name];
 

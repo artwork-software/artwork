@@ -14,7 +14,6 @@
                     </p>
                     <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
                 </div>
-
                 <!-- Calendar Div -->
                 <div class="relative">
                     <Link :href="route('events.view.index')"
@@ -101,6 +100,7 @@ import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
     props: ['tasks', 'projects'],
@@ -119,6 +119,12 @@ export default defineComponent({
         TeamIconCollection,
         Link,
         TeamTooltip
+    },
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                Inertia.reload({only: ['rooms']})
+            });
     },
     computed: {
         sortedTasksDeadline: function () {
@@ -146,7 +152,7 @@ export default defineComponent({
         updateTaskStatus(task) {
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
-        }
+        },
     },
     data() {
         return {

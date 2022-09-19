@@ -117,6 +117,7 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task, HistoryService $historyService)
     {
+
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
 
         if ($request->done == true) {

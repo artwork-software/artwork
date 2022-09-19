@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
 use App\Mail\InvitationCreated;
@@ -198,6 +199,8 @@ class InvitationController extends Controller
 
             $user->assignRole($invitation->role);
             $user->givePermissionTo(json_decode($invitation->permissions));
+
+            broadcast(new UserUpdated())->toOthers();
 
             return Redirect::to('/')->with('success', 'Herzlich Willkommen.');
 

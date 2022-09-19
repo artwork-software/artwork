@@ -28,7 +28,7 @@
                         <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
                     </div>
                     <button @click="openChangeTeamsModal"
-                       :class="['flex items-center my-auto text-sm subpixel-antialiased']">
+                            :class="['flex items-center my-auto text-sm subpixel-antialiased']">
                         <PencilAltIcon
                             class="mr-3 h-5 w-5 ml-6 mt-3 text-primaryText"
                             aria-hidden="true"/>
@@ -76,13 +76,14 @@
                     </draggable>
                 </div>
                 <div class="pt-8">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-8">
-                        <button v-if="!showSuccess" @click="createChecklistTemplate"
-                                class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >Vorlage anlegen
-                        </button>
+                    <div class="mt-2 items-center">
+                        <AddButton v-if="!showSuccess" @click="createChecklistTemplate"
+                                   class="py-3 px-5 border bg-primary hover:bg-primaryHover
+                                 focus:outline-none border-transparent text-base font-bold text-xl uppercase
+                                  shadow-sm text-secondaryHover"
+                                   text="Vorlage anlegen" mode="modal"/>
                         <button v-else type="submit"
-                                class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class="items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >
                             <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
                         </button>
@@ -133,7 +134,7 @@
         <!-- Change Teams Modal -->
         <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_checklist_team_assign.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-bold font-lexend text-primary text-2xl my-2">
                         Checklistenvorlage zuweisen
@@ -216,7 +217,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
-import {Inertia} from "@inertiajs/inertia";
+import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
 
@@ -244,7 +245,8 @@ export default {
         CheckIcon,
         ChevronDownIcon,
         PlusSmIcon,
-        draggable
+        draggable,
+        AddButton
     },
     data() {
         return {
@@ -264,8 +266,8 @@ export default {
                 task_templates: [],
                 departments: []
             }),
-            newTaskName:"",
-            newTaskDescription:"",
+            newTaskName: "",
+            newTaskDescription: "",
             taskForm: useForm({
                 name: "",
                 description: "",
@@ -273,17 +275,17 @@ export default {
         }
     },
     methods: {
-        openChangeTeamsModal(){
-          this.showChangeTeamsModal = true;
+        openChangeTeamsModal() {
+            this.showChangeTeamsModal = true;
         },
-        closeChangeTeamsModal(){
-          this.showChangeTeamsModal = false;
+        closeChangeTeamsModal() {
+            this.showChangeTeamsModal = false;
         },
-        openAddTaskModal(){
+        openAddTaskModal() {
             this.addingTask = true;
         },
-        closeAddTaskModal(){
-          this.addingTask = false;
+        closeAddTaskModal() {
+            this.addingTask = false;
         },
         deleteTeamFromTemplate(team) {
             this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
@@ -306,8 +308,8 @@ export default {
             this.team_query = "";
             this.team_search_results = []
         },
-        addTaskToTemplate(){
-            this.templateForm.task_templates.push({name:this.newTaskName,description:this.newTaskDescription});
+        addTaskToTemplate() {
+            this.templateForm.task_templates.push({name: this.newTaskName, description: this.newTaskDescription});
             this.newTaskName = "";
             this.newTaskDescription = "";
             this.closeAddTaskModal();
@@ -316,7 +318,7 @@ export default {
             this.templateForm.post(route('checklist_templates.store'));
             this.showSuccessButton();
         },
-        deleteTaskFromTemplate(taskToDelete){
+        deleteTaskFromTemplate(taskToDelete) {
             this.templateForm.task_templates.splice(this.templateForm.task_templates.indexOf(taskToDelete), 1);
         }
     },

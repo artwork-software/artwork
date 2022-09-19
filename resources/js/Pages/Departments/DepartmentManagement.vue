@@ -6,7 +6,7 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
                             <h2 class="text-3xl font-black font-lexend flex">Alle Teams</h2>
-                            <AddButton @click="openAddTeamModal" text="Team erstellen"/>
+                            <AddButton @click="openAddTeamModal" text="Team erstellen" mode="page"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
@@ -27,10 +27,12 @@
                         </div>
                     </div>
                     <ul role="list" class="mt-5 w-full">
-                        <li v-if="department_query.length < 1" v-for="(department,index) in departments" :key="department.id"
+                        <li v-if="department_query.length < 1" v-for="(department,index) in departments"
+                            :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
+                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name
+                                                    alt="TeamIcon"/>
                                 <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
@@ -40,10 +42,11 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
+                                        <img :data-tooltip-target="user.id"
+                                             class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
-                                        <UserTooltip :user="user" />
+                                        <UserTooltip :user="user"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -142,7 +145,8 @@
                         <li v-else v-for="(department,index) in department_search_results" :key="department.id"
                             class="py-5 flex justify-between">
                             <div class="flex">
-                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name alt="TeamIcon" />
+                                <TeamIconCollection class="h-16 w-16 flex-shrink-0" :iconName=department.svg_name
+                                                    alt="TeamIcon"/>
                                 <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
@@ -152,10 +156,11 @@
                             <div class="flex">
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
-                                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full ring-2 ring-white"
+                                        <img :data-tooltip-target="user.id"
+                                             class="h-9 w-9 rounded-full ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
-                                        <UserTooltip :user="user" />
+                                        <UserTooltip :user="user"/>
                                     </div>
                                     <div v-if="department.users.length >= 9" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -260,7 +265,7 @@
         <!-- Team erstellen Modal-->
         <jet-dialog-modal :show="addingTeam" @close="closeAddTeamModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Neues Team erstellen
@@ -274,11 +279,13 @@
                         <div class="flex">
                             <Menu as="div" class=" relative">
                                 <div>
-                                    <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']" class="items-center rounded-full focus:outline-none h-12 w-12">
+                                    <MenuButton :class="[form.svg_name === '' ? 'border border-gray-400' : '']"
+                                                class="items-center rounded-full focus:outline-none h-12 w-12">
                                         <label v-if="form.svg_name === ''" class="text-gray-400 text-xs">Icon*</label>
                                         <ChevronDownIcon v-if="form.svg_name === ''"
                                                          class="h-4 w-4 mx-auto items-center rounded-full shadow-sm text-black"></ChevronDownIcon>
-                                        <TeamIconCollection class="h-12 w-12" v-if="form.svg_name !== ''" :iconName=form.svg_name alt="TeamIcon" />
+                                        <TeamIconCollection class="h-12 w-12" v-if="form.svg_name !== ''"
+                                                            :iconName=form.svg_name alt="TeamIcon"/>
                                     </MenuButton>
                                 </div>
                                 <transition enter-active-class="transition ease-out duration-100"
@@ -291,9 +298,10 @@
                                         class="z-40 origin-top-right absolute h-56 w-24 overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div @click="form.svg_name = item.iconName"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary',
+                                                 :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary',
                                                   'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                <TeamIconCollection class="h-14 w-14" :iconName=item.iconName alt="TeamIcon" />
+                                                <TeamIconCollection class="h-14 w-14" :iconName=item.iconName
+                                                                    alt="TeamIcon"/>
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -304,7 +312,8 @@
                                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                        placeholder="placeholder"/>
                                 <label for="name"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name des Teams*</label>
+                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                                    des Teams*</label>
                             </div>
                         </div>
                         <div class="mt-12">
@@ -364,13 +373,14 @@
                             </button>
                             </span>
                         </div>
-                        <button
-                            :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
-                            @click="addTeam"
-                            :disabled="this.form.name === '' || this.form.svg_name === ''">
-                            Team erstellen
-                        </button>
+                        <div class="w-full items-center text-center">
+                            <AddButton
+                                :class="[this.form.name === '' || this.form.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
+                                @click="addTeam"
+                                :disabled="this.form.name === '' || this.form.svg_name === ''" mode="modal"
+                                text="Team erstellen"/>
+                        </div>
                     </div>
 
                 </div>
@@ -380,7 +390,7 @@
         <!-- Alle Mitglieder aus Team löschen Modal -->
         <jet-dialog-modal :show="deletingAllTeamMembers" @close="closeDeleteAllTeamMembersModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Alle Teammitglieder löschen
@@ -390,7 +400,8 @@
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased mt-4">
-                        Bist du sicher, dass du alle Mitglieder des Teams {{ teamToDeleteAllMembers.name }} entfernen willst?
+                        Bist du sicher, dass du alle Mitglieder des Teams {{ teamToDeleteAllMembers.name }} entfernen
+                        willst?
                     </div>
                     <div class="flex justify-between mt-6">
                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -411,7 +422,7 @@
         <!-- Team löschen Modal -->
         <jet-dialog-modal :show="deletingTeam" @close="closeDeleteTeamModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4 bg-secondaryHover">
                     <div class="font-black font-lexend text-primary text-3xl mt-6 my-2">
                         Team löschen
@@ -443,7 +454,7 @@
             <template #content>
                 <div class="mx-4">
                     <div class="font-bold text-primary font-lexend text-2xl my-2">
-                        {{this.successHeading}}
+                        {{ this.successHeading }}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -595,22 +606,22 @@ export default defineComponent({
             this.form.svg_name = "";
         },
         showSuccessModal(type) {
-            if(type === 'add'){
+            if (type === 'add') {
                 this.successHeading = 'Team erfolgreich erstellt'
-            }else if(type === 'delete'){
+            } else if (type === 'delete') {
                 this.successHeading = 'Team erfolgreich gelöscht'
-            }else{
+            } else {
                 this.successHeading = 'Team erfolgreich bearbeitet'
             }
             this.showSuccess = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
-        closeSuccessModal(){
+        closeSuccessModal() {
             this.showSuccess = false;
         },
         addUserToAssignedUsersArray(user) {
-            for(let assigned_user of this.form.assigned_users) {
-                if(user.id === assigned_user.id) {
+            for (let assigned_user of this.form.assigned_users) {
+                if (user.id === assigned_user.id) {
                     this.user_query = ""
                     return;
                 }
@@ -631,23 +642,23 @@ export default defineComponent({
             this.showSuccessModal('add');
 
         },
-        openDeleteAllTeamMembersModal(team){
+        openDeleteAllTeamMembersModal(team) {
             this.teamToDeleteAllMembers = team;
             this.deletingAllTeamMembers = true;
         },
-        closeDeleteAllTeamMembersModal(){
-          this.deletingAllTeamMembers = false;
-          this.teamToDeleteAllMembers = null;
+        closeDeleteAllTeamMembersModal() {
+            this.deletingAllTeamMembers = false;
+            this.teamToDeleteAllMembers = null;
         },
-        openDeleteTeamModal(team){
+        openDeleteTeamModal(team) {
             this.teamToDelete = team;
             this.deletingTeam = true;
         },
-        closeDeleteTeamModal(){
+        closeDeleteTeamModal() {
             this.deletingTeam = false;
             this.teamToDelete = null;
         },
-        deleteTeam(){
+        deleteTeam() {
             Inertia.delete(`/departments/${this.teamToDelete.id}`);
             this.closeDeleteTeamModal();
             this.showSuccessModal('delete');
@@ -663,10 +674,10 @@ export default defineComponent({
     watch: {
         department_query: {
             handler() {
-                if(this.department_query.length > 0) {
+                if (this.department_query.length > 0) {
                     axios.get('/departments/search', {
                         params: {query: this.department_query}
-                    }).then( response => {
+                    }).then(response => {
                         this.department_search_results = response.data
                     })
                 }
@@ -675,10 +686,10 @@ export default defineComponent({
         },
         user_query: {
             handler() {
-                if(this.user_query.length > 0) {
+                if (this.user_query.length > 0) {
                     axios.get('/users/search', {
                         params: {query: this.user_query}
-                    }).then( response => {
+                    }).then(response => {
                         this.user_search_results = response.data
                     })
                 }
@@ -690,7 +701,7 @@ export default defineComponent({
         return {
             addingTeam: false,
             deletingTeam: false,
-            teamToDelete:null,
+            teamToDelete: null,
             teamToDeleteAllMembers: null,
             deletingAllTeamMembers: false,
             showSuccess: false,

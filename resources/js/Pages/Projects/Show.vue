@@ -253,7 +253,7 @@
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                <AddButton @click="openAddChecklistModal" text="Neue Checkliste"/>
+                                <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                     <span
@@ -428,7 +428,8 @@
                                                 <div class="flex"
                                                      v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
-                                                        <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"/>
+                                                        <AddButton @click="openAddTaskModal(checklist)"
+                                                                   text="Neue Aufgabe" mode="page"/>
                                                     </div>
                                                     <div v-if="$page.props.can.show_hints" class="flex">
                                                         <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -637,7 +638,8 @@
                                             <div class="flex w-full mt-6"
                                                  v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="">
-                                                    <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"/>
+                                                    <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"
+                                                               mode="page"/>
                                                 </div>
                                                 <div v-if="$page.props.can.show_hints" class="flex">
                                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -834,14 +836,17 @@
                         <!-- Confirm File Delete Modal -->
                         <jet-dialog-modal :show="deletingFile" @close="closeConfirmDeleteModal">
                             <template #content>
-                                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                                 <div class="mx-4">
                                     <div class="font-black font-lexend text-primary text-3xl my-2">
                                         Datei löschen
                                     </div>
-                                    <XIcon @click="closeConfirmDeleteModal" class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer" aria-hidden="true" />
+                                    <XIcon @click="closeConfirmDeleteModal"
+                                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                                           aria-hidden="true"/>
                                     <div class="text-error subpixel-antialiased">
-                                        Bist du sicher, dass du "{{project_file.name}}" aus dem System löschen möchtest?
+                                        Bist du sicher, dass du "{{ project_file.name }}" aus dem System löschen
+                                        möchtest?
                                     </div>
                                     <div class="flex justify-between mt-6">
                                         <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
@@ -850,7 +855,8 @@
                                             Löschen
                                         </button>
                                         <div class="flex my-auto">
-                                            <span @click="closeConfirmDeleteModal" class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                            <span @click="closeConfirmDeleteModal"
+                                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1103,13 +1109,13 @@
                                 </div>
                             </Listbox>
                         </div>
-                        <button
-                            :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="editProject"
-                            :disabled="this.form.name === ''">
-                            Speichern
-                        </button>
+                        <div class="w-full items-center text-center">
+                            <AddButton
+                                :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
+                                @click="editProject"
+                                :disabled="this.form.name === ''" text="Speichern" mode="modal"/>
+                        </div>
                     </div>
 
                 </div>
@@ -1219,14 +1225,15 @@
                             </div>
                         </div>
 
-                        <button :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="addChecklist"
-                                :disabled="checklistForm.name.length === 0 && !selectedTemplate.id">
-                            Anlegen
-                        </button>
+                        <div class="w-full items-center text-center">
+                            <AddButton :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
+                                       'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                       class="mt-4 items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                       @click="addChecklist"
+                                       :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
+                                       text="Anlegen" mode="modal"/>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -1347,10 +1354,11 @@
 
                         </span>
                     </div>
-                    <button @click="editProjectTeam"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
-                    >Speichern
-                    </button>
+                    <div class="w-full items-center text-center">
+                        <AddButton @click="editProjectTeam" text="Speichern" mode="modal"
+                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
+                        />
+                    </div>
 
                 </div>
 
@@ -1404,13 +1412,15 @@
                                                 v-model="taskForm.description" rows="3"
                                                 class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                         </div>
-                        <button
-                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg tracking-wider uppercase shadow-sm text-secondaryHover"
-                            @click="addTask"
-                            :disabled="this.taskForm.name === ''">
-                            Hinzufügen
-                        </button>
+                        <div class="w-full items-center text-center">
+                            <AddButton
+                                :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover
+                            focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm
+                            text-secondaryHover"
+                                @click="addTask"
+                                :disabled="this.taskForm.name === ''" text="Hinzufügen" mode="modal"/>
+                        </div>
                     </div>
 
                 </div>
@@ -1606,13 +1616,15 @@
                             </div>
                         </div>
 
-                        <button :class="[editChecklistForm.name.length === 0 ?
+                        <div class="w-full items-center text-center">
+                            <AddButton :class="[editChecklistForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="editChecklist" :disabled="editChecklistForm.name.length === 0">
-                            Speichern
-                        </button>
+                                       class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                       @click="editChecklist" :disabled="editChecklistForm.name.length === 0"
+                                       text="Speichern" mode="modal"
+                            />
+                        </div>
                     </div>
                 </div>
             </template>

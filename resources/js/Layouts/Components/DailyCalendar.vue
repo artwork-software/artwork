@@ -8,7 +8,7 @@
                             <h2 class="text-3xl font-black flex">Raumbelegungen</h2>
                             <div class="flex items-center"
                                  v-if="this.$page.props.can.admin_rooms || this.$page.props.is_admin || this.$page.props.can.admin_projects || this.$page.props.can.request_room_occupancy">
-                                <AddButton @click="openAddEventModal" text="Neue Belegung"/>
+                                <AddButton @click="openAddEventModal" text="Neue Belegung" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-2.5">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span

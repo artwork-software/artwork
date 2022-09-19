@@ -10,7 +10,7 @@
             <div class="mt-16 max-w-2xl">
                 <div class="flex">
                     <h2 class="font-bold font-lexend text-xl my-2">Neuer Termintyp</h2>
-                    <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp"/>
+                    <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp" mode="page"/>
                     <div v-if="$page.props.can.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                         <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Erstelle neue Termintypen</span>
@@ -175,14 +175,12 @@
                                    class="ml-4 my-auto text-sm">individueller Terminname möglich</p>
                             </div>
                         </div>
-                        <div class="mt-2 ml-5">
-                            <button
+                        <div class="mt-2 w-full items-center text-center">
+                            <AddButton
                                 :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                 @click="addEventType"
-                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''">
-                                Speichern
-                            </button>
+                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" text="Speichern" mode="modal" />
                         </div>
                     </div>
                 </div>

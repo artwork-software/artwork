@@ -9,7 +9,8 @@
                                 <ListboxButton
                                     class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
-                                        <p class="block items-center flex mr-2 text-header font-black">{{ projectFilter.name }}</p>
+                                        <p class="block items-center flex mr-2 text-header font-black">
+                                            {{ projectFilter.name }}</p>
                                         <span
                                             class="inset-y-0 flex items-center pr-2 pointer-events-none">
                                             <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
@@ -37,7 +38,7 @@
                             </Listbox>
                             <div class="flex"
                                  v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin">
-                                <AddButton @click="openAddProjectModal" text="Neues Projekt"/>
+                                <AddButton @click="openAddProjectModal" text="Neues Projekt" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span
@@ -652,13 +653,14 @@
                                 </div>
                             </Listbox>
                         </div>
-                        <button
-                            :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="addProject"
-                            :disabled="this.form.name === ''">
-                            Anlegen
-                        </button>
+                        <div class="w-full items-center text-center">
+                            <AddButton
+                                :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold
+                             text-xl shadow-sm text-secondaryHover"
+                                @click="addProject"
+                                :disabled="this.form.name === ''" text="Anlegen" mode="modal"/>
+                        </div>
                     </div>
 
                 </div>
@@ -984,7 +986,7 @@ export default defineComponent({
                     axios.get('/projects/search', {
                         params: {query: this.project_query}
                     }).then(response => {
-                        if(this.projectFilter.name === 'Alle Projekte') {
+                        if (this.projectFilter.name === 'Alle Projekte') {
                             this.project_search_results = response.data
                         } else {
                             console.log(response.data)

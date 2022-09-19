@@ -114,12 +114,12 @@
                         </div>
 
                         <div class="pt-5">
-                            <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
-                                <button v-if="!showSuccess" type="submit"
-                                        class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                                        font-bold text-lg uppercase shadow-sm text-secondaryHover"
-                                >Profil-Änderungen speichern
-                                </button>
+                            <div class="mt-2 items-center">
+                                <AddButton v-if="!showSuccess" type="submit"
+                                        class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none
+                                         border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
+                                           text="Profiländerungen speichern" mode="modal"
+                                 />
                                 <button v-else type="submit"
                                         class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                 >
@@ -238,12 +238,11 @@
                             Saved.
                         </jet-action-message>
                     </div>
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 sm:grid-cols-6">
-                        <button @click="updatePassword"
-                                class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                            font-bold text-lg uppercase shadow-sm text-secondaryHover"
-                        > Passwort ändern
-                        </button>
+                    <div class="mt-4">
+                        <AddButton @click="updatePassword"
+                                class="px-10 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                            font-bold text-lg shadow-sm text-secondaryHover" text="Passwort ändern" mode="modal"
+                         />
                     </div>
 
 
@@ -362,9 +361,11 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import {Inertia} from "@inertiajs/inertia";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default defineComponent({
     components: {
+        AddButton,
         JetActionMessage,
         JetButton,
         JetFormSection,

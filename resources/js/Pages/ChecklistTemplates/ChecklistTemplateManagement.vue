@@ -6,7 +6,7 @@
                     <div class="flex">
                         <h2 class="text-3xl font-black font-lexend flex">Checklistenvorlagen</h2>
                         <Link :href="route('checklist_templates.create')">
-                            <AddButton text="Neue Vorlage"/>
+                            <AddButton text="Neue Vorlage" mode="page"/>
                         </Link>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>

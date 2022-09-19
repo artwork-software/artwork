@@ -127,11 +127,10 @@
                     </div>
                 </div>
 
-                <div class="mt-6 grid gap-y-4 gap-x-4 items-center grid-cols-9">
-                    <button class="col-span-3 py-2.5 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                                        font-bold text-lg uppercase shadow-sm text-secondaryHover">
-                        Änderungen speichern
-                    </button>
+                <div class="mt-6 items-center">
+                    <AddButton class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                                        font-bold text-lg shadow-sm text-secondaryHover"
+                    text="Änderungen speichern" mode="modal"/>
                 </div>
             </form>
 
@@ -172,11 +171,10 @@
                         </div>
                     </div>
                 </div>
-                <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-6">
-                    <button @click.prevent="changeEmailData" class="sm:col-span-2 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                                        font-bold text-lg uppercase shadow-sm text-secondaryHover">
-                        Änderungen speichern
-                    </button>
+                <div class="mt-4 items-center">
+                    <AddButton @click.prevent="changeEmailData" class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                                        font-bold text-lg shadow-sm text-secondaryHover"
+                               text="Änderungen speichern" mode="modal"/>
                 </div>
 
             </div>
@@ -189,9 +187,11 @@ import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from "@/Jetstream/InputError";
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default defineComponent({
     components: {
+        AddButton,
         AppLayout,
         SvgCollection,
         JetInputError

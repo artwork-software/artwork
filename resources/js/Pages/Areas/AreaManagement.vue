@@ -10,7 +10,7 @@
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
-                                            <AddButton @click="openAddAreaModal" text="Areal hinzufügen"/>
+                                            <AddButton @click="openAddAreaModal" text="Areal hinzufügen" mode="page"/>
                                         </div>
                                         <div v-if="$page.props.can.show_hints" class="flex">
                                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -102,7 +102,8 @@
                                         </div>
                                         <div class="flex w-full mt-6" v-if="this.opened_areas.includes(area.id)">
                                             <div class="">
-                                                <AddButton @click="openAddRoomModal(area)" text="Raum hinzufügen"/>
+                                                <AddButton @click="openAddRoomModal(area)" text="Raum hinzufügen"
+                                                           mode="page"/>
                                             </div>
                                             <div v-if="$page.props.can.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -321,7 +322,7 @@
     <!-- Areal Hinzufügen-->
     <jet-dialog-modal :show="showAddAreaModal" @close="closeAddAreaModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_area_new.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_area_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Neues Areal
@@ -341,14 +342,14 @@
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
 
-                    <button :class="[newAreaForm.name.length === 0 ?
+                    <div class="w-full items-center text-center">
+                        <AddButton :class="[newAreaForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="addArea"
-                            :disabled="newAreaForm.name.length === 0">
-                        Anlegen
-                    </button>
+                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="addArea"
+                                   :disabled="newAreaForm.name.length === 0" text="Anlegen" mode="modal"/>
+                    </div>
                 </div>
             </div>
         </template>
@@ -356,7 +357,7 @@
     <!-- Areal Bearbeiten-->
     <jet-dialog-modal :show="showEditAreaModal" @close="closeEditAreaModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_area_edit.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_area_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Areal bearbeiten
@@ -376,14 +377,14 @@
                         <jet-input-error :message="editAreaForm.error" class="mt-2"/>
                     </div>
 
-                    <button :class="[editAreaForm.name.length === 0 ?
+                    <div class="w-full items-center text-center">
+                        <AddButton :class="[editAreaForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 flex items-center px-20 py-3 border border-transparent
+                                   class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
                             text-base tracking-wider font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="editArea"
-                            :disabled="editAreaForm.name.length === 0">
-                        Speichern
-                    </button>
+                                   @click="editArea"
+                                   :disabled="editAreaForm.name.length === 0" text="Speichern" mode="modal"/>
+                    </div>
                 </div>
             </div>
         </template>
@@ -391,7 +392,7 @@
     <!-- Raum Hinzufügen-->
     <jet-dialog-modal :show="showAddRoomModal" @close="closeAddRoomModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Neuer Raum
@@ -405,7 +406,8 @@
                                class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="roomName"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name des Raums*
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                            des Raums*
                         </label>
                         <jet-input-error :message="newRoomForm.error" class="mt-2"/>
                     </div>
@@ -451,14 +453,14 @@
                         </div>
                     </div>
 
-                    <button :class="[newRoomForm.name.length === 0 ?
+                    <div class="w-full items-center text-center">
+                        <AddButton :class="[newRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-4 flex items-center px-20 py-3 border border-transparent
+                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="addRoom"
-                            :disabled="newRoomForm.name.length === 0">
-                        Anlegen
-                    </button>
+                                   @click="addRoom"
+                                   :disabled="newRoomForm.name.length === 0" text="Anlegen" mode="modal"/>
+                    </div>
                 </div>
             </div>
         </template>
@@ -466,7 +468,7 @@
     <!-- Raum Bearbeiten-->
     <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Raum bearbeiten
@@ -526,15 +528,13 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2">
-                        <button :class="[editRoomForm.name.length === 0 ?
+                    <div class="w-full items-center text-center">
+                        <AddButton :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
+                                   class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="editRoom"
-                                :disabled="editRoomForm.name.length === 0">
-                            Speichern
-                        </button>
+                                   @click="editRoom"
+                                   :disabled="editRoomForm.name.length === 0" text="Speichern" mode="modal"/>
                     </div>
 
                 </div>
@@ -544,7 +544,7 @@
     <!-- Delete Area Modal -->
     <jet-dialog-modal :show="showSoftDeleteAreaModal" @close="closeSoftDeleteAreaModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
                 <div class="font-bold text-primary text-2xl my-2">
@@ -574,7 +574,7 @@
     <!-- Delete Room Modal -->
     <jet-dialog-modal :show="showSoftDeleteRoomModal" @close="closeSoftDeleteRoomModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
                 <div class="font-bold text-primary text-3xl my-2">
@@ -603,7 +603,7 @@
     <!-- Delete All Rooms from Area Modal -->
     <jet-dialog-modal :show="showDeleteAllRoomsModal" @close="closeDeleteAllRoomsModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
                 <div class="font-black text-primary text-3xl my-2">
@@ -632,7 +632,7 @@
     <!-- Success Modal -->
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4" />
+            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
                 <div class="font-black text-primary font-lexend text-3xl my-2">
@@ -670,7 +670,7 @@ import {
     SearchIcon, TrashIcon,
     XIcon, DuplicateIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronUpIcon,ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronUpIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetButton from "@/Jetstream/Button";
 import {defineComponent} from 'vue'
@@ -768,14 +768,13 @@ export default defineComponent({
     },
     methods: {
         changeAreaStatus(area) {
-            if(!this.opened_areas.includes(area.id)) {
+            if (!this.opened_areas.includes(area.id)) {
                 const openedAreas = this.opened_areas;
 
                 openedAreas.push(area.id)
                 this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": openedAreas});
-            }
-            else {
-                const filteredList = this.opened_areas.filter(function(value) {
+            } else {
+                const filteredList = this.opened_areas.filter(function (value) {
                     return value !== area.id;
                 })
                 this.$inertia.patch(`/users/${this.$page.props.user.id}/areas`, {"opened_areas": filteredList});

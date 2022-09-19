@@ -11,10 +11,10 @@
                                      alt=""/>
                                 <div class="mt-6 flex flex-grow w-full">
                                     <div class="text-3xl  font-lexend font-black flex my-auto ml-6">
-                                        {{userForm.first_name}}
+                                        {{ userForm.first_name }}
                                     </div>
                                     <div class="text-3xl  font-lexend font-black flex my-auto ml-2">
-                                        {{userForm.last_name}}
+                                        {{ userForm.last_name }}
                                     </div>
 
                                 </div>
@@ -36,7 +36,9 @@
                                     </div>
                                     <div class="sm:col-span-3">
                                         <div class="mt-1">
-                                            <input type="text" v-model="this.user_to_edit.email" :disabled="!$page.props.is_admin" :class="$page.props.is_admin ? '' : 'bg-gray-100'"
+                                            <input type="text" v-model="this.user_to_edit.email"
+                                                   :disabled="!$page.props.is_admin"
+                                                   :class="$page.props.is_admin ? '' : 'bg-gray-100'"
                                                    class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                                             <jet-input-error :message="userForm.errors.email" class="mt-2"/>
                                         </div>
@@ -118,25 +120,25 @@
                         {{ password_reset_status }}
                     </div>
 
-                    <jet-validation-errors class="mb-4" />
+                    <jet-validation-errors class="mb-4"/>
 
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
                         <h2 class="text-xl mt-16 mb-8 leading-6 font-black text-gray-900">Nutzerrechte</h2>
 
                         <div class="mb-8">
 
-                                <div class="relative flex items-center" v-for="(role, index) in available_roles" :key=index>
-                                    <div class="flex items-center h-7">
-                                        <input :id="role.name"
-                                               v-model="userForm.roles"
-                                               :value="role.name"
-                                               name="roles" type="checkbox"
-                                               class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
-                                    </div>
-                                    <div class="ml-3 text-sm">
-                                        <label for="roles" class="text-primary">{{ role.name_de }}</label>
-                                    </div>
+                            <div class="relative flex items-center" v-for="(role, index) in available_roles" :key=index>
+                                <div class="flex items-center h-7">
+                                    <input :id="role.name"
+                                           v-model="userForm.roles"
+                                           :value="role.name"
+                                           name="roles" type="checkbox"
+                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
                                 </div>
+                                <div class="ml-3 text-sm">
+                                    <label for="roles" class="text-primary">{{ role.name_de }}</label>
+                                </div>
+                            </div>
 
                         </div>
 
@@ -145,15 +147,16 @@
 
                         <div v-for="(permissions, group) in all_permissions">
 
-                            <h3 class="text-secondary mt-3 mb-1">{{group}}</h3>
+                            <h3 class="text-secondary mt-3 mb-1">{{ group }}</h3>
 
-                            <div class="relative flex items-center" v-for="(permission, index) in permissions" :key=index>
+                            <div class="relative flex items-center" v-for="(permission, index) in permissions"
+                                 :key=index>
                                 <div class="flex items-center h-7">
                                     <input :id="permission.name"
                                            v-model="userForm.permissions"
                                            :value="permission.name"
                                            name="permissions" type="checkbox"
-                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2" />
+                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
                                 </div>
                                 <div class="ml-3 text-sm">
                                     <label for="permissions" class="text-primary">{{ permission.name_de }}</label>
@@ -165,10 +168,9 @@
 
                     <div class="mt-8">
                         <div class="flex">
-                            <button @click="editUser"
-                                    class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            >Einstellungen ändern
-                            </button>
+                            <AddButton @click="editUser"
+                                       class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                       text="Einstellungen ändern" mode="modal"/>
                         </div>
                     </div>
                 </div>
@@ -180,7 +182,7 @@
         <!-- Nutzer*in löschen Modal -->
         <jet-dialog-modal :show="deletingUser" @close="closeDeleteUserModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="font-black font-lexend text-primary text-3xl my-2">
                         Nutzer*in löschen
@@ -211,7 +213,7 @@
         <!-- Change Teams Modal -->
         <jet-dialog-modal :show="showChangeTeamsModal" @close="closeChangeTeamsModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
                     <div class="font-black font-lexend text-primary mt-10 text-3xl my-2">
                         Teamzugehörigkeit
@@ -228,7 +230,8 @@
                               class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
                         <div v-for="team in departments">
                                         <span class=" flex items-center pr-4 py-2 text-md subpixel-antialiased">
-                                            <input :key="team.name" type="checkbox" :value="team" :id="team.id" v-model="team.checked"
+                                            <input :key="team.name" type="checkbox" :value="team" :id="team.id"
+                                                   v-model="team.checked"
                                                    @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
                                             <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
@@ -240,11 +243,11 @@
                                         </span>
                         </div>
                     </div>
-                    <button class="mt-4 bg-primary hover:bg-primaryHover focus:outline-none inline-flex items-center px-20 py-3 border border-transparent
+                    <div class="w-full items-center text-center">
+                        <AddButton class="mt-4 bg-primary hover:bg-primaryHover focus:outline-none inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="saveNewTeams">
-                        Speichern
-                    </button>
+                                   @click="saveNewTeams" text="Speichern" mode="modal"/>
+                    </div>
                 </div>
 
             </template>
@@ -311,10 +314,12 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default defineComponent({
     name: 'Edit',
     components: {
+        AddButton,
         DotsVerticalIcon,
         PencilAltIcon,
         TrashIcon,
@@ -365,7 +370,7 @@ export default defineComponent({
                 roles: this.user_to_edit.roles
             }),
             resetPasswordForm: this.$inertia.form({
-              email: this.user_to_edit.email
+                email: this.user_to_edit.email
             }),
         }
     },
@@ -376,16 +381,17 @@ export default defineComponent({
         closeDeleteUserModal() {
             this.deletingUser = false;
         },
-        closeSuccessModal(){
+        closeSuccessModal() {
             this.showSuccessModal = false;
         },
         openChangeTeamsModal() {
-            this.departments.forEach((team) =>{
+            this.departments.forEach((team) => {
                 this.userForm.departments.forEach((userTeam) => {
-                    if(userTeam.id === team.id) {
+                    if (userTeam.id === team.id) {
                         team.checked = true;
-                    }})
+                    }
                 })
+            })
             this.showChangeTeamsModal = true;
         },
         closeChangeTeamsModal() {
@@ -418,14 +424,14 @@ export default defineComponent({
             this.closeChangeTeamsModal();
             this.openSuccessModal()
         },
-        openSuccessModal(){
+        openSuccessModal() {
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
         resetPassword() {
             this.resetPasswordForm.post(route('user.reset.password'));
         },
-        deleteFromAllDepartments(){
+        deleteFromAllDepartments() {
             this.userForm.departments = [];
             this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
             this.openSuccessModal();

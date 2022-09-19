@@ -6,7 +6,8 @@
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
-                            <AddButton data-modal-toggle="invite-user" id="invite-users" text="Nutzer einladen"/>
+                            <AddButton data-modal-toggle="invite-user" id="invite-users" text="Nutzer einladen"
+                                       mode="page"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Lade neue Nutzer*innen ein</span>
@@ -320,7 +321,7 @@
                     <Disclosure as="div">
                         <div class="flex mt-4 mb-10">
                             <DisclosureButton>
-                                <AddButton text="Zu Teams zuweisen"/>
+                                <AddButton text="Zu Teams zuweisen" mode="page"/>
                             </DisclosureButton>
                             <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
@@ -425,14 +426,15 @@
                     </div>
                 </div>
 
-                <button :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
+                <div class="w-full items-center text-center">
+                    <AddButton :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                        class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
+                               class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
-                        @click="addUser"
-                        :disabled=" form.processing || (form.user_emails.length === 0 && emailInput.length < 3)">
-                    Einladen
-                </button>
+                               @click="addUser"
+                               :disabled=" form.processing || (form.user_emails.length === 0 && emailInput.length < 3)"
+                               text="Einladen" mode="modal"/>
+                </div>
             </div>
         </flowbite-modal>
         <!-- Nutzer*in löschen Modal -->

@@ -12,11 +12,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * @property  string $name
  * @property  string $description
  * @property  bool $done
- * @property  string $deadline
  * @property  \Illuminate\Support\Carbon $done_at
  * @property  string $order
  * @property  int $checklist_id
  * @property  int $user_id
+ * @property  \Illuminate\Support\Carbon $deadline
  * @property  \Illuminate\Support\Carbon $created_at
  * @property  \Illuminate\Support\Carbon $updated_at
  *
@@ -40,7 +40,11 @@ class Task extends Model
 
     protected $casts = [
         'done' => 'boolean',
-        'done_at' => 'datetime',
+    ];
+
+    protected $dates = [
+        'done_at',
+        'deadline',
     ];
 
     public function checklist(): BelongsTo

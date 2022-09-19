@@ -773,40 +773,21 @@
                                  aria-hidden="true"/>
                         </div>
                     </div>
-                    <div class="flex mt-4 items-center">
-                        <div v-if="conflictData">
-                            <div v-if="conflictData.length > 0" class="bg-error absolute left-0 flex p-1 -mt-2 mr-0.5">
-                                <img src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                     class="h-8 w-8 p-1 my-auto flex text-white"
-                                     aria-hidden="true"/>
-                            </div>
-                        </div>
-                        <div class="text-secondary w-1/2">
-                            <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
-                            <div class="w-full">
-                                <input @blur="validateStartTime(addEventForm)"
-                                       v-model="addEventForm.startDate" id="eventStartDate" @change="updateTimes(addEventForm)"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="addEventForm.startTime" id="changeStartTime" @change="updateTimes(addEventForm)"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
-                        </div>
-                        <div class="text-secondary ml-10 w-1/2">
-                            <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
-                            <div class="w-full">
-                                <input @blur="validateEndTime(addEventForm)"
-                                       v-model="addEventForm.endDate" id="eventEndDate" @change="updateTimes(addEventForm)"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="addEventForm.endTime" id="changeEndTime" @change="updateTimes(addEventForm)"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
-                        </div>
+                    <div class="text-secondary mr-2">
+                        <label for="startTime" class="text-xs subpixel-antialiased">Startdatum*</label>
+                        <input
+                            @blur="validateStartTime(addEventForm)"
+                            v-model="addEventForm.start_time" id="startTime"
+                            placeholder="Startdatum" type="datetime-local"
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary mr-2 w-full"/>
+                    </div>
+                    <div class="text-secondary ml-2">
+                        <label for="endTime" class="text-xs subpixel-antialiased">Enddatum*</label>
+                        <input
+                            @blur="validateEndTime(addEventForm)"
+                            v-model="addEventForm.end_time" id="endTime"
+                            placeholder="Zu erledigen bis?" type="datetime-local"
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 text-primary placeholder-secondary w-full"/>
                     </div>
                 </div>
 
@@ -1170,29 +1151,19 @@
                     <div
                         v-if="checkProjectPermission(event.project_id,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || event.created_by.id === this.$page.props.user.id"
                         class="flex mt-1">
-                        <div class="text-secondary w-1/2">
-                            <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
-                            <div class="w-full">
-                                <input v-model="event.startDate" id="changeEventStartDate"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="event.startTime" id="eventStartTime"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
+                        <div class="text-secondary mr-2">
+                            <label for="startDate" class="text-xs subpixel-antialiased">Startdatum*</label>
+                            <input
+                                v-model="event.start_time_dt_local" id="startDate"
+                                placeholder="Terminstart" type="datetime-local"
+                                class="border-gray-300 text-primary placeholder-secondary mr-2 w-full placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1"/>
                         </div>
-                        <div class="text-secondary ml-10 w-1/2">
-                            <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
-                            <div class="w-full">
-                                <input v-model="event.endDate" id="changeEventEndDate"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="event.endTime" id="eventEndTime"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
+                        <div class="text-secondary ml-2">
+                            <label for="endDate" class="text-xs subpixel-antialiased">Enddatum*</label>
+                            <input
+                                v-model="event.end_time_dt_local" id="endDate"
+                                placeholder="Zu erledigen bis?" type="datetime-local"
+                                class="border-gray-300 text-primary placeholder-secondary w-full placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1"/>
                         </div>
                     </div>
                     <div v-else class="mt-4 subpixel-antialiased">
@@ -1642,38 +1613,15 @@ export default defineComponent({
                 return lastRoom;
             }
         },
-        showHints() {
-            if (this.selectedRoom === undefined || this.selectedRoom === null) {
-                this.newEventError = 'Wähle zuerst einen Raum aus.';
-            } else if (this.addEventForm.start_time === undefined) {
-                this.newEventError = 'Wähle zuerst eine Startzeit aus.';
-            } else if (this.addEventForm.end_time === undefined) {
-                this.newEventError = 'Wähle zuerst eine Endzeit aus.';
-            } else if (this.selectedEventType.project_mandatory && this.selectedProject === null && this.newProjectName === '') {
-                this.newEventError = 'Gib zuerst einen Projektnamen an.';
-            } else if (this.assignProject && (this.selectedProject === null && this.newProjectName === '')) {
-                this.newEventError = 'Gib zuerst einen Projektnamen ein';
-            } else if ((this.addEventForm.name === '' && this.selectedEventType.individual_name)
-                && this.newProjectName === ''
-                && this.selectedProject === null) {
-                this.newEventError = 'Gib zuerst einen Terminnamen an.';
-            } else {
-                this.newEventError = ''
-            }
-        },
         openAddEventModal(roomId) {
             this.addingEvent = true;
             if (this.showAddHoverDate !== null) {
                 const startDate = new Date(this.showAddHoverDate);
                 startDate.setMinutes(startDate.getMinutes() + 120);
-                this.addEventForm.startDate = startDate.toISOString().slice(0, 10);
-                this.addEventForm.startTime = startDate.toISOString().slice(11, 16);
                 this.addEventForm.start_time = startDate.toISOString().slice(0, 16);
 
                 const endDate = new Date(this.showAddHoverDate);
                 endDate.setMinutes(endDate.getMinutes() + 1559);
-                this.addEventForm.endDate = endDate.toISOString().slice(0, 10);
-                this.addEventForm.endTime = endDate.toISOString().slice(11, 16);
                 this.addEventForm.end_time = endDate.toISOString().slice(0, 16);
             }
             if (roomId !== null) {
@@ -1727,10 +1675,6 @@ export default defineComponent({
             this.addEventForm.eventType = null;
             this.addEventForm.name = '';
             this.addEventForm.start_time = null;
-            this.addEventForm.startDate = null;
-            this.addEventForm.startTime = null;
-            this.addEventForm.endDate = null;
-            this.addEventForm.endTime = null;
             this.addEventForm.end_time = null;
             this.addEventForm.description = '';
             this.addEventForm.occupancy_option = false;
@@ -1742,7 +1686,6 @@ export default defineComponent({
             this.conflictData = null;
             this.selectedEventType = this.event_types[0];
             this.startTimeError = null;
-            this.newEventError = null;
         },
         addEvent(isOption) {
             this.addEventForm.event_type_id = this.selectedEventType.id;
@@ -1796,8 +1739,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
-            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
+            this.updateEventForm.start_time = event.start_time_dt_local;
+            this.updateEventForm.end_time = event.end_time_dt_local;
             this.updateEventForm.occupancy_option = event.occupancy_option;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1865,8 +1808,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
-            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
+            this.updateEventForm.start_time = event.start_time_dt_local;
+            this.updateEventForm.end_time = event.end_time_dt_local;
             this.updateEventForm.occupancy_option = false;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1882,8 +1825,8 @@ export default defineComponent({
                 this.updateEventForm.name = event.name;
             }
             this.updateEventForm.description = event.description;
-            this.setCombinedTimeString(event.startDate,event.startTime,'start',this.updateEventForm);
-            this.setCombinedTimeString(event.endDate,event.endTime,'end',this.updateEventForm);
+            this.updateEventForm.start_time = event.start_time_dt_local;
+            this.updateEventForm.end_time = event.end_time_dt_local;
             this.updateEventForm.occupancy_option = event.false;
             this.updateEventForm.audience = event.audience;
             this.updateEventForm.is_loud = event.is_loud;
@@ -1893,77 +1836,7 @@ export default defineComponent({
             this.updateEventForm.project_id = event.project_id;
             this.updateEventForm.patch(route('events.update', {event: event.id}));
             this.closeDayDetailModal();
-        },
-        switchProjectMode() {
-            this.newProjectName = '';
-            this.selectedProject = null;
-        },
-        updateTimes(form){
-            if(form.startDate){
-                if(!form.endDate){
-                    form.endDate = form.startDate;
-                }
-                if(form.startTime) {
-                    if (!form.endTime) {
-                        if(form.startTime === '23:00'){
-                            form.endTime = '23:59';
-                        }else{
-                            let startHours = form.startTime.slice(0,2);
-                            if(startHours === '23'){
-                                form.endTime = '00:' + form.startTime.slice(3,5);
-                                let date = new Date();
-                                form.endDate = new Date(date.setDate(new Date(form.endDate).getDate() + 1)).toISOString().slice(0, 10);
-                                this.setCombinedTimeString(form.endDate, form.endTime, 'end', form);
-                            }else{
-                                form.endTime = this.getNextHourString(form.startTime)
-                            }
-                        }
-                    }
-                    this.setCombinedTimeString(form.startDate,form.startTime,'start', form);
-                }else{
-                    this.setCombinedTimeString(form.startDate,'00:00','start', form);
-                }
-            }
-            if(form.endDate){
-                if(form.endTime){
-                    this.setCombinedTimeString(form.endDate, form.endTime, 'end', form);
-                }else{
-                    this.setCombinedTimeString(form.endDate, '23:59', 'end', form);
-                }
-
-            }
-        },
-        setCombinedTimeString(date, time, target, form){
-            let combinedDateString = (date.toString() + ' ' + time);
-            const offset = new Date(combinedDateString).getTimezoneOffset()
-
-            if(target === 'start'){
-                if(offset === -60) {
-                    form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
-                }
-                else {
-                    form.start_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
-                }
-            }else if(target === 'end'){
-                if(offset === -60) {
-                    form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
-                }
-                else {
-                    form.end_time = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
-                }
-            }
-
-        },
-        getNextHourString(timeString){
-            let hours = timeString.slice(0,2);
-            let minutes = timeString.slice(3,5);
-            if((Number(hours) + 1) < 10){
-                return '0' + (Number(hours) + 1) + ':' + minutes;
-            }else{
-                return (Number(hours) + 1) + ':' + minutes;
-            }
-
-        },
+        }
     },
     watch: {
         project_query: {
@@ -2005,14 +1878,9 @@ export default defineComponent({
             project_search_results: [],
             startTimeError: null,
             conflictData: null,
-            newEventError: null,
             addEventForm: useForm({
                 name: '',
                 start_time: this.start_time_of_new_event,
-                startDate: null,
-                endDate: null,
-                startTime: null,
-                endTime: null,
                 end_time: this.end_time_of_new_event,
                 description: '',
                 occupancy_option: false,

@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
 use App\Models\Checklist;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -19,7 +20,7 @@ class ChecklistPolicy
      */
     public function view(User $user, Checklist $checklist)
     {
-        return $user->can('view checklists') && $checklist->departments->users->contains($user->id);
+        return $user->can(PermissionNameEnum::CHECKLIST_VIEW) && $checklist->departments->users->contains($user->id);
     }
 
     /**
@@ -42,7 +43,8 @@ class ChecklistPolicy
      */
     public function update(User $user, Checklist $checklist)
     {
-        return $user->can('update checklists') && 0 < (array_intersect($checklist->departments->all(), $user->departments->all()));
+        return $user->can(PermissionNameEnum::CHECKLIST_UPDATE)
+            && $user->departments->intersect($checklist->departments)->isNotEmpty();
     }
 
     /**
@@ -54,7 +56,8 @@ class ChecklistPolicy
      */
     public function delete(User $user, Checklist $checklist)
     {
-        return $user->can('delete checklists') && 0 < (array_intersect($checklist->departments->all(), $user->departments->all()));
+        return $user->can(PermissionNameEnum::CHECKLIST_DELETE)
+            && $user->departments->intersect($checklist->departments)->isNotEmpty();
     }
 
     /**

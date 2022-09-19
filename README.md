@@ -11,19 +11,30 @@ as `./vendor/bin/sail up`.
 
 After that run the following scripts to install dependencies and compile inertia:
 
-```
+```shell
 ./vendor/bin/sail npm install
 ./vendor/bin/sail npx mix
 ```
 
 To migrate and seed the roles
 
-```
+```shell
 ./vendor/bin/sail artisan migrate:fresh
 ./vendor/bin/sail artisan db:seed --class=TestDatabaseSeeder
 ```
 
 Visit local development on http://localhost 
+
+## Meilisearch
+
+Meilisearch is included in the Docker container and provides searchable indexes. 
+The Search Console can be viewed at: `http://0.0.0.0:7700/`
+
+To add Models to the index the artisan commands can be used: 
+```shell
+./vendor/bin/sail artisan scout:import "App\Models\Department"
+./vendor/bin/sail artisan scout:import "App\Models\User"
+```
 
 ## Debugging
 

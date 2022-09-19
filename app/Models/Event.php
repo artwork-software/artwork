@@ -14,17 +14,17 @@ use Illuminate\Support\Collection;
 /**
  *
  * @property int $id
- * @property string $name
- * @property string $description
- * @property Carbon $start_time
- * @property Carbon $end_time
- * @property bool $occupancy_option
- * @property bool $audience
- * @property bool $is_loud
- * @property int $event_type_id
- * @property int $room_id
+ * @property ?string $name
+ * @property ?string $description
+ * @property ?Carbon $start_time
+ * @property ?Carbon $end_time
+ * @property ?bool $occupancy_option
+ * @property ?bool $audience
+ * @property ?bool $is_loud
+ * @property ?int $event_type_id
+ * @property ?int $room_id
  * @property int $user_id
- * @property int $project_id
+ * @property ?int $project_id
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
@@ -39,18 +39,8 @@ class Event extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = [
-        'name',
-        'description',
-        'start_time',
-        'end_time',
-        'occupancy_option',
-        'audience',
-        'is_loud',
-        'event_type_id',
-        'room_id',
-        'project_id',
-        'user_id'
+    protected $guarded = [
+        'id',
     ];
 
     protected $casts = [
@@ -60,24 +50,6 @@ class Event extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
     ];
-
-    protected $appends = [
-        'days_of_event',
-    ];
-
-    public function getDaysOfEventAttribute(): array
-    {
-        $days_period = CarbonPeriod::create(Carbon::parse($this->start_time)->format('d.m.Y'), Carbon::parse($this->end_time)->format('d.m.Y'));
-
-
-        $days = [];
-
-        foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.Y');
-        }
-
-        return $days;
-    }
 
     public function event_type()
     {
@@ -119,7 +91,7 @@ class Event extends Model
 
     /**
      * @param  \Illuminate\Database\Query\Builder  $query
-     * @return EventBuilder<\App\Models\Post>
+     * @return \App\Builders\EventBuilder
      */
     public function newEloquentBuilder($query): EventBuilder
     {

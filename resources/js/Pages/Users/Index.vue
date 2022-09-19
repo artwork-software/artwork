@@ -261,12 +261,13 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal style="margin-top: 2rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 -mt-6"/>
-            <XIcon @click="closeAddUserModal"
-                   class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 -mt-12 mr-10"
-                   aria-hidden="true"/>
+        <flowbite-modal style="margin-top: 1rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
+
             <div class="mx-3">
+                <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-9 mt-48"/>
+                <XIcon @click="closeAddUserModal"
+                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 -mt-12 mr-10"
+                       aria-hidden="true"/>
                 <div class="mt-4 text-2xl font-black">
                     Nutzer*innen einladen
                 </div>
@@ -580,12 +581,6 @@ export default defineComponent({
         Link,
     },
     props: ['users', 'departments', 'all_permissions'],
-    created() {
-        Echo.private('users')
-            .listen('UserUpdated', () => {
-                Inertia.reload({only: ['users']})
-            });
-    },
     data() {
         return {
             showUserPermissions: true,

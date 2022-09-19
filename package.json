@@ -32,6 +32,7 @@
         "@heroicons/vue": "^1.0.6",
         "@vuepic/vue-datepicker": "^3.2.2",
         "flowbite": "^1.4.1",
+        "vue-cal": "^4.8.0",
         "vuedraggable": "^4.1.0"
     }
 }

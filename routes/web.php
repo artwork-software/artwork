@@ -19,8 +19,6 @@ use App\Http\Controllers\SectorController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\UserController;
-use Illuminate\Foundation\Application;
-use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -134,7 +132,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Tasks
     Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
-    Route::get('/tasks/own', [TaskController::class, 'index_own'])->name('tasks.own');
+    Route::get('/tasks/own', [TaskController::class, 'indexOwnTasks'])->name('tasks.own');
     Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
     Route::get('/tasks/{task}/edit', [TaskController::class, 'edit']);
     Route::patch('/tasks/{task}', [TaskController::class, 'update'])->name('tasks.update');
@@ -183,14 +181,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::put('/rooms/order', [RoomController::class, 'updateOrder']);
     Route::delete('/rooms/{room}', [RoomController::class, 'destroy']);
 
-    //conflicts in room
-    Route::get('/rooms/start_time_conflicts', [EventController::class, 'get_start_time_conflicts_for_all_rooms']);
-    Route::get('/rooms/end_time_conflicts', [EventController::class, 'get_end_time_conflicts_for_all_rooms']);
-
-    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'indexEventsWithStartConflicts']);
-    Route::get('/room/{room}/start_time_conflicts', [EventController::class, 'indexEventsWithStartConflicts']);
-    Route::get('/room/{room}/end_time_conflicts', [EventController::class, 'indexEventsWithEndConflicts']);
-
     //Trash
     Route::delete('/rooms/{id}/force', [RoomController::class, 'forceDelete'])->name('rooms.force');
     Route::patch('/rooms/{id}/restore', [RoomController::class, 'restore'])->name('rooms.restore');
@@ -201,15 +191,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
 
-    //Events
-    Route::get('/events/month', [EventController::class, 'indexEventsInMonth'])->name('events.monthly_management');
-    Route::get('/events/day', [EventController::class, 'indexEventForDay'])->name('events.daily_management');
-    Route::get('/events/requests', [EventController::class, 'indexEventRequests'])->name('events.requests');
-    Route::post('/events', [EventController::class, 'store'])->name('events.store');
-    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
-    Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
-    Route::delete('/events/{event}', [EventController::class, 'destroy']);
+    /**
+     * Event Views
+     */
+    Route::get('/events/view', [EventController::class, 'viewEventIndex'])->name('events.view.index');
+    Route::get('/events/requests', [EventController::class, 'viewRequestIndex'])->name('events.requests');
+    Route::get('/dashboard', [EventController::class, 'showDashboardPage'])->name('dashboard');
 
+    /**
+     * Event Api
+     */
+    Route::get('/events', [EventController::class, 'indexEvents'])->name('events.index');
+    Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');;
+    Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
+    Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');;
+    Route::delete('/events/{event}', [EventController::class, 'destroyEvent'])->name('events.delete');;
 
     //EventTypes
     Route::get('/event_types', [EventTypeController::class, 'index'])->name('event_types.management');
@@ -217,7 +213,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
     Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
-
-
 });
 

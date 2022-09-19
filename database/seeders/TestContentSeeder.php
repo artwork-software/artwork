@@ -13,7 +13,9 @@ use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\Sector;
+use App\Models\Task;
 use App\Models\User;
+use App\Support\Services\HistoryService;
 use Illuminate\Database\Seeder;
 
 class TestContentSeeder extends Seeder
@@ -26,6 +28,8 @@ class TestContentSeeder extends Seeder
     public function run()
     {
         $this->seedModelsThatRequireNoRelationships();
+
+        $historyService = new HistoryService();
 
         // Users
         $users = User::factory()->count(10)->create();
@@ -45,20 +49,10 @@ class TestContentSeeder extends Seeder
             'genre_id' => $genres->random()->id,
         ]);
 
-        $project1->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt"
-        ]);
-
         $project2 = Project::factory()->create([
             'sector_id' => $sectors->random()->id,
             'category_id' => $categories->random()->id,
             'genre_id' => $genres->random()->id,
-        ]);
-
-        $project2->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt"
         ]);
 
         $project3 = Project::factory()->create([
@@ -67,11 +61,9 @@ class TestContentSeeder extends Seeder
             'genre_id' => $genres->random()->id,
         ]);
 
-        $project3->project_histories()->create([
-            "user_id" => 1,
-            "description" => "Projekt angelegt"
-        ]);
-
+        $historyService->projectUpdated($project1);
+        $historyService->projectUpdated($project2);
+        $historyService->projectUpdated($project3);
 
         $projects = collect([$project1, $project2, $project3]);
 
@@ -94,6 +86,13 @@ class TestContentSeeder extends Seeder
                     'project_id' => $checklist->project_id,
                     'user_id' => $users->random()->id,
                 ]);
+            }
+
+            foreach (array_fill(0, random_int(1, 10), null) as $countThird) {
+                $task = Task::factory()->create([
+                    'checklist_id' => $checklist->id,
+                ]);
+                $historyService->taskUpdated($task);
             }
         }
 

@@ -24,9 +24,17 @@ class UpdateProjectRequest extends FormRequest
     public function rules()
     {
         return [
-            'name' => 'required|string|max:255',
-            'assigned_users' => 'sometimes|array',
-            'assigned_departments' => 'sometimes|array'
+            'name' => ['required', 'string', 'max:255'],
+            'description' => ['sometimes', 'nullable', 'string'],
+            'number_of_participants' => ['sometimes', 'nullable', 'int'],
+            'cost_center' => ['sometimes', 'nullable', 'string'],
+            'sector_id' => ['sometimes', 'nullable', 'exists:sectors,id'],
+            'category_id' => ['sometimes', 'nullable', 'exists:categories,id'],
+            'genre_id' => ['sometimes', 'nullable', 'exists:genres,id'],
+            'assigned_users' => ['sometimes', 'nullable', 'array'],
+            'assigned_users.?' => ['exists:users,id'],
+            'assigned_departments' => ['sometimes', 'array'],
+            'assigned_departments.?' => ['exists:departments,id'],
         ];
     }
 }

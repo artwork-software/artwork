@@ -27,7 +27,8 @@ class ChecklistIndexResource extends JsonResource
             'name' => $this->name,
             //determines if the checklist is already opened by default
             'showContent' => true,
-            'tasks' => TaskIndexResource::collection($this->tasks()->orderBy('order')->get())->resolve(),
+            'tasks' => TaskIndexResource::collection($this->tasks->sortBy('order'))->resolve(),
+            // only show departments on public checklists, not on private
             'departments' => $this->user_id
                 ? new MissingValue()
                 : $this->departments->map(fn (Department $department) => [

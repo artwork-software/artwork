@@ -17,7 +17,7 @@ class RoomFactory extends Factory
     public function definition()
     {
         return [
-            'name' => $this->faker->name,
+            'name' => $this->faker->colorName,
             'description' => $this->faker->paragraph,
             'temporary' => false,
             'start_date' => null,

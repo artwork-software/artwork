@@ -941,9 +941,8 @@ export default {
     },
     methods: {
         openEventModal(event){
-            console.log(event);
             this.selectedRoom = this.rooms.find( (x) => x.id === event.roomId);
-            if (event !== null) {
+            if (event.title !== '') {
                 const offset = new Date(event.start).getTimezoneOffset()
                 this.selectedEvent = event;
                 let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
@@ -955,6 +954,8 @@ export default {
                 this.selectedEvent.endDate = endDate.toISOString().slice(0, 10);
                 this.selectedEvent.endTime = endDate.toISOString().slice(11, 16);
                 this.showEventModal = true;
+            }else{
+                this.openAddEventModal(event);
             }
         },
         closeEventModal(){

@@ -78,7 +78,13 @@ class Room extends Model
 
     public function prunable()
     {
-        return static::where('created_at', '<=', now()->subMonth());
+        return static::where('deleted_at', '<=', now()->subMonth())
+            ->orWhere('temporary', true)
+            ->where('end_date', '<=', now());
+    }
+
+    public function pruning() {
+        return $this->room_files()->delete();
     }
 
     public function getEventsAt(Carbon $dateTime): Collection

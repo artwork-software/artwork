@@ -98,7 +98,10 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
-        $event->update($request->data());
+        $event->update($request->event);
+
+        $event->occupancy_option = $request->occupancy_option;
+        $event->save();
 
         return new CalendarEventResource($event);
     }

@@ -10,7 +10,7 @@
     </div>
     <button class="button m-1 rounded-full bg-primary hover:bg-secondary text-white px-2 py-1"
             @click="openAddEventModal()">
-        Neuer Terminee
+        Neuer Termin
     </button>
 
     <!--  Calendar  -->
@@ -305,9 +305,8 @@
                 </div>
                 <div>
                     <div v-if="selectedRoom" @mouseover="showHints()">
-                        <!-- TODO: Abfrage nach (selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) -->
                         <div class="flex items-center w-full justify-center"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                             v-if="(selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book)">
                             <button :class="[this.addEventForm.start === null || this.addEventForm.end === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && selectedProject.projectName === '') || ((addEventForm.title === '' && selectedEventType.individual_name) && addEventForm.projectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
@@ -318,9 +317,8 @@
                             </button>
                         </div>
                     </div>
-                    <!-- TODO : Abfrage nach (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) -->
                     <div class="flex items-center w-full justify-center"
-                         v-if="!selectedRoom || !$page.props.is_admin"
+                         v-if="(!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book)"
                          @mouseover="showHints()">
                         <button :class="[addEventForm.start === null || addEventForm.end === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && addEventForm.projectName === '') || (addEventForm.title === '' && addEventForm.projectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
@@ -417,9 +415,8 @@
                                         </span>
                                     </span>
                         </div>
-                        <!-- TODO: HIER || selectedEvent.created_by.id === this.$page.props.user.id einbauen aktuell fehlt im event noch created by-->
                         <div class="flex justify-end"
-                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id">
                             <Menu as="div" class="my-auto w-full relative">
                                 <div class="flex justify-end">
                                     <MenuButton
@@ -439,7 +436,7 @@
                                         <div class="py-1">
                                             <!-- TODO: WENN ROOM ADMINS EINGEBAUT SIND (admins muss in den rooms props sein) WIEDER NACH OCCUPANCY DAS HIER EINFÜGEN:  && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
                                             <MenuItem
-                                                v-if="selectedEvent.occupancy_option "
+                                                v-if="selectedEvent.occupancy_option && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id).selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="approveRequest(selectedEvent)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -451,7 +448,7 @@
                                             </MenuItem>
                                             <!-- TODO: HIER AUCH DANN EINFÜGEN WENN ROOM ADMINS MITGEGEBEN WERDEN && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
                                             <MenuItem
-                                                v-if="selectedEvent.occupancy_option "
+                                                v-if="selectedEvent.occupancy_option && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
                                                 v-slot="{ active }">
                                                 <a href="#" @click="declineRequest(selectedEvent)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -544,7 +541,6 @@
                             </div>
                         </div>
                     </div>
-                    <!-- TODO: DAS HIER WEIDER REINNEHMEN; WENN CREATED BY WIEDER DRIN IST
                     <div class="flex font-lexend text-secondary subpixel-antialiased text-xs my-auto">
                         <div class="my-auto">angelegt von:</div>
                         <img v-if="selectedEvent.created_by.profile_photo_url"
@@ -555,11 +551,10 @@
                         <div class="flex ml-2 my-auto">
                             {{ selectedEvent.created_by.first_name }} {{ selectedEvent.created_by.last_name }}
                         </div>
-                    </div> -->
+                    </div>
                     <div>
-                        <!-- TODO: WIEDER CREATED BY || selectedEvent.created_by.id === this.$page.props.user.id -->
                         <div class="mt-4 w-full"
-                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms ">
+                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id">
                             <input type="text" v-model="selectedEvent.name"
                                    :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
                                    class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
@@ -572,7 +567,7 @@
                     </div>
                     <!-- TODO: wieder created BY || selectedEvent.created_by.id === this.$page.props.user.id -->
                     <div
-                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id"
                         class="flex mt-4">
                         <div class="text-secondary w-1/2">
                             <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
@@ -613,18 +608,16 @@
                         }}.{{ selectedEvent.end.toLocaleString().split('-')[0] }},
                         {{ selectedEvent.end.split('-')[2].split(' ')[1] }}
                     </div>
-                    <!-- TODO: Hier || (this.myRooms ? this.myRooms.length > 0 : false) wieder einbauen und myRooms wieder befüllen und || selectedEvent.created_by.id === this.$page.props.user.id-->
                     <div
-                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin  ">
+                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || selectedEvent.created_by.id === this.$page.props.user.id">
                         <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="selectedEvent.description" rows="4"
                                       class="resize-none font-black shadow-sm placeholder-secondary p-4 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm border"/>
                         </div>
                         <div class="flex items-center w-full justify-center">
-                            <!-- TODO: HIER WIEDER MIT ROOM ADMINS dann vor letztem oder einfügen: && (rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin) -->
                             <button
-                                v-if="!rooms.find(room => room.id === selectedEvent.roomId) || rooms.find(room => room.id === selectedEvent.roomId)  "
+                                v-if="!rooms.find(room => room.id === selectedEvent.roomId) || rooms.find(room => room.id === selectedEvent.roomId) && (rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin) "
                                 :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-4 px-12 py-3 border border-transparent
@@ -633,9 +626,8 @@
                                 :disabled="selectedEvent.start === null && selectedEvent.end === null">
                                 Speichern
                             </button>
-                            <!-- TODO: HIER WENN ROOM ADMINS DA DANN STATT DEM TRUE EINFÜGEN: ((!rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) -->
                             <div class="items-center"
-                                 v-if="rooms.find(room => room.id === selectedEvent.roomId) ?  true : false">
+                                 v-if="rooms.find(room => room.id === selectedEvent.roomId) ?  ((!rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
                                 <button :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
                                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                         class="mt-4 px-12 py-3 border border-transparent
@@ -1262,7 +1254,7 @@ export default {
             event.roomId = this.selectedRoom.id;
             if (event.id) {
                 return await axios
-                    .put(`/events/${event.id}`, event)
+                    .put(`/events/${event.id}`, {event: event, isOption: isOption})
                     .then(response => this.closeEventModal())
                     .catch(error => this.error = error.response.data.errors);
             }

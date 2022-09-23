@@ -35,6 +35,8 @@ class CalendarEventResource extends JsonResource
             'roomId' => $this->room_id,
             'eventTypeId' => $this->event_type_id,
             'areaId' => $this->room?->area_id,
+            'created_at' => $this->created_at->format('d.m.Y, H:i'),
+            'created_by' => $this->creator,
 
             'collisionCount'=> $this->collision_count,
 

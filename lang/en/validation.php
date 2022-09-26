@@ -162,8 +162,8 @@ return [
         'password' => 'Passwort',
         'photo' => 'Bild',
         'current_password' => 'Aktuelles Passwort',
-        'start_time' => 'Terminstart',
-        'end_time' => 'Terminende'
+        'start' => 'Startdatum',
+        'end' => 'Enddatum'
     ],
 
 ];

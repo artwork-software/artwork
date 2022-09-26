@@ -8,15 +8,60 @@
             {{ room.label }}
         </button>
     </div>
-    <button class="button m-1 rounded-full bg-primary hover:bg-secondary text-white px-2 py-1"
-            @click="openAddEventModal()">
-        Neuer Terminee
-    </button>
+    <div class="flex justify-end mr-5 mb-5">
+
+        <Menu as="div" class="relative inline-block text-left w-56">
+            <div>
+                <MenuButton
+                    class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+                >
+                    <span class="float-left">Filter</span>
+                    <ChevronDownIcon
+                        class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                        aria-hidden="true"
+                    />
+                </MenuButton>
+            </div>
+            <transition
+                enter-active-class="transition duration-100 ease-out"
+                enter-from-class="transform scale-95 opacity-0"
+                enter-to-class="transform scale-100 opacity-100"
+                leave-active-class="transition duration-75 ease-in"
+                leave-from-class="transform scale-100 opacity-100"
+                leave-to-class="transform scale-95 opacity-0"
+            >
+                <MenuItems
+                    class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white
+                 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                    <p>Zurücksetzen</p>
+                    <div class="mx-auto w-full max-w-md rounded-2xl bg-white p-2">
+                        <Disclosure v-slot="{ open }">
+                            <DisclosureButton
+                                class="flex w-full justify-between rounded-lg bg-purple-100 px-4 py-2 text-left text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"
+                            >
+                                <span>What is your refund policy?</span>
+                                <ChevronUpIcon
+                                    :class="open ? 'rotate-180 transform' : ''"
+                                    class="h-5 w-5 text-purple-500"
+                                />
+                            </DisclosureButton>
+                            <DisclosurePanel class="px-4 pt-4 pb-2 text-sm text-gray-500">
+                                If you're unhappy with your purchase for any reason, email us within
+                                90 days and we'll refund you in full, no questions asked.
+                            </DisclosurePanel>
+                        </Disclosure>
+                    </div>
+                </MenuItems>
+            </transition>
+        </Menu>
+        <AddButton class="bg-primary hover:bg-secondary text-white mr-5"
+                   @click="openAddEventModal()" text="Neue Belegung"/>
+    </div>
 
     <!--  Calendar  -->
     <div>
         <vue-cal
-            style="height: 500px"
+            style="height: 650px"
             today-button
             events-on-month-view="short"
             locale="de"
@@ -25,7 +70,7 @@
             :disable-views="['years']"
             :events="displayedEvents"
             :split-days="displayedRooms"
-            :editable-events="{ title: false, drag: true, resize: false, delete: false, create: true }"
+            :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
             :snap-to-time="15"
             :drag-to-create-threshold="15"
             :active-view="initialView ?? 'week'"
@@ -160,7 +205,7 @@
                         </div>
                     </div>
                     <div class="flex mt-4" v-if="creatingProject">
-                        <input type="text" v-model="this.addEventForm.projectName"
+                        <input type="text" v-model="addEventForm.projectName"
                                placeholder="Projektname von neuem Projekt*"
                                class="text-primary h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
                         <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
@@ -306,9 +351,8 @@
                 </div>
                 <div>
                     <div v-if="selectedRoom" @mouseover="showHints()">
-                        <!-- TODO: Abfrage nach (selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) -->
                         <div class="flex items-center w-full justify-center"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms">
+                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || (selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book)">
                             <button :class="[this.addEventForm.start === null || this.addEventForm.end === null || this.selectedRoom === null || (selectedEventType.project_mandatory && selectedProject === null && selectedProject.projectName === '') || ((addEventForm.title === '' && selectedEventType.individual_name) && addEventForm.projectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                     class="mt-4 flex items-center px-20 py-3 border border-transparent
@@ -319,9 +363,8 @@
                             </button>
                         </div>
                     </div>
-                    <!-- TODO : Abfrage nach (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book) -->
                     <div class="flex items-center w-full justify-center"
-                         v-if="!selectedRoom || !$page.props.is_admin"
+                         v-if="!selectedRoom || !$page.props.is_admin || (!selectedRoom.room_admins.find(user => user.id === this.$page.props.user.id) || !selectedRoom.everyone_can_book)"
                          @mouseover="showHints()">
                         <button :class="[addEventForm.start === null || addEventForm.end === null || this.selectedRoom === null ||(selectedEventType.project_mandatory && selectedProject === null && addEventForm.projectName === '') || (addEventForm.title === '' && addEventForm.projectName === '' && selectedProject === null) ?
                                     'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
@@ -351,308 +394,334 @@
             <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8"/>
             <XIcon @click="closeEventModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
-                <div>
-                    <div class="mt-2 flex items-center w-full">
-                        <!-- TODO: KONFLIKTANZEIGE ÜBERARBEITEN -> Aktuell werden Fehler über Collision erkannt -> Funktioniert auch noch nicht wie gewollt -->
-                        <div v-if="false" class="bg-error absolute left-0 flex h-8 w-8 mt-4 mr-2">
-                            <img src="/Svgs/IconSvgs/icon_warning_white.svg"
-                                 class="h-8 w-8 p-1 my-auto flex text-white"
-                                 aria-hidden="true"/>
-                        </div>
-                        <Listbox
-                            v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || selectedEvent.created_by.id === this.$page.props.user.id"
-                            as="div"
-                            class="flex w-full" v-model="selectedEvent.eventTypeId">
-                            <div class="relative">
-                                <ListboxButton
-                                    class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
-                                    <div class="flex items-center">
-                                        <EventTypeIconCollection :height="24" :width="24"
-                                                                 :iconName="eventTypes.find(x => x.id === selectedEvent.eventTypeId).svg_name"/>
-                                        <span class="block truncate items-center text-3xl font-black ml-3 flex">
+            <div>
+                <div class="mt-2 flex items-center w-full">
+                    <!-- TODO: KONFLIKTANZEIGE ÜBERARBEITEN -> Aktuell werden Fehler über Collision erkannt -> Funktioniert auch noch nicht wie gewollt -->
+                    <div v-if="collision > 0" class="bg-error absolute left-0 flex h-8 w-8 mt-4 mr-2">
+                        <img src="/Svgs/IconSvgs/icon_warning_white.svg"
+                             class="h-8 w-8 p-1 my-auto flex text-white"
+                             aria-hidden="true"/>
+                    </div>
+                    <Listbox
+                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || selectedEvent.created_by.id === this.$page.props.user.id"
+                        as="div"
+                        class="flex w-full" v-model="selectedEvent.eventTypeId">
+                        <div class="relative">
+                            <ListboxButton
+                                class="bg-white w-full relative mt-4 py-2 cursor-pointer focus:outline-none">
+                                <div class="flex items-center">
+                                    <EventTypeIconCollection :height="24" :width="24"
+                                                             :iconName="eventTypes.find(x => x.id === selectedEvent.eventTypeId).svg_name"/>
+                                    <span class="block truncate items-center text-3xl font-black ml-3 flex">
                                                 <span>
                                                     {{ eventTypes.find(x => x.id === selectedEvent.eventTypeId).name }}
                                                 </span>
                                             </span>
-                                        <span
-                                            class="ml-2 inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                    <span
+                                        class="ml-2 inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
                                                 <ChevronDownIcon class="h-6 w-6 text-primary font-black"
                                                                  aria-hidden="true"/>
                                             </span>
+                                </div>
+                            </ListboxButton>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute w-full z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   v-for="eventType in eventTypes"
+                                                   :key="eventType.name"
+                                                   :value="eventType.id"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <EventTypeIconCollection :height="20" :width="20"
+                                                                     :iconName="eventType.svg_name"/>
+                                            <span
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ eventType.name }}
+                                                    </span>
+                                            <span
+                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+                    <div v-else
+                         class="bg-white w-full relative mt-4 py-2 focus:outline-none flex items-center">
+                        <EventTypeIconCollection :height="24" :width="24"
+                                                 :iconName="eventTypes.find(x => x.id === selectedEvent.eventTypeId).svg_name"/>
+                        <span class="block truncate items-center text-3xl font-black ml-3 flex">
+                                        <span>
+                                            {{ eventTypes.find(x => x.id === selectedEvent.eventTypeId).name }}
+                                        </span>
+                                    </span>
+                    </div>
+                    <div class="flex justify-end"
+                         v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id">
+                        <Menu as="div" class="my-auto w-full relative">
+                            <div class="flex justify-end">
+                                <MenuButton
+                                    class="flex mt-4">
+                                    <DotsVerticalIcon class="flex flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                      aria-hidden="true"/>
+                                </MenuButton>
+                            </div>
+
+                            <transition enter-active-class="transition ease-out duration-100"
+                                        enter-from-class="transform opacity-0 scale-95"
+                                        enter-to-class="transform opacity-100 scale-100"
+                                        leave-active-class="transition ease-in duration-75"
+                                        leave-from-class="transform opacity-100 scale-100"
+                                        leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems
+                                    class="origin-top-right absolute z-40 right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                    <div class="py-1">
+                                        <!-- TODO: WENN ROOM ADMINS EINGEBAUT SIND (admins muss in den rooms props sein) WIEDER NACH OCCUPANCY DAS HIER EINFÜGEN:  && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
+                                        <MenuItem
+                                            v-if="selectedEvent.occupancy_option && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                            v-slot="{ active }">
+                                            <a href="#" @click="approveRequest(selectedEvent)"
+                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <PencilAltIcon
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                Raumbelegung zusagen
+                                            </a>
+                                        </MenuItem>
+                                        <!-- TODO: HIER AUCH DANN EINFÜGEN WENN ROOM ADMINS MITGEGEBEN WERDEN && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
+                                        <MenuItem
+                                            v-if="selectedEvent.occupancy_option && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms)"
+                                            v-slot="{ active }">
+                                            <a href="#" @click="declineRequest(selectedEvent)"
+                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <PencilAltIcon
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                Raumbelegung absagen
+                                            </a>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }">
+                                            <a href="#" @click="openDeleteEventModal(selectedEvent)"
+                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <TrashIcon
+                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                Termin löschen
+                                            </a>
+                                        </MenuItem>
+                                    </div>
+                                </MenuItems>
+                            </transition>
+                        </Menu>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex flex-wrap items-center justify-between">
+                        <div v-if="selectedEvent.projectId !== null" class="flex items-center w-2/3 text-sm">
+                            <div class="my-auto flex w-28">Zugeordnet zu</div>
+                            <div>
+                                <a
+                                    :href="route('projects.show', {project: selectedEvent.projectId})"
+                                    class="ml-3 text-md flex font-bold font-lexend text-primary">
+                                    {{ selectedEvent.projectName }}
+                                </a>
+                            </div>
+                        </div>
+                        <div v-else class="flex font-lexend text-secondary subpixel-antialiased text-sm">
+                            <div>Keinem Projekt zugeordnet</div>
+                        </div>
+                        <div
+                            v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || selectedEvent.created_by.id === this.$page.props.user.id"
+                            class="w-1/3">
+                            <Listbox @change="changeRoom()" as="div" class="flex" v-model="selectedRoom">
+                                <ListboxButton
+                                    class="pl-3 border border-gray-300 bg-white w-full relative mt-6 py-2 cursor-pointer focus:outline-none sm:text-sm">
+                                    <div class="flex items-center my-auto">
+                                        <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
+                                            <span>{{ selectedRoom.label }}</span>
+
+                                        </span>
+                                        <span v-if="!selectedRoom"
+                                              class="block truncate text-secondary">Raum wählen*</span>
+                                        <span
+                                            class="inset-y-0 right-0 absolute flex items-center pr-2 pointer-events-none">
+                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                         </span>
                                     </div>
                                 </ListboxButton>
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-full z-10 mt-1 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                        class="absolute z-10 mt-16 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="eventType in eventTypes"
-                                                       :key="eventType.name"
-                                                       :value="eventType.id"
+                                                       v-for="room in rooms"
+                                                       :key="room.label"
+                                                       :value="room"
                                                        v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                <EventTypeIconCollection :height="20" :width="20"
-                                                                         :iconName="eventType.svg_name"/>
-                                                <span
-                                                    :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ eventType.name }}
-                                                    </span>
-                                                <span
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </div>
-                        </Listbox>
-                        <div v-else
-                             class="bg-white w-full relative mt-4 py-2 focus:outline-none flex items-center">
-                            <EventTypeIconCollection :height="24" :width="24"
-                                                     :iconName="eventTypes.find(x => x.id === selectedEvent.eventTypeId).svg_name"/>
-                            <span class="block truncate items-center text-3xl font-black ml-3 flex">
-                                        <span>
-                                            {{ eventTypes.find(x => x.id === selectedEvent.eventTypeId).name }}
-                                        </span>
-                                    </span>
-                        </div>
-                        <!-- TODO: HIER || selectedEvent.created_by.id === this.$page.props.user.id einbauen aktuell fehlt im event noch created by-->
-                        <div class="flex justify-end"
-                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms">
-                            <Menu as="div" class="my-auto w-full relative">
-                                <div class="flex justify-end">
-                                    <MenuButton
-                                        class="flex mt-4">
-                                        <DotsVerticalIcon class="flex flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                          aria-hidden="true"/>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="origin-top-right absolute z-40 right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                        <div class="py-1">
-                                            <!-- TODO: WENN ROOM ADMINS EINGEBAUT SIND (admins muss in den rooms props sein) WIEDER NACH OCCUPANCY DAS HIER EINFÜGEN:  && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
-                                            <MenuItem
-                                                v-if="selectedEvent.occupancy_option "
-                                                v-slot="{ active }">
-                                                <a href="#" @click="approveRequest(selectedEvent)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <PencilAltIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    Raumbelegung zusagen
-                                                </a>
-                                            </MenuItem>
-                                            <!-- TODO: HIER AUCH DANN EINFÜGEN WENN ROOM ADMINS MITGEGEBEN WERDEN && ((rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(admin => admin.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) || this.$page.props.is_admin || this.$page.props.can.admin_rooms) -->
-                                            <MenuItem
-                                                v-if="selectedEvent.occupancy_option "
-                                                v-slot="{ active }">
-                                                <a href="#" @click="declineRequest(selectedEvent)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <PencilAltIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    Raumbelegung absagen
-                                                </a>
-                                            </MenuItem>
-                                            <MenuItem v-slot="{ active }">
-                                                <a href="#" @click="deleteEvent(selectedEvent.id)"
-                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <TrashIcon
-                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                        aria-hidden="true"/>
-                                                    Termin löschen
-                                                </a>
-                                            </MenuItem>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex flex-wrap items-center justify-between">
-                            <div v-if="selectedEvent.projectId !== null" class="flex items-center w-2/3 text-sm">
-                                <div class="my-auto flex w-28">Zugeordnet zu</div>
-                                <div>
-                                    <Link
-                                        :href="route('projects.show',{project: selectedEvent.projectId})"
-                                        class="ml-3 text-md flex font-bold font-lexend text-primary">
-                                        {{ projects.find(x => x.id === selectedEvent.projectId).name }}
-                                    </Link>
-                                </div>
-                            </div>
-                            <div v-else class="flex font-lexend text-secondary subpixel-antialiased text-sm">
-                                <div>Keinem Projekt zugeordnet</div>
-                            </div>
-                            <div
-                                v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || selectedEvent.created_by.id === this.$page.props.user.id"
-                                class="w-1/3">
-                                <Listbox @change="changeRoom()" as="div" class="flex" v-model="selectedRoom">
-                                    <ListboxButton
-                                        class="pl-3 border border-gray-300 bg-white w-full relative mt-6 py-2 cursor-pointer focus:outline-none sm:text-sm">
-                                        <div class="flex items-center my-auto">
-                                        <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
-                                            <span>{{ selectedRoom.label }}</span>
-
-                                        </span>
-                                            <span v-if="!selectedRoom"
-                                                  class="block truncate text-secondary">Raum wählen*</span>
-                                            <span
-                                                class="inset-y-0 right-0 absolute flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
-                                         </span>
-                                        </div>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-16 w-5/6 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="room in rooms"
-                                                           :key="room.label"
-                                                           :value="room"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
+                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span
                                                         :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
                                                         {{ room.label }}
                                                     </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                <span
+                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                         <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                    aria-hidden="true"/>
                                                     </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </Listbox>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
 
-                            </div>
-                            <div v-else class="flex items-center my-auto">
+                        </div>
+                        <div v-else class="flex items-center my-auto">
                                         <span v-if="selectedEvent.roomId" class="block truncate items-center flex">
                                             <span>{{ rooms.find(x => x.id === selectedEvent.roomId).name }}</span>
 
                                         </span>
-                            </div>
                         </div>
                     </div>
-                    <!-- TODO: DAS HIER WEIDER REINNEHMEN; WENN CREATED BY WIEDER DRIN IST
-                    <div class="flex font-lexend text-secondary subpixel-antialiased text-xs my-auto">
-                        <div class="my-auto">angelegt von:</div>
-                        <img v-if="selectedEvent.created_by.profile_photo_url"
-                             :data-tooltip-target="selectedEvent.created_by.id"
-                             :src="selectedEvent.created_by.profile_photo_url"
-                             :alt="selectedEvent.created_by.name"
-                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                        <div class="flex ml-2 my-auto">
-                            {{ selectedEvent.created_by.first_name }} {{ selectedEvent.created_by.last_name }}
-                        </div>
-                    </div> -->
-                    <div>
-                        <!-- TODO: WIEDER CREATED BY || selectedEvent.created_by.id === this.$page.props.user.id -->
-                        <div class="mt-4 w-full"
-                             v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms ">
-                            <input type="text" v-model="selectedEvent.name"
-                                   :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
-                                   class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
-                        </div>
-                        <div v-else>
-                            <div class="w-full font-bold font-lexend text-primary tracking-wide text-xl my-2">
-                                {{ selectedEvent.name }}
-                            </div>
+                </div>
+                <div class="flex font-lexend text-secondary subpixel-antialiased text-xs my-auto">
+                    <div class="my-auto">angelegt von:</div>
+                    <img v-if="selectedEvent.created_by.profile_photo_url"
+                         :data-tooltip-target="selectedEvent.created_by.id"
+                         :src="selectedEvent.created_by.profile_photo_url"
+                         :alt="selectedEvent.created_by.name"
+                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <div class="flex ml-2 my-auto">
+                        {{ selectedEvent.created_by.first_name }} {{ selectedEvent.created_by.last_name }}
+                    </div>
+                </div>
+                <div>
+                    <div class="mt-4 w-full"
+                         v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id">
+                        <input type="text" v-model="selectedEvent.name"
+                               :placeholder="[selectedEventType.individual_name ? 'Terminname' : 'Terminname*']"
+                               class="text-primary font-black h-10 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full text-sm border-gray-300 "/>
+                    </div>
+                    <div v-else>
+                        <div class="w-full font-bold font-lexend text-primary tracking-wide text-xl my-2">
+                            {{ selectedEvent.name }}
                         </div>
                     </div>
-                    <!-- TODO: wieder created BY || selectedEvent.created_by.id === this.$page.props.user.id -->
-                    <div
-                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms"
-                        class="flex mt-4">
-                        <div class="text-secondary w-1/2">
-                            <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
-                            <div class="w-full">
-                                <input v-model="selectedEvent.startDate" id="changeEventStartDate"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="selectedEvent.startTime" id="eventStartTime"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
-                        </div>
-                        <div class="text-secondary ml-10 w-1/2">
-                            <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
-                            <div class="w-full">
-                                <input v-model="selectedEvent.endDate" id="changeEventEndDate"
-                                       placeholder="Startdatum*" type="date"
-                                       class="border-gray-300 text-primary placeholder-secondary"/>
-                                <input
-                                    v-model="selectedEvent.endTime" id="eventEndTime"
-                                    placeholder="StartZeit*" type="time"
-                                    class="border-gray-300 text-primary placeholder-secondary"/>
-                            </div>
+                </div>
+                <!-- TODO: wieder created BY || selectedEvent.created_by.id === this.$page.props.user.id -->
+                <div
+                    v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.is_admin || this.$page.props.can.admin_rooms || selectedEvent.created_by.id === this.$page.props.user.id"
+                    class="flex mt-4">
+                    <div class="text-secondary w-1/2">
+                        <label for="eventStartDate" class="text-xs subpixel-antialiased">Startdatum*</label>
+                        <div class="w-full">
+                            <input v-model="selectedEvent.startDate" id="changeEventStartDate"
+                                   placeholder="Startdatum*" type="date"
+                                   class="border-gray-300 text-primary placeholder-secondary"/>
+                            <input
+                                v-model="selectedEvent.startTime" id="eventStartTime"
+                                placeholder="StartZeit*" type="time"
+                                class="border-gray-300 text-primary placeholder-secondary"/>
                         </div>
                     </div>
-                    <div v-else class="mt-4 subpixel-antialiased">
-                        {{
-                            selectedEvent.start.split('-')[2].split(' ')[0]
-                        }}.{{
-                            selectedEvent.start.toLocaleString().split('-')[1]
-                        }}.{{ selectedEvent.start.toLocaleString().split('-')[0] }},
-                        {{ selectedEvent.start.split('-')[2].split(' ')[1] }} -
-                        {{
-                            selectedEvent.end.split('-')[2].split(' ')[0]
-                        }}.{{
-                            selectedEvent.end.toLocaleString().split('-')[1]
-                        }}.{{ selectedEvent.end.toLocaleString().split('-')[0] }},
-                        {{ selectedEvent.end.split('-')[2].split(' ')[1] }}
+                    <div class="text-secondary ml-10 w-1/2">
+                        <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
+                        <div class="w-full">
+                            <input v-model="selectedEvent.endDate" id="changeEventEndDate"
+                                   placeholder="Startdatum*" type="date"
+                                   class="border-gray-300 text-primary placeholder-secondary"/>
+                            <input
+                                v-model="selectedEvent.endTime" id="eventEndTime"
+                                placeholder="StartZeit*" type="time"
+                                class="border-gray-300 text-primary placeholder-secondary"/>
+                        </div>
                     </div>
-                    <!-- TODO: Hier || (this.myRooms ? this.myRooms.length > 0 : false) wieder einbauen und myRooms wieder befüllen und || selectedEvent.created_by.id === this.$page.props.user.id-->
-                    <div
-                        v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin  ">
-                        <div class="mt-4">
+                </div>
+                <div v-else class="mt-4 subpixel-antialiased">
+                    {{
+                        selectedEvent.start.split('-')[2].split(' ')[0]
+                    }}.{{
+                        selectedEvent.start.toLocaleString().split('-')[1]
+                    }}.{{ selectedEvent.start.toLocaleString().split('-')[0] }},
+                    {{ selectedEvent.start.split('-')[2].split(' ')[1] }} -
+                    {{
+                        selectedEvent.end.split('-')[2].split(' ')[0]
+                    }}.{{
+                        selectedEvent.end.toLocaleString().split('-')[1]
+                    }}.{{ selectedEvent.end.toLocaleString().split('-')[0] }},
+                    {{ selectedEvent.end.split('-')[2].split(' ')[1] }}
+                </div>
+                <div
+                    v-if="checkProjectPermission(selectedEvent.projectId,this.$page.props.user.id) || this.$page.props.can.admin_rooms || this.$page.props.is_admin || (this.myRooms ? this.myRooms.length > 0 : false) || selectedEvent.created_by.id === this.$page.props.user.id">
+                    <div class="mt-4">
                             <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                                       v-model="selectedEvent.description" rows="4"
                                       class="resize-none font-black shadow-sm placeholder-secondary p-4 placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full sm:text-sm border"/>
-                        </div>
-                        <div class="flex items-center w-full justify-center">
-                            <!-- TODO: HIER WIEDER MIT ROOM ADMINS dann vor letztem oder einfügen: && (rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin) -->
-                            <button
-                                v-if="!rooms.find(room => room.id === selectedEvent.roomId) || rooms.find(room => room.id === selectedEvent.roomId)  "
-                                :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
-                                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
-                                class="mt-4 px-12 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
-                                @click="updateOrCreateEvent(selectedEvent,false)"
-                                :disabled="selectedEvent.start === null && selectedEvent.end === null">
-                                Speichern
-                            </button>
-                            <!-- TODO: HIER WENN ROOM ADMINS DA DANN STATT DEM TRUE EINFÜGEN: ((!rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) -->
-                            <div class="items-center"
-                                 v-if="rooms.find(room => room.id === selectedEvent.roomId) ?  true : false">
-                                <button :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
-                                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                        class="mt-4 px-12 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
-                                        @click="updateOrCreateEvent(selectedEvent,true)"
-                                        :disabled="selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null">
-                                    Raum anfragen
-                                </button>
-                            </div>
-                        </div>
                     </div>
-                    <div v-else class="subpixel-antialiased mt-4">
-                        {{ selectedEvent.description }}
+                    <div class="flex items-center w-full justify-center">
+                        <button
+                            v-if="!rooms.find(room => room.id === selectedEvent.roomId) || rooms.find(room => room.id === selectedEvent.roomId) && (rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || this.$page.props.is_admin) "
+                            :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
+                                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
+                            class="mt-4 px-12 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
+                            @click="updateOrCreateEvent(selectedEvent,false)"
+                            :disabled="selectedEvent.start === null && selectedEvent.end === null">
+                            Speichern
+                        </button>
+                        <div class="items-center"
+                             v-if="rooms.find(room => room.id === selectedEvent.roomId) ?  ((!rooms.find(room => room.id === selectedEvent.roomId).room_admins.find(user => user.id === this.$page.props.user.id) || selectedRoom.everyone_can_book) && !this.$page.props.is_admin) : false">
+                            <button :class="[selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null ?
+                                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                    class="mt-4 px-12 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-3xl"
+                                    @click="updateOrCreateEvent(selectedEvent,true)"
+                                    :disabled="selectedEvent.start === null || selectedEvent.end === null || selectedEvent.selectedRoom === null">
+                                Raum anfragen
+                            </button>
+                        </div>
                     </div>
                 </div>
+                <div v-else class="subpixel-antialiased mt-4">
+                    {{ selectedEvent.description }}
+                </div>
+            </div>
         </template>
+    </jet-dialog-modal>
+    <!-- Event löschen Modal -->
+    <jet-dialog-modal :show="deletingEvent" @close="closeDeleteEventModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="font-black font-lexend text-primary text-3xl my-2">
+                    Event löschen
+                </div>
+                <XIcon @click="closeDeleteEventModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-error subpixel-antialiased">
+                    Bist du sicher, dass du {{ selectedEvent.title }} aus dem
+                    System löschen möchtest?
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="deleteEvent">
+                        Löschen
+                    </button>
+                    <div class="flex my-auto">
+                            <span @click="closeDeleteEventModal()"
+                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                    </div>
+                </div>
+            </div>
+
+        </template>
+
     </jet-dialog-modal>
     <!-- Event Detail Modal -->
     <jet-dialog-modal :show="false" @close="selectedEvent = null">
@@ -849,16 +918,22 @@ import {
     Menu,
     MenuButton,
     MenuItem, MenuItems,
-    Switch
+    Switch,
+    Disclosure,
+    DisclosureButton
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {useForm} from "@inertiajs/inertia-vue3";
+import {Inertia} from "@inertiajs/inertia";
+import AddButton from "@/Layouts/Components/AddButton";
 import { Link } from "@inertiajs/inertia-vue3";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        Disclosure,
+        DisclosureButton,
         VueCal,
         JetDialogModal,
         XIcon,
@@ -880,11 +955,13 @@ export default {
         PencilAltIcon,
         TrashIcon,
         DotsVerticalIcon,
+        AddButton,
         Link
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
         return {
+            myRooms: [],
             newEventError: null,
             assignProject: true,
             addingEvent: false,
@@ -908,6 +985,7 @@ export default {
             eventsSince: null,
             eventsUntil: null,
             showEventModal: false,
+            deletingEvent: false,
             addEventForm: useForm({
                 title: '',
                 startDate: null,
@@ -943,11 +1021,14 @@ export default {
         }
     },
     methods: {
-        openEventModal(event){
-            this.selectedRoom = this.rooms.find( (x) => x.id === event.roomId);
+        openEventModal(event) {
+            console.log(event);
+            this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
             if (event.title !== '') {
                 const offset = new Date(event.start).getTimezoneOffset()
+                console.log(offset);
                 this.selectedEvent = event;
+                this.checkCollisions();
                 let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
                 this.selectedEvent.start = startDate;
                 this.selectedEvent.startDate = startDate.toISOString().slice(0, 10);
@@ -957,11 +1038,12 @@ export default {
                 this.selectedEvent.endDate = endDate.toISOString().slice(0, 10);
                 this.selectedEvent.endTime = endDate.toISOString().slice(11, 16);
                 this.showEventModal = true;
-            }else{
+            } else {
+                this.checkCollisions();
                 this.openAddEventModal(event);
             }
         },
-        closeEventModal(){
+        closeEventModal() {
             this.showEventModal = false;
             this.selectedEvent = null;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
@@ -987,7 +1069,7 @@ export default {
             }
             if (this.room) {
                 this.addEventForm.roomId = this.room.id;
-                this.selectedRoom = this.rooms.find( (x) => x.id === this.room.id);
+                this.selectedRoom = this.rooms.find((x) => x.id === this.room.id);
             }
             this.addingEvent = true;
         },
@@ -1036,15 +1118,12 @@ export default {
             }
         },
         checkProjectPermission(wantedProjectId, userId) {
-            /* TODO: Hier den projecten auch die project_admins mitgeben und dann den Code wieder reinnehmen
+            // TODO: Hier den projecten auch die project_admins mitgeben und dann den Code wieder reinnehmen
             if (wantedProjectId) {
                 return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
             } else {
                 return false;
             }
-
-             */
-            return true;
 
         },
         updateTimes(event) {
@@ -1129,9 +1208,9 @@ export default {
             this.addEventForm.projectId = null;
         },
         changeRoom() {
-            if(this.selectedEvent){
+            if (this.selectedEvent) {
                 this.selectedEvent.roomId = this.selectedRoom.id;
-            }else{
+            } else {
                 this.addEventForm.roomId = this.selectedRoom.id;
             }
             this.checkCollisions();
@@ -1225,7 +1304,9 @@ export default {
                         eventId: this.selectedEvent.id,
                     }
                 })
-                .then(response => this.collision = response.data);
+                .then(response => {
+                    this.collision = response.data
+                });
         },
 
         /**
@@ -1235,7 +1316,6 @@ export default {
          * @param event
          */
         selectEvent(event = null) {
-            console.log(event);
             if (event === null) {
                 this.selectedEvent = {
                     projectId: this.projectId,
@@ -1276,32 +1356,56 @@ export default {
          * Updates or creates an event and reloads all events
          *
          * @param event
+         * @param isOption
          * @returns {Promise<*>}
          */
         async updateOrCreateEvent(event, isOption) {
             event.eventTypeId = this.selectedEventType.id;
             event.roomId = this.selectedRoom.id;
+            event.isOption = isOption;
             if (event.id) {
                 return await axios
                     .put(`/events/${event.id}`, event)
                     .then(response => this.closeEventModal())
                     .catch(error => this.error = error.response.data.errors);
             }
+            console.log(event);
             return await axios
                 .post('/events', event)
-                .then(response => this.closeAddEventModal())
+                .then(response => {
+                    this.closeAddEventModal();
+                    console.log("Res: ")
+                    console.log(response)
+                })
                 .catch(error => this.error = error.response.data.errors);
         },
-
+        async approveRequest(event) {
+            event.isOption = false;
+            return await axios.put(`/events/${event.id}`, event)
+                .then(response => console.log(response))
+                .catch(error => this.error = error.response.data.errors);
+        },
+        async declineRequest(event) {
+            event.roomId = null;
+            return await axios.put(`/events/${event.id}`, event)
+                .then(response => this.selectedRoom = response)
+                .catch(error => this.error = error.response.data.errors);
+        },
+        openDeleteEventModal() {
+            this.deletingEvent = true;
+        },
+        closeDeleteEventModal() {
+            this.deletingEvent = false;
+        },
         async deleteEvent() {
-            if (!confirm('are you sure you want to delete this event?')) {
-                return;
-            }
             return await axios
                 .delete(`/events/${this.selectedEvent.id}`)
-                .then(response => this.closeEventModal());
-        },
-    }
+                .then(response => {
+                    this.closeEventModal();
+                    this.closeDeleteEventModal();
+                });
+        }
+    },
 }
 </script>
 

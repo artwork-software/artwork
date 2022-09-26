@@ -23,7 +23,10 @@ module.exports = {
                 help: '#93929D',
                 backgroundGray: '#F5F5F3',
                 buttonBlue:'#3017AD',
-                buttonHover:'#2D1FDE'
+                buttonHover:'#2D1FDE',
+                tagBg: 'rgba(48,23,173,0.1)',
+                tag: 'rgba(48,23,173,0.3)',
+                tagText: '#3017AD'
             },
             fontSize: {
                 header: '30px'

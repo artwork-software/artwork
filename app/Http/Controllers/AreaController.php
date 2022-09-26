@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Resources\RoomIndexResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Area;
+use App\Models\RoomAttribute;
+use App\Models\RoomCategory;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -34,7 +36,9 @@ class AreaController extends Controller
                 'showContent' => true,
                 'rooms' => RoomIndexResource::collection($area->rooms()->orderBy('order')->get())->resolve(),
             ]),
-            'opened_areas' => User::where('id', Auth::id())->first()->opened_areas
+            'opened_areas' => User::where('id', Auth::id())->first()->opened_areas,
+            'room_categories' => RoomCategory::all(),
+            'room_attributes' => RoomAttribute::all()
         ]);
     }
 

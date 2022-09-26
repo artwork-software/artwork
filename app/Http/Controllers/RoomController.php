@@ -25,7 +25,7 @@ class RoomController extends Controller
      */
     public function store(Request $request)
     {
-        Room::create([
+        $room = Room::create([
             'name' => $request->name,
             'description' => $request->description,
             'temporary' => $request->temporary,
@@ -36,6 +36,8 @@ class RoomController extends Controller
             'everyone_can_book' => $request->everyone_can_book,
             'order' => Room::max('order') + 1,
         ]);
+
+        $room->categories()->save($request->room_categories);
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
@@ -76,6 +78,30 @@ class RoomController extends Controller
                     $this->authorize('update', User::find($room_admin['id']));
 
                     return $room_admin['id'];
+                })
+        );
+
+        $room->adjoining_rooms()->sync(
+            collect($request->adjoining_rooms)
+                ->map(function ($adjoining_room) {
+
+                    return $adjoining_room['id'];
+                })
+        );
+
+        $room->categories()->sync(
+            collect($request->room_categories)
+                ->map(function ($room_category) {
+
+                    return $room_category['id'];
+                })
+        );
+
+        $room->attributes()->sync(
+            collect($request->room_attributes)
+                ->map(function ($room_attribute) {
+
+                    return $room_attribute['id'];
                 })
         );
 

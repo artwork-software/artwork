@@ -7,6 +7,100 @@
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
                                 <h2 class="text-3xl font-lexend font-black text-primary flex">Räume & Areale</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                    Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
+                                    zusätzlich globale Eigenschaften für Räume.
+                                </div>
+
+                                <h2 class="font-medium mt-10 text-xl">Raumeigenschaften</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                    Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
+                                    Kalendern gefiltert werden.
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-x-10">
+                                    <!-- Raumkategorien -->
+                                    <div class="flex mt-8">
+                                        <div class="relative w-72 mr-4">
+                                            <input v-on:keyup.enter=addRoomCategory id="roomCategory"
+                                                   v-model="roomCategoryInput"
+                                                   type="text"
+                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                                   placeholder="placeholder"/>
+                                            <label for="roomCategory"
+                                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all
+                                                subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
+                                                 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
+                                                  peer-focus:text-sm ">
+                                                Raumkategorie eingeben
+                                            </label>
+                                        </div>
+
+                                        <div class="flex m-2">
+                                            <button
+                                                :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                @click="addRoomCategory" :disabled="!roomCategoryInput">
+                                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <!-- Raumattribute -->
+                                    <div class="flex mt-8">
+                                        <div class="relative w-72 mr-4">
+                                            <input v-on:keyup.enter=addRoomAttribute id="roomAttribute"
+                                                   v-model="roomAttributeInput"
+                                                   type="text"
+                                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                                   placeholder="placeholder"/>
+                                            <label for="roomAttribute"
+                                                   class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all
+                                                subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base
+                                                 peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5
+                                                  peer-focus:text-sm ">
+                                                Raumeigenschaft eingeben
+                                            </label>
+                                        </div>
+
+                                        <div class="flex m-2">
+                                            <button
+                                                :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                @click="addRoomAttribute" :disabled="!roomAttributeInput">
+                                                <CheckIcon class="h-5 w-5"></CheckIcon>
+                                            </button>
+                                        </div>
+
+                                    </div>
+
+                                    <div class="mt-2 flex flex-wrap">
+                                    <span v-for="(category,index) in room_categories"
+                                          class="flex rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-3 py-1 text-sm mr-1 mb-1">
+                                        {{ category.name }}
+                                        <button type="button" @click="deleteRoomCategory(category)">
+                                            <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                            <XIcon class="ml-1 mt-1 h-4 w-4 hover:text-error "/>
+                                        </button>
+                                    </span>
+                                    </div>
+
+                                    <div class="flex mt-2">
+                                    <span v-for="(attribute,index) in room_attributes"
+                                          class="flex mr-1 rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-3 py-1 text-sm">
+                                        {{ attribute.name }}
+                                        <button type="button" @click="deleteRoomAttribute(attribute)">
+                                            <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                            <XIcon class="ml-1 mt-1 h-4 w-4 hover:text-error "/>
+                                        </button>
+                                    </span>
+                                    </div>
+                                </div>
+
+                                <div class="flex w-full justify-between mt-6">
+                                    <h2 class="font-medium mt-10 text-xl">Areale</h2>
+                                </div>
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
                                         <div>
@@ -24,7 +118,7 @@
                             <div class="flex w-full flex-wrap mt-10">
                                 <div v-for="area in areas"
                                      class="flex w-full bg-white my-2 border border-gray-200">
-                                    <button class="bg-black flex" @click="changeAreaStatus(area)">
+                                    <button class="bg-buttonBlue flex" @click="changeAreaStatus(area)">
                                         <ChevronUpIcon v-if="this.opened_areas.includes(area.id)"
                                                        class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                         <ChevronDownIcon v-else
@@ -681,6 +775,7 @@ import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
     components: {
@@ -714,9 +809,11 @@ export default defineComponent({
         draggable,
     },
     name: 'Area Management',
-    props: ['areas', 'opened_areas'],
+    props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],
     data() {
         return {
+            roomCategoryInput: '',
+            roomAttributeInput: '',
             dragging: false,
             showMenu: null,
             showAddAreaModal: false,
@@ -767,6 +864,29 @@ export default defineComponent({
         }
     },
     methods: {
+        deleteRoomCategory(category) {
+            console.log(category)
+            Inertia.delete(`/rooms/categories/${category.id}`, {
+                onError: (err) => console.log(err)
+            });
+        },
+        addRoomCategory() {
+            if (this.roomCategoryInput.indexOf(' ') === -1) {
+                Inertia.post(`/rooms/categories/`, { name: this.roomCategoryInput});
+            }
+            this.roomCategoryInput = "";
+
+        },
+        deleteRoomAttribute(attribute) {
+            console.log(attribute);
+            Inertia.delete(`/rooms/attributes/${attribute.id}`)
+        },
+        addRoomAttribute() {
+            if (this.roomAttributeInput.indexOf(' ') === -1) {
+                Inertia.post(`/rooms/attributes/`, {name: this.roomAttributeInput});
+            }
+            this.roomAttributeInput = "";
+        },
         changeAreaStatus(area) {
             if (!this.opened_areas.includes(area.id)) {
                 const openedAreas = this.opened_areas;

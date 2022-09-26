@@ -20,6 +20,7 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
             'user_id' => Auth::id(),
+            'occupancy_option' => $this->get('isOption'),
         ];
     }
 }

@@ -13,7 +13,7 @@
         <Menu as="div" class="relative inline-block text-left w-56">
             <div>
                 <MenuButton
-                    class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black hover:bg-opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-opacity-75"
+                    class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 >
                     <span class="float-left">Filter</span>
                     <ChevronDownIcon
@@ -23,33 +23,83 @@
                 </MenuButton>
             </div>
             <transition
-                enter-active-class="transition duration-100 ease-out"
-                enter-from-class="transform scale-95 opacity-0"
+                enter-active-class="transition duration-50 ease-out"
+                enter-from-class="transform scale-100 opacity-100"
                 enter-to-class="transform scale-100 opacity-100"
                 leave-active-class="transition duration-75 ease-in"
                 leave-from-class="transform scale-100 opacity-100"
                 leave-to-class="transform scale-95 opacity-0"
             >
                 <MenuItems
-                    class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white
-                 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                    <p>Zurücksetzen</p>
-                    <div class="mx-auto w-full max-w-md rounded-2xl bg-white p-2">
+                    class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                    <div class="flex justify-end">
+                        <button class="flex">
+                            <XIcon class="w-3 mr-1 mt-0.5" />
+                        <div class="text-xs">Zurücksetzen</div>
+                        </button>
+                        <button class="flex ml-4">
+                            <DocumentTextIcon class="w-3 mr-1 mt-0.5" />
+                            <div class="text-xs">Speichern</div>
+                        </button>
+                    </div>
+                    <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
                         <Disclosure v-slot="{ open }">
                             <DisclosureButton
-                                class="flex w-full justify-between rounded-lg bg-purple-100 px-4 py-2 text-left text-sm font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75"
+                                class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium text-white focus:outline-none focus-visible:ring-purple-500"
                             >
-                                <span>What is your refund policy?</span>
-                                <ChevronUpIcon
+                                <span>Räume</span>
+                                <ChevronDownIcon
                                     :class="open ? 'rotate-180 transform' : ''"
-                                    class="h-5 w-5 text-purple-500"
+                                    class="h-4 w-4 mt-0.5 text-white"
                                 />
                             </DisclosureButton>
-                            <DisclosurePanel class="px-4 pt-4 pb-2 text-sm text-gray-500">
-                                If you're unhappy with your purchase for any reason, email us within
-                                90 days and we'll refund you in full, no questions asked.
+                            <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                <SwitchGroup>
+                                    <div class="flex items-center">
+                                        <Switch v-model="roomFilters.showAdjoiningRooms"
+                                                :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
+                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                            class="inline-block h-2 w-2 transform rounded-full transition" />
+                                        </Switch>
+                                        <SwitchLabel class="ml-4 text-xs text-secondary">Nebenräume anzeigen</SwitchLabel>
+                                    </div>
+                                </SwitchGroup>
+                                <SwitchGroup>
+                                    <div class="flex items-center mt-2">
+                                        <Switch v-model="roomFilters.onlyFreeRooms"
+                                                :class="roomFilters.onlyFreeRooms ? 'bg-white' : 'bg-darkGray'"
+                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span :class="roomFilters.onlyFreeRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                  class="inline-block h-2 w-2 transform rounded-full transition" />
+                                        </Switch>
+                                        <SwitchLabel class="ml-4 text-xs text-secondary">Nur freie Räume anzeigen</SwitchLabel>
+                                    </div>
+                                </SwitchGroup>
+                                <hr class="border-gray-500 mt-4 mb-2">
+                                <Disclosure v-slot="{ open }">
+                                    <DisclosureButton
+                                        class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium text-white focus:outline-none focus-visible:ring-purple-500"
+                                    >
+                                        <span>Raumkategorien</span>
+                                        <ChevronDownIcon
+                                            :class="open ? 'rotate-180 transform' : ''"
+                                            class="h-4 w-4 mt-0.5 text-white"
+                                        />
+                                    </DisclosureButton>
+                                    <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                            <div v-for="category in room_categories" class="flex w-full mb-2">
+                                            <input v-model="category"
+                                                   type="checkbox"
+                                                   class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                            <p :class="[category ? 'text-secondary' : 'text-secondary', 'subpixel-antialiased']"
+                                               class="ml-1.5 text-xs subpixel-antialiased text-secondary align-text-middle">{{ category.name }}</p>
+                                            </div>
+                                    </DisclosurePanel>
+                                </Disclosure>
                             </DisclosurePanel>
                         </Disclosure>
+
                     </div>
                 </MenuItems>
             </transition>
@@ -907,7 +957,7 @@
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, TrashIcon, XCircleIcon, XIcon, DocumentTextIcon} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
@@ -919,7 +969,9 @@ import {
     MenuItem, MenuItems,
     Switch,
     Disclosure,
-    DisclosureButton
+    DisclosureButton,
+    DisclosurePanel, SwitchGroup,
+    SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -930,11 +982,15 @@ import AddButton from "@/Layouts/Components/AddButton";
 export default {
     name: 'CalendarComponent',
     components: {
+        SwitchLabel,
+        SwitchGroup,
         Disclosure,
         DisclosureButton,
+        DisclosurePanel,
         VueCal,
         JetDialogModal,
         XIcon,
+        DocumentTextIcon,
         XCircleIcon,
         EventTypeIconCollection,
         Listbox,
@@ -958,6 +1014,12 @@ export default {
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
         return {
+            roomFilters: {
+                showAdjoiningRooms: false,
+                onlyFreeRooms: false
+            },
+            showFreeRooms: false,
+            showAdjoiningRooms: false,
             myRooms: [],
             newEventError: null,
             assignProject: true,
@@ -974,6 +1036,7 @@ export default {
             roomFilter: [],
             typeFilter: [],
             rooms: [],
+            room_categories: [],
             displayedRooms: [],
             projects: [],
             selectedEvent: null,
@@ -1234,6 +1297,7 @@ export default {
                     this.types = response.data.types
                     this.rooms = response.data.rooms
                     this.projects = response.data.projects
+                    this.room_categories = response.data.room_categories
 
                     // color coding of rooms
                     this.events.map(event => event.class = colors[event.split % colors.length])

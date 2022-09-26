@@ -21,6 +21,8 @@ module.exports = {
                 secondary:'#A7A6B1',
                 secondaryHover:'#FCFCFB',
                 help: '#93929D',
+                darkGray: '#616069',
+                darkGrayBg: 'rgba(255,255,255,0.15)',
                 backgroundGray: '#F5F5F3',
                 buttonBlue:'#3017AD',
                 buttonHover:'#2D1FDE',

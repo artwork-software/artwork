@@ -13,6 +13,8 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\RoomAttributeController;
+use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
@@ -190,6 +192,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/room_files/{room_file}', [RoomFileController::class, 'download'])->name('download_room_file');
     Route::delete('/room_files/{room_file}', [RoomFileController::class, 'destroy']);
     Route::delete('/room_files/{id}/force_delete', [RoomFileController::class, 'force_delete']);
+
+    //Room Categories
+    Route::post('/rooms/categories', [RoomCategoryController::class, 'store']);
+    Route::delete('/rooms/categories/{roomCategory}', [RoomCategoryController::class, 'destroy']);
+
+    //Room Attributes
+    Route::post('/rooms/attributes', [RoomAttributeController::class, 'store']);
+    Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy']);
 
     /**
      * Event Views

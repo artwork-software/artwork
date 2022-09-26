@@ -76,6 +76,26 @@ class Room extends Model
         return $this->hasMany(Event::class);
     }
 
+    public function adjoining_rooms()
+    {
+        return $this->belongsToMany(Room::class, null, 'main_room_ids', 'adjoining_room_ids');
+    }
+
+    public function main_rooms()
+    {
+        return $this->belongsToMany(Room::class, null, 'adjoining_room_ids', 'main_room_ids');
+    }
+
+    public function categories()
+    {
+        return $this->belongsToMany(RoomCategory::class, 'room_category');
+    }
+
+    public function attributes()
+    {
+        return $this->belongsToMany(RoomAttribute::class, 'room_attribute');
+    }
+
     public function prunable()
     {
         return static::where('deleted_at', '<=', now()->subMonth())

@@ -23,6 +23,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
+use App\Support\Services\HistoryService;
 
 class EventController extends Controller
 {
@@ -67,7 +68,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function storeEvent(EventStoreRequest $request): CalendarEventResource
+    public function storeEvent(EventStoreRequest $request, HistoryService $historyService): CalendarEventResource
     {
         $this->authorize('create', Event::class);
 
@@ -75,8 +76,11 @@ class EventController extends Controller
         $event = Event::create($request->data());
 
         if ($request->get('projectName')) {
-            $project = $event->project()->create(['name' => $request->get('projectName')]);
+            $project = Project::create(['name' => $request->get('projectName')]);
             $project->users()->save(Auth::user(), ['is_admin' => true]);
+            $event->project()->associate($project);
+            $event->save();
+            $historyService->projectUpdated($project);
         }
 
         broadcast(new OccupancyUpdated())->toOthers();
@@ -98,10 +102,7 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
-        $event->update($request->event);
-
-        $event->occupancy_option = $request->occupancy_option;
-        $event->save();
+        $event->update($request->data());
 
         return new CalendarEventResource($event);
     }

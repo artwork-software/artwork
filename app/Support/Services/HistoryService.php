@@ -18,12 +18,12 @@ class HistoryService
         return $this->modelUpdated($project, $project);
     }
 
-    public function updateHistory(Project $project, string $text): ProjectHistory
+    public function updateHistory(Project $project, string $text): Collection
     {
-        return $project->project_histories()->create([
+        return collect($project->project_histories()->create([
             'user_id' => Auth::id(),
             'description' => $text
-        ]);
+        ]));
     }
 
     public function taskUpdated(Task $task): ProjectHistory|Collection

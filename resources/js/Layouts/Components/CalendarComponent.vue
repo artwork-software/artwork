@@ -530,9 +530,10 @@
                                 class="border-gray-300 text-primary placeholder-secondary"/>
                         </div>
                     </div>
-                    <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
-                    <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
+
                 </div>
+                <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
+                <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                 <Listbox @change="changeRoom()" as="div" class="flex" v-model="selectedRoom">
                     <ListboxButton
                         class="pl-3 border border-gray-300 bg-white w-full relative mt-6 py-2 cursor-pointer focus:outline-none sm:text-sm">
@@ -1175,6 +1176,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import AddButton from "@/Layouts/Components/AddButton";
+import { Link } from "@inertiajs/inertia-vue3";
 
 export default {
     name: 'CalendarComponent',
@@ -1207,7 +1209,8 @@ export default {
         PencilAltIcon,
         TrashIcon,
         DotsVerticalIcon,
-        AddButton
+        AddButton,
+        Link
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
@@ -1354,6 +1357,9 @@ export default {
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
         },
         openAddEventModal(event = null) {
+
+            this.error = null;
+
             if (event !== null) {
                 const offset = new Date(event.start).getTimezoneOffset()
                 let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
@@ -1462,7 +1468,20 @@ export default {
                 }
 
             }
+
+            this.validateStartBeforeEndTime(event);
+
             this.checkCollisions();
+        },
+        async validateStartBeforeEndTime(event) {
+
+            this.error = null;
+            if (event.start && event.end) {
+                return await axios
+                    .post('/events', {start: event.start, end: event.end}, { headers: { 'X-Dry-Run': true } })
+                    .catch(error => this.error = error.response.data.errors);
+            }
+
         },
         setCombinedTimeString(date, time, target, event) {
             let combinedDateString = (date.toString() + ' ' + time);
@@ -1591,6 +1610,9 @@ export default {
          * @returns {Promise<void>}
          */
         async checkCollisions() {
+
+            console.log(this.selectedEvent)
+
             if (!(this.selectedEvent.start && this.selectedEvent.end && this.selectedEvent.roomId)) {
                 this.collision = 0
                 return;

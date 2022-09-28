@@ -37,7 +37,9 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        $room->categories()->save($request->room_categories);
+        if($request->room_categories) {
+            $room->categories()->save($request->room_categories);
+        }
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }

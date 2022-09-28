@@ -15,11 +15,11 @@
                     <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
                 </div>
                 <!-- Calendar Div -->
-                <div class="relative">
-                    <Link :href="route('events.view.index')"
-                        class="flex justify-end uppercase text-sm text-secondary right-0 items-end subpixel-antialiased absolute mt-14">
+                <div class="relative mt-5">
+                    <!--<Link :href="route('events.view.index')"
+                        class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
                         Alle Ansehen
-                    </Link>
+                    </Link> -->
                     <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
                 </div>
             </div>

@@ -20,6 +20,8 @@ module.exports = {
                 error:'#FD6D73',
                 secondary:'#A7A6B1',
                 secondaryHover:'#FCFCFB',
+                darkInputBg:'rgba(252,252,251,0.15)',
+                darkInputText: '#D8D7DE',
                 help: '#93929D',
                 darkGray: '#616069',
                 darkGrayBg: 'rgba(255,255,255,0.15)',

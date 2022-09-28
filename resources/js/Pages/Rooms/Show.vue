@@ -142,44 +142,51 @@
                         </div>
                         <div class="mt-10">
                             <span class="font-medium font-lexend text-xl w-full">Eigenschaften</span>
-                            <MenuButton @click="openChangeRoomAdminsModal()"
-                                        v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
-                                <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                            </MenuButton>
+                            <Menu>
+                                <MenuButton @click="openChangeRoomAdminsModal()"
+                                            v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
+                                    <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
+                                </MenuButton>
 
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <Disclosure as="div" v-for="section in filters" :key="section.id"
-                                            class="border-b border-gray-200 py-6" v-slot="{ open }">
-                                    <h3 class="-my-3 flow-root">
-                                        <DisclosureButton
-                                            class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                                            <span class="font-medium text-gray-900">{{ section.name }}</span>
-                                            <span class="ml-6 flex items-center">
+                                <transition enter-active-class="transition ease-out duration-100"
+                                            enter-from-class="transform opacity-0 scale-95"
+                                            enter-to-class="transform opacity-100 scale-100"
+                                            leave-active-class="transition ease-in duration-75"
+                                            leave-from-class="transform opacity-100 scale-100"
+                                            leave-to-class="transform opacity-0 scale-95">
+                                    <Disclosure as="div" class="border-b border-gray-200 py-6" v-slot="{ open }">
+                                        <div v-for="section in filters" :key="section.id">
+                                            <h3 class="-my-3 flow-root">
+                                                <DisclosureButton
+                                                    class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
+                                                    <span class="font-medium text-gray-900">{{ section.name }}</span>
+                                                    <span class="ml-6 flex items-center">
                                                 <PlusIcon v-if="!open" class="h-5 w-5" aria-hidden="true"/>
                                                 <MinusIcon v-else class="h-5 w-5" aria-hidden="true"/>
                                             </span>
-                                        </DisclosureButton>
-                                    </h3>
-                                    <DisclosurePanel class="pt-6">
-                                        <div class="space-y-4">
-                                            <div v-for="(option, optionIdx) in section.options" :key="option.value"
-                                                 class="flex items-center">
-                                                <input :id="`filter-${section.id}-${optionIdx}`"
-                                                       :name="`${section.id}[]`" :value="option.value" type="checkbox"
-                                                       :checked="option.checked"
-                                                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
-                                                <label :for="`filter-${section.id}-${optionIdx}`"
-                                                       class="ml-3 text-sm text-gray-600">{{ option.label }}</label>
-                                            </div>
+                                                </DisclosureButton>
+                                            </h3>
+                                            <DisclosurePanel class="pt-6">
+                                                <div class="space-y-4">
+                                                    <div v-for="(option, optionIdx) in section.options"
+                                                         :key="option.value"
+                                                         class="flex items-center">
+                                                        <input :id="`filter-${section.id}-${optionIdx}`"
+                                                               :name="`${section.id}[]`" :value="option.value"
+                                                               type="checkbox"
+                                                               :checked="option.checked"
+                                                               class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                                                        <label :for="`filter-${section.id}-${optionIdx}`"
+                                                               class="ml-3 text-sm text-gray-600">{{
+                                                                option.label
+                                                            }}</label>
+                                                    </div>
+                                                </div>
+                                            </DisclosurePanel>
                                         </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                            </transition>
+                                    </Disclosure>
+                                </transition>
+                            </Menu>
                             <div>
                                 <!-- TODO: Hier Raumeigenschaften anzeigen -->
                             </div>
@@ -702,9 +709,12 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel
 } from "@headlessui/vue";
-import {DocumentTextIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {DocumentTextIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon, PlusIcon, MinusIcon} from "@heroicons/vue/outline";
 import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
@@ -727,6 +737,11 @@ export default {
     name: "Show",
     props: ['room', 'event_types', 'projects', 'is_room_admin'],
     components: {
+        PlusIcon,
+        MinusIcon,
+        Disclosure,
+        DisclosureButton,
+        DisclosurePanel,
         TeamIconCollection,
         AppLayout,
         Menu,

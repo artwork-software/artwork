@@ -6,6 +6,7 @@ use App\Models\Area;
 use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
@@ -51,6 +52,16 @@ class CalendarEventCollectionResource extends ResourceCollection
             'room_categories' => RoomCategory::all()->map(fn (RoomCategory $roomCategory) => [
                 'id' => $roomCategory->id,
                 'name' => $roomCategory->name,
+            ]),
+
+            'room_attributes' => RoomAttribute::all()->map(fn (RoomAttribute $roomAttribute) => [
+                'id' => $roomAttribute->id,
+                'name' => $roomAttribute->name,
+            ]),
+
+            'event_types' => EventType::all()->map(fn (EventType $eventType) => [
+                'id' => $eventType->id,
+                'name' => $eventType->name,
             ]),
 
             'areas' => Area::all()->map(fn (Area $area) => [

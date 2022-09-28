@@ -211,7 +211,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     /**
      * Event Api
      */
-    Route::get('/events', [EventController::class, 'indexEvents'])->name('events.index');
+    Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');;
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');;

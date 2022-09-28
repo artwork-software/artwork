@@ -28,6 +28,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
+ * @property \Illuminate\Support\Collection<\App\Models\RoomAttribute> $attributes
  */
 class Room extends Model
 {
@@ -93,7 +94,7 @@ class Room extends Model
 
     public function attributes()
     {
-        return $this->belongsToMany(RoomAttribute::class, 'room_attribute');
+        return $this->belongsToMany(RoomAttribute::class, 'room_pivot_room_attribute');
     }
 
     public function prunable()

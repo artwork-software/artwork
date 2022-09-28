@@ -10,7 +10,10 @@ use App\Models\Area;
 use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\RoomAttribute;
+use App\Models\RoomCategory;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
@@ -20,8 +23,8 @@ class RoomController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @return RedirectResponse
      */
     public function store(Request $request)
     {
@@ -47,7 +50,7 @@ class RoomController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Room  $room
+     * @param Room $room
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(Room $room, Request $request)
@@ -60,15 +63,27 @@ class RoomController extends Controller
             'is_room_admin' => $room->room_admins->contains(Auth::id()),
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
+
+            'available_categories' => RoomCategory::all(),
+            'roomCategoryIds' => $room->categories()->pluck('room_category_id'),
+            'roomCategories' => $room->categories,
+
+            'available_attributes' => RoomAttribute::all(),
+            'roomAttributeIds' => $room->attributes()->pluck('room_attribute_id'),
+            'roomAttributes' => $room->attributes,
+
+            'available_rooms' => Room::where('id', '!=', $room->id)->get(),
+            'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
+            'adjoiningRooms' => $room->adjoining_rooms,
         ]);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Room  $room
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param Room $room
+     * @return RedirectResponse
      */
     public function update(Request $request, Room $room)
     {
@@ -83,29 +98,11 @@ class RoomController extends Controller
                 })
         );
 
-        $room->adjoining_rooms()->sync(
-            collect($request->adjoining_rooms)
-                ->map(function ($adjoining_room) {
+        $room->adjoining_rooms()->sync($request->adjoining_rooms);
 
-                    return $adjoining_room['id'];
-                })
-        );
+        $room->attributes()->sync($request->room_attributes);
 
-        $room->categories()->sync(
-            collect($request->room_categories)
-                ->map(function ($room_category) {
-
-                    return $room_category['id'];
-                })
-        );
-
-        $room->attributes()->sync(
-            collect($request->room_attributes)
-                ->map(function ($room_attribute) {
-
-                    return $room_attribute['id'];
-                })
-        );
+        $room->categories()->sync($request->room_categories);
 
         return Redirect::back()->with('success', 'Room updated');
     }
@@ -132,9 +129,9 @@ class RoomController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Room  $room
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param Room $room
+     * @return RedirectResponse
      */
     public function updateOrder(Request $request)
     {
@@ -159,8 +156,8 @@ class RoomController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Room  $room
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Room $room
+     * @return RedirectResponse
      */
     public function destroy(Room $room)
     {

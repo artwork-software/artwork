@@ -299,7 +299,7 @@
     <!--  Calendar  -->
     <div>
         <vue-cal
-            style="height: 650px"
+            style="height: 500px"
             today-button
             events-on-month-view="short"
             locale="de"
@@ -1734,6 +1734,18 @@ export default {
 
 <style>
 /* Styling of Vue Cal */
+
+.vuecal--month-view .vuecal__cell {height: 75px;}
+
+.vuecal--month-view .vuecal__cell-content {
+    justify-content: flex-start;
+    height: 100%;
+    align-items: flex-end;
+    overflow: hidden;
+}
+
+.vuecal--month-view .vuecal__cell-date {padding: 4px;}
+.vuecal--month-view .vuecal__no-event {display: none;}
 
 .vuecal__event {
     font-size: 0.75rem; /* 14px */

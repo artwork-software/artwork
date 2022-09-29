@@ -1,27 +1,27 @@
 <template>
     <app-layout>
         <div class="py-4">
-            <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-20 mr-40">
+            <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="text-3xl font-lexend font-black text-primary flex">Räume & Areale</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                <h2 class="text-3xl font-lexend font-black text-primary flex w-full">Räume & Areale</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
                                     Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
                                     zusätzlich globale Eigenschaften für Räume.
                                 </div>
 
-                                <h2 class="font-medium mt-10 text-xl">Raumeigenschaften</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                <h2 class="font-medium mt-10 text-xl w-full">Raumeigenschaften</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
                                     Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
                                     Kalendern gefiltert werden.
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-x-10">
+                                <div class="grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Raumkategorien -->
-                                    <div class="flex mt-8">
-                                        <div class="relative w-72 mr-4">
+                                    <div class="mt-8 mr-10 flex">
+                                        <div class="relative w-72">
                                             <input v-on:keyup.enter=addRoomCategory id="roomCategory"
                                                    v-model="roomCategoryInput"
                                                    type="text"
@@ -36,19 +36,30 @@
                                             </label>
                                         </div>
 
-                                        <div class="flex m-2">
+                                        <div class="m-2">
                                             <button
                                                 :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomCategory" :disabled="!roomCategoryInput">
                                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                                             </button>
                                         </div>
+                                    </div>
 
+                                    <div class="mt-2 mr-10 flex flex-wrap">
+                                        <span v-for="(category,index) in room_categories"
+                                              class="rounded-full items-center font-medium text-tagText
+                                            border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            {{ category.name }}
+                                            <button type="button" @click="deleteRoomCategory(category)">
+                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                            </button>
+                                        </span>
                                     </div>
 
                                     <!-- Raumattribute -->
-                                    <div class="flex mt-8">
-                                        <div class="relative w-72 mr-4">
+                                    <div class="mt-8 flex">
+                                        <div class="relative w-72">
                                             <input v-on:keyup.enter=addRoomAttribute id="roomAttribute"
                                                    v-model="roomAttributeInput"
                                                    type="text"
@@ -63,7 +74,7 @@
                                             </label>
                                         </div>
 
-                                        <div class="flex m-2">
+                                        <div class="m-2">
                                             <button
                                                 :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomAttribute" :disabled="!roomAttributeInput">
@@ -74,27 +85,15 @@
                                     </div>
 
                                     <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category,index) in room_categories"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-3 py-1 text-sm mr-1 mb-1">
-                                        {{ category.name }}
-                                        <button type="button" @click="deleteRoomCategory(category)">
-                                            <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                            <XIcon class="ml-1 mt-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                                    </div>
-
-                                    <div class="flex mt-2">
-                                    <span v-for="(attribute,index) in room_attributes"
-                                          class="flex mr-1 rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-3 py-1 text-sm">
-                                        {{ attribute.name }}
-                                        <button type="button" @click="deleteRoomAttribute(attribute)">
-                                            <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                            <XIcon class="ml-1 mt-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
+                                        <span v-for="(attribute,index) in room_attributes"
+                                          class="mr-1 rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-3 text-sm mb-1 h-8 inline-flex">
+                                            {{ attribute.name }}
+                                            <button type="button" @click="deleteRoomAttribute(attribute)">
+                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error"/>
+                                            </button>
+                                        </span>
                                     </div>
                                 </div>
 
@@ -872,7 +871,7 @@ export default defineComponent({
         },
         addRoomCategory() {
             if (this.roomCategoryInput.indexOf(' ') === -1) {
-                Inertia.post(`/rooms/categories/`, { name: this.roomCategoryInput});
+                Inertia.post(`/rooms/categories/`, {name: this.roomCategoryInput});
             }
             this.roomCategoryInput = "";
 

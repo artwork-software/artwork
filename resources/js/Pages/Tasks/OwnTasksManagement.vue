@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl my-12 ml-20 mr-10">
+        <div class="max-w-screen-xl my-12 ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">
                     <h2 class="font-bold font-lexend text-3xl w-full">Meine Aufgaben</h2>

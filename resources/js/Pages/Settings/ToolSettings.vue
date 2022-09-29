@@ -1,7 +1,7 @@
 <template>
     <app-layout>
 
-        <div class="max-w-screen-xl my-8 ml-20 mr-40">
+        <div class="max-w-screen-xl my-8 ml-14 mr-40">
 
             <div class="">
                 <h2 class="font-black font-lexend text-3xl mb-2">Tooleinstellungen</h2>

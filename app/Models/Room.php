@@ -28,7 +28,6 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
- * @property \Illuminate\Support\Collection<\App\Models\RoomAttribute> $attributes
  */
 class Room extends Model
 {

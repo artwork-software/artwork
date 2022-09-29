@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl my-12 ml-20 mr-10">
+        <div class="max-w-screen-xl my-12 ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex">
                     <h2 class="font-bold font-lexend text-3xl">{{ room.name }}</h2>
@@ -142,46 +142,163 @@
                         </div>
                         <div class="mt-10">
                             <span class="font-medium font-lexend text-xl w-full">Eigenschaften</span>
-                            <MenuButton @click="openChangeRoomAdminsModal()"
-                                        v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
-                                <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                            </MenuButton>
+                            <Menu as="span" class="relative">
+                                <MenuButton @click="attributesOpened = true" v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
+                                    <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
+                                </MenuButton>
 
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <Disclosure as="div" v-for="section in filters" :key="section.id"
-                                            class="border-b border-gray-200 py-6" v-slot="{ open }">
-                                    <h3 class="-my-3 flow-root">
-                                        <DisclosureButton
-                                            class="flex w-full items-center justify-between bg-white py-3 text-sm text-gray-400 hover:text-gray-500">
-                                            <span class="font-medium text-gray-900">{{ section.name }}</span>
-                                            <span class="ml-6 flex items-center">
-                                                <PlusIcon v-if="!open" class="h-5 w-5" aria-hidden="true"/>
-                                                <MinusIcon v-else class="h-5 w-5" aria-hidden="true"/>
-                                            </span>
-                                        </DisclosureButton>
-                                    </h3>
-                                    <DisclosurePanel class="pt-6">
-                                        <div class="space-y-4">
-                                            <div v-for="(option, optionIdx) in section.options" :key="option.value"
-                                                 class="flex items-center">
-                                                <input :id="`filter-${section.id}-${optionIdx}`"
-                                                       :name="`${section.id}[]`" :value="option.value" type="checkbox"
-                                                       :checked="option.checked"
-                                                       class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
-                                                <label :for="`filter-${section.id}-${optionIdx}`"
-                                                       class="ml-3 text-sm text-gray-600">{{ option.label }}</label>
-                                            </div>
+                                <transition
+                                    enter-active-class="transition duration-50 ease-out"
+                                    enter-from-class="transform scale-100 opacity-100"
+                                    enter-to-class="transform scale-100 opacity-100"
+                                    leave-active-class="transition duration-75 ease-in"
+                                    leave-from-class="transform scale-100 opacity-100"
+                                    leave-to-class="transform scale-95 opacity-0"
+                                >
+                                    <MenuItems
+                                        v-show="attributesOpened"
+                                        static
+                                        class="absolute right-0 mt-2 w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="inline-flex border-none w-1/5">
+
                                         </div>
-                                    </DisclosurePanel>
-                                </Disclosure>
-                            </transition>
+                                        <div class="inline-flex border-none justify-end w-4/5">
+                                            <button @click="saveRoomAttributes" class="flex ml-4">
+                                                <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
+                                                <div class="text-xs">Speichern</div>
+                                            </button>
+                                        </div>
+                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <!-- Room Categories Section -->
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+
+                                                    <div v-if="available_categories.length > 0"
+                                                         v-for="category in available_categories"
+                                                         :key="category.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="roomForm.room_categories"
+                                                               :value="category.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[roomForm.room_categories.includes(category.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ category.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Mebenräume</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+
+                                                    <div v-if="available_rooms.length > 0"
+                                                         v-for="room in available_rooms"
+                                                         :key="room.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="roomForm.adjoining_rooms"
+                                                               :value="room.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[roomForm.adjoining_rooms.includes(room.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ room.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Räume angelegt</div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+
+
+                                            <!-- Room Attributes Section -->
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+
+                                                    <div v-if="available_attributes.length > 0"
+                                                         v-for="attribute in available_attributes"
+                                                         :key="attribute.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="roomForm.room_attributes"
+                                                               :value="attribute.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[roomForm.room_attributes.includes(attribute.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ attribute.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt</div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+                                        </div>
+                                    </MenuItems>
+                                </transition>
+
+                            </Menu>
                             <div>
-                                <!-- TODO: Hier Raumeigenschaften anzeigen -->
+                                <div class="mt-2 flex flex-wrap">
+                                    <span v-for="(category, index) in roomCategories"
+                                          class="flex rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
+                                        {{ category.name }}
+                                        <button @click="removeCategoryFromRoom(index)" type="button">
+                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                        </button>
+                                    </span>
+                                    <span v-for="(attribute, index) in roomAttributes"
+                                          class="flex rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
+                                        {{ attribute.name }}
+                                        <button @click="removeAttributeFromRoom(index)" type="button">
+                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                        </button>
+                                    </span>
+
+                                    <span v-for="(room, index) in adjoiningRooms"
+                                          class="flex rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
+                                        Nebenraum von {{ room.name }}
+                                        <button @click="removeAdjoiningRoomFromRoom(index)" type="button">
+                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                        </button>
+                                    </span>
+
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -702,9 +819,20 @@ import {
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel
 } from "@headlessui/vue";
-import {DocumentTextIcon, DuplicateIcon, PencilAltIcon, TrashIcon, XIcon} from "@heroicons/vue/outline";
+import {
+    DocumentTextIcon,
+    DuplicateIcon,
+    PencilAltIcon,
+    TrashIcon,
+    XIcon,
+    PlusIcon,
+    MinusIcon
+} from "@heroicons/vue/outline";
 import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
@@ -725,8 +853,27 @@ const attributeFilters = [
 
 export default {
     name: "Show",
-    props: ['room', 'event_types', 'projects', 'is_room_admin'],
+    props: [
+        'room',
+        'event_types',
+        'projects',
+        'is_room_admin',
+        'available_categories',
+        'roomCategoryIds',
+        'roomCategories',
+        'available_attributes',
+        'roomAttributeIds',
+        'roomAttributes',
+        'available_rooms',
+        'adjoiningRoomIds',
+        'adjoiningRooms'
+    ],
     components: {
+        PlusIcon,
+        MinusIcon,
+        Disclosure,
+        DisclosureButton,
+        DisclosurePanel,
         TeamIconCollection,
         AppLayout,
         Menu,
@@ -768,6 +915,7 @@ export default {
     },
     data() {
         return {
+            attributesOpened: false,
             showChangeRoomAdminsModal: false,
             showSuccess: false,
             user_query: "",
@@ -786,6 +934,9 @@ export default {
             roomForm: this.$inertia.form({
                 _method: 'PUT',
                 room_admins: this.room.room_admins,
+                room_categories: this.roomCategoryIds,
+                room_attributes: this.roomAttributeIds,
+                adjoining_rooms: this.adjoiningRoomIds
             }),
             editRoomForm: useForm({
                 id: null,
@@ -960,6 +1111,22 @@ export default {
             this.showSuccessModal = false;
             this.successHeading = "";
             this.successDescription = "";
+        },
+        saveRoomAttributes() {
+            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
+            this.attributesOpened = false;
+        },
+        removeCategoryFromRoom(index) {
+            this.roomForm.room_categories.splice(index, 1)
+            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
+        },
+        removeAttributeFromRoom(index) {
+            this.roomForm.room_attributes.splice(index, 1)
+            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
+        },
+        removeAdjoiningRoomFromRoom(index) {
+            this.roomForm.adjoining_rooms.splice(index, 1)
+            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
         },
         editRoomAdmins() {
             this.roomForm.patch(route('rooms.update', {room: this.room.id}));

@@ -18,7 +18,7 @@
                                     Kalendern gefiltert werden.
                                 </div>
 
-                                <div class="grid w-1/2 grid-cols-2 grid-flow-col grid-rows-2">
+                                <div class="grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Raumkategorien -->
                                     <div class="mt-8 mr-10 flex">
                                         <div class="relative w-72">

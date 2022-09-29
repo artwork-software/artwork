@@ -1,7 +1,7 @@
 <template>
     <app-layout>
         <div class="py-4">
-            <div class="max-w-screen-lg my-12 flex flex-row ml-20 mr-40">
+            <div class="max-w-screen-lg my-12 flex flex-row ml-12 mr-40">
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto">

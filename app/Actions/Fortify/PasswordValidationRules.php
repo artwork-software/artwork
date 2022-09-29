@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fortify;
 
-use Laravel\Fortify\Rules\Password;
+use Illuminate\Validation\Rules\Password;
 
 trait PasswordValidationRules
 {
@@ -16,9 +16,12 @@ trait PasswordValidationRules
         return [
             'required',
             'string',
-            'min:10',
-            new Password,
-            'regex:/^.*(?=.{3,})(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[\d\x])(?=.*[#?!@$%^&*_-]).*$/',
+            Password::min(10)
+                ->letters()
+                ->mixedCase()
+                ->numbers()
+                ->symbols()
+                ->uncompromised(),
             'confirmed'
         ];
     }

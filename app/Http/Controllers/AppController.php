@@ -8,9 +8,12 @@ use App\Models\User;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Redirect;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
+use ZxcvbnPhp\Zxcvbn;
 
 
 class AppController extends Controller
@@ -22,6 +25,45 @@ class AppController extends Controller
     public function __construct(StatefulGuard $guard)
     {
         $this->guard = $guard;
+    }
+
+    public function get_password_feedback(): int
+    {
+        if(strlen(request('password'))) {
+            $zxcvbn = new Zxcvbn();
+            return $zxcvbn->passwordStrength(request('password'))['score'];
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     */
+    public function validate_email(Request $request): \Illuminate\Http\JsonResponse
+    {
+        if(Auth::user()) {
+            $user_id = Auth::user()->id;
+        } else {
+            $user_id = null;
+        }
+
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user_id)],
+        ]);
+
+        return response()->json($validator->errors());
+    }
+
+    public function toggle_hints(): \Illuminate\Http\RedirectResponse
+    {
+
+        $user = Auth::user();
+
+        $user->update([
+           'toggle_hints' => !$user->toggle_hints
+        ]);
+
+        return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
 
     public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
@@ -45,6 +87,58 @@ class AppController extends Controller
         } else {
             return inertia('Auth/Register');
         }
+
+    }
+
+    public function update_tool(Request $request, GeneralSettings $settings) {
+
+        if(!Auth::user()->hasRole('admin') && !Auth::user()->can("change tool settings")) {
+            abort(403);
+        }
+
+        $smallLogo = $request->file('smallLogo');
+        $bigLogo = $request->file('bigLogo');
+        $banner = $request->file('banner');
+
+        if($smallLogo) {
+            $settings->small_logo_path = $smallLogo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($bigLogo) {
+            $settings->big_logo_path = $bigLogo->storePublicly('logo', ['disk' => 'public']);
+        }
+
+        if($banner) {
+            $settings->banner_path = $banner->storePublicly('banner', ['disk' => 'public']);
+        }
+
+        $settings->save();
+
+        return Redirect::back()->with('success', 'Fotos hinzugefügt');
+
+    }
+
+    public function update_EmailSettings(Request $request, GeneralSettings $settings) {
+
+        if(!Auth::user()->hasRole('admin')) {
+            abort(403);
+        }
+
+        if($request->impressumLink != $settings-> impressum_link){
+            $settings->impressum_link = $request->impressumLink;
+        }
+
+        if($request->privacyLink != $settings-> privacy_link){
+            $settings->privacy_link = $request->privacyLink;
+        }
+
+        if($request->emailFooter != $settings-> email_footer){
+            $settings->email_footer = $request->emailFooter;
+        }
+
+        $settings->save();
+
+        return Redirect::back()->with('success', 'Email Einstellungen angepasst');
 
     }
 

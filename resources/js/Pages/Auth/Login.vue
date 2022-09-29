@@ -1,41 +1,31 @@
 <template>
     <div class="min-h-full flex">
+        <img :src="$page.props.big_logo" class="w-20 h-20 ml-12 mt-12 absolute rounded-full" />
         <div
             class="flex-1 flex min-h-screen flex-col align-items-center justify-center py-12 px-4 sm:px-6 lg:px-20 xl:px-24">
             <div class="mx-auto  w-full max-w-sm lg:w-96">
+
                 <div>
-                    <div class="text-2xl font-bold text-black">
-                        <p>ArtWork.tools</p>
+                    <div class="text-2xl mb-8 font-bold text-black">
+                        <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                     </div>
-                    <h2 class="mt-6 text-3xl font-extrabold text-gray-900">Login</h2>
+                    <div class="flex items-center mb-12">
+                    <h2 class="mt-6 text-3xl font-lexend font-bold text-primary">Login</h2>
+                        <SvgCollection svgName="arrowRight" class="mt-12 ml-2"/>
+                    </div>
                 </div>
 
                 <div class="mt-8">
                     <div class="mt-6">
                         <form class="space-y-6" @submit.prevent="submit">
-                            <div>
-                                <label for="email" class="block text-sm font-bold text-gray-700">
-                                    E-Mail-Adresse
-                                </label>
-                                <div class="mt-1">
-                                    <input
-                                        v-model="form.email"
-                                        id="email" name="email" type="email" autocomplete="email" required
-                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
-                                </div>
+                            <div class="relative w-full mr-4">
+                                <input id="email" v-model="form.email" type="text" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                                <label for="email" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">E-Mail*</label>
                             </div>
 
-                            <div>
-                                <label for="password" class="block text-sm font-bold text-gray-700">
-                                    Passwort
-                                </label>
-                                <div class="mt-1">
-                                    <input
-                                        v-model="form.password"
-                                        id="password" name="password" type="password" autocomplete="current-password"
-                                        required
-                                        class="appearance-none block w-full px-4 py-3 border border-gray-300 shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"/>
-                                </div>
+                            <div class="relative w-full mr-4">
+                                <input id="password" v-model="form.password" type="password" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
+                                <label for="password" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Passwort*</label>
                             </div>
 
                             <div class="flex items-center justify-between">
@@ -44,7 +34,7 @@
                                 </div>
                                 <div class="text-sm">
                                     <Link v-if="canResetPassword" :href="route('password.request')"
-                                          class="text-sm text-secondary subpixel-antialiased hover:font-semibold hover:text-primary">
+                                          class="text-xs text-secondary subpixel-antialiased hover:font-semibold hover:text-primary">
                                         Passwort vergessen
                                     </Link>
                                 </div>
@@ -53,18 +43,41 @@
                             <div>
                                 <button type="submit"
                                         :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-sm font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                         :disabled="this.form.email === '' || this.form.password === ''">Login
                                 </button>
                             </div>
                         </form>
+
                     </div>
+                </div>
+                <div class=" absolute bottom-0 mb-20 text-secondary subpixel-antialiased text-sm tracking-wide">
+                    <a v-if="this.$page.props.impressumLink !== ''" target="_blank" :href="this.$page.props.impressumLink">
+                        Impressum
+                    </a>
+                    <!-- TODO: Wohin bei Default ? -->
+                    <a target="_blank" v-else :href="this.$page.props.impressumLink">
+                        Impressum
+                    </a>
+                    |
+                    <a target="_blank" v-if="this.$page.props.privacyLink !== ''" :href="this.$page.props.privacyLink">
+                        Datenschutz
+                    </a>
+                    <!-- TODO: Wohin bei Default ? -->
+                    <a target="_blank" v-else :href="this.$page.props.privacyLink">
+                        Datenschutz
+                    </a>
+                    |
+                    <!-- TODO: Hier noch Link zu Über uns Page -->
+                    <a href="">
+                        Über das Tool
+                    </a>
                 </div>
             </div>
         </div>
         <div class="hidden lg:block relative w-0 flex-1">
             <img class="absolute inset-0 h-full w-full object-cover"
-                 src="https://images.unsplash.com/photo-1505904267569-f02eaeb45a4c?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1908&q=80"
+                 :src="$page.props.banner"
                  alt=""/>
         </div>
     </div>
@@ -81,12 +94,14 @@ import JetLabel from '@/Jetstream/Label.vue'
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
+import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 
 const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
     components: {
+        SvgCollection,
         Head,
         JetAuthenticationCard,
         JetAuthenticationCardLogo,

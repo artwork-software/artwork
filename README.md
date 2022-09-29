@@ -1,4 +1,5 @@
-# About Artwork
+
+## About Artwork
 
 Artwork is a project organisation tool. 
 It enables the scheduling of projects with multiple events, tasks, and responsibilities. 

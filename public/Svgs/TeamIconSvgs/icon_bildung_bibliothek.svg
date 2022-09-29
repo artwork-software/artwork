@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#641a54"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_344" data-name="Rechteck 344" width="19.389" height="25.683" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#641a54"/>
+    <g id="Gruppe_maskieren_402" data-name="Gruppe maskieren 402" clip-path="url(#clip-path)">
+      <g id="Gruppe_478" data-name="Gruppe 478" transform="matrix(0.978, -0.208, 0.208, 0.978, -18.635, 11.955)" clip-path="url(#clip-path-2)">
+        <rect id="Rechteck_343" data-name="Rechteck 343" width="15.724" height="21.979" transform="translate(0.557 3.147)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <path id="Pfad_810" data-name="Pfad 810" d="M19.275,1V22.979H16.724V3.59H1S1,1,4.654,1Z" transform="translate(-0.443 -0.443)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <line id="Linie_184" data-name="Linie 184" x2="8.755" transform="translate(4.211 6.872)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <line id="Linie_185" data-name="Linie 185" x2="8.755" transform="translate(4.211 10.595)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

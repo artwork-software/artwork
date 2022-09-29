@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->timestamps();
-            $table->string('logo_path', 2048)->nullable();
+            $table->string('svg_name');
         });
     }
 

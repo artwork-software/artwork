@@ -1,208 +1,84 @@
 <template>
-    <app-layout title="Dashboard">
-        <div class="py-12">
-            <div class="max-w-screen-2xl my-12 flex flex-row justify-between mx-auto sm:px-6 lg:px-8">
-                <div class="flex">
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
+    <app-layout>
+        <div class="py-4 flex flex-col md:flex-row">
+            <!-- Greetings Div -->
+            <div class="mr-12 overflow-x-auto">
+                <div class="ml-14 mt-10">
+                    <h2 class="text-3xl font-lexend font-black text-primary flex mb-4">Hallo {{
+                            $page.props.user.first_name
+                                                                                       }}</h2>
+                    <p class="text-secondary tracking-tight leading-6 sub">
+                        Herzlich willkommen im artwork tool! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
+                        aktiviert.<br/>
+                        Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
+                    </p>
+                    <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
                 </div>
-                <div class="flex">
-
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Benachrichtigungen</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
+                <!-- Calendar Div -->
+                <div class="relative mt-5">
+                    <!--<Link :href="route('events.view.index')"
+                        class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
+                        Alle Ansehen
+                    </Link> -->
+                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
                 </div>
             </div>
-            <div class="max-w-screen-2xl flex flex-row justify-between mx-auto sm:px-6 lg:px-8">
-                <div class="flex-grow">
-
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Kalender</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-
-
+            <!-- Task Div -->
+            <div class="px-4 mt-20 overflow-y-auto">
+                <div class="flex w-full">
+                    <h2 class="font-bold font-lexend text-2xl w-full">Meine Aufgaben</h2>
+                    <Link :href="route('tasks.own')"
+                        class="flex justify-end uppercase text-sm text-secondary w-full items-end subpixel-antialiased">
+                        Alle Ansehen
+                    </Link>
                 </div>
+                <div class="mt-10" v-for="task in this.sortedTasksDeadline">
+                    <div :key="task.id">
+                        <div>
+                            <div class="flex w-full">
+                                <input @change="updateTaskStatus(task)" v-model="task.done"
+                                    type="checkbox"
+                                    class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                <p class="ml-4 my-auto text-lg font-black text-sm w-full"
+                                    :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                    {{ task.name }}</p>
+                                <div v-show="task.departments.length > 0" class="my-auto shrink-0 -mr-3"
+                                    v-for="department in task.departments">
+                                    <TeamIconCollection :data-tooltip-target="department.name" :iconName="department.svg_name" :alt="department.name"
+                                        class="shrink-0 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                    <TeamTooltip :team="department"/>
+                                </div>
+                                <div v-show="task.checklist.user_id !== null" class="my-auto">
+                                    <img class="h-9 w-9 rounded-full"
+                                        :src="$page.props.user.profile_photo_url"
+                                        alt=""/>
+                                </div>
+                            </div>
+                            <div class="flex w-full ml-8">
+                                    <span v-if="!task.done && task.deadline"
+                                        class="ml-2 my-auto text-sm subpixel-antialiased"
+                                        :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
+                                            task.deadline
+                                                                                                                                                   }}</span>
+                            </div>
+                        </div>
+                        <div class="flex text-sm mt-0.5 w-full items-center ml-10">
+                            <Link
+                                :href="route('projects.show',{project: task.project.id})"
+                                class="cursor-pointer text-secondary flex subpixel-antialiased">
+                                {{ task.project.name }}
+                                <ChevronRightIcon class="h-5 w-5 my-auto text-secondary subpixel-antialiased"
+                                    aria-hidden="true"/>
+                                <span class="text-sm ml-4 subpixel-antialiased text-secondary flex">
+                                        {{ task.checklist.name }}
+                                        </span>
+                            </Link>
+                        </div>
 
-                <div class="flex">
-
-                    <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                        <h1 class="flex font-bold text-2xl justify-center">Meine Projekte</h1>
-                        <ul role="list" class="divide-y divide-gray-200">
-                            <li v-for="position in positions" :key="position.id">
-                                <a href="#" class="block hover:bg-gray-50">
-                                    <div class="px-4 py-4 flex items-center sm:px-6">
-                                        <div class="min-w-0 flex-1 sm:flex sm:items-center sm:justify-between">
-                                            <div class="truncate">
-                                                <div class="flex text-sm">
-                                                    <p class="font-medium text-indigo-600 truncate">{{
-                                                            position.title
-                                                        }}</p>
-                                                    <p class="ml-1 flex-shrink-0 font-normal text-gray-500">in
-                                                        {{ position.department }}</p>
-                                                </div>
-                                                <div class="mt-2 flex">
-                                                    <div class="flex items-center text-sm text-gray-500">
-                                                        <CalendarIcon class="flex-shrink-0 mr-1.5 h-5 w-5 text-gray-400"
-                                                                      aria-hidden="true"/>
-                                                        <p>
-                                                            Closing on
-                                                            {{ ' ' }}
-                                                            <time :datetime="position.closeDate">
-                                                                {{ position.closeDateFull }}
-                                                            </time>
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-4 flex-shrink-0 sm:mt-0 sm:ml-5">
-                                                <div class="flex overflow-hidden -space-x-1">
-                                                    <img v-for="applicant in position.applicants" :key="applicant.email"
-                                                         class="inline-block h-6 w-6 rounded-full ring-2 ring-white"
-                                                         :src="applicant.imageUrl" :alt="applicant.name"/>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ml-5 flex-shrink-0">
-                                            <ChevronRightIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </div>
-                                    </div>
-                                </a>
-                            </li>
-                        </ul>
+                        <div class="ml-10 my-3 text-secondary">
+                            {{ task.description }}
+                        </div>
                     </div>
-
-
                 </div>
             </div>
         </div>
@@ -212,107 +88,79 @@
 <script>
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import {CalendarIcon, ChevronRightIcon} from '@heroicons/vue/solid'
+import {
+    CalendarIcon,
+    ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    DotsHorizontalIcon,
+} from '@heroicons/vue/solid'
+import {Menu, MenuButton, MenuItem, MenuItems} from '@headlessui/vue'
+import CalendarComponent from "@/Layouts/Components/CalendarComponent";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip";
+import {Inertia} from "@inertiajs/inertia";
 
-const positions = [
-    {
-        id: 1,
-        title: 'Back End Developer',
-        department: 'Engineering',
-        closeDate: '2020-01-07',
-        closeDateFull: 'January 7, 2020',
-        applicants: [
-            {
-                name: 'Dries Vincent',
-                email: 'dries.vincent@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Lindsay Walton',
-                email: 'lindsay.walton@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Courtney Henry',
-                email: 'courtney.henry@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Tom Cook',
-                email: 'tom.cook@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-    {
-        id: 2,
-        title: 'Front End Developer',
-        department: 'Engineering',
-        closeDate: '2020-01-07',
-        closeDateFull: 'January 7, 2020',
-        applicants: [
-            {
-                name: 'Whitney Francis',
-                email: 'whitney.francis@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1517365830460-955ce3ccd263?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Leonard Krasner',
-                email: 'leonard.krasner@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1519345182560-3f2917c472ef?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Floyd Miles',
-                email: 'floy.dmiles@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1463453091185-61582044d556?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-    {
-        id: 3,
-        title: 'User Interface Designer',
-        department: 'Design',
-        closeDate: '2020-01-14',
-        closeDateFull: 'January 14, 2020',
-        applicants: [
-            {
-                name: 'Emily Selman',
-                email: 'emily.selman@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1502685104226-ee32379fefbe?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Kristin Watson',
-                email: 'kristin.watson@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-            {
-                name: 'Emma Dorsey',
-                email: 'emma.dorsey@example.com',
-                imageUrl:
-                    'https://images.unsplash.com/photo-1505840717430-882ce147ef2d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-            },
-        ],
-    },
-]
 export default defineComponent({
+    props: ['tasks', 'projects','eventTypes'],
     components: {
         AppLayout,
         CalendarIcon,
-        ChevronRightIcon
+        ChevronRightIcon,
+        Menu,
+        MenuItem,
+        MenuButton,
+        MenuItems,
+        ChevronLeftIcon,
+        DotsHorizontalIcon,
+        ChevronDownIcon,
+        CalendarComponent,
+        TeamIconCollection,
+        Link,
+        TeamTooltip
     },
-    setup() {
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                Inertia.reload({only: ['rooms']})
+            });
+    },
+    computed: {
+        sortedTasksDeadline: function () {
+            let taskCopy = this.tasks.slice();
+            let undoneSortedTasksDeadline = taskCopy.filter(task => task.done === false);
+
+            function compare(a, b) {
+                if (b.deadline === null) {
+                    return -1;
+                }
+                if (a.deadline === null) {
+                    return 1;
+                }
+                if (a.deadline < b.deadline)
+                    return -1;
+                if (a.deadline > b.deadline)
+                    return 1;
+                return 0;
+            }
+
+            return undoneSortedTasksDeadline.sort(compare);
+        },
+    },
+    methods: {
+        updateTaskStatus(task) {
+            this.doneTaskForm.done = task.done;
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
+        },
+    },
+    data() {
         return {
-            positions,
+            doneTaskForm: useForm({
+                done: false
+            }),
         }
-    }
+    },
+
 })
 </script>

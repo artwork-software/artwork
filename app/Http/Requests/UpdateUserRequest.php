@@ -26,11 +26,11 @@ class UpdateUserRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'phone_number' => ['string', 'max:15'],
+            'phone_number' => ['string', 'max:15', 'nullable'],
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
-            'description' => ['sometimes', 'string', 'max:5000'],
-            'role' => ['sometimes', 'string'],
+            'description' => ['sometimes', 'max:5000'],
+            'roles' => ['sometimes', 'array'],
             'permissions' => ['sometimes','array']
         ];
     }

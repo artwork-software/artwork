@@ -2,13 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\UserUpdated;
+use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
+use App\Http\Resources\UserIndexResource;
+use App\Http\Resources\UserShowResource;
 use App\Models\Department;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Laravel\Fortify\Contracts\FailedPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Contracts\SuccessfulPasswordResetLinkRequestResponse;
+use Laravel\Fortify\Fortify;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
@@ -24,6 +34,28 @@ class UserController extends Controller
         $this->authorizeResource(User::class, 'user');
     }
 
+    public function search(SearchRequest $request) {
+
+        $this->authorize('viewAny',User::class);
+
+        return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
+    }
+
+    public function reset_user_password(Request $request) {
+
+        $this->authorize('update',User::class);
+
+        $request->validate([Fortify::email() => 'required|email']);
+
+        $status = Password::broker()->sendResetLink(
+            $request->only(Fortify::email())
+        );
+
+        return $status == Password::RESET_LINK_SENT
+            ? Redirect::back()->with('status', __('passwords.sent_to_user', ['email' => $request->email]))
+            : app(FailedPasswordResetLinkRequestResponse::class, ['status' => $status]);
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -32,18 +64,9 @@ class UserController extends Controller
     public function index(): Response|ResponseFactory
     {
         return inertia('Users/Index', [
-            'users' => User::paginate(15)->through( fn($user) => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                "profile_photo_url" => $user->profile_photo_url,
-                "email" => $user->email,
-                'departments' => $user->departments,
-                "position" => $user->position,
-                "business" => $user->business,
-                "phone_number" => $user->phone_number
-            ]),
-            "departments" => Department::all()
+            'users' => UserIndexResource::collection(User::all())->resolve(),
+            "all_permissions" => Permission::all()->groupBy('group'),
+            "departments" => Department::all(),
         ]);
     }
 
@@ -56,23 +79,11 @@ class UserController extends Controller
     public function edit(User $user): Response|ResponseFactory
     {
         return inertia('Users/Edit', [
-            'user_to_edit' => [
-                'id' => $user->id,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
-                "profile_photo_url" => $user->profile_photo_url,
-                'email' => $user->email,
-                'phone_number' => $user->phone_number,
-                'position' => $user->position,
-                'business' => $user->business,
-                'description' => $user->description,
-                'departments' => $user->departments,
-                'roles' => $user->getRoleNames(),
-                'available_roles' => Role::all()->pluck('name'),
-                'permissions' => $user->getPermissionNames(),
-                'available_permissions' => Permission::all()->pluck('name'),
-            ],
-            "departments" => Department::all()
+            'user_to_edit' => new UserShowResource($user),
+            "departments" => Department::all(),
+            "password_reset_status" => session('status'),
+            'available_roles' => Role::all(),
+            "all_permissions" => Permission::all()->groupBy('group'),
         ]);
     }
 
@@ -98,9 +109,31 @@ class UserController extends Controller
         );
 
         $user->syncPermissions($request->permissions);
-        $user->assignRole($request->role);
+        $user->syncRoles($request->roles);
 
-        return Redirect::route('users')->with('success', 'Benutzer aktualisiert');
+        return Redirect::route('user.edit',$user)->with('success', 'Benutzer aktualisiert');
+    }
+
+    public function update_checklist_status(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $user->update([
+            'opened_checklists' => $request->opened_checklists
+        ]);
+
+        return Redirect::back()->with('success', 'Checklist status updated');
+    }
+
+    public function update_area_status(Request $request): RedirectResponse
+    {
+        $user = Auth::user();
+
+        $user->update([
+            'opened_areas' => $request->opened_areas
+        ]);
+
+        return Redirect::back()->with('success', 'Area status updated');
     }
 
     /**
@@ -112,6 +145,8 @@ class UserController extends Controller
     public function destroy(User $user): RedirectResponse
     {
         $user->delete();
+
+        broadcast(new UserUpdated())->toOthers();
 
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
     }

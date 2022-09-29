@@ -22,7 +22,7 @@ return [
     'alpha_dash' => ':attribute sollte nur Buchstaben, Nummern, Striche und Unterstriche enthalten.',
     'alpha_num' => ':attribute sollte nur Buchstaben und Nummern enthalten.',
     'array' => ':attribute muss ein Array sein.',
-    'before' => ':attribute muss ein Datum vor :date sein.',
+    'before' => ':attribute sollte ein Datum vor :date sein.',
     'before_or_equal' => ':attribute sollte ein Datum vor oder am :date sein.',
     'between' => [
         'numeric' => ':attribute muss zwischen :min und :max liegen.',
@@ -127,6 +127,7 @@ return [
     'url' => ':attribute Format ist ungültig.',
     'uuid' => ':attribute muss eine gültige UUID sein.',
 
+
     /*
     |--------------------------------------------------------------------------
     | Custom Validation Language Lines
@@ -142,6 +143,7 @@ return [
         'attribute-name' => [
             'rule-name' => 'custom-message',
         ],
+        'user_emails.*' => 'Eine der Mails wurde schon registriert. Entferne sie und versuche es dann erneut.',
     ],
 
     /*
@@ -158,7 +160,10 @@ return [
     'attributes' => [
         'email' => 'Email',
         'password' => 'Passwort',
-        'photo' => 'Bild'
+        'photo' => 'Bild',
+        'current_password' => 'Aktuelles Passwort',
+        'start' => 'Startdatum',
+        'end' => 'Enddatum'
     ],
 
 ];

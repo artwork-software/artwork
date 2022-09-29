@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_336" data-name="Rechteck 336" width="21.296" height="21.236" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#168fc3"/>
+    <g id="Gruppe_maskieren_395" data-name="Gruppe maskieren 395" clip-path="url(#clip-path)">
+      <g id="Gruppe_462" data-name="Gruppe 462" transform="translate(-17.736 6.312)" clip-path="url(#clip-path-2)">
+        <path id="Pfad_783" data-name="Pfad 783" d="M19.409,5.287c0,.092,0,.18-.008.273a4.288,4.288,0,0,1-8.553.073,3.417,3.417,0,0,1-.016-.345,4.288,4.288,0,0,1,8.576,0Z" transform="translate(-4.475 0.458)" fill="none" stroke="#fcfcfb" stroke-miterlimit="10" stroke-width="1"/>
+        <path id="Pfad_784" data-name="Pfad 784" d="M17.238,30.3v1.324A1.357,1.357,0,0,1,15.8,32.891H2.432A1.353,1.353,0,0,1,1,31.626V30.3a5.8,5.8,0,0,1,4.035-5.318,7.086,7.086,0,0,0,3.211,1.121L8,27.393l.657.387L7.8,31.334l.779,1.54h1.2l.724-1.558L9.606,27.78l.626-.387-.2-1.293A7.117,7.117,0,0,0,13.2,24.984,5.8,5.8,0,0,1,17.238,30.3Z" transform="translate(1.529 -14.184)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+        <path id="Pfad_785" data-name="Pfad 785" d="M21.209,29.144l-.626.387-.464.284-.482-.284-.657-.387.243-1.288a7.924,7.924,0,0,0,.874.045,8.589,8.589,0,0,0,.91-.049Z" transform="translate(-9.449 -15.935)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

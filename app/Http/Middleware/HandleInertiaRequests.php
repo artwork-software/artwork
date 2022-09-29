@@ -2,8 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\GeneralSettings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Middleware;
 use Spatie\Permission\Models\Role;
 
@@ -29,6 +31,42 @@ class HandleInertiaRequests extends Middleware
         return parent::version($request);
     }
 
+    public function banner(): ?string
+    {
+        $path = app(GeneralSettings::class)->banner_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
+
+    public function small_logo(): ?string
+    {
+        $path = app(GeneralSettings::class)->small_logo_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
+
+    public function big_logo(): ?string
+    {
+        $path = app(GeneralSettings::class)->big_logo_path;
+
+        if($path) {
+            return Storage::disk('public')->url($path);
+        } else {
+            return null;
+        }
+
+    }
+
     /**
      * Defines the props that are shared by default.
      *
@@ -38,13 +76,33 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+
         return array_merge(parent::share($request), [
             'roles' => Auth::guest() ? [] : Auth::user()->getRoleNames(),
             'permissions' => Auth::guest() ? [] : Auth::user()->getPermissionNames(),
             'can' => [
-                'view_users' => Auth::guest() ? false : Auth::user()->can("view users"),
-                'view_departments' => Auth::guest() ? false : Auth::user()->can("view departments")
-            ]
+                'view_projects' => Auth::guest() ? false : Auth::user()->can("view projects"),
+                'create_and_edit_projects' => Auth::guest() ? false : Auth::user()->can("create and edit projects"),
+                'admin_projects' => Auth::guest() ? false : Auth::user()->can("admin projects"),
+                'delete_projects' => Auth::guest() ? false : Auth::user()->can("delete projects"),
+                'change_tool_settings' => Auth::guest() ? false : Auth::user()->can("change tool settings"),
+                'usermanagement' => Auth::guest() ? false : Auth::user()->can("usermanagement"),
+                'teammanagement' => Auth::guest() ? false : Auth::user()->can("teammanagement"),
+                'admin_projectSettings' => Auth::guest() ? false : Auth::user()->can("admin projectSettings"),
+                'admin_eventTypeSettings' => Auth::guest() ? false : Auth::user()->can("admin eventTypeSettings"),
+                'admin_checklistTemplates' => Auth::guest() ? false : Auth::user()->can("admin checklistTemplates"),
+                'admin_rooms' => Auth::guest() ? false : Auth::user()->can("admin rooms"),
+                'request_room_occupancy' => Auth::guest() ? false : Auth::user()->can("request room occupancy"),
+                'view_occupancy_requests' => Auth::guest() ? false : Auth::user()->can("view occupancy requests"),
+                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
+            ],
+            'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin'),
+            'small_logo' => $this->small_logo(),
+            'big_logo' => $this->big_logo(),
+            'banner' => $this->banner(),
+            'impressumLink' => app(GeneralSettings::class)->impressum_link,
+            'privacyLink' => app(GeneralSettings::class)->privacy_link,
+            'emailFooter' => app(GeneralSettings::class)->email_footer
         ]);
     }
 }

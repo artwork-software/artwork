@@ -9,7 +9,7 @@
         <div class="py-8 px-4">
             <form class="space-y-6" @submit.prevent="submit">
                 <div class="text-2xl text-center font-bold text-black">
-                    <p>ArtWork.tools</p>
+                    <img src="/Svgs/Logos/artwork_logo_big.svg"/>
                 </div>
                 <div>
                     <label for="email" class="block text-sm font-bold text-gray-700">

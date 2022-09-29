@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_320" data-name="Rechteck 320" width="15.827" height="17.266" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="abteilung_pic" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#eb7a3d"/>
+    <g id="Gruppe_maskieren_387" data-name="Gruppe maskieren 387" clip-path="url(#clip-path)">
+      <g id="Gruppe_431" data-name="Gruppe 431" transform="translate(-15.001 7.297)">
+        <g id="Gruppe_428" data-name="Gruppe 428" transform="translate(0 0)">
+          <g id="Gruppe_427" data-name="Gruppe 427" clip-path="url(#clip-path-2)">
+            <path id="Pfad_721" data-name="Pfad 721" d="M19.778,35.221V29.58H16.5v5.641" transform="translate(-10.229 -18.335)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_722" data-name="Pfad 722" d="M19.778,35.221V29.58H16.5v5.641" transform="translate(-10.229 -18.335)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <path id="Pfad_723" data-name="Pfad 723" d="M16.067,7.087V17.506h-5.9V11.865H6.894v5.641H1V7.087L8.534,1Z" transform="translate(-0.62 -0.62)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          </g>
+        </g>
+        <line id="Linie_167" data-name="Linie 167" x2="1.481" transform="translate(6.274 14.066)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+        <g id="Gruppe_430" data-name="Gruppe 430" transform="translate(0 0)">
+          <g id="Gruppe_429" data-name="Gruppe 429" clip-path="url(#clip-path-2)">
+            <line id="Linie_168" data-name="Linie 168" x2="15.067" transform="translate(0.38 6.467)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+            <line id="Linie_169" data-name="Linie 169" x2="3.275" transform="translate(6.274 16.886)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

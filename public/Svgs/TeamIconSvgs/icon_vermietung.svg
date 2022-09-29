@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.824" height="29.824" viewBox="0 0 29.824 29.824">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Bildschirmfoto_2022-03-26_um_10.41.44" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#3d9164" stroke="#fcfcfb" stroke-width="2"/>
+    </clipPath>
+    <clipPath id="clip-path-2">
+      <rect id="Rechteck_331" data-name="Rechteck 331" width="15.66" height="27.942" fill="none" stroke="#fcfcfb" stroke-width="1"/>
+    </clipPath>
+  </defs>
+  <g id="vermietung" transform="translate(22 -2.018)" style="isolation: isolate">
+    <path id="Bildschirmfoto_2022-03-26_um_10.41.44-2" data-name="Bildschirmfoto 2022-03-26 um 10.41.44" d="M14.912,0A14.912,14.912,0,1,1,0,14.912,14.912,14.912,0,0,1,14.912,0Z" transform="translate(-22 2.018)" fill="#2eaa63"/>
+    <g id="Gruppe_maskieren_381" data-name="Gruppe maskieren 381" clip-path="url(#clip-path)">
+      <g id="Gruppe_454" data-name="Gruppe 454" transform="matrix(0.819, 0.574, -0.574, 0.819, -3.244, -2.012)" clip-path="url(#clip-path-2)">
+        <path id="Pfad_766" data-name="Pfad 766" d="M12.871,22.578A1.18,1.18,0,0,0,14.046,21.4a1.178,1.178,0,0,0-1.174-1.181H8.734V15.345a7.193,7.193,0,1,0-3.84-.781V25.44a2.082,2.082,0,0,0,1.913,2.218h6.064a1.145,1.145,0,0,0,.829-.346,1.157,1.157,0,0,0,.346-.829A1.178,1.178,0,0,0,12.871,25.3H8.734V22.578ZM4.458,8.184a3.729,3.729,0,1,1,4.167,3.7,3.455,3.455,0,0,1-.435.024A3.743,3.743,0,0,1,4.458,8.184Z" transform="translate(-0.358 -0.358)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+      </g>
+    </g>
+  </g>
+</svg>

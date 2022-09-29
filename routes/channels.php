@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -13,6 +14,18 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+Broadcast::channel('events', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('users', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('projects', function () {
+    return Auth::check();
+});
+
+Broadcast::channel('departments', function () {
+    return Auth::check();
 });

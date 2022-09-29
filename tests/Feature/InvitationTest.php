@@ -153,7 +153,7 @@ test('admins can invite users', function () {
         'user_emails' => ['user@example.de', 'user2@example.de'],
         'permissions' => ['invite users', 'view users'],
         'departments' => [$department],
-        'role' => 'admin'
+        'role' => null
     ]);
 
     Mail::assertSent(InvitationCreated::class, function ($mail) use ($admin_user) {
@@ -163,12 +163,12 @@ test('admins can invite users', function () {
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user@example.de",
-        "role" => 'admin'
+        "role" => null
     ]);
 
     $this->assertDatabaseHas('invitations', [
         "email" => "user2@example.de",
-        "role" => 'admin'
+        "role" => null
     ]);
 
     $invitation = Invitation::where('email', 'user@example.de')->first();

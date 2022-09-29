@@ -205,7 +205,7 @@
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Mebenräume</span>
+                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"

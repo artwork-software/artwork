@@ -7,7 +7,7 @@
             :room_attributes="room_attributes"
             :room_categories="room_categories"
             :rooms="rooms" :areas="areas"
-            :event-types="eventTypes"
+            :event-types="types"
             :current-view="currentView"
             :events-since="eventsSince"
             :events-until="eventsUntil"
@@ -959,6 +959,7 @@ export default {
                 allDayFree: null,
                 showAdjoiningRooms: null
             },
+            types: [],
             myRooms: [],
             newEventError: null,
             assignProject: true,
@@ -1023,6 +1024,28 @@ export default {
         }
     },
     methods: {
+        changeFilterElements(filterArray, element) {
+            element.checked = !element.checked;
+            if (element.checked) {
+                filterArray.push(element)
+            } else {
+                filterArray = filterArray.filter(elem => element.id !== elem.id)
+                console.log(filterArray);
+            }
+            this.fetchEvents({
+                startDate: this.eventsSince,
+                endDate: this.eventsUntil,
+                calendarFilters: this.calendarFilters
+            });
+        },
+        changeFilterBoolean(filter, variable) {
+            this.calendarFilters[`${filter}`] = variable.checked
+            this.fetchEvents({
+                startDate: this.eventsSince,
+                endDate: this.eventsUntil,
+                calendarFilters: this.calendarFilters
+            });
+        },
         openEventModal(event) {
             console.log(event);
             this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
@@ -1258,20 +1281,31 @@ export default {
                 })
                 .then(response => {
                     this.events = response.data.events
-                    this.types = response.data.types
-                    this.rooms = response.data.rooms
                     this.projects = response.data.projects
-                    this.room_categories = response.data.room_categories
-                    this.room_attributes = response.data.room_attributes
-                    this.areas = response.data.areas
-
-                    console.log(response.data.events)
-
+                    this.rooms = response.data.rooms
                     this.addFilterableVariable(this.rooms)
-                    this.addFilterableVariable(this.room_categories)
-                    this.addFilterableVariable(this.room_attributes)
-                    this.addFilterableVariable(this.areas)
-                    this.addFilterableVariable(this.eventTypes)
+
+                    if(this.areas.length === 0) {
+                        this.areas = response.data.areas
+                        this.addFilterableVariable(this.areas)
+                    }
+                    if(this.room_categories.length === 0) {
+                        this.room_categories = response.data.room_categories
+                        this.addFilterableVariable(this.room_categories)
+                    }
+                    if(this.room_attributes.length === 0) {
+                        this.room_attributes = response.data.room_attributes
+                        this.addFilterableVariable(this.room_attributes)
+                    }
+                    if(this.types.length === 0) {
+                        this.types = this.eventTypes
+                        this.addFilterableVariable(this.types)
+                        console.log(this.types)
+                    }
+                    if(this.areas.length === 0) {
+                        this.areas = response.data.areas
+                    }
+
 
                     // color coding of rooms
                     this.events.map(event => event.class = colors[event.split % colors.length])

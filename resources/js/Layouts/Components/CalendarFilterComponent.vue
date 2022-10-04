@@ -151,7 +151,7 @@
                                         <div v-if="room_categories.length > 0" v-for="category in room_categories"
                                              class="flex w-full mb-2">
                                             <input type="checkbox" v-model="category.checked"
-                                                   @change="changeFilterElements(calendarFilters.roomCategories, category)"
+                                                   @change="this.$parent.changeFilterElements(calendarFilters.roomCategories, category)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -175,7 +175,7 @@
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                             <input type="checkbox" v-model="area.checked"
-                                                   @change="changeFilterElements(calendarFilters.areas, area)"
+                                                   @change="this.$parent.changeFilterElements(calendarFilters.areas, area)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -199,7 +199,7 @@
                                         <div v-if="room_attributes.length > 0" v-for="attribute in room_attributes"
                                              class="flex w-full mb-2">
                                             <input type="checkbox" v-model="attribute.checked"
-                                                   @change="changeFilterElements(calendarFilters.roomAttributes, attribute)"
+                                                   @change="this.$parent.changeFilterElements(calendarFilters.roomAttributes, attribute)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -223,8 +223,8 @@
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-if="rooms.length > 0" v-for="room in rooms"
                                              class="flex w-full mb-2">
-                                            <input type="checkbox" v-model="room.checked"
-                                                   @change="changeFilterElements(calendarFilters.rooms, room)"
+                                            <input type="checkbox" :checked="room.checked"
+                                                   @change="this.$parent.changeFilterElements(calendarFilters.rooms, room)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -264,8 +264,8 @@
                                     </DisclosureButton>
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-for="eventType in eventTypes" class="flex w-full mb-2">
-                                            <input type="checkbox" v-model="eventType.checked"
-                                                   @change="changeFilterElements(calendarFilters.eventTypes, eventType)"
+                                            <input type="checkbox" :checked="eventType.checked"
+                                                   @change="this.$parent.changeFilterElements(calendarFilters.eventTypes, eventType)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -287,7 +287,7 @@
                                     <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                         <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
                                             <input type="checkbox" v-model="eventAttribute.checked"
-                                                   @change="changeFilterBoolean(eventAttribute.value, eventAttribute)"
+                                                   @change="this.$parent.changeFilterBoolean(eventAttribute.value, eventAttribute)"
                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                             <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -362,38 +362,38 @@ export default {
     },
     data() {
         return {
-            eventAttributes: [
-                {
+            eventAttributes: {
+                isLoud: {
                     name: 'laut',
                     value: 'isLoud',
                     checked: false
                 },
-                {
+                isNotLoud: {
                     name: 'nicht laut',
                     value: 'isNotLoud',
                     checked: false
                 },
-                {
+                adjoiningNotLoud: {
                     name: 'ohne laute Nebenveranstaltung',
                     value: 'adjoiningNotLoud',
                     checked: false
                 },
-                {
+                hasAudience: {
                     name: 'mit Publikum',
                     value: 'hasAudience',
                     checked: false
                 },
-                {
+                hasNoAudience: {
                     name: 'ohne Publikum',
                     value: 'hasNoAudience',
                     checked: false
                 },
-                {
+                adjoiningNoAudience: {
                     name: 'ohne Nebenveranstaltung mit Publikum',
                     value: 'adjoiningNoAudience',
                     checked: false
-                }
-            ],
+                },
+            },
             saving: false,
             currentInterval: '',
             freeTimeIntervals: [
@@ -409,46 +409,27 @@ export default {
         }
     },
     methods: {
-        changeFilterBoolean(filter, variable) {
-            this.calendarFilters[`${filter}`] = variable.checked
-            this.$parent.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-                calendarFilters: this.calendarFilters
-            });
-        },
-        changeFilterElements(filterArray, element) {
-            if (element.checked) {
-                filterArray.push(element)
-            } else {
-                filterArray = filterArray.filter(elem => element.id !== elem.id)
-            }
-            this.$parent.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-                calendarFilters: this.calendarFilters
-            });
-        },
         resetCalendarFilter() {
             this.calendarFilters.rooms = []
             this.calendarFilters.areas = []
             this.calendarFilters.eventTypes = []
             this.calendarFilters.roomAttributes = []
             this.calendarFilters.roomCategories = []
-            this.calendarFilters.isLoud = null
-            this.calendarFilters.isNotLoud = null
-            this.calendarFilters.hasAudience = null
-            this.calendarFilters.hasNoAudience = null
-            this.calendarFilters.adjoiningNoAudience = null
-            this.calendarFilters.adjoiningNotLoud = null
-            this.calendarFilters.allDayFree = null
-            this.calendarFilters.showAdjoiningRooms = null
+            this.calendarFilters.isLoud = false
+            this.calendarFilters.isNotLoud = false
+            this.calendarFilters.hasAudience = false
+            this.calendarFilters.hasNoAudience = false
+            this.calendarFilters.adjoiningNoAudience = false
+            this.calendarFilters.adjoiningNotLoud = false
+            this.calendarFilters.allDayFree = false
+            this.calendarFilters.showAdjoiningRooms = false
+            this.eventAttributes.isLoud.checked = false
 
             this.$parent.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil
             });
-        }
+        },
     }
 }
 </script>

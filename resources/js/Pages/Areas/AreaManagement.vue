@@ -46,7 +46,7 @@
                                     </div>
 
                                     <div class="mt-2 mr-10 flex flex-wrap">
-                                        <TagComponent v-for="category in room_categories" @click="deleteRoomCategory(category)" :displayed-text="category.name" :property="category"/>
+                                        <TagComponent v-for="category in room_categories" :method="deleteRoomCategory" :displayed-text="category.name" :property="category"/>
                                     </div>
 
                                     <!-- Raumattribute -->

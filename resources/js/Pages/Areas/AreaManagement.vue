@@ -46,15 +46,7 @@
                                     </div>
 
                                     <div class="mt-2 mr-10 flex flex-wrap">
-                                        <span v-for="(category,index) in room_categories"
-                                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ category.name }}
-                                            <button type="button" @click="deleteRoomCategory(category)">
-                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                                        </span>
+                                        <TagComponent v-for="category in room_categories" @click="deleteRoomCategory(category)" :displayed-text="category.name" :property="category"/>
                                     </div>
 
                                     <!-- Raumattribute -->
@@ -775,9 +767,11 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
+import TagComponent from "@/Layouts/Components/TagComponent";
 
 export default defineComponent({
     components: {
+        TagComponent,
         AddButton,
         UserTooltip,
         SvgCollection,

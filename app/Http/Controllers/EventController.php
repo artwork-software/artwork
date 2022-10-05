@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
 use App\Events\OccupancyUpdated;
+use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -103,6 +104,22 @@ class EventController extends Controller
         $this->authorize('update', $event);
 
         $event->update($request->data());
+
+        return new CalendarEventResource($event);
+    }
+
+    public function acceptEvent(EventAcceptionRequest $request, Event $event): CalendarEventResource
+    {
+        if ($request->get('accepted')) {
+            $event->occupancy_option = $request->get('accepted');
+            $event->save();
+
+            return new CalendarEventResource($event);
+        }
+
+        $event->occupancy_option = $request->get('accepted');
+        $event->room_id = null;
+        $event->save();
 
         return new CalendarEventResource($event);
     }

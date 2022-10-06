@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
 use App\Events\OccupancyUpdated;
+use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -17,13 +18,13 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Task;
+use App\Support\Services\HistoryService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Response;
-use App\Support\Services\HistoryService;
 
 class EventController extends Controller
 {
@@ -107,6 +108,22 @@ class EventController extends Controller
         return new CalendarEventResource($event);
     }
 
+    public function acceptEvent(EventAcceptionRequest $request, Event $event): CalendarEventResource
+    {
+        if ($request->get('accepted')) {
+            $event->occupancy_option = $request->get('accepted');
+            $event->save();
+
+            return new CalendarEventResource($event);
+        }
+
+        $event->occupancy_option = $request->get('accepted');
+        $event->room_id = null;
+        $event->save();
+
+        return new CalendarEventResource($event);
+    }
+
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -119,17 +136,38 @@ class EventController extends Controller
             ->count();
     }
 
-    public function indexEvents(EventIndexRequest $request): CalendarEventCollectionResource
+    public function eventIndex(EventIndexRequest $request): CalendarEventCollectionResource
     {
-        $projectId = $request->query('projectId');
-        $roomId = $request->query('roomId');
+        $projectId = $request->get('projectId');
+        $roomId = $request->get('roomId');
+        $roomIds = $request->get('roomIds', []);
+        $areaIds = $request->get('areaIds', []);
+        $eventTypeIds = $request->get('eventTypeIds', []);
+        $roomAttributeIds = $request->get('roomAttributeIds', []);
+        $isLoud = $request->get('isLoud');
+        $hasAudience = $request->get('hasAudience');
 
         $events = Event::query()
-            ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
-            ->when($roomId, fn (EventBuilder $builder) => $builder->where('room_id', $roomId))
+            // eager loading
             ->withCollisionCount()
             ->with('room')
+            // filter for different pages
             ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
+            ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
+            ->when($roomId, fn (EventBuilder $builder) => $builder->where('room_id', $roomId))
+            // user applied filters
+            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds), fn (EventBuilder $builder) => $builder
+                ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
+                    ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                    ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                    ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                            ->whereIn('room_attributes.id', $roomAttributeIds)))
+                )
+            )
+            ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
+            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->get();
 
         return new CalendarEventCollectionResource($events);

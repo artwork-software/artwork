@@ -78,22 +78,22 @@ class Room extends Model
 
     public function adjoining_rooms()
     {
-        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
+        return $this->belongsToMany(Room::class, null, 'main_room_ids', 'adjoining_room_ids');
     }
 
     public function main_rooms()
     {
-        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
+        return $this->belongsToMany(Room::class, null, 'adjoining_room_ids', 'main_room_ids');
     }
 
     public function categories()
     {
-        return $this->belongsToMany(RoomCategory::class);
+        return $this->belongsToMany(RoomCategory::class, 'room_category');
     }
 
     public function attributes()
     {
-        return $this->belongsToMany(RoomAttribute::class);
+        return $this->belongsToMany(RoomAttribute::class, 'room_pivot_room_attribute');
     }
 
     public function prunable()

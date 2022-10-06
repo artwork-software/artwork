@@ -27,9 +27,9 @@ class ProjectEditResource extends JsonResource
             'description' => $this->description,
             'number_of_participants' => $this->number_of_participants,
             'cost_center' => $this->cost_center,
-            'sector_id' => $this->sector_id,
-            'category_id' => $this->sector_id,
-            'genre_id' => $this->genre_id,
+            'sectors' => $this->sectors,
+            'categories' => $this->categories,
+            'genres' => $this->genres,
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'departments' => $this->departments->map(fn (Department $department) => [
                 'id' => $department->id,

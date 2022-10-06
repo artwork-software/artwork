@@ -14,9 +14,6 @@ use Laravel\Scout\Searchable;
  * @property string $description
  * @property int $number_of_participants
  * @property string $cost_center
- * @property int $sector_id
- * @property int $category_id
- * @property int $genre_id
  * @property \Illuminate\Support\Carbon $created_at
  * @property \Illuminate\Support\Carbon $updated_at
  * @property \Illuminate\Support\Carbon $deleted_at
@@ -30,6 +27,9 @@ use Laravel\Scout\Searchable;
  * @property \Illuminate\Database\Eloquent\Collection<Checklist> $checklists
  * @property \Illuminate\Database\Eloquent\Collection<ProjectFile> $project_files
  * @property \Illuminate\Database\Eloquent\Collection<Comment> $comments
+ * @property \Illuminate\Database\Eloquent\Collection<Category> $categories
+ * @property \Illuminate\Database\Eloquent\Collection<Sector> $sectors
+ * @property \Illuminate\Database\Eloquent\Collection<Genre> $genres
  * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
  * @property Sector $sector
  * @property Category $category
@@ -44,9 +44,6 @@ class Project extends Model
         'description',
         'number_of_participants',
         'cost_center',
-        'sector_id',
-        'category_id',
-        'genre_id'
     ];
 
     public function users()
@@ -97,19 +94,19 @@ class Project extends Model
         return $this->hasMany(Comment::class);
     }
 
-    public function sector()
+    public function sectors()
     {
-        return $this->belongsTo(Sector::class, 'sector_id');
+        return $this->belongsToMany(Sector::class);
     }
 
-    public function category()
+    public function categories()
     {
-        return $this->belongsTo(Category::class, 'category_id');
+        return $this->belongsToMany(Category::class);
     }
 
-    public function genre()
+    public function genres()
     {
-        return $this->belongsTo(Genre::class, 'genre_id');
+        return $this->belongsToMany(Genre::class);
     }
 
     public function rooms()

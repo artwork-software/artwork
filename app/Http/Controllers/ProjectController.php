@@ -45,15 +45,15 @@ class ProjectController extends Controller
             ->with([
                 'checklists.tasks.checklist.project',
                 'adminUsers',
-                'category',
+                'categories',
                 'checklists.departments',
                 'comments.user',
                 'departments.users.departments',
-                'genre',
+                'genres',
                 'managerUsers',
                 'project_files',
                 'project_histories.user',
-                'sector',
+                'sectors',
                 'users.departments',
             ])
             ->get();
@@ -136,9 +136,6 @@ class ProjectController extends Controller
             'description' => $request->description,
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
-            'sector_id' => $request->sector_id,
-            'category_id' => $request->category_id,
-            'genre_id' => $request->genre_id,
         ]);
         $historyService->projectUpdated($project);
 
@@ -148,6 +145,9 @@ class ProjectController extends Controller
             $project->users()->sync(collect($request->assigned_user_ids));
         }
 
+        $project->categories()->sync($request->assignedCategoryIds);
+        $project->sectors()->sync($request->assignedSectorIds);
+        $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
@@ -163,17 +163,17 @@ class ProjectController extends Controller
     {
         $project->load([
             'adminUsers',
-            'category',
+            'categories',
             'checklists.departments',
             'checklists.tasks.checklist.project',
             'checklists.tasks.user_who_done',
             'comments.user',
             'departments.users.departments',
-            'genre',
+            'genres',
             'managerUsers',
             'project_files',
             'project_histories.user',
-            'sector',
+            'sectors',
             'users.departments',
         ]);
 
@@ -239,7 +239,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'sector_id', 'category_id', 'genre_id');
+        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'categories','sectors','genres');
 
         // authorization
         if ((! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
@@ -252,13 +252,22 @@ class ProjectController extends Controller
         $historyService->projectUpdated($project);
         $project->save();
 
-        if ($request->assigned_user_ids) {
-            $project->users()->sync(collect($request->assigned_user_ids));
+
+        $project->users()->sync(collect($request->assigned_user_ids));
+        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
+
+        if($request->assignedCategoryIds){
+            $project->categories()->sync($request->assignedCategoryIds);
+        }
+        if($request->assignedSectorIds){
+            $project->sectors()->sync($request->assignedSectorIds);
+        }
+        if($request->assignedGenreIds){
+            $project->genres()->sync($request->assignedGenreIds);
         }
 
-        if ($request->assigned_departments) {
-            $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-        }
+
+
 
         return Redirect::back();
     }
@@ -286,9 +295,6 @@ class ProjectController extends Controller
             'description' => $project->description,
             'number_of_participants' => $project->number_of_participants,
             'cost_center' => $project->cost_center,
-            'sector_id' => $project->sector_id,
-            'category_id' => $project->category_id,
-            'genre_id' => $project->genre_id,
         ]);
         $historyService->projectUpdated($newProject);
 
@@ -307,7 +313,9 @@ class ProjectController extends Controller
         });
 
         $newProject->users()->attach([Auth::id() => ['is_admin' => true]]);
-
+        $newProject->categories()->sync($project->categories->pluck('id'));
+        $newProject->sectors()->sync($project->sectors->pluck('id'));
+        $newProject->genres()->sync($project->genres->pluck('id'));
         $newProject->departments()->sync($project->departments->pluck('id'));
         $newProject->users()->sync($project->users->pluck('id'));
 

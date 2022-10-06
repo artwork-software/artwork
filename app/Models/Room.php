@@ -28,6 +28,7 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
+ * @property \Illuminate\Support\Collection<\App\Models\Room> $adjoiningRooms
  */
 class Room extends Model
 {
@@ -76,14 +77,9 @@ class Room extends Model
         return $this->hasMany(Event::class);
     }
 
-    public function adjoining_rooms()
+    public function adjoiningRooms()
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
-    }
-
-    public function main_rooms()
-    {
-        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
     }
 
     public function categories()
@@ -105,11 +101,5 @@ class Room extends Model
 
     public function pruning() {
         return $this->room_files()->delete();
-    }
-
-    public function getEventsAt(Carbon $dateTime): Collection
-    {
-        return $this->events
-            ->filter(fn (Event $event) => $dateTime->between(Carbon::parse($event->start_time), Carbon::parse($event->end_time)));
     }
 }

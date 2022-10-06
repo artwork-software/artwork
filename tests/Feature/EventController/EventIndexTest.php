@@ -124,7 +124,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'roomIds' => [$room->id],
+                'filters' => [
+                    'roomIds' => [$room->id],
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -151,7 +153,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'areaIds' => [$room->area->id],
+                'filters' => [
+                    'areaIds' => [$room->area->id],
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -179,7 +183,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'eventTypeIds' => [$eventType->id],
+                'filters' => [
+                    'eventTypeIds' => [$eventType->id],
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -207,7 +213,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'roomAttributeIds' => [$room->attributes->first()->id],
+                'filters' => [
+                    'roomAttributeIds' => [$room->attributes->first()->id],
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -232,7 +240,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'isLoud' => true,
+                'filters' => [
+                    'isLoud' => true,
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -241,7 +251,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'isLoud' => false,
+                'filters' => [
+                    'isLoud' => false,
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -266,7 +278,9 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'hasAudience' => true,
+                'filters' => [
+                    'hasAudience' => true,
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
@@ -275,9 +289,126 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'hasAudience' => false,
+                'filters' => [
+                    'hasAudience' => false,
+                ],
             ])
             ->assertSuccessful()
             ->assertJsonCount(1, 'events');
     }
+
+    public function testEventIndexWithAdjoiningRoomIsLoud()
+    {
+        $room = Room::factory()->create();
+        $adjoiningRoom = Room::factory()->create();
+        $otherRoom = Room::factory()->create();
+
+        $room->adjoiningRooms()->sync([$adjoiningRoom->id]);
+
+        // expected
+        Event::factory()->create([
+            'room_id' => $room->id,
+            'start_time' => now(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $adjoiningRoom->id,
+            'start_time' => now(),
+            'end_time' => now()->addHour(),
+            'is_loud' => true,
+        ]);
+
+        // unexpected
+        Event::factory()->create([
+            'room_id' => $room->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'is_loud' => true,
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $adjoiningRoom->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'is_loud' => false,
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $otherRoom->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'is_loud' => true,
+        ]);
+
+        $this->actingAs($this->adminUser())
+            ->json('GET', route('events.index'), [
+                'start' => now()->subDay(),
+                'end' => now()->addDay(),
+                'filters' => [
+                    'roomIds' => [$room->id],
+                    'adjoiningIsLoud' => true,
+                ],
+            ])
+            ->assertSuccessful()
+            ->assertJsonCount(1, 'events');
+    }
+
+    public function testEventIndexWithAdjoiningRoomHasAudience()
+    {
+        $room = Room::factory()->create();
+        $adjoiningRoom = Room::factory()->create();
+        $otherRoom = Room::factory()->create();
+
+        $room->adjoiningRooms()->sync([$adjoiningRoom->id]);
+
+        // expected
+        Event::factory()->create([
+            'room_id' => $room->id,
+            'start_time' => now(),
+            'end_time' => now()->addHour(),
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $adjoiningRoom->id,
+            'start_time' => now(),
+            'end_time' => now()->addHour(),
+            'audience' => true,
+        ]);
+
+        // unexpected
+        Event::factory()->create([
+            'room_id' => $room->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'audience' => true,
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $adjoiningRoom->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'audience' => false,
+        ]);
+
+        Event::factory()->create([
+            'room_id' => $otherRoom->id,
+            'start_time' => now()->addHours(3),
+            'end_time' => now()->addHours(5),
+            'audience' => true,
+        ]);
+
+        $this->actingAs($this->adminUser())
+            ->json('GET', route('events.index'), [
+                'start' => now()->subDay(),
+                'end' => now()->addDay(),
+                'filters' => [
+                    'roomIds' => [$room->id],
+                    'adjoiningHasAudience' => true,
+                ],
+            ])
+            ->assertSuccessful()
+            ->assertJsonCount(1, 'events');
+    }
+
 }

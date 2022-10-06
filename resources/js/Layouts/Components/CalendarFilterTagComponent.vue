@@ -5,7 +5,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ attribute.name }}
             <button
-                @click="calendarFilters.roomAttributes = calendarFilters.roomAttributes.filter(attributeElem => attributeElem.id !== attribute.id)"
+                @click="attribute.checked = false; this.$parent.changeFilterElements(calendarFilters.roomAttributes, attribute)"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -15,7 +15,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ category.name }}
             <button
-                @click="calendarFilters.roomCategories = calendarFilters.roomCategories.filter(categoryElem => categoryElem.id !== category.id)"
+                @click="category.checked = false; this.$parent.changeFilterElements(calendarFilters.roomCategories, category)"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -23,8 +23,8 @@
         <span v-for="room in calendarFilters.rooms"
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{ room.label }}
-            <button @click="calendarFilters.rooms = calendarFilters.rooms.filter(roomElem => roomElem.id !== room.id)"
+            {{ room.label || room.name }}
+            <button @click="room.checked = false; this.$parent.changeFilterElements(calendarFilters.rooms, room)"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -32,8 +32,8 @@
         <span v-for="area in calendarFilters.areas"
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-            {{ area.label }}
-            <button @click="calendarFilters.areas = calendarFilters.areas.filter(areaElem => areaElem.id !== area.id)"
+            {{ area.label || area.name }}
+            <button @click="area.checked = false; this.$parent.changeFilterElements(calendarFilters.areas, area)"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -43,7 +43,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ eventType.name }}
             <button
-                @click="calendarFilters.eventTypes = calendarFilters.eventTypes.filter(eventTypeElem => eventTypeElem.id !== eventType.id)"
+                @click="eventType.checked = false; this.$parent.changeFilterElements(calendarFilters.eventTypes, eventType)"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -52,7 +52,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             mit Publikum
-            <button @click="calendarFilters.hasAudience = !calendarFilters.hasAudience" type="button">
+            <button @click="calendarFilters.hasAudience = !calendarFilters.hasAudience; eventAttributes.hasAudience.checked = false " type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -60,7 +60,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne Publikum
-            <button @click="calendarFilters.hasNoAudience = !calendarFilters.hasNoAudience" type="button">
+            <button @click="calendarFilters.hasNoAudience = !calendarFilters.hasNoAudience; eventAttributes.hasNoAudience.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -68,7 +68,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             laut
-            <button @click="calendarFilters.isLoud = !calendarFilters.isLoud" type="button">
+            <button @click="calendarFilters.isLoud = !calendarFilters.isLoud; eventAttributes.isLoud.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -76,7 +76,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             nicht laut
-            <button @click="calendarFilters.isNotLoud = !calendarFilters.isNotLoud" type="button">
+            <button @click="calendarFilters.isNotLoud = !calendarFilters.isNotLoud; eventAttributes.isNotLoud.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -84,7 +84,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne Nebenveranstaltung mit Publikum
-            <button @click="calendarFilters.adjoiningNoAudience = !calendarFilters.adjoiningNoAudience" type="button">
+            <button @click="calendarFilters.adjoiningNoAudience = !calendarFilters.adjoiningNoAudience; eventAttributes.adjoiningNoAudience.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -92,7 +92,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne laute Nebenveranstaltung
-            <button @click="calendarFilters.adjoiningNotLoud = !calendarFilters.adjoiningNotLoud" type="button">
+            <button @click="calendarFilters.adjoiningNotLoud = !calendarFilters.adjoiningNotLoud; eventAttributes.adjoiningNotLoud.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -100,7 +100,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             mit Nebenräumen
-            <button @click="calendarFilters.showAdjoiningRooms = !calendarFilters.showAdjoiningRooms" type="button">
+            <button @click="calendarFilters.showAdjoiningRooms = !calendarFilters.showAdjoiningRooms; eventAttributes.showAdjoiningRooms.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -108,7 +108,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ganztägig frei
-            <button @click="calendarFilters.allDayFree = !calendarFilters.allDayFree" type="button">
+            <button @click="calendarFilters.allDayFree = !calendarFilters.allDayFree; eventAttributes.allDayFree.checked = false" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -127,7 +127,8 @@ export default {
         XIcon
     },
     props: {
-        calendarFilters: Object
+        calendarFilters: Object,
+        eventAttributes: Object
     }
 }
 </script>

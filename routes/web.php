@@ -9,6 +9,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
@@ -200,6 +201,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Room Attributes
     Route::post('/rooms/attributes', [RoomAttributeController::class, 'store']);
     Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy']);
+
+    //Filters
+    Route::get('/filters', [FilterController::class, 'index']);
+    Route::post('/filters', [FilterController::class, 'store']);
+    Route::delete('/filters/{filter}', [FilterController::class, 'destroy']);
 
     /**
      * Event Views

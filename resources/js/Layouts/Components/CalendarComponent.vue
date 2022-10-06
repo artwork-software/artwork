@@ -2,12 +2,13 @@
 
     <div class="mt-10 ml-14">
         <div class="inline-flex mb-5 w-1/3">
-            <Menu as="div" class="relative inline-block text-left w-52">
+            <Menu as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton
-                        class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="mt-1 border border-gray-300 w-auto bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
-                        <span class="float-left">Monat - Sep 2022</span>
+                        <CalendarIcon class="w-5 h-5 float-left mr-2" />
+                        <span class="float-left">{{ this.displayDate }}</span>
                         <ChevronDownIcon
                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                             aria-hidden="true"
@@ -23,7 +24,7 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
+                        class="absolute left mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
                         <button @click="$refs.vuecal.switchView('day', new Date())"
                                 class="w-full mt-2 text-left pl-2"
                                 :class="currentView === 'day' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
@@ -43,6 +44,13 @@
                                 :class="currentView === 'month' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
                             <label class="text-sm">
                                 Monat
+                            </label>
+                        </button>
+                        <button @click="$refs.vuecal.switchView('year')"
+                                class="w-full mt-2 text-left pl-2"
+                                :class="currentView === 'year' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
+                            <label class="text-sm">
+                                Jahr
                             </label>
                         </button>
                     </MenuItems>
@@ -362,7 +370,8 @@
     <div>
         <vue-cal
             ref="vuecal"
-            style="height: 500px"
+            id="vuecal"
+            style="height: 60vh"
             today-button
             events-on-month-view="short"
             locale="de"
@@ -1217,39 +1226,41 @@ import {
     ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
+    DocumentTextIcon,
     DotsVerticalIcon,
+    FilterIcon,
     PencilAltIcon,
     TrashIcon,
     XCircleIcon,
     XIcon,
-    DocumentTextIcon,
-    FilterIcon
+    CalendarIcon
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems,
+    MenuItem,
+    MenuItems,
     Switch,
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel, SwitchGroup,
+    SwitchGroup,
     SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
-import {Link} from "@inertiajs/inertia-vue3";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        CalendarIcon,
         FilterIcon,
         SwitchLabel,
         SwitchGroup,
@@ -1286,6 +1297,7 @@ export default {
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
         return {
+            displayDate: '',
             currentInterval: '',
             freeTimeIntervals: [
                 'min 0.5h',
@@ -1384,6 +1396,9 @@ export default {
                 user_id: this.$page.props.user.id,
             }),
         }
+    },
+    created() {
+        if (!HTMLElement.prototype.scrollTo) HTMLElement.prototype.scrollTo = function ({ top }) { this.scrollTop = top }
     },
     watch: {
         project_query: {
@@ -1614,6 +1629,9 @@ export default {
          */
         async fetchEvents({view, startDate, endDate}) {
 
+            this.scrollToNine();
+            this.setDisplayDate(view, startDate)
+
             this.currentView = view;
             const colors = ['blue', 'pink', 'green']
 
@@ -1655,8 +1673,35 @@ export default {
                 });
         },
 
+        scrollToNine() {
+            const calendar = document.querySelector('#vuecal .vuecal__bg')
+            calendar.scrollTo({ top: 9 * 40, behavior: 'smooth' })
+        },
+
         addFilterableVariable(dataArray) {
             dataArray.forEach(element => element.checked = true);
+        },
+
+        setDisplayDate(view, startDate) {
+
+            if(view === 'day') {
+                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+                this.displayDate = startDate.toLocaleDateString('de-DE', options)
+            }
+            else if(view === 'week') {
+                let beginOfYear = new Date(startDate.getFullYear(), 0, 1);
+                let days = Math.floor((startDate - beginOfYear) /
+                    (24 * 60 * 60 * 1000));
+
+                let weekNumber = Math.ceil(days / 7);
+                this.displayDate = 'Woche - KW ' + weekNumber
+            }
+            else if(view === 'month') {
+                this.displayDate = "Monat - " + startDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric'})
+            }
+            else {
+                this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', { year: 'numeric'})
+            }
         },
 
         /**
@@ -1799,7 +1844,7 @@ export default {
                     this.closeDeleteEventModal();
                 });
         }
-    },
+    }
 }
 </script>
 
@@ -1879,9 +1924,15 @@ export default {
     color: #27233C
 }
 
-.vuecal__cell--today {
+.vuecal__cell--today .vuecal__cell--current {
     background-color: rgba(48, 23, 173, 0.02) !important;
 }
+
+.vuecal__cell--selected {
+    background-color: rgba(48, 23, 173, 0.02) !important;
+}
+
+
 
 /* Custom Room Colors */
 

@@ -95,11 +95,22 @@
                         Kostenträger:
                     </span>
                     <span class="text-primary font-bold">
-                        {{project.cost_center ? project.cost_center : 'noch nicht definiert' }}
+                        {{ project.cost_center ? project.cost_center : 'noch nicht definiert' }}
                     </span>
                 </div>
-                <div>
-                    {{this.project.categories}}
+                <div class="flex mt-5">
+                    <div>
+                        <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
+                                      :displayed-text="category.name" :property="category"></TagComponent>
+                    </div>
+                    <div>
+                        <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
+                                      :displayed-text="genre.name" :property="genre"></TagComponent>
+                    </div>
+                    <div>
+                        <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
+                                      :displayed-text="sector.name" :property="sector"></TagComponent>
+                    </div>
                 </div>
             </div>
             <div class="flex flex-wrap">
@@ -923,7 +934,7 @@
                         <div class="mt-8 mr-4">
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
-                                                v-model="form.description" rows="4"
+                                                v-model="form.description" rows="8"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
                         <div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
@@ -969,13 +980,20 @@
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="categories.length > 0" v-for="category in categories"
+
+                                                    <div v-if="categories.length > 0"
+                                                         v-for="category in categories"
+                                                         :key="category.id"
                                                          class="flex w-full mb-2">
-                                                        <input @click="changeAssignedCategories(category)" type="checkbox" v-model="category.checked"
+                                                        <input type="checkbox"
+                                                               v-model="form.projectCategoryIds"
+                                                               :value="category.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        <p :class="[form.projectCategoryIds.includes(category.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ category.name }}</p>
+                                                            {{ category.name }}
+                                                        </p>
                                                     </div>
                                                     <div v-else class="text-secondary">Noch keine Kategorien angelegt
                                                     </div>
@@ -994,16 +1012,22 @@
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="genres.length > 0" v-for="genre in genres"
+
+                                                    <div v-if="genres.length > 0"
+                                                         v-for="genre in genres"
+                                                         :key="genre.id"
                                                          class="flex w-full mb-2">
-                                                        <input type="checkbox" v-model="genre.checked"
+                                                        <input type="checkbox"
+                                                               v-model="form.projectGenreIds"
+                                                               :value="genre.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[genre.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        <p :class="[form.projectGenreIds.includes(genre.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ genre.name }}</p>
+                                                            {{ genre.name }}
+                                                        </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Genres angelegt
-                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Genres angelegt</div>
                                                 </DisclosurePanel>
                                             </Disclosure>
                                             <hr class="border-gray-500 mt-2 mb-2">
@@ -1019,13 +1043,20 @@
                                                     />
                                                 </DisclosureButton>
                                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                                    <div v-if="sectors.length > 0" v-for="sector in sectors"
+
+                                                    <div v-if="sectors.length > 0"
+                                                         v-for="sector in sectors"
+                                                         :key="sector.id"
                                                          class="flex w-full mb-2">
-                                                        <input type="checkbox" v-model="sector.checked"
+                                                        <input type="checkbox"
+                                                               v-model="form.projectSectorIds"
+                                                               :value="sector.id"
                                                                class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[sector.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                        <p :class="[form.projectSectorIds.includes(sector.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ sector.name }}</p>
+                                                            {{ sector.name }}
+                                                        </p>
                                                     </div>
                                                     <div v-else class="text-secondary">Noch keine Bereiche angelegt
                                                     </div>
@@ -1037,8 +1068,19 @@
                                 </transition>
                             </Menu>
                         </div>
-                        <div>
-                            <TagComponent v-for="category in this.assignedCategories" :method="deleteCategory" :displayed-text="category.name" :property="category"></TagComponent>
+                        <div class="flex mt-5">
+                            <div>
+                                <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
+                                              :displayed-text="category.name" :property="category"></TagComponent>
+                            </div>
+                            <div>
+                                <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
+                                              :displayed-text="genre.name" :property="genre"></TagComponent>
+                            </div>
+                            <div>
+                                <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
+                                              :displayed-text="sector.name" :property="sector"></TagComponent>
+                            </div>
                         </div>
                         <div class="w-full items-center text-center mt-36">
                             <AddButton
@@ -1625,7 +1667,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
+    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
     components: {
         TagComponent,
         AddButton,
@@ -1679,19 +1721,6 @@ export default {
                 {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
             ]
         },
-        projectAttributeTags() {
-            let projectTags = [];
-            this.assignedSectors.forEach((sector) => {
-                projectTags.push(sector.name);
-            })
-            this.assignedGenres.forEach((genre) => {
-                projectTags.push(genre.name);
-            })
-            this.assignedCategories.forEach((category) => {
-                projectTags.push(category.name);
-            })
-            return projectTags;
-        },
         projectMembers() {
             let projectMembers = [];
             this.project.users.forEach((user) => {
@@ -1741,13 +1770,6 @@ export default {
             )
             return managerIdArray;
         },
-        assignedCategoryIds: function () {
-            let assignedCategoryIds = [];
-            this.assignedCategories.forEach((category)=> {
-                assignedCategoryIds.push(category.id);
-            })
-            return assignedCategoryIds;
-        }
     },
     data() {
         return {
@@ -1769,14 +1791,10 @@ export default {
             department_and_user_search_results: [],
             checklist_assigned_departments: [],
             selectedTemplate: {name: '', id: null},
-            showDetails: false,
             checklistToEdit: null,
             editingChecklist: false,
             assignedUsers: this.project.users ? this.project.users : [],
             assignedDepartments: this.project.departments ? this.project.departments : [],
-            assignedCategories: this.project.categories ? this.project.categories : [],
-            assignedSectors: this.project.sectors ? this.project.sectors : [],
-            assignedGenres: this.project.genres ? this.project.genres : [],
             deletingChecklist: false,
             checklistToDelete: {},
             editingTask: false,
@@ -1793,9 +1811,9 @@ export default {
                 number_of_participants: this.project.number_of_participants,
                 assigned_user_ids: {},
                 assigned_departments: [],
-                assignedCategoryIds: [],
-                assignedSectorIds:[],
-                assignedGenreIds:[],
+                projectCategoryIds: this.projectCategoryIds,
+                projectGenreIds: this.projectGenreIds,
+                projectSectorIds: this.projectSectorIds
 
             }),
             checklistForm: useForm({
@@ -1852,16 +1870,17 @@ export default {
         }
     },
     methods: {
-        changeAssignedCategories(category){
-          if(!category.checked){
-              this.assignedCategories.push(category);
-          }else{
-              this.assignedCategories.splice(this.assignedCategories.indexOf(category));
-          }
+        deleteCategoryFromProject(category) {
+            this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
         },
-        deleteCategory(category){
-          this.assignedCategories.splice(this.assignedCategories.indexOf(category));
-          category.checked = false;
+        deleteGenreFromProject(genre) {
+            this.form.projectGenreIds.splice(this.form.projectGenreIds.indexOf(genre.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
+        },
+        deleteSectorFromProject(sector) {
+            this.form.projectSectorIds.splice(this.form.projectSectorIds.indexOf(sector.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
         },
         changeChecklistStatus(checklist) {
 
@@ -2005,43 +2024,17 @@ export default {
         },
         openEditProjectModal() {
             this.editingProject = true;
-            this.categories.forEach((category)=>{
-                if(this.assignedCategoryIds.includes(category.id)){
-                    category.checked = true;
-                }
-            })
         },
         closeEditProjectModal() {
             this.editingProject = false;
             this.categories.forEach((category) => {
                 category.checked = false;
             })
-            this.form.assignedCategoryIds = [];
-            this.form.assignedGenreIds = [];
-            this.form.assignedSectorIds = [];
             this.form.assigned_departments = [];
             this.form.assigned_user_ids = {};
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
-
-
-            if (this.assignedCategories) {
-                this.assignedCategories.forEach((category) => {
-                    this.form.assignedCategoryIds.push(category.id);
-                })
-            }
-            console.log('Assigned Category IDs: ' + this.form.assignedCategoryIds);
-            if (this.assignedSectors) {
-                this.assignedSectors.forEach((sector) => {
-                    this.form.assignedSectorIds.push(sector.id);
-                })
-            }
-            if (this.assignedGenres) {
-                this.assignedGenres.forEach((genre) => {
-                    this.form.assignedGenreIds.push(genre.id);
-                })
-            }
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
@@ -2105,7 +2098,7 @@ export default {
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
-
+            this.form.assigned_departments = [];
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })

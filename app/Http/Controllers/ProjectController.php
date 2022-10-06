@@ -180,23 +180,17 @@ class ProjectController extends Controller
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 
-            'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
-                'id' => $category->id,
-                'name' => $category->name,
-                'projects' => $category->projects
-            ]),
+            'categories' => Category::all(),
+            'projectCategoryIds' => $project->categories()->pluck('category_id'),
+            'projectCategories' => $project->categories,
 
-            'genres' => Genre::query()->with('projects')->get()->map(fn ($genre) => [
-                'id' => $genre->id,
-                'name' => $genre->name,
-                'projects' => $genre->projects
-            ]),
+            'genres' => Genre::all(),
+            'projectGenreIds' => $project->genres()->pluck('genre_id'),
+            'projectGenres' => $project->genres,
 
-            'sectors' => Sector::query()->with('projects')->get()->map(fn ($sector) => [
-                'id' => $sector->id,
-                'name' => $sector->name,
-                'projects' => $sector->projects
-            ]),
+            'sectors' => Sector::all(),
+            'projectSectorIds' => $project->sectors()->pluck('sector_id'),
+            'projectSectors' => $project->sectors,
 
             'checklist_templates' => ChecklistTemplate::all()->map(fn ($checklist_template) => [
                 'id' => $checklist_template->id,
@@ -256,18 +250,9 @@ class ProjectController extends Controller
         $project->users()->sync(collect($request->assigned_user_ids));
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
-        if($request->assignedCategoryIds){
-            $project->categories()->sync($request->assignedCategoryIds);
-        }
-        if($request->assignedSectorIds){
-            $project->sectors()->sync($request->assignedSectorIds);
-        }
-        if($request->assignedGenreIds){
-            $project->genres()->sync($request->assignedGenreIds);
-        }
-
-
-
+        $project->categories()->sync($request->projectCategoryIds);
+        $project->genres()->sync($request->projectGenreIds);
+        $project->sectors()->sync($request->projectSectorIds);
 
         return Redirect::back();
     }

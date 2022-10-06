@@ -478,180 +478,13 @@
                                                 v-model="form.description" rows="4"
                                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
-
-                        <div v-on:click="showDetails = !showDetails">
-                            <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-6 ">
-                                Weitere Angaben
-                                <ChevronUpIcon v-if="showDetails"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                            </h2>
-                        </div>
-                        <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
+                        <div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
                             <div class="sm:col-span-3">
                                 <div class="">
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
                                            class="text-primary h-10 w-full text-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full  "/>
                                 </div>
                             </div>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate">{{ selectedParticipantNumber }}</span>
-                                        <span v-if="selectedParticipantNumber === ''" class="block truncate">Anzahl Teilnehmer*innen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
-
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template"
-                                                           v-for="participantNumber in number_of_participants"
-                                                           :key="participantNumber.number"
-                                                           :value="participantNumber.number"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                {{ participantNumber.number }}
-                                            </span>
-                                                    <span v-if="selected"
-                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedGenre">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedGenre.name }}</span>
-                                        </span>
-                                        <span v-if="selectedGenre.name === ''"
-                                              class="block truncate">Genre wählen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
-
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="genre in genres"
-                                                           :key="genre.name"
-                                                           :value="genre"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ genre.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedSector">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedSector.name }}</span>
-                                        </span>
-                                        <span v-if="selectedSector.name === ''"
-                                              class="block truncate items-center">
-                                            <span>Bereich wählen</span>
-                                        </span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </span>
-                                    </ListboxButton>
-
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="sector in sectors"
-                                                           :key="sector.name"
-                                                           :value="sector"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ sector.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedCategory">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  border-2 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center flex">
-                                            <span class="">{{ selectedCategory.name }}</span>
-                                        </span>
-                                        <span v-if="selectedCategory.name === ''"
-                                              class="block truncate">Kategorie wählen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
-
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="category in categories"
-                                                           :key="category.name"
-                                                           :value="category"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ category.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
                         </div>
                         <div class="w-full items-center text-center">
                             <AddButton
@@ -904,18 +737,9 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
-            this.selectedCategory = {name: ''};
-            this.selectedGenre = {name: ''};
-            this.selectedSector = {name: ''};
-            this.form.sector_id = 0;
-            this.form.category_id = 0;
-            this.form.genre_id = 0;
         },
         addProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
-            this.form.category_id = this.selectedCategory.id;
-            this.form.sector_id = this.selectedSector.id;
-            this.form.genre_id = this.selectedGenre.id;
             this.form.post(route('projects.store'), {})
             this.closeAddProjectModal();
             this.openSuccessModal2();
@@ -1007,15 +831,11 @@ export default defineComponent({
             project_search_results: [],
             addingProject: false,
             deletingProject: false,
-            showDetails: false,
             projectToDelete: null,
             showSuccessModal: false,
             showSuccessModal2: false,
             selectedParticipantNumber: "",
             nameOfDeletedProject: "",
-            selectedCategory: {name: ''},
-            selectedSector: {name: ''},
-            selectedGenre: {name: ''},
             showProjectHistory: false,
             projectHistoryToDisplay: [],
             form: useForm({

@@ -44,29 +44,29 @@ class CalendarEventCollectionResource extends ResourceCollection
 
             'rooms' => Room::all()->map(fn (Room $room) => [
                 'id' => $room->id,
-                'name' => $room->name,
+                'label' => $room->name,
                 'room_admins' => $room->room_admins,
                 'everyone_can_book' => $room->everyone_can_book
             ]),
 
-            'roomCategories' => RoomCategory::all()->map(fn (RoomCategory $roomCategory) => [
+            'room_categories' => RoomCategory::all()->map(fn (RoomCategory $roomCategory) => [
                 'id' => $roomCategory->id,
                 'name' => $roomCategory->name,
             ]),
 
-            'roomAttributes' => RoomAttribute::all()->map(fn (RoomAttribute $roomAttribute) => [
+            'room_attributes' => RoomAttribute::all()->map(fn (RoomAttribute $roomAttribute) => [
                 'id' => $roomAttribute->id,
                 'name' => $roomAttribute->name,
             ]),
 
-            'eventTypes' => EventType::all()->map(fn (EventType $eventType) => [
+            'event_types' => EventType::all()->map(fn (EventType $eventType) => [
                 'id' => $eventType->id,
                 'name' => $eventType->name,
             ]),
 
             'areas' => Area::all()->map(fn (Area $area) => [
                 'id' => $area->id,
-                'name' => $area->name,
+                'label' => $area->name,
             ]),
         ];
     }

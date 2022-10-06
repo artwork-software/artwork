@@ -17,7 +17,6 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Auth;
 
 class TestContentSeeder extends Seeder
 {
@@ -34,7 +33,6 @@ class TestContentSeeder extends Seeder
 
         // Users
         $users = User::factory()->count(10)->create();
-        Auth::loginUsingId($users->last()->id);
 
         // base models
         $eventTypes = EventType::all();

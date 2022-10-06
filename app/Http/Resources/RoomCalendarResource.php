@@ -25,7 +25,6 @@ class RoomCalendarResource extends JsonResource
 
         /** @var \Illuminate\Database\Eloquent\Collection $events */
         $events = $this->events()
-            /** @see \App\Builders\EventBuilder::visibleForUser() */
             ->visibleForUser(Auth::user())
             ->occursAt($requestedDay)
             ->get();

@@ -3,7 +3,6 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
 
 /**
  * @mixin \App\Models\Event
@@ -33,7 +32,7 @@ class CalendarEventResource extends JsonResource
             'audience' => $this->audience,
             'isLoud' => $this->is_loud,
             'projectId' => $this->project_id,
-            'projectName' => $this->project?->name,
+            'projectName' => $this->project->name,
             'roomId' => $this->room_id,
             'eventTypeId' => $this->event_type_id,
             'areaId' => $this->room?->area_id,
@@ -41,7 +40,7 @@ class CalendarEventResource extends JsonResource
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
 
-            'collisionCount' => $this->collision_count,
+            'collisionCount'=> $this->collision_count,
 
             // to display rooms as split
             'split' => $this->room_id,
@@ -49,10 +48,6 @@ class CalendarEventResource extends JsonResource
             // Todo Add Authorization
             'resizable' => true,
             'draggable' => true,
-
-            'canEdit' => Auth::user()->can('update', $this->resource),
-            'canAccept' => Auth::user()->can('update', $this->resource),
-            'canDelete' => Auth::user()->can('delete', $this->resource),
         ];
     }
 }

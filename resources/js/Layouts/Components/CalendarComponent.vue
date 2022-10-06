@@ -371,7 +371,7 @@
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 60vh"
+            style="height: 600px"
             today-button
             events-on-month-view="short"
             locale="de"

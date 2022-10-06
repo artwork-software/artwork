@@ -73,7 +73,7 @@ class Event extends Model
 
     public function roomAdministrators(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'room_user', 'user_id', 'room_id', 'id', 'room_id');
+        return $this->belongsToMany(User::class, 'room_user', 'user_id', 'room_id', 'room_id', 'id');
     }
 
     public function sameRoomEvents()

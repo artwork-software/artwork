@@ -9,6 +9,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
+use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\ProjectController;
@@ -201,6 +202,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/rooms/attributes', [RoomAttributeController::class, 'store']);
     Route::delete('/rooms/attributes/{roomAttribute}', [RoomAttributeController::class, 'destroy']);
 
+    //Filters
+    Route::get('/filters', [FilterController::class, 'index']);
+    Route::post('/filters', [FilterController::class, 'store']);
+    Route::delete('/filters/{filter}', [FilterController::class, 'destroy']);
+
     /**
      * Event Views
      */
@@ -211,7 +217,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     /**
      * Event Api
      */
-    Route::get('/events', [EventController::class, 'indexEvents'])->name('events.index');
+    Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');;
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');;

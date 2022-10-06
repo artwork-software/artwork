@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Project;
+use App\Models\RoomCategory;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +23,8 @@ class ContentSeeder extends Seeder
         $this->seedRooms();
         $this->seedEventsAndEventTypes();
         $this->seedProjects();
+        $this->seedRoomCategories();
+        $this->seedRoomAttributes();
     }
 
     private function seedDepartments()
@@ -32,6 +35,36 @@ class ContentSeeder extends Seeder
         ]);
 
         $department->users()->attach(1);
+    }
+
+    private function seedRoomCategories()
+    {
+        DB::table('room_categories')->insert([
+            'name' => 'Meetingraum',
+        ]);
+
+        DB::table('room_categories')->insert([
+            'name' => 'Foyer',
+        ]);
+
+        DB::table('room_categories')->insert([
+            'name' => 'Büro',
+        ]);
+    }
+
+    private function seedRoomAttributes()
+    {
+        DB::table('room_attributes')->insert([
+            'name' => 'rollstuhlgerecht',
+        ]);
+
+        DB::table('room_attributes')->insert([
+            'name' => 'groß',
+        ]);
+
+        DB::table('room_attributes')->insert([
+            'name' => 'buchbar ohne Anfrage',
+        ]);
     }
 
     private function seedGenreAndCategoriesAndAreas()

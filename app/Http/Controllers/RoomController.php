@@ -40,11 +40,9 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        $room->adjoining_rooms()->sync(collect($request->adjoining_rooms)->pluck("id"));
-
-        $room->attributes()->sync(collect($request->room_attributes)->pluck("id"));
-
-        $room->categories()->sync(collect($request->room_categories)->pluck("id"));
+        if($request->room_categories) {
+            $room->categories()->save($request->room_categories);
+        }
 
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }

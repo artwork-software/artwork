@@ -6,20 +6,19 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="text-3xl w-full font-lexend font-black text-primary flex">Räume & Areale</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                <h2 class="text-3xl font-lexend font-black text-primary flex w-full">Räume & Areale</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
                                     Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
                                     zusätzlich globale Eigenschaften für Räume.
                                 </div>
 
-                                <h2 class="font-medium w-full mt-10 text-xl">Raumeigenschaften</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                <h2 class="font-medium mt-10 text-xl w-full">Raumeigenschaften</h2>
+                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
                                     Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
                                     Kalendern gefiltert werden.
                                 </div>
 
                                 <div class="grid grid-cols-2 grid-flow-col grid-rows-2">
-
                                     <!-- Raumkategorien -->
                                     <div class="mt-8 mr-10 flex">
                                         <div class="relative w-72">
@@ -37,7 +36,7 @@
                                             </label>
                                         </div>
 
-                                        <div class="flex m-2">
+                                        <div class="m-2">
                                             <button
                                                 :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomCategory" :disabled="!roomCategoryInput">
@@ -45,9 +44,19 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="mt-2 flex flex-wrap">
-                                        <TagComponent v-for="category in room_categories" :method="deleteRoomCategory" :displayed-text="category.name" :property="category"/>
+
+                                    <div class="mt-2 mr-10 flex flex-wrap">
+                                        <span v-for="(category,index) in room_categories"
+                                              class="rounded-full items-center font-medium text-tagText
+                                            border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            {{ category.name }}
+                                            <button type="button" @click="deleteRoomCategory(category)">
+                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                            </button>
+                                        </span>
                                     </div>
+
                                     <!-- Raumattribute -->
                                     <div class="mt-8 flex">
                                         <div class="relative w-72">
@@ -72,9 +81,19 @@
                                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                                             </button>
                                         </div>
+
                                     </div>
-                                    <div class="flex mt-2">
-                                        <TagComponent v-for="(attribute,index) in room_attributes" :method="deleteRoomAttribute" :displayed-text="attribute.name" :property="attribute"/>
+
+                                    <div class="mt-2 flex flex-wrap">
+                                        <span v-for="(attribute,index) in room_attributes"
+                                          class="mr-1 rounded-full items-center font-medium text-tagText
+                                         border bg-tagBg border-tag px-3 text-sm mb-1 h-8 inline-flex">
+                                            {{ attribute.name }}
+                                            <button type="button" @click="deleteRoomAttribute(attribute)">
+                                                <!--<span class="sr-only">Email aus Einladung entfernen</span>-->
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error"/>
+                                            </button>
+                                        </span>
                                     </div>
                                 </div>
 
@@ -467,7 +486,7 @@
     <jet-dialog-modal :show="showAddRoomModal" @close="closeAddRoomModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4"/>
-            <div class="mx-3 overflow-y-auto">
+            <div class="mx-3">
                 <div class="font-bold font-lexend text-primary text-3xl my-2">
                     Neuer Raum
                 </div>
@@ -485,169 +504,11 @@
                         </label>
                         <jet-input-error :message="newRoomForm.error" class="mt-2"/>
                     </div>
-                    <div class="mt-8">
+                    <div class="mt-8 mr-4">
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="newRoomForm.description" rows="4"
                                                 class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full font-semibold border border-gray-300 "/>
-                    </div>
-
-
-                    <Menu as="span" class="relative inline-block w-full text-left">
-                        <div>
-                            <MenuButton
-                                class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                            >
-                                <span class="font-semibold float-left text-secondary">Raumeigenschaften wählen</span>
-                                <ChevronDownIcon
-                                    class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                    aria-hidden="true"
-                                />
-                            </MenuButton>
-                        </div>
-
-                        <transition
-                            enter-active-class="transition duration-50 ease-out"
-                            enter-from-class="transform scale-100 opacity-100"
-                            enter-to-class="transform scale-100 opacity-100"
-                            leave-active-class="transition duration-75 ease-in"
-                            leave-from-class="transform scale-100 opacity-100"
-                            leave-to-class="transform scale-95 opacity-0"
-                        >
-                            <MenuItems
-                                class="absolute right-0 px-4 py-2  mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black text-white opacity-100 z-50">
-                                <div class="mx-auto w-full rounded-2xl bg-primary border-none">
-                                    <!-- Room Categories Section -->
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                            <div v-if="room_categories.length > 0"
-                                                 v-for="category in room_categories"
-                                                 :key="category.id"
-                                                 class="flex w-full items-center mb-2">
-                                                <input type="checkbox"
-                                                       v-model="newRoomForm.room_categories"
-                                                       :value="category"
-                                                       class="cursor-pointer h-6 w-6 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[newRoomForm.room_categories.includes(category)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                    {{ category.name }}
-                                                </p>
-                                            </div>
-                                            <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                            <div v-for="area in areas">
-                                                <div v-if="area.rooms.length > 0"
-                                                     v-for="room in area.rooms"
-                                                     :key="room.id"
-                                                     class="flex items-center w-full mb-2">
-                                                    <input type="checkbox"
-                                                           v-model="newRoomForm.adjoining_rooms"
-                                                           :value="room"
-                                                           class="cursor-pointer h-6 w-6 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                    <p :class="[newRoomForm.adjoining_rooms.includes(room)
-                                                                                            ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                       class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                        {{ room.name }}
-                                                    </p>
-                                                </div>
-                                                <div v-else class="text-secondary">Noch keine Räume angelegt</div>
-                                            </div>
-
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <!--                                    -->
-                                    <!-- Room Attributes Section -->
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                            <div v-if="room_attributes.length > 0"
-                                                 v-for="attribute in room_attributes"
-                                                 :key="attribute.id"
-                                                 class="flex w-full items-center mb-2">
-                                                <input type="checkbox"
-                                                       v-model="newRoomForm.room_attributes"
-                                                       :value="attribute"
-                                                       class="cursor-pointer h-6 w-6 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[newRoomForm.room_attributes.includes(attribute)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-md subpixel-antialiased align-text-middle">
-                                                    {{ attribute.name }}
-                                                </p>
-                                            </div>
-                                            <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
-                                            </div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                </div>
-                            </MenuItems>
-                        </transition>
-
-                    </Menu>
-                    <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category, index) in newRoomForm.room_categories"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ category.name }}
-                                        <button @click="newRoomForm.room_categories.splice(index,1)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                        <span v-for="(attribute, index) in newRoomForm.room_attributes"
-                              class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ attribute.name }}
-                                        <button @click="newRoomForm.room_attributes.splice(index,1)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                        <span v-for="(room, index) in newRoomForm.adjoining_rooms"
-                              class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        Nebenraum von {{ room.name }}
-                                        <button @click="newRoomForm.adjoining_rooms.splice(index,1)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-
                     </div>
                     <div class="flex items-center my-6">
                         <input v-model="newRoomForm.temporary"
@@ -900,10 +761,10 @@ import {
     InformationCircleIcon,
     PencilAltIcon,
     SearchIcon, TrashIcon,
-    XIcon, DuplicateIcon, DocumentTextIcon
+    XIcon, DuplicateIcon
 } from "@heroicons/vue/outline";
 import {CheckIcon, ChevronUpIcon, ChevronDownIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
-import {Menu, MenuButton, MenuItem, MenuItems, Disclosure, DisclosureButton, DisclosurePanel} from "@headlessui/vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetButton from "@/Jetstream/Button";
 import {defineComponent} from 'vue'
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -914,13 +775,10 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
-import TagComponent from "@/Layouts/Components/TagComponent";
 
 export default defineComponent({
     components: {
-        TagComponent,
         AddButton,
-        DocumentTextIcon,
         UserTooltip,
         SvgCollection,
         Button,
@@ -948,10 +806,9 @@ export default defineComponent({
         Link,
         DuplicateIcon,
         draggable,
-        Disclosure, DisclosureButton, DisclosurePanel
     },
     name: 'Area Management',
-    props: ['areas', 'opened_areas', 'room_categories', 'room_attributes', 'rooms'],
+    props: ['areas', 'opened_areas', 'room_categories', 'room_attributes'],
     data() {
         return {
             roomCategoryInput: '',
@@ -983,10 +840,7 @@ export default defineComponent({
                 end_date: null,
                 area_id: null,
                 user_id: this.$page.props.user.id,
-                everyone_can_book: false,
-                room_categories: [],
-                room_attributes: [],
-                adjoining_rooms: []
+                everyone_can_book: false
             }),
             editRoomForm: useForm({
                 id: null,

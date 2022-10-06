@@ -45,6 +45,9 @@ module.exports = {
             },
             boxShadow: {
                 'buttonBlue': '0 35px 60px -15px #2D1FDE'
+            },
+            flex: {
+                'tags': '1 1 30%'
             }
         },
     },

@@ -3,7 +3,7 @@
         <div class="py-4 flex flex-col md:flex-row">
             <!-- Greetings Div -->
             <div class="mr-12 overflow-x-auto">
-                <div class="ml-20 mt-10">
+                <div class="ml-14 mt-10">
                     <h2 class="text-3xl font-lexend font-black text-primary flex mb-4">Hallo {{
                             $page.props.user.first_name
                                                                                        }}</h2>

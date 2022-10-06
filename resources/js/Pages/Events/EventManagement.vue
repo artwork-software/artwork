@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-lg mt-12 flex flex-row ml-20 mr-40">
+        <div class="max-w-screen-lg mt-12 flex flex-row ml-14 mr-40">
             <div class="flex flex-1 flex-wrap">
                 <div class="w-full flex justify-between">
                     <div class="flex flex-wrap">
@@ -9,7 +9,9 @@
                 </div>
             </div>
         </div>
-        <CalendarComponent :eventTypes=this.eventTypes />
+        <div class="mr-4">
+            <CalendarComponent :eventTypes=this.eventTypes />
+        </div>
     </app-layout>
 </template>
 <script>

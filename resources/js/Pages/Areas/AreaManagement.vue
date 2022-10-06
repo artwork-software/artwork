@@ -6,13 +6,13 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="text-3xl font-lexend font-black text-primary flex">Räume & Areale</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4">
+                                <h2 class="text-3xl w-full font-lexend font-black text-primary flex">Räume & Areale</h2>
+                                <div class="w-full text-secondary subpixel-antialiased flex mt-4">
                                     Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
                                     zusätzlich globale Eigenschaften für Räume.
                                 </div>
 
-                                <h2 class="font-medium mt-10 text-xl">Raumeigenschaften</h2>
+                                <h2 class="flex w-full font-medium mt-8 text-xl">Raumeigenschaften</h2>
                                 <div class="text-secondary subpixel-antialiased flex mt-4">
                                     Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
                                     Kalendern gefiltert werden.
@@ -568,7 +568,7 @@
                                             <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
                                         </DisclosurePanel>
                                     </Disclosure>
-
+                                    <hr class="border-gray-500 mt-2 mb-2">
                                     <Disclosure v-slot="{ open }">
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -602,6 +602,7 @@
 
                                         </DisclosurePanel>
                                     </Disclosure>
+                                    <hr class="border-gray-500 mt-2 mb-2">
                                     <!--                                    -->
                                     <!-- Room Attributes Section -->
                                     <Disclosure v-slot="{ open }">

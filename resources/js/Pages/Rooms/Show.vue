@@ -200,7 +200,7 @@
                                                     <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
                                                 </DisclosurePanel>
                                             </Disclosure>
-
+                                            <hr class="border-gray-500 mt-2 mb-2">
                                             <Disclosure v-slot="{ open }">
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -232,7 +232,7 @@
                                                 </DisclosurePanel>
                                             </Disclosure>
 
-
+                                            <hr class="border-gray-500 mt-2 mb-2">
                                             <!-- Room Attributes Section -->
                                             <Disclosure v-slot="{ open }">
                                                 <DisclosureButton

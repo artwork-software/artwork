@@ -1,9 +1,72 @@
 <template>
 
-    <div class="flex justify-end mb-5">
+    <div class="mt-10 ml-14">
+        <div class="inline-flex mb-5 w-1/3">
+            <Menu as="div" class="relative inline-block text-left w-auto">
+                <div>
+                    <MenuButton
+                        class="mt-1 border border-gray-300 w-auto bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
+                    >
+                        <CalendarIcon class="w-5 h-5 float-left mr-2" />
+                        <span class="float-left">{{ this.displayDate }}</span>
+                        <ChevronDownIcon
+                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                            aria-hidden="true"
+                        />
+                    </MenuButton>
+                </div>
+                <transition
+                    enter-active-class="transition duration-50 ease-out"
+                    enter-from-class="transform scale-100 opacity-100"
+                    enter-to-class="transform scale-100 opacity-100"
+                    leave-active-class="transition duration-75 ease-in"
+                    leave-from-class="transform scale-100 opacity-100"
+                    leave-to-class="transform scale-95 opacity-0"
+                >
+                    <MenuItems
+                        class="absolute left mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
+                        <button @click="$refs.vuecal.switchView('day', new Date())"
+                                class="w-full mt-2 text-left pl-2"
+                                :class="currentView === 'day' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
+                            <label class="text-sm">
+                                Heute
+                            </label>
+                        </button>
+                        <button @click="$refs.vuecal.switchView('week')"
+                                class="w-full mt-2 text-left pl-2"
+                                :class="currentView === 'week' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
+                            <label class="text-sm">
+                                Woche
+                            </label>
+                        </button>
+                        <button @click="$refs.vuecal.switchView('month')"
+                                class="w-full mt-2 text-left pl-2"
+                                :class="currentView === 'month' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
+                            <label class="text-sm">
+                                Monat
+                            </label>
+                        </button>
+                        <button @click="$refs.vuecal.switchView('year')"
+                                class="w-full mt-2 text-left pl-2"
+                                :class="currentView === 'year' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
+                            <label class="text-sm">
+                                Jahr
+                            </label>
+                        </button>
+                    </MenuItems>
+                </transition>
+            </Menu>
+            <button class="ml-2 text-black" @click="$refs.vuecal.previous()">
+                <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+            </button>
+            <button class="ml-2 text-black" @click="$refs.vuecal.next()">
+                <ChevronRightIcon class="h-5 w-5 text-primary"/>
+            </button>
+        </div>
 
-        <!-- Calendar Filter -->
-        <div>
+        <div class="inline-flex mb-5 justify-end w-2/3">
+
+            <!-- Calendar Filter -->
             <Menu as="div" class="relative inline-block text-left w-80">
                 <div>
                     <MenuButton
@@ -32,13 +95,13 @@
                             </button>
                         </div>
                         <div class="inline-flex border-none justify-end w-4/5">
-                            <button class="flex" @click="resetCalendarFilter">
+                            <button class="flex">
                                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                                <label class="text-xs">Zurücksetzen</label>
+                                <div class="text-xs">Zurücksetzen</div>
                             </button>
                             <button class="flex ml-4" @click="saving = !saving">
                                 <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                                <label class="text-xs">Speichern</label>
+                                <div class="text-xs">Speichern</div>
                             </button>
                         </div>
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
@@ -54,19 +117,11 @@
                                         class="h-4 w-4 mt-0.5 text-white"
                                     />
                                 </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div class="justify-between flex">
-                                        <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
-                                               class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                               placeholder="Name des Filters"/>
-                                        <AddButton text="Speichern" class="text-sm ml-0"
-                                                   @click="saveFilter"></AddButton>
-                                    </div>
-                                    <hr v-if="filters.length > 0" class="border-secondary rounded-full border-1 mt-4 mb-3">
-                                    <button class="rounded-full bg-buttonBlue px-5 py-2 align-middle flex mb-1" v-for="filter of filters">
-                                        <label @click="applyFilter(filter)" class="text-white">{{ filter.name }}</label>
-                                        <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
-                                    </button>
+                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white flex justify-between">
+                                    <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
+                                           class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
+                                           placeholder="Name des Filters"/>
+                                    <AddButton text="Speichern" class="text-sm ml-0"></AddButton>
                                 </DisclosurePanel>
                                 <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                             </Disclosure>
@@ -87,37 +142,36 @@
                                     <div v-if="currentView !== 'month'">
                                         <SwitchGroup>
                                             <div class="flex items-center">
-                                                <Switch v-model="calendarFilters.showAdjoiningRooms"
-                                                        :class="calendarFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
+                                                <Switch v-model="roomFilters.showAdjoiningRooms"
+                                                        :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="calendarFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                                 </Switch>
                                                 <SwitchLabel class="ml-4 text-xs"
-                                                             :class="calendarFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
+                                                             :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
                                                     Nebenräume anzeigen
                                                 </SwitchLabel>
                                             </div>
                                         </SwitchGroup>
                                         <SwitchGroup>
                                             <div class="flex items-center mt-2">
-                                                <Switch v-model="calendarFilters.allDayFree"
-                                                        :class="calendarFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
+                                                <Switch v-model="roomFilters.onlyFreeRooms"
+                                                        :class="roomFilters.onlyFreeRooms ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="calendarFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="roomFilters.onlyFreeRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                                 </Switch>
                                                 <SwitchLabel class="ml-4 text-xs"
-                                                             :class="calendarFilters.allDayFree ? 'text-white' : 'text-secondary'">
-                                                    ganztägig frei
+                                                             :class="roomFilters.onlyFreeRooms ? 'text-white' : 'text-secondary'">
+                                                    Nur freie Räume anzeigen
                                                 </SwitchLabel>
                                             </div>
                                         </SwitchGroup>
 
-                                        <!-- Wieder einklammern, falls genauere Unterteilung dazu kommt
-                                        <Menu as="div" v-if="calendarFilters.allDayFree">
+                                        <Menu as="div" v-if="roomFilters.onlyFreeRooms">
                                             <div>
                                                 <MenuButton
                                                     class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
@@ -139,13 +193,13 @@
                                                     <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
                                                         <div @click="currentInterval = interval"
                                                              :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
-                                                      'group px-3 py-2 text-sm subpixel-antialiased']">
+                                                  'group px-3 py-2 text-sm subpixel-antialiased']">
                                                             {{ interval }}
                                                         </div>
                                                     </MenuItem>
                                                 </MenuItems>
                                             </transition>
-                                        </Menu> -->
+                                        </Menu>
                                     </div>
 
                                     <hr class="border-gray-500 mt-2 mb-2">
@@ -163,7 +217,6 @@
                                             <div v-if="room_categories.length > 0" v-for="category in room_categories"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="category.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, category)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -177,8 +230,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -187,7 +239,6 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="area.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.areas, area)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -211,7 +262,6 @@
                                             <div v-if="room_attributes.length > 0" v-for="attribute in room_attributes"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="attribute.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -226,8 +276,7 @@
                                         <DisclosureButton
                                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                         >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
+                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
                                             <ChevronDownIcon
                                                 :class="open ? 'rotate-180 transform' : ''"
                                                 class="h-4 w-4 mt-0.5 text-white"
@@ -237,7 +286,6 @@
                                             <div v-if="rooms.length > 0" v-for="room in rooms"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="room.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.rooms, room)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -276,9 +324,8 @@
                                             />
                                         </DisclosureButton>
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-for="eventType in types" class="flex w-full mb-2">
+                                            <div v-for="eventType in eventTypes" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventType.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.eventTypes, eventType)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -300,7 +347,6 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventAttribute.checked"
-                                                       @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -315,22 +361,25 @@
                     </MenuItems>
                 </transition>
             </Menu>
+            <AddButton class="bg-primary hover:bg-secondary text-white"
+                       @click="openAddEventModal()" text="Neue Belegung"/>
         </div>
-
-        <AddButton class="bg-primary hover:bg-secondary text-white"
-                   @click="openAddEventModal()" text="Neue Belegung"/>
     </div>
-
-    <CalendarFilterTagComponent :calendar-filters="calendarFilters" :event-attributes="eventAttributes"/>
 
     <!--  Calendar  -->
     <div>
         <vue-cal
-            style="height: 500px"
+            ref="vuecal"
+            id="vuecal"
+            style="height: 600px"
             today-button
             events-on-month-view="short"
             locale="de"
+            hide-view-selector
+            hide-title-bar
+            show-week-numbers
 
+            :click-to-navigate="true"
             :stickySplitLabels="true"
             :disable-views="['years']"
             :events="displayedEvents"
@@ -338,7 +387,7 @@
             :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
             :snap-to-time="15"
             :drag-to-create-threshold="15"
-            :active-view="initialView ?? 'week'"
+            v-model:active-view="currentView"
 
             @event-drag-create="openEventModal($event)"
             @event-focus="openEventModal($event)"
@@ -548,13 +597,11 @@
                     <div class="text-secondary ml-10 w-1/2">
                         <label for="eventEndDate" class="text-xs subpixel-antialiased">Enddatum*</label>
                         <div class="w-full">
-                            <input v-model="addEventForm.endDate" id="eventEndDate"
-                                   @change="updateTimes(addEventForm)"
+                            <input v-model="addEventForm.endDate" id="eventEndDate" @change="updateTimes(addEventForm)"
                                    placeholder="Startdatum*" type="date"
                                    class="border-gray-300 text-primary placeholder-secondary"/>
                             <input
-                                v-model="addEventForm.endTime" id="changeEndTime"
-                                @change="updateTimes(addEventForm)"
+                                v-model="addEventForm.endTime" id="changeEndTime" @change="updateTimes(addEventForm)"
                                 placeholder="StartZeit*" type="time"
                                 class="border-gray-300 text-primary placeholder-secondary"/>
                         </div>
@@ -569,6 +616,7 @@
                         <div class="flex items-center my-auto">
                                         <span v-if="selectedRoom" class="block truncate items-center flex mr-2">
                                             <span>{{ selectedRoom.label }}</span>
+
                                         </span>
                             <span v-if="!selectedRoom"
                                   class="block truncate text-secondary">Raum wählen*</span>
@@ -1176,45 +1224,43 @@ import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {
     ChevronDownIcon,
+    ChevronLeftIcon,
+    ChevronRightIcon,
+    DocumentTextIcon,
     DotsVerticalIcon,
+    FilterIcon,
     PencilAltIcon,
     TrashIcon,
     XCircleIcon,
     XIcon,
-    DocumentTextIcon,
-    FilterIcon
+    CalendarIcon
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems,
+    MenuItem,
+    MenuItems,
     Switch,
-    Disclosure,
-    DisclosureButton,
-    DisclosurePanel, SwitchGroup,
+    SwitchGroup,
     SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
-import {Link} from "@inertiajs/inertia-vue3";
-import CalendarFilterComponent from "@/Layouts/Components/CalendarFilterComponent";
-import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
-import Button from "@/Jetstream/Button";
 
 export default {
     name: 'CalendarComponent',
     components: {
-        Button,
-        CalendarFilterTagComponent,
-        CalendarFilterComponent,
+        CalendarIcon,
         FilterIcon,
         SwitchLabel,
         SwitchGroup,
@@ -1233,6 +1279,8 @@ export default {
         ListboxOptions,
         ChevronDownIcon,
         ChevronUpIcon,
+        ChevronLeftIcon,
+        ChevronRightIcon,
         SvgCollection,
         CheckIcon,
         Switch,
@@ -1249,58 +1297,57 @@ export default {
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
         return {
-            filters: [],
-            filterName: '',
-            calendarFilters: {
-                rooms: [],
-                areas: [],
-                eventTypes: [],
-                roomAttributes: [],
-                roomCategories: [],
-                isLoud: null,
-                isNotLoud: null,
-                hasAudience: null,
-                hasNoAudience: null,
-                adjoiningNoAudience: null,
-                adjoiningNotLoud: null,
-                allDayFree: null,
-                showAdjoiningRooms: null
-            },
-            eventAttributes: {
-                isLoud: {
-                    name: 'laut',
-                    value: 'isLoud',
-                    checked: false
-                },
-                isNotLoud: {
-                    name: 'nicht laut',
-                    value: 'isNotLoud',
-                    checked: false
-                },
-                adjoiningNotLoud: {
-                    name: 'ohne laute Nebenveranstaltung',
-                    value: 'adjoiningNotLoud',
-                    checked: false
-                },
-                hasAudience: {
-                    name: 'mit Publikum',
-                    value: 'hasAudience',
-                    checked: false
-                },
-                hasNoAudience: {
-                    name: 'ohne Publikum',
-                    value: 'hasNoAudience',
-                    checked: false
-                },
-                adjoiningNoAudience: {
-                    name: 'ohne Nebenveranstaltung mit Publikum',
-                    value: 'adjoiningNoAudience',
-                    checked: false
-                },
-            },
-            saving: false,
+            displayDate: '',
             currentInterval: '',
-            types: [],
+            freeTimeIntervals: [
+                'min 0.5h',
+                'min 1h',
+                'min 2h',
+                'min 3h',
+                'min 4h',
+                'min 5h',
+                'min 6h',
+                'ganztägig',
+            ],
+            saving: false,
+            roomFilters: {
+                showAdjoiningRooms: false,
+                onlyFreeRooms: false
+            },
+            eventAttributes: [
+                {
+                    name: 'laut',
+                    value: 'is_loud',
+                    checked: true
+                },
+                {
+                    name: 'nicht laut',
+                    value: 'is_not_loud',
+                    checked: false
+                },
+                {
+                    name: 'ohne laute Nebenveranstaltung',
+                    value: 'adjoining_not_loud',
+                    checked: false
+                },
+                {
+                    name: 'mit Publikum',
+                    value: 'public',
+                    checked: true
+                },
+                {
+                    name: 'ohne Publikum',
+                    value: 'no_public',
+                    checked: false
+                },
+                {
+                    name: 'ohne Nebenveranstaltung mit Publikum',
+                    value: 'adjoining_not_public',
+                    checked: false
+                }
+            ],
+            showFreeRooms: false,
+            showAdjoiningRooms: false,
             myRooms: [],
             newEventError: null,
             assignProject: true,
@@ -1350,6 +1397,9 @@ export default {
             }),
         }
     },
+    created() {
+        if (!HTMLElement.prototype.scrollTo) HTMLElement.prototype.scrollTo = function ({ top }) { this.scrollTop = top }
+    },
     watch: {
         project_query: {
             handler() {
@@ -1365,106 +1415,6 @@ export default {
         }
     },
     methods: {
-        applyFilter(filter) {
-            this.calendarFilters = filter;
-            this.changeChecked(this.rooms, 'rooms')
-            this.changeChecked(this.areas, 'areas')
-            this.changeChecked(this.room_categories, 'roomCategories')
-            this.changeChecked(this.room_attributes, 'roomAttributes')
-            this.changeChecked(this.types, 'eventTypes')
-
-            Object.entries(this.eventAttributes).forEach(entry => {
-                Object.entries(this.calendarFilters).forEach(filterEntry => {
-                    if(entry[1].value === filterEntry) {
-                        entry[1].checked = true
-                    }
-                })
-            })
-
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-        },
-        changeChecked(array, filterName) {
-            array.forEach(object => {
-                if(this.calendarFilters[`${filterName}`].some(filterObj => filterObj.id === object.id)) {
-                    object.checked = true
-                }
-            })
-        },
-        async saveFilter() {
-            const filterIds = this.getFilterIds();
-            axios.post('/filters', { name: this.filterName, calendarFilters: filterIds})
-            await axios.get('/filters')
-                .then(response => {
-                    this.filters = response.data;
-                })
-
-        },
-        async deleteFilter(id) {
-            axios.delete(`/filters/${id}`)
-            this.resetCalendarFilter();
-            await axios.get('/filters')
-                .then(response => {
-                    this.filters = response.data
-                })
-        },
-        changeFilterElements(filterArray, element) {
-            console.log(element)
-            if (element.checked) {
-                filterArray.push(element)
-            } else {
-                // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
-                Object.entries(this.calendarFilters).forEach(entry => {
-                    if (Array.isArray(entry[1]) && entry[1].length > 0) {
-
-                        if (entry[1].filter(obj => obj.id === element.id)) {
-                            this.calendarFilters[entry[0]] = filterArray.filter(elem => element.id !== elem.id)
-                        }
-                    }
-                })
-            }
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-        },
-        changeFilterBoolean(filter, variable) {
-            this.calendarFilters[`${filter}`] = variable
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-        },
-        resetCalendarFilter() {
-            Object.entries(this.calendarFilters).forEach(entry => {
-                if (Array.isArray(entry[1])) {
-                    entry[1].forEach(object => {
-                        object.checked = false;
-                    })
-                    entry[1].length = 0;
-                } else {
-                    entry[1] = false;
-                }
-            })
-
-            Object.entries(this.eventAttributes).forEach(entry => {
-                entry[1].checked = false;
-            })
-
-
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil
-            });
-        },
-        resetArrayChecked() {
-
-        },
-        resetBooleanChecked() {
-
-        },
         openEventModal(event) {
             console.log(event);
             this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
@@ -1675,10 +1625,12 @@ export default {
          * @param view
          * @param {Date} startDate
          * @param {Date} endDate
-         * @param calendarFilters
          * @returns {Promise<void>}
          */
         async fetchEvents({view, startDate, endDate}) {
+
+            this.scrollToNine();
+            this.setDisplayDate(view, startDate)
 
             this.currentView = view;
             const colors = ['blue', 'pink', 'green']
@@ -1686,12 +1638,9 @@ export default {
             this.eventsSince = startDate;
             this.eventsUntil = endDate;
 
-            const filters = this.getFilterIds();
-
             await axios
                 .get('/events/', {
                     params: {
-                        calendarFilters: filters,
                         start: startDate,
                         end: endDate,
                         projectId: this.projectId,
@@ -1700,33 +1649,18 @@ export default {
                 })
                 .then(response => {
                     this.events = response.data.events
+                    this.types = response.data.types
+                    this.rooms = response.data.rooms
                     this.projects = response.data.projects
-                    this.filters = response.data.calendarFilters
+                    this.room_categories = response.data.room_categories
+                    this.room_attributes = response.data.room_attributes
+                    this.areas = response.data.areas
 
-                    if (this.rooms.length === 0) {
-                        this.rooms = response.data.rooms
-                        this.addFilterableVariable(this.rooms, false)
-                    }
-                    if (this.areas.length === 0) {
-                        this.areas = response.data.areas
-                        this.addFilterableVariable(this.areas, false)
-                    }
-                    if (this.room_categories.length === 0) {
-                        this.room_categories = response.data.room_categories
-                        this.addFilterableVariable(this.room_categories, false)
-                    }
-                    if (this.room_attributes.length === 0) {
-                        this.room_attributes = response.data.room_attributes
-                        this.addFilterableVariable(this.room_attributes, false)
-                    }
-                    if (this.types.length === 0) {
-                        this.types = this.eventTypes
-                        this.addFilterableVariable(this.types, false)
-                    }
-                    if (this.areas.length === 0) {
-                        this.areas = response.data.areas
-                    }
-
+                    this.addFilterableVariable(this.rooms)
+                    this.addFilterableVariable(this.room_categories)
+                    this.addFilterableVariable(this.room_attributes)
+                    this.addFilterableVariable(this.areas)
+                    this.addFilterableVariable(this.eventTypes)
 
                     // color coding of rooms
                     this.events.map(event => event.class = colors[event.split % colors.length])
@@ -1735,32 +1669,54 @@ export default {
                     this.events.map(event => event.start = new Date(event.start))
                     this.events.map(event => event.end = new Date(event.end))
 
-                    this.displayedEvents = this.events;
-                    this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
-
+                    this.filterEvents();
                 });
         },
 
-        getFilterIds() {
-            let filterIds = {};
-            filterIds.roomCategoryIds = this.calendarFilters.roomCategories.map(elem => elem.id);
-            filterIds.roomAttributeIds = this.calendarFilters.roomAttributes.map(elem => elem.id);
-            filterIds.roomIds = this.calendarFilters.rooms.map(elem => elem.id);
-            filterIds.areaIds = this.calendarFilters.areas.map(elem => elem.id);
-            filterIds.eventTypeIds = this.calendarFilters.eventTypes.map(elem => elem.id);
-            filterIds.isLoud = this.calendarFilters.isLoud
-            filterIds.isNotLoud = this.calendarFilters.isNotLoud
-            filterIds.hasAudience = this.calendarFilters.hasAudience
-            filterIds.hasNoAudience = this.calendarFilters.hasNoAudience
-            filterIds.adjoiningNoAudience = this.calendarFilters.adjoiningNoAudience
-            filterIds.adjoiningNotLoud = this.calendarFilters.adjoiningNotLoud
-            filterIds.allDayFree = this.calendarFilters.allDayFree
-            filterIds.showAdjoiningRooms = this.calendarFilters.showAdjoiningRooms
-            return filterIds;
+        scrollToNine() {
+            const calendar = document.querySelector('#vuecal .vuecal__bg')
+            calendar.scrollTo({ top: 9 * 40, behavior: 'smooth' })
         },
 
-        addFilterableVariable(dataArray, boolean) {
-            dataArray.forEach(element => element.checked = boolean);
+        addFilterableVariable(dataArray) {
+            dataArray.forEach(element => element.checked = true);
+        },
+
+        setDisplayDate(view, startDate) {
+
+            if(view === 'day') {
+                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+                this.displayDate = startDate.toLocaleDateString('de-DE', options)
+            }
+            else if(view === 'week') {
+                let beginOfYear = new Date(startDate.getFullYear(), 0, 1);
+                let days = Math.floor((startDate - beginOfYear) /
+                    (24 * 60 * 60 * 1000));
+
+                let weekNumber = Math.ceil(days / 7);
+                this.displayDate = 'Woche - KW ' + weekNumber
+            }
+            else if(view === 'month') {
+                this.displayDate = "Monat - " + startDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric'})
+            }
+            else {
+                this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', { year: 'numeric'})
+            }
+        },
+
+        /**
+         * Filter Events to decide what to display
+         */
+        filterEvents() {
+            // TODO filter events
+            // filter events
+            this.displayedEvents = this.events.filter(event =>
+                (this.areaFilter.length === 0 || this.areaFilter.find(area => area.id === event.areaId))
+                && (this.typeFilter.length === 0 || this.typeFilter.find(type => type.id === event.eventTypeId))
+                && (this.roomFilter.length === 0 || this.roomFilter.find(room => room.id === event.roomId))
+            )
+
+            this.displayedRooms = this.rooms.filter(room => this.displayedEvents.find(event => event.roomId === room.id))
         },
 
         /**
@@ -1889,12 +1845,36 @@ export default {
                 });
         }
     }
-    ,
 }
 </script>
 
 <style>
 /* Styling of Vue Cal */
+
+.vuecal__no-event {
+    display: none;
+}
+
+.vuecal__flex .vuecal__weekdays-headings {
+    background-color: #D8D7DE;
+}
+
+.vuecal__flex .vuecal__week-numbers {
+    background-color: #D8D7DE;
+}
+
+.vuecal__flex .vuecal__split-days-headers {
+    background-color: #828190;
+}
+
+.vuecal__flex .vuecal__week-number-cell {
+    color: #27233C;
+    font-size: 0.81rem;
+}
+
+.vuecal__week-numbers .vuecal__week-number-cell {
+    opacity: 1;
+}
 
 .vuecal--month-view .vuecal__cell {
     height: 75px;
@@ -1919,6 +1899,7 @@ export default {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */
     margin-top: 3px;
+    background-color: white;
 }
 
 .vuecal__view-btn {
@@ -1938,10 +1919,20 @@ export default {
 }
 
 .vuecal__flex.weekday-label {
-    font-size: 1rem; /* 12px */
+    font-size: 0.81rem; /* 13px */
     line-height: 1rem; /* 16px */
-    color: #707070;
+    color: #27233C
 }
+
+.vuecal__cell--today .vuecal__cell--current {
+    background-color: rgba(48, 23, 173, 0.02) !important;
+}
+
+.vuecal__cell--selected {
+    background-color: rgba(48, 23, 173, 0.02) !important;
+}
+
+
 
 /* Custom Room Colors */
 
@@ -1953,6 +1944,20 @@ export default {
 .vuecal__event.pink {
     border: solid rgba(209, 130, 211, 0.9);
     border-width: 0px 0px 0px 3px;
+}
+
+.vuecal__event.pink:before
+{
+    content:"";
+    display:block;
+    position:absolute;
+    z-index:-1;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    border:solid #d0d0d0;
+    border-width: 1px 1px 1px 0px;
 }
 
 .vuecal__event.green {

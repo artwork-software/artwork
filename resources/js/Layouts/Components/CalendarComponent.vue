@@ -1457,7 +1457,6 @@ export default {
             this.createEventComponentIsVisible = false;
             this.fetchEvents();
         },
-
         /**
          * Fetch the events from server
          * initialise possible rooms, types and projects
@@ -1468,6 +1467,10 @@ export default {
          * @returns {Promise<void>}
          */
         async fetchEvents({view = null, startDate = null, endDate = null}) {
+
+
+            this.scrollToNine();
+            this.setDisplayDate(view, startDate)
 
             this.currentView = view ?? this.currentView ?? 'week';
             const colors = ['blue', 'pink', 'green']
@@ -1500,12 +1503,20 @@ export default {
                     this.eventTypes.map(eventType => eventType.checked = false);
                     this.rooms.map(room => room.checked = false);
 
+                    this.addFilterableVariable(this.rooms)
+                    this.addFilterableVariable(this.room_categories)
+                    this.addFilterableVariable(this.room_attributes)
+                    this.addFilterableVariable(this.areas)
+                    this.addFilterableVariable(this.eventTypes)
+
                     // color coding of rooms
                     this.events.map(event => event.class = colors[event.split % colors.length])
 
                     // fix timezone to current local
                     this.events.map(event => event.start = new Date(event.start))
                     this.events.map(event => event.end = new Date(event.end))
+
+                    this.filterEvents();
                 });
         },
         openEventModal(event) {

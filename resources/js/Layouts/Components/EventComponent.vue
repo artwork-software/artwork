@@ -2,7 +2,8 @@
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
             <img alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer" aria-hidden="true"/>
+            <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                   aria-hidden="true"/>
             <div class="mx-4">
                 <!--    Heading    -->
                 <div>
@@ -62,28 +63,48 @@
                         <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!canEdit">
                             {{ selectedEventType?.name }}
                         </div>
-                        <Listbox as="div" v-model="selectedEventType" v-if="canEdit" :onchange="checkCollisions()" id="eventType">
-                            <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow text-left">
-                                    <EventTypeIconCollection :height="20" :width="20" :iconName="selectedEventType?.svg_name"/>
-                                    {{ selectedEventType?.name }}
+                        <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
+                                 :onchange="checkCollisions()" id="eventType">
+                            <ListboxButton
+                                class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                <div class="flex items-center my-auto">
+                                    <EventTypeIconCollection :height="20" :width="20"
+                                                             :iconName="selectedEventType?.svg_name"/>
+                                    <span class="block truncate items-center ml-3 flex">
+                                            <span>{{ selectedEventType?.name }}</span>
+                                </span>
+                                    <span
+                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
 
-                            <ListboxOptions class="w-72 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                <ListboxOption v-for="eventType in eventTypes"
-                                               class="p-2 hover:bg-indigo-800 text-secondary cursor-pointer flex items-center justify-between"
-                                               :key="eventType.name"
-                                               :value="eventType"
-                                               v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'font-bold text-white' : '']">
-                                        <EventTypeIconCollection :height="12" :width="12" :iconName="eventType?.svg_name"/>
-                                        {{ eventType.name }}
-                                    </div>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                </ListboxOption>
-                            </ListboxOptions>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute w-72 z-10 mt-10 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   v-for="eventType in eventTypes"
+                                                   :key="eventType.name"
+                                                   :value="eventType"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <EventTypeIconCollection :height="12" :width="12"
+                                                                     :iconName="eventType?.svg_name"/>
+                                            <span
+                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                                                        {{ eventType.name }}
+                                                    </span>
+                                            <span
+                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
                         </Listbox>
                         <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
                     </div>
@@ -99,39 +120,78 @@
                         <p class="text-xs text-red-800">{{ error?.title?.join('. ') }}</p>
                     </div>
                 </div>
+                <!-- Attribute Menu -->
+                <Menu as="div" class="inline-block text-left w-full">
+                    <div>
+                        <MenuButton
+                            class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        >
+                            <span class="float-left">Termineigenschaften wählen</span>
+                            <ChevronDownIcon
+                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                aria-hidden="true"
+                            />
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition duration-50 ease-out"
+                        enter-from-class="transform scale-100 opacity-100"
+                        enter-to-class="transform scale-100 opacity-100"
+                        leave-active-class="transition duration-75 ease-in"
+                        leave-from-class="transform scale-100 opacity-100"
+                        leave-to-class="transform scale-95 opacity-0"
+                    >
+                        <MenuItems
+                            class="absolute overflow-y-auto h-24 mt-2 w-10/12 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                <div class="flex w-full mb-4">
+                                    <input v-model="audience"
+                                           :disabled="!canEdit"
+                                           type="checkbox"
+                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
+                                    <div :class="[audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                        mit Publikum
+                                    </div>
+                                </div>
+                                <div class="flex w-full mb-2">
+                                    <input v-model="isLoud"
+                                           :disabled="!canEdit"
+                                           type="checkbox"
+                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                    <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
+                                    <div :class="[isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">Es
+                                        wird laut
+                                    </div>
+                                </div>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
                 <!--    Properties    -->
                 <div class="flex py-4">
-                    <div class="flex align-middle w-1/2">
-                        <input v-model="audience"
-                               :disabled="!canEdit"
-                               type="checkbox"
-                               class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                        <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                        <div :class="[audience ? 'text-buttonBlue' : 'text-secondary']">Publikum</div>
+                    <div v-if="audience">
+                        <TagComponent   displayed-text="mit Publikum" hideX="true"></TagComponent>
                     </div>
-                    <div class="flex align-middle w-1/2 pl-4">
-                        <input v-model="isLoud"
-                               :disabled="!canEdit"
-                               type="checkbox"
-                               class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                        <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
-                        <div :class="[isLoud ? 'text-buttonBlue' : 'text-secondary']">Es wird laut</div>
-                    </div>
+                   <div v-if="isLoud">
+                       <TagComponent   displayed-text="es wird laut" hideX="true"></TagComponent>
+                   </div>
                 </div>
 
                 <!--    Project    -->
                 <div>
                     <div class="text-secondary my-4 flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
-                        <div class="text-primary">
+                        <div class="text-primary ml-2">
                             {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                         </div>
-                        <button type="button"
-                                @click="selectedProject = null"
-                                v-if="this.selectedProject && this.canEdit">
-                            <XCircleIcon class="pl-2 pt-2 h-6 w-6 hover:text-error "/>
-                        </button>
+                        <div v-if="this.selectedProject && this.canEdit" class="flex items-center my-auto">
+                            <button type="button"
+                                    @click="selectedProject = null">
+                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                            </button>
+                        </div>
                     </div>
                     <div class="text-secondary my-4" v-if="this.creatingProject">
                         Das Projekt wird beim Abspeichern erstellt.
@@ -139,10 +199,10 @@
 
                     <div class="my-4" v-if="this.canEdit">
                         <div class="flex pb-2">
-                            <label for="projectName" class="text-xs text-secondary flex-grow">
-                                {{ creatingProject ? 'Neues Projekt' : 'Bestehendes Projekt' }}
-                            </label>
-
+                            <span class="mr-4 text-sm"
+                                  :class="[!creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                Bestehendes Projekt
+                            </span>
                             <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
                                 <input type="checkbox"
                                        v-model="creatingProject"
@@ -155,7 +215,10 @@
                             after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
                                 </div>
                             </label>
-
+                            <span class="ml-4 text-sm"
+                                  :class="[creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                Neues Projekt
+                            </span>
                             <div v-if="showHints" class="ml-3 flex">
                                 <SvgCollection svgName="arrowLeft" class="mt-1"/>
                                 <div class="font-nanum text-secondary ml-1 my-auto text-sm">
@@ -192,14 +255,14 @@
                         <div class="w-full flex">
                             <input v-model="startDate"
                                    id="startDate"
-                                   @change="checkCollisions()"
+                                   @change="checkChanges()"
                                    type="date"
                                    :disabled="!canEdit"
                                    required
                                    class="border-gray-300  disabled:border-none flex-grow"/>
                             <input v-model="startTime"
                                    id="changeStartTime"
-                                   @change="checkCollisions()"
+                                   @change="checkChanges()"
                                    type="time"
                                    :disabled="!canEdit"
                                    required
@@ -213,14 +276,14 @@
                         <div class="w-full flex">
                             <input v-model="endDate"
                                    id="endDate"
-                                   @change="checkCollisions()"
+                                   @change="checkChanges()"
                                    type="date"
                                    required
                                    :disabled="!canEdit"
                                    class="border-gray-300  disabled:border-none flex-grow"/>
                             <input v-model="endTime"
                                    id="changeEndTime"
-                                   @change="checkCollisions()"
+                                   @change="checkChanges()"
                                    type="time"
                                    required
                                    :disabled="!canEdit"
@@ -261,7 +324,8 @@
                 </div>
 
                 <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
-                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true" alt="warnIcon"/>
+                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
+                         alt="warnIcon"/>
                     <div>
                         Dieser Termin überschneidet sich mit {{ collisionCount }} Terminen im selben Raum.
                         Diese könnten anderen Projekten zugeordnet sein.
@@ -280,7 +344,7 @@
                 </div>
 
                 <div class="flex justify-center w-full py-4" v-if="canEdit">
-                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-4 uppercase rounded-full text-white"
+                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-6 uppercase rounded-full text-white"
                             @click="updateOrCreateEvent()">
                         {{ (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen' }}
                     </button>
@@ -318,6 +382,7 @@ import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
+import TagComponent from "@/Layouts/Components/TagComponent";
 
 export default {
     name: 'EventComponent',
@@ -344,6 +409,7 @@ export default {
         TrashIcon,
         DotsVerticalIcon,
         ConfirmationComponent,
+        TagComponent
     },
 
     data() {
@@ -437,6 +503,11 @@ export default {
             return (new Date(date + ' ' + time)).toISOString()
         },
 
+        checkChanges(){
+            this.updateTimes(this.event);
+            this.checkCollisions()
+        },
+
         /**
          * If the user selects a start, end, and room
          * call the server to get information if there are any collision
@@ -458,6 +529,73 @@ export default {
                     }
                 })
                 .then(response => this.collisionCount = response.data);
+        },
+        updateTimes() {
+            if (this.startDate) {
+                if (!this.endDate) {
+                    this.endDate = this.startDate;
+                }
+                if (this.startTime) {
+                    if (!this.endTime) {
+                        if (this.startTime === '23:00') {
+                            this.endTime = '23:59';
+                        } else {
+                            let startHours = this.startTime.slice(0, 2);
+                            if (startHours === '23') {
+                                this.endTime = '00:' + this.startTime.slice(3, 5);
+                                let date = new Date();
+                                this.endDate = new Date(date.setDate(new Date(this.endDate).getDate() + 1)).toISOString().slice(0, 10);
+                            } else {
+                                this.endTime = this.getNextHourString(this.startTime)
+                            }
+                        }
+                    }
+                }
+            }
+
+            this.validateStartBeforeEndTime();
+
+            this.checkCollisions();
+        },
+        async validateStartBeforeEndTime() {
+
+            this.error = null;
+            if (this.startDate && this.endDate && this.startTime && this.endTime) {
+                this.setCombinedTimeString(this.startDate,this.startTime,'start');
+                this.setCombinedTimeString(this.endDate,this.endTime,'end');
+                return await axios
+                    .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
+                    .catch(error => this.error = error.response.data.errors);
+            }
+
+        },
+        setCombinedTimeString(date, time, target) {
+            let combinedDateString = (date.toString() + ' ' + time);
+            const offset = new Date(combinedDateString).getTimezoneOffset()
+
+            if (target === 'start') {
+                if (offset === -60) {
+                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                } else {
+                    this.startFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                }
+            } else if (target === 'end') {
+                if (offset === -60) {
+                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
+                } else {
+                    this.endFull = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
+                }
+            }
+        },
+        getNextHourString(timeString) {
+            let hours = timeString.slice(0, 2);
+            let minutes = timeString.slice(3, 5);
+            if ((Number(hours) + 1) < 10) {
+                return '0' + (Number(hours) + 1) + ':' + minutes;
+            } else {
+                return (Number(hours) + 1) + ':' + minutes;
+            }
+
         },
 
         /**

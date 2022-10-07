@@ -425,14 +425,14 @@
                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Hier kannst du die Art des Termins definieren. ihn einem Projekt zuordnen und weitere Infos mit deinem Team teilen. Anschließend kannst du dafür die Raumbelegung anfragen.</span>
                 </div>
                 <div class="flex">
-                    <Listbox as="div" class="flex mt-6 w-1/2 mr-2" v-model="selectedEventType">
+                    <Listbox as="div" class="flex mt-6 w-1/2 mr-2" v-model="selectedEventType" v-if="canEdit" :onchange="checkCollisions()" id="eventType">
                         <ListboxButton
                             class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                             <div class="flex items-center my-auto">
                                 <EventTypeIconCollection :height="20" :width="20"
-                                                         :iconName="selectedEventType.svg_name"/>
+                                                         :iconName="selectedEventType?.svg_name"/>
                                 <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedEventType.name }}</span>
+                                            <span>{{ selectedEventType?.name }}</span>
                                 </span>
                                 <span
                                     class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">

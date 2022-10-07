@@ -91,24 +91,26 @@
                     {{ project.description }}
                 </div>
                 <div class="mt-4 text-xs text-secondary">
-                    <span class="subpixel-antialiased">Kostenträger: </span><span class="text-primary font-bold">{{
-                        project.cost_center ? project.cost_center : 'noch nicht definiert'
-                    }} </span><span class="subpixel-antialiased"> | Anzahl
-                    Teilnehmer*innen: </span>
-                    <span class="text-primary font-bold">{{
-                            project.number_of_participants ? project.number_of_participants : 'noch nicht definiert'
-                        }} </span>
+                    <span class="subpixel-antialiased">
+                        Kostenträger:
+                    </span>
+                    <span class="text-primary font-bold">
+                        {{ project.cost_center ? project.cost_center : 'noch nicht definiert' }}
+                    </span>
                 </div>
-                <div class="mt-3 flex text-secondary text-xs">
-                    <span class="mr-2 subpixel-antialiased">Kategorie: </span>
-                    <span class="ml-1 mr-1 text-primary font-bold">{{
-                            project.category ? project.category.name : 'noch nicht definiert'
-                        }} </span> <span class="subpixel-antialiased"> | Genre: </span><span
-                    class="text-primary font-bold ml-1 mr-1 ">
-                    {{ project.genre ? project.genre.name : 'noch nicht definiert' }} </span> <span
-                    class="subpixel-antialiased"> | Bereich:  </span><span
-                    class="text-primary font-bold ml-1">
-                    {{ project.sector ? project.sector.name : 'noch nicht definiert' }} </span>
+                <div class="flex mt-5">
+                    <div>
+                        <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
+                                      :displayed-text="category.name" :property="category"></TagComponent>
+                    </div>
+                    <div>
+                        <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
+                                      :displayed-text="genre.name" :property="genre"></TagComponent>
+                    </div>
+                    <div>
+                        <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
+                                      :displayed-text="sector.name" :property="sector"></TagComponent>
+                    </div>
                 </div>
             </div>
             <div class="flex flex-wrap">
@@ -932,184 +934,155 @@
                         <div class="mt-8 mr-4">
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
-                                                v-model="form.description" rows="4"
+                                                v-model="form.description" rows="8"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <div v-on:click="showDetails = !showDetails">
-                            <h2 class="text-sm flex text-primary font-semibold cursor-pointer mt-4 ">
-                                Weitere Angaben
-                                <ChevronUpIcon v-if="showDetails"
-                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                            </h2>
-                        </div>
-                        <div v-if="showDetails" class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
+                        <div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
                             <div class="sm:col-span-3">
                                 <div>
                                     <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
+                                           class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
                                 </div>
                             </div>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedParticipantNumber">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate">{{ selectedParticipantNumber }}</span>
-                                        <span v-if="selectedParticipantNumber === ''" class="block truncate">Anzahl Teilnehmer*innen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
-
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template"
-                                                           v-for="participantNumber in number_of_participants"
-                                                           :key="participantNumber.number"
-                                                           :value="participantNumber.number"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                {{ participantNumber.number }}
-                                            </span>
-                                                    <span v-if="selected"
-                                                          :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon class="h-5 w-5 flex text-success" aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
+                            <!-- Attribute Menu -->
+                            <Menu as="div" class="inline-block text-left w-80">
+                                <div>
+                                    <MenuButton
+                                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    >
+                                        <span class="float-left">Eigenschaften wählen</span>
+                                        <ChevronDownIcon
+                                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                            aria-hidden="true"
+                                        />
+                                    </MenuButton>
                                 </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedGenre">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border border-gray-300 font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedGenre.name }}</span>
-                                        </span>
-                                        <span v-if="selectedGenre.name === ''"
-                                              class="block truncate">Genre wählen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
+                                <transition
+                                    enter-active-class="transition duration-50 ease-out"
+                                    enter-from-class="transform scale-100 opacity-100"
+                                    enter-to-class="transform scale-100 opacity-100"
+                                    leave-active-class="transition duration-75 ease-in"
+                                    leave-from-class="transform scale-100 opacity-100"
+                                    leave-to-class="transform scale-95 opacity-0"
+                                >
+                                    <MenuItems
+                                        class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
+                                                    <span
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Kategorie</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
 
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="genre in genres"
-                                                           :key="genre.name"
-                                                           :value="genre"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <div v-if="categories.length > 0"
+                                                         v-for="category in categories"
+                                                         :key="category.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="form.projectCategoryIds"
+                                                               :value="category.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[form.projectCategoryIds.includes(category.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ category.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Kategorien angelegt
+                                                    </div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+                                            <hr class="border-gray-500 mt-2 mb-2">
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
                                                     <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ genre.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedSector">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative  focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedSector.name }}</span>
-                                        </span>
-                                        <span v-if="selectedSector.name === ''"
-                                              class="block truncate items-center">
-                                            <span>Bereich wählen</span>
-                                        </span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                        </span>
-                                    </ListboxButton>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Genre</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
 
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="sector in sectors"
-                                                           :key="sector.name"
-                                                           :value="sector"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <div v-if="genres.length > 0"
+                                                         v-for="genre in genres"
+                                                         :key="genre.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="form.projectGenreIds"
+                                                               :value="genre.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[form.projectGenreIds.includes(genre.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ genre.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Genres angelegt</div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+                                            <hr class="border-gray-500 mt-2 mb-2">
+                                            <Disclosure v-slot="{ open }">
+                                                <DisclosureButton
+                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                                >
                                                     <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ sector.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
-                            <Listbox as="div" class="sm:col-span-3" v-model="selectedCategory">
-                                <div class="relative">
-                                    <ListboxButton
-                                        class="bg-white relative focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full border font-semibold shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center flex">
-                                            <span>{{ selectedCategory.name }}</span>
-                                        </span>
-                                        <span v-if="selectedCategory.name === ''"
-                                              class="block truncate">Kategorie wählen</span>
-                                        <span
-                                            class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                    </ListboxButton>
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Bereich</span>
+                                                    <ChevronDownIcon
+                                                        :class="open ? 'rotate-180 transform' : ''"
+                                                        class="h-4 w-4 mt-0.5 text-white"
+                                                    />
+                                                </DisclosureButton>
+                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
 
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions
-                                            class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                            <ListboxOption as="template" class="max-h-8"
-                                                           v-for="category in categories"
-                                                           :key="category.name"
-                                                           :value="category"
-                                                           v-slot="{ active, selected }">
-                                                <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ category.name }}
-                                                    </span>
-                                                    <span
-                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                                </li>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </div>
-                            </Listbox>
+                                                    <div v-if="sectors.length > 0"
+                                                         v-for="sector in sectors"
+                                                         :key="sector.id"
+                                                         class="flex w-full mb-2">
+                                                        <input type="checkbox"
+                                                               v-model="form.projectSectorIds"
+                                                               :value="sector.id"
+                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                                        <p :class="[form.projectSectorIds.includes(sector.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            {{ sector.name }}
+                                                        </p>
+                                                    </div>
+                                                    <div v-else class="text-secondary">Noch keine Bereiche angelegt
+                                                    </div>
+                                                </DisclosurePanel>
+                                            </Disclosure>
+                                        </div>
+
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
                         </div>
-                        <div class="w-full items-center text-center">
+                        <div class="flex mt-5">
+                            <div>
+                                <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
+                                              :displayed-text="category.name" :property="category"></TagComponent>
+                            </div>
+                            <div>
+                                <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
+                                              :displayed-text="genre.name" :property="genre"></TagComponent>
+                            </div>
+                            <div>
+                                <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
+                                              :displayed-text="sector.name" :property="sector"></TagComponent>
+                            </div>
+                        </div>
+                        <div class="w-full items-center text-center mt-36">
                             <AddButton
                                 :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
@@ -1638,6 +1611,7 @@
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {
+    Disclosure, DisclosureButton, DisclosurePanel,
     Listbox,
     ListboxButton,
     ListboxOption,
@@ -1680,6 +1654,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import AddButton from "@/Layouts/Components/AddButton";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
+import TagComponent from "@/Layouts/Components/TagComponent";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1692,8 +1667,9 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes','opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
+    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
     components: {
+        TagComponent,
         AddButton,
         TeamTooltip,
         CategoryIconCollection,
@@ -1733,6 +1709,9 @@ export default {
         Link,
         CalendarComponent,
         ChecklistTeamComponent,
+        Disclosure,
+        DisclosurePanel,
+        DisclosureButton
     },
     computed: {
         tabs() {
@@ -1790,7 +1769,7 @@ export default {
                 }
             )
             return managerIdArray;
-        }
+        },
     },
     data() {
         return {
@@ -1811,11 +1790,7 @@ export default {
             department_search_results: [],
             department_and_user_search_results: [],
             checklist_assigned_departments: [],
-            selectedCategory: this.project.category ? this.project.category : {name: ''},
-            selectedSector: this.project.sector ? this.project.sector : {name: ''},
-            selectedGenre: this.project.genre ? this.project.genre : {name: ''},
             selectedTemplate: {name: '', id: null},
-            showDetails: false,
             checklistToEdit: null,
             editingChecklist: false,
             assignedUsers: this.project.users ? this.project.users : [],
@@ -1836,9 +1811,9 @@ export default {
                 number_of_participants: this.project.number_of_participants,
                 assigned_user_ids: {},
                 assigned_departments: [],
-                sector_id: this.project.sector_id,
-                category_id: this.project.category_id,
-                genre_id: this.project.genre_id,
+                projectCategoryIds: this.projectCategoryIds,
+                projectGenreIds: this.projectGenreIds,
+                projectSectorIds: this.projectSectorIds
 
             }),
             checklistForm: useForm({
@@ -1895,6 +1870,18 @@ export default {
         }
     },
     methods: {
+        deleteCategoryFromProject(category) {
+            this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
+        },
+        deleteGenreFromProject(genre) {
+            this.form.projectGenreIds.splice(this.form.projectGenreIds.indexOf(genre.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
+        },
+        deleteSectorFromProject(sector) {
+            this.form.projectSectorIds.splice(this.form.projectSectorIds.indexOf(sector.id), 1)
+            this.form.patch(route('projects.update', {project: this.project.id}));
+        },
         changeChecklistStatus(checklist) {
 
             if (!this.opened_checklists.includes(checklist.id)) {
@@ -2040,14 +2027,14 @@ export default {
         },
         closeEditProjectModal() {
             this.editingProject = false;
+            this.categories.forEach((category) => {
+                category.checked = false;
+            })
             this.form.assigned_departments = [];
             this.form.assigned_user_ids = {};
         },
         editProject() {
             this.form.number_of_participants = this.selectedParticipantNumber;
-            this.form.category_id = this.selectedCategory.id;
-            this.form.sector_id = this.selectedSector.id;
-            this.form.genre_id = this.selectedGenre.id;
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
@@ -2111,7 +2098,7 @@ export default {
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
             })
-
+            this.form.assigned_departments = [];
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })

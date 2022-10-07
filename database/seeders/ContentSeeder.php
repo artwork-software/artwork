@@ -141,9 +141,6 @@ class ContentSeeder extends Seeder
               um den Globus mit stolz geschwellter Brust zelebrieren. Au contraire!',
             'number_of_participants' => null,
             'cost_center' => null,
-            'sector_id' => null,
-            'category_id' => 1,
-            'genre_id' => 1
         ]);
 
         $project->project_histories()->create([
@@ -161,9 +158,6 @@ class ContentSeeder extends Seeder
             'description' => null,
             'number_of_participants' => null,
             'cost_center' => null,
-            'sector_id' => null,
-            'category_id' => null,
-            'genre_id' => null,
         ]);
 
         $second_project->project_histories()->create([

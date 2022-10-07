@@ -34,6 +34,7 @@ use Illuminate\Support\Collection;
  * @property Project $project
  * @property User $creator
  * @property \Illuminate\Database\Eloquent\Collection<Event> $sameRoomEvents
+ * @property \Illuminate\Database\Eloquent\Collection<Event> $adjoiningEvents
  */
 class Event extends Model
 {
@@ -79,6 +80,17 @@ class Event extends Model
     public function sameRoomEvents()
     {
         return $this->hasMany(Event::class, 'room_id', 'room_id');
+    }
+
+    public function adjoiningEvents()
+    {
+        return $this->belongsToMany(Event::class,
+            'adjoining_room_main_room',
+            'main_room_id',
+            'adjoining_room_id',
+            'room_id',
+            'room_id'
+        );
     }
 
     /**

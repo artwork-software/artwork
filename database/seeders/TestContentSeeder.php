@@ -12,6 +12,7 @@ use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\RoomAttribute;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
@@ -29,6 +30,7 @@ class TestContentSeeder extends Seeder
     public function run()
     {
         $this->seedModelsThatRequireNoRelationships();
+        $this->seedRooms();
 
         $historyService = new HistoryService();
 
@@ -36,38 +38,11 @@ class TestContentSeeder extends Seeder
         $users = User::factory()->count(10)->create();
         Auth::loginUsingId($users->last()->id);
 
+        $this->seedProjects();
+
         // base models
-        $eventTypes = EventType::all();
-        $rooms = Room::all();
-        $sectors = Sector::all();
-        $categories = Category::all();
-        $genres = Genre::all();
         $departments = Department::all();
-
-        // Projects
-        $project1 = Project::factory()->create([
-            'sector_id' => $sectors->random()->id,
-            'category_id' => $categories->random()->id,
-            'genre_id' => $genres->random()->id,
-        ]);
-
-        $project2 = Project::factory()->create([
-            'sector_id' => $sectors->random()->id,
-            'category_id' => $categories->random()->id,
-            'genre_id' => $genres->random()->id,
-        ]);
-
-        $project3 = Project::factory()->create([
-            'sector_id' => $sectors->random()->id,
-            'category_id' => $categories->random()->id,
-            'genre_id' => $genres->random()->id,
-        ]);
-
-        $historyService->projectUpdated($project1);
-        $historyService->projectUpdated($project2);
-        $historyService->projectUpdated($project3);
-
-        $projects = collect([$project1, $project2, $project3]);
+        $projects = Project::all();
 
         // comments
         foreach (array_fill(0, 10, null) as $count) {
@@ -101,14 +76,7 @@ class TestContentSeeder extends Seeder
         $checklists = Checklist::all();
 
         // Events
-        foreach (array_fill(0, 50, null) as $index => $null) {
-            Event::factory()->create([
-                'room_id' => $rooms->random()->id,
-                'event_type_id' => $eventTypes->random()->id,
-                'project_id' => $projects->random()->id,
-                'user_id' => $users->random()->id,
-            ]);
-        }
+        $this->seedEvents();
 
         // belongsToMany
         /** @var Department $department */
@@ -125,11 +93,72 @@ class TestContentSeeder extends Seeder
         Genre::factory()->count(8)->create();
         EventType::factory()->count(5)->create();
         Sector::factory()->count(2)->create();
-        Room::factory()->count(6)->create();
+        RoomAttribute::factory()->count(6)->create();
         Department::factory()->count(3)->create();
 
         foreach (['Festival', 'Public Performance', 'Workshop',] as $category) {
             Category::factory()->create(['name' => $category]);
+        }
+    }
+
+    private function seedRooms()
+    {
+        $rooms = Room::factory()->count(6)->create();
+        $categories = Category::all();
+        $roomAttributes = RoomAttribute::all();
+
+        $rooms->map(function (Room $room) use ($roomAttributes, $categories, $rooms) {
+            $room->adjoiningRooms()->sync($rooms->shuffle()->take(random_int(0, 2))->pluck('id')->filter(fn ($id) => $id !== $room->id));
+            $room->categories()->sync($categories->shuffle()->take(random_int(1, 3))->pluck('id'));
+            $room->attributes()->sync($roomAttributes->shuffle()->take(random_int(1, 3))->pluck('id'));
+        });
+    }
+
+    private function seedProjects()
+    {
+        $historyService = new HistoryService();
+        $sectors = Sector::all();
+        $categories = Category::all();
+        $genres = Genre::all();
+
+        // Projects
+        $project1 = Project::factory()->create([
+            'sector_id' => $sectors->random()->id,
+            'category_id' => $categories->random()->id,
+            'genre_id' => $genres->random()->id,
+        ]);
+
+        $project2 = Project::factory()->create([
+            'sector_id' => $sectors->random()->id,
+            'category_id' => $categories->random()->id,
+            'genre_id' => $genres->random()->id,
+        ]);
+
+        $project3 = Project::factory()->create([
+            'sector_id' => $sectors->random()->id,
+            'category_id' => $categories->random()->id,
+            'genre_id' => $genres->random()->id,
+        ]);
+
+        $historyService->projectUpdated($project1);
+        $historyService->projectUpdated($project2);
+        $historyService->projectUpdated($project3);
+    }
+
+    private function seedEvents()
+    {
+        $eventTypes = EventType::all();
+        $rooms = Room::all();
+        $projects = Project::all();
+        $users = User::all();
+
+        foreach (array_fill(0, 50, null) as $index => $null) {
+            Event::factory()->create([
+                'room_id' => $rooms->random()->id,
+                'event_type_id' => $eventTypes->random()->id,
+                'project_id' => $projects->random()->id,
+                'user_id' => $users->random()->id,
+            ]);
         }
     }
 }

@@ -65,17 +65,63 @@ class EventBuilder extends Builder
     {
         return $this->withCount([
             'sameRoomEvents as collision_count' => fn (EventBuilder $builder) => $builder
-                ->where(fn (EventBuilder $sameTimeBuilder) => $sameTimeBuilder
-                    ->where(fn (EventBuilder $startTimeInBetween) => $startTimeInBetween
-                        ->whereColumn('start_time', '>=', 'events.start_time')
-                        ->whereColumn('start_time', '<=', 'events.end_time')
-                    )
-                    ->orWhere(fn (EventBuilder $endTimeInBetween) => $endTimeInBetween
-                        ->whereColumn('end_time', '>=', 'events.start_time')
-                        ->whereColumn('end_time', '<=', 'events.end_time')
-                    )
-                )
+                ->where(fn (EventBuilder $sameTimeBuilder) => $sameTimeBuilder->whereHasCollision())
                 ->whereColumn('id', '!=', 'events.id')
         ]);
+    }
+
+    public function whereHasCollision(): self
+    {
+        return $this->where(fn (EventBuilder $sameTimeBuilder) => $sameTimeBuilder
+            ->where(fn (EventBuilder $startTimeInBetween) => $startTimeInBetween
+                ->whereColumn('start_time', '>=', 'events.start_time')
+                ->whereColumn('start_time', '<=', 'events.end_time')
+            )
+            ->orWhere(fn (EventBuilder $endTimeInBetween) => $endTimeInBetween
+                ->whereColumn('end_time', '>=', 'events.start_time')
+                ->whereColumn('end_time', '<=', 'events.end_time')
+            )
+        );
+    }
+
+    public function applyFilter(array $filter): self
+    {
+        if (! (empty($filter['roomIds']) && empty($filter['areaIds']) && empty($filter['roomAttributeIds']))) {
+            $this->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
+                ->when(! empty($filter['roomIds']), fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $filter['roomIds']))
+                ->when(! empty($filter['areaIds']), fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $filter['areaIds']))
+                ->when(! empty($filter['roomAttributeIds']), fn (Builder $roomBuilder) => $roomBuilder
+                    ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                        ->whereIn('room_attributes.id', $filter['roomAttributeIds'])))
+            );
+        }
+
+        if (! empty($filter['eventTypeIds'])) {
+            $this->whereIn('event_type_id', $filter['eventTypeIds']);
+        }
+
+        if (! is_null($filter['isLoud'])) {
+            $this->where('is_loud', $filter['isLoud']);
+        }
+
+        if (! is_null($filter['hasAudience'])) {
+            $this->where('audience', $filter['hasAudience']);
+        }
+
+        if (! is_null($filter['adjoiningHasAudience'])) {
+            $this->whereHas('adjoiningEvents', fn (EventBuilder $eventBuilder) => $eventBuilder
+                ->whereHasCollision()
+                ->where('audience', $filter['adjoiningHasAudience'])
+            );
+        }
+
+        if (! is_null($filter['adjoiningIsLoud'])) {
+            $this->whereHas('adjoiningEvents', fn (EventBuilder $eventBuilder) => $eventBuilder
+                ->whereHasCollision()
+                ->where('is_loud', $filter['adjoiningIsLoud'])
+            );
+        }
+
+        return $this;
     }
 }

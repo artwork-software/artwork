@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
 use App\Events\OccupancyUpdated;
+use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
 use App\Http\Requests\EventStoreRequest;
 use App\Http\Requests\EventUpdateRequest;
@@ -107,6 +108,22 @@ class EventController extends Controller
         return new CalendarEventResource($event);
     }
 
+    public function acceptEvent(EventAcceptionRequest $request, Event $event): CalendarEventResource
+    {
+        if ($request->get('accepted')) {
+            $event->occupancy_option = $request->get('accepted');
+            $event->save();
+
+            return new CalendarEventResource($event);
+        }
+
+        $event->occupancy_option = $request->get('accepted');
+        $event->room_id = null;
+        $event->save();
+
+        return new CalendarEventResource($event);
+    }
+
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -121,8 +138,14 @@ class EventController extends Controller
 
     public function eventIndex(EventIndexRequest $request): CalendarEventCollectionResource
     {
-        $projectId = $request->input('projectId');
-        $roomId = $request->input('roomId');
+        $projectId = $request->get('projectId');
+        $roomId = $request->get('roomId');
+        $roomIds = $request->get('roomIds', []);
+        $areaIds = $request->get('areaIds', []);
+        $eventTypeIds = $request->get('eventTypeIds', []);
+        $roomAttributeIds = $request->get('roomAttributeIds', []);
+        $isLoud = $request->get('isLoud');
+        $hasAudience = $request->get('hasAudience');
 
         $events = Event::query()
             // eager loading
@@ -132,8 +155,21 @@ class EventController extends Controller
             ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
             ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
             ->when($roomId, fn (EventBuilder $builder) => $builder->where('room_id', $roomId))
+            //war in alter Version, relevant für dich Paul ?
+            // ->applyFilter($request->filters())
             // user applied filters
-            ->applyFilter($request->filters())
+            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds), fn (EventBuilder $builder) => $builder
+                ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
+                    ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                    ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                    ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                            ->whereIn('room_attributes.id', $roomAttributeIds)))
+                )
+            )
+            ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
+            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->get();
 
         return new CalendarEventCollectionResource($events);

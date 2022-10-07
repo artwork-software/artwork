@@ -361,7 +361,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventAttribute.checked"
-                                                @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute)"
+                                                @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -1604,6 +1604,8 @@ export default {
             this.eventsUntil = endDate ?? this.eventsUntil;
 
             const filters = this.getFilterIds();
+
+            console.log(filters);
 
             await axios
                 .get('/events/', {

@@ -22,6 +22,17 @@ class Filter extends Model
         'user_id'
     ];
 
+    protected $casts = [
+        'isLoud' => 'boolean',
+        'isNotLoud' => 'boolean',
+        'hasAudience' => 'boolean',
+        'hasNoAudience' => 'boolean',
+        'adjoiningNoAudience' => 'boolean',
+        'adjoiningNotLoud' => 'boolean',
+        'allDayFree' => 'boolean',
+        'showAdjoiningRooms' => 'boolean',
+    ];
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

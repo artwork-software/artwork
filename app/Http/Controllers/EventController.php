@@ -146,14 +146,17 @@ class EventController extends Controller
 
     public function eventIndex(EventIndexRequest $request): CalendarEventCollectionResource
     {
+        $calendarFilters = json_decode($request->input('calendarFilters'));
         $projectId = $request->get('projectId');
         $roomId = $request->get('roomId');
-        $roomIds = $request->input('calendarFilters.roomIds', []);
-        $areaIds = $request->input('calendarFilters.areaIds', []);
-        $eventTypeIds = $request->input('calendarFilters.eventTypeIds', []);
-        $roomAttributeIds = $request->input('calendarFilters.roomAttributeIds', []);
-        $isLoud = $request->input('calendarFilters.isLoud');
-        $hasAudience = $request->input('calendarFilters.hasAudience');
+        $roomIds = $calendarFilters->roomIds;
+        $areaIds = $calendarFilters->areaIds;
+        $eventTypeIds = $calendarFilters->eventTypeIds;
+        $roomAttributeIds = $calendarFilters->roomAttributeIds;
+        $isLoud = $calendarFilters->isLoud;
+        $isNotLoud = $calendarFilters->isNotLoud;
+        $hasAudience = $calendarFilters->hasAudience;
+
 
         $events = Event::query()
             // eager loading
@@ -177,6 +180,7 @@ class EventController extends Controller
             )
             ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
             ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud',null))
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->get();
 

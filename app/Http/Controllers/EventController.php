@@ -148,12 +148,12 @@ class EventController extends Controller
     {
         $projectId = $request->get('projectId');
         $roomId = $request->get('roomId');
-        $roomIds = $request->get('roomIds', []);
-        $areaIds = $request->get('areaIds', []);
-        $eventTypeIds = $request->get('eventTypeIds', []);
-        $roomAttributeIds = $request->get('roomAttributeIds', []);
-        $isLoud = $request->get('isLoud');
-        $hasAudience = $request->get('hasAudience');
+        $roomIds = $request->input('calendarFilters.roomIds', []);
+        $areaIds = $request->input('calendarFilters.areaIds', []);
+        $eventTypeIds = $request->input('calendarFilters.eventTypeIds', []);
+        $roomAttributeIds = $request->input('calendarFilters.roomAttributeIds', []);
+        $isLoud = $request->input('calendarFilters.isLoud');
+        $hasAudience = $request->input('calendarFilters.hasAudience');
 
         $events = Event::query()
             // eager loading

@@ -17,24 +17,24 @@
 
                             <MenuItems class="absolute z-40 right-0 w-72 shadow-lg rouned rounded-md bg-gray-100">
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                    @click="approveRequest(selectedEvent, true)"
-                                    class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          @click="approveRequest(selectedEvent, true)"
+                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
                                     <div class="flex">
                                         <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung zusagen</div>
                                     </div>
                                 </MenuItem>
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                    @click="approveRequest(selectedEvent, false)"
-                                    class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          @click="approveRequest(selectedEvent, false)"
+                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
                                     <div class="flex">
                                         <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung absagen</div>
                                     </div>
                                 </MenuItem>
                                 <MenuItem v-if="event?.canDelete"
-                                    @click="deleteComponentVisible = true"
-                                    class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          @click="deleteComponentVisible = true"
+                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
                                     <div class="flex">
                                         <TrashIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         Termin löschen
@@ -73,10 +73,10 @@
 
                             <ListboxOptions class="w-72 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="eventType in eventTypes"
-                                    class="p-2 hover:bg-indigo-800 text-secondary cursor-pointer flex items-center justify-between"
-                                    :key="eventType.name"
-                                    :value="eventType"
-                                    v-slot="{ active, selected }">
+                                               class="p-2 hover:bg-indigo-800 text-secondary cursor-pointer flex items-center justify-between"
+                                               :key="eventType.name"
+                                               :value="eventType"
+                                               v-slot="{ active, selected }">
                                     <div :class="[selected ? 'font-bold text-white' : '']">
                                         <EventTypeIconCollection :height="12" :width="12" :iconName="eventType?.svg_name"/>
                                         {{ eventType.name }}
@@ -91,10 +91,10 @@
                     <div class="w-1/2 pl-4">
                         <label for="eventTitle" class="text-xs text-secondary">Titel</label>
                         <input type="text"
-                            v-model="title"
-                            id="eventTitle"
-                            :disabled="!canEdit || selectedEventType?.project_mandatory"
-                            class="h-10 focus:outline-none focus:border-secondary focus:border-1 border-gray-300 w-full disabled:border-none"/>
+                               v-model="title"
+                               id="eventTitle"
+                               :disabled="!canEdit || selectedEventType?.project_mandatory"
+                               class="h-10 focus:outline-none focus:border-secondary focus:border-1 border-gray-300 w-full disabled:border-none"/>
 
                         <p class="text-xs text-red-800">{{ error?.title?.join('. ') }}</p>
                     </div>
@@ -104,17 +104,17 @@
                 <div class="flex py-4">
                     <div class="flex align-middle w-1/2">
                         <input v-model="audience"
-                            :disabled="!canEdit"
-                            type="checkbox"
-                            class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                               :disabled="!canEdit"
+                               type="checkbox"
+                               class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
                         <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
                         <div :class="[audience ? 'text-buttonBlue' : 'text-secondary']">Publikum</div>
                     </div>
                     <div class="flex align-middle w-1/2 pl-4">
                         <input v-model="isLoud"
-                            :disabled="!canEdit"
-                            type="checkbox"
-                            class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                               :disabled="!canEdit"
+                               type="checkbox"
+                               class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
                         <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
                         <div :class="[isLoud ? 'text-buttonBlue' : 'text-secondary']">Es wird laut</div>
                     </div>
@@ -128,8 +128,8 @@
                             {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                         </div>
                         <button type="button"
-                            @click="selectedProject = null"
-                            v-if="this.selectedProject && this.canEdit">
+                                @click="selectedProject = null"
+                                v-if="this.selectedProject && this.canEdit">
                             <XCircleIcon class="pl-2 pt-2 h-6 w-6 hover:text-error "/>
                         </button>
                     </div>
@@ -145,10 +145,10 @@
 
                             <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
                                 <input type="checkbox"
-                                    v-model="creatingProject"
-                                    :disabled="!canEdit"
-                                    id="project-toggle"
-                                    class="sr-only peer">
+                                       v-model="creatingProject"
+                                       :disabled="!canEdit"
+                                       id="project-toggle"
+                                       class="sr-only peer">
                                 <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
@@ -165,17 +165,17 @@
                         </div>
 
                         <input type="text"
-                            id="projectName"
-                            v-model="projectName"
-                            :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                            class="h-10 focus:outline-none border-gray-300 w-full disabled:border-none"/>
+                               id="projectName"
+                               v-model="projectName"
+                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                               class="h-10 focus:outline-none border-gray-300 w-full disabled:border-none"/>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
-                            class="absolute bg-primary truncate sm:text-sm w-10/12">
+                             class="absolute bg-primary truncate sm:text-sm w-10/12">
                             <div v-for="(project, index) in projectSearchResults"
-                                :key="index"
-                                @click="selectedProject = project; projectName = ''"
-                                class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                 :key="index"
+                                 @click="selectedProject = project; projectName = ''"
+                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
                                 {{ project.name }}
                             </div>
                         </div>
@@ -191,19 +191,19 @@
                         <label for="startDate" class="text-secondary text-xs">Start</label>
                         <div class="w-full flex">
                             <input v-model="startDate"
-                                id="startDate"
-                                @change="checkCollisions()"
-                                type="date"
-                                :disabled="!canEdit"
-                                required
-                                class="border-gray-300  disabled:border-none flex-grow"/>
+                                   id="startDate"
+                                   @change="checkCollisions()"
+                                   type="date"
+                                   :disabled="!canEdit"
+                                   required
+                                   class="border-gray-300  disabled:border-none flex-grow"/>
                             <input v-model="startTime"
-                                id="changeStartTime"
-                                @change="checkCollisions()"
-                                type="time"
-                                :disabled="!canEdit"
-                                required
-                                class="border-gray-300  disabled:border-none"/>
+                                   id="changeStartTime"
+                                   @change="checkCollisions()"
+                                   type="time"
+                                   :disabled="!canEdit"
+                                   required
+                                   class="border-gray-300  disabled:border-none"/>
                         </div>
                         <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
@@ -212,19 +212,19 @@
                         <label for="endDate" class="text-secondary text-xs">Ende</label>
                         <div class="w-full flex">
                             <input v-model="endDate"
-                                id="endDate"
-                                @change="checkCollisions()"
-                                type="date"
-                                required
-                                :disabled="!canEdit"
-                                class="border-gray-300  disabled:border-none flex-grow"/>
+                                   id="endDate"
+                                   @change="checkCollisions()"
+                                   type="date"
+                                   required
+                                   :disabled="!canEdit"
+                                   class="border-gray-300  disabled:border-none flex-grow"/>
                             <input v-model="endTime"
-                                id="changeEndTime"
-                                @change="checkCollisions()"
-                                type="time"
-                                required
-                                :disabled="!canEdit"
-                                class="border-gray-300  disabled:border-none"/>
+                                   id="changeEndTime"
+                                   @change="checkCollisions()"
+                                   type="time"
+                                   required
+                                   :disabled="!canEdit"
+                                   class="border-gray-300  disabled:border-none"/>
                         </div>
                         <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                     </div>
@@ -246,10 +246,10 @@
                         </ListboxButton>
                         <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                             <ListboxOption v-for="room in rooms"
-                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                :key="room.name"
-                                :value="room"
-                                v-slot="{ active, selected }">
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           :key="room.name"
+                                           :value="room"
+                                           v-slot="{ active, selected }">
                                 <div :class="[selected ? 'text-white' : '']">
                                     {{ room.name }}
                                 </div>
@@ -272,16 +272,16 @@
                 <div class="py-4">
                     <label for="description" class="text-xs text-secondary">Notizen</label>
                     <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
-                        id="description"
-                        :disabled="!canEdit"
-                        v-model="description"
-                        rows="4"
-                        class="border-gray-300 w-full text-sm disabled:border-none"/>
+                              id="description"
+                              :disabled="!canEdit"
+                              v-model="description"
+                              rows="4"
+                              class="border-gray-300 w-full text-sm disabled:border-none"/>
                 </div>
 
                 <div class="flex justify-center w-full py-4" v-if="canEdit">
                     <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-4 uppercase rounded-full text-white"
-                        @click="updateOrCreateEvent()">
+                            @click="updateOrCreateEvent()">
                         {{ (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen' }}
                     </button>
                 </div>

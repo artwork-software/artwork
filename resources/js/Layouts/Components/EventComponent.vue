@@ -226,7 +226,6 @@
                                 </div>
                             </div>
                         </div>
-
                         <input type="text"
                                id="projectName"
                                v-model="projectName"
@@ -606,13 +605,13 @@ export default {
          * @returns {Promise<*>}
          */
         async updateOrCreateEvent() {
+
             if (!this.event?.id) {
                 return await axios
                     .post('/events', this.eventData())
                     .then(() => this.closeModal())
                     .catch(error => this.error = error.response.data.errors);
             }
-
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
                 .then(() => this.closeModal())

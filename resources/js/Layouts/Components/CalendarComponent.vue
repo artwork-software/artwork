@@ -1455,7 +1455,7 @@ export default {
 
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            this.fetchEvents();
+            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
         /**
          * Fetch the events from server
@@ -1468,12 +1468,10 @@ export default {
          */
         async fetchEvents({view = null, startDate = null, endDate = null}) {
 
+            this.currentView = view ?? this.currentView ?? 'week';
 
             this.scrollToNine();
-            this.setDisplayDate(view, startDate)
-
-            this.currentView = view ?? this.currentView ?? 'week';
-            const colors = ['blue', 'pink', 'green']
+            this.setDisplayDate(this.currentView, startDate)
 
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
@@ -1851,12 +1849,12 @@ export default {
             event.roomId = this.selectedRoom.id;
             event.isOption = isOption;
             if (event.id) {
+
                 return await axios
                     .put(`/events/${event.id}`, event)
                     .then(response => this.closeEventModal())
                     .catch(error => this.error = error.response.data.errors);
             }
-            console.log(event);
             return await axios
                 .post('/events', event)
                 .then(response => {

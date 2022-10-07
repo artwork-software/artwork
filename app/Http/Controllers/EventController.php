@@ -99,11 +99,19 @@ class EventController extends Controller
         return new JsonResponse(['success' => 'Event deleted']);
     }
 
-    public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
+    public function updateEvent(EventUpdateRequest $request, Event $event, HistoryService $historyService): CalendarEventResource
     {
         $this->authorize('update', $event);
 
         $event->update($request->data());
+
+        if ($request->get('projectName')) {
+            $project = Project::create(['name' => $request->get('projectName')]);
+            $project->users()->save(Auth::user(), ['is_admin' => true]);
+            $event->project()->associate($project);
+            $event->save();
+            $historyService->projectUpdated($project);
+        }
 
         return new CalendarEventResource($event);
     }

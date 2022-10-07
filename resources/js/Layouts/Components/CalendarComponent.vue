@@ -1509,10 +1509,10 @@ export default {
                     this.addFilterableVariable(this.areas)
                     this.addFilterableVariable(this.eventTypes)
 
-                    // color coding of rooms
-                    this.events.map(event => event.class = colors[event.split % colors.length])
-
                     // fix timezone to current local
+
+                    console.log(this.events)
+
                     this.events.map(event => event.start = new Date(event.start))
                     this.events.map(event => event.end = new Date(event.end))
 
@@ -1986,8 +1986,13 @@ export default {
 
 /* Custom Room Colors */
 
-.vuecal__event.blue {
-    border: solid rgba(135, 208, 224, 0.9);
+.vuecal__event.eventType0 {
+    border: solid #A7A6B1;
+    border-width: 0px 0px 0px 3px;
+}
+
+.vuecal__event.eventType2 {
+    border: solid #da3f87;
     border-width: 0px 0px 0px 3px;
 }
 

@@ -71,7 +71,8 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'id' => $room->id,
                 'name' => $room->name,
                 'room_admins' => $room->room_admins,
-                'everyone_can_book' => $room->everyone_can_book
+                'everyone_can_book' => $room->everyone_can_book,
+                'label' => $room->name
             ]),
 
             'roomCategories' => RoomCategory::all()->map(fn (RoomCategory $roomCategory) => [

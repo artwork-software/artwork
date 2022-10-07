@@ -36,6 +36,7 @@ class CalendarEventResource extends JsonResource
             'projectName' => $this->project?->name,
             'roomId' => $this->room_id,
             'eventTypeId' => $this->event_type_id,
+            'class' => $this->event_type->svg_name,
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at->format('d.m.Y, H:i'),
             'created_by' => $this->creator,

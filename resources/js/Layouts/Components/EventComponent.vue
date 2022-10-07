@@ -323,6 +323,7 @@
                     <p class="text-xs text-red-800">{{ error?.roomId?.join('. ') }}</p>
                 </div>
 
+                <!--TODO: WIRD BEIM BEARBEITEN EINES EVENTS IMMER ANGEZEIGT, dass 1 Termin zeitgleich im Raum stattfindet (was nicht stimmt) -> Bug beheben
                 <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
                     <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
                          alt="warnIcon"/>
@@ -331,6 +332,7 @@
                         Diese könnten anderen Projekten zugeordnet sein.
                     </div>
                 </div>
+                -->
 
                 <!--    Description    -->
                 <div class="py-4">

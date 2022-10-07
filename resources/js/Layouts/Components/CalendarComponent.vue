@@ -1483,7 +1483,7 @@ export default {
                     params: {
                         start: this.eventsSince,
                         end: this.eventsUntil,
-                        projectId: this.projectId,
+                        projectId: this.project?.id,
                         roomId: this.roomId,
                     }
                 })
@@ -1510,8 +1510,6 @@ export default {
                     this.addFilterableVariable(this.eventTypes)
 
                     // fix timezone to current local
-
-                    console.log(this.events)
 
                     this.events.map(event => event.start = new Date(event.start))
                     this.events.map(event => event.end = new Date(event.end))
@@ -1984,15 +1982,52 @@ export default {
 
 
 
-/* Custom Room Colors */
+/* Custom Event Type Colors */
 
 .vuecal__event.eventType0 {
     border: solid #A7A6B1;
     border-width: 0px 0px 0px 3px;
 }
 
+.vuecal__event.eventType1 {
+    border: solid #641a54;
+    border-width: 0px 0px 0px 3px;
+}
+
 .vuecal__event.eventType2 {
     border: solid #da3f87;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType3 {
+    border: solid #eb7a3d;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType4 {
+    border: solid #f1b640;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType5 {
+    border: solid #86c554;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType6 {
+    border: solid #2eaa63;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType7 {
+    border: solid #3dc3cb;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType8 {
+    border: solid #168fc3;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType9 {
+    border: solid #4d908e;
+    border-width: 0px 0px 0px 3px;
+}
+.vuecal__event.eventType10 {
+    border: solid #21485c;
     border-width: 0px 0px 0px 3px;
 }
 

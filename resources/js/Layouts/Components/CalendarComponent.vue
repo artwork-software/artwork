@@ -362,7 +362,7 @@
                 </transition>
             </Menu>
             <AddButton class="bg-primary hover:bg-secondary text-white"
-                       @click="openAddEventModal()" text="Neue Belegung"/>
+                       @click="openEventComponent()" text="Neue Belegung"/>
         </div>
     </div>
 
@@ -389,13 +389,23 @@
             :drag-to-create-threshold="15"
             v-model:active-view="currentView"
 
-            @event-drag-create="openEventModal($event)"
-            @event-focus="openEventModal($event)"
+            @event-drag-create="openEventComponent($event)"
+            @event-focus="openEventComponent($event)"
 
             @ready="fetchEvents"
             @view-change="fetchEvents($event)"
         />
     </div>
+    <!-- Termin erstellen Modal-->
+    <event-component
+        v-if="createEventComponentIsVisible"
+        @closed="onEventComponentClose()"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :event="selectedEvent"
+        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+    />
     <!-- Termin erstellen Modal-->
     <jet-dialog-modal :show="addingEvent" @close="closeAddEventModal">
         <template #content>
@@ -1233,7 +1243,8 @@ import {
     TrashIcon,
     XCircleIcon,
     XIcon,
-    CalendarIcon
+    CalendarIcon,
+
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
@@ -1256,6 +1267,7 @@ import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
+import EventComponent from "@/Layouts/Components/EventComponent";
 
 export default {
     name: 'CalendarComponent',
@@ -1292,7 +1304,8 @@ export default {
         TrashIcon,
         DotsVerticalIcon,
         AddButton,
-        Link
+        Link,
+        EventComponent,
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
@@ -1377,6 +1390,10 @@ export default {
             showEventModal: false,
             deletingEvent: false,
             currentView: this.initialView ?? 'week',
+            roomCategories: [],
+            roomAttributes: [],
+            eventComponentIsVisible: false,
+            createEventComponentIsVisible: false,
             addEventForm: useForm({
                 title: '',
                 startDate: null,
@@ -1415,6 +1432,82 @@ export default {
         }
     },
     methods: {
+        openEventComponent(event = null) {
+            if (event === null) {
+                this.selectedEvent = null;
+                this.createEventComponentIsVisible = true;
+                return;
+            }
+
+            if (!event.id) {
+                event = {
+                    start: event?.start,
+                    end: event?.end,
+                    projectId: this.project?.id,
+                    projectName: this.project?.name,
+                    roomId: event.roomId,
+                }
+            }
+
+            this.selectedEvent = event;
+            this.createEventComponentIsVisible = true;
+        },
+
+        onEventComponentClose() {
+            this.createEventComponentIsVisible = false;
+            this.fetchEvents();
+        },
+
+        /**
+         * Fetch the events from server
+         * initialise possible rooms, types and projects
+         *
+         * @param view
+         * @param {Date} startDate
+         * @param {Date} endDate
+         * @returns {Promise<void>}
+         */
+        async fetchEvents({view = null, startDate = null, endDate = null}) {
+
+            this.currentView = view ?? this.currentView ?? 'week';
+            const colors = ['blue', 'pink', 'green']
+
+            this.eventsSince = startDate ?? this.eventsSince;
+            this.eventsUntil = endDate ?? this.eventsUntil;
+
+            await axios
+                .get('/events/', {
+                    params: {
+                        start: this.eventsSince,
+                        end: this.eventsUntil,
+                        projectId: this.projectId,
+                        roomId: this.roomId,
+                    }
+                })
+                .then(response => {
+                    this.events = response.data.events
+                    this.types = response.data.types
+                    this.rooms = response.data.rooms
+                    this.projects = response.data.projects
+                    this.roomCategories = response.data.roomCategories
+                    this.roomAttributes = response.data.roomAttributes
+                    this.areas = response.data.areas
+
+                    this.rooms.map(room => room.checked = false);
+                    this.roomCategories.map(roomCategory => roomCategory.checked = false);
+                    this.roomAttributes.map(roomAttribute => roomAttribute.checked = false);
+                    this.areas.map(area => area.checked = false);
+                    this.eventTypes.map(eventType => eventType.checked = false);
+                    this.rooms.map(room => room.checked = false);
+
+                    // color coding of rooms
+                    this.events.map(event => event.class = colors[event.split % colors.length])
+
+                    // fix timezone to current local
+                    this.events.map(event => event.start = new Date(event.start))
+                    this.events.map(event => event.end = new Date(event.end))
+                });
+        },
         openEventModal(event) {
             console.log(event);
             this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
@@ -1617,60 +1710,6 @@ export default {
         switchProjectMode() {
             this.addEventForm.projectName = '';
             this.addEventForm.projectId = null;
-        },
-        /**
-         * Fetch the events from server
-         * initialise possible rooms, types and projects
-         *
-         * @param view
-         * @param {Date} startDate
-         * @param {Date} endDate
-         * @returns {Promise<void>}
-         */
-        async fetchEvents({view, startDate, endDate}) {
-
-            this.scrollToNine();
-            this.setDisplayDate(view, startDate)
-
-            this.currentView = view;
-            const colors = ['blue', 'pink', 'green']
-
-            this.eventsSince = startDate;
-            this.eventsUntil = endDate;
-
-            await axios
-                .get('/events/', {
-                    params: {
-                        start: startDate,
-                        end: endDate,
-                        projectId: this.projectId,
-                        roomId: this.roomId,
-                    }
-                })
-                .then(response => {
-                    this.events = response.data.events
-                    this.types = response.data.types
-                    this.rooms = response.data.rooms
-                    this.projects = response.data.projects
-                    this.room_categories = response.data.room_categories
-                    this.room_attributes = response.data.room_attributes
-                    this.areas = response.data.areas
-
-                    this.addFilterableVariable(this.rooms)
-                    this.addFilterableVariable(this.room_categories)
-                    this.addFilterableVariable(this.room_attributes)
-                    this.addFilterableVariable(this.areas)
-                    this.addFilterableVariable(this.eventTypes)
-
-                    // color coding of rooms
-                    this.events.map(event => event.class = colors[event.split % colors.length])
-
-                    // fix timezone to current local
-                    this.events.map(event => event.start = new Date(event.start))
-                    this.events.map(event => event.end = new Date(event.end))
-
-                    this.filterEvents();
-                });
         },
 
         scrollToNine() {

@@ -78,12 +78,12 @@ class Room extends Model
 
     public function adjoining_rooms()
     {
-        return $this->belongsToMany(Room::class, null, 'main_room_ids', 'adjoining_room_ids');
+        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
     }
 
     public function main_rooms()
     {
-        return $this->belongsToMany(Room::class, null, 'adjoining_room_ids', 'main_room_ids');
+        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'adjoining_room_id', 'main_room_id');
     }
 
     public function categories()

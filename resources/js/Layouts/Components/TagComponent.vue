@@ -18,7 +18,7 @@ export default {
         property: String,
         displayedText: String,
         method: { type: Function},
-        hideX: Boolean
+        hideX: false,
     }
 }
 </script>

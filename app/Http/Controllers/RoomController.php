@@ -73,8 +73,8 @@ class RoomController extends Controller
             'roomAttributes' => $room->attributes,
 
             'available_rooms' => Room::where('id', '!=', $room->id)->get(),
-            'adjoiningRoomIds' => $room->adjoiningRooms()->pluck('adjoining_room_id'),
-            'adjoiningRooms' => $room->adjoiningRooms,
+            'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
+            'adjoiningRooms' => $room->adjoining_rooms,
         ]);
     }
 
@@ -98,7 +98,7 @@ class RoomController extends Controller
                 })
         );
 
-        $room->adjoiningRooms()->sync($request->adjoining_rooms);
+        $room->adjoining_rooms()->sync($request->adjoining_rooms);
 
         $room->attributes()->sync($request->room_attributes);
 

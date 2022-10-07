@@ -10,8 +10,8 @@ class EventIndexRequest extends FormRequest
     public function rules()
     {
         return [
-            'projectId' => ['sometimes', 'exists:projects,id'],
-            'roomId' => ['sometimes', 'exists:rooms,id'],
+            'projectId' => ['nullable', 'exists:projects,id'],
+            'roomId' => ['nullable', 'exists:rooms,id'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
 

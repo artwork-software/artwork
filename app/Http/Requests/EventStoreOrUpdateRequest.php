@@ -17,7 +17,7 @@ class EventStoreOrUpdateRequest extends FormRequest
     public function rules()
     {
         return [
-            'title' => ['required', 'string'],
+            'title' => ['sometimes','nullable', 'string'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
             'roomId' => ['sometimes', 'nullable', 'exists:rooms,id'],

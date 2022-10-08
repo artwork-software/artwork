@@ -64,7 +64,7 @@
                             {{ selectedEventType?.name }}
                         </div>
                         <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
-                                 :onchange="checkCollisions()" id="eventType">
+                                 :onchange="checkTypeChange()" id="eventType">
                             <ListboxButton
                                 class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
@@ -114,7 +114,7 @@
                         <input type="text"
                                v-model="title"
                                id="eventTitle"
-                               :disabled="!canEdit || selectedEventType?.project_mandatory"
+                               :disabled="!canEdit || !selectedEventType?.individual_name"
                                class="h-10 focus:outline-none focus:border-secondary focus:border-1 border-gray-300 w-full disabled:border-none"/>
 
                         <p class="text-xs text-red-800">{{ error?.title?.join('. ') }}</p>
@@ -507,6 +507,12 @@ export default {
         checkChanges(){
             this.updateTimes(this.event);
             this.checkCollisions()
+        },
+        checkTypeChange(){
+            if(!this.selectedEventType?.individual_name){
+                this.title = null;
+            }
+            this.checkCollisions();
         },
 
         /**

@@ -9,7 +9,7 @@
                 </div>
             </div>
         </div>
-        <div class="mr-4 ml-14">
+        <div class="mr-4">
             <CalendarComponent :eventTypes=this.eventTypes />
         </div>
     </app-layout>

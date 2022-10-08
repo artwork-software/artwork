@@ -1,7 +1,7 @@
 <template>
 
-    <div class="mt-10">
-        <div class="inline-flex mb-5 w-1/3">
+    <div class="mt-10 ml-14">
+        <div class="inline-flex mb-5 w-1/2">
             <Menu as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton
@@ -64,10 +64,10 @@
             </button>
         </div>
 
-        <div class="inline-flex mb-5 justify-end w-2/3">
+        <div class="inline-flex mb-5 justify-end w-1/2">
 
             <!-- Calendar Filter -->
-            <Menu as="div" class="relative inline-block text-left w-80">
+            <Menu as="div" class="relative inline-block text-left max-w-80">
                 <div>
                     <MenuButton
                         class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
@@ -88,7 +88,7 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 mt-2 w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        class="absolute right-0 mt-2 max-w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                         <div class="inline-flex border-none w-1/5">
                             <button>
                                 <FilterIcon class="w-3 mr-1 mt-0.5"/>

@@ -229,7 +229,7 @@
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="bg-backgroundGray w-full h-full">
+        <div class="w-full h-full">
             <div class="ml-20">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
@@ -270,7 +270,7 @@
                                 <div class="flex w-full flex-wrap">
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
-                                         class="flex w-full bg-white my-2">
+                                         class="flex w-full bg-white my-2 border border-gray-200">
                                         <button class="bg-primary flex"
                                                 @click="changeChecklistStatus(checklist)">
                                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
@@ -770,7 +770,7 @@
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
-                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary bg-backgroundGray border-0  w-full"/>
+                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
                             <div class="absolute bottom-0 right-0 flex">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span

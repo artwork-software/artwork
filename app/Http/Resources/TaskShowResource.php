@@ -28,7 +28,7 @@ class TaskShowResource extends JsonResource
             'done' => (bool) $this->done_at,
             'humanDeadline' => $this->deadline
                 ?->setTimezone($request->get('timezone', config('calendar.default_timezone')))
-                ->format('d.d.Y'),
+                ->format('d.m.Y'),
             'deadline' => $this->deadline->timestamp,
             'isDeadlineInFuture' => $this->deadline?->isFuture(),
 

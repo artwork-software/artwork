@@ -122,7 +122,6 @@ export default {
             switch (this.selectedFilter.name) {
                 case 'Nach Deadline':
                     this.tasksToDisplay = this.tasks.data.filter(task => !task.done);
-                    console.log(this.tasksToDisplay)
                     this.tasksToDisplay = this.tasksToDisplay.sort(function (a, b) {
                         return a.deadline > b.deadline
                     });

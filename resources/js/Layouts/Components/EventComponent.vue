@@ -112,7 +112,7 @@
                     <div class="w-1/2 pl-4">
                         <label for="eventTitle" class="text-xs text-secondary">Titel</label>
                         <input type="text"
-                               v-model="title"
+                               v-model="this.eventName"
                                id="eventTitle"
                                :disabled="!canEdit || !selectedEventType?.individual_name"
                                class="h-10 focus:outline-none focus:border-secondary focus:border-1 border-gray-300 w-full disabled:border-none"/>
@@ -427,6 +427,7 @@ export default {
             audience: false,
             projectName: null,
             title: null,
+            eventName: null,
             eventTypeName: null,
             selectedEventType: null,
             selectedProject: null,
@@ -478,6 +479,7 @@ export default {
             this.isLoud = this.event.isLoud
             this.audience = this.event.audience
             this.title = this.event.title
+            this.eventName = this.event.eventName
             this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId)
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
             this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
@@ -515,6 +517,7 @@ export default {
         checkTypeChange(){
             if(!this.selectedEventType?.individual_name){
                 this.title = null;
+                this.eventName = null;
             }
             this.checkCollisions();
         },
@@ -645,8 +648,10 @@ export default {
         },
 
         eventData() {
+            console.log('HALLO' + this.eventName);
             return {
                 title: this.title,
+                eventName: this.eventName,
                 start: this.formatDate(this.startDate, this.startTime),
                 end: this.formatDate(this.endDate, this.endTime),
                 roomId: this.selectedRoom?.id,

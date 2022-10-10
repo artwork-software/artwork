@@ -404,6 +404,7 @@
             :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
             :snap-to-time="15"
             :drag-to-create-threshold="15"
+            events-count-on-year-view
             v-model:active-view="currentView"
 
             @event-drag-create="openEventComponent($event)"
@@ -411,7 +412,20 @@
 
             @ready="fetchEvents"
             @view-change="fetchEvents($event)"
-        />
+        >
+            <template #event="{ event, view }">
+                <div class="flex absolute right-0 top-0">
+                    <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
+                    <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-1" alt="isLoudIcon"/>
+                </div>
+
+                <div class="font-lexend text-primary truncate" v-html="event.title" />
+                <span class="truncate" v-if="event.eventName && event.eventName !== event.title"> {{event.eventName}}</span>
+                <span class="flex text-xs w-full text-secondary">
+                    <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm")}} - {{ event.end.formatTime("HH:mm") }}  </span><br/>
+                </span>
+            </template>
+        </vue-cal>
     </div>
     <!-- Termin erstellen Modal-->
     <event-component
@@ -2146,12 +2160,14 @@ export default {
 .vuecal__split-days-headers {
     font-size: 0.75rem; /* 12px */
     line-height: 1rem; /* 16px */
+    color: #ffffff
 }
 
 .vuecal__flex.weekday-label {
     font-size: 0.81rem; /* 13px */
     line-height: 1rem; /* 16px */
-    color: #27233C
+    color: #27233C;
+    border-radius: 12px;
 }
 
 .vuecal__cell--today .vuecal__cell--current {
@@ -2160,6 +2176,9 @@ export default {
 
 .vuecal__cell--selected {
     background-color: rgba(48, 23, 173, 0.02) !important;
+}
+.vuecal__cell-split{
+    border: 1px solid #D8D7DE;
 }
 
 

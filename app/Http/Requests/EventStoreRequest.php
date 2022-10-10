@@ -14,6 +14,7 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'end_time' => Carbon::parse($this->get('end'))->setTimezone(config('app.timezone')),
             'room_id' => $this->get('roomId'),
             'name' => $this->get('title'),
+            'eventName' => $this->get('eventName'),
             'description' => $this->get('description'),
             'audience' => $this->get('audience'),
             'is_loud' => $this->get('isLoud'),

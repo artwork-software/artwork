@@ -22,33 +22,11 @@ class CalendarEventResource extends JsonResource
      */
     public function toArray($request)
     {
-        $contentString = '';
         $classString = '';
         if($this->occupancy_option){
             $classString = $this->event_type->svg_name . ' ' . 'occupancy_option';
         }else{
             $classString = $this->event_type->svg_name;
-        }
-        if($this->audience){
-            if($this->is_loud){
-                $contentString = '<div class="flex absolute right-0 top-0">
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                                    <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-1" alt="isLoudIcon"/>
-                                  </div>
-                               ';
-            }else{
-                $contentString = '<div class="flex absolute right-0 top-0">
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                                  </div>
-                               ';
-            }
-        }else{
-            if($this->is_loud){
-                $contentString = '<div class="flex absolute right-0 top-0">
-                                    <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
-                                  </div>
-                               ';
-            }
         }
         return [
             'resource' => class_basename($this),
@@ -56,7 +34,8 @@ class CalendarEventResource extends JsonResource
 
             'start' => $this->start_time->utc()->toIso8601String(),
             'end' => $this->end_time->utc()->toIso8601String(),
-            'title' => $this->project?->name ?: $this->name? : $this->event_type->name,
+            'title' => $this->project?->name ?: $this->eventName? : $this->event_type->name,
+            'eventName' => $this->eventName,
             'description' => $this->description,
             'audience' => $this->audience,
             'isLoud' => $this->is_loud,
@@ -68,7 +47,6 @@ class CalendarEventResource extends JsonResource
             'areaId' => $this->room?->area_id,
             'created_at' => $this->created_at->format('d.m.Y, H:i'),
             'created_by' => $this->creator,
-            'content' => $contentString,
             'occupancy_option' => $this->occupancy_option,
 
             'collisionCount'=> $this->collision_count,

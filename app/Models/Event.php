@@ -15,6 +15,7 @@ use Illuminate\Support\Collection;
  *
  * @property int $id
  * @property ?string $name
+ * @property ?string $eventName
  * @property ?string $description
  * @property ?Carbon $start_time
  * @property ?Carbon $end_time

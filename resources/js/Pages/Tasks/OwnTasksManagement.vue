@@ -48,7 +48,7 @@
                                     </div>
                                     <div v-if="!task.done && task.deadline"
                                         class="ml-2 my-auto text-sm "
-                                        :class="task.isDeadlineInFuture ? 'text-error ' : ''">
+                                        :class="task.isDeadlineInFuture ? '' : 'text-error'">
                                         bis {{ task.humanDeadline }}
                                     </div>
                                 </div>

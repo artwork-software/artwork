@@ -59,7 +59,7 @@
                                         <div class="ml-16 text-secondary text-sm flex items-center">
                                             Zugeordnet zu
                                             <Link
-                                                :href="route('projects.show',{project: eventRequest.project.id})"
+                                                :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                                 {{ eventRequest.project.name }}
                                             </Link>

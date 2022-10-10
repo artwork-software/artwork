@@ -5,7 +5,7 @@
             <Menu as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton
-                        class="mt-1 border border-gray-300 w-auto bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
+                        class="mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2" />
                         <span class="float-left">{{ this.displayDate }}</span>
@@ -867,7 +867,7 @@
                             <div class="my-auto flex w-28">Zugeordnet zu</div>
                             <div>
                                 <a
-                                    :href="route('projects.show', {project: selectedEvent.projectId})"
+                                    :href="route('projects.show', {project: selectedEvent.projectId, openTab: 'calendar'})"
                                     class="ml-3 text-md flex font-bold font-lexend text-primary">
                                     {{ selectedEvent.projectName }}
                                 </a>
@@ -2089,11 +2089,15 @@ export default {
     justify-content: flex-start;
     height: 100%;
     align-items: flex-end;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .vuecal--month-view .vuecal__cell-date {
     padding: 4px;
+}
+.vuecal--month-view .vuecal__event {
+    padding-top: 0px;
+
 }
 
 .vuecal--month-view .vuecal__no-event {
@@ -2104,6 +2108,27 @@ export default {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */
     margin-top: 3px;
+    padding-top: 22px;
+    background-color: white;
+}
+.vuecal__event-title{
+    font-weight: 600;
+    font-size: 0.75rem;
+    letter-spacing: 0em;
+    line-height: 20px;
+    color: #27233c;
+}
+.vuecal__event-time{
+    font-size: 12px;
+    letter-spacing: -0.01em;
+    line-height: 18px;
+    color: #a7a6b1;
+}
+.vuecal__title {
+    font-size: 2rem; /* 14px */
+    line-height: 1.25rem; /* 20px */
+    margin-top: 3px;
+    padding-top: 22px;
     background-color: white;
 }
 
@@ -2141,6 +2166,9 @@ export default {
 
 /* Custom Event Type Colors */
 
+.vuecal__event.occupancy_option {
+    background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
+}
 .vuecal__event.eventType0 {
     border: solid #A7A6B1;
     border-width: 0px 0px 0px 3px;
@@ -2185,30 +2213,6 @@ export default {
 }
 .vuecal__event.eventType10 {
     border: solid #21485c;
-    border-width: 0px 0px 0px 3px;
-}
-
-.vuecal__event.pink {
-    border: solid rgba(209, 130, 211, 0.9);
-    border-width: 0px 0px 0px 3px;
-}
-
-.vuecal__event.pink:before
-{
-    content:"";
-    display:block;
-    position:absolute;
-    z-index:-1;
-    top:0;
-    left:0;
-    right:0;
-    bottom:0;
-    border:solid #d0d0d0;
-    border-width: 1px 1px 1px 0px;
-}
-
-.vuecal__event.green {
-    border: solid rgba(148, 236, 145, 0.9);
     border-width: 0px 0px 0px 3px;
 }
 </style>

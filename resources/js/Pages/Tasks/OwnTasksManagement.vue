@@ -68,7 +68,7 @@
                                 </div>
                             </div>
 
-                            <Link :href="route('projects.show',{project: task.projectId})"
+                            <Link :href="route('projects.show',{project: task.projectId, openTab: 'checklist'})"
                                 class="text-sm my-1 flex ml-10">
                                 {{ task.projectName }}
                                 <ChevronRightIcon class="h-5 w-5 my-auto mx-3 text-secondary " aria-hidden="true"/>

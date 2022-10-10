@@ -106,8 +106,8 @@ return [
     'prohibits' => 'Das Feld :attribute verhindert, dass :other aktiv ist.',
     'regex' => 'Das :attribute sollte Großbuchstaben, Kleinbuchstaben, Zahlen, Sonderzeichen (z.B. !,$,#,_ oder %) enthalten und mindestens 10 Zeichen lang sein.',
     'required' => ':attribute ist ein Pflichtfeld.',
-    'required_if' => ':attribute ist ein Pflichtfeld wenn :other :value ist .',
-    'required_unless' => ':attribute ist ein Pflichtfeld außer :other ist in :values.',
+    'required_if' => ':attribute ist notwendig wenn :other :value ist .',
+    'required_unless' => ':attribute ist notwendig außer :other ist :values.',
     'required_with' => ':attribute ist ein Pflichtfeld wenn :values vorhanden ist.',
     'required_with_all' => ':attribute ist ein Pflichtfeld wenn alle :values vorhanden sind.',
     'required_without' => ':attribute ist ein Pflichtfeld :values nicht vorhanden ist.',
@@ -163,7 +163,11 @@ return [
         'photo' => 'Bild',
         'current_password' => 'Aktuelles Passwort',
         'start' => 'Startdatum',
-        'end' => 'Enddatum'
+        'end' => 'Enddatum',
+        'projectId' => 'Eine Projektzuordnung',
+        'projectIdMandatory' => 'die Projektzuordnung der Terminart',
+        'projectName' => 'Ein Name für das neue Projekt',
+        'creatingProject' => 'ein neues Projekt erstellen'
     ],
 
 ];

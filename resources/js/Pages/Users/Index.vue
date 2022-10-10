@@ -263,20 +263,20 @@
         </div>
         <!-- Nutzer*innen einladen Modal -->
         <flowbite-modal style="margin-top: 1rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
+            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 absolute top-0 mt-16"/>
+            <div class="mx-3 pt-6">
 
-            <div class="mx-3">
-                <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-9 mt-48"/>
                 <XIcon @click="closeAddUserModal"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 -mt-12 mr-10"
+                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10 mt-20"
                        aria-hidden="true"/>
-                <div class="mt-4 text-2xl font-black">
+                <div class="mt-24 text-2xl font-black">
                     Nutzer*innen einladen
                 </div>
                 <div class="text-secondary tracking-tight leading-6 sub">
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                     einladen.
                 </div>
-                <div class="mt-4">
+                <div class="mt-6">
                     <div class="flex mt-8">
                         <div class="relative w-72 mr-4">
                             <input v-on:keyup.enter=addEmailToInvitationArray id="email" v-model="emailInput"

@@ -24,8 +24,10 @@ class EventStoreOrUpdateRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string'],
             'audience' => ['sometimes', 'nullable', 'boolean'],
             'isLoud' => ['sometimes', 'nullable', 'boolean'],
-            'projectId' => ['sometimes', 'nullable', 'exists:projects,id'],
-            'projectName' => ['sometimes', 'nullable', 'string'],
+            'projectIdMandatory' => 'required|boolean',
+            'creatingProject' => 'required|boolean',
+            'projectId' => ['required_if:projectIdMandatory,true', 'nullable', 'exists:projects,id'],
+            'projectName' => ['required_unless:creatingProject,false', 'nullable', 'string'],
             'eventTypeId' => ['required', 'exists:event_types,id'],
         ];
     }

@@ -183,10 +183,15 @@
                 <div>
                     <div class="text-secondary my-4 flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
-                        <div class="text-primary ml-2">
+                        <a v-if="this.selectedProject?.id"
+                            :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                            class="ml-3 text-md flex font-bold font-lexend text-primary">
+                            {{ this.selectedProject?.name }}
+                        </a>
+                        <div v-else class="text-primary ml-2">
                             {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                         </div>
-                        <div v-if="this.selectedProject && this.canEdit" class="flex items-center my-auto">
+                        <div v-if="this.selectedProject?.id && this.canEdit" class="flex items-center my-auto">
                             <button type="button"
                                     @click="selectedProject = null">
                                 <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
@@ -343,7 +348,6 @@
                               rows="4"
                               class="border-gray-300 w-full text-sm disabled:border-none"/>
                 </div>
-
                 <div class="flex justify-center w-full py-4" v-if="canEdit">
                     <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-6 uppercase rounded-full text-white"
                             @click="updateOrCreateEvent()">
@@ -650,8 +654,10 @@ export default {
                 audience: this.audience,
                 isLoud: this.isLoud,
                 projectId: this.selectedProject?.id,
-                projectName: this.projectName,
+                projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,
+                projectIdMandatory:this.selectedEventType?.project_mandatory && !this.creatingProject,
+                creatingProject: this.creatingProject
             };
         },
     },

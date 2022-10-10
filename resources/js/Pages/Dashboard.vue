@@ -64,7 +64,7 @@
                         </div>
                         <div class="flex text-sm mt-0.5 w-full items-center ml-10">
                             <Link
-                                :href="route('projects.show',{project: task.project.id})"
+                                :href="route('projects.show',{project: task.project.id, openTab:'calendar'})"
                                 class="cursor-pointer text-secondary flex subpixel-antialiased">
                                 {{ task.project.name }}
                                 <ChevronRightIcon class="h-5 w-5 my-auto text-secondary subpixel-antialiased"

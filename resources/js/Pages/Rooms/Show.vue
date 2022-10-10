@@ -350,7 +350,7 @@
                                 <div v-if="eventRequest.project" class="w-64">
                                     <div class="text-secondary text-sm flex items-center">
                                         Zugeordnet zu
-                                        <Link :href="route('projects.show',{project: eventRequest.project.id})"
+                                        <Link :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
                                               class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>

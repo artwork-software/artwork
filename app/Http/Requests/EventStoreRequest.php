@@ -19,6 +19,8 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'is_loud' => $this->get('isLoud'),
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
+            'project_id_mandatory' => $this->get('projectIdMandatory'),
+            'creating_project' => $this->get('creatingProject'),
             'user_id' => Auth::id(),
             'occupancy_option' => $this->get('isOption'),
         ];

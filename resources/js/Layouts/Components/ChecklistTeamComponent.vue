@@ -19,12 +19,11 @@
                 <div class="mt-10">
                     <!--   Search for Departments    -->
                     <div class="my-auto w-full">
-                        <label for="departmentSearch" class="text-secondary">Name</label>
-                        <input id="departmentSearch"
+                        <input id="departmentSearch" placeholder="Name"
                             v-model="departmentQuery"
                             type="text"
                             autocomplete="off"
-                            class="pl-0 h-12 w-full focus:border-b-primary border-b-2 border-gray-300 text-primary"/>
+                            class="pl-2 h-12 w-10/12 focus:border-b-primary border-b-2 border-gray-300 text-primary focus:outline-none focus:ring-0 placeholder-secondary border-0"/>
                     </div>
 
                     <!--    Department Search Results    -->
@@ -47,9 +46,9 @@
                 <div v-for="(department,index) in selectedDepartments"
                     class="mt-4 font-bold text-primary flex"
                     :key="index">
-                    <div>
+                    <div class="flex items-center">
                         <TeamIconCollection :iconName="department.svg_name" class="rounded-full h-11 w-11 object-cover"/>
-                        <div class="pl-4 pt-1">{{ department.name }}</div>
+                        <div class="pl-3 pt-1">{{ department.name }}</div>
                     </div>
                     <button type="button" @click="removeDepartment(department)">
                         <span class="sr-only">Team aus Checkliste entfernen</span>
@@ -107,7 +106,7 @@ export default {
         },
 
         removeDepartment(department) {
-            this.selectedDepartments = this.selectedDepartments.filter((selected) => selected.id === department.id);
+            this.selectedDepartments.splice(this.selectedDepartments.indexOf(department),1);
         },
 
         async submitDepartments() {

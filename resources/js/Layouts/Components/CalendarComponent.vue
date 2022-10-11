@@ -5,7 +5,7 @@
             <Menu as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton
-                        class="mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
+                        class="-mt-2 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2" />
                         <span class="float-left">{{ this.displayDate }}</span>
@@ -56,10 +56,10 @@
                     </MenuItems>
                 </transition>
             </Menu>
-            <button class="ml-2 text-black" @click="$refs.vuecal.previous()">
+            <button class="ml-2 -mt-2 text-black" @click="$refs.vuecal.previous()">
                 <ChevronLeftIcon class="h-5 w-5 text-primary"/>
             </button>
-            <button class="ml-2 text-black" @click="$refs.vuecal.next()">
+            <button class="ml-2 -mt-2 text-black" @click="$refs.vuecal.next()">
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
         </div>
@@ -67,10 +67,10 @@
         <div class="inline-flex mb-5 justify-end w-1/2">
 
             <!-- Calendar Filter -->
-            <Menu as="div" class="relative inline-block text-left max-w-80">
-                <div>
+            <Menu as="div" class="relative inline-block flex items-center text-left max-w-80">
+                <div class="">
                     <MenuButton
-                        class="mt-1 border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <span class="float-left">Filter</span>
                         <ChevronDownIcon
@@ -441,7 +441,7 @@
                 <div v-if="event.projectLeaders" class="ml-2 mt-1 flex flex-wrap w-full">
                 <div class="-mr-3 flex flex-wrap flex-row" v-for="user in event.projectLeaders?.slice(0,3)">
                     <img :data-tooltip-target="user.id"
-                         class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
+                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full ring-2 ring-white object-cover"
                          :src="user.profile_photo_url"
                          alt=""/>
                     <UserTooltip :user="user"/>
@@ -451,7 +451,7 @@
                         <div>
                             <MenuButton class="flex items-center rounded-full focus:outline-none">
                                 <div
-                                    class="mx-auto flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                    :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
                                     <p class="items-center mx-auto">
                                     +{{event.projectLeaders.length - 3}}
                                     </p>
@@ -469,7 +469,7 @@
                                 <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
                                     <Link href="#"
                                           :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <img class="h-9 w-9 rounded-full"
+                                        <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <span class="ml-4">

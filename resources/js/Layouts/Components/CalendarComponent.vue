@@ -25,7 +25,7 @@
                 >
                     <MenuItems
                         class="absolute left mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
-                        <button @click="$refs.vuecal.switchView('day', new Date())"
+                        <button @click="$refs.vuecal.switchView('day', new Date()); this.selectedDate = new Date()"
                                 class="w-full mt-2 text-left pl-2"
                                 :class="currentView === 'day' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
                             <label class="text-sm">
@@ -403,6 +403,7 @@
             :split-days="displayedRooms"
             :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
             :snap-to-time="15"
+            :selected-date="selectedDate"
             :drag-to-create-threshold="15"
             events-count-on-year-view
             v-model:active-view="currentView"
@@ -1350,6 +1351,7 @@ export default {
             displayDate: '',
             filters: [],
             filterName: '',
+            selectedDate: null,
             calendarFilters: {
                 rooms: [],
                 areas: [],
@@ -1504,15 +1506,14 @@ export default {
         },
         async saveFilter() {
             const filterIds = this.getFilterIds();
-            axios.post('/filters', { name: this.filterName, calendarFilters: filterIds})
+            await axios.post('/filters', { name: this.filterName, calendarFilters: filterIds})
             await axios.get('/filters')
                 .then(response => {
                     this.filters = response.data;
                 })
-
         },
         async deleteFilter(id) {
-            axios.delete(`/filters/${id}`)
+            await axios.delete(`/filters/${id}`)
             this.resetCalendarFilter();
             await axios.get('/filters')
                 .then(response => {
@@ -1546,14 +1547,16 @@ export default {
             });
         },
         resetCalendarFilter() {
+            this.addFilterableVariable(this.rooms, false);
+            this.addFilterableVariable(this.areas, false);
+            this.addFilterableVariable(this.roomCategories, false);
+            this.addFilterableVariable(this.roomAttributes, false);
+            this.addFilterableVariable(this.types, false);
             Object.entries(this.calendarFilters).forEach(entry => {
                 if (Array.isArray(entry[1])) {
-                    entry[1].forEach(object => {
-                        object.checked = false;
-                    })
                     entry[1].length = 0;
                 } else {
-                    entry[1] = false;
+                    this.calendarFilters[entry[0]] = false;
                 }
             })
 

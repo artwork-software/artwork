@@ -648,7 +648,6 @@ export default {
         },
 
         eventData() {
-            console.log('HALLO' + this.eventName);
             return {
                 title: this.title,
                 eventName: this.eventName,

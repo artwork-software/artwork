@@ -145,7 +145,7 @@
                         <li v-else v-for="(user,index) in user_search_results" :key="user.email"
                             class="py-6 flex justify-between">
                             <div class="flex">
-                                <img class="h-14 w-14 rounded-full flex-shrink-0 flex justify-start"
+                                <img class="h-14 w-14 rounded-full object-cover flex-shrink-0 flex justify-start"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">

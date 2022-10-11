@@ -102,7 +102,7 @@
                                         <ChevronDownIcon v-else
                                             class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                                     </p>
-                                    <img class="h-10 w-10 rounded-full"
+                                    <img class="h-10 w-10 rounded-full object-cover"
                                         :src="$page.props.user.profile_photo_url"
                                         alt=""/>
                                 </MenuButton>

@@ -44,7 +44,7 @@
                         <span class="text-secondary subpixel-antialiased">Noch keine Team-Mitglieder hinzugefügt</span>
                     </div>
                     <div v-else class="mt-3 -mr-3" v-for="user in teamForm.users">
-                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
+                        <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full object-cover"
                              :src="user.profile_photo_url"
                              alt=""/>
                         <UserTooltip :user="user"/>
@@ -225,7 +225,7 @@
                         <span v-for="(user,index) in department.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
+                                <img class="flex h-11 w-11 rounded-full object-cover"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 <span class="flex ml-4">

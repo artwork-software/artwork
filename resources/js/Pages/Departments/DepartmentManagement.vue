@@ -43,7 +43,7 @@
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
                                         <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full ring-2 ring-white"
+                                             class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <UserTooltip :user="user"/>
@@ -67,7 +67,7 @@
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
                                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img class="h-9 w-9 rounded-full"
+                                                            <img class="h-9 w-9 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
                                                             <span class="ml-4">
@@ -157,7 +157,7 @@
                                 <div class="flex mr-8">
                                     <div class="my-auto -mr-3" v-for="user in department.users.slice(0,9)">
                                         <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full ring-2 ring-white"
+                                             class="h-9 w-9 rounded-full object-cover ring-2 ring-white"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <UserTooltip :user="user"/>
@@ -181,7 +181,7 @@
                                                     <MenuItem v-for="user in department.users" v-slot="{ active }">
                                                         <Link href="#"
                                                               :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img class="h-9 w-9 rounded-full"
+                                                            <img class="h-9 w-9 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
                                                             <span class="ml-4">
@@ -360,7 +360,7 @@
                             <span v-for="(user,index) in form.assigned_users"
                                   class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
+                                <img class="flex h-11 w-11 rounded-full object-cover"
                                      :src="user.profile_photo_url"
                                      alt=""/>
                                 <span class="flex ml-4">

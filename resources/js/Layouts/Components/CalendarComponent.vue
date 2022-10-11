@@ -390,14 +390,17 @@
             id="vuecal"
             style="height: 600px"
             today-button
+            time-cell-height=60
             events-on-month-view="short"
             locale="de"
             hide-view-selector
             hide-title-bar
             show-week-numbers
 
+
             :click-to-navigate="true"
             :stickySplitLabels="true"
+            min-split-width="200"
             :disable-views="['years']"
             :events="displayedEvents"
             :split-days="displayedRooms"
@@ -413,8 +416,18 @@
             @ready="fetchEvents"
             @view-change="fetchEvents($event)"
         >
+            <template #title="{ title, view }">
+                <div>
+                    {{title}}
+                </div>
+            </template>
+            <template #split-label="{ split, view }">
+                    <div>
+                        {{split.label}}
+                    </div>
+            </template>
             <template #event="{ event, view }">
-                <div class="flex absolute right-0 top-0">
+                <div v-if="currentView !== 'month'" class="flex absolute right-0 top-0">
                     <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
                     <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-1" alt="isLoudIcon"/>
                 </div>
@@ -424,6 +437,50 @@
                 <span class="flex text-xs w-full text-secondary">
                     <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm")}} - {{ event.end.formatTime("HH:mm") }}  </span><br/>
                 </span>
+                <div v-if="event.projectLeaders" class="ml-2 mt-1 flex flex-wrap w-full">
+                <div class="-mr-3 flex flex-wrap flex-row" v-for="user in event.projectLeaders?.slice(0,3)">
+                    <img :data-tooltip-target="user.id"
+                         class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
+                         :src="user.profile_photo_url"
+                         alt=""/>
+                    <UserTooltip :user="user"/>
+                </div>
+                <div v-if="event.projectLeaders.length >= 3" class="my-auto">
+                    <Menu as="div" class="relative">
+                        <div>
+                            <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                <div
+                                    class="mx-auto flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                    <p class="items-center mx-auto">
+                                    +{{event.projectLeaders.length - 3}}
+                                    </p>
+                                </div>
+                            </MenuButton>
+                        </div>
+                        <transition enter-active-class="transition ease-out duration-100"
+                                    enter-from-class="transform opacity-0 scale-95"
+                                    enter-to-class="transform opacity-100 scale-100"
+                                    leave-active-class="transition ease-in duration-75"
+                                    leave-from-class="transform opacity-100 scale-100"
+                                    leave-to-class="transform opacity-0 scale-95">
+                            <MenuItems
+                                class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                    <Link href="#"
+                                          :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <img class="h-9 w-9 rounded-full"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                        <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                    </Link>
+                                </MenuItem>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                </div>
+                </div>
             </template>
         </vue-cal>
     </div>
@@ -1302,6 +1359,7 @@ import EventComponent from "@/Layouts/Components/EventComponent";
 import CalendarFilterComponent from "@/Layouts/Components/CalendarFilterComponent";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
 import Button from "@/Jetstream/Button";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 
 export default {
     name: 'CalendarComponent',
@@ -1343,6 +1401,7 @@ export default {
         AddButton,
         Link,
         EventComponent,
+        UserTooltip
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {

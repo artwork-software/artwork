@@ -1623,7 +1623,6 @@ export default {
                 entry[1].checked = false;
             })
 
-
             this.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil
@@ -1698,24 +1697,24 @@ export default {
                     this.projects = response.data.projects
                     this.filters = response.data.calendarFilters
 
-                    if (this.rooms.length === 0) {
+                    if (this.rooms.length === 0 || this.areChecked(this.rooms) === 0) {
                         this.rooms = response.data.rooms
                         this.displayedRooms = this.rooms;
                         this.addFilterableVariable(this.rooms, false)
                     }
-                    if (this.areas.length === 0) {
+                    if (this.areas.length === 0 || this.areChecked(this.areas) === 0) {
                         this.areas = response.data.areas
                         this.addFilterableVariable(this.areas, false)
                     }
-                    if (this.roomCategories.length === 0) {
+                    if (this.roomCategories.length === 0 || this.areChecked(this.roomCategories) === 0) {
                         this.roomCategories = response.data.roomCategories
                         this.addFilterableVariable(this.roomCategories, false)
                     }
-                    if (this.roomAttributes.length === 0) {
+                    if (this.roomAttributes.length === 0 || this.areChecked(this.roomAttributes) === 0) {
                         this.roomAttributes = response.data.roomAttributes
                         this.addFilterableVariable(this.roomAttributes, false)
                     }
-                    if (this.types.length === 0) {
+                    if (this.types.length === 0 || this.areChecked(this.types) === 0) {
                         this.types = this.eventTypes
                         this.addFilterableVariable(this.types, false)
                     }
@@ -1732,6 +1731,15 @@ export default {
                     console.log(this.calendarFilters.rooms);
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
+        },
+        areChecked(array){
+            let count = 0;
+            array.forEach(object => {
+                if(object.checked) {
+                    count++;
+                }
+            })
+            return count
         },
         getFilterIds() {
             let filterIds = {};

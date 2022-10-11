@@ -394,8 +394,8 @@
             events-on-month-view="short"
             locale="de"
             hide-view-selector
-            hide-title-bar
             show-week-numbers
+            hide-title-bar
 
 
             :click-to-navigate="true"
@@ -1964,7 +1964,7 @@ export default {
 
         scrollToNine() {
             const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({ top: 9 * 40, behavior: 'smooth' })
+            calendar.scrollTo({ top: 9 * 65, behavior: 'smooth' })
         },
 
         addFilterableVariable(dataArray, boolean) {
@@ -2146,6 +2146,8 @@ export default {
 
 .vuecal__flex .vuecal__weekdays-headings {
     background-color: #D8D7DE;
+    position: fixed;
+    z-index: 50;
 }
 
 .vuecal__flex .vuecal__week-numbers {

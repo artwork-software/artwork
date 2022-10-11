@@ -2145,7 +2145,6 @@ export default {
 }
 
 .vuecal__flex{
-    overflow-x:scroll;
 }
 
 .vuecal__weekdays-headings {

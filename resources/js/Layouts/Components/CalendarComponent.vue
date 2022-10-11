@@ -395,12 +395,12 @@
             locale="de"
             hide-view-selector
             show-week-numbers
-            hide-title-bar
+            hideTitleBar
 
 
             :click-to-navigate="true"
-            :stickySplitLabels="true"
             min-split-width="200"
+            stickySplitLabels
             :disable-views="['years']"
             :events="displayedEvents"
             :split-days="displayedRooms"
@@ -419,7 +419,7 @@
         >
             <template #title="{ title, view }">
                 <div>
-                    {{title}}aaa
+                    {{title}}
                 </div>
             </template>
             <template #split-label="{ split, view }">
@@ -2144,10 +2144,12 @@ export default {
     display: none;
 }
 
-.vuecal__flex .vuecal__weekdays-headings {
+.vuecal__flex{
+    overflow-x:scroll;
+}
+
+.vuecal__weekdays-headings {
     background-color: #D8D7DE;
-    position: fixed;
-    z-index: 50;
 }
 
 .vuecal__flex .vuecal__week-numbers {

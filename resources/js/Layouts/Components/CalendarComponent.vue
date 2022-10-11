@@ -390,7 +390,7 @@
             id="vuecal"
             style="height: 600px"
             today-button
-            time-cell-height=60
+            time-cell-height=54
             events-on-month-view="short"
             locale="de"
             hide-view-selector
@@ -428,7 +428,7 @@
                     </div>
             </template>
             <template #event="{ event, view }">
-                <div v-if="currentView !== 'month'" class="flex absolute right-0 top-0">
+                <div v-if="currentView !== 'month' && (event.audience || event.isLoud)" class="flex absolute right-0 top-0">
                     <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
                     <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-1" alt="isLoudIcon"/>
                 </div>

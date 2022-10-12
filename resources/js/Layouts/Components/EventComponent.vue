@@ -8,7 +8,7 @@
                 <!--    Heading    -->
                 <div>
                     <h1 class="my-2 flex">
-                        <div class="flex-grow text-3xl">
+                        <div class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
                             {{ this.event?.id ? 'Event bearbeiten' : 'Neue Raumbelegung' }}
                         </div>
                         <Menu as="div" v-if=" this.event?.id">
@@ -18,7 +18,7 @@
 
                             <MenuItems class="absolute z-40 right-0 w-72 shadow-lg rouned rounded-md bg-gray-100">
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="approveRequest(selectedEvent, true)"
+                                          @click="approveRequest(this.event, true)"
                                           class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
                                     <div class="flex">
                                         <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
@@ -26,7 +26,7 @@
                                     </div>
                                 </MenuItem>
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="approveRequest(selectedEvent, false)"
+                                          @click="approveRequest(this.event, false)"
                                           class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
                                     <div class="flex">
                                         <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
@@ -59,12 +59,11 @@
                 <!--    Type and Title    -->
                 <div class="flex py-4">
                     <div class="w-1/2">
-                        <label for="eventType" class="text-xs text-secondary">Typ</label>
                         <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!canEdit">
                             {{ selectedEventType?.name }}
                         </div>
                         <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
-                                 :onchange="checkTypeChange()" id="eventType">
+                                 :onchange="checkCollisions" id="eventType">
                             <ListboxButton
                                 class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
@@ -110,21 +109,27 @@
                     </div>
 
                     <div class="w-1/2 pl-4">
-                        <label for="eventTitle" class="text-xs text-secondary">Titel</label>
-                        <input type="text"
+                        <input v-if="selectedEventType?.individual_name" type="text"
                                v-model="this.eventName"
                                id="eventTitle"
-                               :disabled="!canEdit || !selectedEventType?.individual_name"
-                               class="h-10 focus:outline-none focus:border-secondary focus:border-1 border-gray-300 w-full disabled:border-none"/>
+                               placeholder="Terminname*"
+                               :disabled="!canEdit"
+                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <input v-else type="text"
+                               v-model="this.eventName"
+                               id="eventTitle"
+                               placeholder="Terminname"
+                               :disabled="!canEdit"
+                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                        <p class="text-xs text-red-800">{{ error?.title?.join('. ') }}</p>
+                        <p class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
                     </div>
                 </div>
                 <!-- Attribute Menu -->
                 <Menu as="div" class="inline-block text-left w-full">
                     <div>
                         <MenuButton
-                            class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                         >
                             <span class="float-left">Termineigenschaften wählen</span>
                             <ChevronDownIcon
@@ -170,7 +175,7 @@
                     </transition>
                 </Menu>
                 <!--    Properties    -->
-                <div class="flex py-4">
+                <div class="flex py-2">
                     <div v-if="audience">
                         <TagComponent   displayed-text="mit Publikum" hideX="true"></TagComponent>
                     </div>
@@ -181,7 +186,7 @@
 
                 <!--    Project    -->
                 <div>
-                    <div class="text-secondary my-4 flex" v-if="!this.creatingProject">
+                    <div class="text-secondary flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
                         <a v-if="this.selectedProject?.id"
                             :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
@@ -198,11 +203,11 @@
                             </button>
                         </div>
                     </div>
-                    <div class="text-secondary my-4" v-if="this.creatingProject">
+                    <div class="text-secondary my-2" v-if="this.creatingProject">
                         Das Projekt wird beim Abspeichern erstellt.
                     </div>
 
-                    <div class="my-4" v-if="this.canEdit">
+                    <div class="my-2" v-if="this.canEdit">
                         <div class="flex pb-2">
                             <span class="mr-4 text-sm"
                                   :class="[!creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
@@ -235,7 +240,7 @@
                                id="projectName"
                                v-model="projectName"
                                :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                               class="h-10 focus:outline-none border-gray-300 w-full disabled:border-none"/>
+                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">
@@ -253,7 +258,7 @@
                 </div>
 
                 <!--    Time    -->
-                <div class="flex py-4 flex-col sm:flex-row align-baseline">
+                <div class="flex py-1 flex-col sm:flex-row align-baseline">
                     <div class="sm:w-1/2">
                         <label for="startDate" class="text-secondary text-xs">Start</label>
                         <div class="w-full flex">
@@ -299,15 +304,34 @@
                 </div>
 
                 <!--    Room    -->
-                <div class="py-4">
-                    <label for="room" class="text-xs text-secondary">Raum</label>
+                <div class="py-1">
                     <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!canEdit">
-                        {{ selectedEventType?.name }}
+                        {{ selectedRoom?.name }}
                     </div>
-                    <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit">
+                    <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
                         <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
                             <div class="flex-grow text-left">
                                 {{ selectedRoom?.name }}
+                            </div>
+                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                        </ListboxButton>
+                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOption v-for="room in rooms"
+                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                           :key="room.name"
+                                           :value="room"
+                                           v-slot="{ active, selected }">
+                                <div :class="[selected ? 'text-white' : '']">
+                                    {{ room.name }}
+                                </div>
+                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                            </ListboxOption>
+                        </ListboxOptions>
+                    </Listbox>
+                    <Listbox as="div" v-model="selectedRoom" id="room" v-else>
+                        <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
+                            <div class="flex-grow text-left text-secondary subpixel-antialiased">
+                                Raum wählen*
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
@@ -339,17 +363,16 @@
                 -->
 
                 <!--    Description    -->
-                <div class="py-4">
-                    <label for="description" class="text-xs text-secondary">Notizen</label>
+                <div class="py-2">
                     <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                               id="description"
                               :disabled="!canEdit"
                               v-model="description"
                               rows="4"
-                              class="border-gray-300 w-full text-sm disabled:border-none"/>
+                              class="border-gray-300 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
                 <div class="flex justify-center w-full py-4" v-if="canEdit">
-                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-6 uppercase rounded-full text-white"
+                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
                         {{ (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen' }}
                     </button>
@@ -429,7 +452,7 @@ export default {
             title: null,
             eventName: null,
             eventTypeName: null,
-            selectedEventType: null,
+            selectedEventType: this.eventTypes[0],
             selectedProject: null,
             selectedRoom: null,
             error: null,
@@ -470,7 +493,9 @@ export default {
     methods: {
         openModal() {
             this.canEdit = (!this.event?.id) || this.event?.canEdit;
-            if (!this.event) return;
+            if (!this.event){
+                return;
+            }
 
             this.startDate = this.event.start.format('YYYY-MM-DD');
             this.startTime = this.event.start.format('HH:mm');
@@ -480,7 +505,15 @@ export default {
             this.audience = this.event.audience
             this.title = this.event.title
             this.eventName = this.event.eventName
-            this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId)
+            if(!this.event.eventTypeId){
+                this.selectedEventType = this.eventTypes[0];
+            }else{
+                this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
+            }
+
+
+
+
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
             this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
             this.description = this.event.description
@@ -515,10 +548,6 @@ export default {
             this.checkCollisions()
         },
         checkTypeChange(){
-            if(!this.selectedEventType?.individual_name){
-                this.title = null;
-                this.eventName = null;
-            }
             this.checkCollisions();
         },
 
@@ -657,6 +686,7 @@ export default {
                 description: this.description,
                 audience: this.audience,
                 isLoud: this.isLoud,
+                eventNameMandatory: this.selectedEventType?.individual_name,
                 projectId: this.selectedProject?.id,
                 projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,

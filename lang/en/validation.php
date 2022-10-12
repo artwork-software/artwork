@@ -106,7 +106,7 @@ return [
     'prohibits' => 'Das Feld :attribute verhindert, dass :other aktiv ist.',
     'regex' => 'Das :attribute sollte Großbuchstaben, Kleinbuchstaben, Zahlen, Sonderzeichen (z.B. !,$,#,_ oder %) enthalten und mindestens 10 Zeichen lang sein.',
     'required' => ':attribute ist ein Pflichtfeld.',
-    'required_if' => ':attribute ist notwendig wenn :other :value ist .',
+    'required_if' => ':attribute ist notwendig wenn :other.',
     'required_unless' => ':attribute ist notwendig außer :other ist :values.',
     'required_with' => ':attribute ist ein Pflichtfeld wenn :values vorhanden ist.',
     'required_with_all' => ':attribute ist ein Pflichtfeld wenn alle :values vorhanden sind.',
@@ -165,9 +165,11 @@ return [
         'start' => 'Startdatum',
         'end' => 'Enddatum',
         'projectId' => 'Eine Projektzuordnung',
-        'projectIdMandatory' => 'die Projektzuordnung der Terminart',
+        'projectIdMandatory' => 'die Terminart eine Projektzuordnung vorraussetzt',
         'projectName' => 'Ein Name für das neue Projekt',
-        'creatingProject' => 'ein neues Projekt erstellen'
+        'creatingProject' => 'ein neues Projekt erstellen',
+        'eventName' => 'Terminname',
+        'eventNameMandatory' => 'die Terminart einen Namen erfordert'
     ],
 
 ];

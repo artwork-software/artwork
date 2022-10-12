@@ -16,6 +16,7 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'name' => $this->get('title'),
             'eventName' => $this->get('eventName'),
             'project_id_mandatory' => $this->get('projectIdMandatory'),
+            'event_name_mandatory' => $this->get('eventNameMandatory'),
             'creating_project' => $this->get('creatingProject'),
             'description' => $this->get('description'),
             'audience' => $this->get('audience'),

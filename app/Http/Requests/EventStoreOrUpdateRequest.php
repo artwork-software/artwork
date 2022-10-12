@@ -18,6 +18,7 @@ class EventStoreOrUpdateRequest extends FormRequest
     {
         return [
             'title' => ['sometimes','nullable', 'string'],
+            'eventName' => ['required_if:eventNameMandatory,true','nullable','string'],
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
             'roomId' => ['sometimes', 'nullable', 'exists:rooms,id'],
@@ -26,6 +27,7 @@ class EventStoreOrUpdateRequest extends FormRequest
             'isLoud' => ['sometimes', 'nullable', 'boolean'],
             'projectIdMandatory' => 'required|boolean',
             'creatingProject' => 'required|boolean',
+            'eventNameMandatory' => 'required|boolean',
             'projectId' => ['required_if:projectIdMandatory,true', 'nullable', 'exists:projects,id'],
             'projectName' => ['required_unless:creatingProject,false', 'nullable', 'string'],
             'eventTypeId' => ['required', 'exists:event_types,id'],

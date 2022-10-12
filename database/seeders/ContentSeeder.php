@@ -110,7 +110,7 @@ class ContentSeeder extends Seeder
     private function seedEventsAndEventTypes()
     {
         DB::table('event_types')->insert([
-            'name' => 'Undefinierter Termin',
+            'name' => 'Blocker',
             'svg_name' => 'eventType0',
             'project_mandatory' => false,
             'individual_name' => true

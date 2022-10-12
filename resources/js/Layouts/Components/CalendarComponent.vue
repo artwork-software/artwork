@@ -395,7 +395,7 @@
             locale="de"
             hide-view-selector
             show-week-numbers
-            hideTitleBar
+            :hideTitleBar="currentView !== 'year'"
 
 
             :click-to-navigate="true"
@@ -418,7 +418,7 @@
             @view-change="fetchEvents($event)"
         >
             <template #title="{ title, view }">
-                <div>
+                <div class="mb-6">
                     {{title}}
                 </div>
             </template>
@@ -428,58 +428,63 @@
                     </div>
             </template>
             <template #event="{ event, view }">
+                <div>
                 <div v-if="currentView !== 'month' && (event.audience || event.isLoud)" class="flex absolute right-0 top-0">
                     <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                    <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-1" alt="isLoudIcon"/>
+                    <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2" alt="attributeIcon"/>
                 </div>
 
-                <div class="font-lexend text-primary truncate" v-html="event.title" />
+                <div class="font-inter subpixel-antialiased text-base text-primary truncate tracking-wide" >{{event.title}}</div>
                 <span class="truncate" v-if="event.eventName && event.eventName !== event.title"> {{event.eventName}}</span>
                 <span class="flex text-xs w-full text-secondary">
                     <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm")}} - {{ event.end.formatTime("HH:mm") }}  </span><br/>
                 </span>
-                <div v-if="event.projectLeaders" class="ml-2 mt-1 flex flex-wrap w-full">
-                <div class="-mr-3 flex flex-wrap flex-row" v-for="user in event.projectLeaders?.slice(0,3)">
+                <div class="mt-3">
+                <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
+                <div class="-mr-3 flex flex-wrap items-center flex-row" v-for="user in event.projectLeaders?.slice(0,3)">
                     <img :data-tooltip-target="user.id"
                          :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full ring-2 ring-white object-cover"
                          :src="user.profile_photo_url"
                          alt=""/>
                     <UserTooltip :user="user"/>
                 </div>
-                <div v-if="event.projectLeaders.length >= 3" class="my-auto">
-                    <Menu as="div" class="relative">
-                        <div>
-                            <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                <div
-                                    :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                    <p class="items-center mx-auto">
-                                    +{{event.projectLeaders.length - 3}}
-                                    </p>
-                                </div>
-                            </MenuButton>
-                        </div>
-                        <transition enter-active-class="transition ease-out duration-100"
-                                    enter-from-class="transform opacity-0 scale-95"
-                                    enter-to-class="transform opacity-100 scale-100"
-                                    leave-active-class="transition ease-in duration-75"
-                                    leave-from-class="transform opacity-100 scale-100"
-                                    leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
-                                    <Link href="#"
-                                          :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                        <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <span class="ml-4">
+                    <div v-if="event.projectLeaders.length >= 3" class="my-auto">
+                        <Menu as="div" class="relative">
+                            <div>
+                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                    <div
+                                        :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                        <p class="items-center mx-auto">
+                                            +{{event.projectLeaders.length - 3}}
+                                        </p>
+                                    </div>
+                                </MenuButton>
+                            </div>
+                            <transition enter-active-class="transition ease-out duration-100"
+                                        enter-from-class="transform opacity-0 scale-95"
+                                        enter-to-class="transform opacity-100 scale-100"
+                                        leave-active-class="transition ease-in duration-75"
+                                        leave-from-class="transform opacity-100 scale-100"
+                                        leave-to-class="transform opacity-0 scale-95">
+                                <MenuItems
+                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                        <Link href="#"
+                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full"
+                                                 :src="user.profile_photo_url"
+                                                 alt=""/>
+                                            <span class="ml-4">
                                                                 {{ user.first_name }} {{ user.last_name }}
                                                             </span>
-                                    </Link>
-                                </MenuItem>
-                            </MenuItems>
-                        </transition>
-                    </Menu>
+                                        </Link>
+                                    </MenuItem>
+                                </MenuItems>
+                            </transition>
+                        </Menu>
+                    </div>
+                </div>
+
                 </div>
                 </div>
             </template>
@@ -1475,7 +1480,7 @@ export default {
             project_query: "",
             project_search_results: [],
             creatingProject: false,
-            selectedEventType: this.eventTypes[0],
+            selectedEventType: null,
             events: [],
             displayedEvents: [],
             areaFilter: [],
@@ -2201,13 +2206,6 @@ export default {
     margin-top: 3px;
     padding-top: 22px;
     background-color: white;
-}
-.vuecal__event-title{
-    font-weight: 600;
-    font-size: 0.75rem;
-    letter-spacing: 0em;
-    line-height: 20px;
-    color: #27233c;
 }
 .vuecal__event-time{
     font-size: 12px;

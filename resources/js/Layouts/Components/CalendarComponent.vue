@@ -388,9 +388,9 @@
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 600px"
+            style="height: 60rem"
             today-button
-            time-cell-height=54
+            time-cell-height=120
             events-on-month-view="short"
             locale="de"
             hide-view-selector
@@ -423,7 +423,7 @@
                 </div>
             </template>
             <template #split-label="{ split, view }">
-                    <div>
+                    <div class="text-base font-bold">
                         {{split.label}}
                     </div>
             </template>
@@ -1964,7 +1964,7 @@ export default {
 
         scrollToNine() {
             const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({ top: 9 * 65, behavior: 'smooth' })
+            calendar.scrollTo({ top: 9 * 54, behavior: 'smooth' })
         },
 
         addFilterableVariable(dataArray, boolean) {
@@ -2149,6 +2149,10 @@ export default {
 
 .vuecal__weekdays-headings {
     background-color: #D8D7DE;
+    letter-spacing: -0.01em;
+    line-height: 18px;
+    text-align: center;
+    color: #fcfcfb;
 }
 
 .vuecal__flex .vuecal__week-numbers {
@@ -2237,10 +2241,11 @@ export default {
 }
 
 .vuecal__flex.weekday-label {
-    font-size: 0.81rem; /* 13px */
+    font-size: 1rem; /* 16px */
     line-height: 1rem; /* 16px */
     color: #27233C;
     border-radius: 12px;
+    font-weight: bolder;
 }
 
 .vuecal__cell--today .vuecal__cell--current {

@@ -29,7 +29,7 @@ class TaskShowResource extends JsonResource
             'humanDeadline' => $this->deadline
                 ?->setTimezone($request->get('timezone', config('calendar.default_timezone')))
                 ->format('d.m.Y'),
-            'deadline' => $this->deadline->timestamp,
+            'deadline' => $this->deadline?->timestamp,
             'isDeadlineInFuture' => $this->deadline?->isFuture(),
 
             'isPrivate' => (bool) $this->checklist->user_id,

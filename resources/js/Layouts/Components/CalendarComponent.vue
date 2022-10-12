@@ -62,6 +62,14 @@
             <button class="ml-2 -mt-2 text-black" @click="$refs.vuecal.next()">
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
+
+            <div class="ml-5 flex text-error items-center" v-if="eventsWithoutRoom.length > 0">
+
+                <ExclamationIcon class="h-6 text-error mr-2" />
+                {{eventsWithoutRoom.length}}{{eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!'}}
+
+            </div>
+
         </div>
 
         <div class="inline-flex mb-5 justify-end w-1/2">
@@ -390,7 +398,7 @@
             id="vuecal"
             style="height: 60rem"
             today-button
-            time-cell-height=120
+            :time-cell-height=120
             events-on-month-view="short"
             locale="de"
             hide-view-selector
@@ -399,7 +407,7 @@
 
 
             :click-to-navigate="true"
-            min-split-width="200"
+            :min-split-width=200
             stickySplitLabels
             :disable-views="['years']"
             :events="displayedEvents"
@@ -1337,8 +1345,8 @@ import {
     TrashIcon,
     XCircleIcon,
     XIcon,
-    CalendarIcon
-
+    CalendarIcon,
+    ExclamationIcon
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
@@ -1370,6 +1378,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 export default {
     name: 'CalendarComponent',
     components: {
+        ExclamationIcon,
         Button,
         CalendarFilterTagComponent,
         CalendarFilterComponent,
@@ -1482,6 +1491,7 @@ export default {
             creatingProject: false,
             selectedEventType: null,
             events: [],
+            eventsWithoutRoom: [],
             displayedEvents: [],
             areaFilter: [],
             roomFilter: [],
@@ -1685,8 +1695,6 @@ export default {
 
             const filters = this.getFilterIds();
 
-            console.log(filters);
-
             await axios
                 .get('/events/', {
                     params: {
@@ -1701,6 +1709,8 @@ export default {
                     this.events = response.data.events
                     this.projects = response.data.projects
                     this.filters = response.data.calendarFilters
+
+                    this.eventsWithoutRoom = this.events.filter(event => event.roomId === null)
 
                     if (this.rooms.length === 0 || this.areChecked(this.rooms) === 0) {
                         this.rooms = response.data.rooms
@@ -1733,7 +1743,6 @@ export default {
 
                     this.displayedEvents = this.events;
 
-                    console.log(this.calendarFilters.rooms);
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
         },
@@ -1764,11 +1773,9 @@ export default {
             return filterIds;
         },
         openEventModal(event) {
-            console.log(event);
             this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
             if (event.title !== '') {
                 const offset = new Date(event.start).getTimezoneOffset()
-                console.log(offset);
                 this.selectedEvent = event;
                 this.checkCollisions();
                 let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
@@ -2021,8 +2028,6 @@ export default {
          */
         async checkCollisions() {
 
-            console.log(this.selectedEvent)
-
             if (!(this.selectedEvent.start && this.selectedEvent.end && this.selectedEvent.roomId)) {
                 this.collision = 0
                 return;
@@ -2107,8 +2112,6 @@ export default {
                 .post('/events', event)
                 .then(response => {
                     this.closeAddEventModal();
-                    console.log("Res: ")
-                    console.log(response)
                 })
                 .catch(error => this.error = error.response.data.errors);
         },

@@ -1977,6 +1977,10 @@ export default {
         scrollToNine() {
             const calendar = document.querySelector('#vuecal .vuecal__bg')
             calendar.scrollTo({ top: 9 * 54, behavior: 'smooth' })
+
+            document.querySelector('.vuecal__bg').addEventListener('scroll', function () {
+                document.querySelector('.vuecal__weekdays-headings').style.top = this.scrollTop + 'px';
+            });
         },
 
         addFilterableVariable(dataArray, boolean) {
@@ -2161,6 +2165,14 @@ export default {
     line-height: 18px;
     text-align: center;
     color: #fcfcfb;
+    position: absolute;
+    top: 0;
+    z-index: 10;
+}
+
+.vuecal__bg .vuecal__cells {
+    position: relative;
+    padding-top: 50px;
 }
 
 .vuecal__flex .vuecal__week-numbers {

@@ -405,7 +405,6 @@
             show-week-numbers
             :hideTitleBar="currentView !== 'year'"
 
-
             :click-to-navigate="true"
             :min-split-width=200
             stickySplitLabels
@@ -1532,9 +1531,6 @@ export default {
             }),
         }
     },
-    created() {
-        if (!HTMLElement.prototype.scrollTo) HTMLElement.prototype.scrollTo = function ({ top }) { this.scrollTop = top }
-    },
     watch: {
         project_query: {
             handler() {
@@ -1683,11 +1679,16 @@ export default {
          * @param {Date} endDate
          * @returns {Promise<void>}
          */
+
         async fetchEvents({view = null, startDate = null, endDate = null}) {
-
             this.currentView = view ?? this.currentView ?? 'week';
+            let vuecal = document.querySelector('#vuecal .vuecal__bg');
 
+            vuecal.onscroll = function () {
+                document.querySelector('.vuecal__weekdays-headings').style.transform = `translateY(${vuecal.scrollTop}px)`;
+            }
             this.scrollToNine();
+
             this.setDisplayDate(this.currentView, startDate)
 
             this.eventsSince = startDate ?? this.eventsSince;
@@ -1977,10 +1978,6 @@ export default {
         scrollToNine() {
             const calendar = document.querySelector('#vuecal .vuecal__bg')
             calendar.scrollTo({ top: 9 * 54, behavior: 'smooth' })
-
-            document.querySelector('.vuecal__bg').addEventListener('scroll', function () {
-                document.querySelector('.vuecal__weekdays-headings').style.top = this.scrollTop + 'px';
-            });
         },
 
         addFilterableVariable(dataArray, boolean) {
@@ -2165,14 +2162,7 @@ export default {
     line-height: 18px;
     text-align: center;
     color: #fcfcfb;
-    position: absolute;
-    top: 0;
     z-index: 10;
-}
-
-.vuecal__bg .vuecal__cells {
-    position: relative;
-    padding-top: 50px;
 }
 
 .vuecal__flex .vuecal__week-numbers {

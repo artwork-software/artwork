@@ -7,7 +7,7 @@
                     <MenuButton
                         class="-mt-2 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
-                        <CalendarIcon class="w-5 h-5 float-left mr-2" />
+                        <CalendarIcon class="w-5 h-5 float-left mr-2"/>
                         <span class="float-left">{{ this.displayDate }}</span>
                         <ChevronDownIcon
                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
@@ -63,10 +63,13 @@
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
 
-            <div class="ml-5 flex text-error items-center" v-if="eventsWithoutRoom.length > 0">
+            <div class="ml-5 flex text-error items-center cursor-pointer" @click="openEventsWithoutRoomComponent()"
+                 v-if="eventsWithoutRoom.length > 0">
 
-                <ExclamationIcon class="h-6 text-error mr-2" />
-                {{eventsWithoutRoom.length}}{{eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!'}}
+                <ExclamationIcon class="h-6 text-error mr-2"/>
+                {{
+                    eventsWithoutRoom.length
+                }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
 
             </div>
 
@@ -133,8 +136,10 @@
                                         <AddButton text="Speichern" class="text-sm ml-0"
                                                    @click="saveFilter"></AddButton>
                                     </div>
-                                    <hr v-if="filters.length > 0" class="border-secondary rounded-full border-1 mt-4 mb-3">
-                                    <button class="rounded-full bg-buttonBlue px-5 py-2 align-middle flex mb-1" v-for="filter of filters">
+                                    <hr v-if="filters.length > 0"
+                                        class="border-secondary rounded-full border-1 mt-4 mb-3">
+                                    <button class="rounded-full bg-buttonBlue px-5 py-2 align-middle flex mb-1"
+                                            v-for="filter of filters">
                                         <label @click="applyFilter(filter)" class="text-white">{{ filter.name }}</label>
                                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                                     </button>
@@ -234,7 +239,7 @@
                                             <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="category.checked"
-                                                @change="this.changeFilterElements(calendarFilters.roomCategories, category)"
+                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, category)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -257,7 +262,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="area.checked"
-                                                @change="this.changeFilterElements(calendarFilters.areas, area)"
+                                                       @change="this.changeFilterElements(calendarFilters.areas, area)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -281,7 +286,7 @@
                                             <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="attribute.checked"
-                                                @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute)"
+                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -306,7 +311,7 @@
                                             <div v-if="rooms.length > 0" v-for="room in rooms"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="room.checked"
-                                                @change="this.changeFilterElements(calendarFilters.rooms, room)"
+                                                       @change="this.changeFilterElements(calendarFilters.rooms, room)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -347,7 +352,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventType in types" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventType.checked"
-                                                @change="this.changeFilterElements(calendarFilters.eventTypes, eventType)"
+                                                       @change="this.changeFilterElements(calendarFilters.eventTypes, eventType)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -369,7 +374,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventAttribute.checked"
-                                                @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
+                                                       @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -426,73 +431,85 @@
         >
             <template #title="{ title, view }">
                 <div class="mb-6">
-                    {{title}}
+                    {{ title }}
                 </div>
             </template>
             <template #split-label="{ split, view }">
-                    <div class="text-base font-bold">
-                        {{split.label}}
-                    </div>
+                <div class="text-base font-bold">
+                    {{ split.label }}
+                </div>
             </template>
             <template #event="{ event, view }">
                 <div>
-                <div v-if="currentView !== 'month' && (event.audience || event.isLoud)" class="flex absolute right-0 top-0">
-                    <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-                    <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2" alt="attributeIcon"/>
-                </div>
+                    <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                         class="flex absolute right-0 top-0">
+                        <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                             alt="audienceIcon"/>
+                        <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2"
+                             alt="attributeIcon"/>
+                    </div>
 
-                <div class="font-inter subpixel-antialiased text-base text-primary truncate tracking-wide" >{{event.title}}</div>
-                <span class="truncate" v-if="event.eventName && event.eventName !== event.title"> {{event.eventName}}</span>
-                <span class="flex text-xs w-full text-secondary">
-                    <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm")}} - {{ event.end.formatTime("HH:mm") }}  </span><br/>
+                    <div class="font-inter subpixel-antialiased text-base text-primary truncate tracking-wide">
+                        {{ event.title }}
+                    </div>
+                    <span class="truncate"
+                          v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
+                    <span class="flex text-xs w-full text-secondary">
+                    <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
+                            event.end.formatTime("HH:mm")
+                        }}  </span><br/>
                 </span>
-                <div class="mt-3">
-                <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
-                <div class="-mr-3 flex flex-wrap items-center flex-row" v-for="user in event.projectLeaders?.slice(0,3)">
-                    <img :data-tooltip-target="user.id"
-                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full ring-2 ring-white object-cover"
-                         :src="user.profile_photo_url"
-                         alt=""/>
-                    <UserTooltip :user="user"/>
-                </div>
-                    <div v-if="event.projectLeaders.length >= 3" class="my-auto">
-                        <Menu as="div" class="relative">
-                            <div>
-                                <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                    <div
-                                        :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                        <p class="items-center mx-auto">
-                                            +{{event.projectLeaders.length - 3}}
-                                        </p>
-                                    </div>
-                                </MenuButton>
+                    <div class="mt-3">
+                        <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
+                            <div class="-mr-3 flex flex-wrap items-center flex-row"
+                                 v-for="user in event.projectLeaders?.slice(0,3)">
+                                <img :data-tooltip-target="user.id"
+                                     :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                     class="rounded-full ring-2 ring-white object-cover"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                <UserTooltip :user="user"/>
                             </div>
-                            <transition enter-active-class="transition ease-out duration-100"
-                                        enter-from-class="transform opacity-0 scale-95"
-                                        enter-to-class="transform opacity-100 scale-100"
-                                        leave-active-class="transition ease-in duration-75"
-                                        leave-from-class="transform opacity-100 scale-100"
-                                        leave-to-class="transform opacity-0 scale-95">
-                                <MenuItems
-                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
-                                        <Link href="#"
-                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                            <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'" class="rounded-full"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="ml-4">
+                            <div v-if="event.projectLeaders.length >= 3" class="my-auto">
+                                <Menu as="div" class="relative">
+                                    <div>
+                                        <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                            <div
+                                                :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                <p class="items-center mx-auto">
+                                                    +{{ event.projectLeaders.length - 3 }}
+                                                </p>
+                                            </div>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                            <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                                <Link href="#"
+                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                         class="rounded-full"
+                                                         :src="user.profile_photo_url"
+                                                         alt=""/>
+                                                    <span class="ml-4">
                                                                 {{ user.first_name }} {{ user.last_name }}
                                                             </span>
-                                        </Link>
-                                    </MenuItem>
-                                </MenuItems>
-                            </transition>
-                        </Menu>
-                    </div>
-                </div>
+                                                </Link>
+                                            </MenuItem>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu>
+                            </div>
+                        </div>
 
-                </div>
+                    </div>
                 </div>
             </template>
         </vue-cal>
@@ -505,6 +522,16 @@
         :eventTypes="eventTypes"
         :rooms="rooms"
         :event="selectedEvent"
+        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+    />
+    <!-- Termine ohne Raum Modal -->
+    <events-without-room-component
+        v-if="showEventsWithoutRoomComponent"
+        @closed="onEventsWithoutRoomComponentClose()"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :eventsWithoutRoom="this.eventsWithoutRoom"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
     <!-- Termin erstellen Modal-->
@@ -526,7 +553,8 @@
                         class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Hier kannst du die Art des Termins definieren. ihn einem Projekt zuordnen und weitere Infos mit deinem Team teilen. Anschließend kannst du dafür die Raumbelegung anfragen.</span>
                 </div>
                 <div class="flex">
-                    <Listbox as="div" class="flex mt-6 w-1/2 mr-2" v-model="selectedEventType" v-if="canEdit" :onchange="checkCollisions()" id="eventType">
+                    <Listbox as="div" class="flex mt-6 w-1/2 mr-2" v-model="selectedEventType" v-if="canEdit"
+                             :onchange="checkCollisions()" id="eventType">
                         <ListboxButton
                             class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                             <div class="flex items-center my-auto">
@@ -1373,6 +1401,7 @@ import CalendarFilterComponent from "@/Layouts/Components/CalendarFilterComponen
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
 import Button from "@/Jetstream/Button";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
 
 export default {
     name: 'CalendarComponent',
@@ -1415,6 +1444,7 @@ export default {
         AddButton,
         Link,
         EventComponent,
+        EventsWithoutRoomComponent,
         UserTooltip
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
@@ -1511,6 +1541,7 @@ export default {
             roomAttributes: [],
             eventComponentIsVisible: false,
             createEventComponentIsVisible: false,
+            showEventsWithoutRoomComponent: false,
             addEventForm: useForm({
                 title: '',
                 startDate: null,
@@ -1556,7 +1587,7 @@ export default {
 
             Object.entries(this.eventAttributes).forEach(entry => {
                 Object.entries(this.calendarFilters).forEach(filterEntry => {
-                    if(entry[1].value === filterEntry) {
+                    if (entry[1].value === filterEntry) {
                         entry[1].checked = true
                     }
                 })
@@ -1569,14 +1600,14 @@ export default {
         },
         changeChecked(array, filterName) {
             array.forEach(object => {
-                if(this.calendarFilters[`${filterName}`].some(filterObj => filterObj.id === object.id)) {
+                if (this.calendarFilters[`${filterName}`].some(filterObj => filterObj.id === object.id)) {
                     object.checked = true
                 }
             })
         },
         async saveFilter() {
             const filterIds = this.getFilterIds();
-            await axios.post('/filters', { name: this.filterName, calendarFilters: filterIds})
+            await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds})
             await axios.get('/filters')
                 .then(response => {
                     this.filters = response.data;
@@ -1665,9 +1696,16 @@ export default {
             this.selectedEvent = event;
             this.createEventComponentIsVisible = true;
         },
+        openEventsWithoutRoomComponent() {
+            this.showEventsWithoutRoomComponent = true;
+        },
 
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
+            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+        },
+        onEventsWithoutRoomComponentClose() {
+            this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
         /**
@@ -1682,10 +1720,20 @@ export default {
 
         async fetchEvents({view = null, startDate = null, endDate = null}) {
             this.currentView = view ?? this.currentView ?? 'week';
+            console.log(this.currentView);
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
 
-            vuecal.onscroll = function () {
-                document.querySelector('.vuecal__weekdays-headings').style.transform = `translateY(${vuecal.scrollTop}px)`;
+            if (this.currentView === 'week') {
+                console.log('moin');
+                vuecal.onscroll = function () {
+                    document.querySelector('.vuecal__weekdays-headings').style.transform = `translateY(${vuecal.scrollTop}px)`;
+                }
+            }
+            if (this.currentView === 'day') {
+                console.log('hello');
+                vuecal.onscroll = function () {
+                    document.querySelector('.vuecal__flex .vuecal__split-days-headers').style.transform = `translateY(${vuecal.scrollTop}px)`;
+                }
             }
             this.scrollToNine();
 
@@ -1747,10 +1795,18 @@ export default {
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
         },
-        areChecked(array){
+        scrollToNine() {
+            if (this.currentView === 'month') {
+                return;
+            }
+            const calendar = document.querySelector('#vuecal .vuecal__bg')
+            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
+
+        },
+        areChecked(array) {
             let count = 0;
             array.forEach(object => {
-                if(object.checked) {
+                if (object.checked) {
                     count++;
                 }
             })
@@ -1975,10 +2031,6 @@ export default {
             this.addEventForm.projectId = null;
         },
 
-        scrollToNine() {
-            const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({ top: 9 * 54, behavior: 'smooth' })
-        },
 
         addFilterableVariable(dataArray, boolean) {
             dataArray.forEach(element => element.checked = boolean);
@@ -1986,23 +2038,20 @@ export default {
 
         setDisplayDate(view, startDate) {
 
-            if(view === 'day') {
-                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+            if (view === 'day') {
+                const options = {weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'};
                 this.displayDate = startDate.toLocaleDateString('de-DE', options)
-            }
-            else if(view === 'week') {
+            } else if (view === 'week') {
                 let beginOfYear = new Date(startDate.getFullYear(), 0, 1);
                 let days = Math.floor((startDate - beginOfYear) /
                     (24 * 60 * 60 * 1000));
 
                 let weekNumber = Math.ceil(days / 7);
                 this.displayDate = 'Woche - KW ' + weekNumber
-            }
-            else if(view === 'month') {
-                this.displayDate = "Monat - " + startDate.toLocaleDateString('de-DE', { month: 'long', year: 'numeric'})
-            }
-            else {
-                this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', { year: 'numeric'})
+            } else if (view === 'month') {
+                this.displayDate = "Monat - " + startDate.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'})
+            } else {
+                this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             }
         },
 
@@ -2153,7 +2202,11 @@ export default {
     display: none;
 }
 
-.vuecal__flex{
+.vuecal__flex {
+}
+
+.vuecal__bg {
+
 }
 
 .vuecal__weekdays-headings {
@@ -2196,6 +2249,7 @@ export default {
 .vuecal--month-view .vuecal__cell-date {
     padding: 4px;
 }
+
 .vuecal--month-view .vuecal__event {
     padding-top: 0px;
 
@@ -2212,12 +2266,14 @@ export default {
     padding-top: 22px;
     background-color: white;
 }
-.vuecal__event-time{
+
+.vuecal__event-time {
     font-size: 12px;
     letter-spacing: -0.01em;
     line-height: 18px;
     color: #a7a6b1;
 }
+
 .vuecal__title {
     font-size: 2rem; /* 14px */
     line-height: 1.25rem; /* 20px */
@@ -2258,10 +2314,10 @@ export default {
 .vuecal__cell--selected {
     background-color: rgba(48, 23, 173, 0.02) !important;
 }
-.vuecal__cell-split{
+
+.vuecal__cell-split {
     border: 1px solid #D8D7DE;
 }
-
 
 
 /* Custom Event Type Colors */
@@ -2269,6 +2325,7 @@ export default {
 .vuecal__event.occupancy_option {
     background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
 }
+
 .vuecal__event.eventType0 {
     border: solid #A7A6B1;
     border-width: 0px 0px 0px 3px;
@@ -2283,34 +2340,42 @@ export default {
     border: solid #da3f87;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType3 {
     border: solid #eb7a3d;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType4 {
     border: solid #f1b640;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType5 {
     border: solid #86c554;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType6 {
     border: solid #2eaa63;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType7 {
     border: solid #3dc3cb;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType8 {
     border: solid #168fc3;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType9 {
     border: solid #4d908e;
     border-width: 0px 0px 0px 3px;
 }
+
 .vuecal__event.eventType10 {
     border: solid #21485c;
     border-width: 0px 0px 0px 3px;

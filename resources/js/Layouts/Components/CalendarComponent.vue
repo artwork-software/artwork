@@ -75,10 +75,10 @@
         <div class="inline-flex mb-5 justify-end w-1/2">
 
             <!-- Calendar Filter -->
-            <Menu as="div" class="relative inline-block flex items-center text-left max-w-80">
+            <Menu as="div" class="relative inline-block flex items-center text-left w-60">
                 <div class="">
                     <MenuButton
-                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="border border-gray-300 w-60 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <span class="float-left">Filter</span>
                         <ChevronDownIcon
@@ -96,7 +96,7 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 mt-2 max-w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        class="absolute right-0 top-12 w-60 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                         <div class="inline-flex border-none w-1/5">
                             <button>
                                 <FilterIcon class="w-3 mr-1 mt-0.5"/>

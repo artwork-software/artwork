@@ -18,13 +18,24 @@
                 </div>
 
                 <!--    Form    -->
-                <div v-for="event in this.computedEventsWithoutRoom">
+                <div class="border border-2 border-gray-300 p-2 my-8" v-for="event in this.computedEventsWithoutRoom">
+                    <div>
+                        <div v-if="event?.canDelete"
+                             @click="openDeleteEventModal(event)"
+                             class="flex cursor-pointer justify-end">
+                            <div class="flex mr-2">
+                                <TrashIcon class="h-9 w-9 rounded-lg bg-buttonBlue text-white" aria-hidden="true"/>
+                            </div>
+                        </div>
+                    </div>
                 <!--    Type and Title    -->
                 <div class="flex py-4">
+
                     <div class="w-1/2">
                         <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
                             {{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}
                         </div>
+
                         <Listbox as="div" class="flex h-10 mr-2" v-model="event.eventTypeId" v-if="event.canEdit"
                                  :onchange="checkCollisions(event)" id="eventType">
                             <ListboxButton
@@ -87,6 +98,7 @@
 
                         <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
                     </div>
+
                 </div>
                 <!-- Attribute Menu -->
                 <Menu as="div" class="inline-block text-left w-full">
@@ -331,8 +343,8 @@
         v-if="deleteComponentVisible"
         confirm="Löschen"
         titel="Event löschen"
-        :description="'Bist du sicher, dass du ' + event.title + ' aus dem System löschen möchtest?'"
-        @closed="afterConfirm(event)"/>
+        :description="'Bist du sicher, dass du ' + this.eventToDelete.title + ' aus dem System löschen möchtest?'"
+        @closed="afterConfirm(this.eventToDelete)"/>
 
 </template>
 
@@ -407,6 +419,7 @@ export default {
             description: null,
             canEdit: false,
             deleteComponentVisible: false,
+            eventToDelete: null,
         }
     },
 
@@ -561,12 +574,15 @@ export default {
                 .then(() => this.closeModal())
                 .catch(error => event.error = error.response.data.errors);
         },
-
+        openDeleteEventModal(event){
+            this.eventToDelete = event;
+            this.deleteComponentVisible = true;
+        },
         async afterConfirm(bool,event) {
             if (!bool) return this.deleteComponentVisible = false;
 
             return await axios
-                .delete(`/events/${event.id}`)
+                .delete(`/events/${this.eventToDelete.id}`)
                 .then(() => this.closeModal());
         },
 

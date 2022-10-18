@@ -42,6 +42,7 @@ class CalendarEventResource extends JsonResource
             'projectId' => $this->project_id,
             'projectName' => $this->project?->name,
             'roomId' => $this->room_id,
+            'declinedRoomId' => $this->declined_room_id,
             'eventTypeId' => $this->event_type_id,
             'class' => $classString,
             'areaId' => $this->room?->area_id,

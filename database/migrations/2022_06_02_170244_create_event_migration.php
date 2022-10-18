@@ -25,6 +25,7 @@ return new class extends Migration
             $table->boolean('is_loud')->default(false)->nullable();
             $table->unsignedBigInteger('event_type_id');
             $table->unsignedBigInteger('room_id')->nullable();
+            $table->unsignedBigInteger('declined_room_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
             $table->timestamps();

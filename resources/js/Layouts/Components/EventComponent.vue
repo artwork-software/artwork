@@ -6,28 +6,28 @@
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--    Heading    -->
-                <div>
+                <div v-if="canEdit">
                     <h1 class="my-2 flex">
                         <div class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
                             {{ this.event?.id ? 'Event bearbeiten' : 'Neue Raumbelegung' }}
                         </div>
-                        <Menu as="div" v-if=" this.event?.id">
+                        <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option) || event?.canDelete)">
                             <MenuButton class="m-4">
                                 <DotsVerticalIcon class="h-6 w-6 text-gray-600" aria-hidden="true"/>
                             </MenuButton>
 
-                            <MenuItems class="absolute z-40 right-0 w-72 shadow-lg rouned rounded-md bg-gray-100">
+                            <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="approveRequest(this.event, true)"
-                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          @click="approveRequest(this.event)"
+                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung zusagen</div>
                                     </div>
                                 </MenuItem>
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="approveRequest(this.event, false)"
-                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          @click="declineRequest(this.event)"
+                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung absagen</div>
@@ -35,7 +35,7 @@
                                 </MenuItem>
                                 <MenuItem v-if="event?.canDelete"
                                           @click="deleteComponentVisible = true"
-                                          class="hover:bg-indigo-900 hover:text-white p-2 rounded-md">
+                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <TrashIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         Termin löschen
@@ -54,13 +54,19 @@
                     </div>
 
                 </div>
+                <div v-else class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
+                    Termin
+                </div>
 
                 <!--    Form    -->
                 <!--    Type and Title    -->
                 <div class="flex py-4">
                     <div class="w-1/2">
-                        <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!canEdit">
+                        <div class=" w-full flex cursor-pointer truncate" v-if="!canEdit">
+                            <EventTypeIconCollection :height="40" :width="40"
+                                                     :iconName="selectedEventType?.svg_name"/><p class="ml-2 flex items-center text-lg font-lexend font-semibold">
                             {{ selectedEventType?.name }}
+                        </p>
                         </div>
                         <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
                                  :onchange="checkCollisions" id="eventType">
@@ -108,7 +114,7 @@
                         <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
                     </div>
 
-                    <div class="w-1/2 pl-4">
+                    <div class="w-1/2 pl-4" v-if="canEdit">
                         <input v-if="selectedEventType?.individual_name" type="text"
                                v-model="this.eventName"
                                id="eventTitle"
@@ -124,9 +130,12 @@
 
                         <p class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
                     </div>
+                    <div v-else class="flex w-1/2 ml-12 items-center">
+                        {{ this.eventName}}
+                    </div>
                 </div>
                 <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full">
+                <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
                     <div>
                         <MenuButton
                             class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
@@ -174,6 +183,28 @@
                         </MenuItems>
                     </transition>
                 </Menu>
+                <div v-if="!canEdit" class="flex w-full">
+                    <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
+                    Zugeordnet zu: <a
+                                      :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                                      class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
+                    {{ this.selectedProject?.name }}
+                    </a>
+                    </div>
+                    <div class="flex items-center w-1/2">
+                        <p class="truncate max-w-60">
+                        erstellt von {{this.event.created_by.first_name}} {{this.event.created_by.last_name}}</p> <img :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
+                                                                                                                   class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                    </div>
+                </div>
+                <div v-if="!canEdit" class="my-2">
+                    <div v-if="this.startDate === this.endDate">
+                        {{ this.selectedRoom?.name}}, {{this.startDate.toString().substring(10, 8)}}.{{this.startDate.toString().substring(7, 5)}}.{{this.startDate.toString().substring(4, 0)}}, {{this.startTime}} - {{this.endTime}}
+                    </div>
+                    <div v-else>
+                        {{ this.selectedRoom?.name}}, {{this.startDate.toString().substring(10, 8)}}.{{this.startDate.toString().substring(7, 5)}}.{{this.startDate.toString().substring(4, 0)}}, {{this.startTime}} - {{this.endDate.toString().substring(10, 8)}}.{{this.endDate.toString().substring(7, 5)}}.{{this.endDate.toString().substring(4, 0)}}, {{this.endTime}}
+                    </div>
+                </div>
                 <!--    Properties    -->
                 <div class="flex py-2">
                     <div v-if="audience">
@@ -185,7 +216,7 @@
                 </div>
 
                 <!--    Project    -->
-                <div>
+                <div v-if="canEdit">
                     <div class="text-secondary flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
                         <a v-if="this.selectedProject?.id"
@@ -258,7 +289,7 @@
                 </div>
 
                 <!--    Time    -->
-                <div class="flex py-1 flex-col sm:flex-row align-baseline">
+                <div v-if="canEdit" class="flex py-1 flex-col sm:flex-row align-baseline">
                     <div class="sm:w-1/2">
                         <label for="startDate" class="text-secondary text-xs">Start</label>
                         <div class="w-full flex">
@@ -303,11 +334,9 @@
 
                 </div>
 
+
                 <!--    Room    -->
-                <div class="py-1">
-                    <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!canEdit">
-                        {{ selectedRoom?.name }}
-                    </div>
+                <div class="py-1" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
                         <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
                             <div class="flex-grow text-left">
@@ -364,18 +393,29 @@
 
                 <!--    Description    -->
                 <div class="py-2">
-                    <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                    <textarea v-if="canEdit" placeholder="Was gibt es bei dem Termin zu beachten?"
                               id="description"
                               :disabled="!canEdit"
                               v-model="description"
                               rows="4"
                               class="border-gray-300 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    <div v-else-if="this.description" class="mt-4">
+                        {{this.description}}
+                    </div>
                 </div>
-                <div class="flex justify-center w-full py-4" v-if="canEdit">
+                <div v-if="canEdit">
+                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book)" >
                     <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
-                        {{ (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen' }}
+                        Speichern
                     </button>
+                </div>
+                <div class="flex justify-center w-full py-4" v-else>
+                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                            @click="updateOrCreateEvent(true)">
+                        Belegung anfragen
+                    </button>
+                </div>
                 </div>
             </div>
         </template>
@@ -450,6 +490,7 @@ export default {
             audience: false,
             projectName: null,
             title: null,
+            isOption: null,
             eventName: null,
             eventTypeName: null,
             selectedEventType: this.eventTypes[0],
@@ -461,6 +502,7 @@ export default {
             collisionCount: 0,
             description: null,
             canEdit: false,
+            declinedRoomId: null,
             deleteComponentVisible: false,
         }
     },
@@ -646,7 +688,8 @@ export default {
          *
          * @returns {Promise<*>}
          */
-        async updateOrCreateEvent() {
+        async updateOrCreateEvent(isOption = false) {
+            this.isOption = isOption;
 
             if (!this.event?.id) {
                 return await axios
@@ -661,19 +704,24 @@ export default {
         },
 
         async afterConfirm(bool) {
-            console.log(bool)
             if (!bool) return this.deleteComponentVisible = false;
 
             return await axios
                 .delete(`/events/${this.event.id}`)
                 .then(() => this.closeModal());
         },
-
-        async approveRequest(bool) {
-            return await axios
-                .patch('/events/' + this.event?.id + '/accept', {accepted: bool})
+        async approveRequest(event) {
+            event.isOption = false;
+            return await axios.put(`/events/${event.id}`, this.eventData())
                 .then(() => this.closeModal())
-                .catch(error => this.error = error.response.data.errors);
+                .catch(error => event.error = error.response.data.errors);
+        },
+        async declineRequest(event) {
+            this.declinedRoomId = this.selectedRoom?.id;
+            this.selectedRoom = null;
+            return await axios.put(`/events/${event.id}`, this.eventData())
+                .then(() => this.closeModal())
+                .catch(error => event.error = error.response.data.errors);
         },
 
         eventData() {
@@ -686,12 +734,14 @@ export default {
                 description: this.description,
                 audience: this.audience,
                 isLoud: this.isLoud,
+                isOption:this.isOption,
                 eventNameMandatory: this.selectedEventType?.individual_name,
                 projectId: this.selectedProject?.id,
                 projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,
                 projectIdMandatory:this.selectedEventType?.project_mandatory && !this.creatingProject,
-                creatingProject: this.creatingProject
+                creatingProject: this.creatingProject,
+                declinedRoomId: this.declinedRoomId
             };
         },
     },

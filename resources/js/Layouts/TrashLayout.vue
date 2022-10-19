@@ -102,6 +102,10 @@ export default {
                 'Trash/Rooms': {
                     name: 'Räume',
                     href: route('rooms.trashed')
+                },
+                'Trash/Events': {
+                    name: 'Termine',
+                    href: route('events.trashed')
                 }
             }
         }

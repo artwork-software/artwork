@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 
 class EventController extends Controller
@@ -87,16 +88,6 @@ class EventController extends Controller
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($event);
-    }
-
-    public function destroyEvent(Event $event): JsonResponse
-    {
-        $this->authorize('delete', $event);
-
-        broadcast(new OccupancyUpdated())->toOthers();
-        $event->forceDelete();
-
-        return new JsonResponse(['success' => 'Event deleted']);
     }
 
     public function updateEvent(EventUpdateRequest $request, Event $event, HistoryService $historyService): CalendarEventResource
@@ -185,5 +176,50 @@ class EventController extends Controller
             ->get();
 
         return new CalendarEventCollectionResource($events);
+    }
+
+    public function getTrashed(): Response|\Inertia\ResponseFactory
+    {
+        return inertia('Trash/Events', [
+            'trashed_events' => Event::all()->map(fn ($event) => [
+                'id' => $event->id,
+                'name' => $event->name,
+            ])
+        ]);
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param Event $event
+     * @return JsonResponse
+     */
+    public function destroy(Event $event): JsonResponse
+    {
+        $this->authorize('delete', $event);
+
+        broadcast(new OccupancyUpdated())->toOthers();
+        $event->delete();
+
+        return new JsonResponse(['success' => 'Event moved to trash']);
+    }
+
+    public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
+    {
+        $event = Event::onlyTrashed()->findOrFail($id);
+        $this->authorize('delete', $event);
+        $event->forceDelete();
+        broadcast(new OccupancyUpdated())->toOthers();
+
+        return Redirect::route('/events/trashed')->with('success', 'Event deleted');
+    }
+
+    public function restore(int $id): \Illuminate\Http\RedirectResponse
+    {
+        $event = Event::onlyTrashed()->findOrFail($id);
+        $event->restore();
+        broadcast(new OccupancyUpdated())->toOthers();
+
+        return Redirect::route('events.trashed')->with('success', 'Event restored');
     }
 }

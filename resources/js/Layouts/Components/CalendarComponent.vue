@@ -78,10 +78,10 @@
         <div class="inline-flex mb-5 justify-end w-1/2">
 
             <!-- Calendar Filter -->
-            <Menu as="div" class="relative inline-block flex items-center text-left w-60">
+            <Menu as="div" class="relative inline-block flex items-center text-left">
                 <div class="">
                     <MenuButton
-                        class="border border-gray-300 w-60 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <span class="float-left">Filter</span>
                         <ChevronDownIcon
@@ -99,13 +99,13 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 top-12 w-60 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                        <div class="inline-flex border-none w-1/5">
+                        class="absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        <!-- <div class="inline-flex border-none w-1/5">
                             <button>
                                 <FilterIcon class="w-3 mr-1 mt-0.5"/>
                             </button>
-                        </div>
-                        <div class="inline-flex border-none justify-end w-4/5">
+                        </div> -->
+                        <div class="inline-flex border-none justify-end w-full">
                             <button class="flex" @click="resetCalendarFilter">
                                 <XIcon class="w-3 mr-1 mt-0.5"/>
                                 <label class="text-xs">Zurücksetzen</label>
@@ -118,7 +118,7 @@
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
                             <!-- Save Filter Section -->
-                            <Disclosure v-slot="{ open }" v-if="saving" default-open>
+                            <Disclosure v-slot="{ open }" >
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                 >
@@ -129,12 +129,13 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div class="justify-between flex">
+                                    <div class="flex">
                                         <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
                                                class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                                placeholder="Name des Filters"/>
-                                        <AddButton text="Speichern" class="text-sm ml-0"
-                                                   @click="saveFilter"></AddButton>
+                                        <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter" />
+                                        <!-- <AddButton text="Speichern" class="text-sm ml-0"
+                                                   @click="saveFilter"></AddButton> -->
                                     </div>
                                     <hr v-if="filters.length > 0"
                                         class="border-secondary rounded-full border-1 mt-4 mb-3">
@@ -560,7 +561,8 @@ import {
     XCircleIcon,
     XIcon,
     CalendarIcon,
-    ExclamationIcon
+    ExclamationIcon,
+    PlusCircleIcon,
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
@@ -593,6 +595,7 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 export default {
     name: 'CalendarComponent',
     components: {
+        PlusCircleIcon,
         ExclamationIcon,
         Button,
         CalendarFilterTagComponent,

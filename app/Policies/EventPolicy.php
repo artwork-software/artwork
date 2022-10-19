@@ -13,7 +13,8 @@ class EventPolicy
 
     public function create(User $user)
     {
-        return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
+        //return $user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN]);
+        return true;
     }
 
     public function update(User $user, Event $event)

@@ -1,5 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
+    <jet-dialog-modal :show="true" @close="closeModal(false)">
         <template #content>
             <img alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -13,327 +13,426 @@
                         </div>
                     </h1>
                     <h2 class="text-secondary">
-                        Diese Raumbelegungsanfragen wurden vom Raumadmin abgelehnt. Sage die Termine ab oder verschiebe sie in einen anderen Raum.
+                        Diese Raumbelegungsanfragen wurden vom Raumadmin abgelehnt. Sage die Termine ab oder verschiebe
+                        sie in einen anderen Raum.
                     </h2>
                 </div>
 
                 <!--    Form    -->
-                <div class="border border-2 border-gray-300 p-2 my-8" v-for="event in this.computedEventsWithoutRoom">
-                    <div>
-                        <div v-if="event?.canDelete"
-                             @click="openDeleteEventModal(event)"
-                             class="flex cursor-pointer justify-end">
-                            <div class="flex mr-2">
-                                <TrashIcon class="h-9 w-9 rounded-lg bg-buttonBlue text-white" aria-hidden="true"/>
+                <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
+                    <div class="flex w-full border border-2 border-gray-300">
+                        <button class="bg-buttonBlue w-6"
+                                @click="event.opened = !event.opened">
+                            <ChevronUpIcon v-if="event.opened"
+                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                            <ChevronDownIcon v-else
+                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                        </button>
+                        <div class="ml-2 w-11/12" v-if="event.opened && event.canEdit">
+                            <div class="flex w-full justify-between">
+                                <div class="flex justify-start my-auto items-center mt-3.5 ml-1 text-error line-through">
+                                    {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
+                                </div>
+                                <div class="flex justify-end">
+
+                                    <div v-if="event?.canDelete"
+                                         class="flex  justify-end">
+                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
+                                            <TrashIcon class="h-9 w-9 rounded-lg bg-buttonBlue text-white"
+                                                       aria-hidden="true"/>
+                                        </div>
+                                    </div>
+                                    <div v-else>
+                                        <div v-if="event.audience || event.isLoud"
+                                             class="flex justify-end mt-6">
+                                            <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg"
+                                                 class="h-6 w-6 mx-2"
+                                                 alt="audienceIcon"/>
+                                            <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg"
+                                                 class="h-5 w-5 mx-2"
+                                                 alt="attributeIcon"/>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-                <!--    Type and Title    -->
-                <div class="flex py-4">
+                            <!--    Type and Title    -->
+                            <div class="flex py-4">
 
-                    <div class="w-1/2">
-                        <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
-                            {{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}
-                        </div>
+                                <div class="w-1/2">
+                                    <div class="h-10 flex w-full truncate p-2" v-if="!event.canEdit">
+                                        <EventTypeIconCollection :height="20" :width="20"
+                                                                 :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                        <p class="ml-2">
+                                            {{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
 
-                        <Listbox as="div" class="flex h-10 mr-2" v-model="event.eventTypeId" v-if="event.canEdit"
-                                 :onchange="checkCollisions(event)" id="eventType">
-                            <ListboxButton
-                                class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                <div class="flex items-center my-auto">
-                                    <EventTypeIconCollection :height="20" :width="20"
-                                                             :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
-                                    <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}</span>
+                                    </div>
+
+                                    <Listbox as="div" class="flex h-10 mr-2" v-model="event.eventTypeId"
+                                             v-if="event.canEdit"
+                                             :onchange="checkCollisions(event)" id="eventType">
+                                        <ListboxButton
+                                            class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                            <div class="flex items-center my-auto">
+                                                <EventTypeIconCollection :height="20" :width="20"
+                                                                         :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                                <span class="block truncate items-center ml-3 flex">
+                                            <span>{{
+                                                    this.eventTypes.find(type => type.id === event.eventTypeId)?.name
+                                                }}</span>
                                 </span>
-                                    <span
-                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                                <span
+                                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
-                                </div>
-                            </ListboxButton>
+                                            </div>
+                                        </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                <ListboxOptions
-                                    class="absolute w-72 z-10 mt-10 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                    <ListboxOption as="template" class="max-h-8"
-                                                   v-for="eventType in eventTypes"
-                                                   :key="eventType.name"
-                                                   :value="eventType.id"
-                                                   v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                            <EventTypeIconCollection :height="12" :width="12"
-                                                                     :iconName="eventType?.svg_name"/>
-                                            <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                                        <transition leave-active-class="transition ease-in duration-100"
+                                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                            <ListboxOptions
+                                                class="absolute w-72 z-10 mt-10 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                                <ListboxOption as="template" class="max-h-8"
+                                                               v-for="eventType in eventTypes"
+                                                               :key="eventType.name"
+                                                               :value="eventType.id"
+                                                               v-slot="{ active, selected }">
+                                                    <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                        <EventTypeIconCollection :height="12" :width="12"
+                                                                                 :iconName="eventType?.svg_name"/>
+                                                        <span
+                                                            :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
                                                     </span>
-                                            <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                        <span
+                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
                                                       <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
-                                        </li>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </transition>
-                        </Listbox>
-                        <p class="text-xs text-red-800">{{ event.error?.eventType?.join('. ') }}</p>
-                    </div>
-
-                    <div class="w-1/2 pl-4">
-                        <input v-if="this.eventTypes.find(type => type.id === event.eventTypeId)?.individual_name" type="text"
-                               v-model="event.eventName"
-                               id="eventTitle"
-                               placeholder="Terminname*"
-                               :disabled="!event.canEdit"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        <input v-else type="text"
-                               v-model="event.eventName"
-                               id="eventTitle"
-                               placeholder="Terminname"
-                               :disabled="!event.canEdit"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                        <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
-                    </div>
-
-                </div>
-                <!-- Attribute Menu -->
-                <Menu as="div" class="inline-block text-left w-full">
-                    <div>
-                        <MenuButton
-                            class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
-                        >
-                            <span class="float-left">Termineigenschaften wählen</span>
-                            <ChevronDownIcon
-                                class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                                aria-hidden="true"
-                            />
-                        </MenuButton>
-                    </div>
-                    <transition
-                        enter-active-class="transition duration-50 ease-out"
-                        enter-from-class="transform scale-100 opacity-100"
-                        enter-to-class="transform scale-100 opacity-100"
-                        leave-active-class="transition duration-75 ease-in"
-                        leave-from-class="transform scale-100 opacity-100"
-                        leave-to-class="transform scale-95 opacity-0"
-                    >
-                        <MenuItems
-                            class="absolute overflow-y-auto h-24 mt-2 w-10/12 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                            <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
-                                <div class="flex w-full mb-4">
-                                    <input v-model="event.audience"
-                                           :disabled="!event.canEdit"
-                                           type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                                    <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
-
-                                    <div :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
-                                        mit Publikum
-                                    </div>
+                                                    </li>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </transition>
+                                    </Listbox>
+                                    <p class="text-xs text-red-800">{{ event.error?.eventType?.join('. ') }}</p>
                                 </div>
-                                <div class="flex w-full mb-2">
-                                    <input v-model="event.isLoud"
+
+                                <div class="w-1/2 pl-4">
+                                    <input
+                                        v-if="this.eventTypes.find(type => type.id === event.eventTypeId)?.individual_name"
+                                        type="text"
+                                        v-model="event.eventName"
+                                        id="eventTitle"
+                                        placeholder="Terminname*"
+                                        :disabled="!event.canEdit"
+                                        class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    <input v-else type="text"
+                                           v-model="event.eventName"
+                                           id="eventTitle"
+                                           placeholder="Terminname"
                                            :disabled="!event.canEdit"
-                                           type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                                    <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
-                                    <div :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">Es
-                                        wird laut
-                                    </div>
+                                           class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
+                                    <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
+                                </div>
+
+                            </div>
+                            <!-- Attribute Menu -->
+                            <Menu as="div" class="inline-block text-left w-full">
+                                <div>
+                                    <MenuButton
+                                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                                    >
+                                        <span class="float-left">Termineigenschaften wählen</span>
+                                        <ChevronDownIcon
+                                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
+                                            aria-hidden="true"
+                                        />
+                                    </MenuButton>
+                                </div>
+                                <transition
+                                    enter-active-class="transition duration-50 ease-out"
+                                    enter-from-class="transform scale-100 opacity-100"
+                                    enter-to-class="transform scale-100 opacity-100"
+                                    leave-active-class="transition duration-75 ease-in"
+                                    leave-from-class="transform scale-100 opacity-100"
+                                    leave-to-class="transform scale-95 opacity-0"
+                                >
+                                    <MenuItems
+                                        class="absolute overflow-y-auto h-24 mt-2 w-10/12 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                                        <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
+                                            <div class="flex w-full mb-4">
+                                                <input v-model="event.audience"
+                                                       :disabled="!event.canEdit"
+                                                       type="checkbox"
+                                                       class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                                <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
+                                                     alt="audienceIcon"/>
+
+                                                <div
+                                                    :class="[event.audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                                    mit Publikum
+                                                </div>
+                                            </div>
+                                            <div class="flex w-full mb-2">
+                                                <input v-model="event.isLoud"
+                                                       :disabled="!event.canEdit"
+                                                       type="checkbox"
+                                                       class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                                <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2"
+                                                     alt="isLoudIcon"/>
+                                                <div
+                                                    :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                                    Es
+                                                    wird laut
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </MenuItems>
+                                </transition>
+                            </Menu>
+                            <!--    Properties    -->
+                            <div class="flex py-2">
+                                <div v-if="event.audience">
+                                    <TagComponent displayed-text="mit Publikum" hideX="true"></TagComponent>
+                                </div>
+                                <div v-if="event.isLoud">
+                                    <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
                                 </div>
                             </div>
-                        </MenuItems>
-                    </transition>
-                </Menu>
-                <!--    Properties    -->
-                <div class="flex py-2">
-                    <div v-if="event.audience">
-                        <TagComponent   displayed-text="mit Publikum" hideX="true"></TagComponent>
-                    </div>
-                   <div v-if="event.isLoud">
-                       <TagComponent   displayed-text="es wird laut" hideX="true"></TagComponent>
-                   </div>
-                </div>
 
-                <!--    Project    -->
-                <div>
+                            <!--    Project    -->
+                            <div>
 
-                    <div class="text-secondary flex" v-if="!event.creatingProject">
-                        Aktuell zugeordnet zu:
-                        <a v-if="event.projectId"
-                            :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
-                            class="ml-3 text-md flex font-bold font-lexend text-primary">
-                            {{ event.project?.name }}
-                        </a>
-                        <div v-else class="text-primary ml-2">
-                            {{ event.project?.name ?? 'Keinem Projekt' }}
-                        </div>
-                        <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
-                            <button type="button"
-                                    @click="this.deleteProject(event)">
-                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="text-secondary my-2" v-if="event.creatingProject">
-                        Das Projekt wird beim Abspeichern erstellt.
-                    </div>
+                                <div class="text-secondary flex" v-if="!event.creatingProject">
+                                    Aktuell zugeordnet zu:
+                                    <a v-if="event.projectId"
+                                       :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
+                                       class="ml-3 text-md flex font-bold font-lexend text-primary">
+                                        {{ event.project?.name }}
+                                    </a>
+                                    <div v-else class="text-primary ml-2">
+                                        {{ event.project?.name ?? 'Keinem Projekt' }}
+                                    </div>
+                                    <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
+                                        <button type="button"
+                                                @click="this.deleteProject(event)">
+                                            <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="text-secondary my-2" v-if="event.creatingProject">
+                                    Das Projekt wird beim Abspeichern erstellt.
+                                </div>
 
-                    <div class="my-2" v-if="event.canEdit">
-                        <div class="flex pb-2">
+                                <div class="my-2" v-if="event.canEdit">
+                                    <div class="flex pb-2">
                             <span class="mr-4 text-sm"
                                   :class="[!event.creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
                                 Bestehendes Projekt
                             </span>
-                            <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
-                                <input type="checkbox"
-                                       v-model="event.creatingProject"
-                                       :disabled="!event.canEdit"
-                                       id="project-toggle"
-                                       class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 rounded-full
+                                        <label for="project-toggle"
+                                               class="inline-flex relative items-center cursor-pointer">
+                                            <input type="checkbox"
+                                                   v-model="event.creatingProject"
+                                                   :disabled="!event.canEdit"
+                                                   id="project-toggle"
+                                                   class="sr-only peer">
+                                            <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
                             after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
-                                </div>
-                            </label>
-                            <span class="ml-4 text-sm"
-                                  :class="[event.creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                            </div>
+                                        </label>
+                                        <span class="ml-4 text-sm"
+                                              :class="[event.creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
                                 Neues Projekt
                             </span>
-                            <div v-if="showHints" class="ml-3 flex">
-                                <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                <div class="font-nanum text-secondary ml-1 my-auto text-sm">
-                                    Lege gleichzeitig ein neues Projekt an
+                                        <div v-if="showHints" class="ml-3 flex">
+                                            <SvgCollection svgName="arrowLeft" class="mt-1"/>
+                                            <div class="font-nanum text-secondary ml-1 my-auto text-sm">
+                                                Lege gleichzeitig ein neues Projekt an
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <input type="text"
+                                           id="projectName"
+                                           @focusin="event.showProjectSearchResults = true"
+                                           @change="this.projectName = event.projectName"
+                                           @focusout="this.projectName = '';"
+                                           v-model="event.projectName"
+                                           :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                           class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
+                                    <div
+                                        v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
+                                        class="absolute bg-primary truncate sm:text-sm w-10/12">
+                                        <div v-for="(project, index) in projectSearchResults"
+                                             :key="index"
+                                             @click="event.projectId = project.id; event.project = project; event.projectName = ''; this.projectName = ''; event.showProjectSearchResults = false; this.projectSearchResults = [];"
+                                             class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                            {{ project.name }}
+                                        </div>
+                                    </div>
+
+                                    <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
+                                    <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
                                 </div>
                             </div>
-                        </div>
-                        <input type="text"
-                               id="projectName"
-                               v-model="event.projectName"
-                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                        <div v-if="projectSearchResults.length > 0 && !event.creatingProject"
-                             class="absolute bg-primary truncate sm:text-sm w-10/12">
-                            <div v-for="(project, index) in projectSearchResults"
-                                 :key="index"
-                                 @click="event.projectId = project.id; event.projectName = ''"
-                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                                {{ project.name }}
-                            </div>
-                        </div>
-
-                        <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
-                        <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
-                    </div>
-                </div>
-
-                <!--    Time    -->
-                <div class="flex py-1 flex-col sm:flex-row align-baseline">
-                    <div class="sm:w-1/2">
-                        <label for="startDate" class="text-secondary text-xs">Start</label>
-                        <div class="w-full flex">
-                            <input v-model="event.startDate"
-                                   id="startDate"
-                                   @change="checkChanges()"
-                                   type="date"
-                                   :disabled="!event.canEdit"
-                                   required
-                                   class="border-gray-300  disabled:border-none flex-grow"/>
-                            <input v-model="event.startTime"
-                                   id="changeStartTime"
-                                   @change="checkChanges()"
-                                   type="time"
-                                   :disabled="!event.canEdit"
-                                   required
-                                   class="border-gray-300  disabled:border-none"/>
-                        </div>
-                        <p class="text-xs text-red-800">{{ event.error?.start?.join('. ') }}</p>
-                    </div>
-                    <div class="px-2 pt-8">-</div>
-                    <div class="sm:w-1/2">
-                        <label for="endDate" class="text-secondary text-xs">Ende</label>
-                        <div class="w-full flex">
-                            <input v-model="event.endDate"
-                                   id="endDate"
-                                   @change="checkChanges()"
-                                   type="date"
-                                   required
-                                   :disabled="!event.canEdit"
-                                   class="border-gray-300  disabled:border-none flex-grow"/>
-                            <input v-model="event.endTime"
-                                   id="changeEndTime"
-                                   @change="checkChanges()"
-                                   type="time"
-                                   required
-                                   :disabled="!event.canEdit"
-                                   class="border-gray-300  disabled:border-none"/>
-                        </div>
-                        <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
-                    </div>
-
-                </div>
-
-                <!--    Room    -->
-                <div class="py-1">
-                    <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
-                        {{ this.rooms.find(room => room.id === event.roomId)?.name }}
-                    </div>
-                    <Listbox as="div" v-model="event.roomId" id="room" v-if="event.canEdit">
-                        <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow text-left">
-                                {{ this.rooms.find(room => room.id === event.roomId)?.name }}
-                            </div>
-                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                        </ListboxButton>
-                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                            <ListboxOption v-for="room in rooms"
-                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                           :key="room.name"
-                                           :value="room.id"
-                                           v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-white' : '']">
-                                    {{ room.name }}
+                            <!--    Time    -->
+                            <div class="flex py-1 flex-col sm:flex-row align-baseline">
+                                <div class="sm:w-1/2">
+                                    <label for="startDate" class="text-secondary text-xs">Start</label>
+                                    <div class="w-full flex">
+                                        <input v-model="event.startDate"
+                                               id="startDate"
+                                               @change="checkChanges()"
+                                               type="date"
+                                               :disabled="!event.canEdit"
+                                               required
+                                               class="border-gray-300  disabled:border-none flex-grow"/>
+                                        <input v-model="event.startTime"
+                                               id="changeStartTime"
+                                               @change="checkChanges()"
+                                               type="time"
+                                               :disabled="!event.canEdit"
+                                               required
+                                               class="border-gray-300  disabled:border-none"/>
+                                    </div>
+                                    <p class="text-xs text-red-800">{{ event.error?.start?.join('. ') }}</p>
                                 </div>
-                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                            </ListboxOption>
-                        </ListboxOptions>
-                    </Listbox>
-                    <p class="text-xs text-red-800">{{ event.error?.roomId?.join('. ') }}</p>
-                </div>
+                                <div class="sm:w-1/2">
+                                    <label for="endDate" class="text-secondary text-xs">Ende</label>
+                                    <div class="w-full flex">
+                                        <input v-model="event.endDate"
+                                               id="endDate"
+                                               @change="checkChanges()"
+                                               type="date"
+                                               required
+                                               :disabled="!event.canEdit"
+                                               class="border-gray-300  disabled:border-none flex-grow"/>
+                                        <input v-model="event.endTime"
+                                               id="changeEndTime"
+                                               @change="checkChanges()"
+                                               type="time"
+                                               required
+                                               :disabled="!event.canEdit"
+                                               class="border-gray-300  disabled:border-none"/>
+                                    </div>
+                                    <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
+                                </div>
 
-                <!--TODO: WIRD BEIM BEARBEITEN EINES EVENTS IMMER ANGEZEIGT, dass 1 Termin zeitgleich im Raum stattfindet (was nicht stimmt) -> Bug beheben
-                <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
-                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
-                         alt="warnIcon"/>
-                    <div>
-                        Dieser Termin überschneidet sich mit {{ collisionCount }} Terminen im selben Raum.
-                        Diese könnten anderen Projekten zugeordnet sein.
-                    </div>
-                </div>
-                -->
+                            </div>
 
-                <!--    Description    -->
-                <div class="py-2">
+                            <!--    Room    -->
+                            <div class="py-1">
+                                <div class=" w-full h-10 cursor-pointer truncate p-2" v-if="!event.canEdit">
+                                    {{ this.rooms.find(room => room.id === event.roomId)?.name }}
+                                </div>
+                                <Listbox as="div" v-model="event.roomId" id="room" v-if="event.canEdit">
+                                    <ListboxButton
+                                        class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
+                                        <div class="flex-grow text-left">
+                                            {{ this.rooms.find(room => room.id === event.roomId)?.name }}
+                                        </div>
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </ListboxButton>
+                                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-for="room in rooms"
+                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                       :key="room.name"
+                                                       :value="room.id"
+                                                       v-slot="{ active, selected }">
+                                            <div :class="[selected ? 'text-white' : '']">
+                                                {{ room.name }}
+                                            </div>
+                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </Listbox>
+                                <p class="text-xs text-red-800">{{ event.error?.roomId?.join('. ') }}</p>
+                            </div>
+
+                            <!--TODO: WIRD BEIM BEARBEITEN EINES EVENTS IMMER ANGEZEIGT, dass 1 Termin zeitgleich im Raum stattfindet (was nicht stimmt) -> Bug beheben
+                            <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
+                                <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
+                                     alt="warnIcon"/>
+                                <div>
+                                    Dieser Termin überschneidet sich mit {{ collisionCount }} Terminen im selben Raum.
+                                    Diese könnten anderen Projekten zugeordnet sein.
+                                </div>
+                            </div>
+                            -->
+
+                            <!--    Description    -->
+                            <div class="py-2">
                     <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                               id="description"
                               :disabled="!event.canEdit"
                               v-model="event.description"
                               rows="4"
                               class="border-gray-300 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            </div>
+                            <div class="flex justify-center w-full py-4" v-if="event.canEdit">
+                                <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                        @click="updateOrCreateEvent(event)">
+                                    {{
+                                        (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen'
+                                    }}
+                                </button>
+                            </div>
+                        </div>
+                        <!-- View if not opened Event -->
+                        <div class="ml-2 w-11/12" v-else>
+                            <div class=" w-full flex cursor-pointer truncate p-2">
+                                <EventTypeIconCollection :height="40" :width="40"
+                                                         :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
+                                    {{ this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}
+                                </p>
+                                <div class="flex w-1/2 ml-12 items-center">
+                                    {{ event.eventName }}
+                                </div>
+                            </div>
+                            <div class="w-full flex">
+                                <div class="flex w-1/2 items-center my-auto" v-if="event.projectId">
+                                    Projekt:
+                                    <a :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
+                                       class="ml-1 mt-0.5 text-sm items-center flex font-bold font-lexend text-primary">
+                                        {{ event.projectName }}
+                                    </a>
+                                </div>
+                                <div class="flex items-center w-1/2 mb-1">
+                                    <p class="truncate max-w-60 mt-1">
+                                        erstellt von {{ event.created_by.first_name }}
+                                        {{ event.created_by.last_name }}</p> <img
+                                    :data-tooltip-target="event.created_by.id" :src="event.created_by.profile_photo_url"
+                                    :alt="event.created_by.last_name"
+                                    class="ml-2 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                                </div>
+                            </div>
+                            <div class="my-2">
+                                <div class="flex" v-if="event.startDate === event.endDate">
+                                    <p class="text-error line-through">
+                                        {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
+                                    </p> ,
+                                    {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
+                                    {{ event.startTime }} - {{ event.endTime }}
+                                </div>
+                                <div v-else>
+                                    ,
+                                    {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
+                                    {{ event.startTime }} -
+                                    {{ event.endDate.toString().substring(10, 8) }}.{{ event.endDate.toString().substring(7, 5) }}.{{ event.endDate.toString().substring(4, 0) }},
+                                    {{ event.endTime }}
+                                </div>
+                            </div>
+                            <div v-if="event.opened && event.canEdit">
+                                {{event.description}}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="flex justify-center w-full py-4" v-if="event.canEdit">
-                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent(event)">
-                        {{ (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen' }}
-                    </button>
-                </div>
-            </div>
             </div>
         </template>
     </jet-dialog-modal>
@@ -344,7 +443,7 @@
         confirm="Löschen"
         titel="Event löschen"
         :description="'Bist du sicher, dass du ' + this.eventToDelete.title + ' aus dem System löschen möchtest?'"
-        @closed="afterConfirm(this.eventToDelete)"/>
+        @closed="afterConfirm"/>
 
 </template>
 
@@ -448,7 +547,7 @@ export default {
         },
     },
     computed: {
-        computedEventsWithoutRoom: function (){
+        computedEventsWithoutRoom: function () {
             this.eventsWithoutRoom.forEach((event) => {
                 event.startDate = event.start.format('YYYY-MM-DD');
                 event.startTime = event.start.format('HH:mm');
@@ -481,11 +580,11 @@ export default {
             return (new Date(date + ' ' + time)).toISOString()
         },
 
-        checkChanges(event){
+        checkChanges(event) {
             this.updateTimes(event);
             this.checkCollisions(event)
         },
-        checkTypeChange(event){
+        checkTypeChange(event) {
 
             this.checkCollisions(event);
         },
@@ -521,8 +620,8 @@ export default {
 
             event.error = null;
             if (event.startDate && event.endDate && event.startTime && event.endTime) {
-                let startFull = this.setCombinedTimeString(event.startDate,event.startTime,'start');
-                let endFull = this.setCombinedTimeString(event.endDate,event.endTime,'end');
+                let startFull = this.setCombinedTimeString(event.startDate, event.startTime, 'start');
+                let endFull = this.setCombinedTimeString(event.endDate, event.endTime, 'end');
                 return await axios
                     .post('/events', {start: startFull, end: endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => event.error = error.response.data.errors);
@@ -557,7 +656,7 @@ export default {
             }
 
         },
-        deleteProject(event){
+        deleteProject(event) {
             event.project = null;
             event.projectId = null;
         },
@@ -574,23 +673,16 @@ export default {
                 .then(() => this.closeModal())
                 .catch(error => event.error = error.response.data.errors);
         },
-        openDeleteEventModal(event){
+        openDeleteEventModal(event) {
             this.eventToDelete = event;
             this.deleteComponentVisible = true;
         },
-        async afterConfirm(bool,event) {
+        async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
                 .then(() => this.closeModal());
-        },
-
-        async approveRequest(bool) {
-            return await axios
-                .patch('/events/' + this.event?.id + '/accept', {accepted: bool})
-                .then(() => this.closeModal())
-                .catch(error => error = error.response.data.errors);
         },
 
         eventData(event) {
@@ -607,7 +699,7 @@ export default {
                 projectId: event.projectId,
                 projectName: event.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
-                projectIdMandatory:this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject
             };
         },

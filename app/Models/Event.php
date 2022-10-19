@@ -24,6 +24,7 @@ use Illuminate\Support\Collection;
  * @property ?bool $is_loud
  * @property ?int $event_type_id
  * @property ?int $room_id
+ * @property ?int $declined_room_id
  * @property int $user_id
  * @property ?int $project_id
  * @property Carbon $created_at

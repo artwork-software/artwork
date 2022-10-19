@@ -426,7 +426,7 @@
         v-if="deleteComponentVisible"
         confirm="Löschen"
         titel="Event löschen"
-        :description="'Bist du sicher, dass du ' + event.title + ' aus dem System löschen möchtest?'"
+        :description="'Bist du sicher, dass du ' + event.title + ' in den Papierkorb verschieben möchtest?'"
         @closed="afterConfirm"/>
 
 </template>

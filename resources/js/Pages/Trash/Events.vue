@@ -4,9 +4,15 @@
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                                        <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
-                                        {{ event.name }}
-                                        </span>
+                    <p class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                        {{ event.name || "Termin ohne Name" }}
+                    </p>
+                    <p class="text-sm leading-6 font-lexend text-gray-500 mt-2">
+                        {{ event.start }} - {{ event.end }}
+                    </p>
+                    <p class="text-sm leading-6 font-lexend text-gray-500 mt-2">
+                        {{ event.event_type }}
+                    </p>
                 </div>
                 <div class="flex items-center">
                     <Menu as="div" class="my-auto relative">

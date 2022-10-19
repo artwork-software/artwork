@@ -181,9 +181,13 @@ class EventController extends Controller
     public function getTrashed(): Response|\Inertia\ResponseFactory
     {
         return inertia('Trash/Events', [
-            'trashed_events' => Event::all()->map(fn ($event) => [
+            'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
+                'event_type' => $event->event_type?->name,
+                'start' => $event->start_time->format('d.m.Y, H:i'),
+                'end' => $event->end_time->format('d.m.Y, H:i'),
+                'room_name' => $event->room?->label
             ])
         ]);
     }
@@ -211,7 +215,7 @@ class EventController extends Controller
         $event->forceDelete();
         broadcast(new OccupancyUpdated())->toOthers();
 
-        return Redirect::route('/events/trashed')->with('success', 'Event deleted');
+        return Redirect::route('events.trashed')->with('success', 'Event deleted');
     }
 
     public function restore(int $id): \Illuminate\Http\RedirectResponse

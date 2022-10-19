@@ -440,7 +440,7 @@
                     {{ split.label }}
                 </div>
             </template>
-            <template #event="{ event, view }">
+            <template #event="{ event, view}">
                 <div>
                     <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
                          class="flex absolute right-0 top-0">
@@ -456,9 +456,16 @@
                     <span class="truncate"
                           v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
                     <span class="flex text-xs w-full text-secondary">
-                    <span class="items-center mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
+
+                    <span v-if="event.start.getDay() === event.end.getDay()"  class="items-center mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
                             event.end.formatTime("HH:mm")
-                        }}  </span><br/>
+                        }}  </span>
+                        <span v-else>
+                            <span>
+                                {{event.start.format("DD.MM.YYYY HH:mm")}} - {{ event.end.format("DD.MM.YYYY HH:mm")}}
+                            </span>
+
+                        </span><br/>
                 </span>
                     <div class="mt-3">
                         <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
@@ -1464,6 +1471,9 @@ export default {
     margin-top: 3px;
     padding-top: 22px;
     background-color: white;
+}
+.vuecal--month-view .vuecal__cell{
+    height: 10rem ;
 }
 
 .vuecal__view-btn {

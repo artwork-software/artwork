@@ -4,9 +4,22 @@
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                    <p class="text-2xl leading-6 font-bold font-lexend text-gray-900">
-                        {{ event.name || "Termin ohne Name" }}
+                    <p class="text-2xl leading-6 font-bold font-lexend text-gray-900" v-if="!event.name">
+                        {{ event.project?.name || "Termin ohne Name" }}
                     </p>
+                    <div v-else class="flex w-full items-center justify-between">
+                        <div class="mr-12 text-2xl leading-6 font-bold font-lexend text-primary">
+                            {{ event.name}}
+                        </div>
+                        <div v-if="event.project" class="mt-1.5 flex">
+                            zugeordnet zu:
+                            <a v-if="event.project?.id"
+                               :href="route('projects.show', {project: event.project.id, openTab: 'calendar'})"
+                               class="ml-3 text-md flex font-bold font-lexend text-primary">
+                                {{ event.project.name}}
+                            </a>
+                        </div>
+                    </div>
                     <p class="text-sm leading-6 font-lexend text-gray-500 mt-2">
                         {{ event.start }} - {{ event.end }}
                     </p>

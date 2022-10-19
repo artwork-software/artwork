@@ -184,6 +184,7 @@ class EventController extends Controller
             'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
+                'project'=> $event->project,
                 'event_type' => $event->event_type?->name,
                 'start' => $event->start_time->format('d.m.Y, H:i'),
                 'end' => $event->end_time->format('d.m.Y, H:i'),

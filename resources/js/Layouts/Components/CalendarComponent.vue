@@ -63,14 +63,13 @@
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
 
-            <div class="ml-5 flex text-error items-center cursor-pointer" @click="openEventsWithoutRoomComponent()"
+            <div class="ml-5 flex text-error items-center cursor-pointer -mt-1" @click="openEventsWithoutRoomComponent()"
                  v-if="eventsWithoutRoom.length > 0">
 
                 <ExclamationIcon class="h-6 text-error mr-2"/>
                 {{
                     eventsWithoutRoom.length
                 }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-
             </div>
 
         </div>

@@ -21,7 +21,10 @@ class EventUpdateTest extends TestCase
                 'start' => $event->start_time,
                 'end' => $event->end_time,
                 'projectId' => $event->project_id,
-                'eventTypeId' => $event->event_type_id
+                'eventTypeId' => $event->event_type_id,
+                'eventNameMandatory' => false,
+                'projectIdMandatory' => false,
+                'creatingProject' => false,
             ])
             ->assertSuccessful();
 

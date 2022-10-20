@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature;
+namespace Tests\Feature\ChecklistController;
 
 use App\Enums\PermissionNameEnum;
 use App\Models\Checklist;

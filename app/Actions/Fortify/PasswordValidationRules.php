@@ -2,7 +2,7 @@
 
 namespace App\Actions\Fortify;
 
-use Illuminate\Validation\Rules\Password;
+use ZxcvbnPhp\Zxcvbn;
 
 trait PasswordValidationRules
 {
@@ -16,13 +16,8 @@ trait PasswordValidationRules
         return [
             'required',
             'string',
-            Password::min(10)
-                ->letters()
-                ->mixedCase()
-                ->numbers()
-                ->symbols()
-                ->uncompromised(),
-            'confirmed'
+            fn ($attribute, $value, $fail) => (new Zxcvbn())->passwordStrength($value)['score'] >= 3
+                ?: $fail('Bitte wähle ein stärkeres Passwort, in dem du z.B. Buchstaben, Zahlen und Sonderzeichen verwendest.'),
         ];
     }
 }

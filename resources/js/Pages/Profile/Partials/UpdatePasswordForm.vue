@@ -24,7 +24,6 @@
                 form: this.$inertia.form({
                     current_password: '',
                     password: '',
-                    password_confirmation: '',
                 }),
             }
         },
@@ -37,7 +36,7 @@
                     onSuccess: () => this.form.reset(),
                     onError: () => {
                         if (this.form.errors.password) {
-                            this.form.reset('password', 'password_confirmation')
+                            this.form.reset('password')
                             this.$refs.password.focus()
                         }
 

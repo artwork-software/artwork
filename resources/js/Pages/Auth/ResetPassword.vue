@@ -19,11 +19,6 @@
                 <jet-input id="password" type="password" class="mt-1 block w-full" v-model="form.password" required autocomplete="new-password" />
             </div>
 
-            <div class="mt-4">
-                <jet-label for="password_confirmation" value="Confirm Password" />
-                <jet-input id="password_confirmation" type="password" class="mt-1 block w-full" v-model="form.password_confirmation" required autocomplete="new-password" />
-            </div>
-
             <div class="flex items-center justify-end mt-4">
                 <jet-button :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                     Reset Password
@@ -65,7 +60,6 @@
                     token: this.token,
                     email: this.email,
                     password: '',
-                    password_confirmation: '',
                 })
             }
         },
@@ -73,7 +67,7 @@
         methods: {
             submit() {
                 this.form.post(this.route('password.update'), {
-                    onFinish: () => this.form.reset('password', 'password_confirmation'),
+                    onFinish: () => this.form.reset('password'),
                 })
             }
         }

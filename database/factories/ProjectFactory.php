@@ -24,6 +24,9 @@ class ProjectFactory extends Factory
             'description' => $this->faker->paragraph,
             'cost_center' => $this->faker->name,
             'number_of_participants' => $this->faker->numberBetween(5, 500),
+            'sector_id' => Sector::factory(),
+            'category_id' => Category::factory(),
+            'genre_id' => Genre::factory(),
         ];
     }
 }

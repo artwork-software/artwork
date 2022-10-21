@@ -137,8 +137,17 @@ class EventController extends Controller
 
     public function eventIndex(EventIndexRequest $request): CalendarEventCollectionResource
     {
+        $calendarFilters = json_decode($request->input('calendarFilters'));
         $projectId = $request->get('projectId');
         $roomId = $request->get('roomId');
+        $roomIds = $calendarFilters->roomIds;
+        $areaIds = $calendarFilters->areaIds;
+        $eventTypeIds = $calendarFilters->eventTypeIds;
+        $roomAttributeIds = $calendarFilters->roomAttributeIds;
+        $isLoud = $calendarFilters->isLoud;
+        $isNotLoud = $calendarFilters->isNotLoud;
+        $hasAudience = $calendarFilters->hasAudience;
+
 
         $events = Event::query()
             // eager loading
@@ -149,7 +158,21 @@ class EventController extends Controller
             ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
             ->when($roomId, fn (EventBuilder $builder) => $builder->where('room_id', $roomId))
             //war in alter Version, relevant für dich Paul ?
-            ->applyFilter($request->filters())
+            // ->applyFilter($request->filters())
+            // user applied filters
+            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds), fn (EventBuilder $builder) => $builder
+                ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
+                    ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                    ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                    ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                            ->whereIn('room_attributes.id', $roomAttributeIds)))
+                )
+            )
+            ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
+            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud',null))
+            ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->get();
 
         return new CalendarEventCollectionResource($events);
@@ -161,7 +184,7 @@ class EventController extends Controller
             'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
                 'id' => $event->id,
                 'name' => $event->name,
-                'project' => $event->project,
+                'project'=> $event->project,
                 'event_type' => $event->event_type?->name,
                 'start' => $event->start_time->format('d.m.Y, H:i'),
                 'end' => $event->end_time->format('d.m.Y, H:i'),
@@ -173,7 +196,7 @@ class EventController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Event  $event
+     * @param Event $event
      * @return JsonResponse
      */
     public function destroy(Event $event): JsonResponse

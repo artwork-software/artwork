@@ -18,12 +18,12 @@ class HistoryService
         return $this->modelUpdated($project, $project);
     }
 
-    public function updateHistory(Project $project, string $text): ProjectHistory
+    public function updateHistory(Project $project, string $text): Collection
     {
-        return $project->project_histories()->create([
+        return collect($project->project_histories()->create([
             'user_id' => Auth::id(),
             'description' => $text
-        ]);
+        ]));
     }
 
     public function taskUpdated(Task $task): ProjectHistory|Collection
@@ -33,27 +33,27 @@ class HistoryService
         return $this->modelUpdated($task, $task->checklist->project, $wildCards);
     }
 
-    public function modelUpdated(Model $model, Project $project, array $swap = []): Collection
+    public function modelUpdated(Model $model, Project $project, array $swap = []): null|ProjectHistory|Collection
     {
         $config = config('history.' . Str::lower(class_basename($model)));
 
         // is nothing is configured, don't keep the history
         if (! $config) {
-            return collect();
+            return null;
         }
 
         // if the model was deleted and the config is provided, add History
         if (($config['deleted'] ?? false) && ! $model->exists) {
             $description = Str::of($config['deleted'])->swap($swap)->toString();
 
-            return collect([$this->updateHistory($project, $description)]);
+            return $this->updateHistory($project, $description);
         }
 
         // if the model was created and the config is provided, add History
         if (($config['created'] ?? false) && $model->wasRecentlyCreated) {
             $description = Str::of($config['created'])->swap($swap)->toString();
 
-            return collect([$this->updateHistory($project, $description)]);
+            return $this->updateHistory($project, $description);
         }
 
         // foreach property provided in the config

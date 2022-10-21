@@ -28,7 +28,6 @@ class RoomController extends Controller
      */
     public function store(Request $request)
     {
-        /** @var Room $room */
         $room = Room::create([
             'name' => $request->name,
             'description' => $request->description,
@@ -41,7 +40,7 @@ class RoomController extends Controller
             'order' => Room::max('order') + 1,
         ]);
 
-        $room->adjoiningRooms()->sync(collect($request->adjoining_rooms)->pluck("id"));
+        $room->adjoining_rooms()->sync(collect($request->adjoining_rooms)->pluck("id"));
 
         $room->attributes()->sync(collect($request->room_attributes)->pluck("id"));
 
@@ -76,8 +75,8 @@ class RoomController extends Controller
             'roomAttributes' => $room->attributes,
 
             'available_rooms' => Room::where('id', '!=', $room->id)->get(),
-            'adjoiningRoomIds' => $room->adjoiningRooms()->pluck('adjoining_room_id'),
-            'adjoiningRooms' => $room->adjoiningRooms,
+            'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
+            'adjoiningRooms' => $room->adjoining_rooms,
         ]);
     }
 
@@ -101,7 +100,7 @@ class RoomController extends Controller
                 })
         );
 
-        $room->adjoiningRooms()->sync($request->adjoining_rooms);
+        $room->adjoining_rooms()->sync($request->adjoining_rooms);
 
         $room->attributes()->sync($request->room_attributes);
 

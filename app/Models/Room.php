@@ -28,9 +28,6 @@ use Illuminate\Support\Collection;
  * @property \Illuminate\Support\Collection<User> $room_admins
  * @property \Illuminate\Support\Collection<RoomFile> $room_files
  * @property \Illuminate\Support\Collection<Event> $events
- * @property \Illuminate\Support\Collection<\App\Models\Room> $adjoiningRooms
- * @property \Illuminate\Support\Collection<\App\Models\Category> $categories
- * @property \Illuminate\Support\Collection<\App\Models\RoomAttribute> $attributes
  */
 class Room extends Model
 {
@@ -80,11 +77,6 @@ class Room extends Model
     }
 
     public function adjoining_rooms()
-    {
-        return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
-    }
-
-    public function adjoiningRooms()
     {
         return $this->belongsToMany(Room::class, 'adjoining_room_main_room', 'main_room_id', 'adjoining_room_id');
     }

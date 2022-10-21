@@ -1,5 +1,5 @@
 <!doctype html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html xmlns="http://www.w3.org/1999/xhtml">
 
 <head>
     <title>
@@ -135,7 +135,7 @@
                                     <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
                                         <tbody>
                                         <tr>
-                                            <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                     <tbody>
                                                     <tr>
@@ -163,12 +163,12 @@
                                     <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
                                         <tbody>
                                         <tr>
-                                            <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                                                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
                                                     <tbody>
                                                     <tr>
-                                                        <td style="width:150px;">
-                                                            <img height="auto" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="150" />
+                                                        <td style="width:100px;">
+                                                            <img height="auto" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="100" />
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -205,32 +205,18 @@
         <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#27233C;background-color:#27233C;width:100%;">
             <tbody>
             <tr>
-                <td style="direction:ltr;font-size:0px;padding:0;text-align:center;">
+                <td style="direction:ltr;font-size:0px;padding:0px 25px;text-align:center;">
                     <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:middle;width:600px;" ><![endif]-->
                     <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;">
                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
                             <tbody>
-                            <tr>
-                                <td style="vertical-align:middle;padding:0;">
-                                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
-                                        <tbody>
-                                        <tr>
-                                            <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                                                    <tbody>
-                                                    <tr>
-                                                        <td style="width:150px;">
-                                                            <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_small.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="150" />
-                                                        </td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </td>
-                            </tr>
+                                <tr>
+                                    <td style="width:100px;">
+                                        <img height="auto" src="{{ asset('Svgs/Logos/artwork_logo_small.svg') }}"
+                                            style="border:0;display:block;margin: 3em 0 0 2em;height:auto;width:100px;font-size:13px;"
+                                            width="100"/>
+                                    </td>
+                                </tr>
                             </tbody>
                         </table>
                     </div>
@@ -240,39 +226,34 @@
                             <tbody>
                             <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                    <div style="font-family:Inter;font-size:16px;line-height:1;text-align:left;color:#A7A6B1;">Lorem ipsum dolor sit amet, consectetur adipisicing elit. Adipisci alias amet architecto corporis debitis dicta dignissimos distinctio dolores ea inventore iste molestias officiis rem sint, sunt suscipit ullam velit vero.</div>
+                                    <div style="font-family:Inter;
+                                            font-size:14px;
+                                            line-height:1.5;
+                                            text-align:left;
+                                            color:#A7A6B1;">
+                                        Lorem ipsum dolor sit amet, consectetur adipisicing
+                                        elit. Adipisci alias amet architecto corporis
+                                        debitis dicta dignissimos distinctio dolores ea
+                                        inventore iste molestias officiis rem sint, sunt
+                                        suscipit ullam velit vero.
+                                    </div>
                                 </td>
                             </tr>
                             </tbody>
                         </table>
                     </div>
-                    <!--[if mso | IE]></td><td class="" style="vertical-align:top;width:150px;" ><![endif]-->
-                    <div class="mj-column-per-25 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tbody>
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                    <div style="font-family:Inter;font-size:16px;line-height:1;text-align:left;color:#A7A6B1;">Impressum</div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!--[if mso | IE]></td><td class="" style="vertical-align:top;width:150px;" ><![endif]-->
-                    <div class="mj-column-per-25 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                            <tbody>
-                            <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                    <div style="font-family:Inter;font-size:16px;line-height:1;text-align:left;color:#A7A6B1;">Datenschutz</div>
-                                </td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!--[if mso | IE]></td></tr></table><![endif]-->
                 </td>
             </tr>
+                <tr>
+                    <td align="left" style="font-size:0px;padding:25px 50px;word-break:break-word;">
+                        <a style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1;">
+                            Impressum
+                        </a>
+                        <a style="font-family:Inter;font-size:14px;line-height:1;text-align:left;color:#A7A6B1; margin-left: 3em">
+                            Datenschutz
+                        </a>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>

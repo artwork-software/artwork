@@ -459,8 +459,8 @@
                     <span v-if="event.start.getDay() === event.end.getDay()"  class="items-center mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
                             event.end.formatTime("HH:mm")
                         }}  </span>
-                        <span v-else>
-                            <span>
+                        <span class="flex text-xs w-full text-secondary" v-else>
+                            <span class="items-center mx-auto">
                                 {{event.start.format("DD.MM.YYYY HH:mm")}} - {{ event.end.format("DD.MM.YYYY HH:mm")}}
                             </span>
 
@@ -699,31 +699,17 @@ export default {
             showFreeRooms: false,
             showAdjoiningRooms: false,
             myRooms: [],
-            newEventError: null,
-            assignProject: true,
-            addingEvent: false,
-            selectedRoom: null,
-            selectedProject: null,
-            project_query: "",
-            project_search_results: [],
-            creatingProject: false,
-            selectedEventType: null,
             events: [],
             eventsWithoutRoom: [],
             displayedEvents: [],
-            areaFilter: [],
-            roomFilter: [],
-            typeFilter: [],
             rooms: [],
             areas: [],
             displayedRooms: [],
             projects: [],
             selectedEvent: null,
-            error: null,
             collision: 0,
             eventsSince: null,
             eventsUntil: null,
-            showEventModal: false,
             deletingEvent: false,
             currentView: this.initialView ?? 'week',
             roomCategories: [],
@@ -731,38 +717,6 @@ export default {
             eventComponentIsVisible: false,
             createEventComponentIsVisible: false,
             showEventsWithoutRoomComponent: false,
-            addEventForm: useForm({
-                title: '',
-                startDate: null,
-                startTime: null,
-                start: null,
-                endDate: null,
-                endTime: null,
-                end: null,
-                description: '',
-                occupancy_option: false,
-                isLoud: false,
-                audience: false,
-                roomId: null,
-                projectId: null,
-                eventTypeId: null,
-                projectName: null,
-                user_id: this.$page.props.user.id,
-            }),
-        }
-    },
-    watch: {
-        project_query: {
-            handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        this.project_search_results = response.data
-                    })
-                }
-            },
-            deep: true
         }
     },
     methods: {
@@ -859,12 +813,6 @@ export default {
                 endDate: this.eventsUntil
             });
         },
-        resetArrayChecked() {
-
-        },
-        resetBooleanChecked() {
-
-        },
         openEventComponent(event = null) {
             if (event === null) {
                 this.selectedEvent = null;
@@ -909,7 +857,6 @@ export default {
 
         async fetchEvents({view = null, startDate = null, endDate = null}) {
             this.currentView = view ?? this.currentView ?? 'week';
-            console.log(this.currentView);
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
 
             if (this.currentView === 'week') {
@@ -1018,213 +965,9 @@ export default {
             filterIds.showAdjoiningRooms = this.calendarFilters.showAdjoiningRooms
             return filterIds;
         },
-        openEventModal(event) {
-            this.selectedRoom = this.rooms.find((x) => x.id === event.roomId);
-            if (event.title !== '') {
-                const offset = new Date(event.start).getTimezoneOffset()
-                this.selectedEvent = event;
-                this.checkCollisions();
-                let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
-                this.selectedEvent.start = startDate;
-                this.selectedEvent.startDate = startDate.toISOString().slice(0, 10);
-                this.selectedEvent.startTime = startDate.toISOString().slice(11, 16);
-                let endDate = new Date(new Date(event.end).setMinutes(new Date(event.end).getMinutes() - offset))
-                this.selectedEvent.end = endDate;
-                this.selectedEvent.endDate = endDate.toISOString().slice(0, 10);
-                this.selectedEvent.endTime = endDate.toISOString().slice(11, 16);
-                this.showEventModal = true;
-            } else {
-                this.checkCollisions();
-                this.openAddEventModal(event);
-            }
-        },
-        closeEventModal() {
-            this.showEventModal = false;
-            this.selectedEvent = null;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
-        },
-        openAddEventModal(event = null) {
-
-            this.error = null;
-
-            if (event !== null) {
-                const offset = new Date(event.start).getTimezoneOffset()
-                let startDate = new Date(new Date(event.start).setMinutes(new Date(event.start).getMinutes() - offset))
-                this.addEventForm.start = startDate;
-                this.addEventForm.startDate = startDate.toISOString().slice(0, 10);
-                this.addEventForm.startTime = startDate.toISOString().slice(11, 16);
-                let endDate = new Date(new Date(event.end).setMinutes(new Date(event.end).getMinutes() - offset))
-                this.addEventForm.end = endDate;
-                this.addEventForm.endDate = endDate.toISOString().slice(0, 10);
-                this.addEventForm.endTime = endDate.toISOString().slice(11, 16);
-            }
-            if (this.project) {
-                this.addEventForm.projectId = this.projectId;
-                this.selectedProject = this.project;
-            }
-            if (this.room) {
-                this.addEventForm.roomId = this.room.id;
-                this.selectedRoom = this.rooms.find((x) => x.id === this.room.id);
-            }
-            this.addingEvent = true;
-        },
-        closeAddEventModal() {
-            this.addingEvent = false;
-            this.assignProject = false;
-            this.selectedProject = null;
-            this.newProjectName = '';
-            this.creatingProject = false;
-            this.addEventForm.eventType = null;
-            this.addEventForm.title = '';
-            this.addEventForm.start = null;
-            this.addEventForm.startDate = null;
-            this.addEventForm.startTime = null;
-            this.addEventForm.endDate = null;
-            this.addEventForm.endTime = null;
-            this.addEventForm.end = null;
-            this.addEventForm.description = '';
-            this.addEventForm.occupancy_option = false;
-            this.addEventForm.is_loud = false;
-            this.addEventForm.audience = false;
-            this.selectedRoom = null;
-            this.addEventForm.projectId = null;
-            this.addEventForm.projectName = null;
-            this.selectedEventType = this.eventTypes[0];
-            this.newEventError = null;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
-        },
-        showHints() {
-            if (this.selectedRoom === undefined || this.selectedRoom === null) {
-                this.newEventError = 'Wähle zuerst einen Raum aus.';
-            } else if (this.addEventForm.start === undefined) {
-                this.newEventError = 'Wähle zuerst eine Startzeit aus.';
-            } else if (this.addEventForm.end === undefined) {
-                this.newEventError = 'Wähle zuerst eine Endzeit aus.';
-            } else if (this.selectedEventType.project_mandatory && this.selectedProject === null && this.addEventForm.projectName === '') {
-                this.newEventError = 'Gib zuerst einen Projektnamen an.';
-            } else if (this.assignProject && (this.selectedProject === null && this.addEventForm.projectName === '')) {
-                this.newEventError = 'Gib zuerst einen Projektnamen ein';
-            } else if ((this.addEventForm.title === '' && this.selectedEventType.individual_name)
-                && this.newProjectName === ''
-                && this.selectedProject === null) {
-                this.newEventError = 'Gib zuerst einen Terminnamen an.';
-            } else {
-                this.newEventError = ''
-            }
-        },
-        checkProjectPermission(wantedProjectId, userId) {
-            // TODO: Hier den projecten auch die project_admins mitgeben und dann den Code wieder reinnehmen
-            if (wantedProjectId) {
-                return (this.projects.find(project => project.id === wantedProjectId).project_admins.find(admin => admin.id === userId) || this.projects.find(project => project.id === wantedProjectId).project_managers.find(admin => admin.id === userId)) || this.$page.props.is_admin
-            } else {
-                return false;
-            }
-
-        },
-        updateTimes(event) {
-            if (event.startDate) {
-                if (!event.endDate) {
-                    event.endDate = event.startDate;
-                }
-                if (event.startTime) {
-                    if (!event.endTime) {
-                        if (event.startTime === '23:00') {
-                            event.endTime = '23:59';
-                        } else {
-                            let startHours = event.startTime.slice(0, 2);
-                            if (startHours === '23') {
-                                event.endTime = '00:' + event.startTime.slice(3, 5);
-                                let date = new Date();
-                                event.endDate = new Date(date.setDate(new Date(event.endDate).getDate() + 1)).toISOString().slice(0, 10);
-                                this.setCombinedTimeString(event.endDate, event.endTime, 'end', event);
-                            } else {
-                                event.endTime = this.getNextHourString(event.startTime)
-                            }
-                        }
-                    }
-                    this.setCombinedTimeString(event.startDate, event.startTime, 'start', event);
-                } else {
-                    this.setCombinedTimeString(event.startDate, '00:00', 'start', event);
-                }
-            }
-            if (event.endDate) {
-                if (event.endTime) {
-                    this.setCombinedTimeString(event.endDate, event.endTime, 'end', event);
-                } else {
-                    this.setCombinedTimeString(event.endDate, '23:59', 'end', event);
-                }
-
-            }
-
-            this.validateStartBeforeEndTime(event);
-
-            this.checkCollisions();
-        },
-        async validateStartBeforeEndTime(event) {
-
-            this.error = null;
-            if (event.start && event.end) {
-                return await axios
-                    .post('/events', {start: event.start, end: event.end}, {headers: {'X-Dry-Run': true}})
-                    .catch(error => this.error = error.response.data.errors);
-            }
-
-        },
-        setCombinedTimeString(date, time, target, event) {
-            let combinedDateString = (date.toString() + ' ' + time);
-            const offset = new Date(combinedDateString).getTimezoneOffset()
-
-            if (target === 'start') {
-                if (offset === -60) {
-                    event.start = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
-                } else {
-                    event.start = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
-                }
-            } else if (target === 'end') {
-                if (offset === -60) {
-                    event.end = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 60)).toISOString().slice(0, 16);
-                } else {
-                    event.end = new Date(new Date(combinedDateString).setMinutes(new Date(combinedDateString).getMinutes() + 120)).toISOString().slice(0, 16);
-                }
-            }
-        },
-        getNextHourString(timeString) {
-            let hours = timeString.slice(0, 2);
-            let minutes = timeString.slice(3, 5);
-            if ((Number(hours) + 1) < 10) {
-                return '0' + (Number(hours) + 1) + ':' + minutes;
-            } else {
-                return (Number(hours) + 1) + ':' + minutes;
-            }
-
-        },
-        deleteSelectedProject() {
-            this.selectedProject = null;
-            this.addEventForm.projectId = null;
-        },
-        changeRoom() {
-            if (this.selectedEvent) {
-                this.selectedEvent.roomId = this.selectedRoom.id;
-            } else {
-                this.addEventForm.roomId = this.selectedRoom.id;
-            }
-            this.checkCollisions();
-        },
-        addProjectToEvent(project) {
-            this.selectedProject = project;
-            this.addEventForm.projectId = project.id;
-            this.project_query = ""
-        },
-        switchProjectMode() {
-            this.addEventForm.projectName = '';
-            this.addEventForm.projectId = null;
-        },
-
-
         addFilterableVariable(dataArray, boolean) {
             dataArray.forEach(element => element.checked = boolean);
         },
-
         setDisplayDate(view, startDate) {
 
             if (view === 'day') {
@@ -1242,21 +985,6 @@ export default {
             } else {
                 this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             }
-        },
-
-        /**
-         * Filter Events to decide what to display
-         */
-        filterEvents() {
-            // TODO filter events
-            // filter events
-            this.displayedEvents = this.events.filter(event =>
-                (this.areaFilter.length === 0 || this.areaFilter.find(area => area.id === event.areaId))
-                && (this.typeFilter.length === 0 || this.typeFilter.find(type => type.id === event.eventTypeId))
-                && (this.roomFilter.length === 0 || this.roomFilter.find(room => room.id === event.roomId))
-            )
-
-            this.displayedRooms = this.rooms.filter(room => this.displayedEvents.find(event => event.roomId === room.id))
         },
 
         /**
@@ -1328,59 +1056,6 @@ export default {
             this.selectedEvent = event
             this.collision = event.collisionCount
         },
-
-        /**
-         * Updates or creates an event and reloads all events
-         *
-         * @param event
-         * @param isOption
-         * @returns {Promise<*>}
-         */
-        async updateOrCreateEvent(event, isOption) {
-            event.eventTypeId = this.selectedEventType.id;
-            event.roomId = this.selectedRoom.id;
-            event.isOption = isOption;
-            if (event.id) {
-
-                return await axios
-                    .put(`/events/${event.id}`, event)
-                    .then(response => this.closeEventModal())
-                    .catch(error => this.error = error.response.data.errors);
-            }
-            return await axios
-                .post('/events', event)
-                .then(response => {
-                    this.closeAddEventModal();
-                })
-                .catch(error => this.error = error.response.data.errors);
-        },
-        async approveRequest(event) {
-            event.isOption = false;
-            return await axios.put(`/events/${event.id}`, event)
-                .then(response => console.log(response))
-                .catch(error => this.error = error.response.data.errors);
-        },
-        async declineRequest(event) {
-            event.roomId = null;
-            event.declinedRoomId = this.selectedRoom.id;
-            return await axios.put(`/events/${event.id}`, event)
-                .then(response => this.selectedRoom = response)
-                .catch(error => this.error = error.response.data.errors);
-        },
-        openDeleteEventModal() {
-            this.deletingEvent = true;
-        },
-        closeDeleteEventModal() {
-            this.deletingEvent = false;
-        },
-        async deleteEvent() {
-            return await axios
-                .delete(`/events/${this.selectedEvent.id}`)
-                .then(response => {
-                    this.closeEventModal();
-                    this.closeDeleteEventModal();
-                });
-        }
     }
 }
 </script>

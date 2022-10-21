@@ -124,7 +124,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'roomIds' => [$room->id],
                 ],
             ])
@@ -153,7 +153,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'areaIds' => [$room->area->id],
                 ],
             ])
@@ -183,7 +183,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'eventTypeIds' => [$eventType->id],
                 ],
             ])
@@ -213,7 +213,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'roomAttributeIds' => [$room->attributes->first()->id],
                 ],
             ])
@@ -240,7 +240,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'isLoud' => true,
                 ],
             ])
@@ -251,7 +251,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'isLoud' => false,
                 ],
             ])
@@ -278,7 +278,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'hasAudience' => true,
                 ],
             ])
@@ -289,7 +289,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'hasAudience' => false,
                 ],
             ])
@@ -345,7 +345,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'roomIds' => [$room->id],
                     'adjoiningIsLoud' => true,
                 ],
@@ -402,7 +402,7 @@ class EventIndexTest extends TestCase
             ->json('GET', route('events.index'), [
                 'start' => now()->subDay(),
                 'end' => now()->addDay(),
-                'filters' => [
+                'calendarFilters' => [
                     'roomIds' => [$room->id],
                     'adjoiningHasAudience' => true,
                 ],

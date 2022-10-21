@@ -3,20 +3,20 @@
 namespace App\Http\Requests;
 
 use App\Actions\Fortify\PasswordValidationRules;
-use Illuminate\Foundation\Http\FormRequest;
+use App\Models\Invitation;
+use Illuminate\Support\Facades\Hash;
 
-class AcceptInvitationRequest extends FormRequest
+class AcceptInvitationRequest extends UserCreateRequest
 {
     use PasswordValidationRules;
 
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
     public function authorize()
     {
-        return true;
+        $invitation = Invitation::query()
+            ->where('email', $this->request->get('email'))
+            ->firstOrFail();
+
+        return Hash::check($this->request->get('token'), $invitation->token);
     }
 
     /**
@@ -27,9 +27,15 @@ class AcceptInvitationRequest extends FormRequest
     public function rules()
     {
         return [
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users', 'exists:invitations'],
             'password' => $this->passwordRules(),
-            'token' =>  'required|string|min:20|max:20',
-            'email' => 'required|string|email|max:255|unique:users|exists:invitations',
+            'phone_number' => ['string', 'max:15'],
+            'position' => ['required', 'string', 'max:255'],
+            'business' => ['required', 'string', 'max:255'],
+            'description' => ['string', 'max:5000'],
+            'token' => ['required', 'string', 'min:20', 'max:20'],
         ];
     }
 }

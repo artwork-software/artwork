@@ -14,7 +14,6 @@ use Illuminate\Contracts\Auth\StatefulGuard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
@@ -23,12 +22,8 @@ use Spatie\Permission\Models\Role;
 
 class InvitationController extends Controller
 {
-
-    protected StatefulGuard $guard;
-
     public function __construct(StatefulGuard $guard)
     {
-        $this->guard = $guard;
         $this->authorizeResource(Invitation::class);
     }
 
@@ -39,21 +34,20 @@ class InvitationController extends Controller
      */
     public function index()
     {
-
         request()->validate([
             'direction' => ['in:asc,desc', 'string'],
-            'field' => ['in:name,created_at','string']
+            'field' => ['in:name,created_at', 'string']
         ]);
 
         //This is necessary to enable sorting
         $query = Invitation::query();
 
-        if(request()->has(['field', 'direction'])) {
+        if (request()->has(['field', 'direction'])) {
             $query->orderBy(Str::of('invitations.')->append(request('field')), request('direction'));
         }
 
         return inertia('Users/Invitations', [
-            'invitations' => $query->paginate(10)->through(fn($invitation) => [
+            'invitations' => $query->paginate(10)->through(fn ($invitation) => [
                 'id' => $invitation->id,
                 'name' => $invitation->name,
                 'email' => $invitation->email,
@@ -62,7 +56,8 @@ class InvitationController extends Controller
         ]);
     }
 
-    public function invite() {
+    public function invite()
+    {
         return inertia('Users/Invite', [
             'available_roles' => Role::all()->pluck('name'),
             'available_permissions' => Permission::all()->pluck('name'),
@@ -72,7 +67,7 @@ class InvitationController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param StoreInvitationRequest $request
+     * @param  StoreInvitationRequest  $request
      * @return RedirectResponse
      */
     public function store(StoreInvitationRequest $request)
@@ -154,58 +149,43 @@ class InvitationController extends Controller
     public function destroy(Invitation $invitation)
     {
         $invitation->delete();
+
         return Redirect::back()->with('success', 'Invitation deleted');
     }
 
-    public function accept(Request $request) {
+    public function accept(Request $request)
+    {
         return inertia('Users/Accept', [
             'token' => $request->query('token'),
             'email' => $request->query('email'),
         ]);
     }
 
-    public function handle_accept(AcceptInvitationRequest $request) {
+    public function createUser(AcceptInvitationRequest $request, StatefulGuard $guard)
+    {
+        /** @var Invitation $invitation */
+        $invitation = Invitation::query()
+            ->where('email', request()->email)
+            ->with('departments')
+            ->firstOrFail();
 
-        $invitation = Invitation::where('email', $request->email)->first();
+        /** @var User $user */
+        $user = User::create($request->userData());
 
-        if (Hash::check($request->token, $invitation->token)) {
+        $user->departments()->sync($invitation->departments->pluck('id'));
 
-            $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $invitation->email,
-                'phone_number' => $request->phone_number,
-                'password' => Hash::make($request->password),
-                'position' => $request->position,
-                'business' => $request->business,
-                'description' => $request->description,
-                'opened_checklists' => [],
-                'opened_areas' => []
-            ]);
-
-            $departments = $invitation->departments;
-
-            foreach($departments as $department) {
-                $department->users()->attach($user->id);
-            }
-
-            if($invitation->role) {
-                $user->assignRole($invitation->role);
-            }
-
-            $invitation->delete();
-
-            $this->guard->login($user);
-
+        if ($invitation->role) {
             $user->assignRole($invitation->role);
-            $user->givePermissionTo(json_decode($invitation->permissions));
-
-            broadcast(new UserUpdated())->toOthers();
-
-            return Redirect::to('/')->with('success', 'Herzlich Willkommen.');
-
-        } else {
-            abort(403);
         }
+
+        $invitation->delete();
+
+        $guard->login($user);
+        $user->assignRole($invitation->role);
+        $user->givePermissionTo(json_decode($invitation->permissions));
+
+        broadcast(new UserUpdated())->toOthers();
+
+        return Redirect::route('dashboard')->with('success', 'Herzlich Willkommen.');
     }
 }

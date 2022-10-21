@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -22,5 +23,12 @@ class InvitationFactory extends Factory
             'token' => Str::random(20),
             'permissions' => ['invitation permission factory']
         ];
+    }
+
+    public function withToken(string $token): self
+    {
+        return $this->state([
+            'token' => Hash::make($token),
+        ]);
     }
 }

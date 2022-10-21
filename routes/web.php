@@ -38,14 +38,13 @@ use Inertia\Inertia;
 
 Route::get('/', [AppController::class, 'index']);
 
-Route::get('/password_feedback', [AppController::class, 'get_password_feedback']);
-Route::get('/email', [AppController::class, 'validate_email']);
+Route::get('/password_feedback', [AppController::class, 'getPasswordScore']);
 
-Route::get('/setup', [AppController::class, 'setup_company'])->name('setup');
-Route::post('/setup', [AppController::class, 'create_admin'])->name('setup.create');
+Route::get('/setup', [AppController::class, 'showSetupPage'])->name('setup');
+Route::post('/setup', [AppController::class, 'createAdmin'])->name('setup.create');
 
 Route::get('/users/invitations/accept', [InvitationController::class, 'accept']);
-Route::post('/users/invitations/accept', [InvitationController::class, 'handle_accept'])->name('invitation.accept');
+Route::post('/users/invitations/accept', [InvitationController::class, 'createUser'])->name('invitation.accept');
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
@@ -55,8 +54,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
     Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
-    Route::put('/tool/settings', [AppController::class, 'update_tool'])->name('tool.update');
-    Route::put('/tool/settings/email', [AppController::class, 'update_EmailSettings'])->name('tool.updateMail');
+    Route::put('/tool/settings', [AppController::class, 'updateTool'])->name('tool.update');
+    Route::put('/tool/settings/email', [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

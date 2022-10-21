@@ -23,11 +23,11 @@ class HistoryServiceTest extends TestCase
         Config::set('history.task.deleted', 'Some deletion Text with {swap}');
         $task->delete();
 
-        /** @var ProjectHistory $history */
         $history = (new HistoryService())->modelUpdated($task, $project, ['{swap}' => 'Swappy']);
 
-        $this->assertNotNull($history?->description);
-        $this->assertEquals('Some deletion Text with Swappy', $history->description);
+        $this->assertCount(1, $history);
+        $this->assertNotNull($history->first()->description);
+        $this->assertEquals('Some deletion Text with Swappy', $history->first()->description);
     }
 
     public function testHistoryOfCreatedModel()
@@ -38,11 +38,11 @@ class HistoryServiceTest extends TestCase
 
         Config::set('history.task.created', 'Some creation Text with {swap}');
 
-        /** @var ProjectHistory $history */
         $history = (new HistoryService())->modelUpdated($task, $project, ['{swap}' => 'Swappy']);
 
-        $this->assertNotNull($history?->description);
-        $this->assertEquals('Some creation Text with Swappy', $history->description);
+        $this->assertCount(1, $history);
+        $this->assertNotNull($history->first()->description);
+        $this->assertEquals('Some creation Text with Swappy', $history->first()->description);
     }
 
     public function testHistoryOfUpdatedPropertyAddedModel()
@@ -59,7 +59,7 @@ class HistoryServiceTest extends TestCase
         $collectionOfHistory = (new HistoryService())->modelUpdated($task, $project, ['{swap}' => 'Swappy']);
 
         $this->assertCount(1, $collectionOfHistory);
-        $this->assertNotNull($collectionOfHistory->first()?->description);
+        $this->assertNotNull($collectionOfHistory->first()->first()->description);
         $this->assertEquals('Some added Text with Swappy, , and new Description', $collectionOfHistory->first()->description);
     }
 

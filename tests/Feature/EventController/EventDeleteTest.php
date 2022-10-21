@@ -19,7 +19,9 @@ class EventDeleteTest extends TestCase
             ->delete(route('events.delete', ['event' => $event]))
             ->assertSuccessful();
 
-        $this->assertDatabaseCount('events', 0);
+        $this->assertSoftDeleted('events', [
+            'id' => $event->id,
+        ]);
     }
 
     public function testEventDeletePermissions()

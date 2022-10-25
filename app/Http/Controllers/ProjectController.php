@@ -233,7 +233,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center', 'categories','sectors','genres');
+        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
 
         // authorization
         if ((! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
@@ -243,7 +243,7 @@ class ProjectController extends Controller
         }
 
         $project->fill($update_properties);
-        $historyService->projectUpdated($project);
+
         $project->save();
 
 
@@ -253,6 +253,7 @@ class ProjectController extends Controller
         $project->categories()->sync($request->projectCategoryIds);
         $project->genres()->sync($request->projectGenreIds);
         $project->sectors()->sync($request->projectSectorIds);
+        $historyService->projectUpdated($project);
 
         return Redirect::back();
     }

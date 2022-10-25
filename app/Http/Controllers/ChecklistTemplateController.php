@@ -50,7 +50,7 @@ class ChecklistTemplateController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
@@ -115,7 +115,7 @@ class ChecklistTemplateController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\ChecklistTemplate  $checklistTemplate
+     * @param \App\Models\ChecklistTemplate $checklistTemplate
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(ChecklistTemplate $checklistTemplate)
@@ -128,7 +128,7 @@ class ChecklistTemplateController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\ChecklistTemplate  $checklistTemplate
+     * @param \App\Models\ChecklistTemplate $checklistTemplate
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function edit(ChecklistTemplate $checklistTemplate)
@@ -141,8 +141,8 @@ class ChecklistTemplateController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\ChecklistTemplate  $checklistTemplate
+     * @param \Illuminate\Http\Request $request
+     * @param \App\Models\ChecklistTemplate $checklistTemplate
      * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ChecklistTemplate $checklistTemplate)
@@ -160,11 +160,13 @@ class ChecklistTemplateController extends Controller
 
         $checklistTemplate->task_templates()->delete();
 
-        foreach ($request->task_templates as $task_template) {
-            if (! is_array($task_template)) {
-                $checklistTemplate->task_templates()->save($task_template);
-            } else {
-                $checklistTemplate->task_templates()->create($task_template);
+        if ($request->task_templates) {
+            foreach ($request->task_templates as $task_template) {
+                if (!is_array($task_template)) {
+                    $checklistTemplate->task_templates()->save($task_template);
+                } else {
+                    $checklistTemplate->task_templates()->create($task_template);
+                }
             }
         }
 
@@ -174,7 +176,7 @@ class ChecklistTemplateController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\ChecklistTemplate  $checklistTemplate
+     * @param \App\Models\ChecklistTemplate $checklistTemplate
      * @return \Illuminate\Http\RedirectResponse
      */
     public function destroy(ChecklistTemplate $checklistTemplate)

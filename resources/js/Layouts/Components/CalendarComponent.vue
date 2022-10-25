@@ -440,7 +440,7 @@
                 </div>
             </template>
             <template #event="{ event, view}">
-                <div>
+                <div :class="currentView === 'month' ? 'border-2  border-gray-100' : ''">
                     <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
                          class="flex absolute right-0 top-0">
                         <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
@@ -452,6 +452,9 @@
                     <div class="font-inter subpixel-antialiased text-base text-primary truncate tracking-wide">
                         {{ event.title }}
                     </div>
+                    <div v-if="currentView !== 'month'">
+
+
                     <span class="truncate"
                           v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
                     <span class="flex text-xs w-full text-secondary">
@@ -465,7 +468,7 @@
                             </span>
 
                         </span><br/>
-                </span>
+                    </span>
                     <div class="mt-3">
                         <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
                             <div class="-mr-3 flex flex-wrap items-center flex-row"
@@ -518,6 +521,7 @@
 
                     </div>
                 </div>
+                </div>
             </template>
         </vue-cal>
     </div>
@@ -528,6 +532,7 @@
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
+        :project="project"
         :event="selectedEvent"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />

@@ -507,7 +507,7 @@ export default {
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project'],
 
     emits: ['closed'],
 
@@ -536,6 +536,9 @@ export default {
         openModal() {
             this.canEdit = (!this.event?.id) || this.event?.canEdit;
             if (!this.event){
+                if(this.project){
+                    this.selectedProject = {id: this.project.id, name: this.project.name};
+                }
                 return;
             }
 

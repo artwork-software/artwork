@@ -2,7 +2,7 @@
     <app-layout>
         <div class="py-4 flex flex-col md:flex-row">
             <!-- Greetings Div -->
-            <div class="mr-12 overflow-x-auto">
+            <div class="mr-12 overflow-x-auto w-full">
                 <div class="ml-14 mt-10">
                     <h2 class="text-3xl font-lexend font-black text-primary flex mb-4">Hallo {{
                             $page.props.user.first_name
@@ -24,18 +24,18 @@
                 </div>
             </div>
             <!-- Task Div -->
-            <div class="px-4 mt-20 overflow-y-auto">
-                <div class="flex w-full">
-                    <h2 class="font-bold font-lexend text-2xl w-full">Meine Aufgaben</h2>
+            <div class="min-w-fit px-4 mt-20 overflow-y-auto">
+                <div class="flex">
+                    <h2 class="font-bold font-lexend text-2xl">Meine Aufgaben</h2>
                     <Link :href="route('tasks.own')"
-                        class="flex justify-end uppercase text-sm text-secondary w-full items-end subpixel-antialiased">
+                        class="flex ml-4 justify-end uppercase text-sm text-secondary items-end subpixel-antialiased">
                         Alle Ansehen
                     </Link>
                 </div>
                 <div class="mt-10" v-for="task in this.sortedTasksDeadline">
                     <div :key="task.id">
                         <div>
-                            <div class="flex w-full">
+                            <div class="flex">
                                 <input @change="updateTaskStatus(task)" v-model="task.done"
                                     type="checkbox"
                                     class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>

@@ -229,7 +229,7 @@
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="w-full h-full">
+        <div class="w-full h-full mb-48">
             <div class="ml-20">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
@@ -1867,19 +1867,40 @@ export default {
                 done: false,
                 user_id: this.$page.props.user.id
             }),
+            attributeForm: useForm({
+
+            }),
         }
     },
     methods: {
         deleteCategoryFromProject(category) {
             this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
+            this.assignedUsers.forEach(user => {
+                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+            })
+            this.assignedDepartments.forEach(department => {
+                this.form.assigned_departments.push(department);
+            })
             this.form.patch(route('projects.update', {project: this.project.id}));
         },
         deleteGenreFromProject(genre) {
             this.form.projectGenreIds.splice(this.form.projectGenreIds.indexOf(genre.id), 1)
+            this.assignedUsers.forEach(user => {
+                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+            })
+            this.assignedDepartments.forEach(department => {
+                this.form.assigned_departments.push(department);
+            })
             this.form.patch(route('projects.update', {project: this.project.id}));
         },
         deleteSectorFromProject(sector) {
             this.form.projectSectorIds.splice(this.form.projectSectorIds.indexOf(sector.id), 1)
+            this.assignedUsers.forEach(user => {
+                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+            })
+            this.assignedDepartments.forEach(department => {
+                this.form.assigned_departments.push(department);
+            })
             this.form.patch(route('projects.update', {project: this.project.id}));
         },
         changeChecklistStatus(checklist) {
@@ -1889,12 +1910,12 @@ export default {
 
                 openedChecklists.push(checklist.id)
 
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists},{preserveState: true, preserveScroll: true});
             } else {
                 const filteredList = this.opened_checklists.filter(function (value) {
                     return value !== checklist.id;
                 })
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList},{preserveState: true, preserveScroll: true});
             }
         },
         selectNewFiles() {
@@ -1997,14 +2018,14 @@ export default {
 
             if (this.selectedTemplate.id !== null) {
                 this.checklistForm.template_id = this.selectedTemplate.id;
-                this.checklistForm.post(route('checklists.store'), {});
+                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
                 this.checklistForm.template_id = null;
                 this.closeAddChecklistModal();
             } else {
                 if (this.checklistForm.private === true) {
                     this.checklistForm.user_id = this.$page.props.user.id;
                 }
-                this.checklistForm.post(route('checklists.store'), {});
+                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
                 this.closeAddChecklistModal();
             }
 
@@ -2121,7 +2142,7 @@ export default {
             this.closeAddTaskModal();
         },
         editTask() {
-            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id}));
+            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},),{preserveState: true, preserveScroll: true});
             this.closeEditTaskModal();
         },
         openEditTaskModal(task) {
@@ -2140,7 +2161,7 @@ export default {
 
         },
         addCommentToProject() {
-            this.commentForm.post(route('comments.store'), {});
+            this.commentForm.post(route('comments.store'), {preserveState: true, preserveScroll: true});
             this.commentForm.text = "";
         },
         checkAllTasks(checklist) {
@@ -2165,10 +2186,10 @@ export default {
             return checked
         },
         deleteTask(task) {
-            this.$inertia.delete(`/tasks/${task.id}`);
+            this.$inertia.delete(`/tasks/${task.id}`, {preserveState: true, preserveScroll: true});
         },
         deleteCommentFromProject(comment) {
-            this.$inertia.delete(`/comments/${comment.id}`);
+            this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
         },
         duplicateChecklist(checklist) {
             let departmentIds = [];
@@ -2182,7 +2203,7 @@ export default {
                 })
                 this.duplicateForm.assigned_department_ids = departmentIds
             }
-            this.duplicateForm.post(route('checklists.store'), {})
+            this.duplicateForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true})
             this.duplicateForm.name = "";
             this.duplicateForm.tasks = [];
             this.duplicateForm.departments = [];
@@ -2199,13 +2220,13 @@ export default {
         deleteChecklistFromProject() {
             if (this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
                 this.project.public_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`);
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {preserveState: true, preserveScroll: true});
                 this.closeDeleteChecklistModal();
                 return;
             }
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
                 this.project.private_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`);
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {preserveState: true, preserveScroll: true});
                 this.closeDeleteChecklistModal();
             }
         },

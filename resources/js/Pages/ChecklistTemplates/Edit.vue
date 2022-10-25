@@ -24,11 +24,11 @@
                         <span
                             class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>
-                    <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
+                    <div v-else class="-mr-3 my-auto" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9 rounded-full ring-white ring-2" :iconName="team.svg_name"/>
                     </div>
                     <div @click="openChangeTeamsModal"
-                         class="text-secondary flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
+                         class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
                         <PencilAltIcon
                             class="h-5 w-5 text-primaryText group-hover:text-white"
                             aria-hidden="true"/>
@@ -79,16 +79,17 @@
                     </draggable>
                 </div>
                 <div class="pt-12">
-                    <div class="mt-4 grid grid-cols-1 gap-y-4 gap-x-4 items-center sm:grid-cols-8">
-                        <button v-if="!showSuccess" @click="editChecklistTemplate"
-                                class="sm:col-span-3 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        >Speichern
-                        </button>
-                        <button v-else type="submit"
-                                class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                    <div class="mt-4">
+                        <AddButton v-if="!showSuccess" class=" bg-primary hover:bg-primaryHover focus:outline-none mt-6 items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="editChecklistTemplate"
+                                   text="Speichern" mode="page" />
+                        <button
+                                class="px-24 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
                         >
-                            <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
+                            <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
                         </button>
+
                     </div>
                 </div>
             </div>
@@ -120,13 +121,12 @@
                                                 v-model="newTaskDescription" rows="3"
                                                 class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <button
-                            :class="[this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="addTaskToTemplate"
-                            :disabled="this.newTaskName === ''">
-                            Hinzufügen
-                        </button>
+                        <AddButton :class="this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none'"
+                                   class="mt-6 mx-auto items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="addTaskToTemplate"
+                                   :disabled="this.newTaskName === ''"
+                                   text="Hinzufügen" mode="modal"/>
                     </div>
 
                 </div>
@@ -221,6 +221,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import draggable from "vuedraggable";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default {
     name: "Template Edit",
@@ -245,7 +246,8 @@ export default {
         CheckIcon,
         ChevronDownIcon,
         PlusSmIcon,
-        draggable
+        draggable,
+        AddButton
     },
     data() {
         return {
@@ -262,8 +264,8 @@ export default {
                 name: this.checklist_template.name,
                 //user who created the template
                 user_id: this.$page.props.user.id,
-                task_templates: this.checklist_template.tasks,
-                departments: this.checklist_template.departments
+                task_templates: this.checklist_template.tasks? this.checklist_template.tasks : [],
+                departments: this.checklist_template.departments? this.checklist_template.departments : [],
             }),
             newTaskName:"",
             newTaskDescription:"",

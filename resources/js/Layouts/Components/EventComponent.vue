@@ -8,7 +8,7 @@
                 <!--    Heading    -->
                 <div v-if="canEdit">
                     <h1 class="my-2 flex">
-                        <div class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
+                        <div class="flex-grow headline1 my-2">
                             {{ this.event?.id ? 'Event bearbeiten' : 'Neue Raumbelegung' }}
                         </div>
                         <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option) || event?.canDelete)">
@@ -19,7 +19,7 @@
                             <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
                                           @click="approveRequest(this.event)"
-                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
+                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung zusagen</div>
@@ -27,7 +27,7 @@
                                 </MenuItem>
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
                                           @click="declineRequest(this.event)"
-                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
+                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung absagen</div>
@@ -35,7 +35,7 @@
                                 </MenuItem>
                                 <MenuItem v-if="event?.canDelete"
                                           @click="deleteComponentVisible = true"
-                                          class="group flex items-center px-4 py-2 text-sm subpixel-antialiased hover:bg-primaryHover hover:text-white text-secondary">
+                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
                                     <div class="flex">
                                         <TrashIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         Termin löschen
@@ -44,17 +44,11 @@
                             </MenuItems>
                         </Menu>
                     </h1>
-                    <h2 class="text-secondary">
+                    <h2 class="xsLight">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
-                    <div v-if="showHints" class="mt-6 font-nanum text-secondary">
-                        Hier kannst du die Art des Termins definieren. ihn einem Projekt zuordnen
-                        und weitere Infos mit deinem Team teilen.
-                        Anschließend kannst du dafür die Raumbelegung anfragen.
-                    </div>
-
                 </div>
-                <div v-else class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
+                <div v-else class="flex-grow headline1">
                     Termin
                 </div>
 
@@ -69,9 +63,9 @@
                         </p>
                         </div>
                         <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
-                                 :onchange="checkCollisions" id="eventType">
+                                  id="eventType">
                             <ListboxButton
-                                class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                class="pl-3 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
                                     <EventTypeIconCollection :height="20" :width="20"
                                                              :iconName="selectedEventType?.svg_name"/>
@@ -115,12 +109,7 @@
                     </div>
 
                     <div class="w-1/2 pl-4" v-if="canEdit">
-                        <input v-if="selectedEventType?.individual_name" type="text"
-                               v-model="this.eventName"
-                               id="eventTitle"
-                               placeholder="Terminname*"
-                               :disabled="!canEdit"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <inputComponent v-if="selectedEventType?.individual_name" v-model="this.eventName" placeholder="Terminname*" />
                         <input v-else type="text"
                                v-model="this.eventName"
                                id="eventTitle"
@@ -128,7 +117,7 @@
                                :disabled="!canEdit"
                                class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                        <p class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
+                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
                     </div>
                     <div v-else class="flex w-1/2 ml-12 items-center">
                         {{ this.eventName}}
@@ -138,9 +127,12 @@
                 <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
                     <div>
                         <MenuButton
-                            class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                            class="inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                         >
-                            <span class="float-left">Termineigenschaften wählen</span>
+
+                            <span class="float-left flex xsLight subpixel-antialiased"><img src="/Svgs/IconSvgs/icon_adjustments.svg"
+                                                                                            class="mr-2"
+                                                                                            alt="attributeIcon"/>Termineigenschaften wählen</span>
                             <ChevronDownIcon
                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                 aria-hidden="true"
@@ -165,7 +157,7 @@
                                            class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
                                     <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
-                                    <div :class="[audience ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                    <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
                                         mit Publikum
                                     </div>
                                 </div>
@@ -175,7 +167,7 @@
                                            type="checkbox"
                                            class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
                                     <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
-                                    <div :class="[isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">Es
+                                    <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto']">Es
                                         wird laut
                                     </div>
                                 </div>
@@ -192,7 +184,7 @@
                     </a>
                     </div>
                     <div class="flex items-center w-1/2">
-                        <p class="truncate max-w-60">
+                        <p class="truncate xsLight subpixel-antialiased max-w-60">
                         erstellt von {{this.event.created_by.first_name}} {{this.event.created_by.last_name}}</p> <img :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
                                                                                                                    class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
                     </div>
@@ -217,14 +209,14 @@
 
                 <!--    Project    -->
                 <div v-if="canEdit">
-                    <div class="text-secondary flex" v-if="!this.creatingProject">
+                    <div class="xsLight flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
                         <a v-if="this.selectedProject?.id"
                             :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
-                            class="ml-3 text-md flex font-bold font-lexend text-primary">
+                            class="ml-3 flex xsDark">
                             {{ this.selectedProject?.name }}
                         </a>
-                        <div v-else class="text-primary ml-2">
+                        <div v-else class="xsDark ml-2">
                             {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                         </div>
                         <div v-if="this.selectedProject?.id && this.canEdit" class="flex items-center my-auto">
@@ -234,14 +226,14 @@
                             </button>
                         </div>
                     </div>
-                    <div class="text-secondary my-2" v-if="this.creatingProject">
+                    <div class="xsLight" v-if="this.creatingProject">
                         Das Projekt wird beim Abspeichern erstellt.
                     </div>
 
                     <div class="my-2" v-if="this.canEdit">
                         <div class="flex pb-2">
-                            <span class="mr-4 text-sm"
-                                  :class="[!creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                            <span class="mr-4 "
+                                  :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
                                 Bestehendes Projekt
                             </span>
                             <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
@@ -257,28 +249,24 @@
                                 </div>
                             </label>
                             <span class="ml-4 text-sm"
-                                  :class="[creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                  :class="[creatingProject ? 'xsDark' : 'xsLight']">
                                 Neues Projekt
                             </span>
                             <div v-if="showHints" class="ml-3 flex">
                                 <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                <div class="font-nanum text-secondary ml-1 my-auto text-sm">
+                                <div class=" ml-1 my-auto hind">
                                     Lege gleichzeitig ein neues Projekt an
                                 </div>
                             </div>
                         </div>
-                        <input type="text"
-                               id="projectName"
-                               v-model="projectName"
-                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        <inputComponent :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">
                             <div v-for="(project, index) in projectSearchResults"
                                  :key="index"
                                  @click="selectedProject = project; projectName = ''"
-                                 class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                 class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
                                 {{ project.name }}
                             </div>
                         </div>
@@ -289,9 +277,9 @@
                 </div>
 
                 <!--    Time    -->
-                <div v-if="canEdit" class="flex py-1 flex-col sm:flex-row align-baseline">
+                <div v-if="canEdit" class="flex pb-1 flex-col sm:flex-row align-baseline">
                     <div class="sm:w-1/2">
-                        <label for="startDate" class="text-secondary text-xs">Start</label>
+                        <label for="startDate" class="xxsLight">Start</label>
                         <div class="w-full flex">
                             <input v-model="startDate"
                                    id="startDate"
@@ -299,20 +287,20 @@
                                    type="date"
                                    :disabled="!canEdit"
                                    required
-                                   class="border-gray-300  disabled:border-none flex-grow"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                             <input v-model="startTime"
                                    id="changeStartTime"
                                    @change="checkChanges()"
                                    type="time"
                                    :disabled="!canEdit"
                                    required
-                                   class="border-gray-300  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
                         <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
                     <div class="px-2 pt-8">-</div>
                     <div class="sm:w-1/2">
-                        <label for="endDate" class="text-secondary text-xs">Ende</label>
+                        <label for="endDate" class="xxsLight">Ende</label>
                         <div class="w-full flex">
                             <input v-model="endDate"
                                    id="endDate"
@@ -320,14 +308,14 @@
                                    type="date"
                                    required
                                    :disabled="!canEdit"
-                                   class="border-gray-300  disabled:border-none flex-grow"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                             <input v-model="endTime"
                                    id="changeEndTime"
                                    @change="checkChanges()"
                                    type="time"
                                    required
                                    :disabled="!canEdit"
-                                   class="border-gray-300  disabled:border-none"/>
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                         </div>
                         <p class="text-xs text-red-800">{{ error?.end?.join('. ') }}</p>
                     </div>
@@ -338,8 +326,8 @@
                 <!--    Room    -->
                 <div class="py-1" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
-                        <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow text-left">
+                        <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
+                            <div class="flex-grow text-left xsDark">
                                 {{ selectedRoom?.name }}
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -350,7 +338,7 @@
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'text-white' : '']">
+                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight']">
                                     {{ room.name }}
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
@@ -359,7 +347,7 @@
                     </Listbox>
                     <Listbox as="div" v-model="selectedRoom" id="room" v-else>
                         <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow text-left text-secondary subpixel-antialiased">
+                            <div class="flex-grow xsLight text-left subpixel-antialiased">
                                 Raum wählen*
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
@@ -379,18 +367,6 @@
                     </Listbox>
                     <p class="text-xs text-red-800">{{ error?.roomId?.join('. ') }}</p>
                 </div>
-
-                <!--TODO: WIRD BEIM BEARBEITEN EINES EVENTS IMMER ANGEZEIGT, dass 1 Termin zeitgleich im Raum stattfindet (was nicht stimmt) -> Bug beheben
-                <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
-                    <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
-                         alt="warnIcon"/>
-                    <div>
-                        Dieser Termin überschneidet sich mit {{ collisionCount }} Terminen im selben Raum.
-                        Diese könnten anderen Projekten zugeordnet sein.
-                    </div>
-                </div>
-                -->
-
                 <!--    Description    -->
                 <div class="py-2">
                     <textarea v-if="canEdit" placeholder="Was gibt es bei dem Termin zu beachten?"
@@ -398,8 +374,8 @@
                               :disabled="!canEdit"
                               v-model="description"
                               rows="4"
-                              class="border-gray-300 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                    <div v-else-if="this.description" class="mt-4">
+                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    <div v-else-if="this.description" class="mt-4 xsDark">
                         {{this.description}}
                     </div>
                 </div>
@@ -451,6 +427,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 export default {
     name: 'EventComponent',
@@ -477,7 +454,8 @@ export default {
         TrashIcon,
         DotsVerticalIcon,
         ConfirmationComponent,
-        TagComponent
+        TagComponent,
+        InputComponent
     },
 
     data() {

@@ -17,6 +17,7 @@
             <path id="Pfad_195" data-name="Pfad 195" d="M97.342,135.788a38.446,38.446,0,1,1,0-76.892h12.487" fill="none" stroke="#ededec" stroke-width="2"/>
         </g>
     </svg>
+
     <svg v-else-if="svgName === 'arrowRight'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="27.74" height="9.172" viewBox="0 0 27.74 9.172">
         <defs>
             <clipPath id="clip-path">

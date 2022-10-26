@@ -401,7 +401,7 @@
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 60rem;"
+            style="height: 50rem; max-height: calc(100vh - 275px);"
             today-button
             :time-cell-height=120
             events-on-month-view="short"

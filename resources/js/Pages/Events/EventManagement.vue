@@ -4,7 +4,7 @@
             <div class="flex flex-1 flex-wrap">
                 <div class="w-full flex justify-between">
                     <div class="flex flex-wrap">
-                        <h2 class="text-3xl font-black font-lexend flex w-full">Raumbelegungen</h2>
+                        <h2 class="headline1">Raumbelegungen</h2>
                     </div>
                 </div>
             </div>

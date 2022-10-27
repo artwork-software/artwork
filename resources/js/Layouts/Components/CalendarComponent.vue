@@ -402,7 +402,7 @@
             ref="vuecal"
             id="vuecal"
             class="overflow-x-scroll"
-            style="height: 40rem; max-height: calc(100vh - 150px); width: fit-content;"
+            style="height: 70rem; max-height: calc(100vh - 280px); width: fit-content;"
             today-button
             :time-cell-height=120
             events-on-month-view="short"
@@ -976,6 +976,10 @@ export default {
 
 <style>
 /* Styling of Vue Cal */
+
+.day-split-header {
+    min-width: 200px;
+}
 
 .vuecal__no-event {
     display: none;

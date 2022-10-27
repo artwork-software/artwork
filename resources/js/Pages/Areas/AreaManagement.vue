@@ -1102,6 +1102,9 @@ export default defineComponent({
             this.newRoomForm.start_date = null;
             this.newRoomForm.end_date = null;
             this.newRoomForm.temporary = false;
+            this.newRoomForm.room_categories = [];
+            this.newRoomForm.room_attributes = [];
+            this.newRoomForm.adjoining_rooms = [];
         },
         openEditAreaModal(area) {
             this.editAreaForm.id = area.id;

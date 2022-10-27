@@ -2,18 +2,17 @@
     <app-layout>
 
         <div class="max-w-screen-xl my-8 ml-14 mr-40">
-
-            <div class="">
-                <h2 class="font-black font-lexend text-3xl mb-2">Tooleinstellungen</h2>
-                <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub">
+            <div>
+                <h2 class="headline1 mb-2">Tooleinstellungen</h2>
+                <div class="headline3Light">
                     Definiere globale Einstellungen für dein ArtWork tool.
                 </div>
             </div>
 
             <form @submit.prevent="changeLogos">
-                <div class="mt-32 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Branding</h2>
-                    <div class="text-secondary subpixel-antialiased tracking-tight leading-6 sub">
+                <div class="mt-12 max-w-2xl">
+                    <h2 class="headline2 my-2">Branding</h2>
+                    <div class="xsLight">
                         Damit dein ArtWork tool eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine
                         eigenen
                         ArtWork tool Logos und deine Login-Illustration hoch.
@@ -22,12 +21,11 @@
 
                 <jet-input-error :message="uploadDocumentFeedback"/>
 
-                <label class="block mt-6 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                <label class="block mt-6 mb-4 xsDark">
                     Logo groß (Upload per Klick oder Drag & Drop)
                 </label>
 
                 <div class="grid grid-cols-6 gap-x-12 items-center">
-
                     <div
                         class="flex col-span-2 justify-center border-2 w-80 cursor-pointer border-gray-300 bg-stone-50 border-dashed rounded-md p-2"
                         @click="selectNewBigLogo"
@@ -38,7 +36,7 @@
                         <input type="file" class="hidden"
                                ref="bigLogo"
                                @change="updateBigLogoPreview">
-                        <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                        <div class="flex my-auto h-40 items-center xsLight"
                              v-if="$page.props.big_logo === null && bigLogoPreview === null">
                             Ziehe hier dein großes <br/> ArtWork tool Logo hin
                         </div>
@@ -51,13 +49,13 @@
                     <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
-                            class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
+                            class="ml-2 my-auto hind">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
                             Das Logo wird z.B. auf der Login-Seite und in der gesamten E-Mail-Kommunikation genutzt.
                         </span>
                     </div>
                 </div>
 
-                <label class="block mt-12 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                <label class="block mt-12 mb-4 xsDark">
                     Logo klein (Upload per Klick oder Drag & Drop)
                 </label>
                 <div class="grid grid-cols-6 gap-x-12 items-center">
@@ -71,7 +69,7 @@
                         <input type="file" class="hidden"
                                ref="smallLogo"
                                @change="updateSmallLogoPreview">
-                        <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                        <div class="xsLight flex my-auto h-40 items-center"
                              v-if="$page.props.small_logo === null && smallLogoPreview === null">
                             Ziehe hier dein kleines <br/> ArtWork tool Logo hin
 
@@ -85,13 +83,13 @@
                     <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
-                            class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
+                            class="hind ml-2 my-auto">Lade dein Logo als .svg, .png, .gif oder .jpg hoch.
                             Das Logo wird z.B. in der Sidebar genutzt.
                         </span>
                     </div>
                 </div>
 
-                <label class="block mt-12 mb-4 text-sm font-medium text-secondary subpixel-antialiased">
+                <label class="block mt-12 mb-4 xsDark">
                     Login-Illustration </label>
                 <div class="grid grid-cols-6 gap-x-12 items-center">
                     <div
@@ -100,7 +98,7 @@
                         @dragover.prevent
                         @drop.stop.prevent="uploadDraggedBanner($event)">
                         <div v-show="!bannerPreview" class="space-y-1 text-center">
-                            <div class="text-sm text-secondary flex my-auto h-40 items-center"
+                            <div class="xsLight flex my-auto h-40 items-center"
                                  v-if="$page.props.banner === null && bannerPreview === null">
                                 Ziehe hier deine <br/> Login-Illustration hin
                                 <input id="banner-upload" ref="banner" @change="updateBannerPreview"
@@ -122,13 +120,13 @@
                     <div v-if="$page.props.can.show_hints" class="col-span-4 items-center flex">
                         <SvgCollection svgName="arrowLeft" class="ml-2 -mt-4"/>
                         <span
-                            class="font-nanum text-secondary tracking-tight ml-2 my-auto tracking-tight text-xl">Lade deine Illustration als .svg, .png, .gif oder .jpg hoch.
+                            class="ml-2 my-auto hind">Lade deine Illustration als .svg, .png, .gif oder .jpg hoch.
                                 Die Illustration wird auf der Login-Seite genutzt.</span>
                     </div>
                 </div>
 
                 <div class="mt-6 items-center">
-                    <AddButton class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
+                    <AddButton @click.prevent="changeLogos" class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
                                         font-bold text-lg shadow-sm text-secondaryHover"
                     text="Änderungen speichern" mode="modal"/>
                 </div>
@@ -137,8 +135,8 @@
             <div>
 
                 <div class="mt-20">
-                    <h2 class="font-bold font-lexend text-xl mb-2">Kommunikation & Rechtliches</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <h2 class="headline2 mb-2">Kommunikation & Rechtliches</h2>
+                    <div class="xsLight">
                         Definiere hier den Footer-Text für sämtliche System-E-Mails und gib' die Links zur
                         Impressum- und Datenschutzseite deines Unternehmens an.
                     </div>
@@ -146,18 +144,14 @@
                         <div class="col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
                                 <div class="mt-1">
-                                    <input type="text" v-model="mailForm.impressumLink"
-                                           placeholder="Link zum Impressum"
-                                           class="text-primary placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
+                                    <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum" />
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
                                 <div class="mt-1">
-                                    <input type="text" v-model="mailForm.privacyLink"
-                                           placeholder="Link zum Datenschutz"
-                                           class="text-primary placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border-gray-300 "/>
+                                    <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz" />
                                 </div>
                             </div>
                         </div>
@@ -166,7 +160,7 @@
                                             <textarea
                                                 placeholder="E-Mail-Footer"
                                                 v-model="mailForm.emailFooter" rows="4"
-                                                class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
+                                                class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full placeholder:xsLight border border-gray-300 "/>
                             </div>
                         </div>
                     </div>
@@ -188,13 +182,15 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from "@/Jetstream/InputError";
 import AddButton from "@/Layouts/Components/AddButton";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 export default defineComponent({
     components: {
         AddButton,
         AppLayout,
         SvgCollection,
-        JetInputError
+        JetInputError,
+        InputComponent
     },
     props: [],
     data() {

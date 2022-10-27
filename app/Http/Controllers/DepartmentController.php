@@ -135,7 +135,7 @@ class DepartmentController extends Controller
 
         broadcast(new DepartmentUpdated())->toOthers();
 
-        return Redirect::route('departments.show', $department->id)->with('success', 'Department updated');
+        return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 
     /**

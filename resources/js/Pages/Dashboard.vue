@@ -4,15 +4,15 @@
             <!-- Greetings Div -->
             <div class="mr-12 overflow-x-auto w-full">
                 <div class="ml-14 mt-10">
-                    <h2 class="text-3xl font-lexend font-black text-primary flex mb-4">Hallo {{
+                    <h2 class="headline1 flex mb-4">Hallo {{
                             $page.props.user.first_name
                                                                                        }}</h2>
-                    <p class="text-secondary tracking-tight leading-6 sub">
+                    <p class="xsLight">
                         Herzlich willkommen im artwork tool! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
                         aktiviert.<br/>
                         Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
                     </p>
-                    <p class="mt-2 text-secondary tracking-tight leading-6 sub">Viel Spaß beim Loslegen!</p>
+                    <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
                 <!-- Calendar Div -->
                 <div class="relative mt-5">
@@ -26,9 +26,9 @@
             <!-- Task Div -->
             <div class="min-w-fit px-4 mt-20 overflow-y-auto">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-2xl">Meine Aufgaben</h2>
+                    <h2 class="headline2">Meine Aufgaben</h2>
                     <Link :href="route('tasks.own')"
-                        class="flex ml-4 justify-end uppercase text-sm text-secondary items-end subpixel-antialiased">
+                        class="flex ml-4 justify-end uppercase xsLight items-end ">
                         Alle Ansehen
                     </Link>
                 </div>
@@ -39,8 +39,8 @@
                                 <input @change="updateTaskStatus(task)" v-model="task.done"
                                     type="checkbox"
                                     class="ring-offset-0 my-auto cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p class="ml-4 my-auto text-lg font-black text-sm w-full"
-                                    :class="task.done ? 'text-secondary line-through' : 'text-primary'">
+                                <p class="ml-4 my-auto mDark w-full"
+                                    :class="task.done ? 'text-secondary line-through' : ''">
                                     {{ task.name }}</p>
                                 <div v-show="task.departments.length > 0" class="my-auto shrink-0 -mr-3"
                                     v-for="department in task.departments">
@@ -56,13 +56,13 @@
                             </div>
                             <div class="flex w-full ml-8">
                                     <span v-if="!task.done && task.deadline"
-                                        class="ml-2 my-auto text-sm subpixel-antialiased"
+                                        class="ml-2 my-auto xsLight subpixel-antialiased"
                                         :class="Date.parse(task.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                             task.deadline
                                                                                                                                                    }}</span>
                             </div>
                         </div>
-                        <div class="flex text-sm mt-0.5 w-full items-center ml-10">
+                        <div class="flex xsLight mt-0.5 w-full items-center ml-10">
                             <Link
                                 :href="route('projects.show',{project: task.project.id, openTab:'calendar'})"
                                 class="cursor-pointer text-secondary flex subpixel-antialiased">
@@ -75,7 +75,7 @@
                             </Link>
                         </div>
 
-                        <div class="ml-10 my-3 text-secondary">
+                        <div class="ml-10 my-3 xsLight">
                             {{ task.description }}
                         </div>
                     </div>

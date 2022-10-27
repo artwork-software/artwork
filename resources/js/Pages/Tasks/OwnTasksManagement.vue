@@ -3,24 +3,24 @@
         <div class="max-w-screen-xl my-12 ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex flex-wrap">
-                    <h2 class="font-bold font-lexend text-3xl w-full">Meine Aufgaben</h2>
+                    <h2 class="headline1 w-full">Meine Aufgaben</h2>
                     <Listbox as="div" class="sm:col-span-3 mb-8" @click="changeTasksToDisplay" v-model="selectedFilter">
                         <div class="relative">
-                            <ListboxButton class="w-56 flex justify-between font-semibold py-2">
+                            <ListboxButton class="w-56 flex justify-between sDark py-2">
                                 <div> {{ selectedFilter.name }}</div>
                                 <div>
                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                                 </div>
                             </ListboxButton>
 
-                            <ListboxOptions class="bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
+                            <ListboxOptions class="absolute w-56 bg-primary shadow-lg max-h-32 rounded-md focus:outline-none">
                                 <ListboxOption as="template" class="p-2 text-sm"
                                     v-for="filter in filters"
                                     :key="filter.name"
                                     :value="filter"
                                     v-slot="{ active, selected }">
                                     <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'rounded-md cursor-pointer flex justify-between']">
-                                        <div :class="[selected ? 'font-bold text-white' : '', 'truncate']">
+                                        <div :class="[selected ? 'xsWhiteBold' : '', 'truncate']">
                                             {{ filter.name }}
                                         </div>
                                         <div v-if="selected">
@@ -42,12 +42,12 @@
                                         v-model="task.done"
                                         type="checkbox"
                                         class="cursor-pointer h-6 w-6 text-success border-2 my-2 border-gray-300"/>
-                                    <div class="ml-4 my-auto text-lg font-bold"
+                                    <div class="ml-4 my-auto mDark"
                                         :class="task.done ? 'text-secondary line-through' : 'text-primary'">
                                         {{ task.name }}
                                     </div>
                                     <div v-if="!task.done && task.deadline"
-                                        class="ml-2 my-auto text-sm "
+                                        class="ml-2 my-auto pt-1 xsLight "
                                         :class="task.isDeadlineInFuture ? '' : 'text-error'">
                                         bis {{ task.humanDeadline }}
                                     </div>
@@ -62,20 +62,20 @@
                                 </div>
                                 <div v-show="! task.isPrivate"
                                     class="my-auto">
-                                    <img class="h-9 w-9 rounded-full"
+                                    <img class="h-9 w-9 rounded-full object-cover"
                                         :src="$page.props.user.profile_photo_url"
                                         alt=""/>
                                 </div>
                             </div>
 
                             <Link :href="route('projects.show',{project: task.projectId, openTab: 'checklist'})"
-                                class="text-sm my-1 flex ml-10">
+                                class="my-1 flex ml-10 xsDark">
                                 {{ task.projectName }}
-                                <ChevronRightIcon class="h-5 w-5 my-auto mx-3 text-secondary " aria-hidden="true"/>
+                                <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>
                                 {{ task.checklistName }}
                             </Link>
 
-                            <div class="ml-10 my-3 text-secondary">
+                            <div class="ml-10 my-3 xsLight">
                                 {{ task.description }}
                             </div>
 

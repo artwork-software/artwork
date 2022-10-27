@@ -100,12 +100,12 @@
                 <div class="pt-12">
                     <div class="mt-4 items-center">
                         <AddButton v-if="!showSuccess" @click="editTeam"
-                                   class="border bg-primary px-5 hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                   class="border bg-primary px-5 hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                    text="Änderungen speichern" mode="modal"/>
-                        <button v-else type="submit"
-                                class="col-span-3 items-center py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        <button v-else
+                                class="px-20 rounded-full items-center py-1 border bg-success focus:outline-none border-transparent"
                         >
-                            <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
+                            <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
                         </button>
                     </div>
                 </div>

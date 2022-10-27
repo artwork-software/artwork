@@ -5,12 +5,12 @@
                 <div class="flex flex-1 flex-wrap justify-between">
                     <div class="flex">
                         <div class="w-full flex my-auto">
-                            <h2 class="text-3xl font-black font-lexend">Alle Nutzer*innen</h2>
+                            <h2 class="headline1">Alle Nutzer*innen</h2>
                             <AddButton data-modal-toggle="invite-user" id="invite-users" text="Nutzer einladen"
-                                       mode="page"/>
+                                       mode="page" class="-mt-0.5"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Lade neue Nutzer*innen ein</span>
+                                <span class="hind ml-1 my-auto">Lade neue Nutzer*innen ein</span>
                             </div>
                         </div>
                     </div>
@@ -20,9 +20,7 @@
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                         <div v-else class="flex items-center w-full w-64 mr-2">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
-                                   placeholder="Suche nach Nutzer*innen"/>
+                            <inputComponent v-model="user_query" placeholder="Suche nach Nutzer*innen" />
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
@@ -36,10 +34,10 @@
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <Link :href="getEditHref(user)"
-                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
+                                              class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
-                                        <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
+                                        <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
                                     </div>
                                 </div>
@@ -51,7 +49,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                             class="inline-block absolute invisible z-10 py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -151,10 +149,10 @@
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
                                         <Link :href="getEditHref(user)"
-                                              class="text-lg mr-3 font-semibold subpixel-antialiased text-primary">
+                                              class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
-                                        <p class="ml-1 text-sm font-medium text-primary my-auto"> {{ user.business }},
+                                        <p class="ml-1 xxsDarkBold my-auto"> {{ user.business }},
                                             {{ user.position }}</p>
                                     </div>
                                 </div>
@@ -166,7 +164,7 @@
                                                             class="h-10 w-10 rounded-full ring-2 ring-white"
                                                             :iconName="department.svg_name"/>
                                         <div :id="department.id" role="tooltip"
-                                             class="inline-block absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                             class="inline-block absolute invisible z-10 py-2 px-3 bg-primary rounded-lg shadow-sm opacity-0 transition-opacity duration-300 xsWhiteBold tooltip">
                                             {{ department.name }}
                                             <div class="tooltip-arrow" data-popper-arrow></div>
                                         </div>
@@ -269,10 +267,10 @@
                 <XIcon @click="closeAddUserModal"
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10 mt-20"
                        aria-hidden="true"/>
-                <div class="mt-24 text-2xl font-black">
+                <div class="mt-24 headline1">
                     Nutzer*innen einladen
                 </div>
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <div class="xsLight my-3">
                     Du kannst mehrere Nutzer*innen mit den gleichen Nutzerrechten und Teamzugehörigkeiten auf einmal
                     einladen.
                 </div>
@@ -298,7 +296,7 @@
 
                     </div>
                     <span v-for="(email,index) in form.user_emails"
-                          class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                          class="flex mt-4 mr-1 rounded-full items-center sDark">
                             {{ email }}
                     <button type="button" @click="deleteEmailFromInvitationArray(index)">
                     <span class="sr-only">Email aus Einladung entfernen</span>
@@ -307,7 +305,7 @@
                     </button>
                     </span>
                     <ul>
-                        <li class="text-error text-sm subpixel-antialiased" v-for="(error,key) in errors" :key="key">
+                        <li class="errorText" v-for="(error,key) in errors" :key="key">
                             {{ error }}
                         </li>
                     </ul>
@@ -315,7 +313,7 @@
 
                         </span>
                     <span class="flex inline-flex mt-4 -mr-3" v-for="team in form.departments">
-                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
+                                <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white object-cover"
                                                     :iconName="team.svg_name"/>
                         </span>
                     <Disclosure as="div">
@@ -325,7 +323,7 @@
                             </DisclosureButton>
                             <div v-if="$page.props.can.show_hints && form.departments.length === 0" class="flex mt-2">
                                 <SvgCollection svgName="arrowLeft" class="mt-2 ml-2"/>
-                                <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
+                                <span class="hind ml-1 my-auto">Teile die Nutzer*innen direkt deinen Teams zu</span>
                             </div>
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"
@@ -355,51 +353,19 @@
                         </transition>
                     </Disclosure>
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h3 class="text-xl mt-6 mb-8 leading-6 font-bold font-lexend text-gray-900">Nutzerrechte
-                            definieren*</h3>
+                        <h3 class="mt-6 mb-8 headline2">Nutzerrechte
+                            definieren</h3>
 
                         <div class="mb-8">
                             <div v-for="role in roleCheckboxes">
                                 <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
                             </div>
-                            <!--
-                            <RadioGroup v-model="selected">
-                                <div class="bg-white rounded-md -space-y-px">
-                                    <RadioGroupOption as="template" :selected="role.name ==='Keine Rollenrechte'" class="flex" v-for="role in roleCheckboxes" :key="role.name" :value="role" v-slot="{ checked, active }">
-                                        <div class="flex mt-4 flex-row cursor-pointer focus:outline-none">
-                                            <div class="flex items-center text-sm">
-                                                    <span :class="[checked ? 'bg-success' : 'bg-white border-2 border-gray-300', 'ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success  flex items-center justify-center']" aria-hidden="true">
-                                                        <CheckIcon v-if="checked" class="w-6 h-6 text-white" />
-                                                    </span>
-                                                <RadioGroupLabel as="span" :class="[selected.roleName === role.roleName ? 'font-bold' : '', 'text-primary ml-3']">{{ role.name }}</RadioGroupLabel>
-                                            </div>
-                                            <div class="flex flex-1 justify-end">
-
-                                                <div :data-tooltip-target="role.roleName">
-                                                    <InformationCircleIcon  class="h-7 w-7 flex text-gray-400"
-                                                                           aria-hidden="true"/>
-                                                </div>
-
-
-                                                <div :id="role.roleName" role="tooltip"
-                                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-bold text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                                    {{role.tooltipText}}
-                                                    <div class="tooltip-arrow" data-popper-arrow></div>
-                                                </div>
-
-                                            </div>
-                                        </div>
-
-                                    </RadioGroupOption>
-                                </div>
-                            </RadioGroup>
-                            -->
                         </div>
 
                     </div>
                     <div v-if="this.form.role !== 'admin'">
                         <div v-on:click="showUserPermissions = !showUserPermissions">
-                            <h2 class="text-sm flex text-gray-400 font-semibold cursor-pointer mb-2">
+                            <h2 class="flex headline6Light cursor-pointer mb-2">
                                 Nutzerrechte
                                 <ChevronUpIcon v-if="showUserPermissions"
                                                class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
@@ -411,7 +377,7 @@
 
                             <div v-for="(permissions, group) in all_permissions">
 
-                                <h3 class="text-secondary uppercase text-xs mb-2 mt-6">{{ group }}</h3>
+                                <h3 class="headline6Light mb-2 mt-6">{{ group }}</h3>
 
                                 <div class="relative w-full flex items-center"
                                      v-for="(permission, index) in permissions" :key=index>
@@ -442,13 +408,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Nutzer*in löschen
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du {{ userToDelete.last_name + "," }} {{ userToDelete.first_name }} aus dem
                         System löschen möchtest?
                     </div>
@@ -472,13 +438,13 @@
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         Nutzer*innen eingeladen
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         Die Nutzer*innen haben eine Einladungs-E-Mail erhalten.
                     </div>
                     <div class="mt-6">
@@ -544,6 +510,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 export default defineComponent({
     components: {
@@ -581,6 +548,7 @@ export default defineComponent({
         RadioGroupLabel,
         RadioGroupOption,
         Link,
+        InputComponent
     },
     props: ['users', 'departments', 'all_permissions'],
     data() {

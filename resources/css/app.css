@@ -22,4 +22,110 @@
     .stripes {
         background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
     }
+    .headline1{
+        font: normal normal bold 30px/34px Lexend;
+        letter-spacing: -0.15px;
+        color: #27233C;
+        opacity: 1;
+    }
+    .headline2{
+        font: normal normal 600 20px/25px Lexend;
+        letter-spacing: -0.1px;
+        color: #27233C;
+        opacity: 1;
+    }
+    .headline3Light{
+        font: normal normal 18px/21px Inter;
+        letter-spacing: 0;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+    .headline6Light{
+        font: normal normal 600 10px/19px Inter;
+        letter-spacing: 0.5px;
+        color: #A7A6B1;
+        text-transform: uppercase;
+        opacity: 1;
+    }
+    .xxsLight{
+        font: normal normal 12px/18px Inter;
+        letter-spacing: -0.18px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+    .xxsDark{
+        font: normal normal 12px/15px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+    .xxsDarkBold{
+        font: normal normal 600 12px/15px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+    .xsLighter{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: 0.14px;
+        color: #CECDD8;
+        opacity: 1;
+    }
+    .xsWhiteBold{
+        font: normal normal bold 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #FCFCFB;
+        opacity: 1;
+    }
+
+    .xsLight{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+    .xsDark{
+        font: normal normal 600 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #27233C;
+        opacity: 1;
+    }
+    .sDark{
+        font: normal normal 600 16px/20px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+    .mDark{
+        font: normal normal 600 18px/21px Inter;
+        letter-spacing: 0;
+        color: #27233C;
+        opacity: 1;
+    }
+    .hind{
+        font: normal normal normal 18px/18px Nanum Pen Script;
+        letter-spacing: -0.54px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+    .errorText{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #FD6D73;
+        opacity: 1;
+    }
+    .successText{
+        font: normal normal 14px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #1FC687;
+        opacity: 1;
+    }
+    .inputMain{
+        border: 2px solid #CECDD8;
+        opacity: 1;
+    }
+    .eventBorder{
+        border: 1px solid #D8D7DE;
+        opacity: 1;
+    }
 }

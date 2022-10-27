@@ -38,7 +38,7 @@
                     <div class="flex w-full mt-12">
                         <div class="ml-0.5">
                             <button @click="openAddTaskModal()" type="button"
-                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
@@ -84,12 +84,11 @@
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="editChecklistTemplate"
                                    text="Speichern" mode="page" />
-                        <button
-                                class="px-24 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
+                        <button v-else
+                                class="px-24 ml-6 rounded-full items-center py-2.5 border bg-success focus:outline-none border-transparent"
                         >
                             <CheckIcon class="h-7 w-7 inline-block text-secondaryHover"/>
                         </button>
-
                     </div>
                 </div>
             </div>

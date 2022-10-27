@@ -9,7 +9,7 @@
                                 <ListboxButton
                                     class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
-                                        <p class="block items-center flex mr-2 text-header font-black">
+                                        <p class="items-center flex mr-2 headline1">
                                             {{ projectFilter.name }}</p>
                                         <span
                                             class="inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -28,7 +28,7 @@
                                                        v-slot="{ active, selected }">
                                             <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
                                                     <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
                                                         {{ filter.name }}
                                                     </span>
                                             </li>
@@ -42,7 +42,7 @@
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                     <span
-                                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Projekte an</span>
+                                        class="hind ml-1 my-auto">Lege neue Projekte an</span>
                                 </div>
                             </div>
                         </div>
@@ -52,9 +52,7 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <input id="projectSearch" v-model="project_query" type="text" autocomplete="off"
-                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
-                                       placeholder="Suche nach Projekten"/>
+                                <inputComponent v-model="this.project_query" placeholder="Suche nach Projekten" />
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -63,16 +61,16 @@
                          :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
-                            class="py-5 flex">
+                            class="py-4 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
                                     <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)"
                                           class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                        <p class="headline2">
                                             {{ project.name }}</p>
                                     </Link>
                                     <div v-else class="flex w-full my-auto">
-                                        <p class="text-2xl font-black font-lexend subpixel-antialiased text-gray-900">
+                                        <p class="headline2">
                                             {{ project.name }}</p>
                                     </div>
                                 </div>
@@ -80,7 +78,7 @@
                             <div class="flex w-full justify-end">
                                 <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
                                     <TeamIconCollection :data-tooltip-target="department.name"
-                                                        class="h-9 w-9 rounded-full ring-2 ring-white"
+                                                        class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
                                                         :iconName="department.svg_name"
                                                         alt=""/>
                                     <TeamTooltip :team="department"/>
@@ -122,7 +120,7 @@
                                 <div class="flex mr-6">
                                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
                                         <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full ring-2 ring-white"
+                                             class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <UserTooltip :user="user"/>
@@ -146,7 +144,7 @@
                                                     <MenuItem v-for="user in project.users" v-slot="{ active }">
                                                         <div
                                                             :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img class="h-9 w-9 rounded-full"
+                                                            <img class="h-9 w-9 rounded-full object-cover"
                                                                  :src="user.profile_photo_url"
                                                                  alt=""/>
                                                             <span class="ml-4">
@@ -175,7 +173,7 @@
                                             </div>
                                             <div class="flex">
                                                 <span
-                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Projekte</span>
+                                                    class="ml-2 hind mt-1">Bearbeite die Projekte</span>
                                             </div>
                                         </div>
                                     </div>
@@ -224,7 +222,7 @@
                         <div
                             v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin"
                             class="mb-12 -mt-2 text-secondary flex items-center">
-                            <span class=" text-xs subpixel-antialiased">
+                            <span class=" xsLight">
                                   zuletzt geändert:
                             </span>
                             <div class="flex items-center" v-if="project.project_history.length !== 0">
@@ -236,10 +234,10 @@
                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                 <UserTooltip
                                     :user="project.project_history[project.project_history.length -1].user"/>
-                                <span class="ml-2 text-xs subpixel-antialiased">
+                                <span class="ml-2 xsLight">
                                     {{ project.project_history[project.project_history.length - 1].created_at }}
                                 </span>
-                                <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
+                                <button class="ml-4 flex items-center cursor-pointer xsLight"
                                         @click="openProjectHistoryModal(project.project_history)">
                                     <ChevronRightIcon
                                         class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
@@ -660,6 +658,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import AddButton from "@/Layouts/Components/AddButton";
 import projects from "@/Pages/Trash/Projects";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -708,7 +707,8 @@ export default defineComponent({
         ChevronRightIcon,
         Link,
         UserTooltip,
-        TeamTooltip
+        TeamTooltip,
+        InputComponent
     },
     props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can'],
     computed: {

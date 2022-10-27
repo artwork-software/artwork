@@ -8,7 +8,7 @@
                         class="-mt-2 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2"/>
-                        <span class="float-left">{{ this.displayDate }}</span>
+                        <span class="float-left xsDark">{{ this.displayDate }}</span>
                         <ChevronDownIcon
                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                             aria-hidden="true"
@@ -63,10 +63,10 @@
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
 
-            <div class="ml-5 flex text-error items-center cursor-pointer -mt-1" @click="openEventsWithoutRoomComponent()"
+            <div class="ml-5 flex errorText items-center cursor-pointer -mt-1" @click="openEventsWithoutRoomComponent()"
                  v-if="eventsWithoutRoom.length > 0">
 
-                <ExclamationIcon class="h-6 text-error mr-2"/>
+                <ExclamationIcon class="h-6  mr-2"/>
                 {{
                     eventsWithoutRoom.length
                 }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
@@ -82,7 +82,7 @@
                     <MenuButton
                         class="border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
-                        <span class="float-left">Filter</span>
+                        <span class="float-left xsDark">Filter</span>
                         <ChevronDownIcon
                             class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                             aria-hidden="true"
@@ -117,7 +117,7 @@
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
                             <!-- Save Filter Section -->
-                            <Disclosure v-slot="{ open }" >
+                            <Disclosure v-slot="{ open }">
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                 >
@@ -132,7 +132,7 @@
                                         <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
                                                class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                                placeholder="Name des Filters"/>
-                                        <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter" />
+                                        <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter"/>
                                         <!-- <AddButton text="Speichern" class="text-sm ml-0"
                                                    @click="saveFilter"></AddButton> -->
                                     </div>
@@ -401,7 +401,6 @@
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            class="overflow-x-scroll"
             style="height: 70rem; max-height: calc(100vh - 280px); width: fit-content;"
             today-button
             :time-cell-height=120
@@ -440,7 +439,7 @@
                 </div>
             </template>
             <template #event="{ event, view}">
-                <div :class="currentView === 'month' ? 'border-2  border-gray-100' : ''">
+                <div>
                     <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
                          class="flex absolute right-0 top-0">
                         <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
@@ -449,78 +448,81 @@
                              alt="attributeIcon"/>
                     </div>
 
-                    <div class="font-inter subpixel-antialiased text-base text-primary truncate tracking-wide">
+                    <div class="xsDark truncate">
                         {{ event.title }}
                     </div>
                     <div v-if="currentView !== 'month'">
 
 
-                    <span class="truncate"
+                        <span class="truncate xxsLight truncate"
                           v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
-                    <span class="flex text-xs w-full text-secondary">
+                        <span class="flex w-full xxsLight">
 
-                    <span v-if="event.start.getDay() === event.end.getDay()"  class="items-center mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
+                        <span v-if="event.start.getDay() === event.end.getDay()"
+                          class="items-center xxsLight mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
                             event.end.formatTime("HH:mm")
-                        }}  </span>
-                        <span class="flex text-xs w-full text-secondary" v-else>
+                        }}
+                        </span>
+                        <span class="flex w-full xxsLight" v-else>
                             <span class="items-center mx-auto">
-                                {{event.start.format("DD.MM.YYYY HH:mm")}} - {{ event.end.format("DD.MM.YYYY HH:mm")}}
+                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{ event.end.format("DD.MM.YYYY HH:mm") }}
                             </span>
 
                         </span><br/>
                     </span>
-                    <div class="mt-3">
-                        <div v-if="event.projectLeaders" class="mt-1 flex justify-center items-center flex-wrap w-full">
-                            <div class="-mr-3 flex flex-wrap items-center flex-row"
-                                 v-for="user in event.projectLeaders?.slice(0,3)">
-                                <img :data-tooltip-target="user.id"
-                                     :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                     class="rounded-full ring-2 ring-white object-cover"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <UserTooltip :user="user"/>
-                            </div>
-                            <div v-if="event.projectLeaders.length >= 3" class="my-auto">
-                                <Menu as="div" class="relative">
-                                    <div>
-                                        <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                            <div
-                                                :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                                <p class="items-center mx-auto">
-                                                    +{{ event.projectLeaders.length - 3 }}
-                                                </p>
-                                            </div>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                            <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
-                                                <Link href="#"
-                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                         class="rounded-full"
-                                                         :src="user.profile_photo_url"
-                                                         alt=""/>
-                                                    <span class="ml-4">
+                        <div class="mt-3">
+                            <div v-if="event.projectLeaders"
+                                 class="mt-1 flex justify-center items-center flex-wrap w-full">
+                                <div class="-mr-3 flex flex-wrap items-center flex-row"
+                                     v-for="user in event.projectLeaders?.slice(0,3)">
+                                    <img :data-tooltip-target="user.id"
+                                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                         class="rounded-full ring-2 ring-white object-cover"
+                                         :src="user.profile_photo_url"
+                                         alt=""/>
+                                    <UserTooltip :user="user"/>
+                                </div>
+                                <div v-if="event.projectLeaders.length >= 3" class="my-auto">
+                                    <Menu as="div" class="relative">
+                                        <div>
+                                            <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                <div
+                                                    :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                    class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                    <p class="items-center mx-auto">
+                                                        +{{ event.projectLeaders.length - 3 }}
+                                                    </p>
+                                                </div>
+                                            </MenuButton>
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                                    <Link href="#"
+                                                          :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                        <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                             class="rounded-full"
+                                                             :src="user.profile_photo_url"
+                                                             alt=""/>
+                                                        <span class="ml-4">
                                                                 {{ user.first_name }} {{ user.last_name }}
                                                             </span>
-                                                </Link>
-                                            </MenuItem>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
+                                                    </Link>
+                                                </MenuItem>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
-                </div>
                 </div>
             </template>
         </vue-cal>
@@ -922,7 +924,14 @@ export default {
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
         },
+        scrollToNine() {
+            if (this.currentView === 'month') {
+                return;
+            }
+            const calendar = document.querySelector('#vuecal .vuecal__bg')
+            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
 
+        },
         areChecked(array) {
             let count = 0;
             array.forEach(object => {
@@ -1049,6 +1058,8 @@ export default {
     margin-top: 3px;
     padding-top: 22px;
     background-color: white;
+    border: 1px solid #D8D7DE;
+    opacity: 1;
 }
 
 .vuecal__event-time {
@@ -1065,8 +1076,9 @@ export default {
     padding-top: 22px;
     background-color: white;
 }
-.vuecal--month-view .vuecal__cell{
-    height: 10rem ;
+
+.vuecal--month-view .vuecal__cell {
+    height: 10rem;
 }
 
 .vuecal__view-btn {
@@ -1105,6 +1117,27 @@ export default {
 .vuecal__cell-split {
     border: 1px solid #D8D7DE;
 }
+.vuecal--month-view .vuecal__cell {
+    height: 95px;
+}
+.vuecal--month-view .vuecal__cell-content {
+    justify-content: flex-start;
+    height: 100%;
+    align-items: flex-end;
+    overflow-y: auto;
+}
+.vuecal--month-view .vuecal__cell-date {
+    padding: 4px;
+}
+.vuecal--month-view .vuecal__event {
+    padding-top: 0px;
+}
+.vuecal--month-view .vuecal__cell{
+    height: 10rem ;
+}
+.vuecal--month-view .vuecal__no-event {
+    display: none;
+}
 
 
 /* Custom Event Type Colors */
@@ -1114,57 +1147,57 @@ export default {
 }
 
 .vuecal__event.eventType0 {
-    border: solid #A7A6B1;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #A7A6B1;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType1 {
-    border: solid #641a54;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #641a54;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType2 {
-    border: solid #da3f87;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #da3f87;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType3 {
-    border: solid #eb7a3d;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #eb7a3d;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType4 {
-    border: solid #f1b640;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #f1b640;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType5 {
-    border: solid #86c554;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #86c554;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType6 {
-    border: solid #2eaa63;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #2eaa63;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType7 {
-    border: solid #3dc3cb;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #3dc3cb;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType8 {
-    border: solid #168fc3;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #168fc3;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType9 {
-    border: solid #4d908e;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #4d908e;
+    border-width: 1px 1px 1px 3px;
 }
 
 .vuecal__event.eventType10 {
-    border: solid #21485c;
-    border-width: 0px 0px 0px 3px;
+    border-left: solid #21485c;
+    border-width: 1px 1px 1px 3px;
 }
 </style>

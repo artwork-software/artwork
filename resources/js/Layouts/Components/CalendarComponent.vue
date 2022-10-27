@@ -397,11 +397,12 @@
     </div>
 
     <!--  Calendar  -->
-    <div>
+    <div class="pl-3 overflow-x-scroll">
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 60rem"
+            class="overflow-x-scroll"
+            style="height: 40rem; max-height: calc(100vh - 150px); width: fit-content;"
             today-button
             :time-cell-height=120
             events-on-month-view="short"
@@ -411,8 +412,7 @@
             :hideTitleBar="currentView !== 'year'"
 
             :click-to-navigate="true"
-            :min-split-width=200
-            stickySplitLabels
+            sticky-split-labels
             :disable-views="['years']"
             :events="displayedEvents"
             :split-days="displayedRooms"
@@ -864,20 +864,6 @@ export default {
             this.currentView = view ?? this.currentView ?? 'week';
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
 
-            if (this.currentView === 'week') {
-                console.log('moin');
-                vuecal.onscroll = function () {
-                    document.querySelector('.vuecal__weekdays-headings').style.transform = `translateY(${vuecal.scrollTop}px)`;
-                }
-            }
-            if (this.currentView === 'day') {
-                console.log('hello');
-                vuecal.onscroll = function () {
-                    document.querySelector('.vuecal__flex .vuecal__split-days-headers').style.transform = `translateY(${vuecal.scrollTop}px)`;
-                }
-            }
-            this.scrollToNine();
-
             this.setDisplayDate(this.currentView, startDate)
 
             this.eventsSince = startDate ?? this.eventsSince;
@@ -936,14 +922,7 @@ export default {
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
         },
-        scrollToNine() {
-            if (this.currentView === 'month') {
-                return;
-            }
-            const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
 
-        },
         areChecked(array) {
             let count = 0;
             array.forEach(object => {
@@ -990,76 +969,6 @@ export default {
             } else {
                 this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             }
-        },
-
-        /**
-         * If the user selects a start, end, and room
-         * call the server to get information if there are any collision
-         *
-         * @returns {Promise<void>}
-         */
-        async checkCollisions() {
-
-            if (!(this.selectedEvent.start && this.selectedEvent.end && this.selectedEvent.roomId)) {
-                this.collision = 0
-                return;
-            }
-
-            await axios
-                .get('/events/collision', {
-                    params: {
-                        start: this.selectedEvent.start,
-                        end: this.selectedEvent.end,
-                        roomId: this.selectedEvent.roomId,
-                        eventId: this.selectedEvent.id,
-                    }
-                })
-                .then(response => {
-                    this.collision = response.data
-                });
-        },
-
-        /**
-         * If the user wants to add a new event by dragging
-         * open Modal and fill basic information
-         *
-         * @param event
-         */
-        selectEvent(event = null) {
-            if (event === null) {
-                this.selectedEvent = {
-                    projectId: this.projectId,
-                    roomId: this.roomId,
-                }
-                return
-            }
-
-            /**
-             * Reformat the given JavaScript Date to a ISO 8601 that will work with Input Type dateTime-local
-             * Unfortunately the JavaScript toISOString does not convert the timezone,
-             * To keep the timezone the offset is subtracted
-             * Then the ISOString can be generated, but requires the removal of the trailing Z.
-             * Then the Format will work for the HTML Input Type dateTime-local.
-             *
-             * @example 2021-03-10T01:50:55+0200 => 2021-03-09T23:50:55 (german timezone)
-             */
-            event.start = event.start.subtractMinutes(event.start.getTimezoneOffset()).toISOString().slice(0, -1)
-            event.end = event.end.subtractMinutes(event.end.getTimezoneOffset()).toISOString().slice(0, -1)
-
-            // created by drag and drop
-            if (!event.id) {
-                this.selectedEvent = {
-                    start: event.start,
-                    end: event.end,
-                    projectId: this.projectId,
-                    roomId: event.split ? event.split : this.roomId,
-                }
-                this.checkCollisions()
-                return
-            }
-
-            this.selectedEvent = event
-            this.collision = event.collisionCount
         },
     }
 }
@@ -1111,7 +1020,6 @@ export default {
 
 .vuecal--month-view .vuecal__cell-content {
     justify-content: flex-start;
-    height: 100%;
     align-items: flex-end;
     overflow-y: auto;
 }
@@ -1128,7 +1036,9 @@ export default {
 .vuecal--month-view .vuecal__no-event {
     display: none;
 }
-
+.vuecal__flex .vuecal__cell-content .vuecal__cell-split {
+    min-width: 200px !important;
+}
 .vuecal__event {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */

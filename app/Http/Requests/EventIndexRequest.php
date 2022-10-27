@@ -15,7 +15,7 @@ class EventIndexRequest extends FormRequest
             'start' => ['required', 'date'],
             'end' => ['required', 'date', 'after:start'],
 
-            'filters' => ['sometimes', 'array'],
+            'filters' => ['sometimes', 'json'],
             'filters.roomIds' => ['sometimes', 'array'],
             'filters.roomIds.?' => ['sometimes', 'exists:rooms,id'],
             'filters.areaIds' => ['sometimes', 'array'],

@@ -397,11 +397,11 @@
     </div>
 
     <!--  Calendar  -->
-    <div class="pl-3">
+    <div class="pl-3 overflow-x-scroll">
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 60rem; max-height: calc(100vh - 175px);"
+            style="height: 70rem; max-height: calc(100vh - 280px); width: fit-content;"
             today-button
             :time-cell-height=120
             events-on-month-view="short"
@@ -411,8 +411,7 @@
             :hideTitleBar="currentView !== 'year'"
 
             :click-to-navigate="true"
-            :min-split-width="300"
-            stickySplitLabels
+            sticky-split-labels
             :disable-views="['years']"
             :events="displayedEvents"
             :split-days="displayedRooms"
@@ -853,13 +852,6 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
-        scrollToNine() {
-            if (this.currentView === 'month') {
-                return;
-            }
-            const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
-        },
         /**
          * Fetch the events from server
          * initialise possible rooms, types and projects
@@ -873,19 +865,6 @@ export default {
         async fetchEvents({view = null, startDate = null, endDate = null}) {
             this.currentView = view ?? this.currentView ?? 'week';
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
-            if (this.currentView === 'week') {
-                console.log('moin');
-                vuecal.onscroll = function () {
-                    document.querySelector('.vuecal__weekdays-headings').style.transform = `translateY(${vuecal.scrollTop}px)`;
-                }
-            }
-            if (this.currentView === 'day') {
-                console.log('hello');
-                vuecal.onscroll = function () {
-                    document.querySelector('.vuecal__flex .vuecal__split-days-headers').style.transform = `translateY(${vuecal.scrollTop}px)`;
-                }
-            }
-            this.scrollToNine();
 
             this.setDisplayDate(this.currentView, startDate)
 
@@ -945,7 +924,14 @@ export default {
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
                 });
         },
+        scrollToNine() {
+            if (this.currentView === 'month') {
+                return;
+            }
+            const calendar = document.querySelector('#vuecal .vuecal__bg')
+            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
 
+        },
         areChecked(array) {
             let count = 0;
             array.forEach(object => {
@@ -993,40 +979,16 @@ export default {
                 this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             }
         },
-
-        /**
-         * If the user selects a start, end, and room
-         * call the server to get information if there are any collision
-         *
-         * @returns {Promise<void>}
-         */
-        async checkCollisions() {
-
-            if (!(this.selectedEvent.start && this.selectedEvent.end && this.selectedEvent.roomId)) {
-                this.collision = 0
-                return;
-            }
-
-            await axios
-                .get('/events/collision', {
-                    params: {
-                        start: this.selectedEvent.start,
-                        end: this.selectedEvent.end,
-                        roomId: this.selectedEvent.roomId,
-                        eventId: this.selectedEvent.id,
-                    }
-                })
-                .then(response => {
-                    this.collision = response.data
-                });
-        },
-
     }
 }
 </script>
 
 <style>
 /* Styling of Vue Cal */
+
+.day-split-header {
+    min-width: 200px;
+}
 
 .vuecal__no-event {
     display: none;
@@ -1065,6 +1027,31 @@ export default {
     opacity: 1;
 }
 
+.vuecal--month-view .vuecal__cell {
+    height: 95px;
+}
+
+.vuecal--month-view .vuecal__cell-content {
+    justify-content: flex-start;
+    align-items: flex-end;
+    overflow-y: auto;
+}
+
+.vuecal--month-view .vuecal__cell-date {
+    padding: 4px;
+}
+
+.vuecal--month-view .vuecal__event {
+    padding-top: 0px;
+
+}
+
+.vuecal--month-view .vuecal__no-event {
+    display: none;
+}
+.vuecal__flex .vuecal__cell-content .vuecal__cell-split {
+    min-width: 200px !important;
+}
 .vuecal__event {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */

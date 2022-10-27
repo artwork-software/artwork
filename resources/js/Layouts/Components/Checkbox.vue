@@ -4,9 +4,9 @@
             <div class="flex items-center justify-start">
                 <input :key="item.name" v-model="item.checked" type="checkbox"
                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[item.checked ? 'text-primary font-black' : 'text-secondary']"
+                                <p :class="[item.checked ? 'xsDark' : 'xsLight']"
                    class="ml-4 my-auto text-sm" v-if="!item.name_de">{{ item.name }}</p>
-                <p :class="[item.checked ? 'text-primary font-black' : 'text-secondary']"
+                <p :class="[item.checked ? 'xsDark' : 'xsLight']"
                    class="ml-4 my-auto text-sm" v-else>{{item.name_de}}</p>
             </div>
             <div v-if="item.showIcon !== false" :data-tooltip-target="item.name">

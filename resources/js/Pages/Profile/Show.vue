@@ -6,7 +6,7 @@
                     <form @submit.prevent="updateProfileInformation">
                         <div>
                             <div>
-                                <h2 class="font-bold font-lexend text-2xl my-2">Dein Konto</h2>
+                                <h2 class="headline1 my-2">Dein Konto</h2>
                                 <div class="col-span-6 sm:col-span-4">
                                     <!-- Profile Photo File Input -->
                                     <input type="file" class="hidden"
@@ -199,7 +199,7 @@
                         <div class="flex items-center text-secondary w-full">
                             <SvgCollection svgName="arrowTopLeft" class="m-3"/>
 
-                            <div class="font-nanum w-full">
+                            <div class="hind w-full">
                                 Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben
                                 und
                                 Sonderzeichen beinhalten.
@@ -219,7 +219,7 @@
                 </div>
             </div>
             <div class="flex ml-20 mt-12">
-                <span @click="openDeleteUserModal()" class="text-secondary cursor-pointer">Konto endgültig löschen</span>
+                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Konto endgültig löschen</span>
             </div>
         </div>
         <!-- Change Profile Picture Modal -->

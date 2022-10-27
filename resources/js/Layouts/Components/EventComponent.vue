@@ -346,7 +346,7 @@
                         </ListboxOptions>
                     </Listbox>
                     <Listbox as="div" v-model="selectedRoom" id="room" v-else>
-                        <ListboxButton class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
+                        <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                             <div class="flex-grow xsLight text-left subpixel-antialiased">
                                 Raum wählen*
                             </div>

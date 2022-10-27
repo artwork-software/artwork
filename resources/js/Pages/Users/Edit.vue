@@ -6,14 +6,14 @@
                     <form @submit.prevent="editUser">
                         <div>
                             <div class="flex">
-                                <img class="mt-6 h-16 w-16 rounded-full flex justify-start"
+                                <img class="mt-6 h-16 w-16 rounded-full flex justify-start object-cover"
                                      :src="user_to_edit.profile_photo_url"
                                      alt=""/>
                                 <div class="mt-6 flex flex-grow w-full">
-                                    <div class="text-3xl  font-lexend font-black flex my-auto ml-6">
+                                    <div class="headline1 flex my-auto ml-6">
                                         {{ userForm.first_name }}
                                     </div>
-                                    <div class="text-3xl  font-lexend font-black flex my-auto ml-2">
+                                    <div class="headline1 flex my-auto ml-2">
                                         {{ userForm.last_name }}
                                     </div>
 
@@ -114,7 +114,7 @@
                         </div>
                     </form>
                     <div class="flex mt-6" v-if="$page.props.is_admin">
-                        <span @click="resetPassword()" class="text-secondary subpixel-antialiased cursor-pointer">Passwort zurücksetzen</span>
+                        <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
                     </div>
                     <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
                         {{ password_reset_status }}
@@ -123,43 +123,79 @@
                     <jet-validation-errors class="mb-4"/>
 
                     <div class="pb-5 my-2 border-gray-200 sm:pb-0">
-                        <h2 class="text-xl mt-16 mb-8 leading-6 font-black text-gray-900">Nutzerrechte</h2>
+                        <h2 class="mt-16 mb-8 headline2">Nutzerrechte</h2>
 
                         <div class="mb-8">
 
-                            <div class="relative flex items-center" v-for="(role, index) in available_roles" :key=index>
+                            <div class="relative justify-between flex items-center" v-for="(role, index) in available_roles" :key=index>
                                 <div class="flex items-center h-7">
-                                    <input :id="role.name"
+                                    <input
                                            v-model="userForm.roles"
                                            :value="role.name"
                                            name="roles" type="checkbox"
                                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
-                                </div>
+
                                 <div class="ml-3 text-sm">
-                                    <label for="roles" class="text-primary">{{ role.name_de }}</label>
+                                    <label for="roles"
+                                           :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                            role.name_de
+                                        }}</label>
+                                </div>
+                                </div>
+                                <div class="justify-end">
+                                    <div :data-tooltip-target="role.name">
+                                        <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
+                                                               aria-hidden="true"/>
+                                    </div>
+                                    <div :id="role.name" role="tooltip" v-if="role.name_de === 'Adminrechte'"
+                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                        Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen
+                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    </div>
+                                    <div :id="role.name" role="tooltip" v-else
+                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                        Hier fehlt noch Info Text
+                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    </div>
                                 </div>
                             </div>
 
                         </div>
 
                     </div>
-                    <div v-if="showUserPermissions" class="flex flex-col">
+                    <div v-if="showUserPermissions" class="flex flex-col w-full">
 
-                        <div v-for="(permissions, group) in all_permissions">
+                        <div class="w-full" v-for="(permissions, group) in all_permissions">
 
-                            <h3 class="text-secondary mt-3 mb-1">{{ group }}</h3>
+                            <h3 class="xxsLight mt-5 mb-1">{{ group }}</h3>
 
-                            <div class="relative flex items-center" v-for="(permission, index) in permissions"
+                            <div class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
                                  :key=index>
                                 <div class="flex items-center h-7">
-                                    <input :id="permission.name"
+                                    <input
+                                           :key="permission.name"
                                            v-model="userForm.permissions"
                                            :value="permission.name"
                                            name="permissions" type="checkbox"
                                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
+
+                                    <div class="ml-3 text-sm">
+                                        <label for="permissions"
+                                               :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                                permission.name_de
+                                            }}</label>
+                                    </div>
                                 </div>
-                                <div class="ml-3 text-sm">
-                                    <label for="permissions" class="text-primary">{{ permission.name_de }}</label>
+                                <div class="justify-end">
+                                    <div :data-tooltip-target="permission.name">
+                                        <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
+                                                               aria-hidden="true"/>
+                                    </div>
+                                    <div :id="permission.name" role="tooltip"
+                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                        {{ permission.tooltipText }}
+                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -175,7 +211,7 @@
                     </div>
                 </div>
                 <div class="flex mt-12">
-                    <span @click="openDeleteUserModal()" class="text-secondary subpixel-antialiased cursor-pointer">Nutzer*in endgültig löschen</span>
+                    <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
                 </div>
             </div>
         </div>
@@ -184,13 +220,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Nutzer*in löschen
                     </div>
                     <XIcon @click="closeDeleteUserModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du {{ user_to_edit.last_name + "," }} {{ user_to_edit.first_name }} aus dem
                         System löschen möchtest?
                     </div>
@@ -215,28 +251,28 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_team_user.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-black font-lexend text-primary mt-10 text-3xl my-2">
+                    <div class="headline1 my-2">
                         Teamzugehörigkeit
                     </div>
                     <XIcon @click="closeChangeTeamsModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="mt-4 text-secondary subpixel-antialiased leading-6 sub">
+                    <div class="mt-4 xsLight">
                         Gib' an in welchen Teams die/der Nutzer*in ist.<br/> Beachte: Sie/Er hat die Berechtigung alle
                         den Teams zugeordneten <br/>Projekte einzusehen.
                     </div>
                     <div class="mt-8 mb-8">
                         <span v-if="departments.length === 0"
-                              class="text-secondary flex mb-6 mt-8 subpixel-antialiased my-auto">Bisher sind keine Teams im Tool angelegt.</span>
+                              class="xsLight flex mb-6 mt-8 my-auto">Bisher sind keine Teams im Tool angelegt.</span>
                         <div v-for="team in departments">
-                                        <span class=" flex items-center pr-4 py-2 text-md subpixel-antialiased">
+                                        <span class=" flex items-center pr-4 py-2 text-md">
                                             <input :key="team.name" type="checkbox" :value="team" :id="team.id"
                                                    v-model="team.checked"
                                                    @change="teamChecked(team)"
                                                    class="mr-3 ring-offset-0 focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-secondary"/>
                                             <TeamIconCollection class="h-9 w-9 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
-                                            <span :class="[team.checked ? 'text-primary font-black' : 'text-secondary']"
+                                            <span :class="[team.checked ? 'xsDark' : 'xsLight']"
                                                   class="ml-2">
                                             {{ team.name }}
                                             </span>
@@ -257,13 +293,13 @@
         <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         Nutzer*in erfolgreich bearbeitet
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         Die Änderungen wurden erfolgreich gespeichert.
                     </div>
                     <div class="mt-6">
@@ -308,7 +344,7 @@ import {
     ChevronDownIcon,
     ChevronUpIcon,
     XIcon,
-    CheckIcon
+    CheckIcon, InformationCircleIcon
 } from "@heroicons/vue/outline";
 import Checkbox from "@/Layouts/Components/Checkbox";
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
@@ -348,7 +384,8 @@ export default defineComponent({
         XIcon,
         TeamIconCollection,
         JetValidationErrors,
-        CheckIcon
+        CheckIcon,
+        InformationCircleIcon
     },
     props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles'],
     data() {

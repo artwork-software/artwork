@@ -401,7 +401,7 @@
         <vue-cal
             ref="vuecal"
             id="vuecal"
-            style="height: 70rem; max-height: calc(100vh - 280px); width: fit-content;"
+            style="height: 70rem; max-height: calc(100vh - 280px); min-width: 100%; width: fit-content;"
             today-button
             :time-cell-height=120
             events-on-month-view="short"
@@ -988,6 +988,11 @@ export default {
 
 .day-split-header {
     min-width: 200px;
+    text-align: center;
+    font: normal normal 13px/18px Inter;
+    letter-spacing: -0.2px;
+    color: #FCFCFB;
+    opacity: 1;
 }
 
 .vuecal__no-event {
@@ -1099,11 +1104,11 @@ export default {
 }
 
 .vuecal__flex.weekday-label {
-    font-size: 1rem; /* 16px */
-    line-height: 1rem; /* 16px */
+    text-align: center;
+    font: normal normal 600 13px/18px Inter;
+    letter-spacing: -0.2px;
     color: #27233C;
-    border-radius: 12px;
-    font-weight: bolder;
+    opacity: 1;
 }
 
 .vuecal__cell--today .vuecal__cell--current {

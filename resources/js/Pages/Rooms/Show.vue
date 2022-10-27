@@ -3,7 +3,7 @@
         <div class="max-w-screen-xl my-12 ml-14 mr-10">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-3xl">{{ room.name }}</h2>
+                    <h2 class="headline1">{{ room.name }}</h2>
                     <Menu as="div" class="my-auto relative">
                         <div class="flex"
                              v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
@@ -17,7 +17,7 @@
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite den Raum</span>
+                                    <span class="ml-2 hind mt-1">Bearbeite den Raum</span>
                                 </div>
                             </div>
                         </div>
@@ -67,18 +67,18 @@
                 </div>
                 <div class="grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
-                        <span class="text-secondary subpixel-antialiased">
+                        <span class="xsLight">
                             {{ room.area.name }}
                         </span>
-                        <p class="text-secondary subpixel-antialiased mt-4">
+                        <p class="xsLight mt-4">
                             Kann von jedem gebucht werden: <label v-if="room.everyone_can_book">Ja</label>
                             <label v-else>Nein</label>
                         </p>
-                        <span class="flex mt-6 text-secondary text-sm subpixel-antialiased">
+                        <span class="flex mt-6 xsLight subpixel-antialiased">
                             {{ room.description }}
                         </span>
                         <div class="flex w-full mt-6 items-center mb-4">
-                            <h3 class="text-xl leading-6 font-medium font-lexend text-primary"> Dokumente </h3>
+                            <h3 class="headline2"> Dokumente </h3>
                         </div>
                         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
                             <input
@@ -92,7 +92,7 @@
                             <div @click="selectNewFiles" @dragover.prevent
                                  @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-2/3 flex justify-center items-center
                         border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
-                                <p class="text-secondary text-center">Ziehe Dokumente hier her
+                                <p class="xsLight">Ziehe Dokumente hier her
                                     <br>oder klicke ins Feld
                                 </p>
                             </div>
@@ -126,13 +126,13 @@
                         </div>
                     </div>
                     <div class="col-span-2">
-                        <span class="font-medium font-lexend text-xl w-full">Raumadmin</span>
+                        <span class="headline2 w-full">Raumadmin</span>
                         <button @click="openChangeRoomAdminsModal()"
                                 v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-                            <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
+                            <PencilAltIcon class="my-auto ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
                         </button>
                         <div class="mt-4" v-if="roomForm.room_admins.length === 0">
-                            <span class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Raumadmins festgelegt</span>
+                            <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
                         </div>
                         <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
                             <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
@@ -141,7 +141,7 @@
                             <UserTooltip :user="user"/>
                         </div>
                         <div class="mt-10">
-                            <span class="font-medium font-lexend text-xl w-full">Eigenschaften</span>
+                            <span class="headline2 w-full">Eigenschaften</span>
                             <Menu as="span" class="relative">
                                 <MenuButton @click="attributesOpened = true" v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
                                     <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
@@ -305,7 +305,7 @@
                 </div>
 
                 <div class="flex flex-wrap">
-                    <span class="font-bold mt-12 font-lexend text-2xl w-full" v-if="room.event_requests.length !== 0">
+                    <span class="mt-12 headline2 w-full" v-if="room.event_requests.length !== 0">
                     Offene Belegungsanfragen
                     </span>
                     <div v-for="eventRequest in room.event_requests" class="flex flex-wrap w-full items-center">
@@ -315,7 +315,7 @@
                                     <EventTypeIconCollection :height="26" :width="26"
                                                              :iconName="eventRequest.event_type.svg_name"/>
                                     <div
-                                        class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                        class="whitespace-nowrap ml-2 flex leading-6 sDark">
                                         {{ eventRequest.event_type.name }}
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -323,14 +323,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                             eventRequest.start_time.split(',')[0]
                                         }},{{ eventRequest.start_time.split(',')[1] }}
                                         - {{ eventRequest.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex xsDark w-full whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
                                         {{ eventRequest.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
@@ -348,10 +348,10 @@
                             </div>
                             <div class="flex items-center w-full ml-24 ">
                                 <div v-if="eventRequest.project" class="w-64">
-                                    <div class="text-secondary text-sm flex items-center">
+                                    <div class="xsLight flex items-center">
                                         Zugeordnet zu
                                         <Link :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
-                                              class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                              class="xsDark ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
                                     </div>
@@ -365,24 +365,24 @@
                                                                         </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm w-64" v-else>
+                                <div class="xsLight w-64" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
 
-                                <div class="flex text-sm text-secondary items-center">
+                                <div class="flex xsLight items-center">
                                     angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
                                                    :src="eventRequest.created_by.profile_photo_url"
                                                    :alt="eventRequest.created_by.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="eventRequest.created_by"/>
-                                    <span class="ml-2"> {{ eventRequest.created_at }}</span>
+                                    <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
 
-                            <div class="flex ml-40 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-40 mt-2 xsLight items-center w-full"
                                  v-if="eventRequest.description">
                                 {{ eventRequest.description }}
                             </div>
@@ -395,8 +395,8 @@
         </div>
 
         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-            <div class="flex w-full mt-6 items-center mb-2 ml-20">
-                <h3 class="text-xl leading-6 font-medium font-lexend text-primary"> Raumbelegung </h3>
+            <div class="flex w-full mt-6 items-center mb-2 ml-14">
+                <h3 class="headline2"> Raumbelegung </h3>
             </div>
             <CalendarComponent :eventTypes="this.event_types" :room="room"/>
         </div>
@@ -406,13 +406,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-2xl my-2">
+                    <div class="headline1 my-2">
                         Raumadmin bearbeiten
                     </div>
                     <XIcon @click="closeChangeRoomAdminsModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <div class="xsLight">
                         Tippe den Namen der Nutzer*innen ein, welche den Raum bearbeiten und direkt belegen dürfen.
                     </div>
                     <div class="mt-6 relative">
@@ -479,7 +479,7 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Raum bearbeiten
                     </div>
                     <XIcon @click="closeEditRoomModal"
@@ -499,7 +499,7 @@
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="editRoomForm.description" rows="4"
-                                                class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                                                class="shadow-sm placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                         </div>
                         <div class="flex items-center my-6">
                             <input v-model="editRoomForm.temporary"
@@ -508,9 +508,9 @@
                             <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">Temporärer Raum</p>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                    class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
@@ -531,9 +531,9 @@
                             <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                                class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                                <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                    class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
                             </div>
                         </div>
 
@@ -557,13 +557,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Raum in den Papierkorb
                     </div>
                     <XIcon @click="closeSoftDeleteRoomModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -585,13 +585,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         {{ successHeading }}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         {{ successDescription }}
                     </div>
                     <div class="mt-6">
@@ -610,13 +610,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         Raumbelegung zusagen
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         Bist du sicher, dass du die Raumbelegung zusagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">
@@ -637,14 +637,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
                                          v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
                                         - {{ requestToApprove.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
                                         {{ requestToApprove.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
@@ -654,9 +654,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                    <div class="ml-16  xsLight flex items-center">
                                         Zugeordnet zu
-                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                        <div class="xsDark ml-2">
                                             {{ requestToApprove.project.name }}
                                         </div>
                                     </div>
@@ -670,22 +670,22 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
+                                <div class="xsLight ml-10" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
+                                <div class="flex xsLight items-center">
                                     angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
                                                    :src="requestToApprove.created_by.profile_photo_url"
                                                    :alt="requestToApprove.created_by.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="requestToApprove.created_by"/>
-                                    <span class="ml-2"> {{ requestToApprove.created_at }}</span>
+                                    <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
@@ -710,13 +710,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Raumbelegung absagen
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du die Raumbelegung absagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">
@@ -737,14 +737,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3"
                                          v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
                                         - {{ requestToDecline.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsLight whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
                                         {{ requestToDecline.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
@@ -754,9 +754,9 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                    <div class="ml-16 xsLight flex items-center">
                                         Zugeordnet zu
-                                        <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
+                                        <div class="xsDark ml-2">
                                             {{ requestToDecline.project.name }}
                                         </div>
                                     </div>
@@ -770,22 +770,22 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
+                                <div class="xsLight ml-10" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
+                                <div class="flex xsLight items-center">
                                     angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
                                                    :src="requestToDecline.created_by.profile_photo_url"
                                                    :alt="requestToDecline.created_by.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="requestToDecline.created_by"/>
-                                    <span class="ml-2"> {{ requestToDecline.created_at }}</span>
+                                    <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>

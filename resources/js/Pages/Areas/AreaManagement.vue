@@ -6,14 +6,14 @@
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <h2 class="text-3xl font-lexend font-black text-primary flex w-full">Räume & Areale</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
+                                <h2 class="headline1 flex w-full">Räume & Areale</h2>
+                                <div class="xsLight flex mt-4 w-full">
                                     Lege Areale und Räume an und weise einzelnen Räumen Nebenräume zu. Definiere
                                     zusätzlich globale Eigenschaften für Räume.
                                 </div>
 
-                                <h2 class="font-medium mt-10 text-xl w-full">Raumeigenschaften</h2>
-                                <div class="text-secondary subpixel-antialiased flex mt-4 w-full">
+                                <h2 class="mt-10 headline2 w-full">Raumeigenschaften</h2>
+                                <div class="xsLight flex mt-4 w-full">
                                     Lege Raumkategorien und -eigenschaften fest. Nach diesen kann anschließend in den
                                     Kalendern gefiltert werden.
                                 </div>
@@ -98,7 +98,7 @@
                                 </div>
 
                                 <div class="flex w-full justify-between mt-6">
-                                    <h2 class="font-medium mt-10 text-xl">Areale</h2>
+                                    <h2 class=" mt-10 headline2">Areale</h2>
                                 </div>
                                 <div class="flex w-full justify-between mt-6">
                                     <div class="flex">
@@ -106,9 +106,9 @@
                                             <AddButton @click="openAddAreaModal" text="Areal hinzufügen" mode="page"/>
                                         </div>
                                         <div v-if="$page.props.can.show_hints" class="flex">
-                                            <SvgCollection svgName="arrowLeft" class="ml-2"/>
+                                            <SvgCollection svgName="arrowLeft" class="ml-2 mt-4"/>
                                             <span
-                                                class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Areale an</span>
+                                                class="ml-1 mt-4 hind">Lege neue Areale an</span>
                                         </div>
                                     </div>
 
@@ -126,7 +126,7 @@
                                     <div class="flex items-center w-full ml-4 flex-wrap p-4">
                                         <div class="flex justify-between w-full">
                                             <div class="my-auto flex items-center">
-                                                <span class="text-2xl leading-6 font-bold font-lexend text-gray-900">
+                                                <span class="headline2">
                                                     {{ area.name }}
                                                 </span>
                                             </div>
@@ -220,12 +220,12 @@
                                                             <div class="flex w-full">
                                                                 <div class="flex">
                                                                     <Link :href="route('rooms.show',{room: element.id})"
-                                                                          class="ml-4 my-auto text-lg font-black text-sm"
+                                                                          class="ml-4 my-auto xsDark"
                                                                     >
                                                                         {{ element.name }}
                                                                     </Link>
                                                                     <div
-                                                                        class="ml-6 flex items-center text-secondary text-sm my-auto">
+                                                                        class="ml-6 flex items-center xsLight my-auto">
                                                                         angelegt am {{ element.created_at }} von
                                                                         <img
                                                                             :data-tooltip-target="element.created_by.id"
@@ -299,7 +299,7 @@
                                             <div v-show="area.rooms.filter(room => room.temporary === 1).length > 0"
                                                  class="mt-12">
                                                 <h2 v-on:click="switchVisibility(area.id)"
-                                                    class="text-sm pb-2 flex font-bold text-primary cursor-pointer">
+                                                    class="pb-2 flex xxsDarkBold cursor-pointer">
                                                     Temporäre
                                                     Räume
                                                     <ChevronUpIcon v-if="showTemporaryRooms.includes(area.id)"
@@ -324,13 +324,13 @@
                                                                     <div class="flex">
                                                                         <Link
                                                                             :href="route('rooms.show',{room: element.id})"
-                                                                            class="ml-4 my-auto text-lg font-black text-sm"
+                                                                            class="ml-4 my-auto xsDark"
                                                                         >
                                                                             {{ element.name }} ({{ element.start_date }}
                                                                             - {{ element.end_date }})
                                                                         </Link>
                                                                         <div
-                                                                            class="ml-6 flex items-center text-secondary text-sm my-auto">
+                                                                            class="ml-6 flex items-center xsLight my-auto">
                                                                             angelegt am {{ element.created_at }} von
                                                                             <img
                                                                                 :data-tooltip-target="element.created_by.id"
@@ -417,7 +417,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_area_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
-                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Neues Areal
                 </div>
                 <XIcon @click="closeAddAreaModal"
@@ -452,7 +452,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_area_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
-                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Areal bearbeiten
                 </div>
                 <XIcon @click="closeEditAreaModal"
@@ -487,7 +487,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_room_new.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3 overflow-y-auto">
-                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Neuer Raum
                 </div>
                 <XIcon @click="closeAddRoomModal"
@@ -508,7 +508,7 @@
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
                                                 v-model="newRoomForm.description" rows="4"
-                                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full font-semibold border border-gray-300 "/>
+                                                class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full font-semibold border border-gray-300 "/>
                     </div>
 
                     <Menu as="span" class="relative inline-block w-full text-left">
@@ -674,9 +674,9 @@
                         <p :class="[newRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Temporärer Raum</p>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
                         </div>
                     </div>
                     <div class="flex" v-if="newRoomForm.temporary">
@@ -697,9 +697,9 @@
                         <p :class="[newRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
                         </div>
                     </div>
 
@@ -720,7 +720,7 @@
         <template #content>
             <img src="/Svgs/Overlays/illu_room_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
-                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Raum bearbeiten
                 </div>
                 <XIcon @click="closeEditRoomModal"
@@ -749,9 +749,9 @@
                         <p :class="[editRoomForm.temporary ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Temporärer Raum</p>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
+                                class="ml-1 my-auto hind">Richte einen temporären Raum ein - z.B wenn ein Teil eines Raumes abgetrennt wird. Dieser wird nur in diesem Zeitraum im Kalender angezeigt.</span>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-x-3" v-if="editRoomForm.temporary">
@@ -772,9 +772,9 @@
                         <p :class="[editRoomForm.everyone_can_book ? 'text-primary font-black' : 'text-secondary']"
                            class="ml-4 my-auto text-sm">Kann von jedem fest gebucht werden</p>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2 mt-4"/>
+                            <SvgCollection svgName="arrowLeft" class="h-6 w-6 ml-2 mr-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
+                                class="ml-1 my-auto hind">Entscheidet, ob dieser Raum von jedem, oder nur von den Raum Admins fest gebucht werden kann.</span>
                         </div>
                     </div>
 
@@ -797,13 +797,13 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
-                <div class="font-bold text-primary text-2xl my-2">
+                <div class="headline1 my-2">
                     Areal in den Papierkorb
                 </div>
                 <XIcon @click="closeSoftDeleteAreaModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error subpixel-antialiased">
+                <div class="errorText">
                     Bist du sicher,dass du das Areal {{ areaToSoftDelete.name }} mit allen Räumen in den Papierkorb
                     legen möchtest?
                 </div>
@@ -827,13 +827,13 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
-                <div class="font-bold text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Raum in den Papierkorb
                 </div>
                 <XIcon @click="closeSoftDeleteRoomModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error subpixel-antialiased">
+                <div class="errorText">
                     Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
@@ -856,13 +856,13 @@
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
-                <div class="font-black text-primary text-3xl my-2">
+                <div class="headline1 my-2">
                     Alle Räume entfernen
                 </div>
                 <XIcon @click="closeDeleteAllRoomsModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-error subpixel-antialiased">
+                <div class="errorText">
                     Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
@@ -885,13 +885,13 @@
             <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">
 
-                <div class="font-black text-primary font-lexend text-3xl my-2">
+                <div class="headline1 my-2">
                     {{ successHeading }}
                 </div>
                 <XIcon @click="closeSuccessModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-success subpixel-antialiased">
+                <div class="successText">
                     {{ successDescription }}
                 </div>
                 <div class="mt-6">

@@ -2,21 +2,21 @@
     <app-layout>
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
-                <h2 class="text-3xl font-black font-lexend my-2">Termineinstellungen</h2>
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <h2 class="headline1 my-2">Termineinstellungen</h2>
+                <div class="xsLight">
                     Definiere globale Einstellungen für Termine.
                 </div>
             </div>
-            <div class="mt-16 max-w-2xl">
+            <div class="mt-12 max-w-2xl">
                 <div class="flex">
-                    <h2 class="font-bold font-lexend text-xl my-2">Neuer Termintyp</h2>
+                    <h2 class="headline2 my-2">Termintypen</h2>
                     <AddButton @click="openAddEventTypeModal" text="Neuer Termintyp" mode="page"/>
                     <div v-if="$page.props.can.show_hints" class="flex mt-1">
                         <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                        <span class="font-nanum tracking-tight text-lg text-secondary ml-1 my-auto">Erstelle neue Termintypen</span>
+                        <span class="hind ml-1 my-auto">Erstelle neue Termintypen</span>
                     </div>
                 </div>
-                <div class="text-secondary tracking-tight leading-6 subpixel-antialiased mt-5">
+                <div class="xsLight mt-5">
                     Lege bis zu 10 Termintypen fest, denen Termine später zugeordnet werden können. Du kannst außerdem
                     definieren ob sie Projekten zugeordnet werden müssen oder ob sie einen eigenen individuellen
                     Terminnamen bekommen können.
@@ -30,18 +30,18 @@
                                                  :iconName="eventType.svg_name"/>
                         <div class="ml-5 my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
-                                <p class="text-lg subpixel-antialiased text-gray-900">{{ eventType.name }}</p>
+                                <p class="mDark">{{ eventType.name }}</p>
                             </div>
                             <div class="flex mt-2">
-                                <div class="text-secondary subpixel-antialiased mr-2">
+                                <div class="xsLight mr-2">
                                     {{
                                         eventType.project_mandatory ? "Projektzuordnung verpflichtend" : "Projektzuordnung optional"
                                     }}
                                 </div>
-                                <div class="text-secondary subpixel-antialiased">
+                                <div class="xsLight">
                                     |
                                 </div>
-                                <div class="text-secondary subpixel-antialiased ml-2">
+                                <div class="xsLight ml-2">
                                     {{
                                         eventType.individual_name ? "individueller Terminname möglich" : "kein individueller Terminname möglich"
                                     }}
@@ -106,15 +106,15 @@
         <!-- Termintyp erstellen Modal-->
         <jet-dialog-modal :show="addingEventType" @close="closeAddEventTypeModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                    <div class="headline1 my-2">
                         Neuer Termintyp
                     </div>
                     <XIcon @click="closeAddEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
+                    <div class="xsLight">
                         Du kannst bis zu 10 Termintypen festlegen.
                     </div>
                     <div class="mt-4">
@@ -164,15 +164,15 @@
                                 <input v-model="eventTypeForm.project_mandatory"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[eventTypeForm.project_mandatory ? 'text-primary font-black' : 'text-secondary']"
-                                   class="ml-4 my-auto text-sm">Projektzuordnung verpflichtend</p>
+                                <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
+                                   class="ml-4 my-auto ">Projektzuordnung verpflichtend</p>
                             </div>
                             <div class="flex items-center mt-4 ml-5">
                                 <input v-model="eventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[eventTypeForm.individual_name ? 'text-primary font-black' : 'text-secondary']"
-                                   class="ml-4 my-auto text-sm">individueller Terminname möglich</p>
+                                <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
+                                   class="ml-4 my-auto ">individueller Terminname möglich</p>
                             </div>
                         </div>
                         <div class="mt-2 w-full items-center text-center">
@@ -189,8 +189,9 @@
         <!-- Termintyp bearbeiten Modal-->
         <jet-dialog-modal :show="editingEventType" @close="closeEditEventTypeModal">
             <template #content>
+                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                    <div class="headline1 my-2">
                         Termintyp bearbeiten
                     </div>
                     <XIcon @click="closeEditEventTypeModal"
@@ -223,7 +224,7 @@
                                                                              :iconName="item.iconName"/>
                                                 </Link>
                                             </div>
-                                            <div v-else class="text-secondary">
+                                            <div v-else class="xsLight">
                                                 {{ item.iconName }} schon vergeben
                                             </div>
                                         </MenuItem>
@@ -243,15 +244,15 @@
                                 <input v-model="editEventTypeForm.project_mandatory"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[editEventTypeForm.project_mandatory ? 'text-primary font-black' : 'text-secondary']"
-                                   class="ml-4 my-auto text-sm">Projektzuordnung verpflichtend</p>
+                                <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
+                                   class="ml-4 my-auto">Projektzuordnung verpflichtend</p>
                             </div>
                             <div class="flex items-center mt-4 ml-5">
                                 <input v-model="editEventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p :class="[editEventTypeForm.individual_name ? 'text-primary font-black' : 'text-secondary']"
-                                   class="ml-4 my-auto text-sm">individueller Terminname möglich</p>
+                                <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
+                                   class="ml-4 my-auto">individueller Terminname möglich</p>
                             </div>
                         </div>
                         <div class="mt-2 ml-5">
@@ -271,13 +272,13 @@
         <jet-dialog-modal :show="deletingEventType" @close="closeDeleteEventTypeModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="headline1 my-2">
                         Termintyp löschen
                     </div>
                     <XIcon @click="closeDeleteEventTypeModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du den Termintyp {{ eventTypeToDelete.name }} löschen möchtest?
                         Alle Termine, die diesem Typen zugeordnet sind, werden auf "undefiniert" gesetzt.
                     </div>
@@ -298,13 +299,13 @@
         <jet-dialog-modal :show="deletingUndefined" @close="closeDeletingUndefined">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
+                    <div class="headline1">
                         Termintyp löschen
                     </div>
                     <XIcon @click="closeDeletingUndefined"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Der Termintyp {{ eventTypeToDelete.name }} kann nicht gelöscht werden, da er der
                         Standard-Termintyp ist.
                     </div>

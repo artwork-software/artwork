@@ -5,7 +5,7 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex flex-wrap">
-                            <h2 class="text-3xl font-black font-lexend flex w-full">Belegungsanfragen</h2>
+                            <h2 class="headline1 flex w-full">Belegungsanfragen</h2>
                             <div class="text-secondary subpixel-antialiased flex mt-4">
                                 Hier siehst du alle Raumbelegungsanfragen auf einen Blick und kannst sie verwalten.
                             </div>
@@ -16,7 +16,7 @@
                             <div class="flex w-full items-center flex-wrap">
 
                                 <div class="flex items-center w-full mt-4">
-                                    <div class=" w-1/4 text-lg flex leading-6 font-bold font-lexend text-gray-900">
+                                    <div class=" w-1/4 flex mDark">
                                         {{ eventRequest.room.name }}:
                                     </div>
                                     <div class="flex items-center w-full">
@@ -31,14 +31,14 @@
                                                  class="h-5 w-5 ml-2  my-auto"/>
                                         </div>
 
-                                        <div class="flex w-full whitespace-nowrap ml-4"
+                                        <div class="flex w-full xsDark whitespace-nowrap ml-4"
                                              v-if="eventRequest.start_time.split(',')[0] === eventRequest.end_time.split(',')[0]">
                                             {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }}, {{
                                                 eventRequest.start_time.split(',')[0]
                                             }},{{ eventRequest.start_time.split(',')[1] }}
                                             - {{ eventRequest.end_time.split(',')[1] }}
                                         </div>
-                                        <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                        <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                             {{ getGermanWeekdayAbbreviation(eventRequest.start_time_weekday) }},
                                             {{ eventRequest.start_time }} -
                                             {{ getGermanWeekdayAbbreviation(eventRequest.end_time_weekday) }},
@@ -56,7 +56,7 @@
                                 </div>
                                 <div class="flex items-center w-full ml-44 justify-between">
                                     <div v-if="eventRequest.project" class="w-80">
-                                        <div class="ml-16 text-secondary text-sm flex items-center">
+                                        <div class="ml-16 xsLight flex items-center">
                                             Zugeordnet zu
                                             <Link
                                                 :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
@@ -74,17 +74,17 @@
                                         </div>
 
                                     </div>
-                                    <div class="text-secondary text-sm w-64 ml-16" v-else>
+                                    <div class="xsLight w-64 ml-16" v-else>
                                         Keinem Projekt zugeordnet
                                     </div>
-                                    <div class="flex text-sm text-secondary items-center">
+                                    <div class="flex xsLight items-center">
                                         angefragt:<img v-if="eventRequest.created_by.profile_photo_url"
                                                        :data-tooltip-target="eventRequest.created_by.id"
                                                        :src="eventRequest.created_by.profile_photo_url"
                                                        :alt="eventRequest.created_by.name"
                                                        class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                         <UserTooltip :user="eventRequest.created_by"/>
-                                        <span class="ml-2"> {{ eventRequest.created_at }}</span>
+                                        <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>
                                     </div>
 
                                     <div>
@@ -92,7 +92,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex ml-60 mt-2 text-sm text-secondary items-center w-full"
+                                <div class="flex ml-60 mt-2 xsLight items-center w-full"
                                      v-if="eventRequest.description">
                                     {{ eventRequest.description }}
                                 </div>
@@ -109,13 +109,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         Raumbelegung zusagen
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         Bist du sicher, dass du die Raumbelegung zusagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">
@@ -136,14 +136,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="requestToApprove.start_time.split(',')[0] === requestToApprove.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }}, {{
                                             requestToApprove.start_time.split(',')[0]
                                         }},{{ requestToApprove.start_time.split(',')[1] }}
                                         - {{ requestToApprove.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.start_time_weekday) }},
                                         {{ requestToApprove.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToApprove.end_time_weekday) }},
@@ -153,7 +153,7 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToApprove.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                    <div class="ml-16 xsLight flex items-center">
                                         Zugeordnet zu
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ requestToApprove.project.name }}
@@ -169,22 +169,22 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
+                                <div class="xsLight ml-10" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
+                                <div class="flex xsLight items-center">
                                     angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
                                                    :src="requestToApprove.created_by.profile_photo_url"
                                                    :alt="requestToApprove.created_by.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="requestToApprove.created_by"/>
-                                    <span class="ml-2"> {{ requestToApprove.created_at }}</span>
+                                    <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToApprove.description">
                                 {{ requestToApprove.description }}
                             </div>
@@ -209,13 +209,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Raumbelegung absagen
                     </div>
                     <XIcon @click="closeDeclineRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du die Raumbelegung absagen möchtest?
                     </div>
                     <div class="flex flex-wrap w-full items-center">
@@ -236,14 +236,14 @@
                                              class="h-5 w-5 ml-2 my-auto"/>
                                     </div>
 
-                                    <div class="flex w-full whitespace-nowrap ml-3"
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3"
                                          v-if="requestToDecline.start_time.split(',')[0] === requestToDecline.end_time.split(',')[0]">
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }}, {{
                                             requestToDecline.start_time.split(',')[0]
                                         }},{{ requestToDecline.start_time.split(',')[1] }}
                                         - {{ requestToDecline.end_time.split(',')[1] }}
                                     </div>
-                                    <div class="flex w-full whitespace-nowrap ml-3" v-else>
+                                    <div class="flex w-full xsDark whitespace-nowrap ml-3" v-else>
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.start_time_weekday) }},
                                         {{ requestToDecline.start_time }} -
                                         {{ getGermanWeekdayAbbreviation(requestToDecline.end_time_weekday) }},
@@ -253,7 +253,7 @@
                             </div>
                             <div class="flex items-center w-full ml-2 justify-between">
                                 <div v-if="requestToDecline.project" class="w-80">
-                                    <div class="ml-16 text-secondary text-sm flex items-center">
+                                    <div class="ml-16 xsLight flex items-center">
                                         Zugeordnet zu
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
                                             {{ requestToDecline.project.name }}
@@ -269,10 +269,10 @@
                                     </div>
                                     -->
                                 </div>
-                                <div class="text-secondary text-sm ml-10" v-else>
+                                <div class="xsLight ml-10" v-else>
                                     Keinem Projekt zugeordnet
                                 </div>
-                                <div class="flex text-sm text-secondary items-center">
+                                <div class="flex xsLight items-center">
                                     angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
                                                    :src="requestToDecline.created_by.profile_photo_url"
                                                    :alt="requestToDecline.created_by.name"
@@ -284,7 +284,7 @@
 
                                 </div>
                             </div>
-                            <div class="flex ml-12 mt-2 text-sm text-secondary items-center w-full"
+                            <div class="flex ml-12 mt-2 xsLight items-center w-full"
                                  v-if="requestToDecline.description">
                                 {{ requestToDecline.description }}
                             </div>

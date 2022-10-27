@@ -5,12 +5,12 @@
                 <div class="flex flex-1 flex-wrap">
                     <div class="w-full flex my-auto justify-between">
                         <div class="flex">
-                            <h2 class="text-3xl font-black font-lexend flex">Alle Teams</h2>
-                            <AddButton @click="openAddTeamModal" text="Team erstellen" mode="page"/>
+                            <h2 class="headline1 flex">Alle Teams</h2>
+                            <AddButton class="mt-0" @click="openAddTeamModal" text="Team erstellen" mode="page"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Stelle neue Teams zusammen</span>
+                                    class="ml-1 my-auto hind">Stelle neue Teams zusammen</span>
                             </div>
                         </div>
                         <div class="flex items-center">
@@ -19,9 +19,7 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <input id="departmentSearch" v-model="department_query" type="text" autocomplete="off"
-                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
-                                       placeholder="Suche nach Teams"/>
+                                <inputComponent v-model="department_query" placeholder="Suche nach Teams" />
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -35,7 +33,7 @@
                                                     alt="TeamIcon"/>
                                 <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
+                                        <p class="sDark">{{ department.name }}</p>
                                     </div>
                                 </Link>
                             </div>
@@ -95,7 +93,7 @@
                                             </div>
                                             <div class="flex">
                                                 <span
-                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite dein Team</span>
+                                                    class="ml-2 mt-1 hind">Bearbeite dein Team</span>
                                             </div>
                                         </div>
                                     </div>
@@ -149,7 +147,7 @@
                                                     alt="TeamIcon"/>
                                 <Link :href="getEditHref(department)" class="ml-5 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <p class="text-lg subpixel-antialiased text-gray-900">{{ department.name }}</p>
+                                        <p class="sDark">{{ department.name }}</p>
                                     </div>
                                 </Link>
                             </div>
@@ -209,7 +207,7 @@
                                             </div>
                                             <div class="flex">
                                                 <span
-                                                    class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite dein Team</span>
+                                                    class="ml-2 mt-1 hind">Bearbeite dein Team</span>
                                             </div>
                                         </div>
                                     </div>
@@ -267,12 +265,12 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_team_new.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Neues Team erstellen
                     </div>
                     <XIcon @click="closeAddTeamModal" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
+                    <div class="xsLight subpixel-antialiased mt-4">
                         Erstelle ein festes Team/Abteilung.
                     </div>
                     <div class="mt-12">
@@ -317,10 +315,10 @@
                             </div>
                         </div>
                         <div class="mt-12">
-                            <div class="font-bold font-lexend text-primary text-xl my-2">
+                            <div class="headline2 my-2">
                                 Nutzer*innen hinzufügen
                             </div>
-                            <div class="text-secondary tracking-tight leading-6 subpixel-antialiased">
+                            <div class="xsLight subpixel-antialiased">
                                 Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest.
                             </div>
 
@@ -392,14 +390,14 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Alle Teammitglieder löschen
                     </div>
 
                     <XIcon @click="closeDeleteAllTeamMembersModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased mt-4">
+                    <div class="errorText mt-4">
                         Bist du sicher, dass du alle Mitglieder des Teams {{ teamToDeleteAllMembers.name }} entfernen
                         willst?
                     </div>
@@ -424,13 +422,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4 bg-secondaryHover">
-                    <div class="font-black font-lexend text-primary text-3xl mt-6 my-2">
+                    <div class="headline1 mt-6 my-2">
                         Team löschen
                     </div>
                     <XIcon @click="closeDeleteTeamModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du das Team {{ teamToDelete.name }} aus dem System löschen willst?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -453,13 +451,13 @@
         <jet-dialog-modal :show="showSuccess" @close="closeSuccessModal">
             <template #content>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         {{ this.successHeading }}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         Die Änderungen wurden erfolgreich gespeichert.
                     </div>
                     <div class="mt-6">
@@ -516,6 +514,7 @@ import {forEach} from "lodash";
 import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -582,7 +581,8 @@ export default defineComponent({
         PencilAltIcon,
         TrashIcon,
         XCircleIcon,
-        Link
+        Link,
+        InputComponent
     },
     props: ['departments', 'users'],
     created() {

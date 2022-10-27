@@ -8,11 +8,11 @@
                 <!--    Heading    -->
                 <div>
                     <h1 class="my-2 flex">
-                        <div class="flex-grow font-black font-lexend text-primary tracking-wide text-3xl my-2">
+                        <div class="flex-grow headline1 my-2">
                             Termine ohne Raum
                         </div>
                     </h1>
-                    <h2 class="text-secondary">
+                    <h2 class="xsLight">
                         Diese Raumbelegungsanfragen wurden vom Raumadmin abgelehnt. Sage die Termine ab oder verschiebe
                         sie in einen anderen Raum.
                     </h2>
@@ -38,8 +38,7 @@
                                     <div v-if="event?.canDelete"
                                          class="flex  justify-end">
                                         <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
-                                            <TrashIcon class="h-9 w-9 rounded-lg bg-buttonBlue text-white"
-                                                       aria-hidden="true"/>
+                                            <img class="bg-buttonBlue hover:bg-buttonHover h-10 w-10 p-1.5 rounded-full" src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                                         </div>
                                     </div>
                                     <div v-else>
@@ -62,7 +61,7 @@
                                     <div class="h-10 flex w-full truncate p-2" v-if="!event.canEdit">
                                         <EventTypeIconCollection :height="20" :width="20"
                                                                  :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
-                                        <p class="ml-2">
+                                        <p class="ml-2 headline2">
                                             {{ this.eventTypes.find(type => type.id === event.eventTypeId).name }}</p>
 
                                     </div>
@@ -71,7 +70,7 @@
                                              v-if="event.canEdit"
                                              :onchange="checkCollisions(event)" id="eventType">
                                         <ListboxButton
-                                            class="pl-3 border border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                            class="pl-3 border-2 border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                             <div class="flex items-center my-auto">
                                                 <EventTypeIconCollection :height="20" :width="20"
                                                                          :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
@@ -124,13 +123,13 @@
                                         id="eventTitle"
                                         placeholder="Terminname*"
                                         :disabled="!event.canEdit"
-                                        class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                        class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     <input v-else type="text"
                                            v-model="event.eventName"
                                            id="eventTitle"
                                            placeholder="Terminname"
                                            :disabled="!event.canEdit"
-                                           class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                           class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                                     <p class="text-xs text-red-800">{{ event.error?.eventName?.join('. ') }}</p>
                                 </div>
@@ -140,7 +139,7 @@
                             <Menu as="div" class="inline-block text-left w-full">
                                 <div>
                                     <MenuButton
-                                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                                        class="border-2 border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                                     >
                                         <span class="float-left">Termineigenschaften wählen</span>
                                         <ChevronDownIcon
@@ -203,14 +202,14 @@
                             <!--    Project    -->
                             <div>
 
-                                <div class="text-secondary flex" v-if="!event.creatingProject">
+                                <div class="xsLight flex" v-if="!event.creatingProject">
                                     Aktuell zugeordnet zu:
                                     <a v-if="event.projectId"
                                        :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
-                                       class="ml-3 text-md flex font-bold font-lexend text-primary">
+                                       class="ml-3 flex xsDark">
                                         {{ event.project?.name }}
                                     </a>
-                                    <div v-else class="text-primary ml-2">
+                                    <div v-else class="xsDark ml-2">
                                         {{ event.project?.name ?? 'Keinem Projekt' }}
                                     </div>
                                     <div v-if="event.project?.id && event.canEdit" class="flex items-center my-auto">
@@ -220,14 +219,14 @@
                                         </button>
                                     </div>
                                 </div>
-                                <div class="text-secondary my-2" v-if="event.creatingProject">
+                                <div class="xsLight" v-if="event.creatingProject">
                                     Das Projekt wird beim Abspeichern erstellt.
                                 </div>
 
                                 <div class="my-2" v-if="event.canEdit">
                                     <div class="flex pb-2">
                             <span class="mr-4 text-sm"
-                                  :class="[!event.creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
                                 Bestehendes Projekt
                             </span>
                                         <label for="project-toggle"
@@ -244,7 +243,7 @@
                                             </div>
                                         </label>
                                         <span class="ml-4 text-sm"
-                                              :class="[event.creatingProject ? 'text-primary font-black' : 'text-secondary', 'subpixel-antialiased']">
+                                              :class="[event.creatingProject ? 'xsDark' : 'xsLight', '']">
                                 Neues Projekt
                             </span>
                                         <div v-if="showHints" class="ml-3 flex">
@@ -260,8 +259,9 @@
                                            @change="this.projectName = event.projectName"
                                            @focusout="this.projectName = '';"
                                            v-model="event.projectName"
+                                           autocomplete="off"
                                            :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                                           class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                           class="h-10 border-2 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                                     <div
                                         v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
@@ -282,7 +282,7 @@
                             <!--    Time    -->
                             <div class="flex py-1 flex-col sm:flex-row align-baseline">
                                 <div class="sm:w-1/2">
-                                    <label for="startDate" class="text-secondary text-xs">Start</label>
+                                    <label for="startDate" class="xsLight">Start</label>
                                     <div class="w-full flex">
                                         <input v-model="event.startDate"
                                                id="startDate"
@@ -290,19 +290,19 @@
                                                type="date"
                                                :disabled="!event.canEdit"
                                                required
-                                               class="border-gray-300  disabled:border-none flex-grow"/>
+                                               class="border-gray-300 border-2  disabled:border-none flex-grow"/>
                                         <input v-model="event.startTime"
                                                id="changeStartTime"
                                                @change="checkChanges()"
                                                type="time"
                                                :disabled="!event.canEdit"
                                                required
-                                               class="border-gray-300  disabled:border-none"/>
+                                               class="border-gray-300 border-2  disabled:border-none"/>
                                     </div>
                                     <p class="text-xs text-red-800">{{ event.error?.start?.join('. ') }}</p>
                                 </div>
                                 <div class="sm:w-1/2">
-                                    <label for="endDate" class="text-secondary text-xs">Ende</label>
+                                    <label for="endDate" class="xsLight">Ende</label>
                                     <div class="w-full flex">
                                         <input v-model="event.endDate"
                                                id="endDate"
@@ -310,14 +310,14 @@
                                                type="date"
                                                required
                                                :disabled="!event.canEdit"
-                                               class="border-gray-300  disabled:border-none flex-grow"/>
+                                               class="border-gray-300 border-2 disabled:border-none flex-grow"/>
                                         <input v-model="event.endTime"
                                                id="changeEndTime"
                                                @change="checkChanges()"
                                                type="time"
                                                required
                                                :disabled="!event.canEdit"
-                                               class="border-gray-300  disabled:border-none"/>
+                                               class="border-gray-300 border-2 disabled:border-none"/>
                                     </div>
                                     <p class="text-xs text-red-800">{{ event.error?.end?.join('. ') }}</p>
                                 </div>
@@ -331,7 +331,7 @@
                                 </div>
                                 <Listbox as="div" v-model="event.roomId" id="room" v-if="event.canEdit">
                                     <ListboxButton
-                                        class="border border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
+                                        class="border-2 border-gray-300 w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow text-left">
                                             {{ this.rooms.find(room => room.id === event.roomId)?.name }}
                                         </div>
@@ -352,26 +352,14 @@
                                 </Listbox>
                                 <p class="text-xs text-red-800">{{ event.error?.roomId?.join('. ') }}</p>
                             </div>
-
-                            <!--TODO: WIRD BEIM BEARBEITEN EINES EVENTS IMMER ANGEZEIGT, dass 1 Termin zeitgleich im Raum stattfindet (was nicht stimmt) -> Bug beheben
-                            <div v-if="collisionCount > 0" class="bg-error text-sm text-white rounded-md p-2 flex">
-                                <img src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-8 w-8 p-2" aria-hidden="true"
-                                     alt="warnIcon"/>
-                                <div>
-                                    Dieser Termin überschneidet sich mit {{ collisionCount }} Terminen im selben Raum.
-                                    Diese könnten anderen Projekten zugeordnet sein.
-                                </div>
-                            </div>
-                            -->
-
                             <!--    Description    -->
                             <div class="py-2">
-                    <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                            <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
                               id="description"
                               :disabled="!event.canEdit"
                               v-model="event.description"
                               rows="4"
-                              class="border-gray-300 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                              class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="flex justify-center w-full py-4" v-if="event.canEdit">
                                 <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
@@ -387,25 +375,26 @@
                             <div class=" w-full flex cursor-pointer truncate p-2">
                                 <EventTypeIconCollection :height="40" :width="40"
                                                          :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
-                                <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
+                                <p class="ml-2 headline2 flex items-center">
                                     {{ this.eventTypes.find(type => type.id === event.eventTypeId)?.name }}
                                 </p>
-                                <div class="flex w-1/2 ml-12 items-center">
+                                <div class="flex w-1/2 ml-12 xsDark items-center">
                                     {{ event.eventName }}
                                 </div>
                             </div>
                             <div class="w-full flex">
-                                <div class="flex w-1/2 items-center my-auto" v-if="event.projectId">
+                                <div class="flex w-1/2 xxsDark items-center my-auto" v-if="event.projectId">
                                     Projekt:
                                     <a :href="route('projects.show', {project: event.projectId, openTab: 'calendar'})"
-                                       class="ml-1 mt-0.5 text-sm items-center flex font-bold font-lexend text-primary">
+                                       class="ml-1 xxsDarkBold items-center flex">
                                         {{ event.projectName }}
                                     </a>
                                 </div>
                                 <div class="flex items-center w-1/2 mb-1">
-                                    <p class="truncate max-w-60 mt-1">
-                                        erstellt von {{ event.created_by.first_name }}
-                                        {{ event.created_by.last_name }}</p> <img
+                                    <div class="truncate flex xxsDark max-w-60 mt-1">
+                                        erstellt von <div class="xxsDarkBold ml-1"> {{ event.created_by.first_name }}
+                                    {{ event.created_by.last_name }}</div>
+                                    </div> <img
                                     :data-tooltip-target="event.created_by.id" :src="event.created_by.profile_photo_url"
                                     :alt="event.created_by.last_name"
                                     class="ml-2 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
@@ -413,18 +402,24 @@
                             </div>
                             <div class="my-2">
                                 <div class="flex" v-if="event.startDate === event.endDate">
-                                    <p class="text-error line-through">
-                                        {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }}
-                                    </p> ,
+                                    <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error line-through">
+                                        {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
+                                    </p>
+                                    <div class="xsDark">
                                     {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
                                     {{ event.startTime }} - {{ event.endTime }}
+                                    </div>
                                 </div>
                                 <div v-else>
-                                    ,
+                                    <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error line-through">
+                                        {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
+                                    </p>
+                                    <div class="xsDark">
                                     {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
                                     {{ event.startTime }} -
                                     {{ event.endDate.toString().substring(10, 8) }}.{{ event.endDate.toString().substring(7, 5) }}.{{ event.endDate.toString().substring(4, 0) }},
                                     {{ event.endTime }}
+                                    </div>
                                 </div>
                             </div>
                             <div v-if="event.opened && event.canEdit">

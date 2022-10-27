@@ -3,13 +3,13 @@
         <div class="max-w-screen-lg my-12 ml-20 mr-40">
             <div class="flex-wrap">
                 <div class="flex">
-                    <h2 class="font-black text-primary mb-4 font-lexend text-3xl">Checklistenvorlage</h2>
+                    <h2 class="mb-4 headline1">Checklistenvorlage</h2>
                 </div>
-                <div class="text-secondary subpixel-antialiased max-w-screen-sm">
+                <div class="xsLight max-w-screen-sm">
                     Hier kannst du deine Checklistenvorlage anlegen und bearbeiten - sie kann anschließend in jedem
                     Projekt genutzt werden.
                 </div>
-                <div class="flex mt-14">
+                <div class="flex mt-8">
                     <div class="relative w-full max-w-2xl">
                         <input id="teamName" v-model="templateForm.name" type="text"
                                class="peer pl-0 h-12 w-full text-xl font-bold focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
@@ -22,7 +22,7 @@
                 <div class="flex items-center mt-6 mr-8">
                     <div class="mt-3" v-if="templateForm.departments.length === 0">
                         <span
-                            class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
+                            class="xsLight cursor-pointer">Noch keine Teams hinzugefügt</span>
                     </div>
                     <div v-else class="mt-3 -mr-3" v-for="team in templateForm.departments">
                         <TeamIconCollection class="h-9 w-9" :iconName="team.svg_name"/>
@@ -39,14 +39,14 @@
                     <div class="flex w-full mt-12">
                         <div class="">
                             <button @click="openAddTaskModal()" type="button"
-                                    class="flex my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
+                                    class="flex hover:bg-success my-auto items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none">
                                 <PlusSmIcon class="h-5 w-5" aria-hidden="true"/>
                             </button>
                         </div>
                         <div v-if="$page.props.can.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                class="ml-1 my-auto hind">Lege neue Aufgaben an</span>
                         </div>
                     </div>
                 </div>
@@ -61,14 +61,14 @@
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p class="ml-4 my-auto font-black"
-                                       :class="element.done ? 'text-secondary' : 'text-primary'">
+                                       :class="element.done ? 'text-secondary' : 'sDark'">
                                         {{ element.name }}</p>
                                     <button type="button" @click="deleteTaskFromTemplate(element)">
                                         <span class="sr-only">Task aus Checklistenvorlage entfernen</span>
                                         <XCircleIcon class="ml-4 h-5 w-5 hover:text-error group-hover:block hidden "/>
                                     </button>
                                 </div>
-                                <div class="ml-10 text-secondary text-sm">
+                                <div class="ml-10 xsLight">
                                     {{ element.description }}
                                 </div>
                             </div>
@@ -83,7 +83,7 @@
                                   shadow-sm text-secondaryHover"
                                    text="Vorlage anlegen" mode="modal"/>
                         <button v-else type="submit"
-                                class="items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class="items-center rounded-full px-16 py-1 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                         >
                             <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
                         </button>

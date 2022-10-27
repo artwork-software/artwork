@@ -2,16 +2,16 @@
     <app-layout>
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
-                <h2 class="text-3xl font-black font-lexend my-2">Projekteinstellungen</h2>
-                <div class="text-secondary tracking-tight leading-6 sub">
+                <h2 class="headline1 my-2">Projekteinstellungen</h2>
+                <div class="xsLight">
                     Definiere globale Einstellungen für Projekte.
                 </div>
             </div>
             <div class="flex flex-wrap">
                 <!-- Genres -->
                 <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Genres</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <h2 class="headline2 my-2">Genres</h2>
+                    <div class="xsLight">
                         Lege Genres fest, denen Projekte später zugeordnet werden können.
                     </div>
                 </div>
@@ -49,8 +49,8 @@
                 </div>
                 <!-- Kategorien -->
                 <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Kategorien</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <h2 class="headline2 my-2">Kategorien</h2>
+                    <div class="xsLight">
                         Lege Kategorien fest, denen Projekte später zugeordnet werden können.
                     </div>
                 </div>
@@ -88,8 +88,8 @@
                 </div>
                 <!-- Bereiche -->
                 <div class="mt-16 max-w-2xl">
-                    <h2 class="font-bold font-lexend text-xl my-2">Bereiche</h2>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <h2 class="headline2 my-2">Bereiche</h2>
+                    <div class="xsLight">
                         Lege Bereiche fest, denen Projekte später zugeordnet werden können.
                     </div>
                 </div>

@@ -81,8 +81,8 @@
                                         :class="[$page.props.can.show_hints ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
                             </Switch>
                             <span class="ml-2 flex mt-1">
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 mr-1"/>
-                                    <span class="text-md font-nanum tracking-tight text-lg text-secondary">Hilfe einblenden </span>
+                                    <SvgCollection svgName="arrowLeft" class="mr-1"/>
+                                    <span class="hind">Hilfe einblenden </span>
                                 </span>
                         </div>
                         <button v-if="false" type="button"
@@ -95,12 +95,12 @@
                                 <MenuButton @click="showUserMenu = !showUserMenu"
                                     class="flex items-center rounded-full focus:outline-none">
                                     <span class="sr-only">Open user menu</span>
-                                    <p class="subpixel-antialiased flex mr-4 pl-2">Hallo
+                                    <p class="xsDark flex mr-4 pl-2">Hallo
                                                                                    {{ $page.props.user.first_name }}
                                         <ChevronUpIcon v-if="showUserMenu"
-                                            class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                            class="ml-1 flex-shrink-0 mt-0.5 h-4 w-4"></ChevronUpIcon>
                                         <ChevronDownIcon v-else
-                                            class="ml-1 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                                            class="ml-1 flex-shrink-0 mt-0.5  h-4 w-4"></ChevronDownIcon>
                                     </p>
                                     <img class="h-10 w-10 rounded-full object-cover"
                                         :src="$page.props.user.profile_photo_url"

@@ -4,14 +4,14 @@
             <div class="flex flex-1 flex-wrap">
                 <div class="flex justify-between w-full">
                     <div class="flex">
-                        <h2 class="text-3xl font-black font-lexend flex">Checklistenvorlagen</h2>
-                        <Link :href="route('checklist_templates.create')">
+                        <h2 class="headline1 flex">Checklistenvorlagen</h2>
+                        <Link class="-mt-1" :href="route('checklist_templates.create')">
                             <AddButton text="Neue Vorlage" mode="page"/>
                         </Link>
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-lg">Lege neue Checklistenvorlagen an</span>
+                                class="ml-1 mt-2 hind">Lege neue Checklistenvorlagen an</span>
                         </div>
                     </div>
                     <div class="flex items-center">
@@ -20,9 +20,7 @@
                             <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                         </div>
                         <div v-else class="flex items-center w-full w-64 mr-12">
-                            <input id="templateSearch" v-model="template_query" type="text" autocomplete="off"
-                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 block w-full "
-                                   placeholder="Suche nach Projekten"/>
+                            <inputComponent v-model="template_query" placeholder="Suche nach Projekten" />
                             <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                         </div>
                     </div>
@@ -34,9 +32,9 @@
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
-                                <Link :href="getEditHref(template)" class="text-lg mr-3 font-bold font-lexend text-primary">
+                                <Link :href="getEditHref(template)" class="mr-3 sDark">
                                     {{ template.name }} </Link>
-                                <p class="ml-1 text-sm font-medium text-secondary my-auto"> angelegt am
+                                <p class="ml-1 xsLight my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>
                                 <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 my-auto rounded-full flex justify-start"
@@ -63,7 +61,7 @@
                                         </div>
                                         <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite eine Vorlage</span>
+                                                        class="ml-2 hind mt-2">Bearbeite eine Vorlage</span>
                                         </div>
                                     </div>
                                 </div>
@@ -115,12 +113,12 @@
                     <div class="flex">
                         <div class="my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
-                                <p class="text-lg mr-3 font-bold font-lexend text-primary">
+                                <p class="mr-3 sDark">
                                     {{ template.name }} </p>
-                                <p class="ml-1 text-sm font-medium text-secondary my-auto"> angelegt am
+                                <p class="ml-1 xsLight my-auto"> angelegt am
                                     {{ template.created_at }} von
                                 </p>
-                                <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 my-auto rounded-full flex justify-start"
+                                <img :data-tooltip-target="template.user.id" class="h-6 w-6 ml-2 object-cover my-auto rounded-full flex justify-start"
                                      :src="template.user.profile_photo_url"
                                      alt=""/>
                                 <UserTooltip :user="template.user" />
@@ -144,7 +142,7 @@
                                         </div>
                                         <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite eine Vorlage</span>
+                                                        class="ml-2 hind mt-2">Bearbeite eine Vorlage</span>
                                         </div>
                                     </div>
                                 </div>
@@ -198,13 +196,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary text-3xl my-2">
+                    <div class="headline1 my-2">
                         Checklistenvorlage löschen
                     </div>
                     <XIcon @click="closeDeleteTemplateModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
+                    <div class="errorText">
                         Bist du sicher, dass du die Checklistenvorlage {{ templateToDelete.name }} löschen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
@@ -228,13 +226,13 @@
             <template #content>
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
-                    <div class="font-bold text-primary font-lexend text-2xl my-2">
+                    <div class="headline1 my-2">
                         {{this.successHeading}}
                     </div>
                     <XIcon @click="closeSuccessModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-success subpixel-antialiased">
+                    <div class="successText">
                         {{this.successText}}
                     </div>
                     <div class="mt-6">
@@ -263,6 +261,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import InputComponent from "@/Layouts/Components/InputComponent";
 
 export default {
     name: "Checklist Management",
@@ -285,7 +284,8 @@ export default {
         JetDialogModal,
         XIcon,
         UserTooltip,
-        CheckIcon
+        CheckIcon,
+        InputComponent
     },
     data() {
         return {
@@ -322,11 +322,11 @@ export default {
         closeDeleteTemplateModal(){
             this.showDeleteTemplateModal = false;
             this.templateToDelete = null;
-            this.openSuccessModal('delete')
         },
         deleteTemplate(){
             Inertia.delete(`/checklist_templates/${this.templateToDelete.id}`);
             this.closeDeleteTemplateModal();
+            this.openSuccessModal('delete')
         },
         duplicateTemplate(templateToDuplicate){
             this.duplicateForm.name = templateToDuplicate.name + ' (Kopie)';

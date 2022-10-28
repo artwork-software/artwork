@@ -61,7 +61,7 @@
                     Zuweisen
                 </button>
 
-                <p v-if="error" class="text-red-800 text-xs">{{ error }}</p>
+                <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
         </template>
     </jet-dialog-modal>
@@ -115,7 +115,8 @@ export default {
                     assigned_department_ids: this.selectedDepartments.map((department) => department.id)
                 })
                 .then(response => this.emitClose())
-                .catch(error => this.error = error.response.data.errors);
+                // .catch(error => this.error = error.response.data.errors);
+                .catch(error => this.emitClose());
         },
 
         emitClose() {

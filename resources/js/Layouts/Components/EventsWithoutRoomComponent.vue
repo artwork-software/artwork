@@ -543,11 +543,12 @@ export default {
     },
     computed: {
         computedEventsWithoutRoom: function () {
+
             this.eventsWithoutRoom.forEach((event) => {
-                event.startDate = event.start.format('YYYY-MM-DD');
-                event.startTime = event.start.format('HH:mm');
-                event.endDate = event.end.format('YYYY-MM-DD');
-                event.endTime = event.end.format('HH:mm');
+                event.startDate = new Date(event.start).format('YYYY-MM-DD');
+                event.startTime = new Date(event.start).format('HH:mm');
+                event.endDate = new Date(event.end).format('YYYY-MM-DD');
+                event.endTime = new Date(event.end).format('HH:mm');
                 event.creatingProject = false;
             })
             return this.eventsWithoutRoom;

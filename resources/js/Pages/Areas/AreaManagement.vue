@@ -18,7 +18,7 @@
                                     Kalendern gefiltert werden.
                                 </div>
 
-                                <div class="grid grid-cols-2 grid-flow-col grid-rows-2">
+                                <div class=" w-full grid grid-cols-2 grid-flow-col grid-rows-2">
                                     <!-- Raumkategorien -->
                                     <div class="mt-8 mr-10 flex">
                                         <div class="relative w-72">
@@ -38,7 +38,7 @@
 
                                         <div class="m-2">
                                             <button
-                                                :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                :class="[roomCategoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomCategory" :disabled="!roomCategoryInput">
                                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                                             </button>
@@ -76,7 +76,7 @@
 
                                         <div class="m-2">
                                             <button
-                                                :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                                :class="[roomAttributeInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                                 @click="addRoomAttribute" :disabled="!roomAttributeInput">
                                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                                             </button>

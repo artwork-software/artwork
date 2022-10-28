@@ -448,30 +448,40 @@
                              alt="attributeIcon"/>
                     </div>
 
-                    <div class="xsDark truncate">
+                    <div v-if="!project" class="xsDark truncate">
                         {{ event.title }}
+                    </div>
+                    <div v-else class="xsDark truncate">
+                        {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
                     </div>
                     <div v-if="currentView !== 'month'">
 
-
+                        <div v-if="!project">
                         <span class="truncate xxsLight truncate"
-                          v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
+                              v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
+                        </div>
+                        <div v-else class="truncate xxsLight truncate">
+                            {{ event.eventName }}
+                        </div>
                         <span class="flex w-full xxsLight">
 
+
                         <span v-if="event.start.getDay() === event.end.getDay()"
-                          class="items-center xxsLight mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
-                            event.end.formatTime("HH:mm")
-                        }}
+                              class="items-center xxsLight mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
+                                event.end.formatTime("HH:mm")
+                            }}
                         </span>
                         <span class="flex w-full xxsLight" v-else>
                             <span class="items-center mx-auto">
-                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{ event.end.format("DD.MM.YYYY HH:mm") }}
+                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
+                                    event.end.format("DD.MM.YYYY HH:mm")
+                                }}
                             </span>
 
                         </span><br/>
                     </span>
-                        <div class="mt-3">
-                            <div v-if="event.projectLeaders"
+                        <div class="mt-3 -ml-3">
+                            <div v-if="event.projectLeaders && !project"
                                  class="mt-1 flex justify-center items-center flex-wrap w-full">
                                 <div class="-mr-3 flex flex-wrap items-center flex-row"
                                      v-for="user in event.projectLeaders?.slice(0,3)">
@@ -482,7 +492,7 @@
                                          alt=""/>
                                     <UserTooltip :user="user"/>
                                 </div>
-                                <div v-if="event.projectLeaders.length >= 3" class="my-auto">
+                                <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
                                         <div>
                                             <MenuButton class="flex items-center rounded-full focus:outline-none">
@@ -520,6 +530,17 @@
                                     </Menu>
                                 </div>
                             </div>
+                            <div v-else-if="event.created_by"
+                                 class="mt-1 flex justify-center items-center flex-wrap w-full">
+                                <div class="-mr-3 flex flex-wrap items-center flex-row">
+                                    <img :data-tooltip-target="event.created_by.id"
+                                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                         class="rounded-full ring-2 ring-white object-cover"
+                                         :src="event.created_by.profile_photo_url"
+                                         alt=""/>
+                                    <UserTooltip :user="event.created_by"/>
+                                </div>
+                            </div>
 
                         </div>
                     </div>
@@ -536,6 +557,7 @@
         :rooms="rooms"
         :project="project"
         :event="selectedEvent"
+        :wantedRoomId="wantedSplit"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
     <!-- Termine ohne Raum Modal -->
@@ -649,6 +671,7 @@ export default {
             displayDate: '',
             filters: [],
             filterName: '',
+            wantedSplit: null,
             selectedDate: null,
             calendarFilters: {
                 rooms: [],
@@ -821,6 +844,7 @@ export default {
             });
         },
         openEventComponent(event = null) {
+            this.wantedSplit = event?.split;
             if (event === null) {
                 this.selectedEvent = null;
                 this.createEventComponentIsVisible = true;
@@ -884,27 +908,28 @@ export default {
                     }
                 })
                 .then(response => {
-                    this.events = response.data.events
-                    this.projects = response.data.projects
-                    this.filters = response.data.calendarFilters
+                    console.log(response.data.events)
+                    this.events = response.data.events.events
+                    this.projects = response.data.events.projects
+                    this.filters = response.data.events.calendarFilters
 
-                    this.eventsWithoutRoom = this.events.filter(event => event.roomId === null)
+                    this.eventsWithoutRoom = response.data.eventsWithoutRoom.events;
 
                     if (this.rooms.length === 0 || this.areChecked(this.rooms) === 0) {
-                        this.rooms = response.data.rooms
+                        this.rooms = response.data.events.rooms
                         this.displayedRooms = this.rooms;
                         this.addFilterableVariable(this.rooms, false)
                     }
                     if (this.areas.length === 0 || this.areChecked(this.areas) === 0) {
-                        this.areas = response.data.areas
+                        this.areas = response.data.events.areas
                         this.addFilterableVariable(this.areas, false)
                     }
                     if (this.roomCategories.length === 0 || this.areChecked(this.roomCategories) === 0) {
-                        this.roomCategories = response.data.roomCategories
+                        this.roomCategories = response.data.events.roomCategories
                         this.addFilterableVariable(this.roomCategories, false)
                     }
                     if (this.roomAttributes.length === 0 || this.areChecked(this.roomAttributes) === 0) {
-                        this.roomAttributes = response.data.roomAttributes
+                        this.roomAttributes = response.data.events.roomAttributes
                         this.addFilterableVariable(this.roomAttributes, false)
                     }
                     if (this.types.length === 0 || this.areChecked(this.types) === 0) {
@@ -1054,9 +1079,11 @@ export default {
 .vuecal--month-view .vuecal__no-event {
     display: none;
 }
+
 .vuecal__flex .vuecal__cell-content .vuecal__cell-split {
     min-width: 200px !important;
 }
+
 .vuecal__event {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */
@@ -1122,24 +1149,30 @@ export default {
 .vuecal__cell-split {
     border: 1px solid #D8D7DE;
 }
+
 .vuecal--month-view .vuecal__cell {
     height: 95px;
 }
+
 .vuecal--month-view .vuecal__cell-content {
     justify-content: flex-start;
     height: 100%;
     align-items: flex-end;
     overflow-y: auto;
 }
+
 .vuecal--month-view .vuecal__cell-date {
     padding: 4px;
 }
+
 .vuecal--month-view .vuecal__event {
     padding-top: 0px;
 }
-.vuecal--month-view .vuecal__cell{
-    height: 10rem ;
+
+.vuecal--month-view .vuecal__cell {
+    height: 10rem;
 }
+
 .vuecal--month-view .vuecal__no-event {
     display: none;
 }

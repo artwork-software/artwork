@@ -109,13 +109,12 @@
                     </div>
 
                     <div class="w-1/2 pl-4" v-if="canEdit">
-                        <inputComponent v-if="selectedEventType?.individual_name" v-model="this.eventName" placeholder="Terminname*" />
-                        <input v-else type="text"
+                        <input type="text"
                                v-model="this.eventName"
                                id="eventTitle"
-                               placeholder="Terminname"
+                               :placeholder="selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
                                :disabled="!canEdit"
-                               class="h-10 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                         <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
                     </div>
@@ -485,7 +484,7 @@ export default {
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project','wantedRoomId'],
 
     emits: ['closed'],
 
@@ -538,7 +537,13 @@ export default {
 
 
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
-            this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
+            if(this.wantedRoomId){
+                this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId)
+            }else if(this.event){
+                this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
+            }
+
+
             this.description = this.event.description
 
             this.checkCollisions();

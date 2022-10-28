@@ -25,7 +25,7 @@
                             eingeben</label>
                         <div class="m-2 -ml-8 -mt-1">
                             <button
-                                :class="[genreInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[genreInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addGenre" :disabled="!genreInput">
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>
@@ -64,7 +64,7 @@
                             eingeben</label>
                         <div class="m-2 -ml-8 -mt-1">
                             <button
-                                :class="[categoryInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[categoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addCategory" :disabled="!categoryInput">
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>
@@ -103,7 +103,7 @@
                             eingeben</label>
                         <div class="m-2 -ml-8 -mt-1">
                             <button
-                                :class="[sectorInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[sectorInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addSector" :disabled="!sectorInput">
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>

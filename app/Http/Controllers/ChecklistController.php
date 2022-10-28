@@ -180,7 +180,7 @@ class ChecklistController extends Controller
         }
 
         if ($request->missing('assigned_department_ids')) {
-            return new JsonResponse(['success' => 'Checklist updated']);
+            return Redirect::back()->with('success', 'Checklist updated');
         }
 
         $departmentIds = collect($request->get('assigned_department_ids'));
@@ -192,7 +192,7 @@ class ChecklistController extends Controller
 
         $checklist->departments()->sync($departmentIds);
 
-        return new JsonResponse(['success' => 'Checklist updated']);
+        return Redirect::back()->with('success', 'Checklist updated');
     }
 
     /**

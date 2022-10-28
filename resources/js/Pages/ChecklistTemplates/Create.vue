@@ -193,10 +193,10 @@
                             </button>
                         </span>
                     </div>
-                    <button @click="closeChangeTeamsModal"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Zuweisen
-                    </button>
+                    <AddButton
+                        class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        @click="closeChangeTeamsModal"
+                        text="Zuweisen" mode="modal" />
                 </div>
 
             </template>

@@ -255,14 +255,11 @@
                                    class="ml-4 my-auto">individueller Terminname möglich</p>
                             </div>
                         </div>
-                        <div class="mt-2 ml-5">
-                            <button
-                                :class="[this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                        <div class="mt-12 ml-5">
+                            <AddButton
                                 class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                 @click="editEventType"
-                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''">
-                                Speichern
-                            </button>
+                                :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''" text="Speichern" mode="modal" />
                         </div>
                     </div>
                 </div>

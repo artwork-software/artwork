@@ -194,10 +194,10 @@
                             </button>
                         </span>
                     </div>
-                    <button @click="closeChangeTeamsModal"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Zuweisen
-                    </button>
+                    <AddButton
+                        class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        @click="closeChangeTeamsModal"
+                        text="Zuweisen" mode="modal" />
                 </div>
 
             </template>
@@ -263,7 +263,7 @@ export default {
                 name: this.checklist_template.name,
                 //user who created the template
                 user_id: this.$page.props.user.id,
-                task_templates: this.checklist_template.tasks? this.checklist_template.tasks : [],
+                task_templates: this.checklist_template.task_templates? this.checklist_template.task_templates : [],
                 departments: this.checklist_template.departments? this.checklist_template.departments : [],
             }),
             newTaskName:"",

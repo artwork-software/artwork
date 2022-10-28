@@ -135,7 +135,7 @@ class EventController extends Controller
             ->count();
     }
 
-    public function eventIndex(EventIndexRequest $request): CalendarEventCollectionResource
+    public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));
         $projectId = $request->get('projectId');
@@ -147,6 +147,12 @@ class EventController extends Controller
         $isLoud = $calendarFilters->isLoud;
         $isNotLoud = $calendarFilters->isNotLoud;
         $hasAudience = $calendarFilters->hasAudience;
+
+        if($request->get('projectId')){
+            $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('project_id', $request->get('projectId'))->get();
+        }else{
+            $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('user_id',Auth::id())->get();
+        }
 
 
         $events = Event::query()
@@ -175,7 +181,10 @@ class EventController extends Controller
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->get();
 
-        return new CalendarEventCollectionResource($events);
+        return [
+            'events' => new CalendarEventCollectionResource($events),
+            'eventsWithoutRoom' => new CalendarEventCollectionResource($eventsWithoutRoom),
+        ];
     }
 
     public function getTrashed(): Response|\Inertia\ResponseFactory

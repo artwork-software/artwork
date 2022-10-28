@@ -7,12 +7,12 @@
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-20 w-20 -mb-4" alt="artwork-logo"/>
                 </div>
                 <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-20 w-20"/>
-                <div class="flex-1 mt-8 w-full px-2 space-y-1">
+                <div class="flex-1 w-full px-2 space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
-                        :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', ' font-semibold group w-full p-3 rounded-md flex flex-col items-center text-sm']">
+                        :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center']">
                         <img :src="item.svgSrc"
                             alt="menu-item"
-                            :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'text-secondary group-hover:text-secondaryHover', 'h-6 w-6 mb-1']"
+                            :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                             aria-hidden="true"/>
                         {{ item.name }}
                     </a>
@@ -26,7 +26,7 @@
                         || $page.props.can.admin_rooms
                         || this.$page.props.is_admin">
                         <h2 @click="showSystemSettings = !showSystemSettings"
-                            class="text-md pt-4 pb-2 flex items-center justify-center ml-4 font-bold text-secondaryHover cursor-pointer">
+                            class="text-md pt-4 pb-2 flex items-center justify-center ml-4 xsWhiteBold cursor-pointer">
                             System
                             <ChevronUpIcon v-if="showSystemSettings"
                                 class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
@@ -36,7 +36,7 @@
                         <template v-for="item in managementNavigation" :key="item.name">
                             <Link v-if="showSystemSettings && item.has_permission"
                                 :href="item.href"
-                                :class="[isCurrent(item.route) ? 'bg-primaryHover text-secondaryHover' : 'text-secondary hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center text-sm font-semibold']">
+                                :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center ']">
                                 {{ item.name }}
                             </Link>
                         </template>
@@ -233,7 +233,7 @@ export default {
                     name: 'Checklisten',
                     has_permission: this.$page.props.can.admin_checklistTemplates || this.$page.props.is_admin,
                     href: route('checklist_templates.management'),
-                    route: ['/checklists/management']
+                    route: ['/checklist_templates']
                 },
             ]
         }

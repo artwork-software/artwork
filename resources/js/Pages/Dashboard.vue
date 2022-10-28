@@ -1,8 +1,8 @@
 <template>
     <app-layout>
-        <div class="py-4 flex flex-col md:flex-row">
+        <div class="py-4 flex flex-col overflow-x-auto md:flex-row">
             <!-- Greetings Div -->
-            <div class="mr-12 overflow-x-auto w-full">
+            <div class="min-w-[50%] mr-2  w-full">
                 <div class="ml-14 mt-10">
                     <h2 class="headline1 flex mb-4">Hallo {{
                             $page.props.user.first_name
@@ -15,7 +15,7 @@
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
                 <!-- Calendar Div -->
-                <div class="relative mt-5">
+                <div class="min-w-[50%] mt-5">
                     <!--<Link :href="route('events.view.index')"
                         class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
                         Alle Ansehen
@@ -24,7 +24,7 @@
                 </div>
             </div>
             <!-- Task Div -->
-            <div class="min-w-fit px-4 mt-20 overflow-y-auto">
+            <div class="min-w-fit px-6 mt-20 overflow-y-auto">
                 <div class="flex">
                     <h2 class="headline2">Meine Aufgaben</h2>
                     <Link :href="route('tasks.own')"

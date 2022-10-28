@@ -270,8 +270,9 @@
                                 <div class="flex w-full flex-wrap">
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
-                                         class="flex w-full bg-white my-2 border border-gray-200">
-                                        <button class="bg-primary flex"
+                                         class="flex w-full bg-white my-2 inputMain">
+                                        {{checklist.user_id}}
+                                        <button class="bg-buttonBlue flex"
                                                 @click="changeChecklistStatus(checklist)">
                                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
@@ -546,8 +547,8 @@
                                         </div>
                                     </div>
                                     <div v-for="checklist in project.private_checklists"
-                                         class="flex w-full bg-white my-2">
-                                        <button class="bg-primary flex"
+                                         class="flex w-full bg-white my-2 inputMain">
+                                        <button class="bg-buttonBlue flex"
                                                 @click="changeChecklistStatus(checklist)">
                                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
                                                            class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
@@ -563,7 +564,7 @@
                                         </span>
                                                 </div>
                                                 <div class="flex items-center -mr-3">
-                                                    <img class="h-9 w-9 rounded-full"
+                                                    <img class="h-9 w-9 rounded-full object-cover"
                                                          :src="$page.props.user.profile_photo_url"
                                                          alt=""/>
                                                     <Menu as="div" class="my-auto relative">
@@ -2259,12 +2260,12 @@ export default {
         editChecklist() {
             if (this.editChecklistForm.private) {
                 this.editChecklistForm.user_id = this.$page.props.user.id;
-                this.editChecklistForm.assigned_department_ids = null;
+                this.editChecklistForm.assigned_department_ids = [];
             } else {
                 this.editChecklistForm.user_id = null;
 
             }
-            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}));
+            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id},{preserveState: true, preserveScroll: true}));
             this.closeEditChecklistModal();
         },
         createTemplateFromChecklist(checklist) {

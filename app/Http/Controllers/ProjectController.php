@@ -253,6 +253,7 @@ class ProjectController extends Controller
         $project->categories()->sync($request->projectCategoryIds);
         $project->genres()->sync($request->projectGenreIds);
         $project->sectors()->sync($request->projectSectorIds);
+        $historyService->updateHistory($project,'Eigenschaften angepasst.');
         $historyService->projectUpdated($project);
 
         return Redirect::back();

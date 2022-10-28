@@ -17,14 +17,14 @@
 
                                 <div class="flex items-center w-full mt-4">
                                     <div class=" w-1/4 flex mDark">
-                                        {{ eventRequest.room.name }}:
+                                        {{ eventRequest.room?.name }}:
                                     </div>
                                     <div class="flex items-center w-full">
                                         <EventTypeIconCollection :height="26" :width="26"
                                                                  :iconName="eventRequest.event_type.svg_name"/>
                                         <div
                                             class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900 mr-8">
-                                            {{ eventRequest.event_type.name }}
+                                            {{ eventRequest.event_type?.name }}
                                             <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                                  class="h-5 w-5 ml-2 my-auto"/>
                                             <img src="/Svgs/IconSvgs/icon_loud.svg" v-if="eventRequest.is_loud"
@@ -45,11 +45,11 @@
                                             {{ eventRequest.end_time }}
                                         </div>
                                         <button @click="openApproveRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-success">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                         <button @click="openDeclineRequestModal(eventRequest)" type="button"
-                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-primary hover:bg-primaryHover focus:outline-none hover:bg-error">
+                                                class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
                                     </div>
@@ -61,7 +61,7 @@
                                             <Link
                                                 :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
                                                 class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
-                                                {{ eventRequest.project.name }}
+                                                {{ eventRequest.project?.name }}
                                             </Link>
                                         </div>
 
@@ -227,7 +227,7 @@
                                                              :iconName="requestToDecline.event_type.svg_name"/>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
-                                        {{ requestToDecline.event_type.name }}
+                                        {{ requestToDecline.event_type?.name }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
@@ -256,7 +256,7 @@
                                     <div class="ml-16 xsLight flex items-center">
                                         Zugeordnet zu
                                         <div class="text-secondary font-black leading-3 subpixel-antialiased ml-2">
-                                            {{ requestToDecline.project.name }}
+                                            {{ requestToDecline.project?.name }}
                                         </div>
                                     </div>
                                     <!--

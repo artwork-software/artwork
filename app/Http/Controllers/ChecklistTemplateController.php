@@ -33,8 +33,8 @@ class ChecklistTemplateController extends Controller
 
     public function search(SearchRequest $request)
     {
-        return ChecklistTemplateIndexResource::collection(ChecklistTemplate::search($request->input('query')))
-            ->resolve();
+        return ChecklistTemplateIndexResource::collection(ChecklistTemplate::search($request->input('query'))->get())->resolve();
+
     }
 
     /**
@@ -77,6 +77,7 @@ class ChecklistTemplateController extends Controller
             TaskTemplate::create([
                 'name' => $task->name,
                 'description' => $task->description,
+                'done' => false,
                 'checklist_template_id' => $checklist_template->id
             ]);
         }

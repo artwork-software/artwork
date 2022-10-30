@@ -108,18 +108,18 @@ class EventBuilder extends Builder
             $this->where('audience', $filter['hasAudience']);
         }
 
-        if (! is_null($filter['adjoiningHasAudience'])) {
+        if (! is_null($filter['adjoiningNoAudience'])) {
             $this->whereHas('adjoiningEvents', fn (EventBuilder $eventBuilder) => $eventBuilder
                 ->whereHasCollision()
-                ->where('audience', $filter['adjoiningHasAudience'])
-            );
+                ->where('audience', false)
+            )->orWhereDoesntHave('adjoiningEvents');
         }
 
-        if (! is_null($filter['adjoiningIsLoud'])) {
+        if (! is_null($filter['adjoiningNotLoud'])) {
             $this->whereHas('adjoiningEvents', fn (EventBuilder $eventBuilder) => $eventBuilder
                 ->whereHasCollision()
-                ->where('is_loud', $filter['adjoiningIsLoud'])
-            );
+                ->where('is_loud', false)
+            )->orWhereDoesntHave('adjoiningEvents');
         }
 
         return $this;

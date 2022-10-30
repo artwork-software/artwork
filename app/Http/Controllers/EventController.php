@@ -147,6 +147,8 @@ class EventController extends Controller
         $isLoud = $calendarFilters->isLoud;
         $isNotLoud = $calendarFilters->isNotLoud;
         $hasAudience = $calendarFilters->hasAudience;
+        $hasNoAudience = $calendarFilters->hasNoAudience;
+        $allDayFree = $calendarFilters->allDayFree;
 
         if($request->get('projectId')){
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('project_id', $request->get('projectId'))->get();
@@ -164,7 +166,7 @@ class EventController extends Controller
             ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
             ->when($roomId, fn (EventBuilder $builder) => $builder->where('room_id', $roomId))
             //war in alter Version, relevant für dich Paul ?
-            // ->applyFilter($request->filters())
+            ->applyFilter(json_decode($request->input('calendarFilters'), true))
             // user applied filters
             ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds), fn (EventBuilder $builder) => $builder
                 ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
@@ -179,6 +181,7 @@ class EventController extends Controller
             ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
             ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud',null))
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
+            ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null))
             ->get();
 
         return [

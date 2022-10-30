@@ -140,9 +140,9 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <button class="rounded-full bg-buttonBlue px-5 py-2 align-middle flex mb-1"
+                                    <button class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
                                             v-for="filter of filters">
-                                        <label @click="applyFilter(filter)" class="text-white">{{ filter.name }}</label>
+                                        <label @click="applyFilter(filter)" class="cursor-pointer text-white">{{ filter.name }}</label>
                                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                                     </button>
                                     <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter gespeichert</p>

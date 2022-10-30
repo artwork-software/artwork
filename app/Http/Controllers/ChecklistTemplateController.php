@@ -148,6 +148,8 @@ class ChecklistTemplateController extends Controller
      */
     public function update(Request $request, ChecklistTemplate $checklistTemplate)
     {
+        //dd($request->task_templates);
+
         $checklistTemplate->update($request->only('name'));
 
         $checklistTemplate->departments()->sync(
@@ -159,16 +161,11 @@ class ChecklistTemplateController extends Controller
                 })
         );
 
-        $checklistTemplate->task_templates()->delete();
-
         if ($request->task_templates) {
+            $checklistTemplate->task_templates()->delete();
             foreach ($request->task_templates as $task_template) {
-                if (!is_array($task_template)) {
-                    $checklistTemplate->task_templates()->save($task_template);
-                } else {
                     $checklistTemplate->task_templates()->create($task_template);
                 }
-            }
         }
 
         return Redirect::route('checklist_templates.management', $checklistTemplate->id)->with('success', 'ChecklistTemplate updated');

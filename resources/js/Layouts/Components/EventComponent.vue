@@ -5,7 +5,7 @@
             <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
-                <!--    Heading    -->
+                <!--   Heading   -->
                 <div v-if="canEdit">
                     <h1 class="my-2 flex">
                         <div class="flex-grow headline1 my-2">

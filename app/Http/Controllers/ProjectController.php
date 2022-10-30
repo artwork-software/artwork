@@ -293,7 +293,7 @@ class ProjectController extends Controller
 
             $checklist->tasks->map(function (Task $task) use ($replicated_checklist) {
                 $replicated_task = $task->replicate(['deadline', 'done', 'done_at',])
-                    ->fill(['checklist_id' => $replicated_checklist->id]);
+                    ->fill(['checklist_id' => $replicated_checklist->id, 'done' => false]);
 
                 $replicated_task->save();
             });

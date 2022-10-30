@@ -116,6 +116,18 @@
                         </div>
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
+                            <Disclosure v-slot="{ open }" v-if="saving">
+                                <div class="flex">
+                                    <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
+                                           class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
+                                           placeholder="Name des Filters"/>
+                                    <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter"/>
+                                    <!-- <AddButton text="Speichern" class="text-sm ml-0"
+                                               @click="saveFilter"></AddButton> -->
+                                </div>
+                                <hr class="border-secondary rounded-full border-2 mt-4 mb-2">
+                            </Disclosure>
+
                             <!-- Save Filter Section -->
                             <Disclosure v-slot="{ open }">
                                 <DisclosureButton
@@ -128,21 +140,12 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div class="flex">
-                                        <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
-                                               class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                               placeholder="Name des Filters"/>
-                                        <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter"/>
-                                        <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                                   @click="saveFilter"></AddButton> -->
-                                    </div>
-                                    <hr v-if="filters.length > 0"
-                                        class="border-secondary rounded-full border-1 mt-4 mb-3">
                                     <button class="rounded-full bg-buttonBlue px-5 py-2 align-middle flex mb-1"
                                             v-for="filter of filters">
                                         <label @click="applyFilter(filter)" class="text-white">{{ filter.name }}</label>
                                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                                     </button>
+                                    <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter gespeichert</p>
                                 </DisclosurePanel>
                                 <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                             </Disclosure>
@@ -780,7 +783,9 @@ export default {
         },
         async saveFilter() {
             const filterIds = this.getFilterIds();
-            await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds})
+            await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds}).then(() => {
+                this.filterName = ""
+            })
             await axios.get('/filters')
                 .then(response => {
                     this.filters = response.data;
@@ -830,12 +835,12 @@ export default {
                 if (Array.isArray(entry[1])) {
                     entry[1].length = 0;
                 } else {
-                    this.calendarFilters[entry[0]] = false;
+                    this.calendarFilters[entry[0]] = null;
                 }
             })
 
             Object.entries(this.eventAttributes).forEach(entry => {
-                entry[1].checked = false;
+                entry[1].checked = null;
             })
 
             this.fetchEvents({
@@ -896,6 +901,8 @@ export default {
             this.eventsUntil = endDate ?? this.eventsUntil;
 
             const filters = this.getFilterIds();
+
+            console.log(filters);
 
             await axios
                 .get('/events/', {

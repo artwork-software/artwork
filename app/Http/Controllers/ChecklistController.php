@@ -170,6 +170,8 @@ class ChecklistController extends Controller
      */
     public function update(ChecklistUpdateRequest $request, Checklist $checklist, HistoryService $historyService)
     {
+        //dd($request->data());
+
         $checklist->fill($request->data());
         $historyService->checklistUpdated($checklist);
         $checklist->save();

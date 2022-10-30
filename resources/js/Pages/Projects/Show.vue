@@ -1831,7 +1831,7 @@ export default {
                 name: "",
                 private: false,
                 user_id: null,
-                assigned_department_ids: null,
+                assigned_department_ids: [],
             }),
             taskForm: useForm({
                 name: "",
@@ -2258,6 +2258,8 @@ export default {
             this.editChecklistForm.user_id = null;
         },
         editChecklist() {
+            console.log(this.editChecklistForm);
+
             if (this.editChecklistForm.private) {
                 this.editChecklistForm.user_id = this.$page.props.user.id;
                 this.editChecklistForm.assigned_department_ids = [];

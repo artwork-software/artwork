@@ -425,12 +425,11 @@
                        aria-hidden="true"/>
                 <div class="mt-4">
                     <div class="flex mt-10 relative">
-                        <input id="areaName" v-model="newAreaForm.name" type="text"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                        <input id="roomNameEdit" v-model="newAreaForm.name" type="text"
+                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary sDark focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
-                        <label for="areaName"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            des Areals*
+                        <label for="roomNameEdit"
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name des Areals*
                         </label>
                         <jet-input-error :message="newAreaForm.error" class="mt-2"/>
                     </div>
@@ -465,7 +464,7 @@
                                placeholder="placeholder"/>
                         <label for="areaEditName"
                                class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                            des Areals
+                            des Areals*
                         </label>
                         <jet-input-error :message="editAreaForm.error" class="mt-2"/>
                     </div>
@@ -474,7 +473,7 @@
                         <AddButton :class="[editAreaForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                    class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base tracking-wider font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base tracking-wider font-bold shadow-sm text-secondaryHover"
                                    @click="editArea"
                                    :disabled="editAreaForm.name.length === 0" text="Speichern" mode="modal"/>
                     </div>
@@ -707,7 +706,7 @@
                         <AddButton :class="[newRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                    class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addRoom"
                                    :disabled="newRoomForm.name.length === 0" text="Anlegen" mode="modal"/>
                     </div>
@@ -729,10 +728,10 @@
                 <div class="mt-4">
                     <div class="flex mt-10 relative">
                         <input id="roomNameEdit" v-model="editRoomForm.name" type="text"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary sDark focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 placeholder-secondary placeholder-transparent"
                                placeholder="placeholder"/>
                         <label for="roomNameEdit"
-                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname
+                               class="absolute left-0 text-base -top-4 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Raumname*
                         </label>
                         <jet-input-error :message="editRoomForm.error" class="mt-2"/>
                     </div>
@@ -782,7 +781,7 @@
                         <AddButton :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                    class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            text-base font-bold shadow-sm text-secondaryHover"
                                    @click="editRoom"
                                    :disabled="editRoomForm.name.length === 0" text="Speichern" mode="modal"/>
                     </div>
@@ -808,14 +807,10 @@
                     legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="softDeleteArea()">
-                        In den Papierkorb
-                    </button>
+                    <AddButton class="px-16" @click="softDeleteArea()" text="In den Papierkorb" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="closeSoftDeleteAreaModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="txsLight cursor-pointer">Nein, doch nicht</span>
                     </div>
                 </div>
             </div>
@@ -837,14 +832,10 @@
                     Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="softDeleteRoom()">
-                        Entfernen
-                    </button>
+                    <AddButton class="px-28" @click="softDeleteRoom()" text="Entfernen" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="closeSoftDeleteRoomModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                     </div>
                 </div>
             </div>
@@ -866,14 +857,10 @@
                     Bist du sicher, dass du alle Räume aus diesem Areal in den Papierkorb legen möchtest?
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="softDeleteAllRooms()">
-                        In den Papierkorb
-                    </button>
+                    <AddButton class="px-28" @click="softDeleteAllRooms()" text="In den Papierkorb" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="closeDeleteAllRoomsModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                     </div>
                 </div>
             </div>

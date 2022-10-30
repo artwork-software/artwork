@@ -1,17 +1,18 @@
 <template>
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
-            <img alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
+            <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
                 <div v-if="canEdit">
-                    <h1 class="my-2 flex">
-                        <div class="flex-grow headline1 my-2">
-                            {{ this.event?.id ? 'Event bearbeiten' : 'Neue Raumbelegung' }}
+                    <h1 class="my-1 flex">
+                        <div class="flex-grow headline1">
+                            {{ this.event?.id ? 'Termin' : 'Neue Raumbelegung' }}
                         </div>
-                        <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option) || event?.canDelete)">
+                        <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option))">
                             <MenuButton class="m-4">
                                 <DotsVerticalIcon class="h-6 w-6 text-gray-600" aria-hidden="true"/>
                             </MenuButton>
@@ -43,10 +44,17 @@
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
+                        <div v-else-if="event?.canDelete" class="flex mt-2 mr-2 cursor-pointer" @click="deleteComponentVisible = true">
+                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full" src="/Svgs/IconSvgs/icon_trash_white.svg"/>
+                        </div>
                     </h1>
-                    <h2 class="xsLight">
+                    <h2 v-if="!this.event?.id" class="xsLight mb-2">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
+                    <div v-else class="flex">
+                        erstellt von <img :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
+                                          class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    </div>
                 </div>
                 <div v-else class="flex-grow headline1">
                     Termin
@@ -54,7 +62,7 @@
 
                 <!--    Form    -->
                 <!--    Type and Title    -->
-                <div class="flex py-4">
+                <div class="flex py-2">
                     <div class="w-1/2">
                         <div class=" w-full flex cursor-pointer truncate" v-if="!canEdit">
                             <EventTypeIconCollection :height="40" :width="40"
@@ -62,10 +70,10 @@
                             {{ selectedEventType?.name }}
                         </p>
                         </div>
-                        <Listbox as="div" class="flex h-10 mr-2" v-model="selectedEventType" v-if="canEdit"
+                        <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit"
                                   id="eventType">
                             <ListboxButton
-                                class="pl-3 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
                                     <EventTypeIconCollection :height="20" :width="20"
                                                              :iconName="selectedEventType?.svg_name"/>
@@ -82,21 +90,23 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-72 z-10 mt-10 bg-primary shadow-lg max-h-32 pl-1 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    v-for="eventType in eventTypes"
                                                    :key="eventType.name"
                                                    :value="eventType"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <div class="flex">
                                             <EventTypeIconCollection :height="12" :width="12"
                                                                      :iconName="eventType?.svg_name"/>
                                             <span
-                                                :class="[selected ? 'font-bold text-white' : 'font-normal', 'ml-4 block truncate']">
+                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
                                                     </span>
+                                            </div>
                                             <span
-                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
                                                       <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
                                                                  aria-hidden="true"/>
                                                 </span>
@@ -108,13 +118,13 @@
                         <p class="text-xs text-red-800">{{ error?.eventType?.join('. ') }}</p>
                     </div>
 
-                    <div class="w-1/2 pl-4" v-if="canEdit">
+                    <div class="w-1/2" v-if="canEdit">
                         <input type="text"
                                v-model="this.eventName"
                                id="eventTitle"
                                :placeholder="selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
                                :disabled="!canEdit"
-                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                         <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
                     </div>
@@ -126,7 +136,7 @@
                 <Menu as="div" class="inline-block text-left w-full" v-if="canEdit">
                     <div>
                         <MenuButton
-                            class="inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
+                            class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                         >
 
                             <span class="float-left flex xsLight subpixel-antialiased"><img src="/Svgs/IconSvgs/icon_adjustments.svg"
@@ -147,7 +157,7 @@
                         leave-to-class="transform scale-95 opacity-0"
                     >
                         <MenuItems
-                            class="absolute overflow-y-auto h-24 mt-2 w-10/12 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                            class="absolute overflow-y-auto h-24 mt-2 w-[88%] origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                             <div class="mx-auto w-full rounded-2xl bg-primary border-none mt-2">
                                 <div class="flex w-full mb-4">
                                     <input v-model="audience"
@@ -157,7 +167,7 @@
                                     <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
                                     <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
-                                        mit Publikum
+                                        Mit Publikum
                                     </div>
                                 </div>
                                 <div class="flex w-full mb-2">
@@ -199,10 +209,10 @@
                 <!--    Properties    -->
                 <div class="flex py-2">
                     <div v-if="audience">
-                        <TagComponent   displayed-text="mit Publikum" hideX="true"></TagComponent>
+                        <TagComponent icon="audience"   displayed-text="Mit Publikum" hideX="true"></TagComponent>
                     </div>
                    <div v-if="isLoud">
-                       <TagComponent   displayed-text="es wird laut" hideX="true"></TagComponent>
+                       <TagComponent icon="loud"   displayed-text="es wird laut" hideX="true"></TagComponent>
                    </div>
                 </div>
 
@@ -297,7 +307,6 @@
                         </div>
                         <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                     </div>
-                    <div class="px-2 pt-8">-</div>
                     <div class="sm:w-1/2">
                         <label for="endDate" class="xxsLight">Ende</label>
                         <div class="w-full flex">
@@ -351,7 +360,7 @@
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                         </ListboxButton>
-                        <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                        <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
                             <ListboxOption v-for="room in rooms"
                                            class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                            :key="room.name"
@@ -380,13 +389,13 @@
                 </div>
                 <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book)" >
-                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                    <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
-                        Speichern
+                        Belegen
                     </button>
                 </div>
                 <div class="flex justify-center w-full py-4" v-else>
-                    <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                    <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent(true)">
                         Belegung anfragen
                     </button>

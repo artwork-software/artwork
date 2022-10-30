@@ -298,7 +298,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
-                                class="text-secondary cursor-pointer">Nein, doch nicht</span>
+                                class="text-secondary xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>

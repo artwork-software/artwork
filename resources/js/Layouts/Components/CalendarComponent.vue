@@ -673,6 +673,7 @@ export default {
         return {
             displayDate: '',
             filters: [],
+            filterIds: {},
             filterName: '',
             wantedSplit: null,
             selectedDate: null,
@@ -974,21 +975,30 @@ export default {
             return count
         },
         getFilterIds() {
-            let filterIds = {};
-            filterIds.roomCategoryIds = this.calendarFilters.roomCategories.map(elem => elem.id);
-            filterIds.roomAttributeIds = this.calendarFilters.roomAttributes.map(elem => elem.id);
-            filterIds.roomIds = this.calendarFilters.rooms.map(elem => elem.id);
-            filterIds.areaIds = this.calendarFilters.areas.map(elem => elem.id);
-            filterIds.eventTypeIds = this.calendarFilters.eventTypes.map(elem => elem.id);
-            filterIds.isLoud = this.calendarFilters.isLoud
-            filterIds.isNotLoud = this.calendarFilters.isNotLoud
-            filterIds.hasAudience = this.calendarFilters.hasAudience
-            filterIds.hasNoAudience = this.calendarFilters.hasNoAudience
-            filterIds.adjoiningNoAudience = this.calendarFilters.adjoiningNoAudience
-            filterIds.adjoiningNotLoud = this.calendarFilters.adjoiningNotLoud
-            filterIds.allDayFree = this.calendarFilters.allDayFree
-            filterIds.showAdjoiningRooms = this.calendarFilters.showAdjoiningRooms
-            return filterIds;
+            this.filterIds = {};
+            this.filterIds.roomCategoryIds = this.calendarFilters.roomCategories.map(elem => elem.id);
+            this.filterIds.roomAttributeIds = this.calendarFilters.roomAttributes.map(elem => elem.id);
+            this.filterIds.roomIds = this.calendarFilters.rooms.map(elem => elem.id);
+            this.filterIds.areaIds = this.calendarFilters.areas.map(elem => elem.id);
+            this.filterIds.eventTypeIds = this.calendarFilters.eventTypes.map(elem => elem.id);
+            this.setFilterId("isLoud");
+            this.setFilterId("isNotLoud");
+            this.setFilterId("hasAudience");
+            this.setFilterId("hasNoAudience");
+            this.setFilterId("adjoiningNoAudience");
+            this.setFilterId("adjoiningNotLoud");
+            this.setFilterId("allDayFree");
+            this.setFilterId("showAdjoiningRooms");
+
+            return this.filterIds;
+        },
+        setFilterId(field) {
+            if(this.calendarFilters[field] === false || this.calendarFilters[field] === null) {
+                this.filterIds[field] = null
+            }
+            else {
+                this.filterIds[field] = true;
+            }
         },
         addFilterableVariable(dataArray, boolean) {
             dataArray.forEach(element => element.checked = boolean);

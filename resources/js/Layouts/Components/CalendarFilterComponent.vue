@@ -379,7 +379,7 @@ export default {
                     checked: false
                 },
                 hasAudience: {
-                    name: 'mit Publikum',
+                    name: 'Mit Publikum',
                     value: 'hasAudience',
                     checked: false
                 },

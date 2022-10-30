@@ -567,14 +567,10 @@
                         Bist du sicher, dass du den Raum {{ roomToSoftDelete.name }} in den Papierkorb legen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="softDeleteRoom()">
-                            Entfernen
-                        </button>
+                        <AddButton class="px-28" @click="softDeleteRoom()" text="Entfernen" mode="modal"/>
                         <div class="flex my-auto">
                             <span @click="closeSoftDeleteRoomModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -699,7 +695,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeApproveRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -799,7 +795,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeclineRequestModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -844,6 +840,7 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
+import AddButton from "@/Layouts/Components/AddButton";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -903,6 +900,7 @@ export default {
         ListboxOption,
         ListboxOptions,
         CalendarComponent,
+        AddButton
     },
     computed: {
         eventTypeFilters: function () {

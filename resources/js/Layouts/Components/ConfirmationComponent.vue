@@ -13,12 +13,8 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                        @click="closeModal(true)">
-                        {{ confirm ?? 'Ja' }}
-                    </button>
-                    <div class="my-auto text-secondary subpixel-antialiased cursor-pointer"
+                    <AddButton class="px-20 py-4" @click="closeModal(true)" :text="confirm ?? 'Ja'" mode="modal"/>
+                    <div class="my-auto xsLight cursor-pointer"
                         @click="closeModal(false)">
                         {{ cancel ?? 'Nein, doch nicht' }}
                     </div>
@@ -33,12 +29,14 @@
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default {
     name: 'ConfirmationComponent',
     components: {
         JetDialogModal,
         XIcon,
+        AddButton
     },
     props: ['titel', 'description', 'confirm', 'cancel', 'showModal'],
     emits: ['closed'],

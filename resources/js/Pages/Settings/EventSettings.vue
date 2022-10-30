@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="xsLight ml-2">
                                     {{
-                                        eventType.individual_name ? "individueller Terminname möglich" : "kein individueller Terminname möglich"
+                                        eventType.individual_name ? "individueller Terminname verpflichtend" : "kein individueller Terminname verpflichtend"
                                     }}
                                 </div>
                             </div>
@@ -106,7 +106,7 @@
         <!-- Termintyp erstellen Modal-->
         <jet-dialog-modal :show="addingEventType" @close="closeAddEventTypeModal">
             <template #content>
-                <img src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4" />
+                <img src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4" />
                 <div class="mx-4">
                     <div class="headline1 my-2">
                         Neuer Termintyp
@@ -144,7 +144,7 @@
                                                                              :iconName="item.iconName"/>
                                                 </div>
                                             </div>
-                                            <div v-else>
+                                            <div v-else class="xsLight">
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -160,27 +160,27 @@
                             </div>
                         </div>
                         <div>
-                            <div class="flex items-center mt-8 ml-5">
+                            <div class="flex items-center mt-8">
                                 <input v-model="eventTypeForm.project_mandatory"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[eventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
                                    class="ml-4 my-auto ">Projektzuordnung verpflichtend</p>
                             </div>
-                            <div class="flex items-center mt-4 ml-5">
+                            <div class="flex items-center mt-4">
                                 <input v-model="eventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[eventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto ">individueller Terminname möglich</p>
+                                   class="ml-4 my-auto ">individueller Terminname verpflichtend</p>
                             </div>
                         </div>
                         <div class="mt-2 w-full items-center text-center">
                             <AddButton
                                 :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="addEventType"
-                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" text="Speichern" mode="modal" />
+                                :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" text="Termintyp anlegen" mode="modal" />
                         </div>
                     </div>
                 </div>
@@ -215,17 +215,16 @@
                                             leave-from-class="transform opacity-100 scale-100"
                                             leave-to-class="transform opacity-0 scale-95">
                                     <MenuItems
-                                        class="z-40 origin-top-right h-40 w-24 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
+                                        class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
                                             <div v-if="item.taken === false">
-                                                <Link href="#" @click="editEventTypeForm.svg_name = item.iconName"
-                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                <div class="" @click="eventTypeForm.svg_name = item.iconName"
+                                                     :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <EventTypeIconCollection :height="64" :width="64"
                                                                              :iconName="item.iconName"/>
-                                                </Link>
+                                                </div>
                                             </div>
                                             <div v-else class="xsLight">
-                                                {{ item.iconName }} schon vergeben
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -240,24 +239,24 @@
                             </div>
                         </div>
                         <div>
-                            <div class="flex items-center mt-8 ml-5">
+                            <div class="flex items-center mt-8">
                                 <input v-model="editEventTypeForm.project_mandatory"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[editEventTypeForm.project_mandatory ? 'xsDark' : 'xsLight']"
                                    class="ml-4 my-auto">Projektzuordnung verpflichtend</p>
                             </div>
-                            <div class="flex items-center mt-4 ml-5">
+                            <div class="flex items-center mt-4">
                                 <input v-model="editEventTypeForm.individual_name"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <p :class="[editEventTypeForm.individual_name ? 'xsDark' : 'xsLight']"
-                                   class="ml-4 my-auto">individueller Terminname möglich</p>
+                                   class="ml-4 my-auto">individueller Terminname verpflichtend</p>
                             </div>
                         </div>
-                        <div class="mt-12 ml-5">
+                        <div class="mt-8 w-full justify-center flex">
                             <AddButton
-                                class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                class="inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="editEventType"
                                 :disabled="this.editEventTypeForm.name === '' || this.editEventTypeForm.svg_name === ''" text="Speichern" mode="modal" />
                         </div>
@@ -287,7 +286,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteEventTypeModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>

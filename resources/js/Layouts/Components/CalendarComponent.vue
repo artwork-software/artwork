@@ -1,11 +1,11 @@
 <template>
 
-    <div class="mt-10 ml-14">
-        <div class="inline-flex mb-5 w-1/2">
+    <div class="mt-10 ml-12 flex justify-between items-center w-[95%]">
+        <div class="inline-flex mb-5">
             <Menu as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton
-                        class="-mt-2 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
+                        class="-mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2"/>
                         <span class="float-left xsDark">{{ this.displayDate }}</span>
@@ -63,18 +63,18 @@
                 <ChevronRightIcon class="h-5 w-5 text-primary"/>
             </button>
 
-            <div class="ml-5 flex errorText items-center cursor-pointer -mt-1" @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom.length > 0">
 
-                <ExclamationIcon class="h-6  mr-2"/>
-                {{
-                    eventsWithoutRoom.length
-                }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-            </div>
 
         </div>
+        <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
+             v-if="eventsWithoutRoom.length > 0">
 
-        <div class="inline-flex mb-5 justify-end w-1/2">
+            <ExclamationIcon class="h-6  mr-2"/>
+            {{
+                eventsWithoutRoom.length
+            }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+        </div>
+        <div class=" inline-flex mb-5 justify-end">
 
             <!-- Calendar Filter -->
             <Menu as="div" class="relative inline-block flex items-center text-left">
@@ -392,13 +392,15 @@
                     </MenuItems>
                 </transition>
             </Menu>
-            <AddButton class="bg-primary hover:bg-secondary text-white"
+            <AddButton class="bg-primary hover:bg-secondary text-white resize-none"
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
 
-        <CalendarFilterTagComponent :calendar-filters="calendarFilters" :event-attributes="eventAttributes"/>
-    </div>
 
+    </div>
+    <div class="ml-12">
+    <CalendarFilterTagComponent class="flex" :calendar-filters="calendarFilters" :event-attributes="eventAttributes"/>
+    </div>
     <!--  Calendar  -->
     <div class="pl-3 overflow-x-scroll">
         <vue-cal
@@ -432,8 +434,18 @@
             @view-change="fetchEvents($event)"
         >
             <template #title="{ title, view }">
-                <div class="mb-6">
+                <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                     {{ title }}
+                </div>
+            </template>
+            <template #today-button>
+                <div class="flex w-24 xsDark" v-if="currentView === 'year'">
+                    aktuelles Jahr
+                </div>
+            </template>
+            <template #weekday-heading="{ heading, view }">
+                <div v-if="currentView === 'week'" >
+                    {{heading.label}}, {{heading.date.format("DD.MM.YYYY")}}
                 </div>
             </template>
             <template #split-label="{ split, view }">
@@ -714,7 +726,7 @@ export default {
                     checked: false
                 },
                 hasAudience: {
-                    name: 'mit Publikum',
+                    name: 'Mit Publikum',
                     value: 'hasAudience',
                     checked: false
                 },
@@ -1014,7 +1026,7 @@ export default {
                     (24 * 60 * 60 * 1000));
 
                 let weekNumber = Math.ceil(days / 7);
-                this.displayDate = 'Woche - KW ' + weekNumber
+                this.displayDate = 'Woche - KW ' + weekNumber + ' ' + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             } else if (view === 'month') {
                 this.displayDate = "Monat - " + startDate.toLocaleDateString('de-DE', {month: 'long', year: 'numeric'})
             } else {
@@ -1144,7 +1156,7 @@ export default {
 .vuecal__split-days-headers {
     font-size: 0.75rem; /* 12px */
     line-height: 1rem; /* 16px */
-    color: #ffffff
+    color: #ffffff;
 }
 
 .vuecal__flex.weekday-label {
@@ -1153,6 +1165,10 @@ export default {
     letter-spacing: -0.2px;
     color: #27233C;
     opacity: 1;
+}
+
+.vuecal__header{
+    background-color: #828190;
 }
 
 .vuecal__cell--today .vuecal__cell--current {

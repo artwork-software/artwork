@@ -409,7 +409,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteAllTeamMembersModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -439,7 +439,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteTeamModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>

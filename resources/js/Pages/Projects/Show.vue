@@ -235,7 +235,7 @@
                     <div class="border-gray-200">
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
                             <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
-                               :class="[tab.current ? 'border-primary text-primary' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                               :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                :aria-current="tab.current ? 'page' : undefined">
                                 {{ tab.name }}
                             </a>
@@ -859,7 +859,7 @@
                                         </button>
                                         <div class="flex my-auto">
                                             <span @click="closeConfirmDeleteModal"
-                                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                                         </div>
                                     </div>
                                 </div>
@@ -1473,7 +1473,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteChecklistModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -1503,7 +1503,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteProjectModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>

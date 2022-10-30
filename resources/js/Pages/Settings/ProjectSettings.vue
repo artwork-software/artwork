@@ -2,7 +2,7 @@
     <app-layout>
         <div class="max-w-screen-lg my-8 ml-14 mr-40">
             <div class="">
-                <h2 class="headline1 my-2">Projekteinstellungen</h2>
+                <h2 class="headline1 my-6">Projekteinstellungen</h2>
                 <div class="xsLight">
                     Definiere globale Einstellungen für Projekte.
                 </div>
@@ -32,18 +32,13 @@
                         </div>
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="genre in genres"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ genre.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteGenreModal(genre)">
-                                <span class="sr-only">Genre entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
-
+                        <span v-for="(genre) in genres"
+                              class="rounded-full items-center font-medium text-tagText
+                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            {{ genre.name }}
+                                            <button type="button" @click="openDeleteGenreModal(genre)">
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                            </button>
                         </span>
                     </div>
                 </div>
@@ -72,17 +67,12 @@
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
                         <span v-for="category in categories"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ category.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteCategoryModal(category)">
-                                <span class="sr-only">Bereich entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
-
+                              class="rounded-full items-center font-medium text-tagText
+                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            {{ category.name }}
+                                            <button type="button" @click="openDeleteCategoryModal(category)">
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                            </button>
                         </span>
                     </div>
                 </div>
@@ -111,18 +101,14 @@
                     </div>
                     <div class="flex flex-wrap w-full max-w-xl">
                         <span v-for="sector in sectors"
-                              class=" mt-4 mr-4 rounded-full font-bold text-primary">
-                            <div class="flex">
-                                <span class="">
-                                {{ sector.name }}
-                                    </span>
-                                <button type="button" @click="openDeleteSectorModal(sector)">
-                                <span class="sr-only">Bereich entfernen</span>
-                                <XCircleIcon class="ml-2 my-auto h-5 w-5 hover:text-error "/>
-                            </button>
-                            </div>
-
+                              class="rounded-full items-center font-medium text-tagText
+                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
+                                            {{ sector.name }}
+                                            <button type="button" @click="openDeleteSectorModal(sector)">
+                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                            </button>
                         </span>
+
                     </div>
                 </div>
             </div>
@@ -148,7 +134,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteSectorModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -175,7 +161,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteGenreModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -202,7 +188,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteCategoryModal"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>
@@ -257,7 +243,7 @@ export default {
     },
     methods: {
         addCategory() {
-            if(this.categoryInput !== ''){
+            if (this.categoryInput !== '') {
                 this.$inertia.post(route('categories.store'), {name: this.categoryInput});
                 this.categoryInput = "";
             }
@@ -275,9 +261,9 @@ export default {
             this.closeDeleteGenreModal();
         },
         addGenre() {
-            if(this.genreInput !== ''){
-            this.$inertia.post(route('genres.store'), {name: this.genreInput});
-            this.genreInput = '';
+            if (this.genreInput !== '') {
+                this.$inertia.post(route('genres.store'), {name: this.genreInput});
+                this.genreInput = '';
             }
         },
         openDeleteSectorModal(sector) {
@@ -293,9 +279,9 @@ export default {
             this.closeDeleteSectorModal();
         },
         addSector() {
-            if(this.sectorInput !== ''){
-            this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
-            this.sectorInput = '';
+            if (this.sectorInput !== '') {
+                this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
+                this.sectorInput = '';
             }
         },
         openDeleteCategoryModal(category) {

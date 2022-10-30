@@ -41,11 +41,7 @@
                             </div>
 
                             <div>
-                                <button type="submit"
-                                        :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                        class=" inline-flex items-center px-40 py-3 border border-transparent text-sm font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                        :disabled="this.form.email === '' || this.form.password === ''">Login
-                                </button>
+                                <AddButton :disabled="this.form.email === '' || this.form.password === ''" :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary hover:bg-secondary' : '']" class="px-44 py-4" type="submit" text="Login" mode="modal"/>
                             </div>
                         </form>
 
@@ -95,6 +91,7 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import AddButton from "@/Layouts/Components/AddButton";
 
 
 const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
@@ -111,7 +108,8 @@ export default defineComponent({
         JetLabel,
         JetValidationErrors,
         Link,
-        Checkbox
+        Checkbox,
+        AddButton
     },
     props: {
         canResetPassword: Boolean,

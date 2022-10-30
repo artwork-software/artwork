@@ -520,7 +520,7 @@
                         </button>
                         <div class="flex my-auto">
                             <span @click="closeDeleteProjectModal()"
-                                  class="text-secondary subpixel-antialiased cursor-pointer">Nein, doch nicht</span>
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
                         </div>
                     </div>
                 </div>

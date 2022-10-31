@@ -5,7 +5,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ attribute.name }}
             <button
-                @click="attribute.checked = false; this.$parent.changeFilterElements(calendarFilters.roomAttributes, attribute)"
+                @click="attribute.checked = false; this.$parent.changeFilterElements(calendarFilters.roomAttributes, attribute); this.updateDisplayedEvents()"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -15,7 +15,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ category.name }}
             <button
-                @click="category.checked = false; this.$parent.changeFilterElements(calendarFilters.roomCategories, category)"
+                @click="category.checked = false; this.$parent.changeFilterElements(calendarFilters.roomCategories, category); this.updateDisplayedEvents()"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -24,7 +24,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ room.label || room.name }}
-            <button @click="room.checked = false; this.$parent.changeFilterElements(calendarFilters.rooms, room)"
+            <button @click="room.checked = false; this.$parent.changeFilterElements(calendarFilters.rooms, room); this.updateDisplayedEvents()"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -33,7 +33,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ area.label || area.name }}
-            <button @click="area.checked = false; this.$parent.changeFilterElements(calendarFilters.areas, area)"
+            <button @click="area.checked = false; this.$parent.changeFilterElements(calendarFilters.areas, area); this.updateDisplayedEvents()"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -43,7 +43,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ eventType.name }}
             <button
-                @click="eventType.checked = false; this.$parent.changeFilterElements(calendarFilters.eventTypes, eventType)"
+                @click="eventType.checked = false; this.$parent.changeFilterElements(calendarFilters.eventTypes, eventType); this.updateDisplayedEvents()"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -52,7 +52,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             Mit Publikum
-            <button @click="calendarFilters.hasAudience = !calendarFilters.hasAudience; eventAttributes.hasAudience.checked = false " type="button">
+            <button @click="calendarFilters.hasAudience = !calendarFilters.hasAudience; eventAttributes.hasAudience.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -60,7 +60,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne Publikum
-            <button @click="calendarFilters.hasNoAudience = !calendarFilters.hasNoAudience; eventAttributes.hasNoAudience.checked = false" type="button">
+            <button @click="calendarFilters.hasNoAudience = !calendarFilters.hasNoAudience; eventAttributes.hasNoAudience.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -68,7 +68,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             laut
-            <button @click="calendarFilters.isLoud = !calendarFilters.isLoud; eventAttributes.isLoud.checked = false" type="button">
+            <button @click="calendarFilters.isLoud = !calendarFilters.isLoud; eventAttributes.isLoud.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -76,7 +76,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             nicht laut
-            <button @click="calendarFilters.isNotLoud = !calendarFilters.isNotLoud; eventAttributes.isNotLoud.checked = false" type="button">
+            <button @click="calendarFilters.isNotLoud = !calendarFilters.isNotLoud; eventAttributes.isNotLoud.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -84,7 +84,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne Nebenveranstaltung mit Publikum
-            <button @click="calendarFilters.adjoiningNoAudience = !calendarFilters.adjoiningNoAudience; eventAttributes.adjoiningNoAudience.checked = false" type="button">
+            <button @click="calendarFilters.adjoiningNoAudience = !calendarFilters.adjoiningNoAudience; eventAttributes.adjoiningNoAudience.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -92,7 +92,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ohne laute Nebenveranstaltung
-            <button @click="calendarFilters.adjoiningNotLoud = !calendarFilters.adjoiningNotLoud; eventAttributes.adjoiningNotLoud.checked = false" type="button">
+            <button @click="calendarFilters.adjoiningNotLoud = !calendarFilters.adjoiningNotLoud; eventAttributes.adjoiningNotLoud.checked = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -100,7 +100,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             mit Nebenräumen
-            <button @click="calendarFilters.showAdjoiningRooms = !calendarFilters.showAdjoiningRooms; eventAttributes.showAdjoiningRooms.checked = false" type="button">
+            <button @click="calendarFilters.showAdjoiningRooms = !calendarFilters.showAdjoiningRooms; roomFilters.showAdjoiningRooms = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -108,7 +108,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             ganztägig frei
-            <button @click="calendarFilters.allDayFree = !calendarFilters.allDayFree; eventAttributes.allDayFree.checked = false" type="button">
+            <button @click="calendarFilters.allDayFree = !calendarFilters.allDayFree; roomFilters.allDayFree = false; this.updateDisplayedEvents()" type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
         </span>
@@ -128,7 +128,15 @@ export default {
     },
     props: {
         calendarFilters: Object,
-        eventAttributes: Object
+        eventAttributes: Object,
+        roomFilters: Object,
+        eventsSince: Date,
+        eventsUntil: Date
+    },
+    methods: {
+        updateDisplayedEvents() {
+            this.$parent.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
+        }
     }
 }
 </script>

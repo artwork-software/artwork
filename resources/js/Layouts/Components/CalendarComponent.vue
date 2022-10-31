@@ -121,7 +121,9 @@
                                     <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
                                            class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                            placeholder="Name des Filters"/>
-                                    <PlusCircleIcon class="w-6 h-6 ml-2 mt-2" @click="saveFilter"/>
+                                    <button class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                        <label @click="saveFilter" class="cursor-pointer text-white text-xs">Speichern</label>
+                                    </button>
                                     <!-- <AddButton text="Speichern" class="text-sm ml-0"
                                                @click="saveFilter"></AddButton> -->
                                 </div>
@@ -166,30 +168,32 @@
                                     <div v-if="currentView !== 'month'">
                                         <SwitchGroup>
                                             <div class="flex items-center">
-                                                <Switch v-model="calendarFilters.showAdjoiningRooms"
-                                                        :class="calendarFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
+                                                <Switch v-model="roomFilters.showAdjoiningRooms"
+                                                        @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.viewAdjoiningRooms()"
+                                                        :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="calendarFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                                 </Switch>
                                                 <SwitchLabel class="ml-4 text-xs"
-                                                             :class="calendarFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
+                                                             :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
                                                     Nebenräume anzeigen
                                                 </SwitchLabel>
                                             </div>
                                         </SwitchGroup>
                                         <SwitchGroup>
                                             <div class="flex items-center mt-2">
-                                                <Switch v-model="calendarFilters.allDayFree"
-                                                        :class="calendarFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
+                                                <Switch v-model="roomFilters.allDayFree"
+                                                        @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree)"
+                                                        :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="calendarFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                                 </Switch>
                                                 <SwitchLabel class="ml-4 text-xs"
-                                                             :class="calendarFilters.allDayFree ? 'text-white' : 'text-secondary'">
+                                                             :class="roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
                                                     ganztägig frei
                                                 </SwitchLabel>
                                             </div>
@@ -399,7 +403,14 @@
 
     </div>
     <div class="ml-12">
-    <CalendarFilterTagComponent class="flex" :calendar-filters="calendarFilters" :event-attributes="eventAttributes"/>
+    <CalendarFilterTagComponent
+        class="flex"
+        :calendar-filters="calendarFilters"
+        :event-attributes="eventAttributes"
+        :room-filters="roomFilters"
+        :events-since="eventsSince"
+        :events-until="eventsUntil"
+    />
     </div>
     <!--  Calendar  -->
     <div class="pl-3 overflow-x-scroll">
@@ -707,7 +718,7 @@ export default {
             saving: false,
             roomFilters: {
                 showAdjoiningRooms: false,
-                onlyFreeRooms: false
+                allDayFree: false
             },
             eventAttributes: {
                 isLoud: {
@@ -838,6 +849,30 @@ export default {
                 endDate: this.eventsUntil,
             });
         },
+        async viewAdjoiningRooms() {
+            let adjoiningRooms = [];
+
+            if(this.roomFilters.showAdjoiningRooms) {
+                this.displayedRooms.forEach(room => {
+                    adjoiningRooms.push(...room.main_rooms)
+                    adjoiningRooms.push(...room.adjoining_rooms)
+                })
+
+                for (const room of adjoiningRooms) {
+                    if(this.displayedRooms.filter(r => r.name === room.name).length === 0) {
+                        room.adjoining = true;
+                        this.calendarFilters.rooms.push(room)
+                        await this.fetchEvents({
+                            startDate: this.eventsSince,
+                            endDate: this.eventsUntil,
+                        });
+                    }
+                }
+            }
+            else {
+               this.calendarFilters.rooms = this.calendarFilters.rooms.filter(r => !r.adjoining)
+            }
+        },
         resetCalendarFilter() {
             this.addFilterableVariable(this.rooms, false);
             this.addFilterableVariable(this.areas, false);
@@ -913,6 +948,12 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
+            console.log("Startdate: " + startDate)
+            console.log("Enddate: " + endDate)
+
+            console.log(this.eventsSince)
+            console.log(this.eventsUntil)
+
             const filters = this.getFilterIds();
 
             console.log(filters);
@@ -967,6 +1008,8 @@ export default {
                     this.displayedEvents = this.events;
 
                     this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
+
+                    console.log(this.displayedRooms);
                 });
         },
         scrollToNine() {

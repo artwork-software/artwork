@@ -19,6 +19,7 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Task;
 use App\Support\Services\HistoryService;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -149,6 +150,7 @@ class EventController extends Controller
         $hasAudience = $calendarFilters->hasAudience;
         $hasNoAudience = $calendarFilters->hasNoAudience;
         $allDayFree = $calendarFilters->allDayFree;
+        $showAdjoiningRooms = $calendarFilters->showAdjoiningRooms;
 
         if($request->get('projectId')){
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('project_id', $request->get('projectId'))->get();
@@ -172,6 +174,7 @@ class EventController extends Controller
                 ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
                     ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
                     ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
                     ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
                         ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
                             ->whereIn('room_attributes.id', $roomAttributeIds)))

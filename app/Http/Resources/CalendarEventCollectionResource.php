@@ -61,6 +61,7 @@ class CalendarEventCollectionResource extends ResourceCollection
             $rooms = Room::with('adjoining_rooms', 'main_rooms')->whereNotIn('id', $rooms_with_events_everyDay)->get()->map(fn(Room $room) => [
                 'id' => $room->id,
                 'name' => $room->name,
+                'area' => $room->area,
                 'room_admins' => $room->room_admins,
                 'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
@@ -72,12 +73,15 @@ class CalendarEventCollectionResource extends ResourceCollection
                     'id' => $main_room->id,
                     'label' => $main_room->name
                 ]),
+                'categories' => $room->categories,
+                'attributes' => $room->attributes
             ]);
         }
         else {
             $rooms = Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
                 'id' => $room->id,
                 'name' => $room->name,
+                'area' => $room->area,
                 'room_admins' => $room->room_admins,
                 'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
@@ -89,6 +93,8 @@ class CalendarEventCollectionResource extends ResourceCollection
                     'id' => $main_room->id,
                     'label' => $main_room->name
                 ]),
+                'categories' => $room->categories,
+                'attributes' => $room->attributes
             ]);
         }
 

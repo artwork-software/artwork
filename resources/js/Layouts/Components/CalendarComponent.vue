@@ -64,7 +64,6 @@
             </button>
 
 
-
         </div>
         <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
              v-if="eventsWithoutRoom.length > 0">
@@ -116,20 +115,6 @@
                         </div>
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
-                            <Disclosure v-slot="{ open }" v-if="saving">
-                                <div class="flex">
-                                    <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
-                                           class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                           placeholder="Name des Filters"/>
-                                    <button class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
-                                        <label @click="saveFilter" class="cursor-pointer text-white text-xs">Speichern</label>
-                                    </button>
-                                    <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                               @click="saveFilter"></AddButton> -->
-                                </div>
-                                <hr class="border-secondary rounded-full border-2 mt-4 mb-2">
-                            </Disclosure>
-
                             <!-- Save Filter Section -->
                             <Disclosure v-slot="{ open }">
                                 <DisclosureButton
@@ -142,12 +127,29 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <button class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
-                                            v-for="filter of filters">
-                                        <label @click="applyFilter(filter)" class="cursor-pointer text-white">{{ filter.name }}</label>
+                                    <Disclosure v-slot="{ open }" v-if="saving">
+                                        <div class="flex">
+                                            <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
+                                                   class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
+                                                   placeholder="Name des Filters"/>
+                                            <button
+                                                class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                                <label @click="saveFilter" class="cursor-pointer text-white text-xs">Speichern</label>
+                                            </button>
+                                            <!-- <AddButton text="Speichern" class="text-sm ml-0"
+                                                       @click="saveFilter"></AddButton> -->
+                                        </div>
+                                        <hr class="border-gray-500 mt-4 mb-4">
+                                    </Disclosure>
+                                    <button
+                                        class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
+                                        v-for="filter of filters">
+                                        <label @click="applyFilter(filter)"
+                                               class="cursor-pointer text-white">{{ filter.name }}</label>
                                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                                     </button>
-                                    <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter gespeichert</p>
+                                    <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter
+                                        gespeichert</p>
                                 </DisclosurePanel>
                                 <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                             </Disclosure>
@@ -169,7 +171,7 @@
                                         <SwitchGroup>
                                             <div class="flex items-center">
                                                 <Switch v-model="roomFilters.showAdjoiningRooms"
-                                                        @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.viewAdjoiningRooms()"
+                                                        @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.changeDisplayedRooms()"
                                                         :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
@@ -269,7 +271,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="area.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.areas, area)"
+                                                       @change="this.changeFilterElements(calendarFilters.areas, area);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -293,7 +295,7 @@
                                             <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="attribute.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute)"
+                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -403,14 +405,14 @@
 
     </div>
     <div class="ml-12">
-    <CalendarFilterTagComponent
-        class="flex"
-        :calendar-filters="calendarFilters"
-        :event-attributes="eventAttributes"
-        :room-filters="roomFilters"
-        :events-since="eventsSince"
-        :events-until="eventsUntil"
-    />
+        <CalendarFilterTagComponent
+            class="flex"
+            :calendar-filters="calendarFilters"
+            :event-attributes="eventAttributes"
+            :room-filters="roomFilters"
+            :events-since="eventsSince"
+            :events-until="eventsUntil"
+        />
     </div>
     <!--  Calendar  -->
     <div class="pl-3 overflow-x-scroll">
@@ -455,8 +457,8 @@
                 </div>
             </template>
             <template #weekday-heading="{ heading, view }">
-                <div v-if="currentView === 'week'" >
-                    {{heading.label}}, {{heading.date.format("DD.MM.YYYY")}}
+                <div v-if="currentView === 'week'">
+                    {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
                 </div>
             </template>
             <template #split-label="{ split, view }">
@@ -604,19 +606,19 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {
+    CalendarIcon,
     ChevronDownIcon,
     ChevronLeftIcon,
     ChevronRightIcon,
     DocumentTextIcon,
     DotsVerticalIcon,
+    ExclamationIcon,
     FilterIcon,
     PencilAltIcon,
+    PlusCircleIcon,
     TrashIcon,
     XCircleIcon,
     XIcon,
-    CalendarIcon,
-    ExclamationIcon,
-    PlusCircleIcon,
 } from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
@@ -637,7 +639,7 @@ import {
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import {Link, useForm} from "@inertiajs/inertia-vue3";
+import {Link} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import EventComponent from "@/Layouts/Components/EventComponent";
 import CalendarFilterComponent from "@/Layouts/Components/CalendarFilterComponent";
@@ -793,6 +795,8 @@ export default {
                 })
             })
 
+            this.changeDisplayedRooms();
+
             this.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
@@ -824,6 +828,7 @@ export default {
                 })
         },
         async changeFilterElements(filterArray, element) {
+
             if (element.checked) {
                 filterArray.push(element)
             } else {
@@ -837,10 +842,93 @@ export default {
                     }
                 })
             }
+
+            this.changeDisplayedRooms()
             await this.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
+        },
+        changeDisplayedRooms() {
+            const allRooms = this.rooms;
+
+            //decides for every room if it should be displayed in the calendar
+            this.displayedRooms = allRooms.filter(room => {
+                let include = false;
+
+                this.areas.forEach(area => {
+                    //if the current area is checked
+                    if (area.checked) {
+                        if (room.area.name === area.name) {
+                            include = this.filterRooms(room)
+                        }
+                    //checks if no area is checked
+                    } else if (this.zeroObjectsChecked(this.areas)) {
+                        include = this.filterRooms(room)
+                    //at least one area is checked, but not the current one
+                    } else {
+                        if (room.area.name === area.name) {
+                            include = false;
+                        }
+                    }
+                })
+                return include
+            });
+            this.viewAdjoiningRooms()
+        },
+        filterRooms(room) {
+            let include = false;
+            if (!this.zeroObjectsChecked(this.rooms)) {
+                if (room.checked) {
+                    include = this.filterCategories(room);
+                }
+            } else {
+                include = this.filterCategories(room)
+            }
+            return include
+        },
+        filterCategories(room) {
+            let include = false;
+            if(!this.zeroObjectsChecked(this.roomCategories)) {
+                this.roomCategories.forEach(roomCategory => {
+                    if(roomCategory.checked) {
+                        const sameCategory = room.categories.filter(category => category.name === roomCategory.name)
+                        if(sameCategory.length > 0) {
+                            include = this.filterAttributes(room);
+                        }
+                    }
+                })
+            }
+            else {
+                include = this.filterAttributes(room);
+            }
+            return include
+        },
+        filterAttributes(room) {
+            let include = false
+            if(!this.zeroObjectsChecked(this.roomAttributes)) {
+                this.roomAttributes.forEach(roomAttribute => {
+                    if (roomAttribute.checked) {
+                        const sameAttribute = room.attributes.filter(attribute => attribute.name === roomAttribute.name)
+                        if (sameAttribute.length > 0) {
+                            include = true;
+                        }
+                    }
+                })
+            }
+            else {
+                include = true;
+            }
+            return include
+        },
+        zeroObjectsChecked(array) {
+            let zeroChecked = true;
+            array.forEach(object => {
+                if (object.checked === true) {
+                    zeroChecked = false;
+                }
+            })
+            return zeroChecked;
         },
         changeFilterBoolean(filter, variable) {
             this.calendarFilters[`${filter}`] = variable
@@ -852,25 +940,22 @@ export default {
         async viewAdjoiningRooms() {
             let adjoiningRooms = [];
 
-            if(this.roomFilters.showAdjoiningRooms) {
+            if (this.roomFilters.showAdjoiningRooms) {
                 this.displayedRooms.forEach(room => {
                     adjoiningRooms.push(...room.main_rooms)
                     adjoiningRooms.push(...room.adjoining_rooms)
                 })
 
                 for (const room of adjoiningRooms) {
-                    if(this.displayedRooms.filter(r => r.name === room.name).length === 0) {
+                    if (this.displayedRooms.filter(r => r.name === room.name).length === 0) {
                         room.adjoining = true;
                         this.calendarFilters.rooms.push(room)
-                        await this.fetchEvents({
-                            startDate: this.eventsSince,
-                            endDate: this.eventsUntil,
-                        });
+                        this.displayedRooms.push(room);
                     }
                 }
-            }
-            else {
-               this.calendarFilters.rooms = this.calendarFilters.rooms.filter(r => !r.adjoining)
+            } else {
+                this.calendarFilters.rooms = this.calendarFilters.rooms.filter(r => !r.adjoining)
+                this.displayedRooms = this.displayedRooms.filter(r => !r.adjoining)
             }
         },
         resetCalendarFilter() {
@@ -890,6 +975,8 @@ export default {
             Object.entries(this.eventAttributes).forEach(entry => {
                 entry[1].checked = null;
             })
+
+            this.displayedRooms = this.rooms
 
             this.fetchEvents({
                 startDate: this.eventsSince,
@@ -929,6 +1016,7 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
+
         /**
          * Fetch the events from server
          * initialise possible rooms, types and projects
@@ -938,7 +1026,6 @@ export default {
          * @param {Date} endDate
          * @returns {Promise<void>}
          */
-
         async fetchEvents({view = null, startDate = null, endDate = null}) {
             this.currentView = view ?? this.currentView ?? 'week';
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
@@ -948,15 +1035,7 @@ export default {
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
 
-            console.log("Startdate: " + startDate)
-            console.log("Enddate: " + endDate)
-
-            console.log(this.eventsSince)
-            console.log(this.eventsUntil)
-
             const filters = this.getFilterIds();
-
-            console.log(filters);
 
             await axios
                 .get('/events/', {
@@ -969,31 +1048,30 @@ export default {
                     }
                 })
                 .then(response => {
-                    console.log(response.data.events)
                     this.events = response.data.events.events
                     this.projects = response.data.events.projects
                     this.filters = response.data.events.calendarFilters
 
                     this.eventsWithoutRoom = response.data.eventsWithoutRoom.events;
 
-                    if (this.rooms.length === 0 || this.areChecked(this.rooms) === 0) {
+                    if (this.rooms.length === 0) {
                         this.rooms = response.data.events.rooms
                         this.displayedRooms = this.rooms;
                         this.addFilterableVariable(this.rooms, false)
                     }
-                    if (this.areas.length === 0 || this.areChecked(this.areas) === 0) {
+                    if (this.areas.length === 0) {
                         this.areas = response.data.events.areas
                         this.addFilterableVariable(this.areas, false)
                     }
-                    if (this.roomCategories.length === 0 || this.areChecked(this.roomCategories) === 0) {
+                    if (this.roomCategories.length === 0) {
                         this.roomCategories = response.data.events.roomCategories
                         this.addFilterableVariable(this.roomCategories, false)
                     }
-                    if (this.roomAttributes.length === 0 || this.areChecked(this.roomAttributes) === 0) {
+                    if (this.roomAttributes.length === 0) {
                         this.roomAttributes = response.data.events.roomAttributes
                         this.addFilterableVariable(this.roomAttributes, false)
                     }
-                    if (this.types.length === 0 || this.areChecked(this.types) === 0) {
+                    if (this.types.length === 0) {
                         this.types = this.eventTypes
                         this.addFilterableVariable(this.types, false)
                     }
@@ -1006,10 +1084,6 @@ export default {
                     this.events.map(event => event.end = new Date(event.end))
 
                     this.displayedEvents = this.events;
-
-                    this.displayedRooms = (this.calendarFilters.rooms.length > 0 ? this.calendarFilters.rooms : this.rooms)
-
-                    console.log(this.displayedRooms);
                 });
         },
         scrollToNine() {
@@ -1048,10 +1122,9 @@ export default {
             return this.filterIds;
         },
         setFilterId(field) {
-            if(this.calendarFilters[field] === false || this.calendarFilters[field] === null) {
+            if (this.calendarFilters[field] === false || this.calendarFilters[field] === null) {
                 this.filterIds[field] = null
-            }
-            else {
+            } else {
                 this.filterIds[field] = true;
             }
         },
@@ -1210,7 +1283,7 @@ export default {
     opacity: 1;
 }
 
-.vuecal__header{
+.vuecal__header {
     background-color: #828190;
 }
 

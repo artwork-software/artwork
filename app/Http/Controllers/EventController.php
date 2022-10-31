@@ -145,11 +145,11 @@ class EventController extends Controller
         $areaIds = $calendarFilters->areaIds;
         $eventTypeIds = $calendarFilters->eventTypeIds;
         $roomAttributeIds = $calendarFilters->roomAttributeIds;
+        $roomCategoryIds = $calendarFilters->roomCategoryIds;
         $isLoud = $calendarFilters->isLoud;
         $isNotLoud = $calendarFilters->isNotLoud;
         $hasAudience = $calendarFilters->hasAudience;
         $hasNoAudience = $calendarFilters->hasNoAudience;
-        $allDayFree = $calendarFilters->allDayFree;
         $showAdjoiningRooms = $calendarFilters->showAdjoiningRooms;
 
         if($request->get('projectId')){
@@ -178,6 +178,9 @@ class EventController extends Controller
                     ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
                         ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
                             ->whereIn('room_attributes.id', $roomAttributeIds)))
+                    ->when($roomCategoryIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('categories', fn (Builder $roomCategoryBuilder) => $roomCategoryBuilder
+                            ->whereIn('room_categories.id', $roomCategoryIds)))
                 )
             )
             ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))

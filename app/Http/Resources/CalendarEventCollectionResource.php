@@ -32,72 +32,6 @@ class CalendarEventCollectionResource extends ResourceCollection
      */
     public function toArray($request)
     {
-        $calendarFilters = json_decode($request->input('calendarFilters'));
-        $allDayFree = $calendarFilters->allDayFree;
-
-        $period = CarbonPeriod::create(Carbon::parse($request->get('start'))->addHours(2), Carbon::parse($request->get('end')));
-
-        // Convert the period to an array of dates
-        $dates = $period->toArray();
-        $roomIds = [];
-
-        foreach ($dates as $date) {
-            Debugbar::info($date);
-            $events = Event::query()->occursAt(Carbon::parse($date))->get();
-            foreach ($events as $event) {
-                $roomIds[] = $event->room_id;
-            }
-        }
-        $room_occurrences = array_count_values($roomIds);
-
-        $rooms_with_events_everyDay = [];
-        foreach ($room_occurrences as $key => $occurrence) {
-                if ($occurrence == count($dates)) {
-                    $rooms_with_events_everyDay[] = $key;
-                }
-        }
-
-        if($allDayFree) {
-            $rooms = Room::with('adjoining_rooms', 'main_rooms')->whereNotIn('id', $rooms_with_events_everyDay)->get()->map(fn(Room $room) => [
-                'id' => $room->id,
-                'name' => $room->name,
-                'area' => $room->area,
-                'room_admins' => $room->room_admins,
-                'everyone_can_book' => $room->everyone_can_book,
-                'label' => $room->name,
-                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
-                    'id' => $adjoining_room->id,
-                    'label' => $adjoining_room->name
-                ]),
-                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
-                    'id' => $main_room->id,
-                    'label' => $main_room->name
-                ]),
-                'categories' => $room->categories,
-                'attributes' => $room->attributes
-            ]);
-        }
-        else {
-            $rooms = Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
-                'id' => $room->id,
-                'name' => $room->name,
-                'area' => $room->area,
-                'room_admins' => $room->room_admins,
-                'everyone_can_book' => $room->everyone_can_book,
-                'label' => $room->name,
-                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
-                    'id' => $adjoining_room->id,
-                    'label' => $adjoining_room->name
-                ]),
-                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
-                    'id' => $main_room->id,
-                    'label' => $main_room->name
-                ]),
-                'categories' => $room->categories,
-                'attributes' => $room->attributes
-            ]);
-        }
-
         return [
             'resource' => class_basename($this),
             'events' => CalendarEventResource::collection($this->collection),
@@ -137,7 +71,24 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'project_admins' => $project->adminUsers
             ]),
 
-            'rooms' => $rooms,
+            'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'area' => $room->area,
+                'room_admins' => $room->room_admins,
+                'everyone_can_book' => $room->everyone_can_book,
+                'label' => $room->name,
+                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
+                    'id' => $adjoining_room->id,
+                    'label' => $adjoining_room->name
+                ]),
+                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
+                    'id' => $main_room->id,
+                    'label' => $main_room->name
+                ]),
+                'categories' => $room->categories,
+                'attributes' => $room->attributes
+            ]),
 
             'roomCategories' => RoomCategory::all()->map(fn(RoomCategory $roomCategory) => [
                 'id' => $roomCategory->id,

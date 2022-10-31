@@ -177,6 +177,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Rooms
     Route::post('/rooms', [RoomController::class, 'store'])->name('rooms.store');
     Route::get('/rooms/trashed', [RoomController::class, 'getTrashed'])->name('rooms.trashed');
+    Route::get('/rooms/free', [RoomController::class, 'getAllDayFree'])->name('rooms.free');
     Route::post('/rooms/{room}/duplicate', [RoomController::class, 'duplicate'])->name('rooms.duplicate');
     Route::get('/rooms/{room}', [RoomController::class, 'show'])->name('rooms.show');
     Route::patch('/rooms/{room}', [RoomController::class, 'update'])->name('rooms.update');

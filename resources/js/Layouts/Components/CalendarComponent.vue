@@ -846,10 +846,22 @@ export default {
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
-            this.changeDisplayedRooms()
+            await this.changeDisplayedRooms()
         },
-        changeDisplayedRooms() {
-            const allRooms = this.rooms;
+        async changeFilterBoolean(filter, variable) {
+            this.calendarFilters[`${filter}`] = variable
+            await this.fetchEvents({
+                startDate: this.eventsSince,
+                endDate: this.eventsUntil,
+            });
+            await this.changeDisplayedRooms()
+        },
+        async changeDisplayedRooms() {
+
+            let allRooms = this.rooms;
+            if (this.calendarFilters.allDayFree === true) {
+                allRooms = await this.getAllDayFreeRooms();
+            }
 
             //decides for every room if it should be displayed in the calendar
             this.displayedRooms = allRooms.filter(room => {
@@ -861,10 +873,10 @@ export default {
                         if (room.area.name === area.name) {
                             include = this.filterRooms(room)
                         }
-                    //checks if no area is checked
+                        //checks if no area is checked
                     } else if (this.zeroObjectsChecked(this.areas)) {
                         include = this.filterRooms(room)
-                    //at least one area is checked, but not the current one
+                        //at least one area is checked, but not the current one
                     } else {
                         if (room.area.name === area.name) {
                             include = false;
@@ -874,6 +886,19 @@ export default {
                 return include
             });
             this.viewAdjoiningRooms()
+
+        },
+        async getAllDayFreeRooms() {
+            let rooms = []
+            await axios.get('/rooms/free', {
+                params: {
+                    start: this.eventsSince,
+                    end: this.eventsUntil,
+                }
+            }).then(response => {
+                rooms = response.data.rooms;
+            })
+            return rooms
         },
         filterRooms(room) {
             let include = false;
@@ -888,24 +913,23 @@ export default {
         },
         filterCategories(room) {
             let include = false;
-            if(!this.zeroObjectsChecked(this.roomCategories)) {
+            if (!this.zeroObjectsChecked(this.roomCategories)) {
                 this.roomCategories.forEach(roomCategory => {
-                    if(roomCategory.checked) {
+                    if (roomCategory.checked) {
                         const sameCategory = room.categories.filter(category => category.name === roomCategory.name)
-                        if(sameCategory.length > 0) {
+                        if (sameCategory.length > 0) {
                             include = this.filterAttributes(room);
                         }
                     }
                 })
-            }
-            else {
+            } else {
                 include = this.filterAttributes(room);
             }
             return include
         },
         filterAttributes(room) {
             let include = false
-            if(!this.zeroObjectsChecked(this.roomAttributes)) {
+            if (!this.zeroObjectsChecked(this.roomAttributes)) {
                 this.roomAttributes.forEach(roomAttribute => {
                     if (roomAttribute.checked) {
                         const sameAttribute = room.attributes.filter(attribute => attribute.name === roomAttribute.name)
@@ -914,8 +938,7 @@ export default {
                         }
                     }
                 })
-            }
-            else {
+            } else {
                 include = true;
             }
             return include
@@ -929,15 +952,7 @@ export default {
             })
             return zeroChecked;
         },
-        async changeFilterBoolean(filter, variable) {
-            this.calendarFilters[`${filter}`] = variable
-            await this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-            //this.changeDisplayedRooms()
-        },
-        async viewAdjoiningRooms() {
+        viewAdjoiningRooms() {
             let adjoiningRooms = [];
 
             if (this.roomFilters.showAdjoiningRooms) {
@@ -1076,9 +1091,6 @@ export default {
                     if (this.types.length === 0) {
                         this.types = this.eventTypes
                         this.addFilterableVariable(this.types, false)
-                    }
-                    if(filters.allDayFree === true) {
-                        this.displayedRooms = response.data.events.rooms
                     }
 
                     // color coding of rooms

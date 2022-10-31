@@ -7,12 +7,16 @@ use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\Area;
+use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use App\Models\User;
+use Barryvdh\Debugbar\Facades\Debugbar;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +24,57 @@ use Illuminate\Support\Facades\Redirect;
 
 class RoomController extends Controller
 {
+
+    /**
+     * @param Request $request
+     * @return array
+     */
+    public function getAllDayFree(Request $request): array {
+
+        $period = CarbonPeriod::create(Carbon::parse($request->get('start'))->addHours(2), Carbon::parse($request->get('end')));
+
+        // Convert the period to an array of dates
+        $dates = $period->toArray();
+        $roomIds = [];
+
+        foreach ($dates as $date) {
+            Debugbar::info($date);
+            $events = Event::query()->occursAt(Carbon::parse($date))->get();
+            foreach ($events as $event) {
+                $roomIds[] = $event->room_id;
+            }
+        }
+        $room_occurrences = array_count_values($roomIds);
+
+        $rooms_with_events_everyDay = [];
+        foreach ($room_occurrences as $key => $occurrence) {
+            if ($occurrence == count($dates)) {
+                $rooms_with_events_everyDay[] = $key;
+            }
+        }
+
+        $rooms = Room::with('adjoining_rooms', 'main_rooms')->whereNotIn('id', $rooms_with_events_everyDay)->get()->map(fn(Room $room) => [
+            'id' => $room->id,
+            'name' => $room->name,
+            'area' => $room->area,
+            'label' => $room->name,
+            'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
+                'id' => $adjoining_room->id,
+                'label' => $adjoining_room->name
+            ]),
+            'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
+                'id' => $main_room->id,
+                'label' => $main_room->name
+            ]),
+            'categories' => $room->categories,
+            'attributes' => $room->attributes
+        ]);
+
+        return [
+          'rooms' => $rooms
+        ];
+    }
+
     /**
      * Store a newly created resource in storage.
      *

@@ -165,7 +165,7 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="currentView !== 'month'">
+                                    <div v-if="currentView !== 'month' && currentView !== 'year'">
                                         <SwitchGroup>
                                             <div class="flex items-center">
                                                 <Switch v-model="roomFilters.showAdjoiningRooms"
@@ -182,7 +182,7 @@
                                                 </SwitchLabel>
                                             </div>
                                         </SwitchGroup>
-                                        <SwitchGroup>
+                                        <SwitchGroup v-if="currentView === 'day'">
                                             <div class="flex items-center mt-2">
                                                 <Switch v-model="roomFilters.allDayFree"
                                                         @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree)"

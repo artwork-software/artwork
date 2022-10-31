@@ -187,7 +187,7 @@
                                         <SwitchGroup v-if="currentView === 'day'">
                                             <div class="flex items-center mt-2">
                                                 <Switch v-model="roomFilters.allDayFree"
-                                                        @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree)"
+                                                        @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree);"
                                                         :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
                                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
@@ -842,12 +842,11 @@ export default {
                     }
                 })
             }
-
-            this.changeDisplayedRooms()
             await this.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
+            this.changeDisplayedRooms()
         },
         changeDisplayedRooms() {
             const allRooms = this.rooms;
@@ -930,12 +929,13 @@ export default {
             })
             return zeroChecked;
         },
-        changeFilterBoolean(filter, variable) {
+        async changeFilterBoolean(filter, variable) {
             this.calendarFilters[`${filter}`] = variable
-            this.fetchEvents({
+            await this.fetchEvents({
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
+            //this.changeDisplayedRooms()
         },
         async viewAdjoiningRooms() {
             let adjoiningRooms = [];
@@ -947,7 +947,9 @@ export default {
                 })
 
                 for (const room of adjoiningRooms) {
-                    if (this.displayedRooms.filter(r => r.name === room.name).length === 0) {
+                    if (this.displayedRooms.filter(r => r.name === room.label).length === 0) {
+                        console.log(this.displayedRooms.filter(r => r.name === room.label).length)
+                        console.log(room.label)
                         room.adjoining = true;
                         this.calendarFilters.rooms.push(room)
                         this.displayedRooms.push(room);
@@ -1074,6 +1076,9 @@ export default {
                     if (this.types.length === 0) {
                         this.types = this.eventTypes
                         this.addFilterableVariable(this.types, false)
+                    }
+                    if(filters.allDayFree === true) {
+                        this.displayedRooms = response.data.events.rooms
                     }
 
                     // color coding of rooms

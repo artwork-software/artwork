@@ -703,7 +703,7 @@ export default {
                 projectName: event.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: event.creatingProject
+                creatingProject: event.creatingProject,
             };
         },
     },

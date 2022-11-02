@@ -223,6 +223,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
 
+    Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
+
     //Trash
     Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');

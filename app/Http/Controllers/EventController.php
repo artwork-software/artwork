@@ -107,20 +107,15 @@ class EventController extends Controller
         return new CalendarEventResource($event);
     }
 
-    public function acceptEvent(EventAcceptionRequest $request, Event $event): CalendarEventResource
+    public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
-        if ($request->get('accepted')) {
-            $event->occupancy_option = $request->get('accepted');
-            $event->save();
-
-            return new CalendarEventResource($event);
+        $event->occupancy_option = false;
+        if (!$request->get('accepted')) {
+            $event->room_id = null;
         }
-
-        $event->occupancy_option = $request->get('accepted');
-        $event->room_id = null;
         $event->save();
 
-        return new CalendarEventResource($event);
+        return Redirect::back();
     }
 
     public function getCollisionCount(Request $request): int

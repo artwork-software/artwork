@@ -915,8 +915,6 @@ export default {
 
             const filters = this.getFilterIds();
 
-            console.log(filters);
-
             await axios
                 .get('/events/', {
                     params: {
@@ -928,7 +926,6 @@ export default {
                     }
                 })
                 .then(response => {
-                    console.log(response.data.events)
                     this.events = response.data.events.events
                     this.projects = response.data.events.projects
                     this.filters = response.data.events.calendarFilters

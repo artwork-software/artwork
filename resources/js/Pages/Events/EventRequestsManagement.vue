@@ -14,7 +14,6 @@
                     <div class="flex flex-wrap">
                         <div v-for="eventRequest in event_requests" class="flex flex-wrap w-full items-center">
                             <div class="flex w-full items-center flex-wrap">
-
                                 <div class="flex items-center w-full mt-4">
                                     <div class=" w-1/4 flex mDark">
                                         {{ eventRequest.room?.name }}:
@@ -411,37 +410,13 @@ export default defineComponent({
             this.requestToDecline = null;
         },
         approveRequest() {
-            this.approveRequestForm.name = this.requestToApprove.name;
-            this.approveRequestForm.start_time = this.requestToApprove.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToApprove.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToApprove.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToApprove.is_loud;
-            this.approveRequestForm.audience = this.requestToApprove.audience;
-            if (this.requestToApprove.room) {
-                this.approveRequestForm.room_id = this.requestToApprove.room.id;
-            }
-            if (this.requestToApprove.project) {
-                this.approveRequestForm.project_id = this.requestToApprove.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToApprove.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToApprove.id}));
+            this.answerRequestForm.accepted = true;
+            this.answerRequestForm.put(route('events.accept', {event: this.requestToApprove.id}));
             this.closeApproveRequestModal();
         },
         declineRequest() {
-            this.approveRequestForm.name = this.requestToDecline.name;
-            this.approveRequestForm.start_time = this.requestToDecline.start_time_dt_local;
-            this.approveRequestForm.end_time = this.requestToDecline.end_time_dt_local;
-            this.approveRequestForm.description = this.requestToDecline.description;
-            this.approveRequestForm.occupancy_option = false;
-            this.approveRequestForm.is_loud = this.requestToDecline.is_loud;
-            this.approveRequestForm.audience = this.requestToDecline.audience;
-            this.approveRequestForm.room_id = null;
-            if (this.requestToDecline.project) {
-                this.approveRequestForm.project_id = this.requestToDecline.project.id;
-            }
-            this.approveRequestForm.event_type_id = this.requestToDecline.event_type.id;
-            this.approveRequestForm.patch(route('events.update', {event: this.requestToDecline.id}));
+            this.answerRequestForm.accepted = false;
+            this.answerRequestForm.put(route('events.accept', {event: this.requestToDecline.id}));
             this.closeDeclineRequestModal();
         }
     },
@@ -451,31 +426,8 @@ export default defineComponent({
             requestToApprove: null,
             showDeclineRequestModal: false,
             requestToDecline: null,
-            approveRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.user.id,
-            }),
-            declineRequestForm: useForm({
-                name: '',
-                start_time: null,
-                end_time: null,
-                description: '',
-                occupancy_option: false,
-                is_loud: false,
-                audience: false,
-                room_id: null,
-                project_id: null,
-                event_type_id: null,
-                user_id: this.$page.props.user.id,
+            answerRequestForm: useForm({
+                accepted: false,
             }),
         }
     },

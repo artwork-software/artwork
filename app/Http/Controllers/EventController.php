@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Builders\EventBuilder;
+use App\Enums\NotificationConstEnum;
 use App\Events\OccupancyUpdated;
 use App\Http\Requests\EventAcceptionRequest;
 use App\Http\Requests\EventIndexRequest;
@@ -30,6 +31,14 @@ use Inertia\Response;
 
 class EventController extends Controller
 {
+
+    protected ?NotificationController $notificationController = null;
+
+    public function __construct()
+    {
+        $this->notificationController = new NotificationController();
+    }
+
     public function viewEventIndex(Request $request): Response
     {
         return inertia('Events/EventManagement', [
@@ -86,6 +95,18 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
+        // init notification data object
+        $notificationData = new \stdClass();
+        $notificationData->event = new \stdClass();
+
+        // create and send notification data
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $notificationData->title = 'Termin hinzugefügt';
+        $notificationData->event->id = $event->id;
+        $notificationData->event->title = $event->eventName;
+        $notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->project->users->all(), $notificationData);
+
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($event);
@@ -105,16 +126,39 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
+        // init notification data object
+        $notificationData = new \stdClass();
+        $notificationData->event = new \stdClass();
+
+        // create and send notification data
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $notificationData->title = 'Termin geändert';
+        $notificationData->event->id = $event->id;
+        $notificationData->event->title = $event->eventName;
+        $notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->project->users->all(), $notificationData);
+
         return new CalendarEventResource($event);
     }
 
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
+        $notificationData = new \stdClass();
+        $notificationData->event = new \stdClass();
         $event->occupancy_option = false;
         if (!$request->get('accepted')) {
+            $notificationData->title = 'Raumanfrage abgelehnt';
             $event->room_id = null;
+        } else {
+            $notificationData->title = 'Raumanfrage bestätigt';
         }
         $event->save();
+
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $notificationData->event->id = $event->id;
+        $notificationData->event->title = $event->eventName;
+        $notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->creator, $notificationData);
 
         return Redirect::back();
     }
@@ -214,10 +258,22 @@ class EventController extends Controller
      */
     public function destroy(Event $event): JsonResponse
     {
+        // init notification object
+        $notificationData = new \stdClass();
+        $notificationData->event = new \stdClass();
+
         $this->authorize('delete', $event);
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
+
+        // create and send notification to event owner
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
+        $notificationData->event->id = $event->id;
+        $notificationData->event->title = $event->eventName;
+        $notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->creator()->get(), $notificationData);
 
         return new JsonResponse(['success' => 'Event moved to trash']);
     }

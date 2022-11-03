@@ -236,5 +236,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/event_types/{event_type}', [EventTypeController::class, 'show'])->name('event_types.show');
     Route::patch('/event_types/{event_type}', [EventTypeController::class, 'update'])->name('event_types.update');
     Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
+
+    // notification
+    Route::get('/notification', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notification.index');
 });
 

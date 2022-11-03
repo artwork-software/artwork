@@ -196,12 +196,12 @@ class EventController extends Controller
         return inertia('Trash/Events', [
             'trashed_events' => Event::onlyTrashed()->get()->map(fn ($event) => [
                 'id' => $event->id,
-                'name' => $event->name,
+                'name' => $event->eventName,
                 'project'=> $event->project,
-                'event_type' => $event->event_type?->name,
+                'event_type' => $event->event_type,
                 'start' => $event->start_time->format('d.m.Y, H:i'),
                 'end' => $event->end_time->format('d.m.Y, H:i'),
-                'room_name' => $event->room?->label
+                'room_name' => $event->room?->label,
             ])
         ]);
     }

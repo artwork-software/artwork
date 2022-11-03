@@ -30,18 +30,23 @@ import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton";
+import {CheckIcon} from "@heroicons/vue/solid";
 
 export default {
     name: 'ConfirmationComponent',
     components: {
         JetDialogModal,
         XIcon,
-        AddButton
+        AddButton,
+        CheckIcon
     },
     props: ['titel', 'description', 'confirm', 'cancel', 'showModal'],
     emits: ['closed'],
     methods: {
         closeModal(bool) {
+            if(bool){
+                this.showCheckButton = true;
+            }
             this.$emit('closed', bool);
         },
     },

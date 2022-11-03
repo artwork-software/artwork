@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -28,10 +29,15 @@ use Illuminate\Support\Facades\Redirect;
 
 class ProjectController extends Controller
 {
+    // init empty notification controller
+    protected ?NotificationController $notificationController = null;
 
     public function __construct()
     {
         $this->authorizeResource(Project::class);
+
+        // init notification controller
+        $this->notificationController = new NotificationController();
     }
 
     /**
@@ -150,6 +156,20 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
+        // init notification data object
+        $notificationData = new \stdClass();
+        $notificationData->project = new \stdClass();
+
+        // create notification data
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+        $notificationData->title = 'Projekt wurde angelegt';
+        $notificationData->project->id = $project->id;
+        $notificationData->project->title = $request->name;
+        $notificationData->created_by = Auth::id();
+
+        // send notification to all project users
+        $this->notificationController->create($project->users->all(), $notificationData);
+
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
@@ -233,7 +253,24 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
     {
+        // init notification system
+        $notificationData = new \stdClass();
+        $notificationData->project = new \stdClass();
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
+
+        // Get project admin and manager before update
+        $adminIdsBefore = [];
+        $managerIdsBefore = [];
+        $projectAdminsBefore = $project->adminUsers()->get();
+        $projectManagerBefore = $project->managerUsers()->get();
+        foreach ($projectAdminsBefore as $adminBefore){
+            $adminIdsBefore[] = $adminBefore->id;
+        }
+        foreach ($projectManagerBefore as $managerBefore){
+            $managerIdsBefore[] = $managerBefore->id;
+        }
 
         // authorization
         if ((! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
@@ -255,6 +292,67 @@ class ProjectController extends Controller
         $project->sectors()->sync($request->projectSectorIds);
         $historyService->updateHistory($project,'Eigenschaften angepasst.');
         $historyService->projectUpdated($project);
+
+        // Get and check project admins and managers after update
+        $adminIdsAfter = [];
+        $projectAdminsAfter = $project->adminUsers()->get();
+        $managerIdsAfter = [];
+        $projectManagerAfter = $project->managerUsers()->get();
+
+        foreach ($projectAdminsAfter as $adminAfter){
+            $adminIdsAfter[] = $adminAfter->id;
+            // if added a new project admin, send notification to this user
+            if(!in_array($adminAfter->id, $adminIdsBefore)){
+                $notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' ernannt';
+                $notificationData->project->id = $project->id;
+                $notificationData->project->title = $project->name;
+                $notificationData->created_by = Auth::id();
+                $this->notificationController->create($adminAfter, $notificationData);
+            }
+        }
+
+        foreach ($projectManagerAfter as $managerAfter){
+            $managerIdsAfter[] = $managerAfter->id;
+            // if added a new project manager, send notification to this user
+            if(!in_array($managerAfter->id, $managerIdsBefore)){
+                $notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' ernannt';
+                $notificationData->project->id = $project->id;
+                $notificationData->project->title = $project->name;
+                $notificationData->created_by = Auth::id();
+                $this->notificationController->create($managerAfter, $notificationData);
+            }
+        }
+
+        // check if user remove as project admin
+        foreach ($adminIdsBefore as $adminBefore){
+            if(!in_array($adminBefore, $adminIdsAfter)){
+                $user = User::find($adminBefore);
+                $notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' entfernt';
+                $notificationData->project->id = $project->id;
+                $notificationData->project->title = $project->name;
+                $notificationData->created_by = Auth::id();
+                $this->notificationController->create($user, $notificationData);
+            }
+        }
+
+        // check if user remove as project manager
+        foreach ($managerIdsBefore as $managerBefore){
+            if(!in_array($managerBefore, $managerIdsAfter)){
+                $user = User::find($managerBefore);
+                $notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' entfernt';
+                $notificationData->project->id = $project->id;
+                $notificationData->project->title = $project->name;
+                $notificationData->created_by = Auth::id();
+                $this->notificationController->create($user, $notificationData);
+            }
+        }
+
+        // Send notification to all project users if project updated
+        $notificationData->title = 'Es gab Änderungen an';
+        $notificationData->project->id = $project->id;
+        $notificationData->project->title = $project->name;
+        $notificationData->created_by = Auth::id();
+        $this->notificationController->create($project->users->all(), $notificationData);
 
         return Redirect::back();
     }
@@ -324,6 +422,20 @@ class ProjectController extends Controller
         foreach ($project->checklists() as $checklist) {
             $checklist->tasks()->delete();
         }
+
+        // init notification data object
+        $notificationData = new \stdClass();
+        $notificationData->project = new \stdClass();
+
+        //create notification data
+        $notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+        $notificationData->title = 'Projekt ' . $project->name . ' wurde gelöscht';
+        $notificationData->project->id = $project->id;
+        $notificationData->project->title = $project->name;
+        $notificationData->created_by = Auth::id();
+
+        // send notification to all users in project
+        $this->notificationController->create($project->users->all(), $notificationData);
 
         $project->checklists()->delete();
 

@@ -1,5 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
+    <jet-dialog-modal :show="showModal" @close="closeModal(false)">
         <template #content>
             <img v-if="mode === 'warning'" src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <img v-else src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
@@ -47,6 +47,7 @@ export default {
     methods: {
         closeModal(bool) {
             this.showCheckButton = true;
+            this.showModal = false;
             this.$emit('closed', bool);
         },
     },

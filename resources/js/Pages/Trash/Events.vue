@@ -4,11 +4,12 @@
         <div class="flex mt-2 w-full ml-4 flex-wrap p-4">
             <div class="flex justify-between w-full">
                 <div class="my-auto">
-                    <p class="text-2xl leading-6 font-bold font-lexend text-gray-900" v-if="!event.name">
+                    <p class="headline2" v-if="!event.name">
                         {{ event.project?.name || "Termin ohne Name" }}
                     </p>
+
                     <div v-else class="flex w-full items-center justify-between">
-                        <div class="mr-12 text-2xl leading-6 font-bold font-lexend text-primary">
+                        <div class="mr-12 headline2">
                             {{ event.name}}
                         </div>
                         <div v-if="event.project" class="mt-1.5 flex">
@@ -20,12 +21,14 @@
                             </a>
                         </div>
                     </div>
-                    <p class="text-sm leading-6 font-lexend text-gray-500 mt-2">
+                    <p class="xsLight subpixel-antialiased mt-2">
                         {{ event.start }} - {{ event.end }}
                     </p>
-                    <p class="text-sm leading-6 font-lexend text-gray-500 mt-2">
-                        {{ event.event_type }}
-                    </p>
+                    <div class="text-sm leading-6 font-lexend text-gray-500 mt-2 flex">
+                        <EventTypeIconCollection :height="12" :width="12"
+                                                 :iconName="event.event_type.svg_name"/>
+                        <p class="ml-1">{{ event.event_type.name }}</p>
+                    </div>
                 </div>
                 <div class="flex items-center">
                     <Menu as="div" class="my-auto relative">
@@ -88,6 +91,7 @@ import {ChevronDownIcon, ChevronUpIcon, DotsVerticalIcon, RefreshIcon} from "@he
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {TrashIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
+import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 
 export default {
     name: "Events",
@@ -97,7 +101,7 @@ export default {
         ChevronDownIcon,
         ChevronUpIcon,
         Menu, MenuButton, DotsVerticalIcon,
-        MenuItems,MenuItem, RefreshIcon, TrashIcon, Link
+        MenuItems,MenuItem, RefreshIcon, TrashIcon, Link,EventTypeIconCollection
     },
     data() {
         return {

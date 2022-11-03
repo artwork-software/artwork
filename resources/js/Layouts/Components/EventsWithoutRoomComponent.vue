@@ -443,8 +443,8 @@
     <confirmation-component
         v-if="deleteComponentVisible"
         confirm="Löschen"
-        titel="Event löschen"
-        :description="'Bist du sicher, dass du ' + this.eventToDelete.title + ' aus dem System löschen möchtest?'"
+        titel="Termin löschen"
+        :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.title + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
         @closed="afterConfirm"/>
 
 </template>

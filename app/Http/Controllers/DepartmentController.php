@@ -21,13 +21,18 @@ use Inertia\ResponseFactory;
 class DepartmentController extends Controller
 {
     protected ?NotificationController $notificationController = null;
+    protected ?\stdClass $notificationData = null;
+
 
     public function __construct()
     {
         $this->authorizeResource(Department::class);
 
-        // init notification controller
+        // init notification system
         $this->notificationController = new NotificationController();
+        $this->notificationData = new \stdClass();
+        $this->notificationData->team = new \stdClass();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
     }
 
     public function search(SearchRequest $request)
@@ -87,17 +92,12 @@ class DepartmentController extends Controller
                 })
         );
 
-        // init notification data object
-        $notificationData = new \stdClass();
-        $notificationData->team = new \stdClass();
-
         // create and send notification data
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
-        $notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
-        $notificationData->room->id = $department->id;
-        $notificationData->team->title = $department->name;
-        $notificationData->created_by = Auth::id();
-        $this->notificationController->create($department->users->all(), $notificationData);
+        $this->notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
+        $this->notificationData->team->id = $department->id;
+        $this->notificationData->team->title = $department->name;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($department->users->all(), $this->notificationData);
 
         broadcast(new DepartmentUpdated())->toOthers();
 
@@ -140,19 +140,12 @@ class DepartmentController extends Controller
      */
     public function update(Request $request, Department $department)
     {
-
-        // init notification data object
-        $notificationData = new \stdClass();
-        $notificationData->team = new \stdClass();
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
-
         // get team member before update
         $teamIdsBefore = [];
         $teamMemberBefore = $department->users()->get();
         foreach ($teamMemberBefore as $memberBefore){
             $teamIdsBefore[] = $memberBefore->id;
         }
-        //
 
         $department->update($request->only('name', 'svg_name'));
 
@@ -173,11 +166,11 @@ class DepartmentController extends Controller
             $teamIdsAfter[] = $memberAfter->id;
             // send notification to new team member
             if(!in_array($memberAfter->id, $teamIdsBefore)){
-                $notificationData->title = 'Du wurdest zum Team "' . $department->name . '" hinzugefügt';
-                $notificationData->team->id = $department->id;
-                $notificationData->team->title = $department->name;
-                $notificationData->created_by = Auth::id();
-                $this->notificationController->create($memberAfter, $notificationData);
+                $this->notificationData->title = 'Du wurdest zum Team "' . $department->name . '" hinzugefügt';
+                $this->notificationData->team->id = $department->id;
+                $this->notificationData->team->title = $department->name;
+                $this->notificationData->created_by = Auth::id();
+                $this->notificationController->create($memberAfter, $this->notificationData);
             }
         }
 
@@ -185,11 +178,11 @@ class DepartmentController extends Controller
             // send notification to removed team member
             if(!in_array($teamMemberBefore, $teamIdsAfter)){
                 $user = User::find($teamMemberBefore);
-                $notificationData->title = 'Du wurdest aus dem Team "' . $department->name . '" entfernt';
-                $notificationData->team->id = $department->id;
-                $notificationData->team->title = $department->name;
-                $notificationData->created_by = Auth::id();
-                $this->notificationController->create($user, $notificationData);
+                $this->notificationData->title = 'Du wurdest aus dem Team "' . $department->name . '" entfernt';
+                $this->notificationData->team->id = $department->id;
+                $this->notificationData->team->title = $department->name;
+                $this->notificationData->created_by = Auth::id();
+                $this->notificationController->create($user, $this->notificationData);
             }
         }
 
@@ -206,6 +199,14 @@ class DepartmentController extends Controller
      */
     public function destroy(Department $department)
     {
+        // create and send notification data
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
+        $this->notificationData->title = 'Team "' . $department->name . '" wurde gelöscht';
+        $this->notificationData->team->id = $department->id;
+        $this->notificationData->team->title = $department->name;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($department->users->all(), $this->notificationData);
+
         $department->delete();
 
         broadcast(new DepartmentUpdated())->toOthers();

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
@@ -24,6 +25,17 @@ use Illuminate\Support\Facades\Redirect;
 
 class RoomController extends Controller
 {
+    // init notification system
+    protected ?NotificationController $notificationController = null;
+    protected ?\stdClass $notificationData = null;
+
+    public function __construct()
+    {
+        $this->notificationController = new NotificationController();
+        $this->notificationData = new \stdClass();
+        $this->notificationData->room = new \stdClass();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM;
+    }
 
     /**
      * @param Request $request
@@ -101,6 +113,13 @@ class RoomController extends Controller
 
         $room->categories()->sync(collect($request->room_categories)->pluck("id"));
 
+        // create and send notification data
+        $this->notificationData->title = 'Raum "' . $room->name .'" wurde angelegt';
+        $this->notificationData->room->id = $room->id;
+        $this->notificationData->room->title = $room->name;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create(Auth::user(), $this->notificationData);
+
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
@@ -142,8 +161,15 @@ class RoomController extends Controller
      * @param Room $room
      * @return RedirectResponse
      */
-    public function update(Request $request, Room $room)
+    public function update(Request $request, Room $room): RedirectResponse
     {
+        // get room admins before update
+        $roomAdminIdsBefore = [];
+        $roomAdminsBefore = $room->room_admins()->get();
+        foreach ($roomAdminsBefore as $roomAdminBefore){
+            $roomAdminIdsBefore[] = $roomAdminBefore->id;
+        }
+
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
         $room->room_admins()->sync(
@@ -156,10 +182,42 @@ class RoomController extends Controller
         );
 
         $room->adjoining_rooms()->sync($request->adjoining_rooms);
-
         $room->attributes()->sync($request->room_attributes);
-
         $room->categories()->sync($request->room_categories);
+
+        // Get and check project admins and managers after update
+        $roomAdminIdsAfter = [];
+        $roomAdminsAfter = $room->room_admins()->get();
+
+        foreach ($roomAdminsAfter as $roomAdminAfter){
+            $roomAdminIdsAfter[] = $roomAdminAfter->id;
+            // if added a new room admin, send notification to this user
+            if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
+                $this->notificationData->title = 'Du wurdest zum Raum Admin von "' . $room->name . '" ernannt';
+                $this->notificationData->room->id = $room->id;
+                $this->notificationData->room->title = $room->name;
+                $this->notificationData->created_by = Auth::id();
+                $this->notificationController->create($roomAdminAfter, $this->notificationData);
+            }
+        }
+
+        // check if user remove as room admin
+        foreach ($roomAdminIdsBefore as $roomAdminBefore){
+            if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
+                $user = User::find($roomAdminBefore);
+                $this->notificationData->title = 'Du wurdest als Raum Admin von "' . $room->name . '" entfernt';
+                $this->notificationData->room->id = $room->id;
+                $this->notificationData->room->title = $room->name;
+                $this->notificationData->created_by = Auth::id();
+                $this->notificationController->create($user, $this->notificationData);
+            }
+        }
+
+        $this->notificationData->title = 'Änderungen an "'. $room->name . '"';
+        $this->notificationData->room->id = $room->id;
+        $this->notificationData->room->title = $room->name;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);
 
         return Redirect::back()->with('success', 'Room updated');
     }
@@ -218,6 +276,12 @@ class RoomController extends Controller
      */
     public function destroy(Room $room)
     {
+        $this->notificationData->title = 'Raum "' . $room->name . '" wurde gelöscht';
+        $this->notificationData->room->id = $room->id;
+        $this->notificationData->room->title = $room->name;
+        $this->notificationData->created_by = Auth::id();
+        //$this->notificationController->create($room->creator()->get(), $this->notificationData);
+        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);
         $room->delete();
 
         return Redirect::route('areas.management')->with('success', 'Room moved to trash');

@@ -122,7 +122,7 @@ class EventController extends Controller
         $this->notificationData->event->id = $event->id;
         $this->notificationData->event->title = $event->eventName;
         $this->notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->project->users->all(), $this->notificationData);
+        $this->notificationController->create($event->creator, $this->notificationData);
 
         broadcast(new OccupancyUpdated())->toOthers();
 

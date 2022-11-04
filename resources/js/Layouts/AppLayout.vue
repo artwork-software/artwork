@@ -85,11 +85,11 @@
                                     <span class="hind">Hilfe einblenden </span>
                                 </span>
                         </div>
-                        <button v-if="false" type="button"
+                        <Link :href="route('notifications.index')" type="button"
                             class="p-1 rounded-full text-black hover:text-primaryText focus:outline-none">
                             <span class="sr-only">View notifications</span>
                             <BellIcon class="h-6 w-6" aria-hidden="true"/>
-                        </button>
+                        </Link>
                         <Menu as="div" class="ml-3 relative">
                             <div>
                                 <MenuButton @click="showUserMenu = !showUserMenu"

@@ -8,34 +8,34 @@
                 </div>
             </div>
         </div>
-        <div class="ml-12 mt-10">
-            <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
-                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center" id="myTab" data-tabs-toggle="#myTabContent" role="tablist">
+        <div class="ml-12 mt-8">
+            <div class="mb-4 border-gray-200 dark:border-gray-700">
+                <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2" role="presentation">
-                        <button class="inline-block p-4 rounded-t-lg border-b-2" id="profile-tab" data-tabs-target="#profile" type="button" role="tab" aria-controls="profile" aria-selected="false">BENACHRICHTIGUNGEN</button>
+                        <button :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"  @click="openTab = 'notifications'">BENACHRICHTIGUNGEN</button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="dashboard-tab" data-tabs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="false">E-MAIL-EINSTELLUNGEN</button>
+                        <button :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']" @click="openTab = 'mailSettings'">E-MAIL-EINSTELLUNGEN</button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button class="inline-block p-4 rounded-t-lg border-b-2 border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300" id="settings-tab" data-tabs-target="#settings" type="button" role="tab" aria-controls="settings" aria-selected="false">PUSH-EINSTELLUNGEN</button>
+                        <button :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']" @click="openTab = 'pushSettings'">PUSH-EINSTELLUNGEN</button>
                     </li>
                 </ul>
             </div>
             <div id="myTabContent">
-                <div class="hidden p-4" id="profile" role="tabpanel" aria-labelledby="profile-tab">
+                <div v-if="openTab === 'notifications'">
                     <div v-for="notification in notifications">
                         <pre>
                             {{ notification }}
                         </pre>
                     </div>
                 </div>
-                <div class="hidden p-4" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                <div v-if="openTab === 'mailSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
 
                     </p>
                 </div>
-                <div class="hidden p-4" id="settings" role="tabpanel" aria-labelledby="settings-tab">
+                <div v-if="openTab === 'pushSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
 
                     </p>
@@ -139,7 +139,7 @@ export default defineComponent({
     },
     data() {
         return {
-
+            openTab: 'notifications',
         }
     },
     setup() {

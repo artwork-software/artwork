@@ -32,7 +32,7 @@ class NotificationController extends Controller
         foreach ($user->notifications as $notification){
             $output[$notification->type][] = $notification;
         }
-        return inertia('Notification/Show', [
+        return inertia('Notifications/Show', [
             'notifications' => $output
         ]);
     }

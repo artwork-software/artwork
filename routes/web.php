@@ -12,6 +12,7 @@ use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
 use App\Http\Controllers\RoomAttributeController;
@@ -238,6 +239,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/event_types/{event_type}', [EventTypeController::class, 'destroy']);
 
     // notification
-    Route::get('/notification', [\App\Http\Controllers\NotificationController::class, 'index'])->name('notification.index');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 });
 

@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Models\User;
+use App\Notifications\ConflictNotification;
 use App\Notifications\EventNotification;
 use App\Notifications\GlobalUserNotification;
 use App\Notifications\ProjectNotification;
+use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use App\Notifications\SimpleNotification;
 use App\Notifications\TaskNotification;
@@ -114,6 +116,27 @@ class NotificationController extends Controller
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new TeamNotification($notificationBody));
+                break;
+            case NotificationConstEnum::NOTIFICATION_ROOM:
+                $notificationBody = [
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'room' => [
+                        'id' => $notificationData->room->id,
+                        'title' => $notificationData->room->title,
+                    ],
+                    'created_by' => $notificationData->created_by
+                ];
+                Notification::send($user, new RoomNotification($notificationBody));
+                break;
+            case NotificationConstEnum::NOTIFICATION_CONFLICT:
+                $notificationBody = [
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'conflict' => $notificationData->conflict,
+                    'created_by' => $notificationData->created_by
+                ];
+                Notification::send($user, new ConflictNotification($notificationBody));
                 break;
         }
     }

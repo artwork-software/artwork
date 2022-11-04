@@ -19,6 +19,7 @@ use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Task;
+use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
@@ -33,10 +34,16 @@ class EventController extends Controller
 {
 
     protected ?NotificationController $notificationController = null;
+    protected ?\stdClass $notificationData = null;
+    protected ?CollisionService $collisionService = null;
 
     public function __construct()
     {
+        $this->collisionService = new CollisionService();
         $this->notificationController = new NotificationController();
+        $this->notificationData = new \stdClass();
+        $this->notificationData->event = new \stdClass();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
     }
 
     public function viewEventIndex(Request $request): Response
@@ -84,8 +91,23 @@ class EventController extends Controller
     {
         $this->authorize('create', Event::class);
 
+
+        // check if any event in collision. If any event has collision send notification to user
+        if($this->collisionService->getCollisionCount($request)->count() > 0){
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+            $this->notificationData->title = 'Terminkonflikt';
+            $this->notificationData->conflict = new \stdClass();
+            $this->notificationData->conflict = $this->collisionService->getConflictEvents($request);
+            $this->notificationData->created_by = Auth::id();
+            $this->notificationController->create(Auth::user(), $this->notificationData);
+            // reset notification type to event notification
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        }
+
         /** @var Event $event */
         $event = Event::create($request->data());
+
+
 
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
@@ -95,23 +117,25 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
-        // init notification data object
-        $notificationData = new \stdClass();
-        $notificationData->event = new \stdClass();
-
         // create and send notification data
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
-        $notificationData->title = 'Termin hinzugefügt';
-        $notificationData->event->id = $event->id;
-        $notificationData->event->title = $event->eventName;
-        $notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->project->users->all(), $notificationData);
+        $this->notificationData->title = 'Termin hinzugefügt';
+        $this->notificationData->event->id = $event->id;
+        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->project->users->all(), $this->notificationData);
 
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($event);
     }
 
+    /**
+     * @param EventUpdateRequest $request
+     * @param Event $event
+     * @param HistoryService $historyService
+     * @return CalendarEventResource
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     public function updateEvent(EventUpdateRequest $request, Event $event, HistoryService $historyService): CalendarEventResource
     {
         $this->authorize('update', $event);
@@ -126,39 +150,31 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
-        // init notification data object
-        $notificationData = new \stdClass();
-        $notificationData->event = new \stdClass();
-
         // create and send notification data
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
-        $notificationData->title = 'Termin geändert';
-        $notificationData->event->id = $event->id;
-        $notificationData->event->title = $event->eventName;
-        $notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->project->users->all(), $notificationData);
+        $this->notificationData->title = 'Termin geändert';
+        $this->notificationData->event->id = $event->id;
+        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->project->users->all(), $this->notificationData);
 
         return new CalendarEventResource($event);
     }
 
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
-        $notificationData = new \stdClass();
-        $notificationData->event = new \stdClass();
         $event->occupancy_option = false;
         if (!$request->get('accepted')) {
-            $notificationData->title = 'Raumanfrage abgelehnt';
+            $this->notificationData->title = 'Raumanfrage abgelehnt';
             $event->room_id = null;
         } else {
-            $notificationData->title = 'Raumanfrage bestätigt';
+            $this->notificationData->title = 'Raumanfrage bestätigt';
         }
         $event->save();
 
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
-        $notificationData->event->id = $event->id;
-        $notificationData->event->title = $event->eventName;
-        $notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->creator, $notificationData);
+        $this->notificationData->event->id = $event->id;
+        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->creator, $this->notificationData);
 
         return Redirect::back();
     }
@@ -258,22 +274,17 @@ class EventController extends Controller
      */
     public function destroy(Event $event): JsonResponse
     {
-        // init notification object
-        $notificationData = new \stdClass();
-        $notificationData->event = new \stdClass();
-
         $this->authorize('delete', $event);
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
 
         // create and send notification to event owner
-        $notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
-        $notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
-        $notificationData->event->id = $event->id;
-        $notificationData->event->title = $event->eventName;
-        $notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->creator()->get(), $notificationData);
+        $this->notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
+        $this->notificationData->event->id = $event->id;
+        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->created_by = Auth::id();
+        $this->notificationController->create($event->creator()->get(), $this->notificationData);
 
         return new JsonResponse(['success' => 'Event moved to trash']);
     }

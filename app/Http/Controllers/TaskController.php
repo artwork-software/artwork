@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
@@ -17,6 +18,16 @@ use Illuminate\Support\Facades\Redirect;
 
 class TaskController extends Controller
 {
+    protected ?NotificationController $notificationController = null;
+    protected ?\stdClass $notificationData = null;
+
+    public function __construct()
+    {
+        $this->notificationController = new NotificationController();
+        $this->notificationData = new \stdClass();
+        $this->notificationData->event = new \stdClass();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+    }
     /**
      * Show the form for creating a new resource.
      *

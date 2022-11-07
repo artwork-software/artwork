@@ -119,8 +119,7 @@ class EventController extends Controller
 
         // create and send notification data
         $this->notificationData->title = 'Termin hinzugefügt';
-        $this->notificationData->event->id = $event->id;
-        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->event = $event;
         $this->notificationData->created_by = Auth::id();
         $this->notificationController->create($event->creator, $this->notificationData);
 
@@ -152,8 +151,7 @@ class EventController extends Controller
 
         // create and send notification data
         $this->notificationData->title = 'Termin geändert';
-        $this->notificationData->event->id = $event->id;
-        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->event = $event;
         $this->notificationData->created_by = Auth::id();
         $this->notificationController->create($event->project->users->all(), $this->notificationData);
 
@@ -171,6 +169,7 @@ class EventController extends Controller
         }
         $event->save();
 
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->event->id = $event->id;
         $this->notificationData->event->title = $event->eventName;
         $this->notificationData->created_by = Auth::id();
@@ -281,8 +280,7 @@ class EventController extends Controller
 
         // create and send notification to event owner
         $this->notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
-        $this->notificationData->event->id = $event->id;
-        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->event = $event;
         $this->notificationData->created_by = Auth::id();
         $this->notificationController->create($event->creator()->get(), $this->notificationData);
 

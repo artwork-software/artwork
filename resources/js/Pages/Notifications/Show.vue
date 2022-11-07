@@ -12,22 +12,65 @@
             <div class="mb-4 border-gray-200 dark:border-gray-700">
                 <ul class="flex flex-wrap -mb-px text-sm font-medium text-center">
                     <li class="mr-2" role="presentation">
-                        <button :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"  @click="openTab = 'notifications'">BENACHRICHTIGUNGEN</button>
+                        <button
+                            :class="[openTab === 'notifications' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
+                            @click="openTab = 'notifications'">BENACHRICHTIGUNGEN
+                        </button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']" @click="openTab = 'mailSettings'">E-MAIL-EINSTELLUNGEN</button>
+                        <button
+                            :class="[openTab === 'mailSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
+                            @click="openTab = 'mailSettings'">E-MAIL-EINSTELLUNGEN
+                        </button>
                     </li>
                     <li class="mr-2" role="presentation">
-                        <button :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']" @click="openTab = 'pushSettings'">PUSH-EINSTELLUNGEN</button>
+                        <button
+                            :class="[openTab === 'pushSettings' ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'py-4 px-2 border-b-2 font-semibold']"
+                            @click="openTab = 'pushSettings'">PUSH-EINSTELLUNGEN
+                        </button>
                     </li>
                 </ul>
             </div>
-            <div id="myTabContent">
-                <div v-if="openTab === 'notifications'">
-                    <div v-for="notification in notifications">
-                        <pre>
-                            {{ notification }}
-                        </pre>
+            <div class="">
+                <div class="flex" v-if="openTab === 'notifications'">
+                    <button class="bg-buttonBlue flex relative w-6"
+                            @click="showRoomsAndEvents = !showRoomsAndEvents">
+                        <ChevronUpIcon v-if="showRoomsAndEvents"
+                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                        <ChevronDownIcon v-else
+                                         class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                    </button>
+                    <div class="flex flex-wrap w-11/12 border border-2 border-gray-300">
+                        <div class="flex justify-between w-full mb-6 ml-12">
+                            <div class="flex headline2 my-10">
+                                Raumbelegungen & Termine
+                            </div>
+                            <div class="flex justify-end xsLight mr-8 my-10">
+                                alle archivieren
+                            </div>
+                        </div>
+                        <div class="flex border-t-2 border-b-2 mx-12 py-8" v-if="showRoomsAndEvents"
+                             v-for="notification in notifications">
+                            <div class="flex">
+                                <EventTypeIconCollection :height="32" :width="32"
+                                                         iconName="eventType0"/>
+                                <div class="flex">
+                                    <div class="sDark">
+                                        {{ notification[0].data.title }}
+                                    </div>
+                                    <div class="xsLight">
+                                        <!-- HIER FEHLT NOCH CREATED_AT? und dann Design umsetzen -->
+                                        {{ notification[0].data.event.created_at }}
+                                    </div>
+                                </div>
+                                <div>
+
+                                </div>
+                            </div>
+                            <div>
+                                {{ notification[0].data }}
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div v-if="openTab === 'mailSettings'">
@@ -87,6 +130,7 @@ import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 
 
 export default defineComponent({
@@ -124,28 +168,23 @@ export default defineComponent({
         TrashIcon,
         XCircleIcon,
         Link,
-        InputComponent
+        InputComponent,
+        EventTypeIconCollection
     },
     props: ['notifications'],
     created() {
 
     },
-    methods: {
-
-    },
-    watch: {
-
-
-    },
+    methods: {},
+    watch: {},
     data() {
         return {
             openTab: 'notifications',
+            showRoomsAndEvents: true,
         }
     },
     setup() {
-        return {
-
-        }
+        return {}
     }
 })
 </script>

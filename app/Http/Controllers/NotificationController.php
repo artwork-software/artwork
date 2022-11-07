@@ -65,10 +65,7 @@ class NotificationController extends Controller
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => [
-                        'id' => $notificationData->event->id,
-                        'title' => $notificationData->event->title,
-                    ],
+                    'event' => $notificationData->event,
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new EventNotification($notificationBody));

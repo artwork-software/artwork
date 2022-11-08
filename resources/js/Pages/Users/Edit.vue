@@ -54,7 +54,7 @@
 
                                     <div class="sm:col-span-6">
                                         <div class="mt-1">
-                                            <textarea placeholder="Was sollten die anderen ArtWork.tool-User wissen?"
+                                            <textarea placeholder="Was sollten die anderen artwork-User wissen?"
                                                       v-model="userForm.description" rows="5"
                                                       class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border border-gray-300"/>
                                         </div>

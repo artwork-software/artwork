@@ -56,10 +56,10 @@
                     </button>
                 </div>
 
-                <button @click="submitDepartments"
-                    class="mt-8 px-12 py-3 bg-primary hover:bg-primaryHover font-bold text-lg uppercase text-white">
-                    Zuweisen
-                </button>
+                <AddButton @click="submitDepartments"
+                           text="Zuweisen"
+                           mode="modal"
+                    class="mt-8 px-12 py-3" />
 
                 <!-- <p v-if="error" class="text-red-800 text-xs">{{ error }}</p> -->
             </div>
@@ -72,6 +72,7 @@
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
+import AddButton from "@/Layouts/Components/AddButton";
 
 export default {
     name: 'ChecklistTeamComponent',
@@ -81,6 +82,7 @@ export default {
         XCircleIcon,
         TeamIconCollection,
         JetDialogModal,
+        AddButton
     },
 
     emits: ['closed'],

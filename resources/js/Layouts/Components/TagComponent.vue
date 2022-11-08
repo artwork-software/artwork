@@ -1,7 +1,6 @@
 <template>
 <span class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
-    <img v-if="icon === 'audience'" src="/Svgs/IconSvgs/icon_public.svg" class=" h-6 w-6 mx-2" alt="audienceIcon"/>
-    <img v-if="icon === 'loud'" src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
+    <img v-if="icon === 'audience'" src="/Svgs/IconSvgs/icon_public_buttonBlue.svg" class=" h-6 w-6 mx-2" alt="audienceIcon"/>
     {{ displayedText }}
     <button v-if="!hideX" type="button" @click="this.method(property)">
         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>

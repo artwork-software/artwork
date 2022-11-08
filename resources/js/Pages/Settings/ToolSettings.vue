@@ -5,7 +5,7 @@
             <div>
                 <h2 class="headline1 mb-2">Tooleinstellungen</h2>
                 <div class="headline3Light">
-                    Definiere globale Einstellungen für dein ArtWork tool.
+                    Definiere globale Einstellungen für dein artwork.
                 </div>
             </div>
 
@@ -13,9 +13,9 @@
                 <div class="mt-12 max-w-2xl">
                     <h2 class="headline2 my-2">Branding</h2>
                     <div class="xsLight">
-                        Damit dein ArtWork tool eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine
+                        Damit dein artwork eindeutig deinem Unternehmen zugeordnet werden kann, lade hier deine
                         eigenen
-                        ArtWork tool Logos und deine Login-Illustration hoch.
+                        artwork Logos und deine Login-Illustration hoch.
                     </div>
                 </div>
 
@@ -38,7 +38,7 @@
                                @change="updateBigLogoPreview">
                         <div class="flex my-auto h-40 items-center xsLight"
                              v-if="$page.props.big_logo === null && bigLogoPreview === null">
-                            Ziehe hier dein großes <br/> ArtWork tool Logo hin
+                            Ziehe hier dein großes <br/> artwork Logo hin
                         </div>
                         <div class="cursor-pointer" v-else-if="!bigLogoPreview">
                             <img :src="$page.props.big_logo" alt="Logo"
@@ -71,7 +71,7 @@
                                @change="updateSmallLogoPreview">
                         <div class="xsLight flex my-auto h-40 items-center"
                              v-if="$page.props.small_logo === null && smallLogoPreview === null">
-                            Ziehe hier dein kleines <br/> ArtWork tool Logo hin
+                            Ziehe hier dein kleines <br/> artwork Logo hin
 
                         </div>
                         <div class="cursor-pointer" v-else-if="!smallLogoPreview">
@@ -126,8 +126,7 @@
                 </div>
 
                 <div class="mt-6 items-center">
-                    <AddButton @click.prevent="changeLogos" class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                                        font-bold text-lg shadow-sm text-secondaryHover"
+                    <AddButton @click.prevent="changeLogos"
                     text="Änderungen speichern" mode="modal"/>
                 </div>
             </form>
@@ -166,8 +165,7 @@
                     </div>
                 </div>
                 <div class="mt-4 items-center">
-                    <AddButton @click.prevent="changeEmailData" class="border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                                        font-bold text-lg shadow-sm text-secondaryHover"
+                    <AddButton @click.prevent="changeEmailData"
                                text="Änderungen speichern" mode="modal"/>
                 </div>
 

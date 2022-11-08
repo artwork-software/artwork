@@ -93,7 +93,7 @@
                                     <div class="sm:col-span-6">
                                         <div class="mt-1">
                                             <textarea
-                                                placeholder="Was sollten die anderen ArtWork.tool-User über dich wissen?"
+                                                placeholder="Was sollten die anderen artwork-User über dich wissen?"
                                                 v-model="userForm.description" rows="3"
                                                 class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 w-full font-semibold border border-gray-300 "/>
                                         </div>
@@ -116,8 +116,7 @@
                         <div class="pt-5">
                             <div class="mt-2 items-center">
                                 <AddButton v-if="!showSuccess" type="submit"
-                                    class="mt-8 inline-flex items-center px-10 py-3 border focus:outline-none
-                                         border-transparent text-base font-bold text-lg tracking-wider shadow-sm text-secondaryHover"
+                                    class="mt-8 px-10 py-3"
                                     text="Profiländerungen speichern" mode="modal"
                                 />
                                 <button v-else type="submit"
@@ -211,8 +210,7 @@
                         </jet-action-message>
                     </div>
                     <AddButton @click="updatePassword"
-                        class="px-10 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent
-                            font-bold text-lg shadow-sm text-secondaryHover mt-4"
+                        class="px-10 py-3 mt-4"
                         text="Passwort ändern"
                         mode="modal"
                     />
@@ -245,18 +243,17 @@
                             </div>
                         </div>
                         <div class="flex mt-4" :class="photoPreview ? 'ml-3' : ''">
-                            <button
-                                class="my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
-                                type="button"
-                                @click.prevent="selectNewPhoto">
-                                Datei auswählen
-                            </button>
-                            <button type="button"
-                                class=" ml-3 my-auto inline-flex items-center px-3 py-3 text-base border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-sm uppercase shadow-sm text-secondaryHover"
+                            <AddButton
+                                class="my-auto px-3 py-3"
+                                text="Datei auswählen"
+                                mode="modal"
+                                @click.prevent="selectNewPhoto"/>
+                            <AddButton
+                                class=" ml-3 my-auto px-3 py-3"
                                 @click.prevent="deletePhoto"
-                                v-if="user.profile_photo_path">
-                                Aktuelles Profilbild löschen
-                            </button>
+                                text="Aktuelles Profilbild löschen"
+                                mode="modal"
+                                v-if="user.profile_photo_path" />
                         </div>
                     </div>
 
@@ -264,11 +261,11 @@
 
                     <jet-input-error :message="userForm.errors.photo" class="mt-2"/>
                     <div class="mt-6">
-                        <button
-                            class="inline-flex items-center px-8 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-lg uppercase shadow-sm text-secondaryHover"
-                            @click="validateTypeAndChange">
-                            Neues Profilbild speichern
-                        </button>
+                        <AddButton
+                            class="px-8 py-3"
+                            text="Neues Profilbild speichern"
+                            mode="modal"
+                            @click="validateTypeAndChange" />
                     </div>
                 </div>
 
@@ -287,7 +284,7 @@
                         class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                         aria-hidden="true"/>
                     <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du dein ArtWork-Konto endgültig löschen möchtest? Sämtliche Einstellungen
+                        Bist du sicher, dass du dein artwork-Konto endgültig löschen möchtest? Sämtliche Einstellungen
                         gehen verloren.
                     </div>
                     <div class="flex justify-between mt-6">

@@ -167,7 +167,7 @@
                                                 <input v-model="event.audience"
                                                        :disabled="!event.canEdit"
                                                        type="checkbox"
-                                                       class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                                       class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
                                                 <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
                                                      alt="audienceIcon"/>
 
@@ -180,11 +180,9 @@
                                                 <input v-model="event.isLoud"
                                                        :disabled="!event.canEdit"
                                                        type="checkbox"
-                                                       class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                                                <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2"
-                                                     alt="isLoudIcon"/>
+                                                       class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
                                                 <div
-                                                    :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased']">
+                                                    :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
                                                     Es
                                                     wird laut
                                                 </div>
@@ -196,7 +194,7 @@
                             <!--    Properties    -->
                             <div class="flex py-2">
                                 <div v-if="event.audience">
-                                    <TagComponent displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                                    <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
                                 </div>
                                 <div v-if="event.isLoud">
                                     <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
@@ -409,10 +407,10 @@
                             </div>
                             <div class="my-2">
                                 <div class="flex" v-if="event.startDate === event.endDate">
-                                    <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error line-through">
-                                        {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
-                                    </p>
-                                    <div class="xsDark">
+                                    <div class="xsDark flex">
+                                        <p v-if="this.rooms.find(room => room.id === event.declinedRoomId)" class="text-error mr-1 line-through">
+                                            {{ this.rooms.find(room => room.id === event.declinedRoomId)?.name }},
+                                        </p>
                                     {{ event.startDate.toString().substring(10, 8) }}.{{ event.startDate.toString().substring(7, 5) }}.{{ event.startDate.toString().substring(4, 0) }},
                                     {{ event.startTime }} - {{ event.endTime }}
                                     </div>

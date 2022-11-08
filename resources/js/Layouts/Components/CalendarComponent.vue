@@ -2,9 +2,9 @@
 
     <div class="mt-10 ml-12 flex justify-between items-center w-[95%]">
         <div class="inline-flex mb-5">
-            <Menu as="div" class="relative inline-block text-left w-auto">
+            <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
-                    <MenuButton
+                    <MenuButton  id="menuButton"
                         class="-mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2"/>
@@ -25,7 +25,7 @@
                 >
                     <MenuItems
                         class="absolute left mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
-                        <button @click="$refs.vuecal.switchView('day', new Date()); this.selectedDate = new Date()"
+                        <button @click="$refs.vuecal.switchView('day', new Date()); this.selectedDate = new Date();"
                                 class="w-full mt-2 text-left pl-2"
                                 :class="currentView === 'day' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
                             <label class="text-sm">
@@ -428,7 +428,6 @@
             show-week-numbers
             :hideTitleBar="currentView !== 'year'"
 
-            :click-to-navigate="true"
             sticky-split-labels
             :disable-views="['years']"
             :events="displayedEvents"
@@ -452,7 +451,7 @@
                 </div>
             </template>
             <template #today-button>
-                <div class="flex w-24 xsDark" v-if="currentView === 'year'">
+                <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
                     aktuelles Jahr
                 </div>
             </template>
@@ -461,28 +460,33 @@
                     {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
                 </div>
             </template>
-            <template #split-label="{ split, view }">
-                <div class="text-base font-bold">
-                    {{ split.label }}
+            <template #week-number-cell=" weekNumber, view" >
+                <div>
+                KW {{weekNumber.week}}
                 </div>
             </template>
+            <template #split-label="{ split, view }">
+                <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
+                    {{ split.label }}
+                </Link>
+            </template>
             <template #event="{ event, view}">
-                <div>
+                <div class="text-left mt-3 cursor-pointer">
                     <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
-                         class="flex absolute right-0 top-0">
+                         class="flex absolute left-0 top-0">
                         <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
                              alt="audienceIcon"/>
                         <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2"
                              alt="attributeIcon"/>
                     </div>
-
-                    <div v-if="!project" class="xsDark truncate">
+                    <div v-if="!project" class="xsDark truncate mx-1">
                         {{ event.title }}
                     </div>
-                    <div v-else class="xsDark truncate">
+
+                    <div v-else class="xsDark truncate mx-1">
                         {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
                     </div>
-                    <div v-if="currentView !== 'month'">
+                    <div v-if="currentView !== 'month'" class="mx-1">
 
                         <div v-if="!project">
                         <span class="truncate xxsLight truncate"
@@ -495,12 +499,12 @@
 
 
                         <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center xxsLight mx-auto">{{ event.start.formatTime("HH:mm") }} - {{
+                              class="items-center xxsLight">{{ event.start.formatTime("HH:mm") }} - {{
                                 event.end.formatTime("HH:mm")
                             }}
                         </span>
                         <span class="flex w-full xxsLight" v-else>
-                            <span class="items-center mx-auto">
+                            <span class="items-center">
                                 {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
                                     event.end.format("DD.MM.YYYY HH:mm")
                                 }}
@@ -508,10 +512,12 @@
 
                         </span><br/>
                     </span>
+                        <!-- only show profile pics when event is longer than 90 minutes => has enough space to display -->
+                        <div v-if="event.endTimeMinutes - event.startTimeMinutes >= 90">
                         <div class="mt-3 -ml-3">
                             <div v-if="event.projectLeaders && !project"
-                                 class="mt-1 flex justify-center items-center flex-wrap w-full">
-                                <div class="-mr-3 flex flex-wrap items-center flex-row"
+                                 class="mt-1 flex flex-wrap w-full">
+                                <div class="-mr-3 flex flex-wrap flex-row"
                                      v-for="user in event.projectLeaders?.slice(0,3)">
                                     <img :data-tooltip-target="user.id"
                                          :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
@@ -523,11 +529,11 @@
                                 <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                     <Menu as="div" class="relative">
                                         <div>
-                                            <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                            <MenuButton class="flex rounded-full focus:outline-none">
                                                 <div
                                                     :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                    class="mx-auto flex-shrink-0 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                                    <p class="items-center mx-auto">
+                                                    class="flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                    <p class="">
                                                         +{{ event.projectLeaders.length - 3 }}
                                                     </p>
                                                 </div>
@@ -559,8 +565,8 @@
                                 </div>
                             </div>
                             <div v-else-if="event.created_by"
-                                 class="mt-1 flex justify-center items-center flex-wrap w-full">
-                                <div class="-mr-3 flex flex-wrap items-center flex-row">
+                                 class="mt-1 ml-3 flex flex-wrap w-full">
+                                <div class="-mr-3 flex flex-wrap flex-row">
                                     <img :data-tooltip-target="event.created_by.id"
                                          :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
                                          class="rounded-full ring-2 ring-white object-cover"
@@ -571,6 +577,7 @@
                             </div>
 
                         </div>
+                    </div>
                     </div>
                 </div>
             </template>
@@ -1048,6 +1055,7 @@ export default {
             let vuecal = document.querySelector('#vuecal .vuecal__bg');
 
             this.setDisplayDate(this.currentView, startDate)
+            this.scrollToNine();
 
             this.eventsSince = startDate ?? this.eventsSince;
             this.eventsUntil = endDate ?? this.eventsUntil;
@@ -1188,6 +1196,17 @@ export default {
 
 .vuecal__flex {
 }
+.vuecal__cell-events-count{
+    color: #3017AD ;
+    background-color: rgba(48,23,173,0.1);
+    height: 18px;
+    width: 18px;
+    justify-content: center; /* Centering Horizantly */
+    align-items: center;
+    display: flex;
+
+
+}
 
 .vuecal__bg {
 
@@ -1297,6 +1316,7 @@ export default {
     font: normal normal 600 13px/18px Inter;
     letter-spacing: -0.2px;
     color: #27233C;
+    border-right: 2px solid #828190;
     opacity: 1;
 }
 

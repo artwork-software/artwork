@@ -8,14 +8,14 @@
                             $page.props.user.first_name
                                                                                        }}</h2>
                     <p class="xsLight">
-                        Herzlich willkommen im artwork tool! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
+                        Herzlich willkommen im artwork! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
                         aktiviert.<br/>
                         Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
                 <!-- Calendar Div -->
-                <div class="min-w-[50%] mt-5 overflow-x-auto">
+                <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
                     <!--<Link :href="route('events.view.index')"
                         class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
                         Alle Ansehen

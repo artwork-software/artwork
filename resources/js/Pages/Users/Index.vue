@@ -260,9 +260,9 @@
             </div>
         </div>
         <!-- Nutzer*innen einladen Modal -->
-        <flowbite-modal style="margin-top: 1rem" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
+        <flowbite-modal style="margin-top: 1rem;" class="h-fit" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
             <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 absolute top-0 mt-16"/>
-            <div class="mx-3 pt-6">
+            <div class="mx-3 pt-16">
 
                 <XIcon @click="closeAddUserModal"
                        class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10 mt-20"
@@ -373,7 +373,7 @@
                             </h2>
                         </div>
                         <div v-if="showUserPermissions && this.form.role !== 'admin'"
-                             class="flex flex-col max-h-96 overflow-y-auto">
+                             class="flex flex-col">
 
                             <div v-for="(permissions, group) in all_permissions">
 
@@ -419,11 +419,8 @@
                         System löschen möchtest?
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteUser">
-                            Löschen
-                        </button>
+                        <AddButton text="Löschen" mode="modal" class="px-20 py-3"
+                                @click="deleteUser" />
                         <div class="flex my-auto">
                             <span @click="closeDeleteUserModal()"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>

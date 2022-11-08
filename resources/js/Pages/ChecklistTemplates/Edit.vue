@@ -286,6 +286,8 @@ export default {
         },
         closeAddTaskModal(){
             this.addingTask = false;
+            this.newTaskName = "";
+            this.newTaskDescription = "";
         },
         deleteTeamFromTemplate(team) {
             this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
@@ -297,7 +299,6 @@ export default {
             }, 1000)
         },
         editChecklistTemplate() {
-            console.log(this.templateForm.task_templates);
             this.templateForm.patch(route('checklist_templates.update',{checklist_template: this.checklist_template.id}));
             this.showSuccessButton();
         },
@@ -315,8 +316,7 @@ export default {
         },
         addTaskToTemplate(){
             this.templateForm.task_templates.push({name:this.newTaskName,description:this.newTaskDescription});
-            this.newTaskName = "";
-            this.newTaskDescription = "";
+
             this.closeAddTaskModal();
         },
         deleteTaskFromTemplate(taskToDelete){

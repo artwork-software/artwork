@@ -21,7 +21,7 @@
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
                                           @click="approveRequest(this.event)"
                                           class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex">
+                                    <div class="flex cursor-pointer">
                                         <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung zusagen</div>
                                     </div>
@@ -29,7 +29,7 @@
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
                                           @click="declineRequest(this.event)"
                                           class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex">
+                                    <div class="flex cursor-pointer">
                                         <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         <div> Raumbelegung absagen</div>
                                     </div>
@@ -37,7 +37,7 @@
                                 <MenuItem v-if="event?.canDelete"
                                           @click="deleteComponentVisible = true"
                                           class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex">
+                                    <div class="flex cursor-pointer">
                                         <TrashIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
                                         Termin löschen
                                     </div>
@@ -163,7 +163,7 @@
                                     <input v-model="audience"
                                            :disabled="!canEdit"
                                            type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
+                                           class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
                                     <img src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2" alt="audienceIcon"/>
 
                                     <div :class="[audience ? 'xsWhiteBold' : 'xsLight', 'my-auto']">
@@ -174,9 +174,8 @@
                                     <input v-model="isLoud"
                                            :disabled="!canEdit"
                                            type="checkbox"
-                                           class="cursor-pointer h-6 w-6 text-buttonBlue border-2 border-gray-300 focus:ring-0"/>
-                                    <img src="/Svgs/IconSvgs/icon_loud.svg" class="h-6 w-6 mx-2" alt="isLoudIcon"/>
-                                    <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto']">Es
+                                           class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
+                                    <div :class="[isLoud ? 'xsWhiteBold' : 'xsLight', 'my-auto mx-2']">Es
                                         wird laut
                                     </div>
                                 </div>
@@ -212,7 +211,7 @@
                         <TagComponent icon="audience"   displayed-text="Mit Publikum" hideX="true"></TagComponent>
                     </div>
                    <div v-if="isLoud">
-                       <TagComponent icon="loud"   displayed-text="es wird laut" hideX="true"></TagComponent>
+                       <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
                    </div>
                 </div>
 
@@ -268,13 +267,13 @@
                                 </div>
                             </div>
                         </div>
-                        <inputComponent :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
+                        <inputComponent id="projectName" :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">
                             <div v-for="(project, index) in projectSearchResults"
                                  :key="index"
-                                 @click="selectedProject = project; projectName = ''"
+                                 @click="chooseProject(project)"
                                  class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
                                 {{ project.name }}
                             </div>
@@ -717,6 +716,10 @@ export default {
             return await axios.put(`/events/${event.id}`, this.eventData())
                 .then(() => this.closeModal())
                 .catch(error => event.error = error.response.data.errors);
+        },
+        chooseProject(project){
+            this.selectedProject = project;
+            this.projectName = '';
         },
 
         eventData() {

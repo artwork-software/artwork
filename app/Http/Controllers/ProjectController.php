@@ -26,12 +26,15 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
+use Inertia\ResponseFactory;
+use stdClass;
 
 class ProjectController extends Controller
 {
     // init empty notification controller
     protected ?NotificationController $notificationController = null;
-    protected ?\stdClass $notificationData = null;
+    protected ?stdClass $notificationData = null;
 
     public function __construct()
     {
@@ -39,15 +42,15 @@ class ProjectController extends Controller
 
         // init notification controller
         $this->notificationController = new NotificationController();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->project = new \stdClass();
+        $this->notificationData = new stdClass();
+        $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
     }
 
     /**
      * Display a listing of the resource.
      *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
     public function index()
     {
@@ -115,7 +118,7 @@ class ProjectController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
     public function create()
     {
@@ -125,7 +128,7 @@ class ProjectController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      */
     public function store(StoreProjectRequest $request, HistoryService $historyService)
     {
@@ -160,16 +163,6 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
-
-        // create notification data
-        $this->notificationData->title = 'Projekt wurde angelegt';
-        $this->notificationData->project->id = $project->id;
-        $this->notificationData->project->title = $request->name;
-        $this->notificationData->created_by = Auth::id();
-
-        // send notification to all project users
-        $this->notificationController->create($project->users->all(), $this->notificationData);
-
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
@@ -177,7 +170,7 @@ class ProjectController extends Controller
      * Display the specified resource.
      *
      * @param  Project  $project
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
     public function show(Project $project, Request $request)
     {
@@ -233,7 +226,7 @@ class ProjectController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param  Project  $project
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
     public function edit(Project $project)
     {
@@ -341,13 +334,11 @@ class ProjectController extends Controller
             }
         }
 
-        // Send notification to all project users if project updated
-        $this->notificationData->title = 'Es gab Änderungen an';
-        $this->notificationData->project->id = $project->id;
-        $this->notificationData->project->title = $project->name;
-        $this->notificationData->created_by = Auth::id();
-        $this->notificationController->create($project->users->all(), $this->notificationData);
-
+        $task = new SchedulingController();
+        $projectId = $project->id;
+        foreach($project->users->all() as $user ){
+            $task->create($user->id, 'PROJECT', $projectId);
+        }
         return Redirect::back();
     }
 
@@ -378,7 +369,7 @@ class ProjectController extends Controller
         $historyService->projectUpdated($newProject);
 
         $project->checklists->map(function (Checklist $checklist) use ($newProject) {
-            /** @var \App\Models\Checklist $replicated_checklist */
+            /** @var Checklist $replicated_checklist */
             $replicated_checklist = $checklist->replicate()->fill(['project_id' => $newProject->id]);
             $replicated_checklist->save();
             $replicated_checklist->departments()->sync($checklist->departments->pluck('id'));

@@ -37,7 +37,7 @@ class InvitationCreated extends Mailable
     {
         return $this->from("einladung@test.de", $this->user->first_name)
             ->replyTo($this->user->email)
-            ->subject("Einladung für Artwork.tools")
+            ->subject("Einladung für das artwork")
             ->markdown('emails.invitations');
     }
 }

@@ -7,31 +7,37 @@ use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
 use App\Models\Checklist;
+use App\Models\Department;
 use App\Models\Task;
+use App\Models\Scheduling;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Redirect;
+use Inertia\Response;
+use Inertia\ResponseFactory;
+use stdClass;
 
 class TaskController extends Controller
 {
     protected ?NotificationController $notificationController = null;
-    protected ?\stdClass $notificationData = null;
+    protected ?stdClass $notificationData = null;
 
     public function __construct()
     {
         $this->notificationController = new NotificationController();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->event = new \stdClass();
+        $this->notificationData = new stdClass();
+        $this->notificationData->event = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
     }
     /**
      * Show the form for creating a new resource.
      *
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @return Response|ResponseFactory
      */
     public function create()
     {
@@ -59,7 +65,7 @@ class TaskController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param Request $request
      */
     public function store(StoreTaskRequest $request)
     {
@@ -87,6 +93,8 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
+            $taskScheduling = new SchedulingController();
+            $taskScheduling->create(Auth::id(), 'TASK');
             return Redirect::back()->with('success', 'Task created.');
         } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
@@ -110,8 +118,8 @@ class TaskController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Task  $task
-     * @return \Inertia\Response|\Inertia\ResponseFactory
+     * @param Task $task
+     * @return Response|ResponseFactory
      */
     public function edit(Task $task)
     {
@@ -121,10 +129,10 @@ class TaskController extends Controller
     }
 
     /**
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Task  $task
-     * @param  \App\Support\Services\HistoryService  $historyService
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param Task $task
+     * @param HistoryService $historyService
+     * @return RedirectResponse
      */
     public function update(Request $request, Task $task, HistoryService $historyService)
     {
@@ -144,13 +152,20 @@ class TaskController extends Controller
         $historyService->taskUpdated($task);
         $task->save();
 
+        /*$departments = $task->checklistDepartments()->get();
+        $allDepartments = Department::all();
+        $user = User::all();
+        dd($user->);
+        $scheduling = new SchedulingController();
+        $scheduling->create($task->user_id, 'TASK_CHANGES', null, $task->id);*/
+
         return Redirect::back()->with('success', 'Task updated');
     }
 
     /**
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Support\Services\HistoryService  $historyService
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Request $request
+     * @param HistoryService $historyService
+     * @return RedirectResponse
      */
     public function updateOrder(Request $request, HistoryService $historyService)
     {
@@ -165,9 +180,9 @@ class TaskController extends Controller
     }
 
     /**
-     * @param  \App\Models\Task  $task
-     * @param  \App\Support\Services\HistoryService  $historyService
-     * @return \Illuminate\Http\RedirectResponse
+     * @param Task $task
+     * @param HistoryService $historyService
+     * @return RedirectResponse
      */
     public function destroy(Task $task, HistoryService $historyService)
     {

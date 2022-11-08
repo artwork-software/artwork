@@ -17,9 +17,8 @@ class CollisionService
      * @param $request
      * @return \App\Builders\EventBuilder
      */
-    public function getCollisionCount($request): \App\Builders\EventBuilder
+    public function getCollision($request): \App\Builders\EventBuilder
     {
-
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
 
@@ -35,7 +34,7 @@ class CollisionService
      */
     public function getConflictEvents($request): array
     {
-        $conflictEvents = self::getCollisionCount($request)->get();
+        $conflictEvents = self::getCollision($request)->get();
         $conflictObj = [];
         foreach ($conflictEvents as $event){
             $conflictObj[] = [

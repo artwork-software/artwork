@@ -279,12 +279,12 @@
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                         </button>
-                                        <div class="flex w-full ml-4 flex-wrap p-4">
-                                            <div class="flex justify-between w-full my-auto">
-                                                <div class="">
-                                        <span class="text-xl leading-6 font-bold font-lexend text-primary">
-                                        {{ checklist.name }}
-                                        </span>
+                                        <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''" class="flex w-full ml-4 flex-wrap p-4">
+                                            <div class="flex justify-between w-full my-auto items-center">
+                                                <div>
+                                                    <span class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
+                                                        {{ checklist.name }}
+                                                    </span>
                                                 </div>
                                                 <div class="flex">
                                                     <div class="flex -mr-3"
@@ -558,7 +558,7 @@
                                         <div class="flex w-full ml-4 flex-wrap p-4">
                                             <div class="flex justify-between w-full">
                                                 <div class="my-auto">
-                                        <span class="text-xl leading-6 flex font-bold font-lexend text-primary">
+                                        <span class="ml-6 text-xl leading-6 flex font-bold font-lexend text-primary">
                                         {{ checklist.name }} <EyeIcon class="h-6 w-6 ml-3 text-primary"></EyeIcon> <p
                                             class="text-primary text-sm my-auto ml-1">Privat</p>
                                         </span>
@@ -1370,15 +1370,19 @@
                                        class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
                             </div>
                         </div>
-                        <div class="mt-4 mr-4">
-                            <div class="mb-1">
-                                <label for="datePicker" class="text-secondary subpixel-antialiased">Zu erledigen
-                                    bis?</label>
+                        <div class="sm:w-1/2 my-2">
+                            <label for="deadlineDate" class="xxsLight">Zu erledigen bis?</label>
+                            <div class="w-full flex">
+                                <input v-model="taskForm.deadlineDate"
+                                       id="deadlineDate"
+                                       type="date"
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                                <input v-model="taskForm.deadlineTime"
+                                       id="deadlineTime"
+                                       type="time"
+                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
                             </div>
-                            <input
-                                v-model="taskForm.deadline" id="datePicker"
-                                placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300 w-full"/>
+                            <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
                         </div>
                         <div class="mt-4 mr-4">
                                             <textarea
@@ -1837,6 +1841,8 @@ export default {
                 name: "",
                 description: "",
                 deadline: null,
+                deadlineDate: null,
+                deadlineTime: null,
                 checklist_id: null,
             }),
             taskToEditForm: useForm({
@@ -1874,6 +1880,10 @@ export default {
         }
     },
     methods: {
+        formatDate(date, time) {
+            if (date === null || time === null) return null;
+            return new Date((new Date(date + ' ' + time)).getTime()- ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
+        },
         deleteCategoryFromProject(category) {
             this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
             this.assignedUsers.forEach(user => {
@@ -2136,9 +2146,18 @@ export default {
             this.taskForm.name = "";
             this.taskForm.description = "";
             this.taskForm.deadline = null;
+            this.taskForm.deadlineDate = null;
+            this.taskForm.deadlineTime = null;
             this.addingTask = false;
         },
         addTask() {
+            if(this.taskForm.deadlineDate){
+                if(this.taskForm.deadlineTime === null){
+                    this.taskForm.deadlineTime = '00:00';
+                }
+                this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
+            }
+            console.log(this.taskForm.deadline);
             this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
             this.closeAddTaskModal();
         },

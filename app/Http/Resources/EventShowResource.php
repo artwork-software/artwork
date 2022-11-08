@@ -23,7 +23,7 @@ class EventShowResource extends JsonResource
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
-            'name' => $this->name,
+            'name' => $this->eventName,
             'description' => $this->description,
             'start_time' => Carbon::parse($this->start_time)->format('d.m.Y, H:i'),
             'startDate' => Carbon::parse($this->start_time)->format('Y-m-d'),

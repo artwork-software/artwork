@@ -155,7 +155,13 @@ class EventController extends Controller
         $this->notificationData->event->id = $event->id;
         $this->notificationData->event->title = $event->eventName;
         $this->notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->project->users->all(), $this->notificationData);
+
+        if(!empty($event->project)){
+            $this->notificationController->create($event->project->users->all(), $this->notificationData);
+        } else {
+            $this->notificationController->create($event->creator, $this->notificationData);
+        }
+
 
         return new CalendarEventResource($event);
     }

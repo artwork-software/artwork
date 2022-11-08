@@ -93,7 +93,7 @@ class EventController extends Controller
 
 
         // check if any event in collision. If any event has collision send notification to user
-        if($this->collisionService->getCollisionCount($request)->count() > 0){
+        if($this->collisionService->getCollision($request)->count() > 0){
             $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
             $this->notificationData->title = 'Terminkonflikt';
             $this->notificationData->conflict = new \stdClass();

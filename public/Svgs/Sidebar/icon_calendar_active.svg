@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29" height="24.35" viewBox="0 0 29 24.35">
+  <defs>
+    <clipPath id="clip-path">
+      <rect id="Rechteck_354" data-name="Rechteck 354" width="29" height="24.35" fill="#fcfcfb"/>
+    </clipPath>
+  </defs>
+  <g id="Gruppe_498" data-name="Gruppe 498" clip-path="url(#clip-path)">
+    <path id="Pfad_899" data-name="Pfad 899" d="M11.95,13.692H8.228a.919.919,0,1,0,0,1.839H11.95a.919.919,0,1,0,0-1.839" transform="translate(-0.589 -1.104)" fill="#fcfcfb"/>
+    <path id="Pfad_900" data-name="Pfad 900" d="M22.825,13.692H19.1a.919.919,0,1,0,0,1.839h3.722a.919.919,0,0,0,0-1.839" transform="translate(-1.465 -1.104)" fill="#fcfcfb"/>
+    <path id="Pfad_901" data-name="Pfad 901" d="M11.95,19.227H8.228a.919.919,0,1,0,0,1.839H11.95a.919.919,0,1,0,0-1.839" transform="translate(-0.589 -1.55)" fill="#fcfcfb"/>
+    <path id="Pfad_902" data-name="Pfad 902" d="M22.825,19.227H19.1a.919.919,0,1,0,0,1.839h3.722a.919.919,0,0,0,0-1.839" transform="translate(-1.465 -1.55)" fill="#fcfcfb"/>
+    <path id="Pfad_903" data-name="Pfad 903" d="M28.081,1.86h-6.2V.919a.919.919,0,1,0-1.839,0V1.86H15.419V.919a.919.919,0,0,0-1.839,0V1.86H8.362V.919a.919.919,0,0,0-1.839,0V1.86H.919A.919.919,0,0,0,0,2.779V23.43a.919.919,0,0,0,.919.919H28.081A.919.919,0,0,0,29,23.43V2.779a.919.919,0,0,0-.919-.919M6.523,3.7V4.64a.919.919,0,1,0,1.839,0V3.7h5.219V4.64a.919.919,0,1,0,1.839,0V3.7h4.618V4.64a.919.919,0,1,0,1.839,0V3.7h5.285V7.731H1.839V3.7ZM1.839,9.57H27.161V22.511H1.839Z" transform="translate(0 0)" fill="#fcfcfb"/>
+  </g>
+</svg>

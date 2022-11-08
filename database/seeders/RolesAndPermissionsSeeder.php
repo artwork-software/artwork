@@ -111,7 +111,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         Permission::create([
             'name' => PermissionNameEnum::EVENT_REQUEST,
-            'name_de' => "Raumbelegungen",
+            'name_de' => "Raumbelegungen anfragen",
             'group' => 'Raumbelegungen',
             'tooltipText' => 'Nutzer*in darf Raumbelegungs-Anfragen für die eigenen Projekte stellen und die eigenen Anfragen editieren & löschen.',
             'checked' => false

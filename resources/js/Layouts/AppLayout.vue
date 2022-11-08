@@ -10,7 +10,7 @@
                 <div class="flex-1 w-full px-2 space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
                         :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center']">
-                        <img :src="item.svgSrc"
+                        <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
                             alt="menu-item"
                             :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                             aria-hidden="true"/>
@@ -149,15 +149,16 @@ import {Link} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
-    {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], svgSrc: '/Svgs/Sidebar/icon_dashboard.svg'},
-    {name: 'Projekte', href: route('projects'), route: ['/projects'], svgSrc: '/Svgs/Sidebar/icon_projects.svg'},
+    {name: 'Dashboard', href: route('dashboard'), route: ['/dashboard'], svgSrc: '/Svgs/Sidebar/icon_dashboard.svg', svgSrc_active:'/Svgs/Sidebar/icon_dashboard_active.svg'},
+    {name: 'Projekte', href: route('projects'), route: ['/projects'], svgSrc: '/Svgs/Sidebar/icon_projects.svg', svgSrc_active:'/Svgs/Sidebar/icon_projects_active.svg'},
     {
         name: 'Raumbelegung',
         href: route('events.view.index'),
         route: ['/events/view'],
-        svgSrc: '/Svgs/Sidebar/icon_calendar.svg'
+        svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
+        svgSrc_active:'/Svgs/Sidebar/icon_calendar_active.svg'
     },
-    {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], svgSrc: '/Svgs/Sidebar/icon_tasks.svg'},
+    {name: 'Aufgaben', href: route('tasks.own'), route: ['/tasks/own'], svgSrc: '/Svgs/Sidebar/icon_tasks.svg', svgSrc_active:'/Svgs/Sidebar/icon_tasks_active.svg'},
 ]
 
 const userNavigation = [
@@ -254,7 +255,7 @@ export default {
         },
         isCurrent(routes) {
             for (let url of routes) {
-                if (this.$page.url === url) {
+                if (this.$page.url.indexOf(url) !== -1) {
                     return true
                 }
             }

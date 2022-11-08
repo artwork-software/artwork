@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="29.162" height="21.187" viewBox="0 0 29.162 21.187">
+  <defs>
+    <clipPath id="clip-path">
+      <path id="Pfad_1300" data-name="Pfad 1300" d="M0,0H29.162V21.187H0Z" fill="#fcfcfb"/>
+    </clipPath>
+  </defs>
+  <g id="Gruppe_maskieren_17" data-name="Gruppe maskieren 17" clip-path="url(#clip-path)">
+    <path id="Pfad_893" data-name="Pfad 893" d="M2.386,4.686a.944.944,0,0,1-.54-.169L.4,3.512A.944.944,0,0,1,1.484,1.963l.6.419,1.1-1.91a.944.944,0,0,1,1.635.945L3.2,4.214a.95.95,0,0,1-.613.451,1,1,0,0,1-.2.021" transform="translate(0 0)" fill="#fcfcfb"/>
+    <path id="Pfad_894" data-name="Pfad 894" d="M28.825,3.371H11.757a.944.944,0,0,1,0-1.888H28.825a.944.944,0,0,1,0,1.888" transform="translate(-0.607 -0.083)" fill="#fcfcfb"/>
+    <path id="Pfad_895" data-name="Pfad 895" d="M2.386,13.427a.94.94,0,0,1-.539-.17l-1.443-1A.944.944,0,1,1,1.483,10.7l.6.418,1.1-1.909a.943.943,0,1,1,1.633.946L3.2,12.956a.947.947,0,0,1-.611.449,1.016,1.016,0,0,1-.206.022" transform="translate(0 -0.491)" fill="#fcfcfb"/>
+    <path id="Pfad_896" data-name="Pfad 896" d="M28.825,12.112H11.757a.944.944,0,1,1,0-1.888H28.825a.944.944,0,0,1,0,1.888" transform="translate(-0.607 -0.574)" fill="#fcfcfb"/>
+    <path id="Pfad_897" data-name="Pfad 897" d="M2.386,22.168a.945.945,0,0,1-.54-.17L.4,20.993a.944.944,0,1,1,1.081-1.549l.6.419,1.1-1.909A.943.943,0,1,1,4.82,18.9L3.2,21.7a.946.946,0,0,1-.612.449,1,1,0,0,1-.2.022" transform="translate(0 -0.981)" fill="#fcfcfb"/>
+    <path id="Pfad_898" data-name="Pfad 898" d="M28.825,20.852H11.757a.944.944,0,1,1,0-1.888H28.825a.944.944,0,0,1,0,1.888" transform="translate(-0.607 -1.064)" fill="#fcfcfb"/>
+  </g>
+</svg>

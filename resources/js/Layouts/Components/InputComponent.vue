@@ -3,7 +3,7 @@
         <input type="text"
                :placeholder="placeholder"
                @input="updateContent"
-               v-model="content"
+               v-model="modelValue"
                class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
     </div>
 </template>
@@ -17,14 +17,9 @@ export default {
     components: {},
     props: ['modelValue', 'placeholder'],
     emits:['update:modelValue'],
-    data(){
-      return{
-          content:''
-      }
-    },
     methods: {
         updateContent(){
-            this.$emit('update:modelValue', this.content)
+            this.$emit('update:modelValue', this.modelValue)
         }
     },
 

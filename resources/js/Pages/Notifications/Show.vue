@@ -60,7 +60,7 @@
                                     </div>
                                     <div class="xsLight">
                                         <!-- HIER FEHLT NOCH CREATED_AT? und dann Design umsetzen -->
-                                        {{ notification[0].data.event.created_at }}
+                                        {{ notification[0].data.event }}
                                     </div>
                                 </div>
                                 <div>

@@ -152,12 +152,14 @@ class TaskController extends Controller
         $historyService->taskUpdated($task);
         $task->save();
 
-        /*$departments = $task->checklistDepartments()->get();
-        $allDepartments = Department::all();
-        $user = User::all();
-        dd($user->);
-        $scheduling = new SchedulingController();
-        $scheduling->create($task->user_id, 'TASK_CHANGES', null, $task->id);*/
+        $departments = $task->checklistDepartments()->get();
+
+        foreach ($departments as $department){
+            foreach ($department->users as $user){
+                $scheduling = new SchedulingController();
+                $scheduling->create($user->id, 'TASK_CHANGES', null, $task->id);
+            }
+        }
 
         return Redirect::back()->with('success', 'Task updated');
     }

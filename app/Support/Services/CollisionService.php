@@ -40,6 +40,8 @@ class CollisionService
             $conflictObj[] = [
                 'id' => $event->id,
                 'title' => $event->eventName,
+                'created_by' => $event->creator,
+                'created_at' => $event->created_at
             ];
         }
         return $conflictObj;

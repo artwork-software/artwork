@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Models\Event;
 use App\Models\Project;
 use App\Models\Scheduling;
+use App\Models\Task;
 use App\Models\User;
 use App\Notifications\SimpleNotification;
 use Carbon\Carbon;
@@ -41,23 +43,25 @@ class SchedulingController extends Controller
      *
      * @return Response
      */
-    public function create($userId, $type, $project = null, $task = null): Response|bool
+    public function create($userId, $type, $project = null, $task = null, $event = null): Response|bool
     {
-        $task = Scheduling::where('user_id', $userId)
+        $scheduling = Scheduling::where('user_id', $userId)
             ->where('type', $type)
             ->where('project_id', $project)
             ->where('task_id', $task)
+            ->where('event_id', $event)
             ->first();
 
-        if(!empty($task)){
-            $task->increment('count', 1);
+        if(!empty($scheduling)){
+            $scheduling->increment('count', 1);
         } else {
             Scheduling::create([
                 'count' => 1,
                 'user_id' => $userId,
                 'type' => $type,
                 'project_id' => $project,
-                'task_id' => $task
+                'task_id' => $task,
+                'event_id' => $event
             ]);
         }
         return true;
@@ -121,26 +125,42 @@ class SchedulingController extends Controller
 
     public function sendNotification(): void
     {
-        $taskToNotify = Scheduling::whereDate('updated_at', '>=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
-        foreach ($taskToNotify as $task){
-            if($task->type == 'TASK'){
-                $user = User::find($task->user_id);
-                $this->notificationData->type = NotificationConstEnum::NOTIFICATION_SIMPLE;
-                $this->notificationData->title = $task->count . ' neue Aufgaben für dich';
-                $this->notificationData->created_by = null;
-                $this->notificationController->create($user, $this->notificationData);
-                $task->delete();
-            } else if($task->type == 'PROJECT'){
-                $project = Project::find($task->project_id);
-                $user = User::find($task->user_id);
-                $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-                $this->notificationData->title = 'Es gab Änderungen an ' . $project->name;
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = null;
-                $this->notificationController->create($user, $this->notificationData);
-                $task->delete();
+        $scheduleToNotify = Scheduling::whereDate('updated_at', '>=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
+        foreach ($scheduleToNotify as $schedule){
+            $user = User::find($schedule->user_id);
+
+            switch ($schedule->type){
+                case 'TASK':
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_SIMPLE;
+                    $this->notificationData->title = $schedule->count . ' neue Aufgaben für dich';
+                    $this->notificationData->created_by = null;
+                    break;
+                case 'PROJECT':
+                    $project = Project::find($schedule->project_id);
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+                    $this->notificationData->title = 'Es gab Änderungen an ' . $project->name;
+                    $this->notificationData->project->id = $project->id;
+                    $this->notificationData->project->title = $project->name;
+                    $this->notificationData->created_by = null;
+
+                    break;
+                case 'TASK_CHANGES':
+                    $task = Task::find($schedule->task_id);
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_SIMPLE;
+                    $this->notificationData->title = 'Änderungen an ' . $task->name;
+                    $this->notificationData->created_by = null;
+                    break;
+                case 'EVENT':
+                    $event = Event::find($schedule->event_id);
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+                    $this->notificationData->title = 'Termin geändert';
+                    $this->notificationData->event = $event;
+                    $this->notificationData->created_by = null;
+                    break;
             }
+            $this->notificationController->create($user, $this->notificationData);
+            $schedule->delete();
+
         }
     }
 }

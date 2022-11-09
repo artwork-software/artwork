@@ -18,6 +18,7 @@ use App\Http\Resources\TaskIndexResource;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
+use App\Models\Scheduling;
 use App\Models\Task;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
@@ -91,23 +92,22 @@ class EventController extends Controller
     {
         $this->authorize('create', Event::class);
 
-
-        // check if any event in collision. If any event has collision send notification to user
+        // TODO:: Pro Collision eine Notification
         if($this->collisionService->getCollision($request)->count() > 0){
-            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
-            $this->notificationData->title = 'Terminkonflikt';
-            $this->notificationData->conflict = new \stdClass();
-            $this->notificationData->conflict = $this->collisionService->getConflictEvents($request);
-            $this->notificationData->created_by = Auth::id();
-            $this->notificationController->create(Auth::user(), $this->notificationData);
-            // reset notification type to event notification
-            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+            $collisions = $this->collisionService->getConflictEvents($request);
+            if(!empty($collisions)){
+                foreach ($collisions as $collision){
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->title = 'Terminkonflikt';
+                    $this->notificationData->conflict = $collision;
+                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationController->create($collision['created_by'], $this->notificationData);
+                }
+            }
         }
 
         /** @var Event $event */
         $event = Event::create($request->data());
-
-
 
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
@@ -116,12 +116,6 @@ class EventController extends Controller
             $event->save();
             $historyService->projectUpdated($project);
         }
-
-        // create and send notification data
-        $this->notificationData->title = 'Termin hinzugefügt';
-        $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
-        $this->notificationController->create($event->creator, $this->notificationData);
 
         broadcast(new OccupancyUpdated())->toOthers();
 
@@ -149,17 +143,14 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
-        // create and send notification data
-        $this->notificationData->title = 'Termin geändert';
-        $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
-
+        $schedule = new SchedulingController();
         if(!empty($event->project)){
-            $this->notificationController->create($event->project->users->all(), $this->notificationData);
+            foreach ($event->project->users->all() as $eventUser){
+                $schedule->create($eventUser->id, 'EVENT', null, null, $event->id);
+            }
         } else {
-            $this->notificationController->create($event->creator, $this->notificationData);
+            $schedule->create($event->creator, 'EVENT', null, null, $event->id);
         }
-
 
         return new CalendarEventResource($event);
     }
@@ -169,15 +160,15 @@ class EventController extends Controller
         $event->occupancy_option = false;
         if (!$request->get('accepted')) {
             $this->notificationData->title = 'Raumanfrage abgelehnt';
+            $this->notificationData->accepted = false;
             $event->room_id = null;
         } else {
             $this->notificationData->title = 'Raumanfrage bestätigt';
+            $this->notificationData->accepted = true;
         }
         $event->save();
-
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
-        $this->notificationData->event->id = $event->id;
-        $this->notificationData->event->title = $event->eventName;
+        $this->notificationData->event = $event;
         $this->notificationData->created_by = Auth::id();
         $this->notificationController->create($event->creator, $this->notificationData);
 

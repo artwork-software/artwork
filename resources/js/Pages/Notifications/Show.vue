@@ -49,26 +49,25 @@
                                 alle archivieren
                             </div>
                         </div>
-                        <div class="flex border-t-2 border-b-2 mx-12 py-8" v-if="showRoomsAndEvents"
-                             v-for="notification in notifications">
-                            <div class="flex">
-                                <EventTypeIconCollection :height="32" :width="32"
-                                                         iconName="eventType0"/>
-                                <div class="flex">
-                                    <div class="sDark">
-                                        {{ notification[0].data.title }}
-                                    </div>
-                                    <div class="xsLight">
-                                        <!-- HIER FEHLT NOCH CREATED_AT? und dann Design umsetzen -->
-                                        {{ notification[0].data.event }}
+                        <div :class="index !== 0 ? 'border-t-2' : ''" class="flex flex-wrap mx-12 w-full py-6" v-if="showRoomsAndEvents"
+                             v-for="(notification,type,index) in notifications">
+                            <div class="flex flex-wrap">
+                                <div class="flex ">
+                                    <img alt="Notification" v-if="type.indexOf('Conflict') === -1" class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
+                                    <img alt="Notification" v-else class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_red.svg"/>
+                                    <div class="flex-col flex my-auto">
+                                        <div class="flex w-full">
+                                            <div class="sDark">
+                                                {{ notification[0].data.title }}
+                                            </div>
+                                            <div v-if="notification[0].data.title === 'Termin geändert'" class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
+                                                <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
+                                                Verlauf ansehen
+                                            </div>
+                                        </div>
+                                        <NotificationEventInfoRow v-if="notification[0].data.event" :event="notification[0].data.event" :rooms="this.rooms" :eventTypes="this.eventTypes"></NotificationEventInfoRow>
                                     </div>
                                 </div>
-                                <div>
-
-                                </div>
-                            </div>
-                            <div>
-                                {{ notification[0].data }}
                             </div>
                         </div>
                     </div>
@@ -95,15 +94,15 @@ import {defineComponent} from 'vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import AppLayout from '@/Layouts/AppLayout.vue'
 import {
-    DotsVerticalIcon,
     ChevronDownIcon,
+    DotsVerticalIcon,
     InformationCircleIcon,
-    XIcon,
     PencilAltIcon,
-    TrashIcon
+    SearchIcon,
+    TrashIcon,
+    XIcon
 } from '@heroicons/vue/outline'
-import {ChevronUpIcon, PlusSmIcon, CheckIcon, XCircleIcon} from '@heroicons/vue/solid'
-import {SearchIcon} from "@heroicons/vue/outline";
+import {CheckIcon, ChevronRightIcon, ChevronUpIcon, PlusSmIcon, XCircleIcon} from '@heroicons/vue/solid'
 
 import {
     Listbox,
@@ -113,7 +112,8 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems
+    MenuItem,
+    MenuItems
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
@@ -122,15 +122,13 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {useForm} from "@inertiajs/inertia-vue3";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
-import {forEach} from "lodash";
-import {Inertia} from "@inertiajs/inertia";
+import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 
 
 export default defineComponent({
@@ -169,13 +167,19 @@ export default defineComponent({
         XCircleIcon,
         Link,
         InputComponent,
-        EventTypeIconCollection
+        EventTypeIconCollection,
+        ChevronRightIcon,
+        NotificationEventInfoRow
     },
-    props: ['notifications'],
+    props: ['notifications', 'rooms', 'eventTypes'],
     created() {
 
     },
-    methods: {},
+    methods: {
+        formatDate(isoDate) {
+            return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
+        }
+    },
     watch: {},
     data() {
         return {

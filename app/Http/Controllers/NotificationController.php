@@ -3,6 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\RoomIndexWithoutEventsResource;
+use App\Models\EventType;
+use App\Models\Room;
 use App\Models\User;
 use App\Notifications\ConflictNotification;
 use App\Notifications\EventNotification;
@@ -35,7 +39,9 @@ class NotificationController extends Controller
             $output[$notification->type][] = $notification;
         }
         return inertia('Notifications/Show', [
-            'notifications' => $output
+            'notifications' => $output,
+            'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
         ]);
     }
 

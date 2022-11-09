@@ -334,11 +334,12 @@ class ProjectController extends Controller
             }
         }
 
-        $task = new SchedulingController();
+        $scheduling = new SchedulingController();
         $projectId = $project->id;
         foreach($project->users->all() as $user ){
-            $task->create($user->id, 'PROJECT', $projectId);
+            $scheduling->create($user->id, 'PROJECT', $projectId);
         }
+
         return Redirect::back();
     }
 
@@ -409,7 +410,8 @@ class ProjectController extends Controller
         }
 
         //create notification data
-        $this->notificationData->title = 'Projekt ' . $project->name . ' wurde gelöscht';
+        // TODO: Nachfragen ob name so bleiben kann
+        $this->notificationData->title =  $project->name . ' wurde gelöscht';
         $this->notificationData->project->id = $project->id;
         $this->notificationData->project->title = $project->name;
         $this->notificationData->created_by = Auth::id();

@@ -87,7 +87,6 @@ class DepartmentController extends Controller
             collect($request->assigned_users)
                 ->map(function ($user) {
                     $this->authorize('update', User::find($user['id']));
-
                     return $user['id'];
                 })
         );

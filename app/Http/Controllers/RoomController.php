@@ -271,12 +271,7 @@ class RoomController extends Controller
      */
     public function destroy(Room $room)
     {
-        /*$this->notificationData->title = 'Raum "' . $room->name . '" wurde gelöscht';
-        $this->notificationData->room->id = $room->id;
-        $this->notificationData->room->title = $room->name;
-        $this->notificationData->created_by = Auth::id();
-        //$this->notificationController->create($room->creator()->get(), $this->notificationData);
-        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);*/
+
         $room->delete();
 
         return Redirect::route('areas.management')->with('success', 'Room moved to trash');

@@ -96,7 +96,7 @@
                                 </div>
                                 <div v-if="isErrorType(type,notification) && type.indexOf('RoomRequestNotification') !== -1" class="flex w-full ml-16 mt-1">
                                     <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12" text="Anfrage ändern" mode="modal"/>
-                                    <AddButton type="secondary" text="Termin löschen"></AddButton>
+                                    <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary" text="Termin löschen"></AddButton>
                                 </div>
                             </div>
 
@@ -125,7 +125,13 @@
             :projects="this.projects"
             :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
         />
-
+        <!-- Event löschen Modal -->
+        <confirmation-component
+            v-if="deleteComponentVisible"
+            confirm="Löschen"
+            titel="Termin löschen"
+            :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.eventName + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
+            @closed="afterConfirm"/>
     </app-layout>
 </template>
 
@@ -172,6 +178,7 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 
 
 export default defineComponent({
@@ -214,7 +221,9 @@ export default defineComponent({
         ChevronRightIcon,
         NotificationEventInfoRow,
         NotificationUserIcon,
-        EventWithoutRoomNewRequestComponent
+        EventWithoutRoomNewRequestComponent,
+        ConfirmationComponent
+
     },
     props: ['notifications', 'rooms', 'eventTypes', 'projects'],
     created() {
@@ -237,6 +246,19 @@ export default defineComponent({
         onEventWithoutRoomComponentClose() {
             this.showEventWithoutRoomComponent = false;
         },
+        openDeleteEventModal(event) {
+            this.eventToDelete = event;
+            this.deleteComponentVisible = true;
+        },
+        async afterConfirm(bool) {
+            if (!bool) return this.deleteComponentVisible = false;
+
+            // TODO: HIER NOCH NOTIFICATION AUF READ_AT SETZEN
+
+            return await axios
+                .delete(`/events/${this.eventToDelete.id}`)
+                .then(() => this.closeModal());
+        },
     },
     watch: {},
     data() {
@@ -245,6 +267,8 @@ export default defineComponent({
             showRoomsAndEvents: true,
             eventToEdit: null,
             showEventWithoutRoomComponent: false,
+            deleteComponentVisible: false,
+            eventToDelete: null,
         }
     },
     setup() {

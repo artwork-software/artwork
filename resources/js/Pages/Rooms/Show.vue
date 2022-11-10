@@ -62,7 +62,7 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.room_history.length > 0" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div v-if="room.room_history?.length > 0" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         zuletzt geändert:
                     </div>

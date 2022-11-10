@@ -1,29 +1,37 @@
 <template>
     <div class="flex w-full mt-1">
         <div class="flex w-full">
-            <Link
-                :href="route('rooms.show',{room: this.event.roomId})"
+
+            <Link :href="route('rooms.show',{room: declinedRoomId})" class="flex items-center text-error  text-xs cursor-pointer"
+                 v-if="declinedRoomId">
+                <p class="line-through">
+                {{ this.rooms.find(room => room.id === declinedRoomId).name }}
+                </p>
+                <p class="mx-1 xxsLight">|</p>
+            </Link>
+            <Link v-else
+                :href="route('rooms.show',{room: this.event.room_id})"
                 class="text-buttonBlue text-xs cursor-pointer flex items-center"
-                v-if="this.event.roomId">
+                v-if="this.event.room_id">
                 {{
-                    this.rooms.filter(room => room.id === this.event.roomId)
+                    this.rooms.find(room => room.id === this.event.room_id).name
                 }} <p class="mx-1 xxsLight">|</p>
             </Link>
-            <div class="flex xxsLight items-center">
+            <div v-if="this.event.event_type_id" class="flex xxsLight items-center">
                 {{
-                    this.eventTypes.filter(eventType => eventType.id === this.event.event_type_id)[0].name
+                    this.eventTypes.find(eventType => eventType.id === this.event.event_type_id).name
                 }}
                 <div v-if="this.event.eventName">
                     , {{ this.event.eventName }}
                 </div>
             </div>
-            <Link
-                :href="route('projects.show',{project: this.event.project.id, openTab: 'calendar'})"
+            <Link v-if="this.event.project_id"
+                :href="route('projects.show',{project: this.event.project_id, openTab: 'calendar'})"
                 class="text-buttonBlue text-xs cursor-pointer flex items-center">
                 <p class="mx-1 xxsLight">|</p>
-                {{ this.event.project?.name }}
+                {{ this.projects.find(project => project.id === this.event.project_id).name }}
             </Link>
-            <div class="xxsLight flex items-center">
+            <div v-if="event.start_time && event.end_time" class="xxsLight flex items-center">
                 <p class="mx-1">|</p>
                 {{ this.formatDate(this.event.start_time) }} -
                 {{ this.formatDate(this.event.end_time) }}
@@ -40,7 +48,7 @@ import {Link} from "@inertiajs/inertia-vue3";
 export default {
     name: "TagComponent",
     components: {Button, XIcon, Link},
-    props: ['event', 'rooms', 'eventTypes'],
+    props: ['event', 'rooms', 'eventTypes','projects','declinedRoomId'],
     methods: {
         formatDate(isoDate) {
             return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)

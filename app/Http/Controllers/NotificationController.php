@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\EventType;
+use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
 use App\Notifications\ConflictNotification;
@@ -42,6 +44,7 @@ class NotificationController extends Controller
             'notifications' => $output,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => ProjectShowResource::collection(Project::all())->resolve(),
         ]);
     }
 
@@ -58,10 +61,7 @@ class NotificationController extends Controller
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => [
-                        'id' => $notificationData->event->id,
-                        'title' => $notificationData->event->title,
-                    ],
+                    'event' => $notificationData->event,
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];

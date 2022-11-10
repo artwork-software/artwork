@@ -49,26 +49,57 @@
                                 alle archivieren
                             </div>
                         </div>
-                        <div :class="index !== 0 ? 'border-t-2' : ''" class="flex flex-wrap mx-12 w-full py-6" v-if="showRoomsAndEvents"
-                             v-for="(notification,type,index) in notifications">
-                            <div class="flex flex-wrap">
-                                <div class="flex ">
-                                    <img alt="Notification" v-if="type.indexOf('Conflict') === -1" class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
-                                    <img alt="Notification" v-else class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_red.svg"/>
-                                    <div class="flex-col flex my-auto">
-                                        <div class="flex w-full">
-                                            <div class="sDark">
-                                                {{ notification[0].data.title }}
+                        <div
+                            v-for="(notificationGroup,type,index) in notifications">
+                            <div :class="index !== 0 ? 'border-t-2' : ''" class="flex flex-wrap mx-12 w-full py-6"
+                                 v-if="showRoomsAndEvents" v-for="notification in notificationGroup">
+                                <div class="flex flex-wrap">
+                                    <div class="flex ">
+                                        <img alt="Notification" v-if="!isErrorType(type,notification)"
+                                             class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
+                                        <img alt="Notification" v-else class="h-12 w-12 mr-5"
+                                             src="/Svgs/IconSvgs/icon_notification_red.svg"/>
+                                        <div class="flex-col flex my-auto">
+                                            <div class="flex w-full">
+                                                <div class="sDark">
+                                                    {{ notification.data.title }}
+                                                </div>
+                                                <div v-if="notification.data.title === 'Termin geändert'"
+                                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
+                                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
+                                                    Verlauf ansehen
+                                                </div>
+                                                <div class="ml-4 mt-1 flex xxsLight my-auto"
+                                                     v-if="type === 'App\\Notifications\\RoomRequestNotification'">
+                                                    {{ this.formatDate(notification.created_at) }}
+                                                    von
+                                                    <NotificationUserIcon
+                                                        :user="notification.data.created_by"></NotificationUserIcon>
+                                                </div>
+                                                <div class="ml-4 mt-1 flex xxsLight my-auto"
+                                                     v-if="notification.data.title === 'Terminkonflikt'">
+                                                    Konflikttermin belegt:
+                                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
+                                                    <NotificationUserIcon
+                                                        :user="notification.data.conflict.created_by"></NotificationUserIcon>
+                                                </div>
                                             </div>
-                                            <div v-if="notification[0].data.title === 'Termin geändert'" class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
-                                                <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                                Verlauf ansehen
-                                            </div>
+                                            <NotificationEventInfoRow
+                                                :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
+                                                :projects="projects"
+                                                :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.event"
+                                                :rooms="this.rooms"
+                                                :eventTypes="this.eventTypes"></NotificationEventInfoRow>
                                         </div>
-                                        <NotificationEventInfoRow v-if="notification[0].data.event" :event="notification[0].data.event" :rooms="this.rooms" :eventTypes="this.eventTypes"></NotificationEventInfoRow>
                                     </div>
+
+                                </div>
+                                <div v-if="isErrorType(type,notification) && type.indexOf('RoomRequestNotification') !== -1" class="flex w-full ml-16 mt-1">
+                                    <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12" text="Anfrage ändern" mode="modal"/>
+                                    <AddButton type="secondary" text="Termin löschen"></AddButton>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>
@@ -84,6 +115,16 @@
                 </div>
             </div>
         </div>
+        <event-without-room-new-request-component
+            v-if="showEventWithoutRoomComponent"
+            @closed="onEventWithoutRoomComponentClose()"
+            :showHints="$page.props?.can?.show_hints"
+            :eventTypes="eventTypes"
+            :rooms="rooms"
+            :event="this.eventToEdit"
+            :projects="this.projects"
+            :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        />
 
     </app-layout>
 </template>
@@ -129,6 +170,8 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
+import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
+import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 
 
 export default defineComponent({
@@ -169,22 +212,39 @@ export default defineComponent({
         InputComponent,
         EventTypeIconCollection,
         ChevronRightIcon,
-        NotificationEventInfoRow
+        NotificationEventInfoRow,
+        NotificationUserIcon,
+        EventWithoutRoomNewRequestComponent
     },
-    props: ['notifications', 'rooms', 'eventTypes'],
+    props: ['notifications', 'rooms', 'eventTypes', 'projects'],
     created() {
 
     },
     methods: {
         formatDate(isoDate) {
             return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-        }
+        },
+        isErrorType(type, notification) {
+            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1) {
+                return true;
+            }
+            return false;
+        },
+        openEventWithoutRoomComponent(event){
+          this.eventToEdit = event;
+          this.showEventWithoutRoomComponent = true;
+        },
+        onEventWithoutRoomComponentClose() {
+            this.showEventWithoutRoomComponent = false;
+        },
     },
     watch: {},
     data() {
         return {
             openTab: 'notifications',
             showRoomsAndEvents: true,
+            eventToEdit: null,
+            showEventWithoutRoomComponent: false,
         }
     },
     setup() {

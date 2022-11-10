@@ -20,6 +20,7 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Scheduling;
 use App\Models\Task;
+use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use Barryvdh\Debugbar\Facades\Debugbar;
@@ -149,7 +150,7 @@ class EventController extends Controller
                 $schedule->create($eventUser->id, 'EVENT', null, null, $event->id);
             }
         } else {
-            $schedule->create($event->creator, 'EVENT', null, null, $event->id);
+            $schedule->create($event->creator->id, 'EVENT', null, null, $event->id);
         }
 
         return new CalendarEventResource($event);
@@ -161,7 +162,9 @@ class EventController extends Controller
         if (!$request->get('accepted')) {
             $this->notificationData->title = 'Raumanfrage abgelehnt';
             $this->notificationData->accepted = false;
+            $event->declined_room_id = $event->room_id;
             $event->room_id = null;
+
         } else {
             $this->notificationData->title = 'Raumanfrage bestätigt';
             $this->notificationData->accepted = true;
@@ -169,7 +172,8 @@ class EventController extends Controller
         $event->save();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
+        //Hier brauche ich ganzen User + created_at der Notification
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator, $this->notificationData);
 
         return Redirect::back();

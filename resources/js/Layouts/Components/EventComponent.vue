@@ -435,6 +435,7 @@ import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
     name: 'EventComponent',
@@ -489,6 +490,9 @@ export default {
             canEdit: false,
             declinedRoomId: null,
             deleteComponentVisible: false,
+            answerRequestForm: useForm({
+                accepted: false,
+            }),
         }
     },
 
@@ -705,17 +709,14 @@ export default {
                 .then(() => this.closeModal());
         },
         async approveRequest(event) {
-            event.isOption = false;
-            return await axios.put(`/events/${event.id}`, this.eventData())
-                .then(() => this.closeModal())
-                .catch(error => event.error = error.response.data.errors);
+            this.answerRequestForm.accepted = true;
+            this.answerRequestForm.put(route('events.accept', {event: event.id}));
+            this.closeModal()
         },
         async declineRequest(event) {
-            this.declinedRoomId = this.selectedRoom?.id;
-            this.selectedRoom = null;
-            return await axios.put(`/events/${event.id}`, this.eventData())
-                .then(() => this.closeModal())
-                .catch(error => event.error = error.response.data.errors);
+            this.answerRequestForm.accepted = false;
+            this.answerRequestForm.put(route('events.accept', {event: event}));
+            this.closeModal()
         },
         chooseProject(project){
             this.selectedProject = project;

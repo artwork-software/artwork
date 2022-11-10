@@ -3,6 +3,7 @@
 namespace App\Support\Services;
 
 use App\Models\Event;
+use App\Models\Room;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Request;
 
@@ -45,5 +46,21 @@ class CollisionService
             ];
         }
         return $conflictObj;
+    }
+
+    public function adjoiningCollision($request): array
+    {
+        $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
+        $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
+
+        $joiningRooms = Room::find($request->roomId)->adjoining_rooms()->get();
+        $events = [];
+        foreach ($joiningRooms as $joiningRoom){
+            $events[] = Event::query()
+                ->whereDate('start_time', '>=', $startDate)
+                ->whereDate('end_time', '<=', $endDate)
+                ->where('room_id', $joiningRoom->id)->get();
+        }
+        return $events;
     }
 }

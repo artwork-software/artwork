@@ -20,6 +20,7 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Scheduling;
 use App\Models\Task;
+use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
 use Barryvdh\Debugbar\Facades\Debugbar;
@@ -90,9 +91,33 @@ class EventController extends Controller
 
     public function storeEvent(EventStoreRequest $request, HistoryService $historyService): CalendarEventResource
     {
+        // Adjoining Room / Event check
+        $joiningEvents = $this->collisionService->adjoiningCollision($request);
+        foreach ($joiningEvents as $joiningEvent){
+            foreach ($joiningEvent as $conflict){
+                $user = User::find($conflict->user_id);
+                if($user->id == Auth::id()){
+                    continue;
+                }
+                if($conflict->audience){
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
+                    $this->notificationData->conflict = $conflict;
+                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationController->create($user, $this->notificationData);
+                }
+                if($conflict->is_loud){
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->title = 'Lauter Termin im Nebenraum';
+                    $this->notificationData->conflict = $conflict;
+                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationController->create($user, $this->notificationData);
+                }
+            }
+        }
+
         $this->authorize('create', Event::class);
 
-        // TODO:: Pro Collision eine Notification
         if($this->collisionService->getCollision($request)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
@@ -149,7 +174,7 @@ class EventController extends Controller
                 $schedule->create($eventUser->id, 'EVENT', null, null, $event->id);
             }
         } else {
-            $schedule->create($event->creator, 'EVENT', null, null, $event->id);
+            $schedule->create($event->creator->id, 'EVENT', null, null, $event->id);
         }
 
         return new CalendarEventResource($event);
@@ -302,4 +327,5 @@ class EventController extends Controller
 
         return Redirect::route('events.trashed')->with('success', 'Event restored');
     }
+
 }

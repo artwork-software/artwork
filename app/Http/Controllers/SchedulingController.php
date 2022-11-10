@@ -81,10 +81,10 @@ class SchedulingController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param Scheduling $taskScheduling
+     * @param Scheduling $scheduling
      * @return Response
      */
-    public function show(Scheduling $taskScheduling)
+    public function show(Scheduling $scheduling)
     {
         //
     }
@@ -92,10 +92,10 @@ class SchedulingController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param Scheduling $taskScheduling
+     * @param Scheduling $scheduling
      * @return Response
      */
-    public function edit(Scheduling $taskScheduling)
+    public function edit(Scheduling $scheduling)
     {
         //
     }
@@ -104,10 +104,10 @@ class SchedulingController extends Controller
      * Update the specified resource in storage.
      *
      * @param Request $request
-     * @param Scheduling $taskScheduling
+     * @param Scheduling $scheduling
      * @return Response
      */
-    public function update(Request $request, Scheduling $taskScheduling)
+    public function update(Request $request, Scheduling $scheduling)
     {
         //
     }
@@ -115,12 +115,16 @@ class SchedulingController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param Scheduling $taskScheduling
+     * @param Scheduling $scheduling
      * @return Response
      */
-    public function destroy(Scheduling $taskScheduling)
+    public function destroy(Scheduling $scheduling)
     {
-        $taskScheduling->delete();
+        $scheduling->delete();
+    }
+
+    public function sendDeadlineNotification(){
+
     }
 
     public function sendNotification(): void
@@ -160,7 +164,6 @@ class SchedulingController extends Controller
             }
             $this->notificationController->create($user, $this->notificationData);
             $schedule->delete();
-
         }
     }
 }

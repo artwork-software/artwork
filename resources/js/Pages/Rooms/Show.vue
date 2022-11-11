@@ -484,10 +484,10 @@
                             </button>
                         </span>
                     </div>
-                    <button @click="editRoomAdmins"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Speichern
-                    </button>
+                    <AddButton @click="editRoomAdmins"
+                               text="Speichern"
+                               mode="modal"
+                               class="mt-8 px-12 py-3" />
 
                 </div>
 
@@ -557,15 +557,14 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2">
-                            <button :class="[editRoomForm.name.length === 0 ?
+                        <div>
+                            <AddButton @click="editRoom"
+                                       text="Speichern"
+                                       mode="modal"
+                                       :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                    class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                    @click="editRoom"
-                                    :disabled="editRoomForm.name.length === 0">
-                                Speichern
-                            </button>
+                                       :disabled="editRoomForm.name.length === 0"
+                                       class="mt-8 px-24 py-3" />
                         </div>
 
                     </div>

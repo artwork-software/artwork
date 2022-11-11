@@ -53,14 +53,14 @@
                             v-for="(notificationGroup,type,index) in notifications">
                             <div :class="index !== 0 ? 'border-t-2' : ''"  class="flex flex-wrap mx-12 w-full py-6"
                                  v-if="showRoomsAndEvents" v-for="notification in notificationGroup">
-                                <div  class="flex flex-wrap w-full">
-                                    <div class="flex w-full">
+                                <div  class="flex flex-wrap">
+                                    <div class="flex">
                                         <img alt="Notification" v-if="!isErrorType(type,notification)"
                                              class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
                                         <img alt="Notification" v-else class="h-12 w-12 mr-5"
                                              src="/Svgs/IconSvgs/icon_notification_red.svg"/>
                                         <div class="flex-col flex my-auto">
-                                            <div class="flex w-full">
+                                            <div class="flex">
                                                 <div class="sDark">
                                                     {{ notification.data.title }}
                                                 </div>
@@ -84,12 +84,22 @@
                                                         :user="notification.data.conflict.created_by"></NotificationUserIcon>
                                                 </div>
                                             </div>
-                                            <NotificationEventInfoRow
+                                            <NotificationEventInfoRow v-if="notificationGroup[0].type === 'App\\Notifications\\EventNotification' || notification.data.type === 'ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'"
                                                 :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
                                                 :projects="projects"
                                                 :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.event"
                                                 :rooms="this.rooms"
                                                 :eventTypes="this.eventTypes"></NotificationEventInfoRow>
+                                            <Link :href="route('tasks.own')" v-else-if="notification.data.title.indexOf('neue Aufgaben') !== -1"
+                                                 class="xxsLight mt-1.5 cursor-pointer items-center flex text-buttonBlue">
+                                                in Aufgaben ansehen
+                                            </Link>
+                                            <div class="mt-1.5 flex xxsLight my-auto" v-if="notification.data.type === 'NOTIFICATION_TEAM' ||notification.data.type === 'NOTIFICATION_PROJECT'">
+                                                {{ this.formatDate(notification.created_at) }}
+                                                von
+                                                <NotificationUserIcon
+                                                    :user="notification.data.created_by"></NotificationUserIcon>
+                                            </div>
                                         </div>
                                     </div>
 

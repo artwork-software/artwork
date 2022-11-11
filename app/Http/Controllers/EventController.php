@@ -196,7 +196,6 @@ class EventController extends Controller
         $event->save();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->event = $event;
-        //Hier brauche ich ganzen User + created_at der Notification
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator, $this->notificationData);
 
@@ -304,9 +303,9 @@ class EventController extends Controller
         $event->delete();
 
         // create and send notification to event owner
-        $this->notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
+        $this->notificationData->title = 'Termin abgesagt';
         $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator()->get(), $this->notificationData);
 
         return new JsonResponse(['success' => 'Event moved to trash']);

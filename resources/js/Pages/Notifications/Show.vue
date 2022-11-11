@@ -51,10 +51,10 @@
                         </div>
                         <div
                             v-for="(notificationGroup,type,index) in notifications">
-                            <div :class="index !== 0 ? 'border-t-2' : ''" class="flex flex-wrap mx-12 w-full py-6"
+                            <div :class="index !== 0 ? 'border-t-2' : ''"  class="flex flex-wrap mx-12 w-full py-6"
                                  v-if="showRoomsAndEvents" v-for="notification in notificationGroup">
-                                <div class="flex flex-wrap">
-                                    <div class="flex ">
+                                <div  class="flex flex-wrap w-full">
+                                    <div class="flex w-full">
                                         <img alt="Notification" v-if="!isErrorType(type,notification)"
                                              class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
                                         <img alt="Notification" v-else class="h-12 w-12 mr-5"
@@ -70,7 +70,7 @@
                                                     Verlauf ansehen
                                                 </div>
                                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                                     v-if="type === 'App\\Notifications\\RoomRequestNotification'">
+                                                     v-if="type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
                                                     {{ this.formatDate(notification.created_at) }}
                                                     von
                                                     <NotificationUserIcon
@@ -234,7 +234,7 @@ export default defineComponent({
             return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
         },
         isErrorType(type, notification) {
-            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1) {
+            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt') {
                 return true;
             }
             return false;

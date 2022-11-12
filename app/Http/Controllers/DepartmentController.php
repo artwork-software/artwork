@@ -95,7 +95,7 @@ class DepartmentController extends Controller
         $this->notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
         $this->notificationData->team->id = $department->id;
         $this->notificationData->team->title = $department->name;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($department->users->all(), $this->notificationData);
 
         broadcast(new DepartmentUpdated())->toOthers();
@@ -165,10 +165,10 @@ class DepartmentController extends Controller
             $teamIdsAfter[] = $memberAfter->id;
             // send notification to new team member
             if(!in_array($memberAfter->id, $teamIdsBefore)){
-                $this->notificationData->title = 'Du wurdest zum Team "' . $department->name . '" hinzugefügt';
+                $this->notificationData->title = 'Du wurdest zu Team "' . $department->name . '" hinzugefügt';
                 $this->notificationData->team->id = $department->id;
                 $this->notificationData->team->title = $department->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($memberAfter, $this->notificationData);
             }
         }
@@ -177,10 +177,10 @@ class DepartmentController extends Controller
             // send notification to removed team member
             if(!in_array($teamMemberBefore, $teamIdsAfter)){
                 $user = User::find($teamMemberBefore);
-                $this->notificationData->title = 'Du wurdest aus dem Team "' . $department->name . '" entfernt';
+                $this->notificationData->title = 'Du wurdest aus Team "' . $department->name . '" gelöscht';
                 $this->notificationData->team->id = $department->id;
                 $this->notificationData->team->title = $department->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
@@ -203,7 +203,7 @@ class DepartmentController extends Controller
         $this->notificationData->title = 'Team "' . $department->name . '" wurde gelöscht';
         $this->notificationData->team->id = $department->id;
         $this->notificationData->team->title = $department->name;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($department->users->all(), $this->notificationData);
 
         $department->delete();

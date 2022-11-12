@@ -186,10 +186,10 @@ class RoomController extends Controller
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
             if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
-                $this->notificationData->title = 'Du wurdest zum Raum Admin von "' . $room->name . '" ernannt';
+                $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $this->notificationData->room->id = $room->id;
                 $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($roomAdminAfter, $this->notificationData);
             }
         }
@@ -198,10 +198,10 @@ class RoomController extends Controller
         foreach ($roomAdminIdsBefore as $roomAdminBefore){
             if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
                 $user = User::find($roomAdminBefore);
-                $this->notificationData->title = 'Du wurdest als Raum Admin von "' . $room->name . '" entfernt';
+                $this->notificationData->title = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $this->notificationData->room->id = $room->id;
                 $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
@@ -211,7 +211,7 @@ class RoomController extends Controller
         $this->notificationData->title = 'Änderungen an "'. $room->name . '"';
         $this->notificationData->room->id = $room->id;
         $this->notificationData->room->title = $room->name;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($room->room_admins()->get(), $this->notificationData);
 
         return Redirect::back()->with('success', 'Room updated');

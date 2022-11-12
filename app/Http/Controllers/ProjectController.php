@@ -290,10 +290,10 @@ class ProjectController extends Controller
             $adminIdsAfter[] = $adminAfter->id;
             // if added a new project admin, send notification to this user
             if(!in_array($adminAfter->id, $adminIdsBefore)){
-                $this->notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' ernannt';
+                $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($adminAfter, $this->notificationData);
             }
         }
@@ -302,10 +302,10 @@ class ProjectController extends Controller
             $managerIdsAfter[] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if(!in_array($managerAfter->id, $managerIdsBefore)){
-                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' ernannt';
+                $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($managerAfter, $this->notificationData);
             }
         }
@@ -314,10 +314,10 @@ class ProjectController extends Controller
         foreach ($adminIdsBefore as $adminBefore){
             if(!in_array($adminBefore, $adminIdsAfter)){
                 $user = User::find($adminBefore);
-                $this->notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' entfernt';
+                $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' entfernt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
@@ -326,10 +326,10 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore){
             if(!in_array($managerBefore, $managerIdsAfter)){
                 $user = User::find($managerBefore);
-                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' entfernt';
+                $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' entfernt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = Auth::id();
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
@@ -414,7 +414,7 @@ class ProjectController extends Controller
         $this->notificationData->title =  $project->name . ' wurde gelöscht';
         $this->notificationData->project->id = $project->id;
         $this->notificationData->project->title = $project->name;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
 
         // send notification to all users in project
         $this->notificationController->create($project->users->all(), $this->notificationData);

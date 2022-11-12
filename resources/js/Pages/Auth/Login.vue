@@ -41,7 +41,10 @@
                             </div>
 
                             <div>
-                                <AddButton :disabled="this.form.email === '' || this.form.password === ''" :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary hover:bg-secondary' : '']" class="px-44 py-4" type="submit" text="Login" mode="modal"/>
+                                <button :disabled="this.form.email === '' || this.form.password === ''" :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
+                                        class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
+                                    <p class="text-sm">Login</p>
+                                </button>
                             </div>
                         </form>
 

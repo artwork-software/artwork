@@ -10,6 +10,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Notifications\SimpleNotification;
 use Carbon\Carbon;
+use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -123,8 +124,30 @@ class SchedulingController extends Controller
         $scheduling->delete();
     }
 
+    /**
+     * @throws \Exception
+     */
     public function sendDeadlineNotification(){
-
+        $tasks = Task::where('done_at', null)->get();
+        foreach ($tasks as $task){
+            if(!empty($task->user_id)){
+                $user = User::find($task->user_id);
+                $deadline = new DateTime($task->deadline);
+                $date = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
+                if($deadline->format('Y-m-d H:i:s') == $date){
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_DEADLINE;
+                    $this->notificationData->title = 'Deadline von '. $task->name .' ist morgen erreicht';
+                    $this->notificationData->task = $task;
+                    $this->notificationController->create($user, $this->notificationData);
+                }
+                if($deadline->format('Y-m-d H:i:s') <= $date){
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_DEADLINE;
+                    $this->notificationData->title = $task->name .' hat ihre Deadline überschritten';
+                    $this->notificationData->task = $task;
+                    $this->notificationController->create($user, $this->notificationData);
+                }
+            }
+        }
     }
 
     public function sendNotification(): void
@@ -132,10 +155,9 @@ class SchedulingController extends Controller
         $scheduleToNotify = Scheduling::whereDate('updated_at', '>=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
         foreach ($scheduleToNotify as $schedule){
             $user = User::find($schedule->user_id);
-
             switch ($schedule->type){
                 case 'TASK':
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_SIMPLE;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_NEW_TASK;
                     $this->notificationData->title = $schedule->count . ' neue Aufgaben für dich';
                     $this->notificationData->created_by = null;
                     break;
@@ -146,17 +168,16 @@ class SchedulingController extends Controller
                     $this->notificationData->project->id = $project->id;
                     $this->notificationData->project->title = $project->name;
                     $this->notificationData->created_by = null;
-
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->task_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_SIMPLE;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
                     $this->notificationData->title = 'Änderungen an ' . $task->name;
                     $this->notificationData->created_by = null;
                     break;
                 case 'EVENT':
                     $event = Event::find($schedule->event_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
                     $this->notificationData->title = 'Termin geändert';
                     $this->notificationData->event = $event;
                     $this->notificationData->created_by = null;

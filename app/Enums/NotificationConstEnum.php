@@ -19,4 +19,6 @@ class NotificationConstEnum
 
     public const NOTIFICATION_PROJECT = 'NOTIFICATION_PROJECT';
     public const NOTIFICATION_TEAM = 'NOTIFICATION_TEAM';
+
+    public const NOTIFICATION_DEADLINE = 'NOTIFICATION_DEADLINE';
 }

@@ -34,7 +34,7 @@ class RoomController extends Controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new \stdClass();
         $this->notificationData->room = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
     }
 
     /**

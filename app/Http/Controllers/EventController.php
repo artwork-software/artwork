@@ -45,7 +45,7 @@ class EventController extends Controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
     }
 
     public function viewEventIndex(Request $request): Response
@@ -99,16 +99,15 @@ class EventController extends Controller
                 if($user->id == Auth::id()){
                     continue;
                 }
-
                 if($conflict->audience){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
                     $this->notificationData->conflict = $conflict;
                     $this->notificationData->created_by = User::where('id', Auth::id())->first();
                     $this->notificationController->create($user, $this->notificationData);
                 }
                 if($conflict->is_loud){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Lauter Termin im Nebenraum';
                     $this->notificationData->conflict = $conflict;
                     $this->notificationData->created_by = User::where('id', Auth::id())->first();

@@ -105,10 +105,9 @@
                 </div>
             </div>
 
-            <button type="submit"
-                class="px-28 py-3 mt-5 bg-indigo-900 hover:bg-secondary text-xl uppercase text-white disabled:bg-secondary disabled:cursor-not-allowed"
-                :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''">
-                Registrieren
+            <button :disabled="form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === ''" :class="[form.email === '' || form.position === '' || form.password === '' || form.first_name === '' || form.last_name === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
+                    class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
+                <p class="text-sm">Registrieren</p>
             </button>
         </form>
     </div>

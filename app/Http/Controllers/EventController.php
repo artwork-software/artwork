@@ -45,7 +45,7 @@ class EventController extends Controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
     }
 
     public function viewEventIndex(Request $request): Response
@@ -100,22 +100,21 @@ class EventController extends Controller
                     continue;
                 }
                 if($conflict->audience){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
                     $this->notificationData->conflict = $conflict;
-                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
                     $this->notificationController->create($user, $this->notificationData);
                 }
                 if($conflict->is_loud){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Lauter Termin im Nebenraum';
                     $this->notificationData->conflict = $conflict;
-                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
                     $this->notificationController->create($user, $this->notificationData);
                 }
             }
         }
-
         $this->authorize('create', Event::class);
 
         if($this->collisionService->getCollision($request)->count() > 0){
@@ -125,7 +124,7 @@ class EventController extends Controller
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
                     $this->notificationData->title = 'Terminkonflikt';
                     $this->notificationData->conflict = $collision;
-                    $this->notificationData->created_by = Auth::id();
+                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
                     $this->notificationController->create($collision['created_by'], $this->notificationData);
                 }
             }
@@ -186,7 +185,9 @@ class EventController extends Controller
         if (!$request->get('accepted')) {
             $this->notificationData->title = 'Raumanfrage abgelehnt';
             $this->notificationData->accepted = false;
+            $event->declined_room_id = $event->room_id;
             $event->room_id = null;
+
         } else {
             $this->notificationData->title = 'Raumanfrage bestätigt';
             $this->notificationData->accepted = true;
@@ -194,7 +195,7 @@ class EventController extends Controller
         $event->save();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator, $this->notificationData);
 
         return Redirect::back();
@@ -301,9 +302,9 @@ class EventController extends Controller
         $event->delete();
 
         // create and send notification to event owner
-        $this->notificationData->title = 'Event ' . $event->eventName . ' wurde gelöscht';
+        $this->notificationData->title = 'Termin abgesagt';
         $this->notificationData->event = $event;
-        $this->notificationData->created_by = Auth::id();
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator()->get(), $this->notificationData);
 
         return new JsonResponse(['success' => 'Event moved to trash']);

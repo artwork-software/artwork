@@ -62,6 +62,26 @@
                         </transition>
                     </Menu>
                 </div>
+                <div v-if="room.room_history?.length > 0" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                    <div>
+                        zuletzt geändert:
+                    </div>
+                    <img :data-tooltip-target="room.room_history[0].user.id"
+                         :src="room.room_history[0].user.profile_photo_url"
+                         :alt="room.room_history[0].user?.name"
+                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <UserTooltip :user="room.room_history[0].user"/>
+                    <span class="ml-2 subpixel-antialiased">
+                        {{ room.room_history[0].created_at }}
+                    </span>
+                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                            @click="openRoomHistoryModal()">
+                        <ChevronRightIcon
+                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                            aria-hidden="true"/>
+                        Verlauf ansehen
+                    </button>
+                </div>
                 <div v-if="room.temporary === 1" class="font-lexend my-4 font-semibold">
                     {{ room.start_date }} - {{ room.end_date }}
                 </div>
@@ -464,10 +484,10 @@
                             </button>
                         </span>
                     </div>
-                    <button @click="editRoomAdmins"
-                            class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                    >Speichern
-                    </button>
+                    <AddButton @click="editRoomAdmins"
+                               text="Speichern"
+                               mode="modal"
+                               class="mt-8 px-12 py-3" />
 
                 </div>
 
@@ -537,15 +557,14 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2">
-                            <button :class="[editRoomForm.name.length === 0 ?
+                        <div>
+                            <AddButton @click="editRoom"
+                                       text="Speichern"
+                                       mode="modal"
+                                       :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                    class="mt-4 col-span-1 mr-1.5 flex items-center px-24 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                    @click="editRoom"
-                                    :disabled="editRoomForm.name.length === 0">
-                                Speichern
-                            </button>
+                                       :disabled="editRoomForm.name.length === 0"
+                                       class="mt-8 px-24 py-3" />
                         </div>
 
                     </div>
@@ -801,6 +820,41 @@
                 </div>
             </template>
         </jet-dialog-modal>
+        <!-- Room History Modal-->
+        <jet-dialog-modal :show="showRoomHistory" @close="closeRoomHistoryModal">
+            <template #content>
+                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
+                <div class="mx-4">
+                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                        Raumverlauf
+                    </div>
+                    <XIcon @click="closeRoomHistoryModal"
+                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-secondary subpixel-antialiased">
+                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
+                    </div>
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
+                        <div class="flex w-full my-1" v-for="historyItem in room.room_history">
+                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                {{ historyItem.created_at }}:
+                            </span>
+                            <div class="flex w-full">
+                                <img :data-tooltip-target="historyItem.user.id"
+                                     :src="historyItem.user.profile_photo_url"
+                                     :alt="historyItem.user.name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip :user="historyItem.user"/>
+                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                    {{ historyItem.description }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
     </app-layout>
 </template>
 
@@ -829,7 +883,7 @@ import {
     PlusIcon,
     MinusIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon} from "@heroicons/vue/solid";
+import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -900,7 +954,8 @@ export default {
         ListboxOption,
         ListboxOptions,
         CalendarComponent,
-        AddButton
+        AddButton,
+        ChevronRightIcon
     },
     computed: {
         eventTypeFilters: function () {
@@ -927,6 +982,7 @@ export default {
             requestToApprove: null,
             showApproveRequestModal: false,
             showDeclineRequestModal: false,
+            showRoomHistory: false,
             successHeading: "",
             successDescription: "",
             roomForm: this.$inertia.form({
@@ -1189,7 +1245,13 @@ export default {
             this.editRoomForm.end_date = this.editRoomForm.end_date_dt_local;
             this.editRoomForm.patch(route('rooms.update', {room: this.editRoomForm.id}));
             this.closeEditRoomModal();
-        }
+        },
+        openRoomHistoryModal() {
+            this.showRoomHistory = true;
+        },
+        closeRoomHistoryModal() {
+            this.showRoomHistory = false;
+        },
     },
     watch: {
         user_query: {

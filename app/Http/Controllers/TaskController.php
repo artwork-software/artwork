@@ -32,7 +32,7 @@ class TaskController extends Controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new stdClass();
         $this->notificationData->event = new stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
     }
     /**
      * Show the form for creating a new resource.

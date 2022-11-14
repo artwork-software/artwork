@@ -3,8 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\RoomIndexWithoutEventsResource;
+use App\Models\EventType;
+use App\Models\Project;
+use App\Models\Room;
 use App\Models\User;
 use App\Notifications\ConflictNotification;
+use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
 use App\Notifications\GlobalUserNotification;
 use App\Notifications\ProjectNotification;
@@ -34,8 +41,11 @@ class NotificationController extends Controller
         foreach ($user->notifications as $notification){
             $output[$notification->type][] = $notification;
         }
-        return inertia('Notification/Show', [
-            'notifications' => $output
+        return inertia('Notifications/Show', [
+            'notifications' => $output,
+            'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'projects' => ProjectShowResource::collection(Project::all())->resolve(),
         ]);
     }
 
@@ -52,16 +62,13 @@ class NotificationController extends Controller
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => [
-                        'id' => $notificationData->event->id,
-                        'title' => $notificationData->event->title,
-                    ],
+                    'event' => $notificationData->event,
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new RoomRequestNotification($notificationBody));
                 break;
-            case NotificationConstEnum::NOTIFICATION_EVENT:
+            case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
@@ -70,7 +77,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new EventNotification($notificationBody));
                 break;
-            case NotificationConstEnum::NOTIFICATION_TASK:
+            case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
@@ -81,14 +88,6 @@ class NotificationController extends Controller
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new TaskNotification($notificationBody));
-                break;
-            case NotificationConstEnum::NOTIFICATION_SIMPLE:
-                $notificationBody = [
-                    'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'created_by' => $notificationData->created_by
-                ];
-                Notification::send($user, new SimpleNotification($notificationBody));
                 break;
             case NotificationConstEnum::NOTIFICATION_PROJECT:
                 $notificationBody = [
@@ -114,7 +113,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new TeamNotification($notificationBody));
                 break;
-            case NotificationConstEnum::NOTIFICATION_ROOM:
+            case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
                 $notificationBody = [
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
@@ -134,6 +133,14 @@ class NotificationController extends Controller
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new ConflictNotification($notificationBody));
+                break;
+            case NotificationConstEnum::NOTIFICATION_DEADLINE:
+                $notificationBody = [
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'task' => $notificationData->task,
+                ];
+                Notification::send($user, new DeadlineNotification($notificationBody));
                 break;
         }
     }

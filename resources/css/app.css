@@ -34,6 +34,12 @@
         color: #27233C;
         opacity: 1;
     }
+    .headline3{
+        font: normal normal 600 18px/21px Lexend;
+        letter-spacing: 0.4px;
+        color: #27233C;
+        opacity: 1;
+    }
     .headline3Light{
         font: normal normal 18px/21px Inter;
         letter-spacing: 0;

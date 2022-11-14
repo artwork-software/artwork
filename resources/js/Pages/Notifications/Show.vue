@@ -115,7 +115,7 @@
                 </div>
                 <div v-if="openTab === 'mailSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-
+                        <NotificationFrequencySettings/>
                     </p>
                 </div>
                 <div v-if="openTab === 'pushSettings'">
@@ -189,10 +189,12 @@ import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfo
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
+import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 
 
 export default defineComponent({
     components: {
+        NotificationFrequencySettings,
         AddButton,
         TeamIconCollection,
         UserTooltip,

@@ -38,8 +38,9 @@ class NotificationController extends Controller
     {
         $user = User::find(Auth::id());
         $output = [];
+
         foreach ($user->notifications as $notification){
-            $output[$notification->type][] = $notification;
+            $output[$notification->data['groupType']][] = $notification;
         }
         return inertia('Notifications/Show', [
             'notifications' => $output,
@@ -58,8 +59,20 @@ class NotificationController extends Controller
     {
         $notificationBody = [];
         switch($notificationData->type){
+            case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
+                $notificationBody = [
+                    'groupType' => 'EVENTS',
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'event' => $notificationData->event,
+                    'accepted' => $notificationData->accepted,
+                    'created_by' => $notificationData->created_by
+                ];
+                Notification::send($user, new RoomRequestNotification($notificationBody));
+                break;
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
                 $notificationBody = [
+                    'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'event' => $notificationData->event,
@@ -70,6 +83,7 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 $notificationBody = [
+                    'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'event' => $notificationData->event,
@@ -79,6 +93,7 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
                 $notificationBody = [
+                    'groupType' => 'TASKS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'task' => [
@@ -91,6 +106,7 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_PROJECT:
                 $notificationBody = [
+                    'groupType' => 'PROJECTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'project' => [
@@ -103,11 +119,13 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_TEAM:
                 $notificationBody = [
+                    'groupType' => 'PROJECTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'team' => [
                         'id' => $notificationData->team->id,
-                        'title' => $notificationData->team->title
+                        'title' => $notificationData->team->title,
+                        'svg_name' => $notificationData->team->svg_name,
                     ],
                     'created_by' => $notificationData->created_by
                 ];
@@ -115,6 +133,7 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
                 $notificationBody = [
+                    'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'room' => [
@@ -126,7 +145,9 @@ class NotificationController extends Controller
                 Notification::send($user, new RoomNotification($notificationBody));
                 break;
             case NotificationConstEnum::NOTIFICATION_CONFLICT:
+            case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
                 $notificationBody = [
+                    'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'conflict' => $notificationData->conflict,
@@ -136,6 +157,7 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_DEADLINE:
                 $notificationBody = [
+                    'groupType' => 'TASKS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'task' => $notificationData->task,

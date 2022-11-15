@@ -96,17 +96,17 @@ class EventController extends Controller
         foreach ($joiningEvents as $joiningEvent){
             foreach ($joiningEvent as $conflict){
                 $user = User::find($conflict->user_id);
-                if($user->id == Auth::id()){
+                if($user->id === Auth::id()){
                     continue;
                 }
-                if($conflict->audience){
+                if($request->audience){
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
                     $this->notificationData->conflict = $conflict;
                     $this->notificationData->created_by = User::where('id', Auth::id())->first();
                     $this->notificationController->create($user, $this->notificationData);
                 }
-                if($conflict->is_loud){
+                if($request->isLoud){
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
                     $this->notificationData->title = 'Lauter Termin im Nebenraum';
                     $this->notificationData->conflict = $conflict;
@@ -193,7 +193,7 @@ class EventController extends Controller
             $this->notificationData->accepted = true;
         }
         $event->save();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST;
         $this->notificationData->event = $event;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator, $this->notificationData);

@@ -32,86 +32,16 @@
                 </ul>
             </div>
             <div class="">
-                <div class="flex" v-if="openTab === 'notifications'">
-                    <button class="bg-buttonBlue flex relative w-6"
-                            @click="showRoomsAndEvents = !showRoomsAndEvents">
-                        <ChevronUpIcon v-if="showRoomsAndEvents"
-                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                        <ChevronDownIcon v-else
-                                         class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                    </button>
-                    <div class="flex flex-wrap w-11/12 border border-2 border-gray-300">
-                        <div class="flex justify-between w-full mb-6 ml-12">
-                            <div class="flex headline2 my-10">
-                                Raumbelegungen & Termine
-                            </div>
-                            <div class="flex justify-end xsLight mr-8 my-10">
-                                alle archivieren
-                            </div>
-                        </div>
-                        <div
-                            v-for="(notificationGroup,type,index) in notifications">
-                            <div :class="index !== 0 ? 'border-t-2' : ''"  class="flex flex-wrap mx-12 w-full py-6"
-                                 v-if="showRoomsAndEvents" v-for="notification in notificationGroup">
-                                <div  class="flex flex-wrap">
-                                    <div class="flex">
-                                        <img alt="Notification" v-if="!isErrorType(type,notification)"
-                                             class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
-                                        <img alt="Notification" v-else class="h-12 w-12 mr-5"
-                                             src="/Svgs/IconSvgs/icon_notification_red.svg"/>
-                                        <div class="flex-col flex my-auto">
-                                            <div class="flex">
-                                                <div class="sDark">
-                                                    {{ notification.data.title }}
-                                                </div>
-                                                <div v-if="notification.data.title === 'Termin geändert'"
-                                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
-                                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                                    Verlauf ansehen
-                                                </div>
-                                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                                     v-if="type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
-                                                    {{ this.formatDate(notification.created_at) }}
-                                                    von
-                                                    <NotificationUserIcon
-                                                        :user="notification.data.created_by"></NotificationUserIcon>
-                                                </div>
-                                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                                     v-if="notification.data.title === 'Terminkonflikt'">
-                                                    Konflikttermin belegt:
-                                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
-                                                    <NotificationUserIcon
-                                                        :user="notification.data.conflict.created_by"></NotificationUserIcon>
-                                                </div>
-                                            </div>
-                                            <NotificationEventInfoRow v-if="notificationGroup[0].type === 'App\\Notifications\\EventNotification' || notification.data.type === 'ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'"
-                                                :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
-                                                :projects="projects"
-                                                :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.event"
-                                                :rooms="this.rooms"
-                                                :eventTypes="this.eventTypes"></NotificationEventInfoRow>
-                                            <Link :href="route('tasks.own')" v-else-if="notification.data.title.indexOf('neue Aufgaben') !== -1"
-                                                 class="xxsLight mt-1.5 cursor-pointer items-center flex text-buttonBlue">
-                                                in Aufgaben ansehen
-                                            </Link>
-                                            <div class="mt-1.5 flex xxsLight my-auto" v-if="notification.data.type === 'NOTIFICATION_TEAM' ||notification.data.type === 'NOTIFICATION_PROJECT'">
-                                                {{ this.formatDate(notification.created_at) }}
-                                                von
-                                                <NotificationUserIcon
-                                                    :user="notification.data.created_by"></NotificationUserIcon>
-                                            </div>
-                                        </div>
-                                    </div>
+                <div class="flex flex-wrap" v-if="openTab === 'notifications'">
+                    <!-- Raumbelegungen und Termine Notifications -->
+                    <NotificationSectionComponent name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['EVENTS']"></NotificationSectionComponent>
+                    <!-- Räume und Raumbelegungsanfragen -->
+                    <NotificationSectionComponent name="Räume & Raumbelegungsanfragen" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['ROOMS']"></NotificationSectionComponent>
+                    <!-- Aufgaben -->
+                    <NotificationSectionComponent name="Aufgaben" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['TASKS']"></NotificationSectionComponent>
+                    <!-- Projekte & Teams -->
+                    <NotificationSectionComponent name="Projekte & Teams" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
 
-                                </div>
-                                <div v-if="isErrorType(type,notification) && type.indexOf('RoomRequestNotification') !== -1" class="flex w-full ml-16 mt-1">
-                                    <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12" text="Anfrage ändern" mode="modal"/>
-                                    <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary" text="Termin löschen"></AddButton>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
                 </div>
                 <div v-if="openTab === 'mailSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -190,10 +120,12 @@ import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
+import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 
 
 export default defineComponent({
     components: {
+        NotificationSectionComponent,
         NotificationFrequencySettings,
         AddButton,
         TeamIconCollection,
@@ -277,6 +209,7 @@ export default defineComponent({
         return {
             openTab: 'notifications',
             showRoomsAndEvents: true,
+            showRoomsAndRoomRequests: true,
             eventToEdit: null,
             showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,

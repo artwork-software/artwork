@@ -277,8 +277,8 @@ class ProjectController extends Controller
         $project->categories()->sync($request->projectCategoryIds);
         $project->genres()->sync($request->projectGenreIds);
         $project->sectors()->sync($request->projectSectorIds);
-        $historyService->updateHistory($project,'Eigenschaften angepasst.');
-        $historyService->projectUpdated($project);
+        //$historyService->updateHistory($project,'Eigenschaften angepasst.');
+        //$historyService->projectUpdated($project);
 
         // Get and check project admins and managers after update
         $adminIdsAfter = [];
@@ -314,7 +314,7 @@ class ProjectController extends Controller
         foreach ($adminIdsBefore as $adminBefore){
             if(!in_array($adminBefore, $adminIdsAfter)){
                 $user = User::find($adminBefore);
-                $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' entfernt';
+                $this->notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
@@ -326,7 +326,7 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore){
             if(!in_array($managerBefore, $managerIdsAfter)){
                 $user = User::find($managerBefore);
-                $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' entfernt';
+                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();

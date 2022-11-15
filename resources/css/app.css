@@ -134,4 +134,11 @@
         border: 1px solid #D8D7DE;
         opacity: 1;
     }
+    .linkText{
+        text-align: left;
+        font: normal normal 12px/18px Inter;
+        letter-spacing: -0.18px;
+        color: #3017AD;
+        opacity: 1;
+    }
 }

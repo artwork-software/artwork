@@ -93,8 +93,7 @@ class DepartmentController extends Controller
 
         // create and send notification data
         $this->notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
-        $this->notificationData->team->id = $department->id;
-        $this->notificationData->team->title = $department->name;
+        $this->notificationData->team = $department;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($department->users->all(), $this->notificationData);
 
@@ -166,8 +165,7 @@ class DepartmentController extends Controller
             // send notification to new team member
             if(!in_array($memberAfter->id, $teamIdsBefore)){
                 $this->notificationData->title = 'Du wurdest zu Team "' . $department->name . '" hinzugefügt';
-                $this->notificationData->team->id = $department->id;
-                $this->notificationData->team->title = $department->name;
+                $this->notificationData->team = $department;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($memberAfter, $this->notificationData);
             }
@@ -178,8 +176,7 @@ class DepartmentController extends Controller
             if(!in_array($teamMemberBefore, $teamIdsAfter)){
                 $user = User::find($teamMemberBefore);
                 $this->notificationData->title = 'Du wurdest aus Team "' . $department->name . '" gelöscht';
-                $this->notificationData->team->id = $department->id;
-                $this->notificationData->team->title = $department->name;
+                $this->notificationData->team = $department;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
             }
@@ -201,8 +198,7 @@ class DepartmentController extends Controller
         // create and send notification data
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
         $this->notificationData->title = 'Team "' . $department->name . '" wurde gelöscht';
-        $this->notificationData->team->id = $department->id;
-        $this->notificationData->team->title = $department->name;
+        $this->notificationData->team = $department;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($department->users->all(), $this->notificationData);
 

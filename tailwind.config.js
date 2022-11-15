@@ -30,7 +30,8 @@ module.exports = {
                 buttonHover:'#2D1FDE',
                 tagBg: 'rgba(48,23,173,0.1)',
                 tag: 'rgba(48,23,173,0.3)',
-                tagText: '#3017AD'
+                tagText: '#3017AD',
+                backgroundBlue: '#3017AD34'
             },
             fontSize: {
                 header: '30px'

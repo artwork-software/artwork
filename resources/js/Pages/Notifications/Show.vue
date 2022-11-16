@@ -31,6 +31,9 @@
                     </li>
                 </ul>
             </div>
+            <pre>
+                {{readNotifications}}
+            </pre>
             <div class="">
                 <div class="flex flex-wrap" v-if="openTab === 'notifications'">
                     <!-- Raumbelegungen und Termine Notifications -->
@@ -169,7 +172,7 @@ export default defineComponent({
         ConfirmationComponent
 
     },
-    props: ['notifications', 'rooms', 'eventTypes', 'projects'],
+    props: ['notifications', 'rooms', 'eventTypes', 'projects','readNotifications'],
     created() {
 
     },

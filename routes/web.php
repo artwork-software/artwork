@@ -240,5 +240,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
 });
 

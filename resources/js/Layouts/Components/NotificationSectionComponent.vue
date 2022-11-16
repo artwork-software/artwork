@@ -23,6 +23,7 @@
             </div>
             <div v-if="showSection" @mouseover="notification.hovered = true" @mouseleave="notification.hovered = false" :class="index !== 0 && showSection ? 'border-t-2' : ''" class="flex flex-wrap justify-between mx-12 w-full py-6"
                  v-for="(notification,index) in notifications">
+                {{notification}}
                     <div class="flex flex-wrap">
                         <div class="flex">
                             <!-- Notification Icon -->
@@ -106,7 +107,7 @@
                         </div>
                     </div>
                 <!-- Archive Button -->
-                <img v-show="notification.hovered" src="/Svgs/IconSvgs/icon_archive_white.svg"
+                <img @click="setOnRead(notification.id)" v-show="notification.hovered" src="/Svgs/IconSvgs/icon_archive_white.svg"
                      class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-buttonBlue rounded-full"
                      aria-hidden="true"/>
 
@@ -186,6 +187,10 @@ export default {
             showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            setOnReadForm: this.$inertia.form({
+                _method: 'PATCH',
+                notificationId: null
+            })
         }
     },
     props: ['eventTypes', 'rooms', 'notifications', 'projects','name'],
@@ -209,6 +214,10 @@ export default {
         openDeleteEventModal(event) {
             this.eventToDelete = event;
             this.deleteComponentVisible = true;
+        },
+        setOnRead(notificationId){
+            this.setOnReadForm.notificationId = notificationId;
+            this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;

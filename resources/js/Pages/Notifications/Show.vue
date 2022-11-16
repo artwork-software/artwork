@@ -31,19 +31,16 @@
                     </li>
                 </ul>
             </div>
-            <pre>
-                {{readNotifications}}
-            </pre>
             <div class="">
                 <div class="flex flex-wrap" v-if="openTab === 'notifications'">
                     <!-- Raumbelegungen und Termine Notifications -->
-                    <NotificationSectionComponent name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['EVENTS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']" name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['EVENTS']"></NotificationSectionComponent>
                     <!-- Räume und Raumbelegungsanfragen -->
-                    <NotificationSectionComponent name="Räume & Raumbelegungsanfragen" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['ROOMS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']" name="Räume & Raumbelegungsanfragen" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['ROOMS']"></NotificationSectionComponent>
                     <!-- Aufgaben -->
-                    <NotificationSectionComponent name="Aufgaben" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['TASKS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['TASKS']"></NotificationSectionComponent>
                     <!-- Projekte & Teams -->
-                    <NotificationSectionComponent name="Projekte & Teams" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']" name="Projekte & Teams" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
 
                 </div>
                 <div v-if="openTab === 'mailSettings'">

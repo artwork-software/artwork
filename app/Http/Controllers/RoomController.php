@@ -15,6 +15,7 @@ use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use App\Models\User;
+use App\Support\Services\CollisionService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -22,6 +23,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use function Clue\StreamFilter\fun;
 
 class RoomController extends Controller
 {
@@ -291,5 +293,30 @@ class RoomController extends Controller
         $room->restore();
 
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
+    }
+
+    public function collisionsCount(Request $request): array
+    {
+        $startDate = Carbon::parse($request['params']['start'])->setTimezone(config('app.timezone'));
+        $endDate = Carbon::parse($request['params']['end'])->setTimezone(config('app.timezone'));
+
+        $rooms = Room::all();
+        $collisions = [];
+        foreach ($rooms as $room){
+            $collisions[$room->id] = [
+                Event::query()
+                    ->whereOccursBetween($startDate, $endDate, true)
+                    ->where('room_id', $room->id)->count()
+            ];
+        }
+
+        /*
+         *
+         *
+         *
+         *
+         */
+
+        return $collisions;
     }
 }

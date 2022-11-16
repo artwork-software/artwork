@@ -29,6 +29,16 @@ class CollisionService
             ->where('room_id', $request->roomId);
     }
 
+
+    /**
+     * @param $request
+     * @return int
+     */
+    public function getCollisionCount($request): int
+    {
+        return $this->getCollision($request)->count();
+    }
+
     /**
      * @param $request
      * @return array

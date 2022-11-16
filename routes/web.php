@@ -240,5 +240,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+
+    Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
 });
 

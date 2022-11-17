@@ -51,9 +51,12 @@
                     <h2 v-if="!this.event?.id" class="xsLight mb-2">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
-                    <div v-else class="flex">
-                        erstellt von <img :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
+                    <div v-else class="flex items-center">
+                        erstellt von <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
                                           class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        <div class="xsLight ml-3" v-else>
+                            gelöschte Nutzer:in
+                        </div>
                     </div>
                 </div>
                 <div v-else class="flex-grow headline1">

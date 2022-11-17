@@ -69,7 +69,7 @@
                                 </div>
                                 <!-- 2nd Row of Notification-->
                                 <NotificationEventInfoRow
-                                    v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.data.type === 'ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
+                                    v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.data.type === 'NOTIFICATION_UPSERT_ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
                                     :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
                                     :projects="projects"
                                     :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
@@ -169,8 +169,8 @@
                                     <NotificationUserIcon v-if="notification.data.created_by"
                                                           :user="notification.data.created_by"></NotificationUserIcon>
                                 </div>
-
                             </div>
+
                             <!-- 2nd Row of Notification-->
                             <NotificationEventInfoRow
                                 v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.data.type === 'ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"

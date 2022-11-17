@@ -71,11 +71,11 @@
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img :data-tooltip-target="project.project_history[0].user.id"
-                         :src="project.project_history[0].user.profile_photo_url"
-                         :alt="project.project_history[0].user.name"
+                    <img v-if="project.project_history[0].user" :data-tooltip-target="project.project_history[0].user?.id"
+                         :src="project.project_history[0].user?.profile_photo_url"
+                         :alt="project.project_history[0].user?.name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip :user="project.project_history[0].user"/>
+                    <UserTooltip v-if="project.project_history[0].user" :user="project.project_history[0].user"/>
                     <span class="ml-2 subpixel-antialiased">
                         {{ project.project_history[0].created_at }}
                     </span>
@@ -137,7 +137,7 @@
                 <div class="flex flex-wrap w-full">
                     <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
-                        <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
+                        <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                         <UserTooltip :user="user"/>
                     </div>
@@ -187,7 +187,7 @@
                             </div>
                         </div>
                         <div class="flex -mr-3 mt-2" v-for="user in projectMembers.slice(0,5)">
-                            <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
+                            <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                                  class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
                             <UserTooltip :user="user"/>
                         </div>
@@ -211,10 +211,10 @@
                                             <Link href="#"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <img class="h-9 w-9 rounded-full"
-                                                     :src="user.profile_photo_url"
+                                                     :src="user?.profile_photo_url"
                                                      alt=""/>
                                                 <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
+                                                                {{ user?.first_name }} {{ user?.last_name }}
                                                             </span>
                                             </Link>
                                         </MenuItem>
@@ -790,11 +790,11 @@
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
-                                    <div class="flex items-center">
-                                        <img :data-tooltip-target="comment.user"
+                                    <div  class="flex items-center">
+                                        <img v-if="comment.user" :data-tooltip-target="comment.user"
                                              :src="comment.user.profile_photo_url" :alt="comment.user.name"
                                              class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="comment.user"/>
+                                        <UserTooltip v-if="comment.user" :user="comment.user"/>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ comment.created_at }}
@@ -1534,12 +1534,15 @@
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                            <div class="flex w-full">
-                                <img :data-tooltip-target="historyItem.user.id"
+                            <div  class="flex w-full">
+                                <img v-if="historyItem.user !== null" :data-tooltip-target="historyItem.user.id"
                                      :src="historyItem.user.profile_photo_url"
                                      :alt="historyItem.user.name"
                                      class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="historyItem.user"/>
+                                <UserTooltip v-if="historyItem.user !== null" :user="historyItem.user"/>
+                                <div v-else class="xsLight ml-3">
+                                    gelöschte Nutzer:in
+                                </div>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
                                     {{ historyItem.description }}
                                 </div>

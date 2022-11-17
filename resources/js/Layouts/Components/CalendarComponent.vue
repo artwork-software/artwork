@@ -79,7 +79,7 @@
             <Menu as="div" class="relative inline-block flex items-center text-left">
                 <div class="">
                     <MenuButton
-                        class="border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <span class="float-left xsDark">Filter</span>
                         <ChevronDownIcon
@@ -97,7 +97,7 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                         <!-- <div class="inline-flex border-none w-1/5">
                             <button>
                                 <FilterIcon class="w-3 mr-1 mt-0.5"/>
@@ -116,7 +116,7 @@
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
                             <!-- Save Filter Section -->
-                            <Disclosure v-slot="{ open }">
+                            <Disclosure v-slot="{ open }" default-open>
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                 >
@@ -127,9 +127,9 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <Disclosure v-slot="{ open }" v-if="saving">
+                                    <div v-if="saving">
                                         <div class="flex">
-                                            <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
+                                            <input id="saveFilter" v-model="filterName" type="text"
                                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                                    placeholder="Name des Filters"/>
                                             <button
@@ -140,7 +140,7 @@
                                                        @click="saveFilter"></AddButton> -->
                                         </div>
                                         <hr class="border-gray-500 mt-4 mb-4">
-                                    </Disclosure>
+                                    </div>
                                     <button
                                         class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
                                         v-for="filter of filters">
@@ -786,6 +786,10 @@ export default {
         }
     },
     methods: {
+        logFilter() {
+            console.log('on_button')
+            console.log(this.filterName)
+        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')

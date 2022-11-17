@@ -154,11 +154,13 @@
                         <div class="mt-4" v-if="roomForm.room_admins.length === 0">
                             <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
                         </div>
-                        <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
+                        <div v-else class="flex">
+                        <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
                             <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                                  :src="user.profile_photo_url"
                                  alt=""/>
                             <UserTooltip :user="user"/>
+                        </div>
                         </div>
                         <div class="mt-10">
                             <span class="headline2 w-full">Eigenschaften</span>
@@ -997,6 +999,10 @@ export default {
                 name: '',
                 description: '',
                 temporary: false,
+                room_admins: this.room.room_admins,
+                room_categories: this.roomCategoryIds,
+                room_attributes: this.roomAttributeIds,
+                adjoining_rooms: this.adjoiningRoomIds,
                 start_date: null,
                 start_date_dt_local: null,
                 end_date: null,

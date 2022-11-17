@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
@@ -163,13 +164,24 @@ class RoomController extends Controller
             $roomAdminIdsBefore[] = $roomAdminBefore->id;
         }
 
+        // get Room description
+        $oldRoomDescription = $room->description;
+
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
+        // get new room Description
+        $newRoomDescription = $room->description;
+
+        // check changes in room description
+        if(strlen($oldRoomDescription) !== strlen($newRoomDescription) || strlen($newRoomDescription) !== strlen($oldRoomDescription)){
+            $history = new HistoryController($room->id, 'App\Models\Room', 'Beschreibung wurde geändert');
+            $history->createHistory();
+        }
+        
         $room->room_admins()->sync(
             collect($request->room_admins)
                 ->map(function ($room_admin) {
                     $this->authorize('update', User::find($room_admin['id']));
-
                     return $room_admin['id'];
                 })
         );

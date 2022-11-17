@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
@@ -277,7 +278,7 @@ class ProjectController extends Controller
                 unset($userIdsBefore[$managerBefore->id]);
             }
         }
-        
+
         $project->fill($update_properties);
 
         $project->save();

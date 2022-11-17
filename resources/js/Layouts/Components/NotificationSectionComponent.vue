@@ -15,8 +15,8 @@
                     {{notifications.length}}
                     </div>
                 </div>
-                <div class="flex items-center justify-end linkText mr-8">
-                    <img src="/Svgs/IconSvgs/icon_archive_blue.svg"
+                <div @click="setAllOnRead(notifications)" class="flex cursor-pointer items-center justify-end linkText mr-8">
+                    <img  src="/Svgs/IconSvgs/icon_archive_blue.svg"
                          class="h-4 w-4 mr-2"
                          aria-hidden="true"/>alle archivieren
                 </div>
@@ -209,8 +209,8 @@
                                    text="Termin löschen"></AddButton>
                     </div>
                 </div>
-                <!-- Archive Button -->
-                <img @click="setOnRead(notification.id)" v-show="notification.hovered" src="/Svgs/IconSvgs/icon_archive_white.svg"
+                <!-- TODO: HERE DELETE BUTTON ?  -->
+                <img @click="setOnRead(notification.id)" v-show="false" src="/Svgs/IconSvgs/icon_archive_white.svg"
                      class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-buttonBlue rounded-full"
                      aria-hidden="true"/>
 
@@ -319,6 +319,11 @@ export default {
         setOnRead(notificationId){
             this.setOnReadForm.notificationId = notificationId;
             this.setOnReadForm.patch(route('notifications.setReadAt'));
+        },
+        setAllOnRead(notifications){
+            notifications.forEach((notification) => {
+              this.setOnRead(notification.id);
+            })
         },
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;

@@ -45,12 +45,15 @@
                 </div>
                 <div v-if="openTab === 'mailSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-                        <NotificationFrequencySettings/>
+                        <NotificationFrequencySettings :group-types="groupTypes"
+                                                       :notification-frequencies="notificationFrequencies"
+                                                       :notificationSettings="notificationSettings"/>
                     </p>
                 </div>
                 <div v-if="openTab === 'pushSettings'">
                     <p class="text-sm text-gray-500 dark:text-gray-400">
-
+                        <NotificationPushSettings :group-types="groupTypes"
+                                                  :notificationSettings="notificationSettings"/>
                     </p>
                 </div>
             </div>
@@ -121,10 +124,12 @@ import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWitho
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
+import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
 
 
 export default defineComponent({
     components: {
+        NotificationPushSettings,
         NotificationSectionComponent,
         NotificationFrequencySettings,
         AddButton,
@@ -169,7 +174,7 @@ export default defineComponent({
         ConfirmationComponent
 
     },
-    props: ['notifications', 'rooms', 'eventTypes', 'projects','readNotifications'],
+    props: ['notifications', 'rooms', 'eventTypes', 'projects','readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes'],
     created() {
 
     },

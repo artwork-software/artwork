@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Enums\NotificationFrequency;
+use App\Enums\NotificationGroupEnum;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
 use App\Models\EventType;
+use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
@@ -36,7 +39,8 @@ class NotificationController extends Controller
      */
     public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
-        $user = User::find(Auth::id());
+        /** @var User $user */
+        $user = Auth::user();
         $output = [];
         $outputRead = [];
 
@@ -47,12 +51,25 @@ class NotificationController extends Controller
                 $outputRead[$notification->data['groupType']][] = $notification;
             }
         }
+
         return inertia('Notifications/Show', [
             'notifications' => $output,
             'readNotifications' => $outputRead,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectShowResource::collection(Project::all())->resolve(),
+            'notificationSettings' => $user->notificationSettings()->get()->groupBy("group_type"),
+            'notificationFrequencies' => array_map(fn (NotificationFrequency $frequency) => [
+                'title' => $frequency->title(),
+                'value' => $frequency->value,
+            ], NotificationFrequency::cases()),
+            'groupTypes' => collect(NotificationGroupEnum::cases())->reduce( function($groupTypes, $type) {
+                $groupTypes[$type->value] = [
+                    'title' => $type->title(),
+                    'description' =>$type->description(),
+                ];
+                return $groupTypes;
+            },[]),
         ]);
     }
 
@@ -225,12 +242,22 @@ class NotificationController extends Controller
      * Update the specified resource in storage.
      *
      * @param \Illuminate\Http\Request $request
-     * @param int $id
-     * @return \Illuminate\Http\Response
+     * @param NotificationSetting $setting
      */
-    public function update(Request $request, $id)
+    public function updateSetting(Request $request, NotificationSetting $setting): void
     {
-        //
+        if(Auth::id() !== $setting->user_id) {
+            abort(403);
+        }
+
+        $setting->update($request->only("enabled_email", "frequency", "enabled_push"));
+    }
+
+    public function toggleGroup(Request $request): void {
+        Auth::user()->notificationSettings()
+            ->where('group_type', $request->groupType)
+            ->update($request->only('enabled_email', 'enabled_push'));
+
     }
 
     /**

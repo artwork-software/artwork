@@ -38,12 +38,18 @@ class NotificationController extends Controller
     {
         $user = User::find(Auth::id());
         $output = [];
+        $outputRead = [];
 
-        foreach ($user->notifications as $notification){
-            $output[$notification->data['groupType']][] = $notification;
+        foreach ($user->notifications as $notification) {
+            if($notification->read_at === null){
+                $output[$notification->data['groupType']][] = $notification;
+            }else{
+                $outputRead[$notification->data['groupType']][] = $notification;
+            }
         }
         return inertia('Notifications/Show', [
             'notifications' => $output,
+            'readNotifications' => $outputRead,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectShowResource::collection(Project::all())->resolve(),
@@ -58,7 +64,7 @@ class NotificationController extends Controller
     public function create($user, object $notificationData): void
     {
         $notificationBody = [];
-        switch($notificationData->type){
+        switch ($notificationData->type) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
                 $notificationBody = [
                     'groupType' => 'EVENTS',
@@ -168,9 +174,24 @@ class NotificationController extends Controller
     }
 
     /**
+     * Show the form for editing the specified resource.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\Response
+     */
+
+    public function setOnRead(Request $request)
+    {
+        $user = User::find(Auth::id());
+        $wantedNotification = $user->notifications->find($request->notificationId);
+        $wantedNotification->read_at = now();
+        $wantedNotification->save();
+    }
+
+    /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
@@ -181,7 +202,7 @@ class NotificationController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -192,7 +213,7 @@ class NotificationController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -203,8 +224,8 @@ class NotificationController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -215,7 +236,7 @@ class NotificationController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

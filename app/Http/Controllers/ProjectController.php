@@ -255,18 +255,29 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        // Get project admin and manager before update
+        // Get project admin, manager and User before update
+        $userIdsBefore = [];
         $adminIdsBefore = [];
         $managerIdsBefore = [];
         $projectAdminsBefore = $project->adminUsers()->get();
         $projectManagerBefore = $project->managerUsers()->get();
+        $projectUsers = $project->users()->get();
+        foreach ($projectUsers as $projectUser){
+            $userIdsBefore[$projectUser->id] = $projectUser->id;
+        }
         foreach ($projectAdminsBefore as $adminBefore){
-            $adminIdsBefore[] = $adminBefore->id;
+            $adminIdsBefore[$adminBefore->id] = $adminBefore->id;
+            if(in_array($adminBefore->id, $userIdsBefore)){
+                unset($userIdsBefore[$adminBefore->id]);
+            }
         }
         foreach ($projectManagerBefore as $managerBefore){
-            $managerIdsBefore[] = $managerBefore->id;
+            $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
+            if(in_array($managerBefore->id, $userIdsBefore)){
+                unset($userIdsBefore[$managerBefore->id]);
+            }
         }
-
+        
         $project->fill($update_properties);
 
         $project->save();
@@ -280,14 +291,20 @@ class ProjectController extends Controller
         //$historyService->updateHistory($project,'Eigenschaften angepasst.');
         //$historyService->projectUpdated($project);
 
-        // Get and check project admins and managers after update
+        // Get and check project admins, managers and users after update
         $adminIdsAfter = [];
         $projectAdminsAfter = $project->adminUsers()->get();
+        $projectUsersAfter = $project->users()->get();
+        $userIdsAfter = [];
         $managerIdsAfter = [];
         $projectManagerAfter = $project->managerUsers()->get();
 
+        foreach ($projectUsersAfter as $projectUserAfter){
+            $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
+        }
+
         foreach ($projectAdminsAfter as $adminAfter){
-            $adminIdsAfter[] = $adminAfter->id;
+            $adminIdsAfter[$adminAfter->id] = $adminAfter->id;
             // if added a new project admin, send notification to this user
             if(!in_array($adminAfter->id, $adminIdsBefore)){
                 $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' ernannt';
@@ -296,10 +313,13 @@ class ProjectController extends Controller
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($adminAfter, $this->notificationData);
             }
+            if(in_array($adminAfter->id, $userIdsAfter)){
+                unset($userIdsAfter[$adminAfter->id]);
+            }
         }
 
         foreach ($projectManagerAfter as $managerAfter){
-            $managerIdsAfter[] = $managerAfter->id;
+            $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if(!in_array($managerAfter->id, $managerIdsBefore)){
                 $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
@@ -307,6 +327,9 @@ class ProjectController extends Controller
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($managerAfter, $this->notificationData);
+            }
+            if(in_array($managerAfter->id, $userIdsAfter)){
+                unset($userIdsAfter[$managerAfter->id]);
             }
         }
 
@@ -327,6 +350,28 @@ class ProjectController extends Controller
             if(!in_array($managerBefore, $managerIdsAfter)){
                 $user = User::find($managerBefore);
                 $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
+                $this->notificationData->project->id = $project->id;
+                $this->notificationData->project->title = $project->name;
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+                $this->notificationController->create($user, $this->notificationData);
+            }
+        }
+
+        foreach ($userIdsAfter as $userIdAfter){
+            if(!in_array($userIdAfter, $userIdsBefore)){
+                $user = User::find($userIdAfter);
+                $this->notificationData->title = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
+                $this->notificationData->project->id = $project->id;
+                $this->notificationData->project->title = $project->name;
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+                $this->notificationController->create($user, $this->notificationData);
+            }
+        }
+
+        foreach ($userIdsBefore as $userIdBefore){
+            if(!in_array($userIdBefore, $userIdsAfter)){
+                $user = User::find($userIdBefore);
+                $this->notificationData->title = 'Du wurdest aus ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();

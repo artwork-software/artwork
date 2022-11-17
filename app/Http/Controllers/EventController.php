@@ -93,9 +93,6 @@ class EventController extends Controller
     public function storeEvent(EventStoreRequest $request, HistoryService $historyService): CalendarEventResource
     {
 
-
-
-
         // Adjoining Room / Event check
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
         foreach ($joiningEvents as $joiningEvent){

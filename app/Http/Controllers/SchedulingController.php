@@ -129,19 +129,18 @@ class SchedulingController extends Controller
      */
     public function sendDeadlineNotification(){
         $tasks = Task::where('done_at', null)->get();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_REMINDER;
         foreach ($tasks as $task){
             if(!empty($task->user_id)){
                 $user = User::find($task->user_id);
                 $deadline = new DateTime($task->deadline);
                 $date = Carbon::now()->addDays(1)->format('Y-m-d H:i:s');
                 if($deadline->format('Y-m-d H:i:s') == $date){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_DEADLINE;
                     $this->notificationData->title = 'Deadline von '. $task->name .' ist morgen erreicht';
                     $this->notificationData->task = $task;
                     $this->notificationController->create($user, $this->notificationData);
                 }
                 if($deadline->format('Y-m-d H:i:s') <= $date){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_DEADLINE;
                     $this->notificationData->title = $task->name .' hat ihre Deadline überschritten';
                     $this->notificationData->task = $task;
                     $this->notificationController->create($user, $this->notificationData);

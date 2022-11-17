@@ -18,6 +18,7 @@ use App\Http\Resources\TaskIndexResource;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
+use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
@@ -91,6 +92,10 @@ class EventController extends Controller
 
     public function storeEvent(EventStoreRequest $request, HistoryService $historyService): CalendarEventResource
     {
+
+
+
+
         // Adjoining Room / Event check
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
         foreach ($joiningEvents as $joiningEvent){
@@ -117,6 +122,7 @@ class EventController extends Controller
         }
         $this->authorize('create', Event::class);
 
+
         if($this->collisionService->getCollision($request)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
@@ -139,6 +145,25 @@ class EventController extends Controller
             $event->project()->associate($project);
             $event->save();
             $historyService->projectUpdated($project);
+        }
+
+        if($request->isOption){
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
+            $this->notificationData->title = 'Neue Raumanfrage';
+            $this->notificationData->event = $event;
+            $this->notificationData->accepted = false;
+            $this->notificationData->created_by = User::where('id', Auth::id())->first();
+            $room = Room::find($request->roomId);
+            $admins = $room->room_admins()->get();
+            //dd($admins);
+            if(!empty($admins)){
+                foreach ($admins as $admin){
+                    $this->notificationController->create($admin, $this->notificationData);
+                }
+            } else {
+                $user = User::find($room->user_id);
+                $this->notificationController->create($user, $this->notificationData);
+            }
         }
 
         broadcast(new OccupancyUpdated())->toOthers();

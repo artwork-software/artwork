@@ -155,7 +155,7 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new ConflictNotification($notificationBody));
                 break;
-            case NotificationConstEnum::NOTIFICATION_DEADLINE:
+            case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
                 $notificationBody = [
                     'groupType' => 'TASKS',
                     'type' => $notificationData->type,

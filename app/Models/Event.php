@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -40,7 +41,7 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasChangesHistory;
 
     protected $guarded = [
         'id',
@@ -96,9 +97,9 @@ class Event extends Model
     }
 
     /**
-     * @return \App\Builders\EventBuilder<\App\Models\Event>
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function query(): EventBuilder
+    public static function query(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::query();
     }

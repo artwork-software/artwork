@@ -186,17 +186,19 @@ class SchedulingController extends Controller
             }
         }
         foreach ($taskWithReachedDeadline as $taskDeadline) {
-            foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
-                $user = User::find($userToNotify);
-                if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
-                    $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
-                    $this->notificationData->task = $task;
-                    $this->notificationController->create($user, $this->notificationData);
-                }
-                if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
-                    $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
-                    $this->notificationData->task = $task;
-                    $this->notificationController->create($user, $this->notificationData);
+            if(array_key_exists($taskDeadline['id'], $userForNotify)){
+                foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
+                    $user = User::find($userToNotify);
+                    if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
+                        $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
+                        $this->notificationData->task = $task;
+                        $this->notificationController->create($user, $this->notificationData);
+                    }
+                    if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
+                        $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
+                        $this->notificationData->task = $task;
+                        $this->notificationController->create($user, $this->notificationData);
+                    }
                 }
             }
         }

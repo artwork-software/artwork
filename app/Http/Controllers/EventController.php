@@ -94,6 +94,25 @@ class EventController extends Controller
     {
 
         // Adjoining Room / Event check
+        $this->adjoiningRoomsCheck($request);
+
+        /** @var Event $event */
+        $event = Event::create($request->data());
+
+        if ($request->get('projectName')) {
+            $this->associateProject($request, $event, $historyService);
+        }
+
+        if($request->isOption){
+            $this->createRequestNotification($request, $event);
+        }
+
+        broadcast(new OccupancyUpdated())->toOthers();
+
+        return new CalendarEventResource($event);
+    }
+
+    private function adjoiningRoomsCheck(EventStoreRequest $request) {
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
         foreach ($joiningEvents as $joiningEvent){
             foreach ($joiningEvent as $conflict){
@@ -102,70 +121,74 @@ class EventController extends Controller
                     continue;
                 }
                 if($request->audience){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
-                    $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
-                    $this->notificationData->conflict = $conflict;
-                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                    $this->notificationController->create($user, $this->notificationData);
+                    $this->createAdjoiningAudienceNotification($conflict, $user);
                 }
                 if($request->isLoud){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
-                    $this->notificationData->title = 'Lauter Termin im Nebenraum';
-                    $this->notificationData->conflict = $conflict;
-                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                    $this->notificationController->create($user, $this->notificationData);
+                    $this->createAdjoiningLoudNotification($conflict, $user);
                 }
             }
         }
         $this->authorize('create', Event::class);
 
-
         if($this->collisionService->getCollision($request)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
                 foreach ($collisions as $collision){
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
-                    $this->notificationData->title = 'Terminkonflikt';
-                    $this->notificationData->conflict = $collision;
-                    $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                    $this->notificationController->create($collision['created_by'], $this->notificationData);
+                    $this->createConflictNotification($collision);
                 }
             }
         }
+    }
 
-        /** @var Event $event */
-        $event = Event::create($request->data());
+    private function createAdjoiningAudienceNotification($conflict, User $user) {
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
+        $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
+        $this->notificationData->conflict = $conflict;
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $this->notificationController->create($user, $this->notificationData);
+    }
 
-        if ($request->get('projectName')) {
-            $project = Project::create(['name' => $request->get('projectName')]);
-            $project->users()->save(Auth::user(), ['is_admin' => true]);
-            $event->project()->associate($project);
-            $event->save();
-            $historyService->projectUpdated($project);
-        }
+    private function createAdjoiningLoudNotification($conflict, User $user) {
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
+        $this->notificationData->title = 'Lauter Termin im Nebenraum';
+        $this->notificationData->conflict = $conflict;
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $this->notificationController->create($user, $this->notificationData);
+    }
 
-        if($request->isOption){
-            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
-            $this->notificationData->title = 'Neue Raumanfrage';
-            $this->notificationData->event = $event;
-            $this->notificationData->accepted = false;
-            $this->notificationData->created_by = User::where('id', Auth::id())->first();
-            $room = Room::find($request->roomId);
-            $admins = $room->room_admins()->get();
-            //dd($admins);
-            if(!empty($admins)){
-                foreach ($admins as $admin){
-                    $this->notificationController->create($admin, $this->notificationData);
-                }
-            } else {
-                $user = User::find($room->user_id);
-                $this->notificationController->create($user, $this->notificationData);
+    private function createConflictNotification($collision) {
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
+        $this->notificationData->title = 'Terminkonflikt';
+        $this->notificationData->conflict = $collision;
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $this->notificationController->create($collision['created_by'], $this->notificationData);
+    }
+
+    private function associateProject($request, $event, $historyService) {
+        $project = Project::create(['name' => $request->get('projectName')]);
+        $project->users()->save(Auth::user(), ['is_admin' => true]);
+        $event->project()->associate($project);
+        $event->save();
+        $historyService->projectUpdated($project);
+    }
+
+    private function createRequestNotification($request, $event) {
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
+        $this->notificationData->title = 'Neue Raumanfrage';
+        $this->notificationData->event = $event;
+        $this->notificationData->accepted = false;
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $room = Room::find($request->roomId);
+        $admins = $room->room_admins()->get();
+        //dd($admins);
+        if(!empty($admins)){
+            foreach ($admins as $admin){
+                $this->notificationController->create($admin, $this->notificationData);
             }
+        } else {
+            $user = User::find($room->user_id);
+            $this->notificationController->create($user, $this->notificationData);
         }
-
-        broadcast(new OccupancyUpdated())->toOthers();
-
-        return new CalendarEventResource($event);
     }
 
     /**

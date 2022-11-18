@@ -29,6 +29,7 @@ class RoomController extends Controller
     // init notification system
     protected ?NotificationController $notificationController = null;
     protected ?\stdClass $notificationData = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -36,6 +37,8 @@ class RoomController extends Controller
         $this->notificationData = new \stdClass();
         $this->notificationData->room = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
+        $this->history = new HistoryController('App\Models\Room');
+
     }
 
     /**
@@ -114,6 +117,8 @@ class RoomController extends Controller
 
         $room->categories()->sync(collect($request->room_categories)->pluck("id"));
 
+        $this->history->createHistory($room->id, 'Raum wurde erstellt');
+
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
@@ -166,18 +171,23 @@ class RoomController extends Controller
 
         // get Room description
         $oldRoomDescription = $room->description;
+        $oldRoomTitle = $room->name;
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
         // get new room Description
         $newRoomDescription = $room->description;
+        $newRoomTitle = $room->name;
+
+        if($oldRoomTitle !== $newRoomTitle){
+            $this->history->createHistory($room->id, 'Raumname wurde geändert');
+        }
 
         // check changes in room description
-        if(strlen($oldRoomDescription) !== strlen($newRoomDescription) || strlen($newRoomDescription) !== strlen($oldRoomDescription)){
-            $history = new HistoryController($room->id, 'App\Models\Room', 'Beschreibung wurde geändert');
-            $history->createHistory();
+        if($oldRoomDescription !== $newRoomDescription){
+            $this->history->createHistory($room->id, 'Beschreibung wurde geändert');
         }
-        
+
         $room->room_admins()->sync(
             collect($request->room_admins)
                 ->map(function ($room_admin) {
@@ -198,11 +208,13 @@ class RoomController extends Controller
             $roomAdminIdsAfter[] = $roomAdminAfter->id;
             // if added a new room admin, send notification to this user
             if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
+                $user = User::find($roomAdminAfter->id);
                 $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $this->notificationData->room->id = $room->id;
                 $this->notificationData->room->title = $room->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($roomAdminAfter, $this->notificationData);
+                $this->notificationController->create($user, $this->notificationData);
+                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
             }
         }
 
@@ -215,6 +227,7 @@ class RoomController extends Controller
                 $this->notificationData->room->title = $room->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
+                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }
 

@@ -186,19 +186,21 @@ class SchedulingController extends Controller
             }
         }
         foreach ($taskWithReachedDeadline as $taskDeadline) {
-            if(array_key_exists($taskDeadline['id'], $userForNotify)){
-                foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
-                    $user = User::find($userToNotify);
-                    if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
-                        $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
-                        $this->notificationData->task = $task;
-                        $this->notificationController->create($user, $this->notificationData);
-                    }
-                    if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
-                        $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
-                        $this->notificationData->task = $task;
-                        $this->notificationController->create($user, $this->notificationData);
-                    }
+            // guard for tasks without teams
+            if(!array_key_exists($taskDeadline['id'], $userForNotify)) {
+                continue;
+            }
+            foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
+                $user = User::find($userToNotify);
+                if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
+                    $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
+                    $this->notificationData->task = $task;
+                    $this->notificationController->create($user, $this->notificationData);
+                }
+                if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
+                    $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
+                    $this->notificationData->task = $task;
+                    $this->notificationController->create($user, $this->notificationData);
                 }
             }
         }

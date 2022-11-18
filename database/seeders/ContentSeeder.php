@@ -35,8 +35,6 @@ class ContentSeeder extends Seeder
             'svg_name' => 'icon_festival'
         ]);
 
-        $department->users()->attach(1);
-
         $tech_department = Department::create([
             'name' => 'Technik Team',
             'svg_name' => 'icon_technik_haus'

@@ -16,9 +16,9 @@ class CollisionService
 
     /**
      * @param $request
-     * @return \App\Builders\EventBuilder
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function getCollision($request): \App\Builders\EventBuilder
+    public function getCollision($request): \Illuminate\Database\Eloquent\Builder
     {
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));

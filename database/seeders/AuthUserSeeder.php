@@ -24,11 +24,15 @@ class AuthUserSeeder extends Seeder
     {
         Storage::put('/public/profile-photos/photo-1499996860823-5214fcc65f8f.jpg',
             File::get(public_path('/profile-photos/photo-1499996860823-5214fcc65f8f.jpg')), 'public');
-        $this->command->info("Profile Photo set");
+        $this->command->info("Profile Photo 1 set");
+
+        Storage::put('/public/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg',
+            File::get(public_path('/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg')), 'public');
+        $this->command->info("Profile Photo 2 set");
 
         $user = User::create([
             'first_name' => 'Max',
-            'last_name' => 'Mustermann',
+            'last_name' => 'Schmidt',
             'email' => 'max.mustermann@kampnagel.de',
             'phone_number' => null,
             'password' => Hash::make('TestPass1234!$'),
@@ -42,6 +46,23 @@ class AuthUserSeeder extends Seeder
         ]);
 
         $user->assignRole('admin');
+
+        $user = User::create([
+            'first_name' => 'Lisa',
+            'last_name' => 'Müller',
+            'email' => 'lisa.musterfrau@deichtorhallen.de',
+            'phone_number' => null,
+            'password' => Hash::make('TestPass1234!$'),
+            'position' => 'Technikerin',
+            'business' => 'Deichtorhallen',
+            'description' => null,
+            'toggle_hints' => true,
+            'opened_checklists' => [],
+            'opened_areas' => [],
+            'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
+        ]);
+
+        $user->assignRole('user');
 
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;

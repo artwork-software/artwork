@@ -6,6 +6,7 @@ use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\RoomCategory;
+use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -34,6 +35,14 @@ class ContentSeeder extends Seeder
             'svg_name' => 'icon_festival'
         ]);
 
+        $department->users()->attach(1);
+
+        $tech_department = Department::create([
+            'name' => 'Technik Team',
+            'svg_name' => 'icon_technik_haus'
+        ]);
+
+        $tech_department->users()->attach(2);
         $department->users()->attach(1);
     }
 
@@ -116,17 +125,66 @@ class ContentSeeder extends Seeder
             'individual_name' => true
         ]);
 
+        DB::table('event_types')->insert([
+            'name' => 'Meeting',
+            'svg_name' => 'eventType1',
+            'project_mandatory' => false,
+            'individual_name' => true
+        ]);
+
+        DB::table('event_types')->insert([
+            'name' => 'Workshop',
+            'svg_name' => 'eventType2',
+            'project_mandatory' => false,
+            'individual_name' => true
+        ]);
+
+        DB::table('event_types')->insert([
+            'name' => 'Aufführung',
+            'svg_name' => 'eventType3',
+            'project_mandatory' => false,
+            'individual_name' => true
+        ]);
+
         DB::table('events')->insert([
-            'name' => 'TestEvent',
+            'name' => 'Aufführung',
             'description' => null,
-            'start_time' => '2022-05-29T14:00',
-            'end_time' => '2022-05-30T16:00',
+            'start_time' => Carbon::now()->addDay()->addHours(2),
+            'end_time' => Carbon::now()->addDay()->addHours(3),
             'occupancy_option' => null,
             'audience' => null,
             'is_loud' => null,
             'event_type_id' => 1,
             'room_id' => 1,
             'project_id' => null,
+            'user_id' => 1
+        ]);
+
+        DB::table('events')->insert([
+            'name' => 'Meeting Rock & Wrestling',
+            'description' => null,
+            'start_time' => Carbon::now()->addDay(),
+            'end_time' => Carbon::now()->addDay()->addHour(),
+            'occupancy_option' => null,
+            'audience' => null,
+            'is_loud' => null,
+            'event_type_id' => 1,
+            'room_id' => 1,
+            'project_id' => 1,
+            'user_id' => 1
+        ]);
+
+        DB::table('events')->insert([
+            'name' => 'Aufbau Rock & Wrestling',
+            'description' => null,
+            'start_time' => Carbon::now()->addDays(2)->subHours(2),
+            'end_time' => Carbon::now()->addDays(2)->subHour(),
+            'occupancy_option' => null,
+            'audience' => null,
+            'is_loud' => null,
+            'event_type_id' => 1,
+            'room_id' => 2,
+            'project_id' => 1,
             'user_id' => 1
         ]);
     }

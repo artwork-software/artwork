@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\AcceptInvitationRequest;
 use App\Http\Requests\StoreInvitationRequest;
@@ -171,6 +172,17 @@ class InvitationController extends Controller
 
         /** @var User $user */
         $user = User::create($request->userData());
+
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
+
+        }
 
         $user->departments()->sync($invitation->departments->pluck('id'));
 

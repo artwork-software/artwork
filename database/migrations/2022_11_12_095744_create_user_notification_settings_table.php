@@ -13,11 +13,13 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('user_notification_settings', function (Blueprint $table) {
+        Schema::create('notification_settings', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->string("group_type");
             $table->string("type");
+            $table->string("title");
+            $table->mediumText("description");
             $table->string("frequency")->default("daily");
             $table->boolean("enabled_email")->default(true);
             $table->boolean("enabled_push")->default(true);

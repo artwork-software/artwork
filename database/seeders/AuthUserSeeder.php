@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\NotificationConstEnum;
 use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\GeneralSettings;
@@ -44,6 +45,17 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/photo-1499996860823-5214fcc65f8f.jpg'
         ]);
+
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
+
+        }
 
         $user->assignRole('admin');
 

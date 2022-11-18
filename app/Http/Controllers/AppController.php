@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Fortify\PasswordValidationRules;
+use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Http\Requests\UserCreateRequest;
@@ -80,6 +81,18 @@ class AppController extends Controller
     {
         /** @var User $user */
         $user = User::create($request->userData());
+
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
+
+        }
+
         $user->assignRole(RoleNameEnum::ADMIN);
 
         $guard->login($user);

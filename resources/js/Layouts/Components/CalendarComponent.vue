@@ -843,27 +843,37 @@ export default {
                 Object.entries(this.calendarFilters).forEach(entry => {
                     if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
                         if(arrayName === 'rooms') {
-                            const room = this.rooms.filter(room => element.id === room.id)
-                            room[0].checked = false
+                            const room = this.rooms.filter(room => element?.id === room.id)
+                            if(room){
+                                room[0].checked = false
+                            }
                         }
                         if(arrayName === 'areas') {
-                            const area = this.areas.filter(area => element.id === area.id)
-                            area[0].checked = false
+                            const area = this.areas.filter(area => element?.id === area.id)
+                            if(area){
+                                area[0].checked = false
+                            }
                         }
                         if(arrayName === 'roomCategories') {
-                            const category = this.roomCategories.filter(category => element.id === category.id)
-                            category[0].checked = false
+                            const category = this.roomCategories.filter(category => element?.id === category.id)
+                            if(category){
+                                category[0].checked = false
+                            }
                         }
                         if(arrayName === 'roomAttributes') {
-                            const attribute = this.roomAttributes.filter(room => element.id === attribute.id)
-                            attribute[0].checked = false
+                            const attribute = this.roomAttributes.filter(room => element?.id === room.id)
+                            if(attribute){
+                                attribute[0].checked = false
+                            }
                         }
                         if(arrayName === 'eventTypes') {
-                            const eventType = this.eventTypes.filter(room => element.id === eventType.id)
-                            eventType[0].checked = false
+                            const eventType = this.eventTypes.filter(type => element?.id === type.id)
+                            if(eventType){
+                                eventType[0].checked = false
+                            }
                         }
 
-                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element.id !== elem.id)
+                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element?.id !== elem.id)
                     }
                 })
             }

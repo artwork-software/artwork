@@ -169,24 +169,15 @@ class RoomController extends Controller
             $roomAdminIdsBefore[] = $roomAdminBefore->id;
         }
 
-        // get Room description
+        // get old values
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;
+        $oldAdjoiningRooms[] = $room->adjoining_rooms()->get();
+        $oldRoomAttributes[] = $room->attributes()->get();
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
-        // get new room Description
-        $newRoomDescription = $room->description;
-        $newRoomTitle = $room->name;
 
-        if($oldRoomTitle !== $newRoomTitle){
-            $this->history->createHistory($room->id, 'Raumname wurde geändert');
-        }
-
-        // check changes in room description
-        if($oldRoomDescription !== $newRoomDescription){
-            $this->history->createHistory($room->id, 'Beschreibung wurde geändert');
-        }
 
         $room->room_admins()->sync(
             collect($request->room_admins)
@@ -199,6 +190,31 @@ class RoomController extends Controller
         $room->adjoining_rooms()->sync($request->adjoining_rooms);
         $room->attributes()->sync($request->room_attributes);
         $room->categories()->sync($request->room_categories);
+
+
+        // get new room Description
+        $newRoomDescription = $room->description;
+        $newRoomTitle = $room->name;
+        $newAdjoiningRooms[] = $room->adjoining_rooms()->get();
+        $newRoomAttributes[] = $room->attributes()->get();
+
+        if(array_diff($oldAdjoiningRooms, $newAdjoiningRooms)){
+            $this->history->createHistory($room->id, 'Nebenräume wurden geändert');
+        }
+
+        if(array_diff($oldRoomAttributes, $newRoomAttributes)){
+            $this->history->createHistory($room->id, 'Raumeigenschaft geändert');
+        }
+
+        if($oldRoomTitle !== $newRoomTitle){
+            $this->history->createHistory($room->id, 'Raumname wurde geändert');
+        }
+
+        // check changes in room description
+        if($oldRoomDescription !== $newRoomDescription){
+            $this->history->createHistory($room->id, 'Beschreibung wurde geändert');
+        }
+
 
         // Get and check project admins and managers after update
         $roomAdminIdsAfter = [];
@@ -233,11 +249,11 @@ class RoomController extends Controller
 
 
         // TODO Sammel Notification
-        $this->notificationData->title = 'Änderungen an "'. $room->name . '"';
+        /*$this->notificationData->title = 'Änderungen an "'. $room->name . '"';
         $this->notificationData->room->id = $room->id;
         $this->notificationData->room->title = $room->name;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);
+        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);*/
 
         return Redirect::back()->with('success', 'Room updated');
     }

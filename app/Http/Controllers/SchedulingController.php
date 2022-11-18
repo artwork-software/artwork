@@ -27,6 +27,7 @@ class SchedulingController extends Controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
+        $this->notificationData->task = new stdClass();
     }
 
     /**
@@ -172,6 +173,8 @@ class SchedulingController extends Controller
                     $task = Task::find($schedule->task_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
                     $this->notificationData->title = 'Änderungen an ' . $task->name;
+                    $this->notificationData->task->title = $task->name;
+                    $this->notificationData->task->deadline = $task->deadline;
                     $this->notificationData->created_by = null;
                     break;
                 case 'EVENT':

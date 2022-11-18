@@ -39,6 +39,7 @@ class EventController extends Controller
     protected ?NotificationController $notificationController = null;
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -47,6 +48,7 @@ class EventController extends Controller
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
+        $this->history = new HistoryController('App\Models\Event');
     }
 
     public function viewEventIndex(Request $request): Response

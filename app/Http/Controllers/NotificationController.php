@@ -187,6 +187,14 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new DeadlineNotification($notificationBody));
                 break;
+            case NotificationConstEnum::NOTIFICATION_NEW_TASK:
+                $notificationBody = [
+                    'groupType' => 'TASKS',
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                ];
+                Notification::send($user, new TaskNotification($notificationBody));
+                break;
         }
     }
 

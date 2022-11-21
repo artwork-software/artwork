@@ -93,11 +93,34 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
-            $taskScheduling = new SchedulingController();
-            $taskScheduling->create(Auth::id(), 'TASK');
+            $this->createNotificationForAllChecklistUser($checklist);
             return Redirect::back()->with('success', 'Task created.');
         } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
+        }
+    }
+
+    /**
+     * @param Checklist $checklist
+     * @return void
+     */
+    private function createNotificationForAllChecklistUser(Checklist $checklist): void
+    {
+        $taskScheduling = new SchedulingController();
+        $uniqueTaskUsers = [];
+        if($checklist->user_id === null){
+            $checklistDepartments = $checklist->departments()->get();
+            foreach ($checklistDepartments as $checklistDepartment){
+                $departmentUsers = $checklistDepartment->users()->get();
+                foreach ($departmentUsers as $departmentUser){
+                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
+                }
+            }
+            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+                $taskScheduling->create($uniqueTaskUser, 'TASK');
+            }
+        } else {
+            $taskScheduling->create(Auth::id(), 'TASK');
         }
     }
 
@@ -152,16 +175,34 @@ class TaskController extends Controller
         $historyService->taskUpdated($task);
         $task->save();
 
-        $departments = $task->checklistDepartments()->get();
-
-        foreach ($departments as $department){
-            foreach ($department->users as $user){
-                $scheduling = new SchedulingController();
-                $scheduling->create($user->id, 'TASK_CHANGES', null, $task->id);
-            }
-        }
+        $this->createNotificationUpdateTask($task);
 
         return Redirect::back()->with('success', 'Task updated');
+    }
+
+    /**
+     * @param Task $task
+     * @return void
+     */
+    private function createNotificationUpdateTask(Task $task): void
+    {
+        $taskUser = $task->checklist()->first()->user_id;
+        $departments = $task->checklistDepartments()->get();
+        $taskScheduling = new SchedulingController();
+        $uniqueTaskUsers = [];
+        if($taskUser === null){
+            foreach ($departments as $checklistDepartment){
+                $departmentUsers = $checklistDepartment->users()->get();
+                foreach ($departmentUsers as $departmentUser){
+                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
+                }
+            }
+            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', null, $task->id);
+            }
+        } else {
+            $taskScheduling->create($taskUser, 'TASK_CHANGES', null, $task->id);
+        }
     }
 
     /**

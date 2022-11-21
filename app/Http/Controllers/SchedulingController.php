@@ -208,7 +208,7 @@ class SchedulingController extends Controller
 
     public function sendNotification(): void
     {
-        $scheduleToNotify = Scheduling::whereDate('updated_at', '>=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
+        $scheduleToNotify = Scheduling::where('updated_at', '<=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
         foreach ($scheduleToNotify as $schedule) {
             $user = User::find($schedule->user_id);
             switch ($schedule->type) {

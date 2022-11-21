@@ -182,7 +182,6 @@ class EventController extends Controller
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $room = Room::find($request->roomId);
         $admins = $room->room_admins()->get();
-        //dd($admins);
         if(!empty($admins)){
             foreach ($admins as $admin){
                 $this->notificationController->create($admin, $this->notificationData);
@@ -204,6 +203,11 @@ class EventController extends Controller
     {
         $this->authorize('update', $event);
 
+        $oldEventDescription = $event->description;
+        $oldEventRoom = $event->room_id;
+        $oldEventProject = $event->project_id;
+        $oldEventName = $event->eventName;
+
         $event->update($request->data());
 
         if ($request->get('projectName')) {
@@ -214,6 +218,28 @@ class EventController extends Controller
             $historyService->projectUpdated($project);
         }
 
+        $newEventDescription = $event->description;
+        $newEventRoom = $event->room_id;
+        $newEventProject = $event->project_id;
+        $newEventName = $event->eventName;
+
+
+        $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
+        $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
+        $this->checkProjectChanges($event->id, $oldEventProject, $newEventProject);
+        $this->checkEventNameChanges($event->id, $oldEventName, $newEventName);
+
+        $this->createEventScheduleNotification($event);
+
+        return new CalendarEventResource($event);
+    }
+
+    /**
+     * @param Event $event
+     * @return void
+     */
+    private function createEventScheduleNotification(Event $event): void
+    {
         $schedule = new SchedulingController();
         if(!empty($event->project)){
             foreach ($event->project->users->all() as $eventUser){
@@ -222,8 +248,6 @@ class EventController extends Controller
         } else {
             $schedule->create($event->creator->id, 'EVENT', null, null, $event->id);
         }
-
-        return new CalendarEventResource($event);
     }
 
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
@@ -231,12 +255,14 @@ class EventController extends Controller
         $event->occupancy_option = false;
         if (!$request->get('accepted')) {
             $this->notificationData->title = 'Raumanfrage abgelehnt';
+            $this->history->createHistory($event->id, 'Raum abgelehnt');
             $this->notificationData->accepted = false;
             $event->declined_room_id = $event->room_id;
             $event->room_id = null;
 
         } else {
             $this->notificationData->title = 'Raumanfrage bestätigt';
+            $this->history->createHistory($event->id, 'Raum bestätigt');
             $this->notificationData->accepted = true;
         }
         $event->save();
@@ -354,6 +380,8 @@ class EventController extends Controller
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
         $this->notificationController->create($event->creator()->get(), $this->notificationData);
 
+
+
         return new JsonResponse(['success' => 'Event moved to trash']);
     }
 
@@ -374,6 +402,82 @@ class EventController extends Controller
         broadcast(new OccupancyUpdated())->toOthers();
 
         return Redirect::route('events.trashed')->with('success', 'Event restored');
+    }
+
+    /**
+     * @param $eventId
+     * @param $oldName
+     * @param $newName
+     * @return void
+     */
+    private function checkEventNameChanges($eventId, $oldName, $newName): void
+    {
+        if($oldName === null && $newName !== null){
+            $this->history->createHistory($eventId, 'Terminname hinzugefügt');
+        }
+
+        if($oldName !== $newName && $newName !== null && $oldName !== null){
+            $this->history->createHistory($eventId, 'Terminname geändert');
+        }
+
+        if($oldName !== null && $newName === null){
+            $this->history->createHistory($eventId, 'Terminname gelöscht');
+        }
+    }
+
+    /**
+     * @param $eventId
+     * @param $oldProject
+     * @param $newProject
+     * @return void
+     */
+    private function checkProjectChanges($eventId, $oldProject, $newProject): void
+    {
+        if($newProject !== null && $oldProject === null){
+            $this->history->createHistory($eventId, 'Projektzuordnung hinzugefügt');
+        }
+
+        if($oldProject !== null && $newProject === null ){
+            $this->history->createHistory($eventId, 'Projektzuordnung gelöscht');
+        }
+
+        if($newProject !== null && $oldProject !== null && $newProject !== $oldProject ){
+            $this->history->createHistory($eventId, 'Projektzuordnung geändert');
+        }
+    }
+
+    /**
+     * @param $eventId
+     * @param $oldRoom
+     * @param $newRoom
+     * @return void
+     */
+    private function checkRoomChanges($eventId, $oldRoom, $newRoom): void
+    {
+        if($oldRoom !== $newRoom){
+            $this->history->createHistory($eventId, 'Raum geändert');
+        }
+    }
+
+    /**
+     * @param int $eventId
+     * @param $oldDescription
+     * @param $newDescription
+     * @return void
+     */
+    private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
+    {
+        if (strlen($oldDescription) == 0 && $newDescription > 0){
+            $this->history->createHistory($eventId, 'Terminnotiz hinzugefügt');
+        }
+
+        if($oldDescription !== $newDescription && strlen($oldDescription) > 0 && strlen($newDescription) > 0){
+            $this->history->createHistory($eventId, 'Terminnotiz geändert');
+        }
+
+        if(strlen($newDescription) == 0){
+            $this->history->createHistory($eventId, 'Terminnotiz gelöscht');
+        }
     }
 
 }

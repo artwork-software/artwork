@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -24,12 +25,22 @@ class EventNotification extends Notification
     /**
      * Get the notification's delivery channels.
      *
-     * @param  mixed  $notifiable
+     * @param $user
      * @return array
      */
-    public function via($notifiable)
+    public function via($user)
     {
-        return ['database'];
+        $channels = ['database'];
+
+        $typeSettings = $user->notificationSettings()
+            ->where('type', $this->notificationData['type'])
+            ->first();
+
+        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**

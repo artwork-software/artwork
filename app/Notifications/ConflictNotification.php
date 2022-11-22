@@ -2,6 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationFrequency;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,9 +19,33 @@ class ConflictNotification extends Notification
         $this->notificationData = $notificationData;
     }
 
-    public function via($notifiable)
+    public function via($user): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        $typeSettings = $user->notificationSettings()
+            ->where('type', $this->notificationData['type'])
+            ->first();
+
+        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
     /**

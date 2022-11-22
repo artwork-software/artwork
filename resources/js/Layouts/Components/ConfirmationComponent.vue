@@ -40,13 +40,10 @@ export default {
         AddButton,
         CheckIcon
     },
-    props: ['titel', 'description', 'confirm', 'cancel', 'showModal'],
+    props: ['titel', 'description', 'confirm', 'cancel'],
     emits: ['closed'],
     methods: {
         closeModal(bool) {
-            if(bool){
-                this.showCheckButton = true;
-            }
             this.$emit('closed', bool);
         },
     },

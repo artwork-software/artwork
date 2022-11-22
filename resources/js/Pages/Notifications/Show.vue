@@ -34,13 +34,24 @@
             <div class="">
                 <div class="flex flex-wrap" v-if="openTab === 'notifications'">
                     <!-- Raumbelegungen und Termine Notifications -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']" name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['EVENTS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
+                                                  name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects"
+                                                  :event-types="eventTypes"
+                                                  :notifications="notifications['EVENTS']"></NotificationSectionComponent>
                     <!-- Räume und Raumbelegungsanfragen -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']" name="Räume & Raumbelegungsanfragen" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['ROOMS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
+                                                  name="Räume & Raumbelegungsanfragen" :rooms="rooms"
+                                                  :projects="projects" :event-types="eventTypes"
+                                                  :notifications="notifications['ROOMS']"></NotificationSectionComponent>
                     <!-- Aufgaben -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['TASKS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
+                                                  :rooms="rooms" :projects="projects" :event-types="eventTypes"
+                                                  :notifications="notifications['TASKS']"></NotificationSectionComponent>
                     <!-- Projekte & Teams -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']" name="Projekte & Teams" :rooms="rooms" :projects="projects" :event-types="eventTypes" :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                    <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
+                                                  name="Projekte & Teams" :rooms="rooms" :projects="projects"
+                                                  :event-types="eventTypes"
+                                                  :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
 
                 </div>
                 <div v-if="openTab === 'mailSettings'">
@@ -112,7 +123,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
@@ -125,6 +136,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
+import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 
 
 export default defineComponent({
@@ -171,10 +183,11 @@ export default defineComponent({
         NotificationEventInfoRow,
         NotificationUserIcon,
         EventWithoutRoomNewRequestComponent,
-        ConfirmationComponent
+        ConfirmationComponent,
+        AnswerEventRequestComponent,
 
     },
-    props: ['notifications', 'rooms', 'eventTypes', 'projects','readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes'],
+    props: ['notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes'],
     created() {
 
     },
@@ -188,9 +201,9 @@ export default defineComponent({
             }
             return false;
         },
-        openEventWithoutRoomComponent(event){
-          this.eventToEdit = event;
-          this.showEventWithoutRoomComponent = true;
+        openEventWithoutRoomComponent(event) {
+            this.eventToEdit = event;
+            this.showEventWithoutRoomComponent = true;
         },
         onEventWithoutRoomComponentClose() {
             this.showEventWithoutRoomComponent = false;
@@ -219,6 +232,12 @@ export default defineComponent({
             showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            answerRequestModalVisible: false,
+            requestToAnswer: null,
+            answerRequestType: '',
+            answerRequestForm: useForm({
+                accepted: false,
+            }),
         }
     },
     setup() {

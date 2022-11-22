@@ -112,7 +112,7 @@
                 <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
                 <div class="mx-4">
                     <div class="headline1 my-2">
-                        Raumbelegung zusagen
+                        Raumbelegung bestätigen
                     </div>
                     <XIcon @click="closeApproveRequestModal"
                            class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"

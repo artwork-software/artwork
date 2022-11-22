@@ -74,7 +74,7 @@
                             </div>
                             <!-- 2nd Row of Notification-->
                             <NotificationEventInfoRow
-                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.data.type === 'NOTIFICATION_UPSERT_ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
+                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.type.indexOf('RoomRequestNotification') !== -1 || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
                                 :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
                                 :projects="projects"
                                 :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
@@ -111,10 +111,20 @@
                     <div
                         v-if="isErrorType(notification.type,notification) && notification.type.indexOf('RoomRequestNotification') !== -1"
                         class="flex w-full ml-16 mt-1">
-                        <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12"
-                                   text="Anfrage ändern" mode="modal"/>
-                        <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
-                                   text="Termin löschen"></AddButton>
+                        <div class="flex" v-if="notification.data.title.indexOf('Neue Raumanfrage') !== -1">
+                            <AddButton @click="openAnswerEventRequestModal(notification.data.event,'accept')" class="flex px-12"
+                                       text="Anfrage bestätigen" mode="modal"/>
+                            <AddButton @click="openAnswerEventRequestModal(notification.data.event,'decline')" type="secondary"
+                                       text="Anfrage ablehnen"></AddButton>
+                            <AddButton @click="openAnswerRequestWithRoomChangeModal(notification.data.event, notification.data.created_by)" type="secondary"
+                                       text="Raum ändern"></AddButton>
+                        </div>
+                        <div class="flex" v-else>
+                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12"
+                                       text="Anfrage ändern" mode="modal"/>
+                            <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
+                                       text="Termin löschen"></AddButton>
+                        </div>
                     </div>
                     <!-- Archive Button -->
                     <img v-else @click="setOnRead(notification.id)" v-show="notification.hovered"
@@ -223,16 +233,7 @@
                             </div>
                         </div>
                     </div>
-                    <div
-                        v-if="isErrorType(notification.type,notification) && notification.type.indexOf('RoomRequestNotification') !== -1"
-                        class="flex w-full ml-16 mt-1">
-                        <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12"
-                                   text="Anfrage ändern" mode="modal"/>
-                        <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
-                                   text="Termin löschen"></AddButton>
-                    </div>
                 </div>
-
             </div>
         </div>
     </div>
@@ -253,6 +254,24 @@
         titel="Termin löschen"
         :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.eventName + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
         @closed="afterConfirm"/>
+    <!-- Raumbelegungsanfrage beantworten Modal -->
+    <AnswerEventRequestComponent
+        v-if="answerRequestModalVisible"
+        :type="answerRequestType"
+        :request="requestToAnswer"
+        :rooms="this.rooms"
+        :eventTypes="this.eventTypes"
+        :projects="this.projects"
+        @closed="afterRequestAnswer"/>
+    <!-- Raumbelegungsanfrage beantworten mit Raumänderung Modal -->
+    <AnswerEventRequestWithRoomChangeComponent
+        v-if="answerRequestWithRoomChangeVisible"
+        :request="requestToAnswerWithRoomChange"
+        :rooms="this.rooms"
+        :creator="this.creatorOfRequest"
+        :eventTypes="this.eventTypes"
+        :projects="this.projects"
+        @closed="afterRequestAnswerWithRoomChange"/>
 </template>
 
 <script>
@@ -280,7 +299,9 @@ import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfo
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
+import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
+import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
 
 export default {
     name: 'NotificationSectionComponent',
@@ -296,7 +317,9 @@ export default {
         ChevronRightIcon,
         NotificationUserIcon,
         EventWithoutRoomNewRequestComponent,
-        Link
+        Link,
+        AnswerEventRequestComponent,
+        AnswerEventRequestWithRoomChangeComponent,
     },
 
     data() {
@@ -307,6 +330,15 @@ export default {
             showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            answerRequestModalVisible: false,
+            requestToAnswer: null,
+            answerRequestType: '',
+            answerRequestWithRoomChangeVisible: false,
+            requestToAnswerWithRoomChange: null,
+            creatorOfRequest: null,
+            answerRequestForm: useForm({
+                accepted: false,
+            }),
             setOnReadForm: this.$inertia.form({
                 _method: 'PATCH',
                 notificationId: null
@@ -343,6 +375,37 @@ export default {
             notifications.forEach((notification) => {
                 this.setOnRead(notification.id);
             })
+        },
+        openAnswerEventRequestModal(event, type){
+            this.requestToAnswer = event;
+            this.answerRequestType = type;
+            this.answerRequestModalVisible = true;
+        },
+        openAnswerRequestWithRoomChangeModal(event, creator){
+            this.creatorOfRequest = creator;
+            this.requestToAnswerWithRoomChange = event;
+            this.answerRequestWithRoomChangeVisible = true;
+        },
+        afterRequestAnswer(bool) {
+            if (!bool) {
+                return this.answerRequestModalVisible = false;
+            }
+            // TODO: HIER NOCH NOTIFICATION LÖSCHEN
+            if(this.answerRequestType === 'accept'){
+                this.answerRequestForm.accepted = true;
+            }else if(this.answerRequestType === 'decline'){
+                this.answerRequestForm.accepted = false;
+            }
+            this.answerRequestForm.put(route('events.accept', {event: this.requestToAnswer.id}));
+            this.answerRequestModalVisible = false;
+        },
+        afterRequestAnswerWithRoomChange(bool) {
+            if(!bool){
+                return this.answerRequestWithRoomChangeVisible = false;
+            }
+            // TODO: HIER NOCH NOTIFICATION LÖSCHEN
+            // TODO: HIER FUNKTION ZUR RAUMÄNDERUNG SCHREIBEN
+            console.log(this.requestToAnswerWithRoomChange);
         },
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;

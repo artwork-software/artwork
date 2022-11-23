@@ -33,6 +33,7 @@
             </div>
             <div class="">
                 <div class="flex flex-wrap" v-if="openTab === 'notifications'">
+                    <div>
                     <!-- Raumbelegungen und Termine Notifications -->
                     <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
                                                   name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects"
@@ -52,6 +53,9 @@
                                                   name="Projekte & Teams" :rooms="rooms" :projects="projects"
                                                   :event-types="eventTypes"
                                                   :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                    </div>
+                    <div>
+                    </div>
 
                 </div>
                 <div v-if="openTab === 'mailSettings'">

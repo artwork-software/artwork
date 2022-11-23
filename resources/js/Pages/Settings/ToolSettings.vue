@@ -192,14 +192,14 @@
                             @drop.stop.prevent="uploadDraggedImage($event)">
                             <div v-show="!notificationImagePreview" class="space-y-1 text-center">
                                 <div class="xsLight flex my-auto h-40 items-center"
-                                     v-if="$page.props.notificationImage === null && notificationImagePreview === null">
+                                     v-if="$page.props.globalNotification?.image_name === null && notificationImagePreview === null">
                                     Ziehe hier dein <br/> Bild für die Benachrichtigung hin
                                     <input id="notificationImage-upload" ref="notificationImage"
                                            @change="updateNotificationImagePreview()"
                                            name="file-upload" type="file" class="sr-only"/>
                                 </div>
                                 <div class="cursor-pointer" v-else>
-                                    <img :src="$page.props.notificationImage" alt="Aktuelles Bild"
+                                    <img :src="$page.props.globalNotification?.image_name" alt="Aktuelles Bild"
                                          class="rounded-md h-40 w-40">
                                 </div>
                             </div>
@@ -214,6 +214,7 @@
                         </div>
                     </div>
                 </div>
+                {{$page.props.globalNotification}}
                 <div class="flex my-4 w-full">
                     <div class="w-5/12 mr-6">
                         <input type="text"
@@ -245,7 +246,7 @@
                 <div class="w-10/12 flex justify-between">
                     <AddButton @click="createGlobalNotification()" class="flex px-12"
                                text="Benachrichtigung teilen" mode="modal"/>
-                    <AddButton @click="deleteGlobalNotification()" type="secondary"
+                    <AddButton @click="deleteGlobalNotification($page.props.globalNotification.id)" type="secondary"
                                text="Benachrichtigung löschen"></AddButton>
                 </div>
             </div>
@@ -284,11 +285,11 @@ export default defineComponent({
                 banner: null,
             }),
             globalNotificationForm: this.$inertia.form({
-                notificationImage: null,
-                notificationName: '',
+                notificationImage: this.$page.props.globalNotification?.image_name,
+                notificationName: this.$page.props.globalNotification?.title,
                 notificationDeadlineDate: null,
                 notificationDeadlineTime: null,
-                notificationDescription: '',
+                notificationDescription: this.$page.props.globalNotification?.description,
             }),
             mailForm: this.$inertia.form({
                 _method: 'PUT',
@@ -341,8 +342,12 @@ export default defineComponent({
             } else {
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
-
-
+        },
+        getTimeOfDate(isoDate) {
+            return isoDate.split('T')[1].substring(0, 5);
+        },
+        getDateOfDate(isoDate) {
+            return isoDate.split('T')[0];
         },
         uploadDraggedBigLogo(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'bigLogo');
@@ -387,10 +392,10 @@ export default defineComponent({
             this.mailForm.post(route('tool.updateMail'))
         },
         createGlobalNotification(){
-
+            this.globalNotificationForm.post(route('global_notification.store'));
         },
-        deleteGlobalNotification(){
-
+        deleteGlobalNotification(globalNotificationId){
+            this.$inertia.delete(route('global_notification.destroy',globalNotificationId));
         }
     },
 })

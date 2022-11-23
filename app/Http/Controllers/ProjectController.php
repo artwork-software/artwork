@@ -36,6 +36,7 @@ class ProjectController extends Controller
     // init empty notification controller
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -46,6 +47,7 @@ class ProjectController extends Controller
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+        $this->history = new HistoryController('App\Models\Project');
     }
 
     /**

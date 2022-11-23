@@ -16,6 +16,7 @@ use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use App\Models\User;
+use App\Support\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -28,18 +29,11 @@ use JetBrains\PhpStorm\NoReturn;
 class RoomController extends Controller
 {
     // init notification system
-    protected ?NotificationController $notificationController = null;
-    protected ?\stdClass $notificationData = null;
-    protected ?HistoryController $history = null;
+    protected ?RoomService $roomService = null;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->room = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
-        $this->history = new HistoryController('App\Models\Room');
-
+        $this->roomService = new RoomService();
     }
 
     /**
@@ -118,8 +112,6 @@ class RoomController extends Controller
 
         $room->categories()->sync(collect($request->room_categories)->pluck("id"));
 
-        $this->history->createHistory($room->id, 'Raum wurde erstellt');
-
         return Redirect::route('areas.management')->with('success', 'Room created.');
     }
 
@@ -163,7 +155,6 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room): RedirectResponse
     {
-
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;
         $roomAdminsBefore = $room->room_admins()->get();
@@ -173,7 +164,6 @@ class RoomController extends Controller
         $oldTemporary = $room->temporary;
         $oldStartDate = $room->start_date;
         $oldEndDate = $room->end_date;
-
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
@@ -199,13 +189,13 @@ class RoomController extends Controller
         $newStartDate = $room->start_date;
         $newEndDate = $room->end_date;
 
-        $this->checkAdjoiningRoomChanges($room->id, $oldAdjoiningRooms, $newAdjoiningRooms);
-        $this->checkDescriptionChanges($room->id, $oldRoomDescription, $newRoomDescription);
-        $this->checkMemberChanges($room, $roomAdminsBefore, $roomAdminsAfter);
-        $this->checkTitleChanges($room->id, $oldRoomTitle, $newRoomTitle);
-        $this->checkAttributeChanges($room->id, $oldRoomAttributes, $newRoomAttributes);
-        $this->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
-        $this->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
+        $this->roomService->checkAdjoiningRoomChanges($room->id, $oldAdjoiningRooms, $newAdjoiningRooms);
+        $this->roomService->checkDescriptionChanges($room->id, $oldRoomDescription, $newRoomDescription);
+        $this->roomService->checkMemberChanges($room, $roomAdminsBefore, $roomAdminsAfter);
+        $this->roomService->checkTitleChanges($room->id, $oldRoomTitle, $newRoomTitle);
+        $this->roomService->checkAttributeChanges($room->id, $oldRoomAttributes, $newRoomAttributes);
+        $this->roomService->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
+        $this->roomService->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
 
         // TODO Sammel Notification
         /*$this->notificationData->title = 'Änderungen an "'. $room->name . '"';
@@ -304,190 +294,6 @@ class RoomController extends Controller
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 
-    /**
-     * @param $roomId
-     * @param $oldTemporary
-     * @param $newTemporary
-     * @param $oldStartDate
-     * @param $newStartDate
-     * @param $oldEndDate
-     * @param $newEndDate
-     * @return void
-     */
-    private function checkTemporaryChanges($roomId, $oldTemporary, $newTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate): void
-    {
-        if($oldTemporary && !$newTemporary){
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum gelöscht');
-        }
-        if($newTemporary && !$oldTemporary){
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum hinzugefügt');
-        }
 
-        if($oldStartDate !== $newStartDate || $oldEndDate !== $newEndDate){
-            $this->history->createHistory($roomId, 'Temporärer Zeitraum geändert');
-        }
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldCategories
-     * @param $newCategories
-     * @return void
-     */
-    private function checkCategoryChanges($roomId, $oldCategories, $newCategories): void
-    {
-        $oldCategoryIds = [];
-        $oldCategoryNames = [];
-        $newCategoryIds = [];
-
-        foreach ($oldCategories as $oldCategory){
-            $oldCategoryIds[$oldCategory->id] = $oldCategory->id;
-            $oldCategoryNames[$oldCategory->id] = $oldCategory->name;
-        }
-
-        foreach ($newCategories as $newCategory){
-            $newCategoryIds[] = $newCategory->id;
-            if(!in_array($newCategory->id, $oldCategoryIds)){
-                $this->history->createHistory($roomId, 'Kategorie ' . $newCategory->name . ' wurde hinzugefügt');
-            }
-        }
-
-        foreach ($oldCategoryIds as $oldCategoryId){
-            if(!in_array($oldCategoryId, $newCategoryIds)){
-                $this->history->createHistory($roomId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' wurde entfernt');
-            }
-        }
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldAttributes
-     * @param $newAttributes
-     * @return void
-     */
-    private function checkAttributeChanges($roomId, $oldAttributes, $newAttributes): void
-    {
-        $oldAttributeIds = [];
-        $oldAttributeNames = [];
-        $newAttributeIds = [];
-
-        foreach ($oldAttributes as $oldAttribute){
-            $oldAttributeIds[] = $oldAttribute->id;
-            $oldAttributeNames[$oldAttribute->id] = $oldAttribute->name;
-        }
-
-        foreach ($newAttributes as $newAttribute){
-            $newAttributeIds[] = $newAttribute->id;
-            if(!in_array($newAttribute->id, $oldAttributeIds)){
-                $this->history->createHistory($roomId, 'Attribut ' . $newAttribute->name . ' wurde hinzugefügt');
-            }
-        }
-
-        foreach ($oldAttributeIds as $oldAttributeId){
-            if(!in_array($oldAttributeId, $newAttributeIds)){
-                $this->history->createHistory($roomId, 'Attribut ' . $oldAttributeNames[$oldAttributeId] . ' wurde entfernt');
-            }
-        }
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldTitle
-     * @param $newTitle
-     * @return void
-     */
-    private function checkTitleChanges($roomId, $oldTitle, $newTitle): void
-    {
-        if($oldTitle !== $newTitle){
-            $this->history->createHistory($roomId, 'Raumname wurde geändert');
-        }
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldDescription
-     * @param $newDescription
-     * @return void
-     */
-    private function checkDescriptionChanges($roomId, $oldDescription, $newDescription): void
-    {
-        // check changes in room description
-        if($oldDescription !== $newDescription){
-            $this->history->createHistory($roomId, 'Beschreibung wurde geändert');
-        }
-    }
-
-    /**
-     * @param $roomId
-     * @param $oldAdjoiningRooms
-     * @param $newAdjoiningRooms
-     * @return void
-     */
-    private function checkAdjoiningRoomChanges($roomId, $oldAdjoiningRooms, $newAdjoiningRooms): void
-    {
-        $newAdjoiningRoomIds = [];
-        $oldAdjoiningRoomIds = [];
-        $oldAdjoiningRoomName = [];
-
-        foreach ($oldAdjoiningRooms as $oldAdjoiningRoom){
-            $oldAdjoiningRoomIds[] = $oldAdjoiningRoom->id;
-            $oldAdjoiningRoomName[$oldAdjoiningRoom->id] = $oldAdjoiningRoom->name;
-        }
-
-        foreach ($newAdjoiningRooms as $newAdjoiningRoom){
-            $newAdjoiningRoomIds[] = $newAdjoiningRoom->id;
-            if(!in_array($newAdjoiningRoom->id, $oldAdjoiningRoomIds)){
-                $this->history->createHistory($roomId, 'Nebenraum ' . $newAdjoiningRoom->name . ' wurde hinzugefügt');
-            }
-        }
-
-        foreach ($oldAdjoiningRoomIds as $oldAdjoiningRoomId){
-            if(!in_array($oldAdjoiningRoomId, $newAdjoiningRoomIds)){
-                $this->history->createHistory($roomId, 'Nebenraum ' . $oldAdjoiningRoomName[$oldAdjoiningRoomId]. ' wurde entfernt');
-            }
-        }
-    }
-
-    /**
-     * @param Room $room
-     * @param $roomAdminsBefore
-     * @param $roomAdminsAfter
-     * @return void
-     */
-    private function checkMemberChanges(Room $room, $roomAdminsBefore, $roomAdminsAfter): void
-    {
-        $roomAdminIdsBefore = [];
-        $roomAdminIdsAfter = [];
-        foreach ($roomAdminsBefore as $roomAdminBefore){
-            $roomAdminIdsBefore[] = $roomAdminBefore->id;
-        }
-
-        foreach ($roomAdminsAfter as $roomAdminAfter){
-            $roomAdminIdsAfter[] = $roomAdminAfter->id;
-            // if added a new room admin, send notification to this user
-            if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
-                $user = User::find($roomAdminAfter->id);
-                $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
-            }
-        }
-
-        // check if user remove as room admin
-        foreach ($roomAdminIdsBefore as $roomAdminBefore){
-            if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
-                $user = User::find($roomAdminBefore);
-                $this->notificationData->title = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
-                $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
-            }
-        }
-    }
 
 }

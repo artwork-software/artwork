@@ -57,6 +57,7 @@ return [
         Change::TYPE_DELETED,
         Change::TYPE_RESTORED,
         Change::TYPE_FORCE_DELETED,
+        'create'
     ],
 
     /*
@@ -84,7 +85,6 @@ return [
     */
 
     'stores' => [
-
         'database' => [
             'driver'     => 'database',
             'table'      => 'model_changes_history',

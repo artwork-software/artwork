@@ -16,6 +16,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ProjectFileController extends Controller
 {
+    protected ?HistoryController $history = null;
+
+    public function __construct()
+    {
+        $this->history = new HistoryController('App\Models\Project');
+    }
 
     /**
      * @throws AuthorizationException
@@ -39,10 +45,7 @@ class ProjectFileController extends Controller
             'basename' => $basename,
         ]);
 
-        $project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => "Datei $original_name hochgeladen"
-        ]);
+        $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt');
 
         return Redirect::back();
     }
@@ -58,11 +61,6 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile->project);
 
-        $projectFile->project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => "Datei $projectFile->name heruntergeladen"
-        ]);
-
         return Storage::download('project_files/'. $projectFile->basename, $projectFile->name);
     }
 
@@ -76,14 +74,10 @@ class ProjectFileController extends Controller
     public function destroy(ProjectFile $projectFile)
     {
         $this->authorize('view', $projectFile->project);
+        $project = $projectFile->project()->first();
+        $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht');
 
         $projectFile->delete();
-
-        $projectFile->project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => "Datei $projectFile->name gelöscht"
-        ]);
-
         return Redirect::back();
     }
 

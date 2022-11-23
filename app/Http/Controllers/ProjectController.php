@@ -133,7 +133,7 @@ class ProjectController extends Controller
      *
      * @param Request $request
      */
-    public function store(StoreProjectRequest $request, HistoryService $historyService)
+    public function store(StoreProjectRequest $request)
     {
         if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -153,7 +153,6 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
         ]);
-        $historyService->projectUpdated($project);
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
 
@@ -247,7 +246,7 @@ class ProjectController extends Controller
      * @param  Project  $project
      * @return JsonResponse|RedirectResponse
      */
-    public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
+    public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
 
@@ -258,13 +257,123 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        // Get project admin, manager and User before update
-        $userIdsBefore = [];
-        $adminIdsBefore = [];
-        $managerIdsBefore = [];
         $projectAdminsBefore = $project->adminUsers()->get();
         $projectManagerBefore = $project->managerUsers()->get();
         $projectUsers = $project->users()->get();
+        $oldProjectDepartments = $project->departments()->get();
+
+        $oldProjectDescription = $project->description;
+        $oldProjectName = $project->name;
+
+        $project->fill($update_properties);
+
+        $project->save();
+
+        $project->users()->sync(collect($request->assigned_user_ids));
+        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
+
+        $project->categories()->sync($request->projectCategoryIds);
+        $project->genres()->sync($request->projectGenreIds);
+        $project->sectors()->sync($request->projectSectorIds);
+
+        $newProjectDescription = $project->description;
+        $newProjectName = $project->name;
+
+        $newProjectDepartments = $project->departments()->get();
+        $projectAdminsAfter = $project->adminUsers()->get();
+        $projectUsersAfter = $project->users()->get();
+        $projectManagerAfter = $project->managerUsers()->get();
+
+        // history functions
+        $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
+        $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
+        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
+
+        // Get and check project admins, managers and users after update
+        $this->createNotificationProjectMemberChanges($project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter);
+
+        $scheduling = new SchedulingController();
+        $projectId = $project->id;
+        foreach($project->users->all() as $user ){
+            $scheduling->create($user->id, 'PROJECT', $projectId);
+        }
+        return Redirect::back();
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldName
+     * @param $newName
+     * @return void
+     */
+    private function checkProjectNameChanges($projectId, $oldName, $newName): void
+    {
+        if($oldName !== $newName){
+            $this->history->createHistory($projectId, 'Projektname geändert');
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldDepartments
+     * @param $newDepartments
+     * @return void
+     */
+    private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
+    {
+        $oldDepartmentIds = [];
+        $newDepartmentIds = [];
+        $oldDepartmentNames = [];
+        foreach ($oldDepartments as $oldDepartment){
+            $oldDepartmentIds[] = $oldDepartment->id;
+            $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
+        }
+
+        foreach ($newDepartments as $newDepartment) {
+            $newDepartmentIds[] = $newDepartment->id;
+            if(!in_array($newDepartment->id, $oldDepartmentIds)){
+                $this->history->createHistory($projectId, 'Projektteam ' . $newDepartment->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldDepartmentIds as $oldDepartmentId){
+            if(!in_array($oldDepartmentId, $newDepartmentIds)){
+                $this->history->createHistory($projectId, 'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt');
+            }
+        }
+    }
+
+    private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
+    {
+        if(strlen($newDescription) === null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht');
+        }
+        if($oldDescription === null && $newDescription !== null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt');
+        }
+        if($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert');
+        }
+    }
+
+    /**
+     * @param Project $project
+     * @param $projectAdminsBefore
+     * @param $projectManagerBefore
+     * @param $projectUsers
+     * @param $projectAdminsAfter
+     * @param $projectUsersAfter
+     * @param $projectManagerAfter
+     * @return void
+     */
+    private function createNotificationProjectMemberChanges(Project $project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter): void
+    {
+        $userIdsBefore = [];
+        $adminIdsBefore = [];
+        $managerIdsBefore = [];
+        $userIdsAfter = [];
+        $managerIdsAfter = [];
+        $adminIdsAfter = [];
         foreach ($projectUsers as $projectUser){
             $userIdsBefore[$projectUser->id] = $projectUser->id;
         }
@@ -280,32 +389,9 @@ class ProjectController extends Controller
                 unset($userIdsBefore[$managerBefore->id]);
             }
         }
-
-        $project->fill($update_properties);
-
-        $project->save();
-
-        $project->users()->sync(collect($request->assigned_user_ids));
-        $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        $project->categories()->sync($request->projectCategoryIds);
-        $project->genres()->sync($request->projectGenreIds);
-        $project->sectors()->sync($request->projectSectorIds);
-        //$historyService->updateHistory($project,'Eigenschaften angepasst.');
-        //$historyService->projectUpdated($project);
-
-        // Get and check project admins, managers and users after update
-        $adminIdsAfter = [];
-        $projectAdminsAfter = $project->adminUsers()->get();
-        $projectUsersAfter = $project->users()->get();
-        $userIdsAfter = [];
-        $managerIdsAfter = [];
-        $projectManagerAfter = $project->managerUsers()->get();
-
         foreach ($projectUsersAfter as $projectUserAfter){
             $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
         }
-
         foreach ($projectAdminsAfter as $adminAfter){
             $adminIdsAfter[$adminAfter->id] = $adminAfter->id;
             // if added a new project admin, send notification to this user
@@ -320,7 +406,6 @@ class ProjectController extends Controller
                 unset($userIdsAfter[$adminAfter->id]);
             }
         }
-
         foreach ($projectManagerAfter as $managerAfter){
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
@@ -335,7 +420,6 @@ class ProjectController extends Controller
                 unset($userIdsAfter[$managerAfter->id]);
             }
         }
-
         // check if user remove as project admin
         foreach ($adminIdsBefore as $adminBefore){
             if(!in_array($adminBefore, $adminIdsAfter)){
@@ -347,7 +431,6 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
-
         // check if user remove as project manager
         foreach ($managerIdsBefore as $managerBefore){
             if(!in_array($managerBefore, $managerIdsAfter)){
@@ -359,7 +442,6 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
-
         foreach ($userIdsAfter as $userIdAfter){
             if(!in_array($userIdAfter, $userIdsBefore)){
                 $user = User::find($userIdAfter);
@@ -370,7 +452,6 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
-
         foreach ($userIdsBefore as $userIdBefore){
             if(!in_array($userIdBefore, $userIdsAfter)){
                 $user = User::find($userIdBefore);
@@ -381,14 +462,6 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData);
             }
         }
-
-        $scheduling = new SchedulingController();
-        $projectId = $project->id;
-        foreach($project->users->all() as $user ){
-            $scheduling->create($user->id, 'PROJECT', $projectId);
-        }
-
-        return Redirect::back();
     }
 
     /**

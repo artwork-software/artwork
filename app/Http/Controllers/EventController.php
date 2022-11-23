@@ -92,7 +92,7 @@ class EventController extends Controller
         ]);
     }
 
-    public function storeEvent(EventStoreRequest $request, HistoryService $historyService): CalendarEventResource
+    public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
 
         // Adjoining Room / Event check
@@ -102,7 +102,13 @@ class EventController extends Controller
         $event = Event::create($request->data());
 
         if ($request->get('projectName')) {
-            $this->associateProject($request, $event, $historyService);
+            $this->associateProject($request, $event);
+        }
+
+        if(!empty($event->project()->get())){
+            $eventProject = $event->project()->first();
+            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
         }
 
         if($request->isOption){
@@ -166,12 +172,11 @@ class EventController extends Controller
         $this->notificationController->create($collision['created_by'], $this->notificationData);
     }
 
-    private function associateProject($request, $event, $historyService) {
+    private function associateProject($request, $event) {
         $project = Project::create(['name' => $request->get('projectName')]);
         $project->users()->save(Auth::user(), ['is_admin' => true]);
         $event->project()->associate($project);
         $event->save();
-        $historyService->projectUpdated($project);
     }
 
     private function createRequestNotification($request, $event) {
@@ -199,7 +204,7 @@ class EventController extends Controller
      * @return CalendarEventResource
      * @throws \Illuminate\Auth\Access\AuthorizationException
      */
-    public function updateEvent(EventUpdateRequest $request, Event $event, HistoryService $historyService): CalendarEventResource
+    public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
         $this->authorize('update', $event);
 
@@ -215,7 +220,6 @@ class EventController extends Controller
             $project->users()->save(Auth::user(), ['is_admin' => true]);
             $event->project()->associate($project);
             $event->save();
-            $historyService->projectUpdated($project);
         }
 
         $newEventDescription = $event->description;

@@ -212,6 +212,9 @@ class EventController extends Controller
         $oldEventRoom = $event->room_id;
         $oldEventProject = $event->project_id;
         $oldEventName = $event->eventName;
+        $oldEventType = $event->event_type_id;
+        $oldEventStartDate = $event->start_time;
+        $oldEventEndDate = $event->end_time;
 
         $event->update($request->data());
 
@@ -226,12 +229,16 @@ class EventController extends Controller
         $newEventRoom = $event->room_id;
         $newEventProject = $event->project_id;
         $newEventName = $event->eventName;
-
+        $newEventType = $event->event_type_id;
+        $newEventStartDate = $event->start_time;
+        $newEventEndDate = $event->end_time;
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
         $this->checkProjectChanges($event->id, $oldEventProject, $newEventProject);
         $this->checkEventNameChanges($event->id, $oldEventName, $newEventName);
+        $this->checkEventTypeChanges($event->id, $oldEventType, $newEventType);
+        $this->checkDateChanges($event->id, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate);
 
         $this->createEventScheduleNotification($event);
 
@@ -406,6 +413,34 @@ class EventController extends Controller
         broadcast(new OccupancyUpdated())->toOthers();
 
         return Redirect::route('events.trashed')->with('success', 'Event restored');
+    }
+
+    /**
+     * @param $eventId
+     * @param $oldEventStartDate
+     * @param $newEventStartDate
+     * @param $oldEventEndDate
+     * @param $newEventEndDate
+     * @return void
+     */
+    private function checkDateChanges($eventId, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate): void
+    {
+        if($oldEventStartDate !== $newEventStartDate || $oldEventEndDate !== $newEventEndDate){
+            $this->history->createHistory($eventId, 'Datum/Uhrzeit geändert');
+        }
+    }
+
+    /**
+     * @param $eventId
+     * @param $oldType
+     * @param $newType
+     * @return void
+     */
+    private function checkEventTypeChanges($eventId, $oldType, $newType): void
+    {
+        if($oldType !== $newType){
+            $this->history->createHistory($eventId, 'Termintyp geändert');
+        }
     }
 
     /**

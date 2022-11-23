@@ -11,6 +11,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
@@ -245,5 +246,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])->name('notifications.settings');
 
+    //globalNotification
+    Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
+    Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
+    Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
 });
 

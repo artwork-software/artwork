@@ -228,9 +228,9 @@ class SchedulingController extends Controller
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->task_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
-                    $this->notificationData->title = 'Änderungen an ' . $task->name;
-                    $this->notificationData->task->title = $task->name;
-                    $this->notificationData->task->deadline = $task->deadline;
+                    $this->notificationData->title = 'Änderungen an ' . @$task->name;
+                    $this->notificationData->task->title = @$task->name;
+                    $this->notificationData->task->deadline = @$task->deadline;
                     $this->notificationData->created_by = null;
                     break;
                 case 'EVENT':

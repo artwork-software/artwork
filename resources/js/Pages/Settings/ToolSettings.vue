@@ -284,7 +284,7 @@ export default defineComponent({
                 banner: null,
             }),
             globalNotificationForm: this.$inertia.form({
-                notificationImage: this.$page.props.globalNotification?.image_name,
+                notificationImage: this.$page.props.globalNotification?.image_url,
                 notificationName: this.$page.props.globalNotification?.title,
                 notificationDeadlineDate: this.$page.props.globalNotification ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
                 notificationDeadlineTime: this.$page.props.globalNotification ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,

@@ -26,9 +26,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        if(DB::table('global_notifications')->exists()){
-            $globalNotification = GlobalNotification::first();
-            Inertia::share('globalNotification', $globalNotification ?? null);
-        }
+
     }
 }

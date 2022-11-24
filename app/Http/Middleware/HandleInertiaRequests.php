@@ -77,9 +77,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
-
         $globalNotification = GlobalNotification::first();
-        $globalNotification['image_url'] = Storage::disk('public')->url($globalNotification->image_name);
+        $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
         return array_merge(parent::share($request), [
             'roles' => Auth::guest() ? [] : Auth::user()->getRoleNames(),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -37,7 +38,7 @@ use Laravel\Scout\Searchable;
  */
 class Project extends Model
 {
-    use HasFactory, SoftDeletes, Prunable, Searchable;
+    use HasFactory, SoftDeletes, Prunable, Searchable, HasChangesHistory;
 
     protected $fillable = [
         'name',

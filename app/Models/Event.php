@@ -41,11 +41,13 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
-    use HasFactory, SoftDeletes, HasChangesHistory;
+    use HasChangesHistory;
+    use HasFactory, SoftDeletes;
 
     protected $guarded = [
         'id',
     ];
+
 
     protected $casts = [
         'is_loud' => 'boolean',
@@ -155,4 +157,6 @@ class Event extends Model
         return $this->start_time->isBetween($event->start_time, $event->end_time)
             || $this->end_time->isBetween($event->start_time, $event->end_time);
     }
+
+
 }

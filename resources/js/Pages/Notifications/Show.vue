@@ -32,29 +32,42 @@
                 </ul>
             </div>
             <div class="">
-                <div class="flex flex-wrap" v-if="openTab === 'notifications'">
-                    <div>
-                    <!-- Raumbelegungen und Termine Notifications -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
-                                                  name="Raumbelegungen & Termine" :rooms="rooms" :projects="projects"
-                                                  :event-types="eventTypes"
-                                                  :notifications="notifications['EVENTS']"></NotificationSectionComponent>
-                    <!-- Räume und Raumbelegungsanfragen -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
-                                                  name="Räume & Raumbelegungsanfragen" :rooms="rooms"
-                                                  :projects="projects" :event-types="eventTypes"
-                                                  :notifications="notifications['ROOMS']"></NotificationSectionComponent>
-                    <!-- Aufgaben -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
-                                                  :rooms="rooms" :projects="projects" :event-types="eventTypes"
-                                                  :notifications="notifications['TASKS']"></NotificationSectionComponent>
-                    <!-- Projekte & Teams -->
-                    <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
-                                                  name="Projekte & Teams" :rooms="rooms" :projects="projects"
-                                                  :event-types="eventTypes"
-                                                  :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                <div class="grid grid-cols-12 mt-12" v-if="openTab === 'notifications'">
+                    <div class="col-span-8">
+                        <!-- Raumbelegungen und Termine Notifications -->
+                        <NotificationSectionComponent :readNotifications="readNotifications['EVENTS']"
+                                                      name="Raumbelegungen & Termine" :rooms="rooms"
+                                                      :projects="projects"
+                                                      :event-types="eventTypes"
+                                                      :notifications="notifications['EVENTS']"></NotificationSectionComponent>
+                        <!-- Räume und Raumbelegungsanfragen -->
+                        <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
+                                                      name="Räume & Raumbelegungsanfragen" :rooms="rooms"
+                                                      :projects="projects" :event-types="eventTypes"
+                                                      :notifications="notifications['ROOMS']"></NotificationSectionComponent>
+                        <!-- Aufgaben -->
+                        <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
+                                                      :rooms="rooms" :projects="projects" :event-types="eventTypes"
+                                                      :notifications="notifications['TASKS']"></NotificationSectionComponent>
+                        <!-- Projekte & Teams -->
+                        <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
+                                                      name="Projekte & Teams" :rooms="rooms" :projects="projects"
+                                                      :event-types="eventTypes"
+                                                      :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
                     </div>
-                    <div>
+                    <div v-if="this.$page.props.globalNotification" class="col-span-4 pr-4">
+                        <div class="bg-backgroundGray">
+                            <img alt="Benachrichtigungs Bild" class="h-80 "
+                                 :src="this.$page.props.globalNotification.image_name"/>
+                            <div class="px-4 py-4">
+                                <div class="headline2 mt-6 mb-2">
+                                    {{ this.$page.props.globalNotification.title }}
+                                </div>
+                                <div class="xsLight">
+                                    {{ this.$page.props.globalNotification.description }}
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                 </div>

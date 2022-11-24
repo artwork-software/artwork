@@ -13,7 +13,7 @@
                     {{ name }}
                     <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? 'px-2' : ''"
                          class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
-                        {{ notifications.length }}
+                        {{notifications.length }}
                     </div>
                 </div>
                 <div @click="setAllOnRead(notifications)"

@@ -46,7 +46,7 @@ class GlobalNotificationController extends Controller
         $user->globalNotifications()->create([
             'title' => $request->notificationName,
             'description' => $request->notificationDescription,
-            'image_name' => $image->storePublicly('notificationImage', ['disk' => 'public']),
+            'image_name' => $image?->storePublicly('notificationImage', ['disk' => 'public']),
             'expiration_date' => new \DateTime($request->notificationDeadlineDate . ' ' . $request->notificationDeadlineTime)
         ]);
     }

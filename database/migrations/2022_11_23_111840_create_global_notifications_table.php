@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->longText('description');
-            $table->string('image_name');
+            $table->string('image_name')->nullable();
             $table->bigInteger('created_by');
             $table->dateTime('expiration_date')->nullable();
             $table->timestamps();

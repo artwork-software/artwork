@@ -18,7 +18,7 @@ class HistoryController extends Controller
         Change::create([
             'model_id' => $modelId,
             'model_type' => $this->modelObject,
-            'changes' => json_encode(['message' => $historyText]),
+            'changes' => json_encode(['message' => $historyText, 'changed_by' => Auth::user()]),
             'change_type' => 'updated',
             'changer_type' => 'App\Models\User',
             'changer_id' => Auth::id(),

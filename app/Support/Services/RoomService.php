@@ -189,8 +189,7 @@ class RoomService
             if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
                 $user = User::find($roomAdminAfter->id);
                 $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
+                $this->notificationData->room = $room;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
@@ -202,8 +201,7 @@ class RoomService
             if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
                 $user = User::find($roomAdminBefore);
                 $this->notificationData->title = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
+                $this->notificationData->room = $room;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $this->notificationController->create($user, $this->notificationData);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');

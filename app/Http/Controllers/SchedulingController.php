@@ -6,6 +6,7 @@ use App\Enums\NotificationConstEnum;
 use App\Models\Checklist;
 use App\Models\Event;
 use App\Models\Project;
+use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
@@ -29,6 +30,7 @@ class SchedulingController extends Controller
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->task = new stdClass();
+        $this->notificationData->room = new stdClass();
     }
 
     /**
@@ -44,19 +46,21 @@ class SchedulingController extends Controller
     /**
      * Show the form for creating a new resource.
      *
-     * @return Response
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function create($userId, $type, $project = null, $task = null, $event = null): Response|bool
+    public function create($userId, $type, $project = null, $task = null, $event = null, $room = null): \Illuminate\Http\JsonResponse
     {
         $scheduling = Scheduling::where('user_id', $userId)
             ->where('type', $type)
             ->where('project_id', $project)
             ->where('task_id', $task)
             ->where('event_id', $event)
+            ->where('room_id', $room)
             ->first();
 
         if (!empty($scheduling)) {
             $scheduling->increment('count', 1);
+            return \response()->json(['message' => 'increment', 'project' => $project, 'task' => $task, 'event' => $event, 'room' => $room, 'type' => $type]);
         } else {
             Scheduling::create([
                 'count' => 1,
@@ -64,10 +68,11 @@ class SchedulingController extends Controller
                 'type' => $type,
                 'project_id' => $project,
                 'task_id' => $task,
-                'event_id' => $event
+                'event_id' => $event,
+                'room_id' => $room
             ]);
+            return \response()->json(['message' => 'created', 'project' => $project, 'task' => $task, 'event' => $event, 'room' => $room, 'type' => $type]);
         }
-        return true;
     }
 
     /**
@@ -231,6 +236,13 @@ class SchedulingController extends Controller
                     $this->notificationData->title = 'Änderungen an ' . @$task->name;
                     $this->notificationData->task->title = @$task->name;
                     $this->notificationData->task->deadline = @$task->deadline;
+                    $this->notificationData->created_by = null;
+                    break;
+                case 'ROOM_CHANGES':
+                    $room = Room::find($schedule->room_id);
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
+                    $this->notificationData->title = 'Änderungen an ' . @$room->name;
+                    $this->notificationData->room = $room;
                     $this->notificationData->created_by = null;
                     break;
                 case 'EVENT':

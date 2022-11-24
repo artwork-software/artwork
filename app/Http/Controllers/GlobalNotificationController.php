@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\GlobalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class GlobalNotificationController extends Controller
 {
@@ -38,6 +39,9 @@ class GlobalNotificationController extends Controller
     {
         $oldGlobalNotifications = GlobalNotification::all();
         foreach ($oldGlobalNotifications as $globalNotification){
+            if(Storage::disk('public')->exists($globalNotification->image_name)) {
+                Storage::disk('public')->delete($globalNotification->image_name);
+            }
             $globalNotification->delete();
         }
         $image = $request->file('notificationImage');

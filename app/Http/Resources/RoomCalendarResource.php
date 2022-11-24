@@ -30,12 +30,25 @@ class RoomCalendarResource extends JsonResource
             ->occursAt($requestedDay)
             ->get();
 
+        $historyArray = [];
+        $historyComplete = $this->historyChanges()->all();
+
+        foreach ($historyComplete as $history){
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        }
+
         return [
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'temporary' => $this->temporary,
+            'room_history' => $historyArray,
             'created_by' => $this->creator,
             'created_at' => $this->created_at?->format('d.m.Y'),
             'start_date' => $this->start_date?->format('d.m.Y'),

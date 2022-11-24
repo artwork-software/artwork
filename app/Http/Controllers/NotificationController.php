@@ -88,7 +88,26 @@ class NotificationController extends Controller
                     'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => $notificationData->event,
+                    'event' => [
+                        'id' => $notificationData->event->id,
+                        'name' => $notificationData->event->name,
+                        'eventName' => $notificationData->event->eventName,
+                        'description' => $notificationData->event->description,
+                        'start_time' => Carbon::parse($notificationData->event->start_time)->setTimezone(config('app.timezone')),
+                        'end_time' => Carbon::parse($notificationData->event->end_time)->setTimezone(config('app.timezone')),
+                        'occupancy_option' => $notificationData->event->occupancy_option,
+                        'audience' => $notificationData->event->audience,
+                        'is_loud' => $notificationData->event->is_loud,
+                        'event_type_id' => $notificationData->event->event_type_id,
+                        'room_id' => $notificationData->event->room_id,
+                        'declined_room_id' => $notificationData->event->declined_room_id,
+                        'user_id' => $notificationData->event->user_id,
+                        'project_id' => $notificationData->event->project_id,
+                        'created_at' => $notificationData->event->created_at,
+                        'updated_at' => $notificationData->event->updated_at,
+                        'creator' => $notificationData->event->creator,
+                        'history' => $notificationData->event->historyChanges(),
+                        ],
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];
@@ -99,7 +118,26 @@ class NotificationController extends Controller
                     'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => $notificationData->event,
+                    'event' => [
+                        'id' => $notificationData->event->id,
+                        'name' => $notificationData->event->name,
+                        'eventName' => $notificationData->event->eventName,
+                        'description' => $notificationData->event->description,
+                        'start_time' => Carbon::parse($notificationData->event->start_time)->setTimezone(config('app.timezone')),
+                        'end_time' => Carbon::parse($notificationData->event->end_time)->setTimezone(config('app.timezone')),
+                        'occupancy_option' => $notificationData->event->occupancy_option,
+                        'audience' => $notificationData->event->audience,
+                        'is_loud' => $notificationData->event->is_loud,
+                        'event_type_id' => $notificationData->event->event_type_id,
+                        'room_id' => $notificationData->event->room_id,
+                        'declined_room_id' => $notificationData->event->declined_room_id,
+                        'user_id' => $notificationData->event->user_id,
+                        'project_id' => $notificationData->event->project_id,
+                        'created_at' => $notificationData->event->created_at,
+                        'updated_at' => $notificationData->event->updated_at,
+                        'creator' => $notificationData->event->creator,
+                        'history' => $notificationData->event->historyChanges(),
+                    ],
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];
@@ -110,7 +148,26 @@ class NotificationController extends Controller
                     'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'event' => $notificationData->event,
+                    'event' => [
+                        'id' => $notificationData->event->id,
+                        'name' => $notificationData->event->name,
+                        'eventName' => $notificationData->event->eventName,
+                        'description' => $notificationData->event->description,
+                        'start_time' => Carbon::parse($notificationData->event->start_time)->setTimezone(config('app.timezone')),
+                        'end_time' => Carbon::parse($notificationData->event->end_time)->setTimezone(config('app.timezone')),
+                        'occupancy_option' => $notificationData->event->occupancy_option,
+                        'audience' => $notificationData->event->audience,
+                        'is_loud' => $notificationData->event->is_loud,
+                        'event_type_id' => $notificationData->event->event_type_id,
+                        'room_id' => $notificationData->event->room_id,
+                        'declined_room_id' => $notificationData->event->declined_room_id,
+                        'user_id' => $notificationData->event->user_id,
+                        'project_id' => $notificationData->event->project_id,
+                        'created_at' => $notificationData->event->created_at,
+                        'updated_at' => $notificationData->event->updated_at,
+                        'creator' => $notificationData->event->creator,
+                        'history' => $notificationData->event->historyChanges(),
+                    ],
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new EventNotification($notificationBody));
@@ -273,13 +330,13 @@ class NotificationController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\RedirectResponse
+     * @return String
      */
-    public function destroy(int $id): \Illuminate\Http\RedirectResponse
+    public function destroy(String $id)
     {
         $user = User::find(Auth::id());
         $notification = $user->notifications->find($id);
         $notification->delete();
-        return Redirect::route('notifications.index')->with('success', 'Notification deleted');
+        return 'Notification deleted';
     }
 }

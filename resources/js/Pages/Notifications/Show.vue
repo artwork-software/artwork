@@ -58,7 +58,7 @@
                     <div v-if="this.$page.props.globalNotification" class="col-span-4 pr-4">
                         <div class="bg-backgroundGray">
                             <img alt="Benachrichtigungs Bild" class="h-80 "
-                                 :src="this.$page.props.globalNotification.image_name"/>
+                                 :src="this.$page.props.globalNotification.image_url"/>
                             <div class="px-4 py-4">
                                 <div class="headline2 mt-6 mb-2">
                                     {{ this.$page.props.globalNotification.title }}

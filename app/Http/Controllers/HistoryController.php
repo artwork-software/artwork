@@ -15,10 +15,11 @@ class HistoryController extends Controller
 
     public function createHistory(int $modelId, string $historyText): void
     {
+        $array[] = ['message' => $historyText, 'changed_by' => Auth::user()];
         Change::create([
             'model_id' => $modelId,
             'model_type' => $this->modelObject,
-            'changes' => json_encode(['message' => $historyText, 'changed_by' => Auth::user()]),
+            'changes' => json_encode($array),
             'change_type' => 'updated',
             'changer_type' => 'App\Models\User',
             'changer_id' => Auth::id(),

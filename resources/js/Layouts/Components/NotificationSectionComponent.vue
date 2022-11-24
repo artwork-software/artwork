@@ -430,7 +430,7 @@ export default {
         },
         async deleteNotification() {
             const notification = this.notification
-            await axios.delete(`/notifications/${notification.id}`)
+            await axios.delete(`/notifications/${notification.id}/`)
                 .then(res => {
                     console.log(res)
                 })

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->integer('project_id')->nullable();
             $table->integer('task_id')->nullable();
             $table->integer('event_id')->nullable();
+            $table->integer('room_id')->nullable();
             $table->timestamps();
         });
     }

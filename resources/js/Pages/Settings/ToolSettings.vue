@@ -186,7 +186,7 @@
                         Bild </label>
                     <div class="items-center">
                         <div
-                            class="flex w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                            class="flex w-full justify-center border-2 bg-stone-50 w-5/12 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
                             @click="selectNewNotificationImage"
                             @dragover.prevent
                             @drop.stop.prevent="uploadDraggedImage($event)">
@@ -214,7 +214,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="flex my-4 w-full">
+                <div class="flex my-4 w-full pr-7">
                     <div class="w-5/12 mr-6">
                         <input type="text"
                                v-model="this.globalNotificationForm.notificationName"
@@ -222,7 +222,7 @@
                                placeholder="Titel*"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
-                    <div class="w-full flex w-4/12">
+                    <div class="w-full flex w-5/12">
                         <input v-model="this.globalNotificationForm.notificationDeadlineDate"
                                id="deadlineDate"
                                type="date"

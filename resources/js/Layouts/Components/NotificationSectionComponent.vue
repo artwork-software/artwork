@@ -373,7 +373,9 @@ export default {
         },
         setAllOnRead(notifications) {
             notifications.forEach((notification) => {
-                this.setOnRead(notification.id);
+                if(!this.isErrorType(notification.type,notification) || notification.type.indexOf('RoomRequestNotification') === -1){
+                    this.setOnRead(notification.id);
+                }
             })
         },
         openAnswerEventRequestModal(event, type){
@@ -410,7 +412,7 @@ export default {
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            // TODO: HIER NOCH NOTIFICATION AUF READ_AT SETZEN / deleten
+            // TODO: HIER NOCH NOTIFICATION AUF READ_AT SETZEN
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)

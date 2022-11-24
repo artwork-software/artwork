@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redirect;
 
 class NotificationController extends Controller
 {
@@ -328,10 +329,13 @@ class NotificationController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return String
      */
-    public function destroy($id)
+    public function destroy(String $id)
     {
-        //
+        $user = User::find(Auth::id());
+        $notification = $user->notifications->find($id);
+        $notification->delete();
+        return 'Notification deleted';
     }
 }

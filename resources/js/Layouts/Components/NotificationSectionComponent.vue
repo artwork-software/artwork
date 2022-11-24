@@ -13,7 +13,7 @@
                     {{ name }}
                     <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? 'px-2' : ''"
                          class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
-                        {{notifications.length }}
+                        {{ notifications.length }}
                     </div>
                 </div>
                 <div @click="setAllOnRead(notifications)"
@@ -112,15 +112,22 @@
                         v-if="isErrorType(notification.type,notification) && notification.type.indexOf('RoomRequestNotification') !== -1"
                         class="flex w-full ml-16 mt-1">
                         <div class="flex" v-if="notification.data.title.indexOf('Neue Raumanfrage') !== -1">
-                            <AddButton @click="openAnswerEventRequestModal(notification.data.event,'accept')" class="flex px-12"
-                                       text="Anfrage bestätigen" mode="modal"/>
-                            <AddButton @click="openAnswerEventRequestModal(notification.data.event,'decline')" type="secondary"
-                                       text="Anfrage ablehnen"></AddButton>
-                            <AddButton @click="openAnswerRequestWithRoomChangeModal(notification.data.event, notification.data.created_by)" type="secondary"
-                                       text="Raum ändern"></AddButton>
+                            <AddButton
+                                @click="openAnswerEventRequestModal(notification, notification.data.event,'accept')"
+                                class="flex px-12"
+                                text="Anfrage bestätigen" mode="modal"/>
+                            <AddButton
+                                @click="openAnswerEventRequestModal(notification, notification.data.event,'decline')"
+                                type="secondary"
+                                text="Anfrage ablehnen"></AddButton>
+                            <AddButton
+                                @click="openAnswerRequestWithRoomChangeModal(notification, notification.data.event, notification.data.created_by)"
+                                type="secondary"
+                                text="Raum ändern"></AddButton>
                         </div>
                         <div class="flex" v-else>
-                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event)" class="flex px-12"
+                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event)"
+                                       class="flex px-12"
                                        text="Anfrage ändern" mode="modal"/>
                             <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
                                        text="Termin löschen"></AddButton>
@@ -333,6 +340,7 @@ export default {
             answerRequestModalVisible: false,
             requestToAnswer: null,
             answerRequestType: '',
+            notification: null,
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
             creatorOfRequest: null,
@@ -373,39 +381,42 @@ export default {
         },
         setAllOnRead(notifications) {
             notifications.forEach((notification) => {
-                if(!this.isErrorType(notification.type,notification) || notification.type.indexOf('RoomRequestNotification') === -1){
+                if (!this.isErrorType(notification.type, notification) || notification.type.indexOf('RoomRequestNotification') === -1) {
                     this.setOnRead(notification.id);
                 }
             })
         },
-        openAnswerEventRequestModal(event, type){
+        openAnswerEventRequestModal(notification, event, type) {
             this.requestToAnswer = event;
             this.answerRequestType = type;
             this.answerRequestModalVisible = true;
+            this.notification = notification;
         },
-        openAnswerRequestWithRoomChangeModal(event, creator){
+        openAnswerRequestWithRoomChangeModal(notification, event, creator) {
             this.creatorOfRequest = creator;
             this.requestToAnswerWithRoomChange = event;
             this.answerRequestWithRoomChangeVisible = true;
+            this.notification = notification
         },
-        afterRequestAnswer(bool) {
+        async afterRequestAnswer(bool) {
             if (!bool) {
                 return this.answerRequestModalVisible = false;
             }
-            // TODO: HIER NOCH NOTIFICATION LÖSCHEN
-            if(this.answerRequestType === 'accept'){
+            await this.deleteNotification();
+
+            if (this.answerRequestType === 'accept') {
                 this.answerRequestForm.accepted = true;
-            }else if(this.answerRequestType === 'decline'){
+            } else if (this.answerRequestType === 'decline') {
                 this.answerRequestForm.accepted = false;
             }
             this.answerRequestForm.put(route('events.accept', {event: this.requestToAnswer.id}));
             this.answerRequestModalVisible = false;
         },
-        afterRequestAnswerWithRoomChange(bool) {
-            if(!bool){
+        async afterRequestAnswerWithRoomChange(bool) {
+            if (!bool) {
                 return this.answerRequestWithRoomChangeVisible = false;
             }
-            // TODO: HIER NOCH NOTIFICATION LÖSCHEN
+            await this.deleteNotification();
             // TODO: HIER FUNKTION ZUR RAUMÄNDERUNG SCHREIBEN
             console.log(this.requestToAnswerWithRoomChange);
         },
@@ -417,6 +428,15 @@ export default {
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
         },
+        async deleteNotification() {
+            const notification = this.notification
+            await axios.delete(`/notifications/${notification.id}/`)
+                .then(res => {
+                    console.log(res)
+                })
+                .catch(err => console.log(err))
+            this.notification = null
+        }
     },
 }
 </script>

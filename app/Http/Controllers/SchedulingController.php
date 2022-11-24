@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use stdClass;
 
@@ -256,5 +257,22 @@ class SchedulingController extends Controller
             $this->notificationController->create($user, $this->notificationData);
             $schedule->delete();
         }
+    }
+
+    /**
+     * Deletes notifications that were archived 7 or more days ago
+     * @return void
+     */
+    public function deleteOldNotifications() {
+        $users = User::all();
+        foreach($users as $user) {
+            foreach($user->notifications as $notification) {
+                $archived = Carbon::parse($notification->read_at);
+                if($archived->diffInDays(Carbon::now()) >= 7) {
+                    $notification->delete();
+                }
+            }
+        }
+
     }
 }

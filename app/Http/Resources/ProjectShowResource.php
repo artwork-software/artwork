@@ -20,7 +20,17 @@ class ProjectShowResource extends JsonResource
      */
     public function toArray($request)
     {
-        $projectHistory = $this->project_histories->sortByDesc('created_at');
+        $historyArray = [];
+        $historyComplete = $this->historyChanges()->all();
+
+        foreach ($historyComplete as $history){
+            $historyArray[] = [
+                'changes' => json_decode($history->changes),
+                'created_at' => $history->created_at->diffInHours() < 24
+                    ? $history->created_at->diffForHumans()
+                    : $history->created_at->format('d.m.Y, H:i'),
+            ];
+        }
 
         return [
             'id' => $this->id,
@@ -36,7 +46,7 @@ class ProjectShowResource extends JsonResource
             'curr_user_is_related' => $this->users->contains(Auth::id()),
 
             'users' => UserIndexResource::collection($this->users)->resolve(),
-            'project_history' => ProjectHistoryResource::collection($projectHistory)->resolve(),
+            'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
             'project_files' => $this->project_files,

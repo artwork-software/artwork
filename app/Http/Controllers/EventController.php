@@ -107,8 +107,10 @@ class EventController extends Controller
 
         if(!empty($event->project()->get())){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
-            $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
+            if($eventProject){
+                $projectHistory = new HistoryController('App\Models\Project');
+                $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
+            }
         }
 
         if($request->isOption){

@@ -4,11 +4,13 @@ namespace App\Notifications;
 
 use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class TeamNotification extends Notification
+class TeamNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
     protected array $notificationData = [];
@@ -22,6 +24,13 @@ class TeamNotification extends Notification
         $this->notificationData = $notificationData;
     }
 
+    public function toBroadcast($notifiable): BroadcastMessage
+    {
+        return new BroadcastMessage([
+            'message' => "Test"
+        ]);
+    }
+
     public function via($user)
     {
         $channels = ['database'];
@@ -32,6 +41,10 @@ class TeamNotification extends Notification
 
         if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
             $channels[] = 'mail';
+        }
+
+        if($typeSettings->enabled_push) {
+            $channels[] = 'broadcast';
         }
 
         return $channels;

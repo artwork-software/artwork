@@ -2,6 +2,15 @@
 
 namespace App\Enums;
 
+use App\Notifications\ConflictNotification;
+use App\Notifications\DeadlineNotification;
+use App\Notifications\EventNotification;
+use App\Notifications\ProjectNotification;
+use App\Notifications\RoomNotification;
+use App\Notifications\RoomRequestNotification;
+use App\Notifications\TaskNotification;
+use App\Notifications\TeamNotification;
+
 enum NotificationConstEnum: string
 {
     case NOTIFICATION_ROOM_REQUEST = 'ROOM_REQUEST';
@@ -38,6 +47,29 @@ enum NotificationConstEnum: string
 
             self::NOTIFICATION_PROJECT,
             self::NOTIFICATION_TEAM => "projects"
+        };
+    }
+
+    public function notificationClass(): string
+    {
+        return match ($this) {
+            self::NOTIFICATION_EVENT_CHANGED => EventNotification::class,
+
+            self::NOTIFICATION_UPSERT_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_REQUEST => RoomRequestNotification::class,
+
+            self::NOTIFICATION_CONFLICT,
+            self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
+
+            self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
+
+            self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
+            self::NOTIFICATION_NEW_TASK,
+            self::NOTIFICATION_TASK_CHANGED => TaskNotification::class,
+
+            self::NOTIFICATION_PROJECT => ProjectNotification::class,
+            self::NOTIFICATION_TEAM => TeamNotification::class
         };
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Console\Commands\SendNotificationEmailSummaries;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -19,6 +20,18 @@ class Kernel extends ConsoleKernel
         $schedule->command('task:notification')->everyTenMinutes();
         $schedule->command('deadline:notification')->dailyAt('09:00');
         $schedule->command('delete:notification')->dailyAt('07:00');
+
+        $schedule->command(SendNotificationEmailSummaries::class, ['daily'])
+            ->dailyAt('9:00');
+
+        $schedule->command(SendNotificationEmailSummaries::class, ['weekly_once'])
+            ->weekly()
+            ->mondays()
+            ->at('9:00');
+
+        $schedule->command(SendNotificationEmailSummaries::class, ['weekly_twice'])
+            ->days([Schedule::MONDAY, Schedule::THURSDAY])
+            ->at('9:00');
     }
 
     /**

@@ -9,7 +9,7 @@
                 </div>
             </div>
 
-            <form @submit.prevent="changeLogos">
+            <form v-if="$page.props.is_admin || $page.props.can.change_tool_settings" @submit.prevent="changeLogos">
                 <div class="mt-12 max-w-2xl">
                     <h2 class="headline2 my-2">Branding</h2>
                     <div class="xsLight">
@@ -131,8 +131,7 @@
                 </div>
             </form>
 
-            <div>
-
+            <div v-if="$page.props.is_admin || $page.props.can.change_tool_settings">
                 <div class="mt-20">
                     <h2 class="headline2 mb-2">Kommunikation & Rechtliches</h2>
                     <div class="xsLight">
@@ -170,7 +169,7 @@
                 </div>
 
             </div>
-            <div>
+            <div v-if="$page.props.can.admin_globalNotification || $page.props.is_admin">
 
                 <div class="headline2 mt-12 mb-6">
                     Benachrichtigung an alle
@@ -250,6 +249,31 @@
                 </div>
             </div>
         </div>
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+                <div class="mx-4">
+                    <div class="font-black text-primary font-lexend text-3xl my-2">
+                        Benachrichtigung für alle erstellt
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success subpixel-antialiased">
+                        Die Benachrichtigung wurde erfolgreich erstellt.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
+
     </app-layout>
 </template>
 
@@ -260,6 +284,8 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from "@/Jetstream/InputError";
 import AddButton from "@/Layouts/Components/AddButton";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import {CheckIcon, XIcon} from "@heroicons/vue/solid";
+import JetDialogModal from "@/Jetstream/DialogModal";
 
 export default defineComponent({
     components: {
@@ -267,7 +293,10 @@ export default defineComponent({
         AppLayout,
         SvgCollection,
         JetInputError,
-        InputComponent
+        InputComponent,
+        CheckIcon,
+        XIcon,
+        JetDialogModal
     },
     props: [],
     data() {
@@ -277,6 +306,7 @@ export default defineComponent({
             smallLogoPreview: null,
             bannerPreview: null,
             notificationImagePreview: null,
+            showSuccessModal: false,
             form: this.$inertia.form({
                 _method: 'PUT',
                 bigLogo: null,
@@ -286,8 +316,8 @@ export default defineComponent({
             globalNotificationForm: this.$inertia.form({
                 notificationImage: this.$page.props.globalNotification?.image_url,
                 notificationName: this.$page.props.globalNotification?.title,
-                notificationDeadlineDate: this.$page.props.globalNotification ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
-                notificationDeadlineTime: this.$page.props.globalNotification ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,
+                notificationDeadlineDate: this.$page.props.globalNotification.expiration_date ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
+                notificationDeadlineTime: this.$page.props.globalNotification.expiration_date ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,
                 notificationDescription: this.$page.props.globalNotification?.description,
             }),
             mailForm: this.$inertia.form({
@@ -342,6 +372,9 @@ export default defineComponent({
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
         },
+        closeSuccessModal(){
+            this.showSuccessModal = false;
+        },
         getTimeOfDate(isoDate) {
             return isoDate.split(' ')[1].substring(0, 5);
         },
@@ -392,6 +425,7 @@ export default defineComponent({
         },
         createGlobalNotification(){
             this.globalNotificationForm.post(route('global_notification.store'));
+            this.showSuccessModal = true;
         },
         deleteGlobalNotification(globalNotificationId){
             this.$inertia.delete(route('global_notification.destroy',globalNotificationId));

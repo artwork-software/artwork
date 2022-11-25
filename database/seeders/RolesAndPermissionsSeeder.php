@@ -123,6 +123,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.',
             'checked' => false
         ]);
+        Permission::create([
+            'name' => PermissionNameEnum::GLOBAL_NOTIFICATION_ADMIN,
+            'name_de' => "Benachrichtigung für alle editieren",
+            'group' => 'Sonstiges',
+            'tooltipText' => 'Nutzer*in darf die Benachrichtigung für alle erstellen, bearbeiten und löschen.',
+            'checked' => false
+        ]);
 
         //Has every permission because of the gate in AuthServiceProvider
         Role::create([

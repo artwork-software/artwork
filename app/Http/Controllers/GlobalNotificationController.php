@@ -39,7 +39,7 @@ class GlobalNotificationController extends Controller
     {
         $oldGlobalNotifications = GlobalNotification::all();
         foreach ($oldGlobalNotifications as $globalNotification){
-            if(Storage::disk('public')->exists($globalNotification->image_name)) {
+            if($globalNotification->image_name) {
                 Storage::disk('public')->delete($globalNotification->image_name);
             }
             $globalNotification->delete();

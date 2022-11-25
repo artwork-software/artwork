@@ -24,6 +24,7 @@
                         || $page.props.can.admin_eventTypeSettings
                         || $page.props.can.admin_checklistTemplates
                         || $page.props.can.admin_rooms
+                        || $page.props.can.admin_globalNotification
                         || this.$page.props.is_admin">
                         <h2 @click="showSystemSettings = !showSystemSettings"
                             class="text-md pt-4 pb-2 flex items-center justify-center ml-4 xsWhiteBold cursor-pointer">
@@ -189,7 +190,7 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings,
+                    has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.admin_globalNotification,
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']

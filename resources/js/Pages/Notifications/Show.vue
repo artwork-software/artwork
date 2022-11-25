@@ -55,12 +55,12 @@
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
                     </div>
-                    <div v-if="this.$page.props.globalNotification" class="col-span-4 pr-4">
+                    <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title" class="col-span-4 pr-4">
                         <div class="bg-backgroundGray">
-                            <img alt="Benachrichtigungs Bild" class="h-80 "
+                            <img alt="Benachrichtigungs Bild" class="max-h-96"
                                  :src="this.$page.props.globalNotification.image_url"/>
                             <div class="px-4 py-4">
-                                <div class="headline2 mt-6 mb-2">
+                                <div class="headline2 mt-2 mb-2">
                                     {{ this.$page.props.globalNotification.title }}
                                 </div>
                                 <div class="xsLight">

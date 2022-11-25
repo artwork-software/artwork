@@ -9,6 +9,7 @@ class PermissionNameEnum
     public const PROJECT_ADMIN = 'admin projects';
     public const PROJECT_DELETE = 'delete projects';
     public const PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
+    public const GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
 
     public const SETTINGS_UPDATE = 'change tool settings';
 

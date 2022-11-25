@@ -431,9 +431,6 @@ export default {
         async deleteNotification() {
             const notification = this.notification
             await axios.delete(`/notifications/${notification.id}/`)
-                .then(res => {
-                    console.log(res)
-                })
                 .catch(err => console.log(err))
             this.notification = null
         }

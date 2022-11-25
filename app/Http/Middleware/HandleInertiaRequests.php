@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\GeneralSettings;
+use App\Models\GlobalNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -76,6 +77,8 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $globalNotification = GlobalNotification::first();
+        $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
         return array_merge(parent::share($request), [
             'roles' => Auth::guest() ? [] : Auth::user()->getRoleNames(),
@@ -102,7 +105,8 @@ class HandleInertiaRequests extends Middleware
             'banner' => $this->banner(),
             'impressumLink' => app(GeneralSettings::class)->impressum_link,
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
-            'emailFooter' => app(GeneralSettings::class)->email_footer
+            'emailFooter' => app(GeneralSettings::class)->email_footer,
+            'globalNotification' => $globalNotification,
         ]);
     }
 }

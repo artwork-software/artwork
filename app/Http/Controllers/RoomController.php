@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\NotificationConstEnum;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
@@ -15,6 +16,7 @@ use App\Models\Room;
 use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use App\Models\User;
+use App\Support\Services\RoomService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -22,19 +24,16 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use JetBrains\PhpStorm\NoReturn;
 
 class RoomController extends Controller
 {
     // init notification system
-    protected ?NotificationController $notificationController = null;
-    protected ?\stdClass $notificationData = null;
+    protected ?RoomService $roomService = null;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
-        $this->notificationData = new \stdClass();
-        $this->notificationData->room = new \stdClass();
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
+        $this->roomService = new RoomService();
     }
 
     /**
@@ -156,12 +155,15 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room): RedirectResponse
     {
-        // get room admins before update
-        $roomAdminIdsBefore = [];
+        $oldRoomDescription = $room->description;
+        $oldRoomTitle = $room->name;
         $roomAdminsBefore = $room->room_admins()->get();
-        foreach ($roomAdminsBefore as $roomAdminBefore){
-            $roomAdminIdsBefore[] = $roomAdminBefore->id;
-        }
+        $oldAdjoiningRooms = $room->adjoining_rooms()->get();
+        $oldRoomAttributes = $room->attributes()->get();
+        $oldRoomCategories = $room->categories()->get();
+        $oldTemporary = $room->temporary;
+        $oldStartDate = $room->start_date;
+        $oldEndDate = $room->end_date;
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
@@ -169,7 +171,6 @@ class RoomController extends Controller
             collect($request->room_admins)
                 ->map(function ($room_admin) {
                     $this->authorize('update', User::find($room_admin['id']));
-
                     return $room_admin['id'];
                 })
         );
@@ -178,41 +179,30 @@ class RoomController extends Controller
         $room->attributes()->sync($request->room_attributes);
         $room->categories()->sync($request->room_categories);
 
-        // Get and check project admins and managers after update
-        $roomAdminIdsAfter = [];
+        $newRoomDescription = $room->description;
+        $newRoomTitle = $room->name;
+        $newAdjoiningRooms = $room->adjoining_rooms()->get();
+        $newRoomAttributes = $room->attributes()->get();
         $roomAdminsAfter = $room->room_admins()->get();
+        $newRoomCategories = $room->categories()->get();
+        $newRoomTemporary = $room->temporary;
+        $newStartDate = $room->start_date;
+        $newEndDate = $room->end_date;
 
-        foreach ($roomAdminsAfter as $roomAdminAfter){
-            $roomAdminIdsAfter[] = $roomAdminAfter->id;
-            // if added a new room admin, send notification to this user
-            if(!in_array($roomAdminAfter->id, $roomAdminIdsBefore)){
-                $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($roomAdminAfter, $this->notificationData);
-            }
-        }
-
-        // check if user remove as room admin
-        foreach ($roomAdminIdsBefore as $roomAdminBefore){
-            if(!in_array($roomAdminBefore, $roomAdminIdsAfter)){
-                $user = User::find($roomAdminBefore);
-                $this->notificationData->title = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
-                $this->notificationData->room->id = $room->id;
-                $this->notificationData->room->title = $room->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
-            }
-        }
-
+        $this->roomService->checkAdjoiningRoomChanges($room->id, $oldAdjoiningRooms, $newAdjoiningRooms);
+        $this->roomService->checkDescriptionChanges($room->id, $oldRoomDescription, $newRoomDescription);
+        $this->roomService->checkMemberChanges($room, $roomAdminsBefore, $roomAdminsAfter);
+        $this->roomService->checkTitleChanges($room->id, $oldRoomTitle, $newRoomTitle);
+        $this->roomService->checkAttributeChanges($room->id, $oldRoomAttributes, $newRoomAttributes);
+        $this->roomService->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
+        $this->roomService->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
 
         // TODO Sammel Notification
-        $this->notificationData->title = 'Änderungen an "'. $room->name . '"';
+        /*$this->notificationData->title = 'Änderungen an "'. $room->name . '"';
         $this->notificationData->room->id = $room->id;
         $this->notificationData->room->title = $room->name;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);
+        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);*/
 
         return Redirect::back()->with('success', 'Room updated');
     }
@@ -220,7 +210,7 @@ class RoomController extends Controller
     /**
      * Duplicates the room whose id is passed in the request
      */
-    public function duplicate(Room $room)
+    public function duplicate(Room $room): RedirectResponse
     {
         Room::create([
             'name' => '(Kopie) ' . $room->name,
@@ -243,7 +233,7 @@ class RoomController extends Controller
      * @param Room $room
      * @return RedirectResponse
      */
-    public function updateOrder(Request $request)
+    public function updateOrder(Request $request): RedirectResponse
     {
         foreach ($request->rooms as $room) {
             Room::findOrFail($room['id'])->update(['order' => $room['order']]);
@@ -252,7 +242,10 @@ class RoomController extends Controller
         return Redirect::back();
     }
 
-    public function getTrashed()
+    /**
+     * @return \Inertia\Response|\Inertia\ResponseFactory
+     */
+    public function getTrashed(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Trash/Rooms', [
             'trashed_rooms' => Area::all()->map(fn ($area) => [
@@ -269,7 +262,7 @@ class RoomController extends Controller
      * @param Room $room
      * @return RedirectResponse
      */
-    public function destroy(Room $room)
+    public function destroy(Room $room): RedirectResponse
     {
 
         $room->delete();
@@ -277,7 +270,11 @@ class RoomController extends Controller
         return Redirect::route('areas.management')->with('success', 'Room moved to trash');
     }
 
-    public function forceDelete(int $id)
+    /**
+     * @param int $id
+     * @return RedirectResponse
+     */
+    public function forceDelete(int $id): RedirectResponse
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->forceDelete();
@@ -285,11 +282,18 @@ class RoomController extends Controller
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
 
-    public function restore(int $id)
+    /**
+     * @param int $id
+     * @return RedirectResponse
+     */
+    public function restore(int $id): RedirectResponse
     {
         $room = Room::onlyTrashed()->findOrFail($id);
         $room->restore();
 
         return Redirect::route('rooms.trashed')->with('success', 'Room restored');
     }
+
+
+
 }

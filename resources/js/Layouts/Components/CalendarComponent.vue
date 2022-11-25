@@ -248,7 +248,7 @@
                                             <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="category.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, category)"
+                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -271,7 +271,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="area.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.areas, area);"
+                                                       @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -295,7 +295,7 @@
                                             <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="attribute.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute);"
+                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -320,7 +320,7 @@
                                             <div v-if="rooms.length > 0" v-for="room in rooms"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="room.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.rooms, room)"
+                                                       @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -361,7 +361,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventType in types" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventType.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.eventTypes, eventType)"
+                                                       @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -786,10 +786,6 @@ export default {
         }
     },
     methods: {
-        logFilter() {
-            console.log('on_button')
-            console.log(this.filterName)
-        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')
@@ -838,18 +834,46 @@ export default {
                     this.filters = response.data
                 })
         },
-        async changeFilterElements(filterArray, element) {
+        async changeFilterElements(filterArray, arrayName, element) {
 
             if (element.checked) {
                 filterArray.push(element)
             } else {
                 // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
                 Object.entries(this.calendarFilters).forEach(entry => {
-                    if (Array.isArray(entry[1]) && entry[1].length > 0) {
-
-                        if (entry[1].filter(obj => obj.id === element.id)) {
-                            this.calendarFilters[entry[0]] = filterArray.filter(elem => element.id !== elem.id)
+                    if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
+                        if(arrayName === 'rooms') {
+                            const room = this.rooms.filter(room => element?.id === room.id)
+                            if(room){
+                                room[0].checked = false
+                            }
                         }
+                        if(arrayName === 'areas') {
+                            const area = this.areas.filter(area => element?.id === area.id)
+                            if(area){
+                                area[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'roomCategories') {
+                            const category = this.roomCategories.filter(category => element?.id === category.id)
+                            if(category){
+                                category[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'roomAttributes') {
+                            const attribute = this.roomAttributes.filter(room => element?.id === room.id)
+                            if(attribute){
+                                attribute[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'eventTypes') {
+                            const eventType = this.eventTypes.filter(type => element?.id === type.id)
+                            if(eventType){
+                                eventType[0].checked = false
+                            }
+                        }
+
+                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element?.id !== elem.id)
                     }
                 })
             }
@@ -974,8 +998,6 @@ export default {
 
                 for (const room of adjoiningRooms) {
                     if (this.displayedRooms.filter(r => r.name === room.label).length === 0) {
-                        console.log(this.displayedRooms.filter(r => r.name === room.label).length)
-                        console.log(room.label)
                         room.adjoining = true;
                         this.calendarFilters.rooms.push(room)
                         this.displayedRooms.push(room);

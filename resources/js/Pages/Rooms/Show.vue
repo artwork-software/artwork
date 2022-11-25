@@ -62,15 +62,17 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.room_history?.length > 0" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div v-if="room.room_history[0]" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img :data-tooltip-target="room.room_history[0].user.id"
-                         :src="room.room_history[0].user.profile_photo_url"
-                         :alt="room.room_history[0].user?.name"
+                    <img v-if="room.room_history[0].changes[0].changed_by"
+                         :data-tooltip-target="room.room_history[0].changes[0].changed_by?.id"
+                         :src="room.room_history[0].changes[0].changed_by?.profile_photo_url"
+                         :alt="room.room_history[0].changes[0].changed_by?.first_name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip :user="room.room_history[0].user"/>
+                    <UserTooltip v-if="room.room_history[0].changes[0].changed_by"
+                                 :user="room.room_history[0].changes[0].changed_by"/>
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
@@ -337,7 +339,7 @@
                                     <EventTypeIconCollection :height="26" :width="26"
                                                              :iconName="eventRequest.event_type.svg_name"/>
                                     <div
-                                        class="whitespace-nowrap ml-2 flex leading-6 sDark">
+                                        class="mx-6 ml-2 flex leading-6 sDark">
                                         {{ eventRequest.event_type.name }}
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -368,7 +370,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex items-center w-full ml-24 ">
+                            <div class="flex items-center w-full ml-8">
                                 <div v-if="eventRequest.project" class="w-64">
                                     <div class="xsLight flex items-center">
                                         Zugeordnet zu
@@ -404,7 +406,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex ml-40 mt-2 xsLight items-center w-full"
+                            <div class="flex ml-8 mt-2 xsLight items-center w-full"
                                  v-if="eventRequest.description">
                                 {{ eventRequest.description }}
                             </div>
@@ -842,13 +844,18 @@
                                 {{ historyItem.created_at }}:
                             </span>
                             <div class="flex w-full">
-                                <img :data-tooltip-target="historyItem.user.id"
-                                     :src="historyItem.user.profile_photo_url"
-                                     :alt="historyItem.user.name"
+                                <img v-if="historyItem.changes[0].changed_by"
+                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                     :alt="historyItem.changes[0].changed_by?.first_name"
                                      class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="historyItem.user"/>
+                                <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                             :user="historyItem.changes[0].changed_by"/>
+                                <div v-else class="xsLight ml-3">
+                                    gelöschte Nutzer:in
+                                </div>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.description }}
+                                    {{ historyItem.changes[0].message }}
                                 </div>
                             </div>
                         </div>

@@ -5,7 +5,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ attribute.name }}
             <button
-                @click="attribute.checked = false; this.$parent.changeFilterElements(calendarFilters.roomAttributes, attribute); this.updateDisplayedEvents()"
+                @click="attribute.checked = false; this.$parent.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -15,7 +15,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ category.name }}
             <button
-                @click="category.checked = false; this.$parent.changeFilterElements(calendarFilters.roomCategories, category); this.updateDisplayedEvents()"
+                @click="category.checked = false; this.$parent.changeFilterElements(calendarFilters.roomCategories,'roomCategories', category);"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -24,7 +24,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ room.label || room.name }}
-            <button @click="room.checked = false; this.$parent.changeFilterElements(calendarFilters.rooms, room); this.updateDisplayedEvents()"
+            <button @click="room.checked = false; this.$parent.changeFilterElements(calendarFilters.rooms,'rooms', room)"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -33,7 +33,7 @@
               class="flex rounded-full items-center font-medium text-tagText
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ area.label || area.name }}
-            <button @click="area.checked = false; this.$parent.changeFilterElements(calendarFilters.areas, area); this.updateDisplayedEvents()"
+            <button @click="area.checked = false; this.$parent.changeFilterElements(calendarFilters.areas,'areas', area);"
                     type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -43,7 +43,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ eventType.name }}
             <button
-                @click="eventType.checked = false; this.$parent.changeFilterElements(calendarFilters.eventTypes, eventType); this.updateDisplayedEvents()"
+                @click="eventType.checked = false; this.$parent.changeFilterElements(calendarFilters.eventTypes, 'eventTypes', eventType)"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -136,7 +136,7 @@ export default {
     methods: {
         updateDisplayedEvents() {
             this.$parent.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil})
-        }
+        },
     }
 }
 </script>

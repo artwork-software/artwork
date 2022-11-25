@@ -12,9 +12,12 @@ use Illuminate\Support\Facades\Redirect;
 
 class CommentController extends Controller
 {
+    protected ?HistoryController $history = null;
+
     public function __construct()
     {
         $this->authorizeResource(Comment::class);
+        $this->history = new HistoryController('APP\Models\Project');
     }
 
     /**
@@ -56,10 +59,7 @@ class CommentController extends Controller
             return response()->json(['error' => 'Not authorized to create comments in this project.'], 403);
         }
 
-        $project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => "Kommentar hinzugefügt"
-        ]);
+        $this->history->createHistory($project->id, 'Kommentar hinzugefügt');
 
         return Redirect::back()->with('success', 'Comment created');
     }
@@ -84,12 +84,10 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
+        $project = $comment->project()->first();
+        $this->history->createHistory($project->id, 'Kommentar gelöscht');
         $comment->delete();
 
-        $comment->project->project_histories()->create([
-            'user_id' => Auth::id(),
-            'description' => "Kommentar entfernt"
-        ]);
         return Redirect::back()->with('success', 'Comment deleted');
     }
 }

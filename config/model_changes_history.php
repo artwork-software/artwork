@@ -52,11 +52,12 @@ return [
     */
 
     'ignored_actions' => [
-        // Change::TYPE_CREATED,
-        // Change::TYPE_UPDATED,
-        // Change::TYPE_DELETED,
-        // Change::TYPE_RESTORED,
-        // Change::TYPE_FORCE_DELETED,
+        Change::TYPE_CREATED,
+        Change::TYPE_UPDATED,
+        Change::TYPE_DELETED,
+        Change::TYPE_RESTORED,
+        Change::TYPE_FORCE_DELETED,
+        'create'
     ],
 
     /*
@@ -84,7 +85,6 @@ return [
     */
 
     'stores' => [
-
         'database' => [
             'driver'     => 'database',
             'table'      => 'model_changes_history',

@@ -26,6 +26,7 @@ class TaskController extends Controller
 {
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -93,11 +94,15 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
+            $this->history = new HistoryController('App\Models\Project');
+            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
             $this->createNotificationForAllChecklistUser($checklist);
             return Redirect::back()->with('success', 'Task created.');
         } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
         }
+
+
     }
 
     /**
@@ -154,10 +159,9 @@ class TaskController extends Controller
     /**
      * @param Request $request
      * @param Task $task
-     * @param HistoryService $historyService
      * @return RedirectResponse
      */
-    public function update(Request $request, Task $task, HistoryService $historyService)
+    public function update(Request $request, Task $task)
     {
 
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
@@ -172,8 +176,12 @@ class TaskController extends Controller
         }
 
         $task->fill($update_properties);
-        $historyService->taskUpdated($task);
+
         $task->save();
+
+        $checklist = $task->checklist()->first();
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
         $this->createNotificationUpdateTask($task);
 
@@ -227,10 +235,13 @@ class TaskController extends Controller
      * @param HistoryService $historyService
      * @return RedirectResponse
      */
-    public function destroy(Task $task, HistoryService $historyService)
+    public function destroy(Task $task)
     {
+        $checklist = $task->checklist()->first();
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
         $task->delete();
-        $historyService->taskUpdated($task);
+
 
         return Redirect::back()->with('success', 'Task deleted');
     }

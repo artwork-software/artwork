@@ -18,6 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('model:prune')->daily();
         $schedule->command('task:notification')->everyTenMinutes();
         $schedule->command('deadline:notification')->dailyAt('09:00');
+        $schedule->command('delete:notification')->dailyAt('07:00');
     }
 
     /**

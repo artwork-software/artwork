@@ -58,4 +58,5 @@ class ConflictNotification extends Notification
     {
         return $this->notificationData;
     }
+
 }

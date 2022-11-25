@@ -27,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Redirect;
 
 class NotificationController extends Controller
 {
@@ -212,14 +213,13 @@ class NotificationController extends Controller
                 Notification::send($user, new TeamNotification($notificationBody));
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
+                $room = $notificationData->room->id;
                 $notificationBody = [
                     'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
-                    'room' => [
-                        'id' => $notificationData->room->id,
-                        'title' => $notificationData->room->title,
-                    ],
+                    'room' => $notificationData->room,
+                    'history' => Room::find($room)->historyChanges(),
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new RoomNotification($notificationBody));
@@ -329,10 +329,13 @@ class NotificationController extends Controller
      * Remove the specified resource from storage.
      *
      * @param int $id
-     * @return \Illuminate\Http\Response
+     * @return String
      */
-    public function destroy($id)
+    public function destroy(String $id)
     {
-        //
+        $user = User::find(Auth::id());
+        $notification = $user->notifications->find($id);
+        $notification->delete();
+        return 'Notification deleted';
     }
 }

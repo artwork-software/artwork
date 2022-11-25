@@ -198,11 +198,12 @@ class RoomController extends Controller
         $this->roomService->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
 
         // TODO Sammel Notification
-        /*$this->notificationData->title = 'Änderungen an "'. $room->name . '"';
-        $this->notificationData->room->id = $room->id;
-        $this->notificationData->room->title = $room->name;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($room->room_admins()->get(), $this->notificationData);*/
+
+        $scheduling = new SchedulingController();
+        $roomId = $room->id;
+        foreach($room->room_admins()->get() as $user){
+           $scheduling->create($user->id, 'ROOM_CHANGES', null, null, null, $roomId);
+        }
 
         return Redirect::back()->with('success', 'Room updated');
     }

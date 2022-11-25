@@ -227,6 +227,12 @@ class EventController extends Controller
             $event->save();
         }
 
+        if(!empty($event->project_id)){
+            $eventProject = $event->project()->first();
+            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
+        }
+
         $newEventDescription = $event->description;
         $newEventRoom = $event->room_id;
         $newEventProject = $event->project_id;
@@ -383,6 +389,12 @@ class EventController extends Controller
     public function destroy(Event $event): JsonResponse
     {
         $this->authorize('delete', $event);
+
+        if(!empty($event->project_id)){
+            $eventProject = $event->project()->first();
+            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
+        }
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();

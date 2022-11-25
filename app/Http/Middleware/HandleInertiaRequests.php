@@ -97,6 +97,7 @@ class HandleInertiaRequests extends Middleware
                 'admin_rooms' => Auth::guest() ? false : Auth::user()->can("admin rooms"),
                 'request_room_occupancy' => Auth::guest() ? false : Auth::user()->can("request room occupancy"),
                 'view_occupancy_requests' => Auth::guest() ? false : Auth::user()->can("view occupancy requests"),
+                'admin_globalNotification' => Auth::guest() ? false : Auth::user()->can("admin globalNotification"),
                 'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
             ],
             'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin'),

@@ -212,12 +212,22 @@ class NotificationController extends Controller
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
                 $room = $notificationData->room->id;
+                $historyArray = [];
+                $historyComplete = Room::find($room)->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyArray[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
                 $notificationBody = [
                     'groupType' => 'ROOMS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'room' => $notificationData->room,
-                    'history' => Room::find($room)->historyChanges(),
+                    'history' => $historyArray,
                     'created_by' => $notificationData->created_by
                 ];
                 Notification::send($user, new RoomNotification($notificationBody));

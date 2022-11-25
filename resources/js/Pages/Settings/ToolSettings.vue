@@ -376,10 +376,16 @@ export default defineComponent({
             this.showSuccessModal = false;
         },
         getTimeOfDate(isoDate) {
-            return isoDate.split(' ')[1].substring(0, 5);
+            if(isoDate.split(' ')[1]){
+                return isoDate.split(' ')[1].substring(0, 5);
+            }
+
         },
         getDateOfDate(isoDate) {
-            return isoDate.split(' ')[0];
+            if(isoDate.split(' ')[0]){
+                return isoDate.split(' ')[0];
+            }
+
         },
         uploadDraggedBigLogo(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'bigLogo');
@@ -424,6 +430,7 @@ export default defineComponent({
             this.mailForm.post(route('tool.updateMail'))
         },
         createGlobalNotification(){
+            console.log(this.globalNotificationForm);
             this.globalNotificationForm.post(route('global_notification.store'));
             this.showSuccessModal = true;
         },

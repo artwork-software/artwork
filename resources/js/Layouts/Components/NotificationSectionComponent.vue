@@ -94,7 +94,7 @@
                             </div>
                             <div class="mt-1.5 flex xxsLight my-auto"
                                  v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED'">
-                                <div v-if="notification.data.title.indexOf('Es gab Änderungen an') !== -1"
+                                <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
                                      class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
@@ -226,7 +226,7 @@
                             </div>
                             <div class="mt-1.5 flex xxsLight my-auto"
                                  v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED'">
-                                <div v-if="notification.data.title.indexOf('Es gab Änderungen an') !== -1"
+                                <div v-if="notification.data.title.indexOf('Änderungen an') !== -1"
                                      class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
@@ -279,6 +279,12 @@
         :eventTypes="this.eventTypes"
         :projects="this.projects"
         @closed="afterRequestAnswerWithRoomChange"/>
+    <!-- Room History Modal-->
+    <room-history-component
+        v-if="showRoomHistory"
+        :room_history="wantedHistory"
+        @closed="closeRoomHistoryModal"
+    />
 </template>
 
 <script>
@@ -309,6 +315,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
+import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 
 export default {
     name: 'NotificationSectionComponent',
@@ -327,6 +334,7 @@ export default {
         Link,
         AnswerEventRequestComponent,
         AnswerEventRequestWithRoomChangeComponent,
+        RoomHistoryComponent
     },
 
     data() {
@@ -340,6 +348,8 @@ export default {
             answerRequestModalVisible: false,
             requestToAnswer: null,
             answerRequestType: '',
+            showRoomHistory: false,
+            wantedHistory: null,
             notification: null,
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
@@ -363,6 +373,14 @@ export default {
                 return true;
             }
             return false;
+        },
+        openRoomHistoryModal(history){
+            this.wantedHistory = history;
+            this.showRoomHistory = true;
+        },
+        closeRoomHistoryModal(){
+            this.showRoomHistory = false;
+            this.wantedRoom = null;
         },
         openEventWithoutRoomComponent(event) {
             this.eventToEdit = event;

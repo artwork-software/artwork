@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -28,9 +29,19 @@ class GlobalUserNotification extends Notification
      * @param  mixed  $notifiable
      * @return array
      */
-    public function via(mixed $notifiable): array
+    public function via($user)
     {
-        return ['database'];
+        $channels = ['database'];
+
+        $typeSettings = $user->notificationSettings()
+            ->where('type', $this->notificationData['type'])
+            ->first();
+
+        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
     }
 
     /**

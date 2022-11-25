@@ -31,8 +31,6 @@ use Illuminate\Support\Facades\Redirect;
 
 class NotificationController extends Controller
 {
-
-
     /**
      * Display a listing of the resource.
      *
@@ -107,7 +105,7 @@ class NotificationController extends Controller
                         'updated_at' => $notificationData->event->updated_at,
                         'creator' => $notificationData->event->creator,
                         'history' => $notificationData->event->historyChanges(),
-                        ],
+                    ],
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];

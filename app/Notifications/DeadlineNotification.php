@@ -2,12 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class DeadlineNotification extends Notification
+class DeadlineNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
     protected array $notificationData = [];
@@ -17,9 +20,44 @@ class DeadlineNotification extends Notification
         $this->notificationData = $notificationData;
     }
 
-    public function via($notifiable)
+    public function toBroadcast($notifiable): BroadcastMessage
     {
-        return ['database'];
+        return new BroadcastMessage([
+            'message' => "Test"
+        ]);
+    }
+
+    public function via($user)
+    {
+        $channels = ['database'];
+
+        $typeSettings = $user->notificationSettings()
+            ->where('type', $this->notificationData['type'])
+            ->first();
+
+        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+            $channels[] = 'mail';
+        }
+
+        if($typeSettings->enabled_push) {
+            $channels[] = 'broadcast';
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     *
+     * @param  mixed  $notifiable
+     * @return \Illuminate\Notifications\Messages\MailMessage
+     */
+    public function toMail($notifiable)
+    {
+        return (new MailMessage)
+            ->line('The introduction to the notification.')
+            ->action('Notification Action', url('/'))
+            ->line('Thank you for using our application!');
     }
 
     /**

@@ -2,12 +2,15 @@
 
 namespace App\Notifications;
 
+use App\Enums\NotificationFrequency;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class RoomNotification extends Notification
+class RoomNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
     protected array $notificationData = [];
@@ -21,15 +24,30 @@ class RoomNotification extends Notification
         $this->notificationData = $notificationData;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @param  mixed  $notifiable
-     * @return array
-     */
-    public function via(mixed $notifiable): array
+    public function toBroadcast($notifiable): BroadcastMessage
     {
-        return ['database'];
+        return new BroadcastMessage([
+            'message' => "Test"
+        ]);
+    }
+
+    public function via($user)
+    {
+        $channels = ['database'];
+
+        $typeSettings = $user->notificationSettings()
+            ->where('type', $this->notificationData['type'])
+            ->first();
+
+        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+            $channels[] = 'mail';
+        }
+
+        if($typeSettings->enabled_push) {
+            $channels[] = 'broadcast';
+        }
+
+        return $channels;
     }
 
     /**

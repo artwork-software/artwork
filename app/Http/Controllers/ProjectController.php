@@ -264,6 +264,10 @@ class ProjectController extends Controller
 
         $oldProjectDescription = $project->description;
         $oldProjectName = $project->name;
+        $oldProjectCategories = $project->categories()->get();
+        $oldProjectGenres = $project->genres()->get();
+        $oldProjectSectors = $project->sectors()->get();
+        $oldProjectCostCenter = $project->cost_center;
 
         $project->fill($update_properties);
 
@@ -278,17 +282,25 @@ class ProjectController extends Controller
 
         $newProjectDescription = $project->description;
         $newProjectName = $project->name;
+        $newProjectCategories = $project->categories()->get();
 
         $newProjectDepartments = $project->departments()->get();
         $projectAdminsAfter = $project->adminUsers()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
+        $newProjectGenres = $project->genres()->get();
+        $newProjectSectors = $project->sectors()->get();
+        $newProjectCostCenter = $project->cost_center;
 
         // history functions
         $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
         $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
         $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
-
+        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
+        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
+        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
+        $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
+        
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter);
 
@@ -298,6 +310,106 @@ class ProjectController extends Controller
             $scheduling->create($user->id, 'PROJECT', $projectId);
         }
         return Redirect::back();
+    }
+
+    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
+    {
+        if(strlen($newCostCenter) === 0 || $newCostCenter === null){
+            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
+        }
+        if($oldCostCenter === null && $newCostCenter !== null){
+            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
+        }
+        if($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && strlen($newCostCenter) !== null){
+            $this->history->createHistory($projectId, 'Kostenträger geändert');
+        }
+    }
+
+    private function checkProjectSectorChanges($projectId, $oldSectors, $newSectors): void
+    {
+        $oldSectorIds = [];
+        $oldSectorNames = [];
+        $newSectorIds = [];
+
+        foreach ($oldSectors as $oldSector){
+            $oldSectorIds[] = $oldSector->id;
+            $oldSectorNames[$oldSector->id] = $oldSector->name;
+        }
+
+        foreach ($newSectors as $newSector){
+            $newSectorIds[] = $newSector->id;
+            if(!in_array($newSector->id, $oldSectorIds)){
+                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldSectorIds as $oldSectorId){
+            if(!in_array($oldSectorId, $newSectorIds)){
+                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
+            }
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldGenres
+     * @param $newGenres
+     * @return void
+     */
+    private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void
+    {
+        $oldGenreIds = [];
+        $oldGenreNames = [];
+        $newGenreIds = [];
+
+        foreach ($oldGenres as $oldGenre){
+            $oldGenreIds[] = $oldGenre->id;
+            $oldGenreNames[$oldGenre->id] = $oldGenre->name;
+        }
+
+        foreach ($newGenres as $newGenre){
+            $newGenreIds[] = $newGenre->id;
+            if(!in_array($newGenre->id, $oldGenreIds)){
+                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldGenreIds as $oldGenreId){
+            if(!in_array($oldGenreId, $newGenreIds)){
+                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht');
+            }
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldCategories
+     * @param $newCategories
+     * @return void
+     */
+    private function checkProjectCategoryChanges($projectId, $oldCategories, $newCategories): void
+    {
+        $oldCategoryIds = [];
+        $oldCategoryNames = [];
+        $newCategoryIds = [];
+
+        foreach ($oldCategories as $oldCategory){
+            $oldCategoryIds[] = $oldCategory->id;
+            $oldCategoryNames[$oldCategory->id] = $oldCategory->name;
+        }
+
+        foreach ($newCategories as $newCategory){
+            $newCategoryIds[] = $newCategory->id;
+            if(!in_array($newCategory->id, $oldCategoryIds)){
+                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldCategoryIds as $oldCategoryId){
+            if(!in_array($oldCategoryId, $newCategoryIds)){
+                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht');
+            }
+        }
     }
 
     /**

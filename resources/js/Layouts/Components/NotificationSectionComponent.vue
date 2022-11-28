@@ -475,6 +475,7 @@ export default  {
                 eventTypeId: event.event_type_id,
                 projectIdMandatory: false,
                 creatingProject: false,
+                roomChange: true,
             };
         },
     },

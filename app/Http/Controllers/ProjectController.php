@@ -300,7 +300,7 @@ class ProjectController extends Controller
         $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
         $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
         $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
-        
+
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter);
 
@@ -314,7 +314,7 @@ class ProjectController extends Controller
 
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
     {
-        if(strlen($newCostCenter) === 0 || $newCostCenter === null){
+        if(strlen($newCostCenter) === 0 || $oldCostCenter !== null){
             $this->history->createHistory($projectId, 'Kostenträger gelöscht');
         }
         if($oldCostCenter === null && $newCostCenter !== null){
@@ -512,7 +512,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($adminAfter, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($adminAfter, $this->notificationData, $broadcastMessage);
             }
             if(in_array($adminAfter->id, $userIdsAfter)){
                 unset($userIdsAfter[$adminAfter->id]);
@@ -526,7 +531,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($managerAfter, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($managerAfter, $this->notificationData, $broadcastMessage);
             }
             if(in_array($managerAfter->id, $userIdsAfter)){
                 unset($userIdsAfter[$managerAfter->id]);
@@ -540,7 +550,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         // check if user remove as project manager
@@ -551,7 +566,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsAfter as $userIdAfter){
@@ -561,7 +581,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsBefore as $userIdBefore){
@@ -571,7 +596,12 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
     }

@@ -77,8 +77,9 @@ class NotificationController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function create($user, object $notificationData): void
+    public function create($user, object $notificationData, ?array $broadcastMessage = []): void
     {
+
         $notificationBody = [];
         switch ($notificationData->type) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
@@ -109,7 +110,7 @@ class NotificationController extends Controller
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new RoomRequestNotification($notificationBody));
+                Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
                 $notificationBody = [
@@ -139,7 +140,7 @@ class NotificationController extends Controller
                     'accepted' => $notificationData->accepted,
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new RoomRequestNotification($notificationBody));
+                Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
                 $notificationBody = [
@@ -168,7 +169,7 @@ class NotificationController extends Controller
                     ],
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new EventNotification($notificationBody));
+                Notification::send($user, new EventNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_TASK_CHANGED:
                 $notificationBody = [
@@ -181,7 +182,7 @@ class NotificationController extends Controller
                     ],
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new TaskNotification($notificationBody));
+                Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_PROJECT:
                 $notificationBody = [
@@ -194,7 +195,7 @@ class NotificationController extends Controller
                     ],
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new ProjectNotification($notificationBody));
+                Notification::send($user, new ProjectNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_TEAM:
                 $notificationBody = [
@@ -208,7 +209,7 @@ class NotificationController extends Controller
                     ],
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new TeamNotification($notificationBody));
+                Notification::send($user, new TeamNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_ROOM_CHANGED:
                 $room = $notificationData->room->id;
@@ -230,7 +231,7 @@ class NotificationController extends Controller
                     'history' => $historyArray,
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new RoomNotification($notificationBody));
+                Notification::send($user, new RoomNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_CONFLICT:
             case NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT:
@@ -241,7 +242,7 @@ class NotificationController extends Controller
                     'conflict' => $notificationData->conflict,
                     'created_by' => $notificationData->created_by
                 ];
-                Notification::send($user, new ConflictNotification($notificationBody));
+                Notification::send($user, new ConflictNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_TASK_REMINDER:
                 $notificationBody = [
@@ -250,7 +251,7 @@ class NotificationController extends Controller
                     'title' => $notificationData->title,
                     'task' => $notificationData->task,
                 ];
-                Notification::send($user, new DeadlineNotification($notificationBody));
+                Notification::send($user, new DeadlineNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_NEW_TASK:
                 $notificationBody = [
@@ -258,7 +259,7 @@ class NotificationController extends Controller
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                 ];
-                Notification::send($user, new TaskNotification($notificationBody));
+                Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
                 break;
         }
     }

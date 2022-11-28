@@ -191,7 +191,12 @@ class RoomService
                 $this->notificationData->title = 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt';
                 $this->notificationData->room = $room;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
             }
         }
@@ -203,7 +208,12 @@ class RoomService
                 $this->notificationData->title = 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht';
                 $this->notificationData->room = $room;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }

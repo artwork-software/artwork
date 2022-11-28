@@ -126,7 +126,7 @@
                                 text="Raum ändern"></AddButton>
                         </div>
                         <div class="flex" v-else>
-                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event)"
+                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event, notification)"
                                        class="flex px-12"
                                        text="Anfrage ändern" mode="modal"/>
                             <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
@@ -354,6 +354,7 @@ export default  {
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
             creatorOfRequest: null,
+            notificationToDelete: null,
             answerRequestForm: useForm({
                 accepted: false,
             }),
@@ -382,12 +383,15 @@ export default  {
             this.showRoomHistory = false;
             this.wantedRoom = null;
         },
-        openEventWithoutRoomComponent(event) {
+        openEventWithoutRoomComponent(event,notification) {
             this.eventToEdit = event;
+            this.notification = notification;
             this.showEventWithoutRoomComponent = true;
         },
         onEventWithoutRoomComponentClose() {
             this.showEventWithoutRoomComponent = false;
+            this.deleteNotification();
+
         },
         openDeleteEventModal(event) {
             this.eventToDelete = event;

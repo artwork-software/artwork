@@ -251,5 +251,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
     Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
+
+    Route::get('/test', function(){
+        $user = \App\Models\User::first();
+        $user->notify(new App\Notifications\RealTimeNotification('Hello World'));
+
+        $user2 = \App\Models\User::find(2);
+        $user2->notify(new App\Notifications\RealTimeNotification('Hello World'));
+    });
 });
 

@@ -278,6 +278,11 @@ export default {
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
         window.document.dispatchEvent(ev);
+
+        Echo.private('App.Models.User.' + this.$page.props.user.id)
+            .notification((notification) => {
+                console.log(notification.message);
+            });
     },
     data() {
         return {

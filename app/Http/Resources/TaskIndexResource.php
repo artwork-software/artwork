@@ -25,7 +25,7 @@ class TaskIndexResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'checklist' => $this->checklist,
-            'project' => $this->checklist->project,
+            'project' => @$this->checklist->project,
             'description' => $this->description,
             'deadline' => $this->deadline ? Carbon::parse($this->deadline)->format('d.m.Y, H:i') : null,
             'deadlineDate' => $this->deadline ? Carbon::parse($this->deadline)->format('Y-m-d') : null,

@@ -28,10 +28,11 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route } })
-
         app.config.globalProperties.$svgColors = svgColors;
         app.mount(el);
     },
 });
 
+
 InertiaProgress.init({ color: '#4B5563' });
+

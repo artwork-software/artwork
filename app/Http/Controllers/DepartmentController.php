@@ -95,7 +95,12 @@ class DepartmentController extends Controller
         $this->notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
         $this->notificationData->team = $department;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($department->users->all(), $this->notificationData);
+        $broadcastMesssage = [
+            'id' => rand(10, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         broadcast(new DepartmentUpdated())->toOthers();
 
@@ -167,7 +172,12 @@ class DepartmentController extends Controller
                 $this->notificationData->title = 'Du wurdest zu Team "' . $department->name . '" hinzugefügt';
                 $this->notificationData->team = $department;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($memberAfter, $this->notificationData);
+                $broadcastMesssage = [
+                    'id' => rand(10, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($memberAfter, $this->notificationData, $broadcastMesssage);
             }
         }
 
@@ -178,12 +188,18 @@ class DepartmentController extends Controller
                 $this->notificationData->title = 'Du wurdest aus Team "' . $department->name . '" gelöscht';
                 $this->notificationData->team = $department;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMesssage = [
+                    'id' => rand(10, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMesssage);
             }
         }
 
         broadcast(new DepartmentUpdated())->toOthers();
 
+        //return back();
         return Redirect::route('departments', $department->id)->with('success', 'Department updated');
     }
 
@@ -200,7 +216,12 @@ class DepartmentController extends Controller
         $this->notificationData->title = 'Team "' . $department->name . '" wurde gelöscht';
         $this->notificationData->team = $department;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($department->users->all(), $this->notificationData);
+        $broadcastMesssage = [
+            'id' => rand(10, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         $department->delete();
 

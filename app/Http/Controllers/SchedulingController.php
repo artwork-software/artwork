@@ -152,12 +152,22 @@ class SchedulingController extends Controller
                     if ($deadline <= Carbon::now()->addDay() && $deadline >= Carbon::now()) {
                         $this->notificationData->title = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
                         $this->notificationData->task = $privateChecklistTask;
-                        $this->notificationController->create($user, $this->notificationData);
+                        $broadcastMessage = [
+                            'id' => rand(1, 1000000),
+                            'type' => 'error',
+                            'message' => $this->notificationData->title
+                        ];
+                        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                     }
                     if ($deadline <= now()) {
                         $this->notificationData->title = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
                         $this->notificationData->task = $privateChecklistTask;
-                        $this->notificationController->create($user, $this->notificationData);
+                        $broadcastMessage = [
+                            'id' => rand(1, 1000000),
+                            'type' => 'error',
+                            'message' => $this->notificationData->title
+                        ];
+                        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                     }
                 }
                 continue;
@@ -201,12 +211,22 @@ class SchedulingController extends Controller
                 if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
                     $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
                     $this->notificationData->task = $task;
-                    $this->notificationController->create($user, $this->notificationData);
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'error',
+                        'message' => $this->notificationData->title
+                    ];
+                    $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                 }
                 if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
                     $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
                     $this->notificationData->task = $task;
-                    $this->notificationController->create($user, $this->notificationData);
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'error',
+                        'message' => $this->notificationData->title
+                    ];
+                    $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
                 }
             }
         }
@@ -222,6 +242,11 @@ class SchedulingController extends Controller
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_NEW_TASK;
                     $this->notificationData->title = $schedule->count . ' neue Aufgaben für dich';
                     $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
                     break;
                 case 'PROJECT':
                     $project = Project::find($schedule->project_id);
@@ -230,6 +255,11 @@ class SchedulingController extends Controller
                     $this->notificationData->project->id = $project->id;
                     $this->notificationData->project->title = $project->name;
                     $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->task_id);
@@ -238,6 +268,11 @@ class SchedulingController extends Controller
                     $this->notificationData->task->title = @$task->name;
                     $this->notificationData->task->deadline = @$task->deadline;
                     $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
                     break;
                 case 'ROOM_CHANGES':
                     $room = Room::find($schedule->room_id);
@@ -245,6 +280,11 @@ class SchedulingController extends Controller
                     $this->notificationData->title = 'Änderungen an ' . @$room->name;
                     $this->notificationData->room = $room;
                     $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
                     break;
                 case 'EVENT':
                     $event = Event::find($schedule->event_id);
@@ -252,9 +292,14 @@ class SchedulingController extends Controller
                     $this->notificationData->title = 'Termin geändert';
                     $this->notificationData->event = $event;
                     $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
                     break;
             }
-            $this->notificationController->create($user, $this->notificationData);
+            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             $schedule->delete();
         }
     }

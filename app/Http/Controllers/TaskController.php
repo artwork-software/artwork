@@ -241,8 +241,6 @@ class TaskController extends Controller
         $this->history = new HistoryController('App\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
         $task->delete();
-
-
         return Redirect::back()->with('success', 'Task deleted');
     }
 }

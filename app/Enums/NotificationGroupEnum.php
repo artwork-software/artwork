@@ -4,10 +4,10 @@ namespace App\Enums;
 
 enum NotificationGroupEnum: string
 {
-    case EVENTS = 'events';
-    case ROOMS = 'rooms';
-    case TASKS = 'tasks';
-    case PROJECTS = 'projects';
+    case EVENTS = 'EVENTS';
+    case ROOMS = 'ROOMS';
+    case TASKS = 'TASKS';
+    case PROJECTS = 'PROJECTS';
 
     public function title(): string
     {

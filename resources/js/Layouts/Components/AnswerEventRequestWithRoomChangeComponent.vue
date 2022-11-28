@@ -128,6 +128,7 @@ export default {
     methods: {
         closeModal(bool) {
             this.request.room_id = this.room.id;
+            this.request.occupancy_option = false;
             this.$emit('closed', bool);
         },
         formatDate(isoDate) {

@@ -126,7 +126,7 @@
                                 text="Raum ändern"></AddButton>
                         </div>
                         <div class="flex" v-else>
-                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event)"
+                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event, notification)"
                                        class="flex px-12"
                                        text="Anfrage ändern" mode="modal"/>
                             <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
@@ -317,7 +317,7 @@ import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequest
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 
-export default {
+export default  {
     name: 'NotificationSectionComponent',
 
     components: {
@@ -354,6 +354,7 @@ export default {
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
             creatorOfRequest: null,
+            notificationToDelete: null,
             answerRequestForm: useForm({
                 accepted: false,
             }),
@@ -382,12 +383,15 @@ export default {
             this.showRoomHistory = false;
             this.wantedRoom = null;
         },
-        openEventWithoutRoomComponent(event) {
+        openEventWithoutRoomComponent(event,notification) {
             this.eventToEdit = event;
+            this.notification = notification;
             this.showEventWithoutRoomComponent = true;
         },
         onEventWithoutRoomComponentClose() {
             this.showEventWithoutRoomComponent = false;
+            this.deleteNotification();
+
         },
         openDeleteEventModal(event) {
             this.eventToDelete = event;
@@ -435,13 +439,15 @@ export default {
                 return this.answerRequestWithRoomChangeVisible = false;
             }
             await this.deleteNotification();
-            // TODO: HIER FUNKTION ZUR RAUMÄNDERUNG SCHREIBEN
-            console.log(this.requestToAnswerWithRoomChange);
+
+            return await axios
+                .put('/events/' + this.requestToAnswerWithRoomChange.id, this.eventData(this.requestToAnswerWithRoomChange))
+                .then(() => this.answerRequestWithRoomChangeVisible = false)
         },
         async afterConfirm(bool) {
             if (!bool) return this.deleteComponentVisible = false;
 
-            // TODO: HIER NOCH NOTIFICATION AUF READ_AT SETZEN
+            await this.deleteNotification();
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
@@ -451,7 +457,27 @@ export default {
             await axios.delete(`/notifications/${notification.id}/`)
                 .catch(err => console.log(err))
             this.notification = null
-        }
+        },
+
+        eventData(event) {
+            return {
+                title: event.title,
+                eventName: event.eventName,
+                start: event.start_time,
+                end: event.end_time,
+                roomId: event.room_id,
+                description: event.description,
+                audience: event.audience,
+                isLoud: event.is_loud,
+                eventNameMandatory: false,
+                projectId: event.project_id,
+                projectName: event.creatingProject ? event.projectName : '',
+                eventTypeId: event.event_type_id,
+                projectIdMandatory: false,
+                creatingProject: false,
+                roomChange: true,
+            };
+        },
     },
 }
 </script>

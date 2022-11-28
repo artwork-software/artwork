@@ -71,15 +71,15 @@
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img v-if="project.project_history[0].changes[0].changed_by"
+                    <img v-if="project.project_history[0]?.changes[0]?.changed_by"
                          :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
                          :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
                          :alt="project.project_history[0].changes[0].changed_by?.first_name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
+                    <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
                                  :user="project.project_history[0].changes[0].changed_by"/>
                     <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0].created_at }}
+                        {{ project.project_history[0]?.created_at }}
                     </span>
                     <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">

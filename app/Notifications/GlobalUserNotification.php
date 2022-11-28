@@ -37,7 +37,7 @@ class GlobalUserNotification extends Notification
             ->where('type', $this->notificationData['type'])
             ->first();
 
-        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+        if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
             $channels[] = 'mail';
         }
 

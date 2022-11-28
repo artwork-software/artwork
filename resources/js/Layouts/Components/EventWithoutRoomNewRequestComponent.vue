@@ -4,6 +4,9 @@
             <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
+            <div class="hidden">
+                {{computedEvent }}
+            </div>
             <div class="mx-4">
                 <!--    Heading    -->
                 <div>
@@ -448,7 +451,7 @@ export default {
                 eventToShow.startDate = this.getDateOfDate(this.event.start_time);
                 eventToShow.startTime = this.getTimeOfDate(this.event.start_time);
                 eventToShow.endDate = this.getDateOfDate(this.event.end_time);
-                eventToShow.endTime = this.getTimeOfDate(this.event.end_time)
+                eventToShow.endTime = this.getTimeOfDate(this.event.end_time);
             }
 
 
@@ -597,10 +600,10 @@ export default {
 
         eventData(event) {
             return {
-                title: event.title,
+                title: event.name,
                 eventName: event.eventName,
-                start: this.formatDate(event.startDate, event.startTime),
-                end: this.formatDate(event.endDate, event.endTime),
+                start: event.start_time,
+                end: event.end_time,
                 roomId: event.room_id,
                 description: event.description,
                 audience: event.audience,

@@ -35,11 +35,11 @@ class DeadlineNotification extends Notification implements ShouldBroadcast
             ->where('type', $this->notificationData['type'])
             ->first();
 
-        if($typeSettings->enabled_email && $typeSettings->frequency === NotificationFrequency::IMMEDIATELY) {
+        if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
             $channels[] = 'mail';
         }
 
-        if($typeSettings->enabled_push) {
+        if($typeSettings?->enabled_push) {
             $channels[] = 'broadcast';
         }
 

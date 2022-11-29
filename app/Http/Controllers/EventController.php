@@ -154,24 +154,39 @@ class EventController extends Controller
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
         $this->notificationData->conflict = $conflict;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($user, $this->notificationData);
+        $this->notificationData->created_by = Auth::user();
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
     }
 
     private function createAdjoiningLoudNotification($conflict, User $user) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Lauter Termin im Nebenraum';
         $this->notificationData->conflict = $conflict;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($user, $this->notificationData);
+        $this->notificationData->created_by = Auth::user();
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
     }
 
     private function createConflictNotification($collision) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
         $this->notificationData->title = 'Terminkonflikt';
         $this->notificationData->conflict = $collision;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($collision['created_by'], $this->notificationData);
+        $this->notificationData->created_by = Auth::user();
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($collision['created_by'], $this->notificationData, $broadcastMessage);
     }
 
     private function associateProject($request, $event) {
@@ -186,16 +201,21 @@ class EventController extends Controller
         $this->notificationData->title = 'Neue Raumanfrage';
         $this->notificationData->event = $event;
         $this->notificationData->accepted = false;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationData->created_by = Auth::user();
         $room = Room::find($request->roomId);
         $admins = $room->room_admins()->get();
         if(!empty($admins)){
             foreach ($admins as $admin){
-                $this->notificationController->create($admin, $this->notificationData);
+                $this->notificationController->create($admin, $this->notificationData, $broadcastMessage);
             }
         } else {
             $user = User::find($room->user_id);
-            $this->notificationController->create($user, $this->notificationData);
+            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
         }
     }
 
@@ -208,6 +228,21 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+
+        if($request->roomChange){
+            $this->notificationData->title = 'Raumanfrage mit Raumänderung bestätigt';
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
+            $this->notificationData->event = $event;
+            $this->notificationData->accepted = true;
+            $this->notificationData->created_by = Auth::user();
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
+        }
+
         $this->authorize('update', $event);
 
         $oldEventDescription = $event->description;
@@ -278,17 +313,27 @@ class EventController extends Controller
             $this->notificationData->accepted = false;
             $event->declined_room_id = $event->room_id;
             $event->room_id = null;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $this->notificationData->title
+            ];
 
         } else {
             $this->notificationData->title = 'Raumanfrage bestätigt';
             $this->history->createHistory($event->id, 'Raum bestätigt');
             $this->notificationData->accepted = true;
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
         }
         $event->save();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST;
         $this->notificationData->event = $event;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($event->creator, $this->notificationData);
+        $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
     }
@@ -403,7 +448,12 @@ class EventController extends Controller
         $this->notificationData->title = 'Termin abgesagt';
         $this->notificationData->event = $event;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($event->creator()->get(), $this->notificationData);
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
 
 
 

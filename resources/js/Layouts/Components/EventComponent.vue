@@ -348,8 +348,8 @@
                                            :key="room.name"
                                            :value="room"
                                            v-slot="{ active, selected }">
-                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight']">
-                                    {{ room.name }}
+                                <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                    {{ room.name }}   <img v-if="this.roomCollisions[room.id] > 0" src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-4 w-4 mx-2" alt="conflictIcon"/>
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -496,10 +496,16 @@ export default {
             answerRequestForm: useForm({
                 accepted: false,
             }),
+            collisionRoomForm: this.$inertia.form({
+                _method: 'POST',
+                start: null,
+                end: null,
+                roomId: null
+            })
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project','wantedRoomId'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project','wantedRoomId', 'roomCollisions'],
 
     emits: ['closed'],
 
@@ -588,10 +594,22 @@ export default {
 
         checkChanges(){
             this.updateTimes(this.event);
-            this.checkCollisions()
+
+            if(this.event?.start && this.event?.end){
+
+                axios.post('/collision/room', {
+                    params: {
+                        start: this.event?.start,
+                        end:  this.event?.end,
+                    }
+                })
+                    .then(response => this.roomCollisions = response.data);
+            }
+
+
         },
         checkTypeChange(){
-            this.checkCollisions();
+
         },
 
         /**

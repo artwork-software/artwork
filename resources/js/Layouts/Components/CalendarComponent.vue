@@ -594,6 +594,7 @@
         :event="selectedEvent"
         :wantedRoomId="wantedSplit"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :roomCollisions="roomCollisions"
     />
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
@@ -783,6 +784,8 @@ export default {
             eventComponentIsVisible: false,
             createEventComponentIsVisible: false,
             showEventsWithoutRoomComponent: false,
+            roomCollisions: [],
+
         }
     },
     methods: {
@@ -1034,6 +1037,7 @@ export default {
             });
         },
         openEventComponent(event = null) {
+
             this.wantedSplit = event?.split;
             if (event === null) {
                 this.selectedEvent = null;
@@ -1051,6 +1055,15 @@ export default {
                 }
             }
 
+            if(event?.start && event?.end){
+                axios.post('/collision/room', {
+                        params: {
+                            start: event?.start,
+                            end:  event?.end,
+                        }
+                    })
+                    .then(response => this.roomCollisions = response.data);
+            }
             this.selectedEvent = event;
             this.createEventComponentIsVisible = true;
         },

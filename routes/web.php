@@ -11,6 +11,7 @@ use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
 use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
+use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
@@ -221,6 +222,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
      */
     Route::get('/events', [EventController::class, 'eventIndex'])->name('events.index');
     Route::get('/events/collision', [EventController::class, 'getCollisionCount'])->name('events.collisions');
+    Route::get('/event/{event}', [EventController::class, 'getEventById'])->name('events.getById');
     Route::post('/events', [EventController::class, 'storeEvent'])->name('events.store');
     Route::put('/events/{event}', [EventController::class, 'updateEvent'])->name('events.update');
     Route::delete('/events/{event}', [EventController::class, 'destroy'])->name('events.delete');
@@ -241,6 +243,17 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // notification
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
+
     Route::post('/collision/room', [RoomController::class, 'collisionsCount'])->name('collisions.room');
+
+    Route::patch('/notifications', [NotificationController::class, 'setOnRead'])->name('notifications.setReadAt');
+    Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
+    Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])->name('notifications.settings');
+    Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
+
+    //globalNotification
+    Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
+    Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
+    Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
 });
 

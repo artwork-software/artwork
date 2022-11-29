@@ -9,7 +9,7 @@
                 </div>
             </div>
 
-            <form @submit.prevent="changeLogos">
+            <form v-if="$page.props.is_admin || $page.props.can.change_tool_settings" @submit.prevent="changeLogos">
                 <div class="mt-12 max-w-2xl">
                     <h2 class="headline2 my-2">Branding</h2>
                     <div class="xsLight">
@@ -127,12 +127,11 @@
 
                 <div class="mt-6 items-center">
                     <AddButton @click.prevent="changeLogos"
-                    text="Änderungen speichern" mode="modal"/>
+                               text="Änderungen speichern" mode="modal"/>
                 </div>
             </form>
 
-            <div>
-
+            <div v-if="$page.props.is_admin || $page.props.can.change_tool_settings">
                 <div class="mt-20">
                     <h2 class="headline2 mb-2">Kommunikation & Rechtliches</h2>
                     <div class="xsLight">
@@ -143,14 +142,14 @@
                         <div class="col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
                                 <div class="mt-1">
-                                    <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum" />
+                                    <inputComponent v-model="mailForm.impressumLink" placeholder="Link zum Impressum"/>
                                 </div>
                             </div>
                         </div>
                         <div class="mt-4 col-span-9 grid grid-cols-9">
                             <div class="sm:col-span-3">
                                 <div class="mt-1">
-                                    <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz" />
+                                    <inputComponent v-model="mailForm.privacyLink" placeholder="Link zum Datenschutz"/>
                                 </div>
                             </div>
                         </div>
@@ -170,7 +169,111 @@
                 </div>
 
             </div>
+            <div v-if="$page.props.can.admin_globalNotification || $page.props.is_admin">
+
+                <div class="headline2 mt-12 mb-6">
+                    Benachrichtigung an alle
+                </div>
+                <div class="xsLight">
+                    Teile allen Usern etwas Wichtiges mit - z.B. Änderungen oder neue Funktionen im artwork oder
+                    wichtige Mitteilungen, die
+                    das ganze Haus betreffen. Die Nachricht können alle User in den Benachrichtigungen einsehen (auch
+                    die Externen!).
+                </div>
+                <div>
+                    <label class="block mt-12 mb-2 xsLight">
+                        Bild </label>
+                    <div class="items-center">
+                        <div
+                            class="flex w-full justify-center border-2 bg-stone-50 w-5/12 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                            @click="selectNewNotificationImage"
+                            @dragover.prevent
+                            @drop.stop.prevent="uploadDraggedImage($event)">
+                            <div v-show="!notificationImagePreview" class="space-y-1 text-center">
+                                <div class="xsLight flex my-auto h-40 items-center"
+                                     v-if="this.globalNotificationForm.notificationImage === null && notificationImagePreview === null">
+                                    Ziehe hier dein <br/> Bild für die Benachrichtigung hin
+                                    <input id="notificationImage-upload" ref="notificationImage"
+                                           @change="updateNotificationImagePreview()"
+                                           name="file-upload" type="file" class="sr-only"/>
+                                </div>
+                                <div class="cursor-pointer" v-else>
+                                    <img :src="this.globalNotificationForm.notificationImage" alt="Aktuelles Bild"
+                                         class="rounded-md h-40 w-40">
+                                </div>
+                            </div>
+                            <div class="cursor-pointer">
+                                <img v-show="notificationImagePreview" :src="notificationImagePreview"
+                                     alt="Aktuelles Banner"
+                                     class="rounded-md h-40 w-40">
+                                <input type="file" class="hidden"
+                                       ref="notificationImage"
+                                       @change="updateNotificationImagePreview">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex my-4 w-full pr-7">
+                    <div class="w-5/12 mr-6">
+                        <input type="text"
+                               v-model="this.globalNotificationForm.notificationName"
+                               id="eventTitle"
+                               placeholder="Titel*"
+                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    </div>
+                    <div class="w-full flex w-5/12">
+                        <input v-model="this.globalNotificationForm.notificationDeadlineDate"
+                               id="deadlineDate"
+                               type="date"
+                               required
+                               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                        <input v-model="this.globalNotificationForm.notificationDeadlineTime"
+                               id="deadlineTime"
+                               type="time"
+                               required
+                               class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                    </div>
+                </div>
+                <div class="py-2 w-10/12">
+                    <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
+                              id="description"
+                              v-model="this.globalNotificationForm.notificationDescription"
+                              rows="4"
+                              class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                </div>
+                <div class="w-10/12 flex justify-between">
+                    <AddButton @click="createGlobalNotification()" class="flex px-12"
+                               text="Benachrichtigung teilen" mode="modal"/>
+                    <AddButton @click="deleteGlobalNotification($page.props.globalNotification.id)" type="secondary"
+                               text="Benachrichtigung löschen"></AddButton>
+                </div>
+            </div>
         </div>
+        <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+            <template #content>
+                <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+                <div class="mx-4">
+                    <div class="font-black text-primary font-lexend text-3xl my-2">
+                        Benachrichtigung für alle erstellt
+                    </div>
+                    <XIcon @click="closeSuccessModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-success subpixel-antialiased">
+                        Die Benachrichtigung wurde erfolgreich erstellt.
+                    </div>
+                    <div class="mt-6">
+                        <button class="bg-success focus:outline-none my-auto inline-flex items-center px-24 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="closeSuccessModal">
+                            <CheckIcon class="h-6 w-12 text-secondaryHover"/>
+                        </button>
+                    </div>
+                </div>
+
+            </template>
+        </jet-dialog-modal>
+
     </app-layout>
 </template>
 
@@ -181,6 +284,8 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from "@/Jetstream/InputError";
 import AddButton from "@/Layouts/Components/AddButton";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import {CheckIcon, XIcon} from "@heroicons/vue/solid";
+import JetDialogModal from "@/Jetstream/DialogModal";
 
 export default defineComponent({
     components: {
@@ -188,7 +293,10 @@ export default defineComponent({
         AppLayout,
         SvgCollection,
         JetInputError,
-        InputComponent
+        InputComponent,
+        CheckIcon,
+        XIcon,
+        JetDialogModal
     },
     props: [],
     data() {
@@ -197,11 +305,20 @@ export default defineComponent({
             bigLogoPreview: null,
             smallLogoPreview: null,
             bannerPreview: null,
+            notificationImagePreview: null,
+            showSuccessModal: false,
             form: this.$inertia.form({
                 _method: 'PUT',
                 bigLogo: null,
                 smallLogo: null,
                 banner: null,
+            }),
+            globalNotificationForm: this.$inertia.form({
+                notificationImage: this.$page.props.globalNotification?.image_url,
+                notificationName: this.$page.props.globalNotification?.title,
+                notificationDeadlineDate: this.$page.props.globalNotification.expiration_date ? this.getDateOfDate(this.$page.props.globalNotification.expiration_date) : null,
+                notificationDeadlineTime: this.$page.props.globalNotification.expiration_date ? this.getTimeOfDate(this.$page.props.globalNotification.expiration_date) : null,
+                notificationDescription: this.$page.props.globalNotification?.description,
             }),
             mailForm: this.$inertia.form({
                 _method: 'PUT',
@@ -242,6 +359,10 @@ export default defineComponent({
                         this.bannerPreview = e.target.result;
                         this.form.banner = file
                     }
+                    if (type === 'notificationImage') {
+                        this.notificationImagePreview = e.target.result;
+                        this.globalNotificationForm.notificationImage = file
+                    }
 
                 }
 
@@ -250,7 +371,20 @@ export default defineComponent({
             } else {
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
+        },
+        closeSuccessModal(){
+            this.showSuccessModal = false;
+        },
+        getTimeOfDate(isoDate) {
+            if(isoDate.split(' ')[1]){
+                return isoDate.split(' ')[1].substring(0, 5);
+            }
 
+        },
+        getDateOfDate(isoDate) {
+            if(isoDate.split(' ')[0]){
+                return isoDate.split(' ')[0];
+            }
 
         },
         uploadDraggedBigLogo(event) {
@@ -262,6 +396,9 @@ export default defineComponent({
         uploadDraggedBanner(event) {
             this.validateTypeAndUpload(event.dataTransfer.files[0], 'banner');
         },
+        uploadDraggedImage(event) {
+          this.validateTypeAndUpload(event.dataTransfer.files[0], 'notificationImage')
+        },
         selectNewBigLogo() {
             this.$refs.bigLogo.click();
         },
@@ -270,6 +407,12 @@ export default defineComponent({
         },
         selectNewBanner() {
             this.$refs.banner.click();
+        },
+        selectNewNotificationImage() {
+          this.$refs.notificationImage.click();
+        },
+        updateNotificationImagePreview(){
+          this.validateTypeAndUpload(this.$refs.notificationImage.files[0], 'notificationImage')
         },
         updateBannerPreview() {
             this.validateTypeAndUpload(this.$refs.banner.files[0], 'banner');
@@ -285,6 +428,20 @@ export default defineComponent({
         },
         changeEmailData() {
             this.mailForm.post(route('tool.updateMail'))
+        },
+        createGlobalNotification(){
+            console.log(this.globalNotificationForm);
+            this.globalNotificationForm.post(route('global_notification.store'));
+            this.showSuccessModal = true;
+        },
+        deleteGlobalNotification(globalNotificationId){
+            this.$inertia.delete(route('global_notification.destroy',globalNotificationId));
+            this.globalNotificationForm.notificationImage = null;
+            this.globalNotificationForm.notificationName = null;
+            this.globalNotificationForm.notificationDeadlineDate = null;
+            this.globalNotificationForm.notificationDeadlineTime = null;
+            this.globalNotificationForm.notificationDescription = null;
+            this.notificationImagePreview = null;
         }
     },
 })

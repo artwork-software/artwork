@@ -4,6 +4,9 @@
             <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
+            <div class="hidden">
+                {{computedEvent }}
+            </div>
             <div class="mx-4">
                 <!--    Heading    -->
                 <div>
@@ -48,16 +51,16 @@
                     <!--    Type and Title    -->
                     <div class="flex py-2">
                         <div class="w-1/2">
-                            <Listbox as="div" class="flex h-12 mr-2" v-model="event.eventTypeId"
+                            <Listbox as="div" class="flex h-12 mr-2" v-model="event.event_type_id"
                                      :onchange="checkCollisions(event)" id="eventType">
                                 <ListboxButton
                                     class="pl-3 border-2 border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
                                         <EventTypeIconCollection :height="20" :width="20"
-                                                                 :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
+                                                                 :iconName="this.eventTypes.find(type => type.id === event.event_type_id)?.svg_name"/>
                                         <span class="block truncate items-center ml-3 flex">
                                             <span>{{
-                                                    this.eventTypes.find(type => type.id === event.eventTypeId)?.name
+                                                    this.eventTypes.find(type => type.id === event.event_type_id)?.name
                                                 }}</span>
                                 </span>
                                         <span
@@ -156,11 +159,11 @@
                                         </div>
                                     </div>
                                     <div class="flex w-full mb-2">
-                                        <input v-model="event.isLoud"
+                                        <input v-model="event.is_loud"
                                                type="checkbox"
                                                class="cursor-pointer h-6 w-6 text-success border-2 border-gray-300 focus:ring-0"/>
                                         <div
-                                            :class="[event.isLoud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
+                                            :class="[event.is_loud ? 'text-white' : 'text-secondary', 'subpixel-antialiased mx-2']">
                                             Es
                                             wird laut
                                         </div>
@@ -174,7 +177,7 @@
                         <div v-if="event.audience">
                             <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
                         </div>
-                        <div v-if="event.isLoud">
+                        <div v-if="event.is_loud">
                             <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
                         </div>
                     </div>
@@ -190,7 +193,7 @@
                             <div v-else class="xsDark ml-2">
                                 {{ this.projects.find(project => project.id === event.project_id)?.name ?? 'Keinem Projekt' }}
                             </div>
-                            <div v-if="event.project_id && event.canEdit" class="flex items-center my-auto">
+                            <div v-if="event.project_id" class="flex items-center my-auto">
                                 <button type="button"
                                         @click="this.deleteProject(event)">
                                     <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
@@ -402,21 +405,8 @@ export default {
         ConfirmationComponent,
         TagComponent
     },
-
     data() {
         return {
-            startDate: null,
-            startTime: null,
-            endDate: null,
-            endTime: null,
-            isLoud: false,
-            audience: false,
-            projectName: null,
-            title: null,
-            eventName: null,
-            eventTypeName: null,
-            selectedEventType: this.eventTypes[0],
-            selectedProject: null,
             selectedRoom: null,
             error: null,
             creatingProject: false,
@@ -454,17 +444,24 @@ export default {
         },
     },
     computed: {
-        eventToShow: function () {
+        computedEvent: function () {
             let eventToShow = this.event;
 
-            eventToShow.startDate = new Date(this.event.start).format('YYYY-MM-DD');
-            eventToShow.startTime = new Date(this.event.start).format('HH:mm');
-            eventToShow.endDate = new Date(this.event.end).format('YYYY-MM-DD');
-            eventToShow.endTime = new Date(this.event.end).format('HH:mm');
+            if(this.event.start_time && this.event.end_time){
+                eventToShow.startDate = this.getDateOfDate(this.event.start_time);
+                eventToShow.startTime = this.getTimeOfDate(this.event.start_time);
+                eventToShow.endDate = this.getDateOfDate(this.event.end_time);
+                eventToShow.endTime = this.getTimeOfDate(this.event.end_time);
+            }
+
+
+            //eventToShow.startDate = (new Date(this.event.start)).format('YYYY-MM-DD');
+            //eventToShow.startTime = (new Date(this.event.start)).format('HH:mm');
+           // eventToShow.endDate = (new Date(this.event.end)).format('YYYY-MM-DD');
+            //eventToShow.endTime = (new Date(this.event.end)).format('HH:mm');
             eventToShow.creatingProject = false;
             return eventToShow;
         },
-
     },
 
     methods: {
@@ -474,6 +471,12 @@ export default {
 
         closeModal(bool) {
             this.$emit('closed', bool);
+        },
+        getTimeOfDate(isoDate){
+            return isoDate.split('T')[1].substring(0, 5);
+        },
+        getDateOfDate(isoDate){
+            return isoDate.split('T')[0];
         },
         formatFullDate(isoDate) {
             return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
@@ -568,8 +571,7 @@ export default {
 
         },
         deleteProject(event) {
-            event.project = null;
-            event.projectId = null;
+            event.project_id = null;
         },
 
         /**
@@ -598,19 +600,19 @@ export default {
 
         eventData(event) {
             return {
-                title: event.title,
+                title: event.name,
                 eventName: event.eventName,
-                start: this.formatDate(event.startDate, event.startTime),
-                end: this.formatDate(event.endDate, event.endTime),
+                start: event.start_time,
+                end: event.end_time,
                 roomId: event.room_id,
                 description: event.description,
                 audience: event.audience,
-                isLoud: event.isLoud,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: event.projectId,
+                isLoud: event.is_loud,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.event_type_id)?.individual_name,
+                projectId: event.project_id,
                 projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.eventTypeId,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
+                eventTypeId: event.event_type_id,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.event_type_id)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
             };
         },

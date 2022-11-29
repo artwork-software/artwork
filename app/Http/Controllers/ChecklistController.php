@@ -17,6 +17,7 @@ use Illuminate\Support\Facades\Redirect;
 
 class ChecklistController extends Controller
 {
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -47,6 +48,10 @@ class ChecklistController extends Controller
         } else {
             $this->createWithoutTemplate($request);
         }
+
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name. ' hinzugefügt');
+
 
         ProjectHistory::create([
             "user_id" => Auth::id(),
@@ -168,12 +173,10 @@ class ChecklistController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\Checklist  $checklist
      */
-    public function update(ChecklistUpdateRequest $request, Checklist $checklist, HistoryService $historyService)
+    public function update(ChecklistUpdateRequest $request, Checklist $checklist)
     {
-        //dd($request->data());
-
         $checklist->fill($request->data());
-        $historyService->checklistUpdated($checklist);
+
         $checklist->save();
 
         if ($request->get('tasks')) {
@@ -192,6 +195,8 @@ class ChecklistController extends Controller
                 ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
         }
 
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' geändert');
         $checklist->departments()->sync($departmentIds);
 
         return Redirect::back()->with('success', 'Checklist updated');
@@ -205,6 +210,8 @@ class ChecklistController extends Controller
      */
     public function destroy(Checklist $checklist, HistoryService $historyService)
     {
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' gelöscht');
         $checklist->delete();
         $historyService->checklistUpdated($checklist);
 

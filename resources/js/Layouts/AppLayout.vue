@@ -24,6 +24,7 @@
                         || $page.props.can.admin_eventTypeSettings
                         || $page.props.can.admin_checklistTemplates
                         || $page.props.can.admin_rooms
+                        || $page.props.can.admin_globalNotification
                         || this.$page.props.is_admin">
                         <h2 @click="showSystemSettings = !showSystemSettings"
                             class="text-md pt-4 pb-2 flex items-center justify-center ml-4 xsWhiteBold cursor-pointer">
@@ -55,7 +56,7 @@
 
         <!--   Top Menu     -->
         <div class="sm:pl-28 flex flex-col">
-            <div class="sticky top-0 z-10 flex-shrink-0 flex h-16">
+            <div class="sticky top-0 z-20 flex-shrink-0 flex h-16">
                 <button type="button"
                     class="px-4 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
                     @click="openSideBarOnMobile">
@@ -131,6 +132,23 @@
                     </div>
                 </div>
             </div>
+            <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
+                <div v-for="pushNotification in pushNotifications" :id="pushNotification.id" class="my-2 z-10 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray" role="alert">
+                    <div class="flex p-4">
+                        <div class="inline-flex flex-shrink-0 justify-center items-center rounded-lg">
+                            <img alt="Notification" v-if="pushNotification.type === 'success'"
+                                 class="h-9 w-9" src="/Svgs/IconSvgs/icon_push_notification_green.svg"/>
+                            <img alt="Notification" v-if="pushNotification.type === 'error'" class="h-9 w-9"
+                                 src="/Svgs/IconSvgs/icon_push_notification_red.svg"/>
+                        </div>
+                        <div class="ml-4 xsDark">{{ pushNotification.message }}</div>
+                    </div>
+                    <button type="button" class="-mt-4 mr-2">
+                        <XIcon class="-mt-4 h-5 w-5 text-secondary hover:text-error relative" @click="closePushNotification(pushNotification.id)"/>
+                    </button>
+                </div>
+            </div>
+            <!-- Notification -->
 
             <!--     Main       -->
             <main class="main">
@@ -138,6 +156,7 @@
             </main>
         </div>
     </div>
+
 </template>
 
 <script>
@@ -189,7 +208,7 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings,
+                    has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.admin_globalNotification,
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']
@@ -271,12 +290,24 @@ export default {
         openSideBarOnMobile() {
             document.querySelector(".sidebar").classList.toggle("hidden");
             document.querySelector(".main").classList.toggle("hidden");
+        },
+        closePushNotification(id){
+            const pushNotification = document.getElementById(id);
+            pushNotification.remove();
         }
     },
     mounted() {
         let ev = document.createEvent("Event");
         ev.initEvent("DOMContentLoaded", true, true);
         window.document.dispatchEvent(ev);
+
+        Echo.private('App.Models.User.' + this.$page.props.user.id)
+            .notification((notification) => {
+                this.pushNotifications.push(notification.message);
+                setTimeout(() => {
+                    this.closePushNotification(notification.message.id)
+                }, 3000)
+            });
     },
     data() {
         return {
@@ -289,6 +320,7 @@ export default {
                 || this.$page.props.can.admin_eventTypeSettings
                 || this.$page.props.can.admin_checklistTemplates,
             showUserMenu: false,
+            pushNotifications: []
         }
     },
     setup() {

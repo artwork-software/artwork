@@ -18,6 +18,13 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class RoomFileController extends Controller
 {
 
+    protected ?HistoryController $historyController = null;
+
+    public function __construct()
+    {
+        $this->historyController = new HistoryController('App\Models\Room');
+    }
+
     /**
      * @throws AuthorizationException
      */
@@ -40,6 +47,8 @@ class RoomFileController extends Controller
             'basename' => $basename,
         ]);
 
+        $this->historyController->createHistory($room->id, 'Dokument ' . $original_name . ' wurde hinzugefügt');
+
         return Redirect::back();
     }
 
@@ -54,6 +63,8 @@ class RoomFileController extends Controller
     {
         $this->authorize('view projects');
 
+        $this->historyController->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde heruntergeladen');
+
         return Storage::download('room_files/'. $roomFile->basename, $roomFile->name);
     }
 
@@ -66,7 +77,10 @@ class RoomFileController extends Controller
      */
     public function destroy(RoomFile $roomFile)
     {
+        //dd($roomFile);
         $this->authorize('view', $roomFile->room->area);
+
+        $this->historyController->createHistory($roomFile->room_id, 'Dokument ' . $roomFile->name . ' wurde entfernt');
 
         $roomFile->delete();
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Prunable;
@@ -31,7 +32,7 @@ use Illuminate\Support\Collection;
  */
 class Room extends Model
 {
-    use HasFactory, SoftDeletes, Prunable;
+    use HasFactory, SoftDeletes, Prunable, HasChangesHistory;
 
     protected $fillable = [
         'name',

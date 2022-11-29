@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -40,11 +41,13 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
+    use HasChangesHistory;
     use HasFactory, SoftDeletes;
 
     protected $guarded = [
         'id',
     ];
+
 
     protected $casts = [
         'is_loud' => 'boolean',
@@ -96,9 +99,9 @@ class Event extends Model
     }
 
     /**
-     * @return \App\Builders\EventBuilder<\App\Models\Event>
+     * @return \Illuminate\Database\Eloquent\Builder
      */
-    public static function query(): EventBuilder
+    public static function query(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::query();
     }
@@ -154,4 +157,6 @@ class Event extends Model
         return $this->start_time->isBetween($event->start_time, $event->end_time)
             || $this->end_time->isBetween($event->start_time, $event->end_time);
     }
+
+
 }

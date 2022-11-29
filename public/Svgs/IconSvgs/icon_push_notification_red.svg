@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="34.023" height="34.527" viewBox="0 0 34.023 34.527">
+  <g id="clock" transform="translate(-3896.01 -1279)">
+    <path id="Pfad_1078" data-name="Pfad 1078" d="M15.94,15.94h0A15.958,15.958,0,0,0,31.858,0H15.918A15.958,15.958,0,0,0,0,15.94Z" transform="translate(3911.949 1313.516) rotate(-90)" fill="#f46b72"/>
+    <path id="Pfad_1079" data-name="Pfad 1079" d="M15.94,0h0A15.958,15.958,0,0,1,31.858,15.94H15.918A15.958,15.958,0,0,1,0,0Z" transform="translate(3896.01 1313.527) rotate(-90)" fill="#f5cac3"/>
+    <g id="Ellipse_127" data-name="Ellipse 127" transform="translate(3916.741 1279)" fill="#23234e" stroke="#f4f4f3" stroke-width="1.5">
+      <circle cx="6.646" cy="6.646" r="6.646" stroke="none"/>
+      <circle cx="6.646" cy="6.646" r="5.896" fill="none"/>
+    </g>
+  </g>
+</svg>

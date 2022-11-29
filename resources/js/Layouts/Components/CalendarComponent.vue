@@ -79,7 +79,7 @@
             <Menu as="div" class="relative inline-block flex items-center text-left">
                 <div class="">
                     <MenuButton
-                        class="border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                     >
                         <span class="float-left xsDark">Filter</span>
                         <ChevronDownIcon
@@ -97,7 +97,7 @@
                     leave-to-class="transform scale-95 opacity-0"
                 >
                     <MenuItems
-                        class="absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                        class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                         <!-- <div class="inline-flex border-none w-1/5">
                             <button>
                                 <FilterIcon class="w-3 mr-1 mt-0.5"/>
@@ -116,7 +116,7 @@
                         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
                             <!-- Save Filter Section -->
-                            <Disclosure v-slot="{ open }">
+                            <Disclosure v-slot="{ open }" default-open>
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                 >
@@ -127,9 +127,9 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <Disclosure v-slot="{ open }" v-if="saving">
+                                    <div v-if="saving">
                                         <div class="flex">
-                                            <input id="saveFilter" v-model="filterName" type="text" autocomplete="off"
+                                            <input id="saveFilter" v-model="filterName" type="text"
                                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                                    placeholder="Name des Filters"/>
                                             <button
@@ -140,7 +140,7 @@
                                                        @click="saveFilter"></AddButton> -->
                                         </div>
                                         <hr class="border-gray-500 mt-4 mb-4">
-                                    </Disclosure>
+                                    </div>
                                     <button
                                         class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
                                         v-for="filter of filters">
@@ -248,7 +248,7 @@
                                             <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="category.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, category)"
+                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -271,7 +271,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="area.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.areas, area);"
+                                                       @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -295,7 +295,7 @@
                                             <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="attribute.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes, attribute);"
+                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -320,7 +320,7 @@
                                             <div v-if="rooms.length > 0" v-for="room in rooms"
                                                  class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="room.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.rooms, room)"
+                                                       @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -361,7 +361,7 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                                             <div v-for="eventType in types" class="flex w-full mb-2">
                                                 <input type="checkbox" v-model="eventType.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.eventTypes, eventType)"
+                                                       @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
                                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -837,18 +837,46 @@ export default {
                     this.filters = response.data
                 })
         },
-        async changeFilterElements(filterArray, element) {
+        async changeFilterElements(filterArray, arrayName, element) {
 
             if (element.checked) {
                 filterArray.push(element)
             } else {
                 // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
                 Object.entries(this.calendarFilters).forEach(entry => {
-                    if (Array.isArray(entry[1]) && entry[1].length > 0) {
-
-                        if (entry[1].filter(obj => obj.id === element.id)) {
-                            this.calendarFilters[entry[0]] = filterArray.filter(elem => element.id !== elem.id)
+                    if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
+                        if(arrayName === 'rooms') {
+                            const room = this.rooms.filter(room => element?.id === room.id)
+                            if(room){
+                                room[0].checked = false
+                            }
                         }
+                        if(arrayName === 'areas') {
+                            const area = this.areas.filter(area => element?.id === area.id)
+                            if(area){
+                                area[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'roomCategories') {
+                            const category = this.roomCategories.filter(category => element?.id === category.id)
+                            if(category){
+                                category[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'roomAttributes') {
+                            const attribute = this.roomAttributes.filter(room => element?.id === room.id)
+                            if(attribute){
+                                attribute[0].checked = false
+                            }
+                        }
+                        if(arrayName === 'eventTypes') {
+                            const eventType = this.eventTypes.filter(type => element?.id === type.id)
+                            if(eventType){
+                                eventType[0].checked = false
+                            }
+                        }
+
+                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element?.id !== elem.id)
                     }
                 })
             }
@@ -973,8 +1001,6 @@ export default {
 
                 for (const room of adjoiningRooms) {
                     if (this.displayedRooms.filter(r => r.name === room.label).length === 0) {
-                        console.log(this.displayedRooms.filter(r => r.name === room.label).length)
-                        console.log(room.label)
                         room.adjoining = true;
                         this.calendarFilters.rooms.push(room)
                         this.displayedRooms.push(room);

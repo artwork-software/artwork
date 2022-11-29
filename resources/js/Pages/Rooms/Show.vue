@@ -62,15 +62,17 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.room_history?.length > 0" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div v-if="room.room_history[0]" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img :data-tooltip-target="room.room_history[0].user.id"
-                         :src="room.room_history[0].user.profile_photo_url"
-                         :alt="room.room_history[0].user?.name"
+                    <img v-if="room.room_history[0].changes[0].changed_by"
+                         :data-tooltip-target="room.room_history[0].changes[0].changed_by?.id"
+                         :src="room.room_history[0].changes[0].changed_by?.profile_photo_url"
+                         :alt="room.room_history[0].changes[0].changed_by?.first_name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip :user="room.room_history[0].user"/>
+                    <UserTooltip v-if="room.room_history[0].changes[0].changed_by"
+                                 :user="room.room_history[0].changes[0].changed_by"/>
                     <span class="ml-2 subpixel-antialiased">
                         {{ room.room_history[0].created_at }}
                     </span>
@@ -154,11 +156,13 @@
                         <div class="mt-4" v-if="roomForm.room_admins.length === 0">
                             <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
                         </div>
-                        <div v-else class="mt-4 -mr-3" v-for="user in room.room_admins">
+                        <div v-else class="flex">
+                        <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
                             <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                                  :src="user.profile_photo_url"
                                  alt=""/>
                             <UserTooltip :user="user"/>
+                        </div>
                         </div>
                         <div class="mt-10">
                             <span class="headline2 w-full">Eigenschaften</span>
@@ -335,7 +339,7 @@
                                     <EventTypeIconCollection :height="26" :width="26"
                                                              :iconName="eventRequest.event_type.svg_name"/>
                                     <div
-                                        class="whitespace-nowrap ml-2 flex leading-6 sDark">
+                                        class="mx-6 ml-2 flex leading-6 sDark">
                                         {{ eventRequest.event_type.name }}
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="eventRequest.audience"
                                              class="h-5 w-5 ml-2 my-auto"/>
@@ -366,7 +370,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <div class="flex items-center w-full ml-24 ">
+                            <div class="flex items-center w-full ml-8">
                                 <div v-if="eventRequest.project" class="w-64">
                                     <div class="xsLight flex items-center">
                                         Zugeordnet zu
@@ -402,7 +406,7 @@
                                 </div>
                             </div>
 
-                            <div class="flex ml-40 mt-2 xsLight items-center w-full"
+                            <div class="flex ml-8 mt-2 xsLight items-center w-full"
                                  v-if="eventRequest.description">
                                 {{ eventRequest.description }}
                             </div>
@@ -820,42 +824,15 @@
                 </div>
             </template>
         </jet-dialog-modal>
-        <!-- Room History Modal-->
-        <jet-dialog-modal :show="showRoomHistory" @close="closeRoomHistoryModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Raumverlauf
-                    </div>
-                    <XIcon @click="closeRoomHistoryModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
-                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
-                    </div>
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
-                        <div class="flex w-full my-1" v-for="historyItem in room.room_history">
-                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                {{ historyItem.created_at }}:
-                            </span>
-                            <div class="flex w-full">
-                                <img :data-tooltip-target="historyItem.user.id"
-                                     :src="historyItem.user.profile_photo_url"
-                                     :alt="historyItem.user.name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="historyItem.user"/>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.description }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-            </template>
-        </jet-dialog-modal>
+
     </app-layout>
+    <!-- Room History Modal-->
+    <room-history-component
+        v-if="showRoomHistory"
+        :room_history="room.room_history"
+        @closed="closeRoomHistoryModal"
+    />
 </template>
 
 <script>
@@ -895,6 +872,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import AddButton from "@/Layouts/Components/AddButton";
+import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -955,7 +933,8 @@ export default {
         ListboxOptions,
         CalendarComponent,
         AddButton,
-        ChevronRightIcon
+        ChevronRightIcon,
+        RoomHistoryComponent
     },
     computed: {
         eventTypeFilters: function () {
@@ -997,6 +976,10 @@ export default {
                 name: '',
                 description: '',
                 temporary: false,
+                room_admins: this.room.room_admins,
+                room_categories: this.roomCategoryIds,
+                room_attributes: this.roomAttributeIds,
+                adjoining_rooms: this.adjoiningRoomIds,
                 start_date: null,
                 start_date_dt_local: null,
                 end_date: null,

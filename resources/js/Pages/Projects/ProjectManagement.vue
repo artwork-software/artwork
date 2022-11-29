@@ -52,7 +52,7 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <inputComponent v-model="this.project_query" placeholder="Suche nach Projekten" />
+                                <inputComponent v-model="this.project_query" placeholder="Suche nach Projekten"/>
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
@@ -222,30 +222,30 @@
                         <div
                             v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin"
                             class="mb-12 -mt-2 text-secondary flex items-center">
+                            <div v-if="project.project_history.length" class="flex items-center">
                             <span class=" xsLight">
                                   zuletzt geändert:
                             </span>
-                            <div class="flex items-center" v-if="project.project_history.length !== 0">
 
-                                <img
-                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
-                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
-                                    :alt="project.project_history[project.project_history.length -1].user.name"
-                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip
-                                    :user="project.project_history[project.project_history.length -1].user"/>
-                                <span class="ml-2 xsLight">
-                                    {{ project.project_history[project.project_history.length - 1].created_at }}
+                                <img v-if="project.project_history[0].changes[0].changed_by"
+                                     :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                                     :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                                     :alt="project.project_history[0].changes[0].changed_by?.first_name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
+                                             :user="project.project_history[0].changes[0].changed_by"/>
+                                <span class="ml-2 subpixel-antialiased">
+                                    {{ project.project_history[0].created_at }}
                                 </span>
-                                <button class="ml-4 flex items-center cursor-pointer xsLight"
+                                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
                                         @click="openProjectHistoryModal(project.project_history)">
                                     <ChevronRightIcon
-                                        class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
+                                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
                                         aria-hidden="true"/>
                                     Verlauf ansehen
                                 </button>
                             </div>
-                            <div v-else class="ml-2 text-secondary subpixel-antialiased">
+                            <div v-else class="xsLight">
                                 Noch kein Verlauf verfügbar
                             </div>
 
@@ -414,36 +414,34 @@
                             </div>
                         </div>
                         <div
-                            v-if="this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin"
+                            v-if="(this.$page.props.can.view_projects || this.$page.props.can.admin_projects || this.$page.props.is_admin) && project.project_history"
                             class="mb-12 -mt-2 text-secondary flex items-center">
                             <span class=" text-xs subpixel-antialiased">
                                   zuletzt geändert:
                             </span>
-                            <div class="flex items-center" v-if="project.project_history.length !== 0">
-
-                                <img
-                                    :data-tooltip-target="project.project_history[project.project_history.length -1].user.id"
-                                    :src="project.project_history[project.project_history.length -1].user.profile_photo_url"
-                                    :alt="project.project_history[project.project_history.length -1].user.name"
-                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip
-                                    :user="project.project_history[project.project_history.length -1].user"/>
-                                <span class="ml-2 text-xs subpixel-antialiased">
-                                    {{ project.project_history[project.project_history.length - 1].created_at }}
-                                </span>
-                                <button class="ml-4 text-xs subpixel-antialiased flex items-center cursor-pointer"
-                                        @click="openProjectHistoryModal(project.project_history)">
-                                    <ChevronRightIcon
-                                        class="-mr-0.5 h-4 w-4  text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Verlauf ansehen
-                                </button>
-                            </div>
-                            <div v-else class="ml-2 text-secondary subpixel-antialiased">
-                                Noch kein Verlauf verfügbar
-                            </div>
-
+                            <img v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                 :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                                 :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                                 :alt="project.project_history[0].changes[0].changed_by?.first_name"
+                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                         :user="project.project_history[0].changes[0].changed_by"/>
+                            <span class="ml-2 subpixel-antialiased">
+                                {{ project.project_history[0].created_at }}
+                            </span>
+                            <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
+                                    @click="openProjectHistoryModal(project.project_history)">
+                                <ChevronRightIcon
+                                    class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
+                                    aria-hidden="true"/>
+                                Verlauf ansehen
+                            </button>
                         </div>
+                        <div v-else class="ml-2 text-secondary subpixel-antialiased">
+                            Noch kein Verlauf verfügbar
+                        </div>
+
+
                     </div>
                 </div>
 
@@ -598,13 +596,18 @@
                                 {{ historyItem.created_at }}:
                             </span>
                             <div class="flex w-full">
-                                <img :data-tooltip-target="historyItem.user.id"
-                                     :src="historyItem.user.profile_photo_url"
-                                     :alt="historyItem.user.name"
+                                <img v-if="historyItem.changes[0].changed_by"
+                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                     :alt="historyItem.changes[0].changed_by?.first_name"
                                      class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="historyItem.user"/>
+                                <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                             :user="historyItem.changes[0].changed_by"/>
+                                <div v-else class="xsLight ml-3">
+                                    gelöschte Nutzer:in
+                                </div>
                                 <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.description }}
+                                    {{ historyItem.changes[0].message }}
                                 </div>
                             </div>
                         </div>
@@ -745,7 +748,7 @@ export default defineComponent({
             this.openSuccessModal2();
         },
         getEditHref(project) {
-            return route('projects.show', {project: project.id, openTab:'calendar'});
+            return route('projects.show', {project: project.id, openTab: 'calendar'});
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

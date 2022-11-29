@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
@@ -35,6 +36,7 @@ class ProjectController extends Controller
     // init empty notification controller
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -45,6 +47,7 @@ class ProjectController extends Controller
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
+        $this->history = new HistoryController('App\Models\Project');
     }
 
     /**
@@ -130,7 +133,7 @@ class ProjectController extends Controller
      *
      * @param Request $request
      */
-    public function store(StoreProjectRequest $request, HistoryService $historyService)
+    public function store(StoreProjectRequest $request)
     {
         if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -150,7 +153,6 @@ class ProjectController extends Controller
             'number_of_participants' => $request->number_of_participants,
             'cost_center' => $request->cost_center,
         ]);
-        $historyService->projectUpdated($project);
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
 
@@ -244,7 +246,7 @@ class ProjectController extends Controller
      * @param  Project  $project
      * @return JsonResponse|RedirectResponse
      */
-    public function update(UpdateProjectRequest $request, Project $project, HistoryService $historyService)
+    public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
 
@@ -255,17 +257,17 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        // Get project admin and manager before update
-        $adminIdsBefore = [];
-        $managerIdsBefore = [];
         $projectAdminsBefore = $project->adminUsers()->get();
         $projectManagerBefore = $project->managerUsers()->get();
-        foreach ($projectAdminsBefore as $adminBefore){
-            $adminIdsBefore[] = $adminBefore->id;
-        }
-        foreach ($projectManagerBefore as $managerBefore){
-            $managerIdsBefore[] = $managerBefore->id;
-        }
+        $projectUsers = $project->users()->get();
+        $oldProjectDepartments = $project->departments()->get();
+
+        $oldProjectDescription = $project->description;
+        $oldProjectName = $project->name;
+        $oldProjectCategories = $project->categories()->get();
+        $oldProjectGenres = $project->genres()->get();
+        $oldProjectSectors = $project->sectors()->get();
+        $oldProjectCostCenter = $project->cost_center;
 
         $project->fill($update_properties);
 
@@ -277,39 +279,269 @@ class ProjectController extends Controller
         $project->categories()->sync($request->projectCategoryIds);
         $project->genres()->sync($request->projectGenreIds);
         $project->sectors()->sync($request->projectSectorIds);
-        //$historyService->updateHistory($project,'Eigenschaften angepasst.');
-        //$historyService->projectUpdated($project);
 
-        // Get and check project admins and managers after update
-        $adminIdsAfter = [];
+        $newProjectDescription = $project->description;
+        $newProjectName = $project->name;
+        $newProjectCategories = $project->categories()->get();
+
+        $newProjectDepartments = $project->departments()->get();
         $projectAdminsAfter = $project->adminUsers()->get();
-        $managerIdsAfter = [];
+        $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
+        $newProjectGenres = $project->genres()->get();
+        $newProjectSectors = $project->sectors()->get();
+        $newProjectCostCenter = $project->cost_center;
 
+        // history functions
+        $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
+        $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
+        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
+        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
+        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
+        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
+        $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
+
+        // Get and check project admins, managers and users after update
+        $this->createNotificationProjectMemberChanges($project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter);
+
+        $scheduling = new SchedulingController();
+        $projectId = $project->id;
+        foreach($project->users->all() as $user ){
+            $scheduling->create($user->id, 'PROJECT', $projectId);
+        }
+        return Redirect::back();
+    }
+
+    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
+    {
+        if(strlen($newCostCenter) === 0 || $oldCostCenter !== null){
+            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
+        }
+        if($oldCostCenter === null && $newCostCenter !== null){
+            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
+        }
+        if($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && strlen($newCostCenter) !== null){
+            $this->history->createHistory($projectId, 'Kostenträger geändert');
+        }
+    }
+
+    private function checkProjectSectorChanges($projectId, $oldSectors, $newSectors): void
+    {
+        $oldSectorIds = [];
+        $oldSectorNames = [];
+        $newSectorIds = [];
+
+        foreach ($oldSectors as $oldSector){
+            $oldSectorIds[] = $oldSector->id;
+            $oldSectorNames[$oldSector->id] = $oldSector->name;
+        }
+
+        foreach ($newSectors as $newSector){
+            $newSectorIds[] = $newSector->id;
+            if(!in_array($newSector->id, $oldSectorIds)){
+                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldSectorIds as $oldSectorId){
+            if(!in_array($oldSectorId, $newSectorIds)){
+                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
+            }
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldGenres
+     * @param $newGenres
+     * @return void
+     */
+    private function checkProjectGenreChanges($projectId, $oldGenres, $newGenres): void
+    {
+        $oldGenreIds = [];
+        $oldGenreNames = [];
+        $newGenreIds = [];
+
+        foreach ($oldGenres as $oldGenre){
+            $oldGenreIds[] = $oldGenre->id;
+            $oldGenreNames[$oldGenre->id] = $oldGenre->name;
+        }
+
+        foreach ($newGenres as $newGenre){
+            $newGenreIds[] = $newGenre->id;
+            if(!in_array($newGenre->id, $oldGenreIds)){
+                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldGenreIds as $oldGenreId){
+            if(!in_array($oldGenreId, $newGenreIds)){
+                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht');
+            }
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldCategories
+     * @param $newCategories
+     * @return void
+     */
+    private function checkProjectCategoryChanges($projectId, $oldCategories, $newCategories): void
+    {
+        $oldCategoryIds = [];
+        $oldCategoryNames = [];
+        $newCategoryIds = [];
+
+        foreach ($oldCategories as $oldCategory){
+            $oldCategoryIds[] = $oldCategory->id;
+            $oldCategoryNames[$oldCategory->id] = $oldCategory->name;
+        }
+
+        foreach ($newCategories as $newCategory){
+            $newCategoryIds[] = $newCategory->id;
+            if(!in_array($newCategory->id, $oldCategoryIds)){
+                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldCategoryIds as $oldCategoryId){
+            if(!in_array($oldCategoryId, $newCategoryIds)){
+                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht');
+            }
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldName
+     * @param $newName
+     * @return void
+     */
+    private function checkProjectNameChanges($projectId, $oldName, $newName): void
+    {
+        if($oldName !== $newName){
+            $this->history->createHistory($projectId, 'Projektname geändert');
+        }
+    }
+
+    /**
+     * @param $projectId
+     * @param $oldDepartments
+     * @param $newDepartments
+     * @return void
+     */
+    private function checkDepartmentChanges($projectId, $oldDepartments, $newDepartments): void
+    {
+        $oldDepartmentIds = [];
+        $newDepartmentIds = [];
+        $oldDepartmentNames = [];
+        foreach ($oldDepartments as $oldDepartment){
+            $oldDepartmentIds[] = $oldDepartment->id;
+            $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
+        }
+
+        foreach ($newDepartments as $newDepartment) {
+            $newDepartmentIds[] = $newDepartment->id;
+            if(!in_array($newDepartment->id, $oldDepartmentIds)){
+                $this->history->createHistory($projectId, 'Projektteam ' . $newDepartment->name . ' hinzugefügt');
+            }
+        }
+
+        foreach ($oldDepartmentIds as $oldDepartmentId){
+            if(!in_array($oldDepartmentId, $newDepartmentIds)){
+                $this->history->createHistory($projectId, 'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt');
+            }
+        }
+    }
+
+    private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
+    {
+        if(strlen($newDescription) === null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht');
+        }
+        if($oldDescription === null && $newDescription !== null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt');
+        }
+        if($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null){
+            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert');
+        }
+    }
+
+    /**
+     * @param Project $project
+     * @param $projectAdminsBefore
+     * @param $projectManagerBefore
+     * @param $projectUsers
+     * @param $projectAdminsAfter
+     * @param $projectUsersAfter
+     * @param $projectManagerAfter
+     * @return void
+     */
+    private function createNotificationProjectMemberChanges(Project $project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter): void
+    {
+        $userIdsBefore = [];
+        $adminIdsBefore = [];
+        $managerIdsBefore = [];
+        $userIdsAfter = [];
+        $managerIdsAfter = [];
+        $adminIdsAfter = [];
+        foreach ($projectUsers as $projectUser){
+            $userIdsBefore[$projectUser->id] = $projectUser->id;
+        }
+        foreach ($projectAdminsBefore as $adminBefore){
+            $adminIdsBefore[$adminBefore->id] = $adminBefore->id;
+            if(in_array($adminBefore->id, $userIdsBefore)){
+                unset($userIdsBefore[$adminBefore->id]);
+            }
+        }
+        foreach ($projectManagerBefore as $managerBefore){
+            $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
+            if(in_array($managerBefore->id, $userIdsBefore)){
+                unset($userIdsBefore[$managerBefore->id]);
+            }
+        }
+        foreach ($projectUsersAfter as $projectUserAfter){
+            $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
+        }
         foreach ($projectAdminsAfter as $adminAfter){
-            $adminIdsAfter[] = $adminAfter->id;
+            $adminIdsAfter[$adminAfter->id] = $adminAfter->id;
             // if added a new project admin, send notification to this user
             if(!in_array($adminAfter->id, $adminIdsBefore)){
                 $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($adminAfter, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($adminAfter, $this->notificationData, $broadcastMessage);
+            }
+            if(in_array($adminAfter->id, $userIdsAfter)){
+                unset($userIdsAfter[$adminAfter->id]);
             }
         }
-
         foreach ($projectManagerAfter as $managerAfter){
-            $managerIdsAfter[] = $managerAfter->id;
+            $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if(!in_array($managerAfter->id, $managerIdsBefore)){
                 $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($managerAfter, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($managerAfter, $this->notificationData, $broadcastMessage);
+            }
+            if(in_array($managerAfter->id, $userIdsAfter)){
+                unset($userIdsAfter[$managerAfter->id]);
             }
         }
-
         // check if user remove as project admin
         foreach ($adminIdsBefore as $adminBefore){
             if(!in_array($adminBefore, $adminIdsAfter)){
@@ -318,10 +550,14 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
-
         // check if user remove as project manager
         foreach ($managerIdsBefore as $managerBefore){
             if(!in_array($managerBefore, $managerIdsAfter)){
@@ -330,17 +566,44 @@ class ProjectController extends Controller
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
                 $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $this->notificationController->create($user, $this->notificationData);
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'error',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
-
-        $scheduling = new SchedulingController();
-        $projectId = $project->id;
-        foreach($project->users->all() as $user ){
-            $scheduling->create($user->id, 'PROJECT', $projectId);
+        foreach ($userIdsAfter as $userIdAfter){
+            if(!in_array($userIdAfter, $userIdsBefore)){
+                $user = User::find($userIdAfter);
+                $this->notificationData->title = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
+                $this->notificationData->project->id = $project->id;
+                $this->notificationData->project->title = $project->name;
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            }
         }
-
-        return Redirect::back();
+        foreach ($userIdsBefore as $userIdBefore){
+            if(!in_array($userIdBefore, $userIdsAfter)){
+                $user = User::find($userIdBefore);
+                $this->notificationData->title = 'Du wurdest aus ' . $project->name . ' gelöscht';
+                $this->notificationData->project->id = $project->id;
+                $this->notificationData->project->title = $project->name;
+                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            }
+        }
     }
 
     /**

@@ -26,6 +26,7 @@ class TaskController extends Controller
 {
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
+    protected ?HistoryController $history = null;
 
     public function __construct()
     {
@@ -93,11 +94,38 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
-            $taskScheduling = new SchedulingController();
-            $taskScheduling->create(Auth::id(), 'TASK');
+            $this->history = new HistoryController('App\Models\Project');
+            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
+            $this->createNotificationForAllChecklistUser($checklist);
             return Redirect::back()->with('success', 'Task created.');
         } else {
             return response()->json(['error' => 'Not authorized to create tasks on this checklist.'], 403);
+        }
+
+
+    }
+
+    /**
+     * @param Checklist $checklist
+     * @return void
+     */
+    private function createNotificationForAllChecklistUser(Checklist $checklist): void
+    {
+        $taskScheduling = new SchedulingController();
+        $uniqueTaskUsers = [];
+        if($checklist->user_id === null){
+            $checklistDepartments = $checklist->departments()->get();
+            foreach ($checklistDepartments as $checklistDepartment){
+                $departmentUsers = $checklistDepartment->users()->get();
+                foreach ($departmentUsers as $departmentUser){
+                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
+                }
+            }
+            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+                $taskScheduling->create($uniqueTaskUser, 'TASK');
+            }
+        } else {
+            $taskScheduling->create(Auth::id(), 'TASK');
         }
     }
 
@@ -131,10 +159,9 @@ class TaskController extends Controller
     /**
      * @param Request $request
      * @param Task $task
-     * @param HistoryService $historyService
      * @return RedirectResponse
      */
-    public function update(Request $request, Task $task, HistoryService $historyService)
+    public function update(Request $request, Task $task)
     {
 
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
@@ -149,19 +176,41 @@ class TaskController extends Controller
         }
 
         $task->fill($update_properties);
-        $historyService->taskUpdated($task);
+
         $task->save();
 
-        $departments = $task->checklistDepartments()->get();
+        $checklist = $task->checklist()->first();
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
-        foreach ($departments as $department){
-            foreach ($department->users as $user){
-                $scheduling = new SchedulingController();
-                $scheduling->create($user->id, 'TASK_CHANGES', null, $task->id);
-            }
-        }
+        $this->createNotificationUpdateTask($task);
 
         return Redirect::back()->with('success', 'Task updated');
+    }
+
+    /**
+     * @param Task $task
+     * @return void
+     */
+    private function createNotificationUpdateTask(Task $task): void
+    {
+        $taskUser = $task->checklist()->first()->user_id;
+        $departments = $task->checklistDepartments()->get();
+        $taskScheduling = new SchedulingController();
+        $uniqueTaskUsers = [];
+        if($taskUser === null){
+            foreach ($departments as $checklistDepartment){
+                $departmentUsers = $checklistDepartment->users()->get();
+                foreach ($departmentUsers as $departmentUser){
+                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
+                }
+            }
+            foreach ($uniqueTaskUsers as $uniqueTaskUser){
+                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', null, $task->id);
+            }
+        } else {
+            $taskScheduling->create($taskUser, 'TASK_CHANGES', null, $task->id);
+        }
     }
 
     /**
@@ -186,11 +235,12 @@ class TaskController extends Controller
      * @param HistoryService $historyService
      * @return RedirectResponse
      */
-    public function destroy(Task $task, HistoryService $historyService)
+    public function destroy(Task $task)
     {
+        $checklist = $task->checklist()->first();
+        $this->history = new HistoryController('App\Models\Project');
+        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
         $task->delete();
-        $historyService->taskUpdated($task);
-
         return Redirect::back()->with('success', 'Task deleted');
     }
 }

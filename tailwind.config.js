@@ -31,7 +31,8 @@ module.exports = {
                 tagBg: 'rgba(48,23,173,0.1)',
                 tag: 'rgba(48,23,173,0.3)',
                 tagText: '#3017AD',
-                backgroundBlue: '#3017AD34'
+                backgroundBlue: '#3017AD34',
+                lightBackgroundGray: '#F4F4F3'
             },
             fontSize: {
                 header: '30px'

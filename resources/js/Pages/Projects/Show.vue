@@ -67,17 +67,19 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center" v-if="project.project_history.lenght">
                     <div>
                         zuletzt geändert:
                     </div>
-                    <img :data-tooltip-target="project.project_history[0].user.id"
-                         :src="project.project_history[0].user.profile_photo_url"
-                         :alt="project.project_history[0].user.name"
+                    <img v-if="project.project_history[0]?.changes[0]?.changed_by"
+                         :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                         :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                         :alt="project.project_history[0].changes[0].changed_by?.first_name"
                          class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip :user="project.project_history[0].user"/>
+                    <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                 :user="project.project_history[0].changes[0].changed_by"/>
                     <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0].created_at }}
+                        {{ project.project_history[0]?.created_at }}
                     </span>
                     <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
                             @click="openProjectHistoryModal()">
@@ -137,7 +139,7 @@
                 <div class="flex flex-wrap w-full">
                     <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
                     <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
-                        <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
+                        <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                              class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
                         <UserTooltip :user="user"/>
                     </div>
@@ -187,7 +189,7 @@
                             </div>
                         </div>
                         <div class="flex -mr-3 mt-2" v-for="user in projectMembers.slice(0,5)">
-                            <img :data-tooltip-target="user.id" :src="user.profile_photo_url" :alt="user.name"
+                            <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                                  class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
                             <UserTooltip :user="user"/>
                         </div>
@@ -211,10 +213,10 @@
                                             <Link href="#"
                                                   :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                 <img class="h-9 w-9 rounded-full"
-                                                     :src="user.profile_photo_url"
+                                                     :src="user?.profile_photo_url"
                                                      alt=""/>
                                                 <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
+                                                                {{ user?.first_name }} {{ user?.last_name }}
                                                             </span>
                                             </Link>
                                         </MenuItem>
@@ -271,7 +273,7 @@
                                     <!-- Div einer Checkliste -->
                                     <div v-for="checklist in project.public_checklists"
                                          class="flex w-full bg-white my-2 inputMain">
-                                        {{checklist.user_id}}
+                                        {{ checklist.user_id }}
                                         <button class="bg-buttonBlue flex"
                                                 @click="changeChecklistStatus(checklist)">
                                             <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
@@ -279,10 +281,12 @@
                                             <ChevronDownIcon v-else
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                         </button>
-                                        <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''" class="flex w-full ml-4 flex-wrap p-4">
+                                        <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''"
+                                             class="flex w-full ml-4 flex-wrap p-4">
                                             <div class="flex justify-between w-full my-auto items-center">
                                                 <div>
-                                                    <span class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
+                                                    <span
+                                                        class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
                                                         {{ checklist.name }}
                                                     </span>
                                                 </div>
@@ -791,10 +795,10 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img :data-tooltip-target="comment.user"
+                                        <img v-if="comment.user" :data-tooltip-target="comment.user"
                                              :src="comment.user.profile_photo_url" :alt="comment.user.name"
                                              class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="comment.user"/>
+                                        <UserTooltip v-if="comment.user" :user="comment.user"/>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ comment.created_at }}
@@ -1534,15 +1538,18 @@
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                            <div class="flex w-full">
-                                <img :data-tooltip-target="historyItem.user.id"
-                                     :src="historyItem.user.profile_photo_url"
-                                     :alt="historyItem.user.name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip :user="historyItem.user"/>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.description }}
-                                </div>
+                            <img v-if="historyItem.changes[0].changed_by"
+                                 :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                 :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                 :alt="historyItem.changes[0].changed_by?.first_name"
+                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                            <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                         :user="historyItem.changes[0].changed_by"/>
+                            <div v-else class="xsLight ml-3">
+                                gelöschte Nutzer:in
+                            </div>
+                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                {{ historyItem.changes[0].message }}
                             </div>
                         </div>
                     </div>
@@ -1874,15 +1881,13 @@ export default {
                 done: false,
                 user_id: this.$page.props.user.id
             }),
-            attributeForm: useForm({
-
-            }),
+            attributeForm: useForm({}),
         }
     },
     methods: {
         formatDate(date, time) {
             if (date === null || time === null) return null;
-            return new Date((new Date(date + ' ' + time)).getTime()- ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
+            return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
         },
         deleteCategoryFromProject(category) {
             this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
@@ -1921,12 +1926,18 @@ export default {
 
                 openedChecklists.push(checklist.id)
 
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists},{preserveState: true, preserveScroll: true});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists}, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
             } else {
                 const filteredList = this.opened_checklists.filter(function (value) {
                     return value !== checklist.id;
                 })
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList},{preserveState: true, preserveScroll: true});
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList}, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
             }
         },
         selectNewFiles() {
@@ -2151,8 +2162,8 @@ export default {
             this.addingTask = false;
         },
         addTask() {
-            if(this.taskForm.deadlineDate){
-                if(this.taskForm.deadlineTime === null){
+            if (this.taskForm.deadlineDate) {
+                if (this.taskForm.deadlineTime === null) {
                     this.taskForm.deadlineTime = '00:00';
                 }
                 this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
@@ -2162,7 +2173,10 @@ export default {
             this.closeAddTaskModal();
         },
         editTask() {
-            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},),{preserveState: true, preserveScroll: true});
+            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},), {
+                preserveState: true,
+                preserveScroll: true
+            });
             this.closeEditTaskModal();
         },
         openEditTaskModal(task) {
@@ -2240,13 +2254,19 @@ export default {
         deleteChecklistFromProject() {
             if (this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
                 this.project.public_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {preserveState: true, preserveScroll: true});
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
                 this.closeDeleteChecklistModal();
                 return;
             }
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
                 this.project.private_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {preserveState: true, preserveScroll: true});
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
                 this.closeDeleteChecklistModal();
             }
         },
@@ -2286,7 +2306,10 @@ export default {
                 this.editChecklistForm.user_id = null;
 
             }
-            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id},{preserveState: true, preserveScroll: true}));
+            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}, {
+                preserveState: true,
+                preserveScroll: true
+            }));
             this.closeEditChecklistModal();
         },
         createTemplateFromChecklist(checklist) {

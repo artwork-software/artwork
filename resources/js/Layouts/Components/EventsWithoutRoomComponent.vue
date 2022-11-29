@@ -370,7 +370,7 @@
                                 <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                         @click="updateOrCreateEvent(event)">
                                     {{
-                                        (isAdmin || selectedRoom.everyone_can_book) ? 'Speichern' : 'Belegung anfragen'
+                                        (isAdmin || selectedRoom?.everyone_can_book) ? 'Speichern' : 'Belegung anfragen'
                                     }}
                                 </button>
                             </div>

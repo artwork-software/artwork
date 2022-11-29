@@ -79,7 +79,6 @@ class NotificationController extends Controller
      */
     public function create($user, object $notificationData, ?array $broadcastMessage = []): void
     {
-
         $notificationBody = [];
         switch ($notificationData->type) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:

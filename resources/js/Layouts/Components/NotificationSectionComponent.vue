@@ -49,7 +49,7 @@
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
                                 </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
+                                <div class="ml-6 mt-1 flex xxsLight my-auto"
                                      v-if="notification.type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
                                     {{ this.formatDate(notification.created_at) }}
                                     von
@@ -181,7 +181,7 @@
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
                                 </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
+                                <div class="ml-6 mt-1 flex xxsLight my-auto"
                                      v-if="notification.type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
                                     {{ this.formatDate(notification.created_at) }}
                                     von
@@ -206,7 +206,7 @@
                             </div>
                             <!-- 2nd Row of Notification-->
                             <NotificationEventInfoRow
-                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.data.type === 'NOTIFICATION_UPSERT_ROOM_REQUEST' || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
+                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.type.indexOf('RoomRequestNotification') !== -1 || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
                                 :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
                                 :projects="projects"
                                 :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
@@ -226,7 +226,7 @@
                             </div>
                             <div class="mt-1.5 flex xxsLight my-auto"
                                  v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED'">
-                                <div v-if="notification.data.title.indexOf('Änderungen an') !== -1"
+                                <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
                                      class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen

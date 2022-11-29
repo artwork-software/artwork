@@ -337,7 +337,7 @@
                 <div class="py-1" v-if="canEdit">
                     <Listbox as="div" v-model="selectedRoom" id="room" v-if="canEdit && selectedRoom">
                         <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                            <div class="flex-grow text-left xsDark">
+                            <div class="flex-grow flex text-left xsDark">
                                 {{ selectedRoom?.name }}
                             </div>
                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>

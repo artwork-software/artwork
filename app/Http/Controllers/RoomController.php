@@ -317,6 +317,5 @@ class RoomController extends Controller
 
         return $collisions;
     }
-}
 
 }

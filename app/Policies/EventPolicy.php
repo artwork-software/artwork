@@ -23,7 +23,7 @@ class EventPolicy
             return true;
         }
 
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() ?? false;
+        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() || $event->creator?->id === $user->id ?? false;
     }
 
     public function delete(User $user, Event $event)
@@ -31,7 +31,6 @@ class EventPolicy
         if ($user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN])) {
             return true;
         }
-
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() ?? false;
+        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() || $event->creator?->id === $user->id ?? false;
     }
 }

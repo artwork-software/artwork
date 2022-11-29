@@ -416,6 +416,7 @@ export default {
             canEdit: false,
             deleteComponentVisible: false,
             eventToDelete: null,
+            isOption: false,
         }
     },
 
@@ -581,6 +582,10 @@ export default {
          */
         async updateOrCreateEvent(event) {
 
+            if(this.selectedRoom?.everyone_can_book || this.isAdmin){
+                this.isOption = true;
+            }
+
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
                 .then(() => this.closeModal())
@@ -608,6 +613,7 @@ export default {
                 description: event.description,
                 audience: event.audience,
                 isLoud: event.is_loud,
+                isOption:this.isOption,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.event_type_id)?.individual_name,
                 projectId: event.project_id,
                 projectName: event.creatingProject ? event.projectName : '',

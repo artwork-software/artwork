@@ -129,7 +129,7 @@
                             <AddButton @click="openEventWithoutRoomComponent(notification.data.event, notification)"
                                        class="flex px-12"
                                        text="Anfrage ändern" mode="modal"/>
-                            <AddButton @click="openDeleteEventModal(notification.data.event)" type="secondary"
+                            <AddButton @click="openDeleteEventModal(notification.data.event, notification)" type="secondary"
                                        text="Termin löschen"></AddButton>
                         </div>
                     </div>
@@ -350,7 +350,6 @@ export default  {
             answerRequestType: '',
             showRoomHistory: false,
             wantedHistory: null,
-            notification: null,
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
             creatorOfRequest: null,
@@ -385,7 +384,7 @@ export default  {
         },
         openEventWithoutRoomComponent(event,notification) {
             this.eventToEdit = event;
-            this.notification = notification;
+            this.notificationToDelete = notification;
             this.showEventWithoutRoomComponent = true;
         },
         onEventWithoutRoomComponentClose() {
@@ -393,8 +392,9 @@ export default  {
             this.deleteNotification();
 
         },
-        openDeleteEventModal(event) {
+        openDeleteEventModal(event, notification) {
             this.eventToDelete = event;
+            this.notificationToDelete = notification;
             this.deleteComponentVisible = true;
         },
         setOnRead(notificationId) {
@@ -412,13 +412,13 @@ export default  {
             this.requestToAnswer = event;
             this.answerRequestType = type;
             this.answerRequestModalVisible = true;
-            this.notification = notification;
+            this.notificationToDelete = notification;
         },
         openAnswerRequestWithRoomChangeModal(notification, event, creator) {
             this.creatorOfRequest = creator;
             this.requestToAnswerWithRoomChange = event;
             this.answerRequestWithRoomChangeVisible = true;
-            this.notification = notification
+            this.notificationToDelete = notification
         },
         async afterRequestAnswer(bool) {
             if (!bool) {
@@ -451,12 +451,13 @@ export default  {
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
+                .then(() => this.deleteComponentVisible = false)
         },
         async deleteNotification() {
-            const notification = this.notification
+            const notification = this.notificationToDelete
             await axios.delete(`/notifications/${notification.id}/`)
                 .catch(err => console.log(err))
-            this.notification = null
+            this.notificationToDelete = null
         },
 
         eventData(event) {

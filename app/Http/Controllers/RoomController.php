@@ -42,7 +42,8 @@ class RoomController extends Controller
      * @param Request $request
      * @return array
      */
-    public function getAllDayFree(Request $request): array {
+    public function getAllDayFree(Request $request): array
+    {
 
         $period = CarbonPeriod::create(Carbon::parse($request->get('start'))->addHours(2), Carbon::parse($request->get('end')));
 
@@ -84,7 +85,7 @@ class RoomController extends Controller
         ]);
 
         return [
-          'rooms' => $rooms
+            'rooms' => $rooms
         ];
     }
 
@@ -203,8 +204,8 @@ class RoomController extends Controller
 
         $scheduling = new SchedulingController();
         $roomId = $room->id;
-        foreach($room->room_admins()->get() as $user){
-           $scheduling->create($user->id, 'ROOM_CHANGES', null, null, null, $roomId);
+        foreach ($room->room_admins()->get() as $user) {
+            $scheduling->create($user->id, 'ROOM_CHANGES', null, null, null, $roomId);
         }
 
         return Redirect::back()->with('success', 'Room updated');
@@ -251,7 +252,7 @@ class RoomController extends Controller
     public function getTrashed(): \Inertia\Response|\Inertia\ResponseFactory
     {
         return inertia('Trash/Rooms', [
-            'trashed_rooms' => Area::all()->map(fn ($area) => [
+            'trashed_rooms' => Area::all()->map(fn($area) => [
                 'id' => $area->id,
                 'name' => $area->name,
                 'rooms' => RoomIndexWithoutEventsResource::collection($area->trashed_rooms)->resolve(),
@@ -305,7 +306,7 @@ class RoomController extends Controller
 
         $rooms = Room::all();
         $collisions = [];
-        foreach ($rooms as $room){
+        foreach ($rooms as $room) {
             $collisions[$room->id] = [
                 Event::query()
                     ->whereOccursBetween($startDate, $endDate, true)
@@ -316,4 +317,5 @@ class RoomController extends Controller
 
         return $collisions;
     }
+}
 

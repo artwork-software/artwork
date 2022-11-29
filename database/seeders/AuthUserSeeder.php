@@ -74,6 +74,17 @@ class AuthUserSeeder extends Seeder
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
 
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
+
+        }
+
         $user->assignRole('user');
 
         $settings = app(GeneralSettings::class);

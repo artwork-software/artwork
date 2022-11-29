@@ -35,18 +35,18 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_ROOM_REQUEST,
             self::NOTIFICATION_CONFLICT,
             self::NOTIFICATION_EVENT_CHANGED,
-            self::NOTIFICATION_LOUD_ADJOINING_EVENT => "events",
+            self::NOTIFICATION_LOUD_ADJOINING_EVENT => "EVENTS",
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
-            self::NOTIFICATION_ROOM_CHANGED => "rooms",
+            self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
 
             self::NOTIFICATION_NEW_TASK,
             self::NOTIFICATION_TASK_REMINDER,
-            self::NOTIFICATION_TASK_CHANGED => "tasks",
+            self::NOTIFICATION_TASK_CHANGED => "TASKS",
 
             self::NOTIFICATION_PROJECT,
-            self::NOTIFICATION_TEAM => "projects"
+            self::NOTIFICATION_TEAM => "PROJECTS"
         };
     }
 

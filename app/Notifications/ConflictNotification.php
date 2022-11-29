@@ -71,6 +71,7 @@ class ConflictNotification extends Notification implements ShouldBroadcast
      */
     public function toArray($notifiable)
     {
+
         return $this->notificationData;
     }
 

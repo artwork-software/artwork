@@ -41,7 +41,10 @@
                         <div class="flex-col flex my-auto w-full">
                             <!-- 1st Row of Notification -->
                             <div class="flex w-full">
-                                <div class="sDark">
+                                <div class="sDark" v-if="isErrorType(notification.type,notification) && notification.data.title.indexOf('Neue Raumanfrage') !== -1">
+                                    Erinnerung: {{ notification.data.title }}
+                                </div>
+                                <div class="sDark" v-else>
                                     {{ notification.data.title }}
                                 </div>
                                 <div v-if="notification.data.title === 'Termin geändert'"
@@ -109,7 +112,7 @@
                         </div>
                     </div>
                     <div
-                        v-if="isErrorType(notification.type,notification) && notification.type.indexOf('RoomRequestNotification') !== -1"
+                        v-if="notification.type.indexOf('RoomRequestNotification') !== -1"
                         class="flex w-full ml-16 mt-1">
                         <div class="flex" v-if="notification.data.title.indexOf('Neue Raumanfrage') !== -1">
                             <AddButton
@@ -366,13 +369,23 @@ export default  {
     props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name'],
     methods: {
         formatDate(isoDate) {
-            return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
+            if(isoDate){
+                return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
+            }
         },
         isErrorType(type, notification) {
-            if (type.indexOf('RoomRequestNotification') !== -1 && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1) {
+            // TODO: DAS HIER NOCHMAL CHECKEN MIT ISDATESOON
+            if ((type.indexOf('RoomRequestNotification') !== -1 && this.isDateSoon(notification.data.event.start_time)) && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1) {
                 return true;
             }
             return false;
+        },
+        isDateSoon(date){
+            const dateTemp = new Date(date);
+            const threeDaysInMillis = 1000 * 60 * 60 * 24 * 3;
+            const threeDaysFromNow = Date.now() + threeDaysInMillis;
+            return dateTemp < threeDaysFromNow;
+
         },
         openRoomHistoryModal(history){
             this.wantedHistory = history;

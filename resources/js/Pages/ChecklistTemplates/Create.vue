@@ -118,13 +118,12 @@
                                                 v-model="newTaskDescription" rows="3"
                                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                         </div>
-                        <button
-                            :class="[this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="addTaskToTemplate"
-                            :disabled="this.newTaskName === ''">
-                            Hinzufügen
-                        </button>
+                        <AddButton :class="this.newTaskName === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none'"
+                                   class="mt-6 mx-auto items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="addTaskToTemplate"
+                                   :disabled="this.newTaskName === ''"
+                                   text="Hinzufügen" mode="modal"/>
                     </div>
 
                 </div>

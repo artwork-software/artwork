@@ -67,7 +67,7 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center" v-if="project.project_history.lenght">
+                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center" v-if="project.project_history.length">
                     <div>
                         zuletzt geändert:
                     </div>

@@ -12,7 +12,7 @@ class DeadLine extends Command
      *
      * @var string
      */
-    protected $signature = 'deadline:notification';
+    protected $signature = 'app:send-deadline-notification';
 
     /**
      * The console command description.

@@ -36,6 +36,13 @@ To add Models to the index the artisan commands can be used:
 ./vendor/bin/sail artisan scout:import "App\Models\User"
 ```
 
+## Push Notification
+To start the websocket server use this command:
+```shell
+./vendor/bin/sail artisan websockets:serve 
+```
+
+
 ## Debugging
 
 With PHPStorm mind to select the correct Interpreter (laravel.test), install the PEST Plugin and to include 

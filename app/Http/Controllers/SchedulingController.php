@@ -5,18 +5,16 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Models\Checklist;
 use App\Models\Event;
+use App\Models\GlobalNotification;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
-use App\Notifications\SimpleNotification;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Auth;
 use stdClass;
 
 class SchedulingController extends Controller
@@ -319,5 +317,14 @@ class SchedulingController extends Controller
             }
         }
 
+    }
+
+    public function deleteExpiredNotificationForAll(){
+        $notificationForAll = GlobalNotification::all();
+        foreach ($notificationForAll as $notification){
+            if ($notification->expiration_date <= now()){
+                $notification->delete();
+            }
+        }
     }
 }

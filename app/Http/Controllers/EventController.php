@@ -29,6 +29,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
@@ -284,6 +286,11 @@ class EventController extends Controller
         $this->checkDateChanges($event->id, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate);
 
         $this->createEventScheduleNotification($event);
+
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->whereJsonContains("data->event->id", $event->id)
+            ->delete();
 
         return new CalendarEventResource($event);
     }

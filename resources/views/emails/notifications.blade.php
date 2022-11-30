@@ -61,6 +61,7 @@
                 <div class="notification-content">
                     <div class="notification-text">
                         <h2>{{ $body['body']['title'] }}</h2>
+
                         <p>
                             @if($body['body']['type'] === 'ROOM_REQUEST')
                                 {{ \App\Models\Room::find($body['body']['event']['room_id'])->first()->name }} | {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }},
@@ -78,12 +79,12 @@
                                 {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['event']['start_time'])) }} -  {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['event']['end_time'])) }}
                             @endif
                             @if($body['body']['type'] === 'NOTIFICATION_EVENT_CHANGED')
-                                {{ \App\Models\Room::find($body['body']['event']['room_id'])->first()->name }} | {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }},
+                                @if(!empty($body['body']['event']['room_id'])) {{ \App\Models\Room::find($body['body']['event']['room_id'])->first()->name }} | @endif {{ \App\Models\EventType::find($body['body']['event']['event_type_id'])->first()->name }},
                                 {{ $body['body']['event']['eventName'] }} | @if(!empty($body['body']['conflict']['event']['project_id'])) {{ \App\Models\Project::find($body['body']['event']['project_id'])->first()->name }} | @endif
                                 {{ date('d.m.Y H:i', strtotime($body['body']['event']['start_time'])) }} -  {{ date('d.m.Y H:i', strtotime($body['body']['event']['end_time'])) }}
                             @endif
                             @if($body['body']['type'] === 'NOTIFICATION_LOUD_ADJOINING_EVENT')
-                                {{ \App\Models\Room::find($body['body']['conflict']['room_id'])->first()->name }} | {{ \App\Models\EventType::find($body['body']['conflict']['event_type_id'])->first()->name }},
+                                @if(!empty($body['body']['event']['room_id'])) {{ \App\Models\Room::find($body['body']['event']['room_id'])->first()->name }} | @endif {{ \App\Models\EventType::find($body['body']['conflict']['event_type_id'])->first()->name }},
                                 {{ $body['body']['conflict']['eventName'] }} | @if(!empty($body['body']['conflict']['project_id'])) {{ \App\Models\Project::find($body['body']['conflict']['project_id'])->first()->name }} | @endif
                                 {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['start_time'])) }} -  {{ date('d.m.Y H:i', strtotime($body['body']['conflict']['end_time'])) }}
                             @endif

@@ -20,8 +20,8 @@ class CollisionService
      */
     public function getCollision($request): \Illuminate\Database\Eloquent\Builder
     {
-        $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
-        $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
+        $startDate = $request->start;
+        $endDate = $request->end;
 
         return Event::query()
             ->whereDate('start_time', '>=', $startDate)

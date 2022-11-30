@@ -68,7 +68,10 @@ class SendNotificationEmailSummaries extends Command
                 ];
             }
         }
-        Mail::to($user)->send(new NotificationSummary($notificationArray, $user->first_name));
+        if(!empty($notificationArray)){
+            Mail::to($user)->send(new NotificationSummary($notificationArray, $user->first_name));
+        }
+
     }
 
 }

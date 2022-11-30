@@ -314,13 +314,13 @@ class ProjectController extends Controller
 
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
     {
-        if(strlen($newCostCenter) === 0 || $oldCostCenter !== null){
+        if($newCostCenter === null && $oldCostCenter !== null){
             $this->history->createHistory($projectId, 'Kostenträger gelöscht');
         }
         if($oldCostCenter === null && $newCostCenter !== null){
             $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
         }
-        if($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && strlen($newCostCenter) !== null){
+        if($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null){
             $this->history->createHistory($projectId, 'Kostenträger geändert');
         }
     }

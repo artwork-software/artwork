@@ -28,6 +28,7 @@
             align-items: center;
             align-content: center;
             justify-content: center;
+            padding: 5px;
         }
         .email-content {
             padding: 10px;

@@ -6,6 +6,7 @@ use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use App\Builders\EventBuilder;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use DateTimeInterface;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -48,7 +49,6 @@ class Event extends Model
         'id',
     ];
 
-
     protected $casts = [
         'is_loud' => 'boolean',
         'audience' => 'boolean',
@@ -56,6 +56,11 @@ class Event extends Model
         'start_time' => 'datetime',
         'end_time' => 'datetime',
     ];
+
+    public function serializeDate(DateTimeInterface $date)
+    {
+        return $date->format('Y-m-d H:i:s');
+    }
 
     public function event_type()
     {

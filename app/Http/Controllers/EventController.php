@@ -230,6 +230,10 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->whereJsonContains("data->event->id", $event->id)
+            ->delete();
 
         if($request->roomChange){
             $this->notificationData->title = 'Raumanfrage mit Raumänderung bestätigt';
@@ -287,11 +291,6 @@ class EventController extends Controller
 
         $this->createEventScheduleNotification($event);
 
-        DatabaseNotification::query()
-            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
-            ->whereJsonContains("data->event->id", $event->id)
-            ->delete();
-
         return new CalendarEventResource($event);
     }
 
@@ -313,6 +312,11 @@ class EventController extends Controller
 
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->whereJsonContains("data->event->id", $event->id)
+            ->delete();
+
         $event->occupancy_option = false;
         if (!$request->get('accepted')) {
             $this->notificationData->title = 'Raumanfrage abgelehnt';

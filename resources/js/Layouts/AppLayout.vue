@@ -293,7 +293,7 @@ export default {
         },
         closePushNotification(id){
             const pushNotification = document.getElementById(id);
-            pushNotification.remove();
+            pushNotification?.remove();
         }
     },
     mounted() {

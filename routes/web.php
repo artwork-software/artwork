@@ -257,3 +257,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
 });
 
+Route::get('/php-info', function(){
+    echo phpinfo();
+});
+

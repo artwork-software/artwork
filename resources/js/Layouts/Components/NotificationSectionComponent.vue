@@ -128,7 +128,7 @@
                                 type="secondary"
                                 text="Raum ändern"></AddButton>
                         </div>
-                        <div class="flex" v-else>
+                        <div class="flex" v-else-if="notification.data.title.indexOf('Raumanfrage mit Raumänderung bestätigt') === -1">
                             <AddButton @click="openEventWithoutRoomComponent(notification.data.event, notification)"
                                        class="flex px-12"
                                        text="Anfrage ändern" mode="modal"/>

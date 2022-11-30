@@ -230,8 +230,10 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->orWhereJsonContains("data->type", "ROOM_REQUEST")
             ->whereJsonContains("data->event->id", $event->id)
             ->delete();
 
@@ -314,6 +316,7 @@ class EventController extends Controller
     {
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->orWhereJsonContains("data->type", "ROOM_REQUEST")
             ->whereJsonContains("data->event->id", $event->id)
             ->delete();
 

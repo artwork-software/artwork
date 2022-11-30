@@ -62,14 +62,14 @@
                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
                                      v-if="notification.data.title === 'Terminkonflikt'">
                                     Konflikttermin belegt:
-                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
+                                    {{ this.formatDate(notification.data.conflict.event.created_at) }} von
                                     <NotificationUserIcon v-if="notification.data.conflict.created_by"
                                                           :user="notification.data.conflict.created_by"></NotificationUserIcon>
                                 </div>
                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
                                      v-if="notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'">
                                     Termin belegt:
-                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
+                                    {{ this.formatDate(notification.data.conflict.event.created_at) }} von
                                     <NotificationUserIcon v-if="notification.data.created_by"
                                                           :user="notification.data.created_by"></NotificationUserIcon>
                                 </div>
@@ -369,12 +369,13 @@ export default  {
     props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name'],
     methods: {
         formatDate(isoDate) {
-            if(isoDate){
+            if(isoDate.split('T').length > 1){
                 return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
+            }else if(isoDate.split(' ').length > 1){
+                return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
             }
         },
         isErrorType(type, notification) {
-            // TODO: DAS HIER NOCHMAL CHECKEN MIT ISDATESOON
             if ((type.indexOf('RoomRequestNotification') !== -1 && this.isDateSoon(notification.data.event.start_time)) && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1) {
                 return true;
             }
@@ -416,7 +417,7 @@ export default  {
         },
         setAllOnRead(notifications) {
             notifications.forEach((notification) => {
-                if (!this.isErrorType(notification.type, notification) || notification.type.indexOf('RoomRequestNotification') === -1) {
+                if ((!this.isErrorType(notification.type, notification)  || notification.type.indexOf('RoomRequestNotification') === -1) && notification.data.title.indexOf('Neue Raumanfrage') === -1) {
                     this.setOnRead(notification.id);
                 }
             })

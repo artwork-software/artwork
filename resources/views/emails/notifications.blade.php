@@ -96,7 +96,7 @@
         </div>
     @endforeach
 
-    <a href="#" style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem">alle Benachrichtigungen im artwork ansehen</a>
+    <a href="{{ config('app.url') }}" style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem">alle Benachrichtigungen im artwork ansehen</a>
 </div>
 
 

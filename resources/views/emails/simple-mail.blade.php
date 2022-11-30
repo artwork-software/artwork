@@ -50,6 +50,7 @@
                 {{ date('d.m.Y H:i', strtotime($notification['conflict']['start_time'])) }} -  {{ date('d.m.Y H:i', strtotime($notification['conflict']['end_time'])) }}
             @endif
         </p>
+        <a href="{{ config('app.url') }}" style="margin-bottom: 2rem; font-size: 12px; text-decoration: none; color: #3017AD; padding-bottom: 2rem; margin-top: 2rem">alle Benachrichtigungen im artwork ansehen</a>
     </div>
 
 @endcomponent

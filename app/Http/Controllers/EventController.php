@@ -584,16 +584,14 @@ class EventController extends Controller
      */
     private function checkShortDescriptionChanges(int $eventId, $oldDescription, $newDescription): void
     {
-        if (strlen($oldDescription) == 0 && $newDescription > 0){
+        if($newDescription === null && $oldDescription !== null){
+            $this->history->createHistory($eventId, 'Terminnotiz gelöscht');
+        }
+        if($oldDescription === null && $newDescription !== null){
             $this->history->createHistory($eventId, 'Terminnotiz hinzugefügt');
         }
-
-        if($oldDescription !== $newDescription && strlen($oldDescription) > 0 && strlen($newDescription) > 0){
+        if($oldDescription !== $newDescription && $oldDescription !== null && $newDescription !== null){
             $this->history->createHistory($eventId, 'Terminnotiz geändert');
-        }
-
-        if(strlen($newDescription) == 0){
-            $this->history->createHistory($eventId, 'Terminnotiz gelöscht');
         }
     }
 

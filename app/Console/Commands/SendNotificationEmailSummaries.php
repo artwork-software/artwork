@@ -52,14 +52,23 @@ class SendNotificationEmailSummaries extends Command
                return $notification['data']['groupType'];
             });
 
-        //Falls möglich hier noch events hier klein schreiben im Controller
 
-        $this->info($notifications);
-
-        //Name in der Mail bekommst du so
-        $this->info(NotificationGroupEnum::from('events')->title());
-
-        //Mail::to($user)->send(new NotificationSummary($notifications));
+        $notificationArray = [];
+        foreach ($notifications as $notification){
+            $count = 1;
+            foreach ($notification as $notificationBody){
+                $notificationArray[$notificationBody->data['groupType']] = [
+                    'title' => NotificationGroupEnum::from($notificationBody->data['groupType'])->title(),
+                    'count' => $count++,
+                ];
+            }
+            foreach ($notification as $notificationBody){
+                $notificationArray[$notificationBody->data['groupType']]['notifications'][] = [
+                    'body' => $notificationBody->data
+                ];
+            }
+        }
+        Mail::to($user)->send(new NotificationSummary($notificationArray, $user->first_name));
     }
 
 }

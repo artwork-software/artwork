@@ -9,6 +9,7 @@
     <!--<![endif]-->
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <style type="text/css">
         #outlook a {
             padding: 0;
@@ -168,7 +169,7 @@
                                                     <tbody>
                                                     <tr>
                                                         <td style="width:100px;">
-                                                            <img height="auto" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="100" />
+                                                            <img height="auto" src="{{ asset('Svgs/Overlays/illu_team_user.svg') }}" style="border:0;display:block;outline:none;text-decoration:none;height:auto;width:100%;font-size:13px;" width="400" />
                                                         </td>
                                                     </tr>
                                                     </tbody>

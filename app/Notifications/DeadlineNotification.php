@@ -57,9 +57,8 @@ class DeadlineNotification extends Notification implements ShouldBroadcast
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->line('The introduction to the notification.')
-            ->action('Notification Action', url('/'))
-            ->line('Thank you for using our application!');
+            ->subject($this->notificationData['title'])
+            ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
     /**

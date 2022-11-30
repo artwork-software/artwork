@@ -96,13 +96,6 @@
             :projects="this.projects"
             :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
         />
-        <!-- Event löschen Modal -->
-        <confirmation-component
-            v-if="deleteComponentVisible"
-            confirm="Löschen"
-            titel="Termin löschen"
-            :description="'Bist du sicher, dass du den Termin ' + this.eventToDelete.eventName + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
-            @closed="afterConfirm"/>
     </app-layout>
 </template>
 
@@ -149,7 +142,6 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
 import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import NotificationFrequencySettings from "@/Layouts/Components/NotificationFrequencySettings";
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
@@ -200,7 +192,6 @@ export default defineComponent({
         NotificationEventInfoRow,
         NotificationUserIcon,
         EventWithoutRoomNewRequestComponent,
-        ConfirmationComponent,
         AnswerEventRequestComponent,
 
     },
@@ -229,19 +220,6 @@ export default defineComponent({
         onEventWithoutRoomComponentClose() {
             this.showEventWithoutRoomComponent = false;
         },
-        openDeleteEventModal(event) {
-            this.eventToDelete = event;
-            this.deleteComponentVisible = true;
-        },
-        async afterConfirm(bool) {
-            if (!bool) return this.deleteComponentVisible = false;
-
-            // TODO: HIER NOCH NOTIFICATION AUF READ_AT SETZEN
-
-            return await axios
-                .delete(`/events/${this.eventToDelete.id}`)
-                .then(() => this.closeModal());
-        },
     },
     watch: {},
     data() {
@@ -252,7 +230,6 @@ export default defineComponent({
             eventToEdit: null,
             showEventWithoutRoomComponent: false,
             deleteComponentVisible: false,
-            eventToDelete: null,
             answerRequestModalVisible: false,
             requestToAnswer: null,
             answerRequestType: '',

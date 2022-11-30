@@ -673,7 +673,6 @@ class ProjectController extends Controller
         }
 
         //create notification data
-        // TODO: Nachfragen ob name so bleiben kann
         $this->notificationData->title =  $project->name . ' wurde gelöscht';
         $this->notificationData->project->id = $project->id;
         $this->notificationData->project->title = $project->name;

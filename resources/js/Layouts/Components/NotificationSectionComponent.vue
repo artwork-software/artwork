@@ -369,9 +369,9 @@ export default  {
     props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name'],
     methods: {
         formatDate(isoDate) {
-            if(isoDate.split('T').length > 1){
+            if(isoDate?.split('T').length > 1){
                 return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-            }else if(isoDate.split(' ').length > 1){
+            }else if(isoDate?.split(' ').length > 1){
                 return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
             }
         },

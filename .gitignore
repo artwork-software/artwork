@@ -14,3 +14,8 @@ npm-debug.log
 yarn-error.log
 /.idea
 /.vscode
+/data.ms
+MailHog_windows_amd64.exe
+meilisearch-windows-amd64.exe
+package-lock.json
+composer.lock

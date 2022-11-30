@@ -263,6 +263,7 @@ class EventController extends Controller
         $oldIsLoud = $event->is_loud;
         $oldAudience = $event->audience;
 
+
         $event->update($request->data());
 
         if ($request->get('projectName')) {
@@ -287,6 +288,7 @@ class EventController extends Controller
         $newEventEndDate = $event->end_time;
         $newIsLoud = $event->is_loud;
         $newAudience = $event->audience;
+
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
@@ -508,7 +510,7 @@ class EventController extends Controller
      */
     private function checkDateChanges($eventId, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate): void
     {
-        if($oldEventStartDate !== $newEventStartDate || $oldEventEndDate !== $newEventEndDate){
+        if(strtotime($oldEventStartDate) !== strtotime($newEventStartDate) || strtotime($oldEventEndDate) !== strtotime($newEventEndDate)){
             $this->history->createHistory($eventId, 'Datum/Uhrzeit geändert');
         }
     }

@@ -48,7 +48,7 @@
                                     {{ notification.data.title }}
                                 </div>
                                 <div v-if="notification.data.title === 'Termin geändert'"
-                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
+                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue" @click="openEventHistoryModal(notification.data.eventHistory)">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
                                 </div>
@@ -180,7 +180,7 @@
                                     {{ notification.data.title }}
                                 </div>
                                 <div v-if="notification.data.title === 'Termin geändert'"
-                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue">
+                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue" @click="openEventHistoryModal(notification.data.eventHistory)">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
                                     Verlauf ansehen
                                 </div>
@@ -288,28 +288,20 @@
         :room_history="wantedHistory"
         @closed="closeRoomHistoryModal"
     />
+    <event-history-component
+        v-if="showEventHistory"
+        :event_history="wantedHistory"
+        @closed="closeEventHistoryModal"
+    />
 </template>
 
 <script>
 
-import JetDialogModal from "@/Jetstream/DialogModal";
-import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+
+import {ChevronDownIcon} from '@heroicons/vue/outline';
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
-import {
-    Listbox,
-    ListboxButton,
-    ListboxOption,
-    ListboxOptions,
-    Menu,
-    MenuButton,
-    MenuItem,
-    MenuItems
-} from "@headlessui/vue";
 import {CheckIcon, ChevronRightIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
-import SvgCollection from "@/Layouts/Components/SvgCollection";
-import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
-import TagComponent from "@/Layouts/Components/TagComponent";
 import AddButton from "@/Layouts/Components/AddButton";
 import NotificationEventInfoRow from "@/Layouts/Components/NotificationEventInfoRow";
 import NotificationUserIcon from "@/Layouts/Components/NotificationUserIcon";
@@ -319,6 +311,7 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
+import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 
 export default  {
     name: 'NotificationSectionComponent',
@@ -337,7 +330,8 @@ export default  {
         Link,
         AnswerEventRequestComponent,
         AnswerEventRequestWithRoomChangeComponent,
-        RoomHistoryComponent
+        RoomHistoryComponent,
+        EventHistoryComponent
     },
 
     data() {
@@ -356,6 +350,7 @@ export default  {
             answerRequestWithRoomChangeVisible: false,
             requestToAnswerWithRoomChange: null,
             creatorOfRequest: null,
+            showEventHistory: false,
             notificationToDelete: null,
             answerRequestForm: useForm({
                 accepted: false,
@@ -391,6 +386,14 @@ export default  {
         openRoomHistoryModal(history){
             this.wantedHistory = history;
             this.showRoomHistory = true;
+        },
+        openEventHistoryModal(history){
+          this.wantedHistory = history;
+          this.showEventHistory = true;
+        },
+        closeEventHistoryModal(){
+            this.showEventHistory = false;
+            this.wantedHistory = null
         },
         closeRoomHistoryModal(){
             this.showRoomHistory = false;

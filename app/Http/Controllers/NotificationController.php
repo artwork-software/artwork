@@ -104,12 +104,26 @@ class NotificationController extends Controller
                 Notification::send($user, new RoomRequestNotification($notificationBody, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
+
+                $historyArray = [];
+                $historyComplete = $notificationData->event->historyChanges()->all();
+
+                foreach ($historyComplete as $history){
+                    $historyArray[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+
                 $notificationBody = [
                     'groupType' => 'EVENTS',
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'event' => $notificationData->event,
-                    'created_by' => $notificationData->created_by
+                    'eventHistory' => $historyArray,
+                    'created_by' => $notificationData->created_by,
                 ];
                 Notification::send($user, new EventNotification($notificationBody, $broadcastMessage));
                 break;

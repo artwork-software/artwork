@@ -260,6 +260,8 @@ class EventController extends Controller
         $oldEventType = $event->event_type_id;
         $oldEventStartDate = $event->start_time;
         $oldEventEndDate = $event->end_time;
+        $oldIsLoud = $event->is_loud;
+        $oldAudience = $event->audience;
 
         $event->update($request->data());
 
@@ -283,6 +285,8 @@ class EventController extends Controller
         $newEventType = $event->event_type_id;
         $newEventStartDate = $event->start_time;
         $newEventEndDate = $event->end_time;
+        $newIsLoud = $event->is_loud;
+        $newAudience = $event->audience;
 
         $this->checkShortDescriptionChanges($event->id, $oldEventDescription, $newEventDescription);
         $this->checkRoomChanges($event->id, $oldEventRoom, $newEventRoom);
@@ -290,6 +294,7 @@ class EventController extends Controller
         $this->checkEventNameChanges($event->id, $oldEventName, $newEventName);
         $this->checkEventTypeChanges($event->id, $oldEventType, $newEventType);
         $this->checkDateChanges($event->id, $oldEventStartDate, $newEventStartDate, $oldEventEndDate, $newEventEndDate);
+        $this->checkEventOptionChanges($event->id, $oldIsLoud, $newIsLoud, $oldAudience, $newAudience);
 
         $this->createEventScheduleNotification($event);
 
@@ -592,6 +597,12 @@ class EventController extends Controller
         }
         if($oldDescription !== $newDescription && $oldDescription !== null && $newDescription !== null){
             $this->history->createHistory($eventId, 'Terminnotiz geändert');
+        }
+    }
+
+    private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew){
+        if($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew){
+            $this->history->createHistory($eventId, 'Termineigenschaft geändert');
         }
     }
 

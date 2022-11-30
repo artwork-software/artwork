@@ -69,7 +69,7 @@
                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
                                      v-if="notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'">
                                     Termin belegt:
-                                    {{ this.formatDate(notification.data.conflict.event.created_at) }} von
+                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
                                     <NotificationUserIcon v-if="notification.data.created_by"
                                                           :user="notification.data.created_by"></NotificationUserIcon>
                                 </div>

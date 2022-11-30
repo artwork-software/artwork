@@ -2,6 +2,8 @@
 
 namespace App\Mail;
 
+use App\Enums\NotificationConstEnum;
+use App\Enums\NotificationGroupEnum;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Database\Eloquent\Collection;
@@ -15,26 +17,29 @@ class NotificationSummary extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Collection $notifications;
+    public array $notifications;
+    public string $user;
 
-    public function __construct(Collection $notifications)
+    public function __construct(array $notifications, string $user)
     {
         $this->notifications = $notifications;
+        $this->user = $user;
     }
 
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Hier Betreff einfügen',
+            subject: 'Es gibt Neuigkeiten in deinem artwork!',
         );
     }
 
     public function content(): Content
     {
         return new Content(
-            markdown: 'hier.markdown.verwenden',
+            markdown: 'emails.notifications',
             with: [
-                'notifications' => $this->notifications
+                'notifications' => $this->notifications,
+                'user' => $this->user
             ]
         );
     }

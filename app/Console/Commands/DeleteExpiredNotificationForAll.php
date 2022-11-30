@@ -4,22 +4,23 @@ namespace App\Console\Commands;
 
 use App\Http\Controllers\SchedulingController;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Command\Command as CommandAlias;
 
-class DeleteNotifications extends Command
+class DeleteExpiredNotificationForAll extends Command
 {
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:delete-notification';
+    protected $signature = 'app:notification-for-all-delete';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Deletes notifications that were archived 7 or more days ago';
+    protected $description = 'This command deletes the expired Notification for all';
 
     /**
      * Execute the console command.
@@ -28,8 +29,8 @@ class DeleteNotifications extends Command
      */
     public function handle()
     {
-        $taskScheduling = new SchedulingController();
-        $taskScheduling->deleteOldNotifications();
-        return 1;
+        $scheduling = new SchedulingController();
+        $scheduling->deleteExpiredNotificationForAll();
+        return CommandAlias::SUCCESS;
     }
 }

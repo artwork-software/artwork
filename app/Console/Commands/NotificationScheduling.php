@@ -12,7 +12,7 @@ class NotificationScheduling extends Command
      *
      * @var string
      */
-    protected $signature = 'task:notification';
+    protected $signature = 'app:schedule-notification';
 
     /**
      * The console command description.

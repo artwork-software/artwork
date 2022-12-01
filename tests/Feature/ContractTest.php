@@ -59,3 +59,19 @@ test('contracts can be updated', function() {
     ]);
 
 });
+
+test('contracts can be deleted', function() {
+
+    $this->user->assignRole('admin');
+    $this->project->contracts()->save($this->contract);
+
+    $this->actingAs($this->user);
+
+    $this->delete("/contracts/{$this->contract->id}");
+
+    //assures that only the fields that were updated changed, and that the rest stays the same.
+    $this->assertDatabaseMissing('contracts', [
+        'id' => $this->contract->id,
+    ]);
+
+});

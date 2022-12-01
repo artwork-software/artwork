@@ -6,6 +6,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ContractController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -255,6 +256,14 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
     Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
+
+    //Contracts
+    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
+    Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
+    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
+    Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
+    Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 });
 
 Route::get('/php-info', function(){

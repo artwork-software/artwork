@@ -70,6 +70,11 @@ class Project extends Model
         return $this->hasMany(event::class);
     }
 
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
     public function departments()
     {
         return $this->belongsToMany(Department::class);

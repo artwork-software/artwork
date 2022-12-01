@@ -111,6 +111,11 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
     public function notificationSettings(): HasMany {
         return $this->hasMany(NotificationSetting::class);
     }

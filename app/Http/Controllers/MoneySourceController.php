@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\SearchRequest;
 use App\Models\MoneySource;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,11 +13,21 @@ class MoneySourceController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
+     * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function index()
     {
-        //
+        return inertia('MoneySources/Show', [
+            'moneySources' => MoneySource::all(),
+            'moneySourceGroups' => MOneySource::where('is_group',true)->get(),
+        ]);
+    }
+
+    public function search(SearchRequest $request) {
+
+        $this->authorize('viewAny',User::class);
+
+        return MoneySource::search($request->input('query'))->get();
     }
 
     /**
@@ -33,14 +44,13 @@ class MoneySourceController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function store(Request $request)
     {
         $inputArray = [];
-        // anpassen frontend
-        $requestUsers = explode(',', $request->users);
-        foreach ($requestUsers as $requestUser){
+
+        foreach ($request->users as $requestUser){
             $user = User::find($requestUser);
             $inputArray[$user->id] = [
                 'id' => $user->id,
@@ -50,7 +60,7 @@ class MoneySourceController extends Controller
         }
 
         // user => Auth()::user()
-        $user = User::find(1);
+        $user = Auth::user();
         $source = $user->money_sources()->create([
             'name' => $request->name,
             'amount' => str_replace(',', '.', $request->amount),
@@ -63,15 +73,13 @@ class MoneySourceController extends Controller
         ]);
 
         if($request->is_group){
-            // anpassen frontend
-            $sub_money_source_ids = explode(',', $request->sub_money_source_ids);
-            foreach ($sub_money_source_ids as $sub_money_source_id){
+            foreach ($request->sub_money_source_ids as $sub_money_source_id){
                 $money_source = MoneySource::find($sub_money_source_id);
                 $money_source->update(['group_id' => $source->id]);
             }
         }
 
-        return response()->json($source);
+        return back();
     }
 
     /**

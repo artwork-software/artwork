@@ -13,6 +13,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
@@ -256,8 +257,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
 
+    // Money Sources
+    Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
+    Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
+    Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
+
 
 
 });
-// Money Sources
-Route::post('/money_sources', [\App\Http\Controllers\MoneySourceController::class, 'store'])->name('money_sources.store');
+

@@ -4,10 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laravel\Scout\Searchable;
 
 class MoneySource extends Model
 {
     use HasFactory;
+    use Searchable;
 
     protected $fillable = [
         'name',
@@ -25,5 +27,12 @@ class MoneySource extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+        ];
     }
 }

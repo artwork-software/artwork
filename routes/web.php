@@ -15,6 +15,7 @@ use App\Http\Controllers\FilterController;
 use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MoneySourceController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
@@ -267,12 +268,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
     //ContractModules
-    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.management');
-    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.store');
-    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.download');
+    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contract_modules.management');
+    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contract_modules.store');
+    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contract_modules.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
 });
 
 // Money Sources
-Route::post('/money_sources', [\App\Http\Controllers\MoneySourceController::class, 'store'])->name('money_sources.store');
+Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');

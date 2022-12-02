@@ -255,6 +255,12 @@ export default {
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
+                {
+                    name: 'Verträge',
+                    has_permission: this.$page.props.is_admin,
+                    href: route('contracts.management'),
+                    route: ['/contracts']
+                }
             ]
         }
     },

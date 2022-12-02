@@ -26,30 +26,36 @@ class ContractController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return Response|ResponseFactory
      */
     public function index(Request $request)
     {
         $contracts = Contract::all();
         $filters = $request->input('contractFilters');
-        $ksk_filter = $filters->ksk_liable;
-        $resident_abroad = $filters->resident_abroad;
-        $legal_forms = $filters->legal_forms;
-        $contract_types = $filters->contract_types;
 
-        if($ksk_filter) {
-            $contracts = $contracts->where('ksk_liable', $ksk_filter)->all();
+        if($filters) {
+            $ksk_filter = $filters->ksk_liable;
+            $resident_abroad = $filters->resident_abroad;
+            $legal_forms = $filters->legal_forms;
+            $contract_types = $filters->contract_types;
+
+            if($ksk_filter) {
+                $contracts = $contracts->where('ksk_liable', $ksk_filter)->all();
+            }
+            if($resident_abroad) {
+                $contracts = $contracts->where('resident_abroad', $resident_abroad)->all();
+            }
+            if($legal_forms) {
+                $contracts = $contracts->whereIn('legal_form', $legal_forms)->all();
+            }
+            if($legal_forms) {
+                $contracts = $contracts->whereIn('type', $contract_types)->all();
+            }
         }
-        if($resident_abroad) {
-            $contracts = $contracts->where('resident_abroad', $resident_abroad)->all();
-        }
-        if($legal_forms) {
-            $contracts = $contracts->whereIn('legal_form', $legal_forms)->all();
-        }
-        if($legal_forms) {
-            $contracts = $contracts->whereIn('type', $contract_types)->all();
-        }
-        return ContractResource::collection($contracts);
+
+        return inertia('Contracts/ContractManagement', [
+            'contracts' => ContractResource::collection($contracts)
+            ]);
 
     }
 

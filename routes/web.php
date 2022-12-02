@@ -255,9 +255,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');
     Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
-});
 
-Route::get('/php-info', function(){
-    echo phpinfo();
-});
 
+
+});
+// Money Sources
+Route::post('/money_sources', [\App\Http\Controllers\MoneySourceController::class, 'store'])->name('money_sources.store');

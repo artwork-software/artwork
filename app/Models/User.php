@@ -122,7 +122,12 @@ class User extends Authenticatable
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');;
+        return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');
+    }
+
+    public function money_sources()
+    {
+        return $this->hasMany(MoneySource::class, 'creator_id');
     }
 
     public function comments()
@@ -164,6 +169,7 @@ class User extends Authenticatable
     {
         return $this->getAllPermissions();
     }
+
     public function globalNotifications()
     {
         return $this->hasOne(GlobalNotification::class, 'created_by');

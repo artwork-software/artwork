@@ -266,7 +266,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 });
 
-Route::get('/php-info', function(){
-    echo phpinfo();
-});
-
+// Money Sources
+Route::post('/money_sources', [\App\Http\Controllers\MoneySourceController::class, 'store'])->name('money_sources.store');

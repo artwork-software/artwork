@@ -7,6 +7,7 @@ use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -264,6 +265,13 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+
+    //ContractModules
+    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.management');
+    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.store');
+    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.download');
+    Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
+
 });
 
 // Money Sources

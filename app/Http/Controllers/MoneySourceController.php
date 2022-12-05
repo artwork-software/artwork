@@ -8,7 +8,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-
 class MoneySourceController extends Controller
 {
     /**
@@ -18,7 +17,7 @@ class MoneySourceController extends Controller
      */
     public function index()
     {
-        return inertia('MoneySources/Show', [
+        return inertia('MoneySources/MoneySourceManagement', [
             'moneySources' => MoneySource::all(),
             'moneySourceGroups' => MoneySource::where('is_group',true)->get(),
         ]);
@@ -35,10 +34,19 @@ class MoneySourceController extends Controller
                 }
                 $filteredObjects[] = $moneySource;
             }
-
             return $filteredObjects;
-        }
 
+        }else if($request->input('type') === 'group'){
+            $moneySources = MoneySource::search($request->input('query'))->get();
+            foreach ($moneySources as $moneySource){
+                if($moneySource->is_group === 1 || $moneySource->is_group === true){
+                    $filteredObjects[] = $moneySource;
+                }
+            }
+            return $filteredObjects;
+        }else{
+            return MoneySource::search($request->input('query'))->get();
+        }
     }
 
     /**
@@ -103,11 +111,27 @@ class MoneySourceController extends Controller
      * Display the specified resource.
      *
      * @param  \App\Models\MoneySource  $moneySource
-     * @return \Illuminate\Http\Response
+     * @return \Inertia\Response|\Inertia\ResponseFactory
      */
     public function show(MoneySource $moneySource)
     {
-        //
+        return inertia('MoneySources/Show', [
+            'moneySource' => [
+                'id' => $moneySource->id,
+                'creator' => User::all()->where('id',$moneySource->creator_id),
+                'name' => $moneySource->name,
+                'amount' => $moneySource->amount,
+                'source_name' => $moneySource->source_name,
+                'start_date' => $moneySource->start_date,
+                'end_date' => $moneySource->end_date,
+                'users' => json_decode($moneySource->users),
+                'group_id' => $moneySource->group_id,
+                'description' => $moneySource->description,
+                'is_group' => $moneySource->is_group,
+                'created_at' => $moneySource->created_at,
+                'updated_at' => $moneySource->updated_at,
+            ],
+        ]);
     }
 
     /**

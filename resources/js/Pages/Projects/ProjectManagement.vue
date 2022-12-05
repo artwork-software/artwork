@@ -720,7 +720,6 @@ export default defineComponent({
                 return this.projects
             } else {
                 const newProjects = this.projects.filter(project => project.curr_user_is_related === true)
-                console.log(newProjects);
                 return newProjects;
             }
         }

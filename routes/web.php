@@ -260,6 +260,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // Money Sources
     Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
+    Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
 
 

@@ -141,7 +141,7 @@ export default defineComponent({
             handler() {
                 if (this.moneySource_query.length > 0) {
                     axios.get('/money_sources/search', {
-                        params: {query: this.moneySource_query}
+                        params: {query: this.moneySource_query, type: this.searchType}
                     }).then(response => {
                         console.log(response);
                     })
@@ -155,6 +155,7 @@ export default defineComponent({
             showSearchbar: false,
             moneySource_query: '',
             showMoneySourceModal: false,
+            searchType: 'single'
         }
     },
     setup() {

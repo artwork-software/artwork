@@ -356,6 +356,7 @@ export default {
             moneySource_query: '',
             moneySource_search_results: [],
             selectedMoneySourceGroup: null,
+            searchType: 'single',
             createSingleSourceForm: useForm({
                 name: '',
                 amount: null,
@@ -402,7 +403,7 @@ export default {
             handler() {
                 if (this.moneySource_query.length > 0) {
                     axios.get('/money_sources/search', {
-                        params: {query: this.moneySource_query}
+                        params: {query: this.moneySource_query, type: this.searchType}
                     }).then(response => {
                         this.moneySource_search_results = response.data
                     })

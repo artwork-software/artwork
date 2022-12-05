@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+
 class MoneySourceController extends Controller
 {
     /**
@@ -19,15 +20,25 @@ class MoneySourceController extends Controller
     {
         return inertia('MoneySources/Show', [
             'moneySources' => MoneySource::all(),
-            'moneySourceGroups' => MOneySource::where('is_group',true)->get(),
+            'moneySourceGroups' => MoneySource::where('is_group',true)->get(),
         ]);
     }
 
     public function search(SearchRequest $request) {
-
+        $filteredObjects = [];
         $this->authorize('viewAny',User::class);
+        if($request->input('type') === 'single'){
+            $moneySources = MoneySource::search($request->input('query'))->get();
+            foreach ($moneySources as $moneySource){
+                if($moneySource->is_group === 1 || $moneySource->is_group === true){
+                    continue;
+                }
+                $filteredObjects[] = $moneySource;
+            }
 
-        return MoneySource::search($request->input('query'))->get();
+            return $filteredObjects;
+        }
+
     }
 
     /**
@@ -59,11 +70,17 @@ class MoneySourceController extends Controller
             ];
         }
 
+        if(!empty($request->amount)){
+            $amount = str_replace(',', '.', $request->amount);
+        } else {
+            $amount = 0.00;
+        }
+
         // user => Auth()::user()
         $user = Auth::user();
         $source = $user->money_sources()->create([
             'name' => $request->name,
-            'amount' => str_replace(',', '.', $request->amount),
+            'amount' => $amount,
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'source_name' => $request->source_name,

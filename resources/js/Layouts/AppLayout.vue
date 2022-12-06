@@ -255,6 +255,12 @@ export default {
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
+                {
+                    name: 'Finanzierungsquellen',
+                    has_permission: true,
+                    href: route('money_sources.index'),
+                    route: ['/money_sources']
+                }
             ]
         }
     },

@@ -6,6 +6,8 @@ use App\Models\GlobalNotification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\ServiceProvider;
 use Inertia\Inertia;
+use MeiliSearch\Client;
+use MeiliSearch\MeiliSearch;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+
     }
 
     /**

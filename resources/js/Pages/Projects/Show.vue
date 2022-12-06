@@ -231,7 +231,7 @@
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="w-full h-full mb-48">
+        <div class="w-full h-full mb-48 ">
             <div class="ml-20">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
@@ -245,13 +245,13 @@
                     </div>
                 </div>
             </div>
-            <div class="max-w-screen-2xl">
+            <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
-                <div v-if="isScheduleTab" class="p-5">
+                <div v-if="isScheduleTab" class="p-5 mt-14">
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14">
+                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14 p-5">
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
@@ -763,7 +763,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14">
+                <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
                     <div class="col-span-2 mr-8">
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
@@ -771,12 +771,12 @@
                         </div>
                         <div
                             v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
-                            class="relative border-2 hover:border-gray-400 w-full border border-gray-300">
+                            class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
                             v-model="commentForm.text" rows="4"
                             class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
-                            <div class="absolute bottom-0 right-0 flex">
+                            <div class="absolute bottom-0 right-0 flex bg-white">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span
                                     class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>

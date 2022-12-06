@@ -21,7 +21,7 @@ class MoneySource extends Model
         'is_group',
         'users',
         'group_id',
-        'sub_money_source_id'
+        'sub_money_source_ids'
     ];
 
 

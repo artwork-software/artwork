@@ -112,6 +112,8 @@ class MoneySourceController extends Controller
      */
     public function show(MoneySource $moneySource)
     {
+
+
         return inertia('MoneySources/Show', [
             'moneySource' => [
                 'id' => $moneySource->id,
@@ -124,6 +126,7 @@ class MoneySourceController extends Controller
                 'users' => json_decode($moneySource->users),
                 'group_id' => $moneySource->group_id,
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
+                'subMoneySources' => MoneySource::where('group_id', $moneySource->id)->get(),
                 'description' => $moneySource->description,
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
@@ -167,6 +170,13 @@ class MoneySourceController extends Controller
         } else {
             $amount = 0.00;
         }
+
+        $beforeSubMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
+        foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
+            $beforeSubMoneySource->update(['group_id' => null]);
+        }
+
+
         $moneySource->update([
             'name' => $request->name,
             'amount' => $amount,
@@ -178,6 +188,13 @@ class MoneySourceController extends Controller
             'group_id' => $request->group_id,
             'users' => json_encode($inputArray)
         ]);
+
+        if ($request->is_group) {
+            foreach ($request->sub_money_source_ids as $sub_money_source_id) {
+                $money_source = MoneySource::find($sub_money_source_id);
+                $money_source->update(['group_id' => $moneySource->id]);
+            }
+        }
     }
 
     /**

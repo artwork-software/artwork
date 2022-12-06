@@ -11,7 +11,7 @@
                     <div class="flex-grow headline1 mb-6">
                         {{ moneySource.is_group ? 'Finanzierungsquellengruppe' : 'Finanzierungsquelle' }}
                     </div>
-                    {{moneySource}}
+                    {{subMoneySources}}
                     <div class="flex items-center w-full mt-4">
                         <div class="mt-2 xsDark text-xs flex items-center"
                              v-if="moneySource.users">
@@ -355,10 +355,10 @@ export default {
             ]
         },
         subMoneySources() {
-            let subMoneySourceArray;
-            if (this.moneySource.sub_money_source_ids) {
-                this.moneySource.sub_money_source_ids.forEach((id) => {
-                    subMoneySourceArray.push(this.moneySources.find(moneySource => moneySource.id === id));
+            let subMoneySourceArray = [];
+            if (this.moneySource.subMoneySources) {
+                this.moneySource.subMoneySources.forEach((subMoneySource) => {
+                    subMoneySourceArray.push(subMoneySource);
                 })
                 return subMoneySourceArray;
             }else{
@@ -448,7 +448,7 @@ export default {
             this.usersToAdd.splice(index, 1);
         },
         deleteSubMoneySourceFromGroup(index) {
-            this.subMoneySources.splice(index, 1);
+            this.moneySource.subMoneySources.splice(index,1);
         },
         editSingleSource() {
             this.usersToAdd.forEach((userToAdd) => {
@@ -471,17 +471,8 @@ export default {
             this.subMoneySources.forEach((subMoneySource) => {
                 this.editSourceGroupForm.sub_money_source_ids.push(subMoneySource.id);
             })
+            console.log(this.editSourceGroupForm);
             this.editSourceGroupForm.patch(route('money_sources.update', {moneySource: this.moneySource.id}));
-            this.closeModal(true);
-        },
-        createMoneySourceGroup() {
-            this.usersToAdd.forEach((userToAdd) => {
-                this.createSourceGroupForm.users.push(userToAdd.id);
-            })
-            this.subMoneySources.forEach((subMoneySource) => {
-                this.createSourceGroupForm.sub_money_source_ids.push(subMoneySource.id);
-            })
-            this.createSourceGroupForm.post(route('money_sources.store'));
             this.closeModal(true);
         },
         changeTab(selectedTab) {

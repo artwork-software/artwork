@@ -200,7 +200,7 @@ export default {
         DotsVerticalIcon,
         SvgCollection,
         Link,
-        EditMoneySourceComponent
+        EditMoneySourceComponent,
     },
     computed: {},
     data() {

@@ -115,12 +115,12 @@
 
                         <div class="pt-5">
                             <div class="mt-2 items-center">
-                                <AddButton v-if="!showSuccess" type="submit"
+                                <AddButton v-if="!showSuccess" @click="updateProfileInformation()"
                                     class="mt-8 px-10 py-3"
                                     text="Profiländerungen speichern" mode="modal"
                                 />
                                 <button v-else type="submit"
-                                    class=" sm:col-span-3 items-center py-1.5 border bg-success focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                    class="items-center py-1 mt-5 rounded-full px-28 border bg-success"
                                 >
                                     <CheckIcon class="h-10 w-9 inline-block text-secondaryHover"/>
                                 </button>

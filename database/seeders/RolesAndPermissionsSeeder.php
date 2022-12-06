@@ -61,7 +61,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         //Users
         Permission::create([
-            'name' => PermissionNameEnum::SETTINGS_UPDATE,
+            'name' => PermissionNameEnum::USER_UPDATE,
             'name_de' => "Nutzer*innenverwaltung",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.',
@@ -69,7 +69,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         //Teams
         Permission::create([
-            'name' => PermissionNameEnum::USER_UPDATE,
+            'name' => PermissionNameEnum::TEAM_UPDATE,
             'name_de' => "Teamverwaltung",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. Diese Teams können anschließend z.B. Projekten zugeordnet werden.',
@@ -77,7 +77,7 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
         //Projektsettings
         Permission::create([
-            'name' => PermissionNameEnum::TEAM_UPDATE,
+            'name' => PermissionNameEnum::SETTINGS_UPDATE,
             'name_de' => "Systemeinstellungen für Projekte definieren",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche definieren, bearbeiten & löschen.',

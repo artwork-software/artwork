@@ -17,6 +17,8 @@ use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
 use App\Notifications\GlobalUserNotification;
+use App\Notifications\MoneySource;
+use App\Notifications\MoneySourceNotification;
 use App\Notifications\ProjectNotification;
 use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
@@ -216,6 +218,15 @@ class NotificationController extends Controller
                     'title' => $notificationData->title,
                 ];
                 Notification::send($user, new TaskNotification($notificationBody, $broadcastMessage));
+                break;
+            case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
+                $notificationBody = [
+                    'groupType' => 'BUDGET',
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'created_by' => $notificationData->created_by,
+                ];
+                Notification::send($user, new MoneySourceNotification($notificationBody, $broadcastMessage));
                 break;
         }
     }

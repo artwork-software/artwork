@@ -6,6 +6,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ContractController;
+use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -264,7 +266,19 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
 
+    //Contracts
+    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
+    Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
+    Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
+    Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
+    Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
+    Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
+
+    //ContractModules
+    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.management');
+    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.store');
+    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.download');
+    Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
 });
-

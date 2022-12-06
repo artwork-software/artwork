@@ -111,6 +111,11 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+    public function contracts()
+    {
+        return $this->hasMany(Contract::class);
+    }
+
     public function notificationSettings(): HasMany {
         return $this->hasMany(NotificationSetting::class);
     }
@@ -122,12 +127,7 @@ class User extends Authenticatable
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');
-    }
-
-    public function money_sources()
-    {
-        return $this->hasMany(MoneySource::class, 'creator_id');
+        return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');;
     }
 
     public function comments()

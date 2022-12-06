@@ -67,7 +67,6 @@
                         <li v-if="moneySource_query.length < 1" v-for="(moneySource,index) in sourcesToShow"
                             :key="moneySource.id"
                             class="py-5 flex justify-between border-b-2 border-gray-200 my-2">
-                            {{moneySource}}
                             <div class="flex w-full">
                                 <div class="flex">
                                     <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"

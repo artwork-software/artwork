@@ -69,29 +69,31 @@
                 </div>
                 <div class="flex items-center w-full justify-between mt-4">
                     <div class="mt-2 xsDark text-xs flex items-center"
-                         v-if="moneySource['users']">
+                         v-if="moneySource.users">
                         <div class="flex items-center">
+                            <div class="mr-2">
                             zuständig:
-                            <div v-for="user in moneySource['users']">
+                            </div>
+                            <div class="-ml-3" v-for="user in moneySource.users">
                                 <img v-if="user"
                                      :data-tooltip-target="user?.id"
                                      :src="user?.profile_photo_url"
-                                     :alt="user?.first_name"
+                                     :alt="user?.name"
                                      class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="user?.changed_by"
+                                <UserTooltip v-if="user"
                                              :user="user"/>
                             </div>
                         </div>
                     </div>
                     <div class="flex mt-2 mx-4 xsDark items-center">
                         erstellt von
-                        <img v-if="moneySource.creator[0]"
-                             :data-tooltip-target="moneySource.creator[0]?.id"
-                             :src="moneySource.creator[0]?.profile_photo_url"
-                             :alt="moneySource.creator[0]?.first_name"
+                        <img v-if="moneySource.creator"
+                             :data-tooltip-target="moneySource.creator?.id"
+                             :src="moneySource.creator?.profile_photo_url"
+                             :alt="moneySource.creator?.first_name"
                              class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                        <UserTooltip v-if="moneySource.creator[0]"
-                                     :user="moneySource.creator[0]"/>
+                        <UserTooltip v-if="moneySource.creator"
+                                     :user="moneySource.creator"/>
                     </div>
                     <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
                             @click="openMoneySourceHistoryModal()">
@@ -101,7 +103,23 @@
                         Verlauf ansehen
                     </button>
                 </div>
-                <div class="mr-14 my-4 subpixel-antialiased text-secondary">
+                <div class="xsDark mt-4 flex items-center" v-if="moneySource.group_id">
+                    <img src="/Svgs/IconSvgs/icon_group_red.svg"
+                         class=" h-4 w-4" alt="groupIcon"/>
+                    <div class="ml-2">
+                    Gehört zu
+                    </div>
+                    <Link v-if="moneySource.group_id" :href="getEditHref(moneySource.group_id)" class="linkText ml-1 mt-0.5">
+                        {{moneySource.moneySourceGroup.name}}
+                    </Link>
+                </div>
+                <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
+                    Laufzeit: {{formatDate(moneySource.start_date)}} - {{formatDate(moneySource.end_date)}}
+                </div>
+                <div class="mt-2 xsDark" v-if="moneySource.source_name">
+                    Quelle: {{ moneySource.source_name}}
+                </div>
+                <div class="mr-14 my-3 subpixel-antialiased text-secondary">
                     {{ moneySource.description }}
                 </div>
                 <div class="mt-12 flex">
@@ -128,6 +146,14 @@
                 </div>
             </div>
         </div>
+        <edit-money-source-component
+            v-if="showEditMoneySourceModal"
+            @closed="onEditMoneySourceModalClose()"
+            :moneySource="this.moneySource"
+            :moneySources="this.moneySources"
+            :moneySourceGroups="this.moneySourceGroups"
+        />
+
     </app-layout>
 </template>
 
@@ -152,12 +178,14 @@ import {
 } from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {Link} from "@inertiajs/inertia-vue3";
+import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
 
 
 
 export default {
     name: "MoneySourceShow",
-    props: ['moneySource'],
+    props: ['moneySource','moneySourceGroups','moneySources'],
     components: {
         AppLayout,
         UserTooltip,
@@ -170,13 +198,30 @@ export default {
         PencilAltIcon,
         TrashIcon,
         DotsVerticalIcon,
-        SvgCollection
+        SvgCollection,
+        Link,
+        EditMoneySourceComponent
     },
     computed: {},
     data() {
-        return {}
+        return {
+            showEditMoneySourceModal: false,
+        }
     },
-    methods: {},
+    methods: {
+        getEditHref(moneySourceId) {
+            return route('money_sources.show', {moneySource: moneySourceId});
+        },
+        formatDate(isoDate) {
+            return isoDate.substring(8, 10) + '.' + isoDate.substring(5, 7) + '.' + isoDate.substring(0, 4)
+        },
+        openEditMoneySourceModal(){
+            this.showEditMoneySourceModal = true;
+        },
+        onEditMoneySourceModalClose(){
+            this.showEditMoneySourceModal = false;
+        }
+    },
     setup() {
         return {}
     }

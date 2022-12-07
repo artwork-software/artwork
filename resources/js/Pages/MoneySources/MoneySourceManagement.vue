@@ -111,18 +111,18 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
+                                                    <a @click="duplicateMoneySource(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
+                                                        <DuplicateIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         Duplizieren
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
+                                                    <a @click="openDeleteSourceModal(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
+                                                        <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         Löschen
@@ -172,18 +172,18 @@
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
+                                                    <a @click="duplicateMoneySource(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
+                                                        <DuplicateIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         Duplizieren
                                                     </a>
                                                 </MenuItem>
                                                 <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
+                                                    <a @click="openDeleteSourceModal(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
+                                                        <TrashIcon
                                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                             aria-hidden="true"/>
                                                         Löschen
@@ -206,6 +206,12 @@
         @closed="onCreateMoneySourceModalClose()"
         :moneySourceGroups="this.moneySourceGroups"
     />
+    <confirmation-component
+        v-if="showDeleteSourceModal"
+        confirm="Löschen"
+        titel="Finanzierungsquelle/gruppe löschen"
+        :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
+        @closed="afterConfirm"/>
 </template>
 
 <script>
@@ -223,13 +229,14 @@ import {
     MenuItem,
     MenuItems
 } from "@headlessui/vue";
-import {ChevronDownIcon, DotsVerticalIcon, SearchIcon, XIcon} from "@heroicons/vue/solid";
+import {ChevronDownIcon, DotsVerticalIcon, SearchIcon, TrashIcon, XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
-import {PencilAltIcon} from "@heroicons/vue/outline";
+import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 
 
 export default defineComponent({
@@ -253,7 +260,10 @@ export default defineComponent({
         CreateMoneySourceComponent,
         DotsVerticalIcon,
         PencilAltIcon,
-        Link
+        Link,
+        DuplicateIcon,
+        TrashIcon,
+        ConfirmationComponent
     },
     props: ['moneySources', 'moneySourceGroups'],
     created() {
@@ -283,7 +293,23 @@ export default defineComponent({
         },
         getEditHref(moneySource) {
             return route('money_sources.show', {moneySource: moneySource.id});
-        }
+        },
+        duplicateMoneySource(moneySource){
+            this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
+        },
+        deleteMoneySource(moneySource){
+            this.$inertia.delete(`/money_sources/${moneySource.id}`);
+            this.showDeleteSourceModal = false;
+        },
+        openDeleteSourceModal(moneySourceToDelete){
+            this.sourceToDelete = moneySourceToDelete;
+            this.showDeleteSourceModal = true;
+        },
+        async afterConfirm(bool) {
+            if (!bool) return this.showDeleteSourceModal = false;
+
+            this.deleteMoneySource(this.sourceToDelete)
+        },
     },
     watch: {
         moneySource_query: {
@@ -313,6 +339,8 @@ export default defineComponent({
             moneySource_query: '',
             showMoneySourceModal: false,
             moneySource_search_results: [],
+            showDeleteSourceModal: false,
+            sourceToDelete: null,
         }
     },
     setup() {

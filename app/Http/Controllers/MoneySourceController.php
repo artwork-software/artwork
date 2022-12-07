@@ -218,7 +218,7 @@ class MoneySourceController extends Controller
         }
 
         $newMoneySourceUsers = json_decode($moneySource->users);
-        $this->checkUserChanges($moneySource->id, $moneySource->name, $oldMoneySourceUsers, $newMoneySourceUsers);
+        $this->checkUserChanges($moneySource->name, $oldMoneySourceUsers, $newMoneySourceUsers);
 
     }
 
@@ -251,7 +251,7 @@ class MoneySourceController extends Controller
         return back();
     }
 
-    private function checkUserChanges($moneySourceId, $moneySourceName, $oldUsers, $newUsers){
+    private function checkUserChanges($moneySourceName, $oldUsers, $newUsers){
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
         $oldUserIds = [];
         $newUserIds = [];

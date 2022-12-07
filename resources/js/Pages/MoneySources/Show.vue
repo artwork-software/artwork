@@ -43,7 +43,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a href="#" @click="duplicateMoneySource(this.moneySource)"
+                                        <a @click="duplicateMoneySource(this.moneySource)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -54,7 +54,7 @@
                                     <MenuItem
                                         v-if="this.$page.props.is_admin"
                                         v-slot="{ active }">
-                                        <a @click="openDeleteMoneySourceModal(this.moneySource)"
+                                        <a @click="openDeleteSourceModal(this.moneySource)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <TrashIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -155,6 +155,12 @@
         />
 
     </app-layout>
+    <confirmation-component
+        v-if="showDeleteSourceModal"
+        confirm="Löschen"
+        titel="Finanzierungsquelle/gruppe löschen"
+        :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
+        @closed="afterConfirm"/>
 </template>
 
 <script>
@@ -180,6 +186,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 
 
 
@@ -201,11 +208,14 @@ export default {
         SvgCollection,
         Link,
         EditMoneySourceComponent,
+        ConfirmationComponent
     },
     computed: {},
     data() {
         return {
             showEditMoneySourceModal: false,
+            showDeleteSourceModal: false,
+            sourceToDelete: null,
         }
     },
     methods: {
@@ -220,7 +230,23 @@ export default {
         },
         onEditMoneySourceModalClose(){
             this.showEditMoneySourceModal = false;
-        }
+        },
+        duplicateMoneySource(moneySource){
+            this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
+        },
+        deleteMoneySource(moneySource){
+            this.$inertia.delete(`/money_sources/${moneySource.id}`);
+            this.showDeleteSourceModal = false;
+        },
+        openDeleteSourceModal(moneySourceToDelete){
+            this.sourceToDelete = moneySourceToDelete;
+            this.showDeleteSourceModal = true;
+        },
+        async afterConfirm(bool) {
+            if (!bool) return this.showDeleteSourceModal = false;
+
+            this.deleteMoneySource(this.sourceToDelete)
+        },
     },
     setup() {
         return {}

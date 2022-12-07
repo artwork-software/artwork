@@ -8,6 +8,7 @@ use App\Models\MoneySource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Redirect;
 use stdClass;
 
 class MoneySourceController extends Controller
@@ -230,13 +231,17 @@ class MoneySourceController extends Controller
      */
     public function destroy(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
     {
+        $beforeSubMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
+        foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
+            $beforeSubMoneySource->update(['group_id' => null]);
+        }
         $moneySource->delete();
-        // TODO: return einmal testen. Return am besten auf die Übersichtsseite
-        return back();
+        return Redirect::route('money_sources.index')->with('success', 'MoneySource deleted.');
     }
 
     public function duplicate(MoneySource $moneySource){
-        $newMoneySource = MoneySource::create([
+        $user = Auth::user();
+        $newMoneySource = $user->money_sources()->create([
             'name' => '(Kopie) ' . $moneySource->name,
             'amount' => $moneySource->amount,
             'start_date' => $moneySource->start_date,
@@ -247,8 +252,8 @@ class MoneySourceController extends Controller
             'group_id' => $moneySource->group_id,
             'users' => $moneySource->users
         ]);
-        // TODO: return einmal testen. Return am besten auf die Übersichtsseite
-        return back();
+
+        return Redirect::route('money_sources.index')->with('success', 'MoneySource duplicated.');
     }
 
     private function checkUserChanges($moneySourceId, $moneySourceName, $oldUsers, $newUsers){

@@ -265,6 +265,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
+    Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
+    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+
 
     //Contracts
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
@@ -274,11 +277,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
-
+/* HIER BITTE NOCH CHECKEN WEGEN DOPPELTEN ROUTES
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
     Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.module.store');
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
+*/
 });

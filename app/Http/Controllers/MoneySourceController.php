@@ -228,10 +228,28 @@ class MoneySourceController extends Controller
      * Remove the specified resource from storage.
      *
      * @param \App\Models\MoneySource $moneySource
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(MoneySource $moneySource)
+    public function destroy(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
     {
-        //
+        $moneySource->delete();
+        // TODO: return einmal testen. Return am besten auf die Übersichtsseite
+        return back();
+    }
+
+    public function duplicate(MoneySource $moneySource){
+        $newMoneySource = MoneySource::create([
+            'name' => '(Kopie) ' . $moneySource->name,
+            'amount' => $moneySource->amount,
+            'start_date' => $moneySource->start_date,
+            'end_date' => $moneySource->end_date,
+            'source_name' => $moneySource->source_name,
+            'description' => $moneySource->description,
+            'is_group' => $moneySource->is_group,
+            'group_id' => $moneySource->group_id,
+            'users' => $moneySource->users
+        ]);
+        // TODO: return einmal testen. Return am besten auf die Übersichtsseite
+        return back();
     }
 }

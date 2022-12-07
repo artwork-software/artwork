@@ -7,6 +7,7 @@ use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Comment;
+use App\Models\Contract;
 use App\Models\Department;
 use App\Models\Genre;
 use App\Models\Invitation;
@@ -20,6 +21,7 @@ use App\Policies\CategoryPolicy;
 use App\Policies\ChecklistPolicy;
 use App\Policies\ChecklistTemplatePolicy;
 use App\Policies\CommentPolicy;
+use App\Policies\ContractPolicy;
 use App\Policies\DepartmentPolicy;
 use App\Policies\GenrePolicy;
 use App\Policies\InvitationPolicy;
@@ -51,7 +53,8 @@ class AuthServiceProvider extends ServiceProvider
         Comment::class => CommentPolicy::class,
         ChecklistTemplate::class => ChecklistTemplatePolicy::class,
         TaskTemplate::class => TaskTemplatePolicy::class,
-        Area::class => AreaPolicy::class
+        Area::class => AreaPolicy::class,
+        Contract::class => ContractPolicy::class
     ];
 
     /**

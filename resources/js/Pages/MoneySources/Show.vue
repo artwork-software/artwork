@@ -1,165 +1,233 @@
 <template>
     <app-layout>
-        <div class="py-4">
-
-            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
-                <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
-                        <div class="flex">
-                            <!--
-                            <Listbox as="div" class="flex" v-model="moneySourceFilter">
-                                <ListboxButton
-                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm">
-                                    <div class="flex items-center my-auto">
-                                        <p class="items-center flex mr-2 headline1">
-                                            {{ moneySourceFilter.name }}</p>
-                                        <span
-                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
-                                         </span>
-                                    </div>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-56 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="filter in moneySourceFilters"
-                                                       :key="filter.name"
-                                                       :value="filter"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
-                                                        {{ filter.name }}
-                                                    </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                            -->
-                            <div class="flex"
-                                 v-if="this.$page.props.is_admin">
-                                <AddButton @click="openAddMoneySourceModal" text="Neu" mode="page"/>
-                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                    <span
-                                        class="hind ml-1 my-auto">Lege neue Finanzierungsquellen oder -gruppen an</span>
-                                    <SvgCollection svgName="arrowRight" class="mt-1 ml-2"/>
+        <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
+            <div class="flex w-8/12 flex-col">
+                <div class="flex ">
+                    <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
+                        {{ moneySource.name }}</h2>
+                    <Menu as="div" class="my-auto mt-3 relative"
+                          v-if="this.$page.props.is_admin">
+                        <div class="flex items-center -mt-1">
+                            <MenuButton
+                                class="flex ml-6">
+                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                  aria-hidden="true"/>
+                            </MenuButton>
+                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
+                                <div>
+                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
+                                </div>
+                                <div class="flex">
+                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Basisdaten</span>
                                 </div>
                             </div>
                         </div>
+                        <transition enter-active-class="transition ease-out duration-100"
+                                    enter-from-class="transform opacity-0 scale-95"
+                                    enter-to-class="transform opacity-100 scale-100"
+                                    leave-active-class="transition ease-in duration-75"
+                                    leave-from-class="transform opacity-100 scale-100"
+                                    leave-to-class="transform opacity-0 scale-95">
+                            <MenuItems
+                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                <div class="py-1">
+                                    <MenuItem
+                                        v-if="this.$page.props.is_admin"
+                                        v-slot="{ active }">
+                                        <a @click="openEditMoneySourceModal"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <PencilAltIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            Basisdaten bearbeiten
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem v-slot="{ active }">
+                                        <a href="#" @click="duplicateMoneySource(this.moneySource)"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <DuplicateIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            Duplizieren
+                                        </a>
+                                    </MenuItem>
+                                    <MenuItem
+                                        v-if="this.$page.props.is_admin"
+                                        v-slot="{ active }">
+                                        <a @click="openDeleteMoneySourceModal(this.moneySource)"
+                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                            <TrashIcon
+                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                            Löschen
+                                        </a>
+                                    </MenuItem>
+                                </div>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                </div>
+                <div class="flex items-center w-full justify-between mt-4">
+                    <div class="mt-2 xsDark text-xs flex items-center"
+                         v-if="moneySource.users">
                         <div class="flex items-center">
-                            <div v-if="!showSearchbar" @click="this.showSearchbar = !this.showSearchbar"
-                                 class="cursor-pointer inset-y-0 mr-3">
-                                <SearchIcon class="h-5 w-5" aria-hidden="true"/>
+                            <div class="mr-2">
+                            zuständig:
                             </div>
-                            <div v-else class="flex items-center w-full w-64 mr-2">
-                                <inputComponent v-model="this.moneySource_query" placeholder="Suche nach Quellen oder Gruppen"/>
-                                <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
+                            <div class="-ml-3" v-for="user in moneySource.users">
+                                <img v-if="user"
+                                     :data-tooltip-target="user?.id"
+                                     :src="user?.profile_photo_url"
+                                     :alt="user?.name"
+                                     class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip v-if="user"
+                                             :user="user"/>
                             </div>
                         </div>
                     </div>
+                    <div class="flex mt-2 mx-4 xsDark items-center">
+                        erstellt von
+                        <img v-if="moneySource.creator"
+                             :data-tooltip-target="moneySource.creator?.id"
+                             :src="moneySource.creator?.profile_photo_url"
+                             :alt="moneySource.creator?.first_name"
+                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                        <UserTooltip v-if="moneySource.creator"
+                                     :user="moneySource.creator"/>
+                    </div>
+                    <button class="ml-4 mt-3 subpixel-antialiased flex items-center linkText cursor-pointer"
+                            @click="openMoneySourceHistoryModal()">
+                        <ChevronRightIcon
+                            class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                            aria-hidden="true"/>
+                        Verlauf ansehen
+                    </button>
                 </div>
-
-
+                <div class="xsDark mt-4 flex items-center" v-if="moneySource.group_id">
+                    <img src="/Svgs/IconSvgs/icon_group_red.svg"
+                         class=" h-4 w-4" alt="groupIcon"/>
+                    <div class="ml-2">
+                    Gehört zu
+                    </div>
+                    <Link v-if="moneySource.group_id" :href="getEditHref(moneySource.group_id)" class="linkText ml-1 mt-0.5">
+                        {{moneySource.moneySourceGroup.name}}
+                    </Link>
+                </div>
+                <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
+                    Laufzeit: {{formatDate(moneySource.start_date)}} - {{formatDate(moneySource.end_date)}}
+                </div>
+                <div class="mt-2 xsDark" v-if="moneySource.source_name">
+                    Quelle: {{ moneySource.source_name}}
+                </div>
+                <div class="mr-14 my-3 subpixel-antialiased text-secondary">
+                    {{ moneySource.description }}
+                </div>
+                <div class="mt-12 flex">
+                    <div class="w-1/2 xsLight uppercase border-r-2">
+                        Ursprungsvolumen
+                        <div class="bigNumber my-4">
+                            {{moneySource.amount}}
+                        </div>
+                    </div>
+                    <div class="w-1/2 xsLight uppercase ml-6">
+                        Noch Verfügbar
+                        <div class="bigNumber my-4">
+                            {{moneySource.amount}}
+                        </div>
+                    </div>
+                </div>
             </div>
-
-            {{moneySources}}
         </div>
+        <!-- Div with Bg-Color -->
+        <div class="w-full h-full mb-48">
+            <div class="max-w-screen-2xl bg-lightBackgroundGray">
+                <div class="headline4 py-12 ml-20">
+                Untergeordnete Finanzierungsquellen
+                </div>
+            </div>
+        </div>
+        <edit-money-source-component
+            v-if="showEditMoneySourceModal"
+            @closed="onEditMoneySourceModalClose()"
+            :moneySource="this.moneySource"
+            :moneySources="this.moneySources"
+            :moneySourceGroups="this.moneySourceGroups"
+        />
+
     </app-layout>
-    <create-money-source-component
-        v-if="showMoneySourceModal"
-        @closed="onCreateMoneySourceModalClose()"
-        :moneySourceGroups="this.moneySourceGroups"
-    />
 </template>
 
 <script>
 
-import {defineComponent} from 'vue'
-import AppLayout from '@/Layouts/AppLayout.vue'
+
+import AppLayout from '@/Layouts/AppLayout.vue';
 import {
-    Listbox,
-    ListboxButton,
-    ListboxLabel,
-    ListboxOption,
-    ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems
+    MenuItem,
+    MenuItems,
 } from "@headlessui/vue";
-import {ChevronDownIcon, SearchIcon, XIcon} from "@heroicons/vue/solid";
-import AddButton from "@/Layouts/Components/AddButton";
+import {
+    PencilAltIcon,
+    TrashIcon,
+    DuplicateIcon,
+} from "@heroicons/vue/outline";
+import {
+    DotsVerticalIcon,
+    ChevronRightIcon
+} from "@heroicons/vue/solid";
+import UserTooltip from "@/Layouts/Components/UserTooltip";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
-import InputComponent from "@/Layouts/Components/InputComponent";
-import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
+import {Link} from "@inertiajs/inertia-vue3";
+import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
 
 
 
-export default defineComponent({
+export default {
+    name: "MoneySourceShow",
+    props: ['moneySource','moneySourceGroups','moneySources'],
     components: {
         AppLayout,
-        Listbox,
-        ListboxButton,
-        ListboxLabel,
-        ListboxOption,
-        ListboxOptions,
+        UserTooltip,
+        ChevronRightIcon,
         Menu,
-        MenuButton,
         MenuItem,
         MenuItems,
-        ChevronDownIcon,
-        AddButton,
+        MenuButton,
+        DuplicateIcon,
+        PencilAltIcon,
+        TrashIcon,
+        DotsVerticalIcon,
         SvgCollection,
-        SearchIcon,
-        InputComponent,
-        XIcon,
-        CreateMoneySourceComponent
-
-
-
+        Link,
+        EditMoneySourceComponent,
     },
-    props: ['moneySources','moneySourceGroups'],
-    created() {
-
-    },
-    methods: {
-        closeSearchbar() {
-            this.showSearchbar = !this.showSearchbar;
-            this.moneySource_query = ''
-        },
-        openAddMoneySourceModal(){
-            this.showMoneySourceModal = true;
-        },
-        onCreateMoneySourceModalClose(){
-            this.showMoneySourceModal = false;
-        },
-    },
-    watch: {
-        moneySource_query: {
-            handler() {
-                if (this.moneySource_query.length > 0) {
-                    axios.get('/money_sources/search', {
-                        params: {query: this.moneySource_query, type: this.searchType}
-                    }).then(response => {
-                        console.log(response);
-                    })
-                }
-            },
-            deep: true
-        }
-    },
+    computed: {},
     data() {
         return {
-            showSearchbar: false,
-            moneySource_query: '',
-            showMoneySourceModal: false,
-            searchType: 'single'
+            showEditMoneySourceModal: false,
+        }
+    },
+    methods: {
+        getEditHref(moneySourceId) {
+            return route('money_sources.show', {moneySource: moneySourceId});
+        },
+        formatDate(isoDate) {
+            return isoDate.substring(8, 10) + '.' + isoDate.substring(5, 7) + '.' + isoDate.substring(0, 4)
+        },
+        openEditMoneySourceModal(){
+            this.showEditMoneySourceModal = true;
+        },
+        onEditMoneySourceModalClose(){
+            this.showEditMoneySourceModal = false;
         }
     },
     setup() {
         return {}
     }
-})
+}
+
 </script>
+
+<style scoped>
+</style>

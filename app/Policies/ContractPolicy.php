@@ -2,11 +2,11 @@
 
 namespace App\Policies;
 
-use App\Models\Department;
 use App\Models\User;
+use App\Models\contract;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class DepartmentPolicy
+class ContractPolicy
 {
     use HandlesAuthorization;
 
@@ -18,19 +18,19 @@ class DepartmentPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view departments') || $user->can('teammanagement');
+        return true;
     }
 
     /**
      * Determine whether the user can view the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \App\Models\contract  $contract
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function view(User $user, Department $department)
+    public function view(User $user, contract $contract)
     {
-        return $user->can('view departments') || $user->can('teammanagement');
+        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     /**
@@ -41,41 +41,41 @@ class DepartmentPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create departments') || $user->can('teammanagement');
+        return true;
     }
 
     /**
      * Determine whether the user can update the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \App\Models\contract  $contract
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function update(User $user, Department $department)
+    public function update(User $user, contract $contract)
     {
-        return $user->can('update departments') || $user->can('teammanagement');
+        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     /**
      * Determine whether the user can delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \App\Models\contract  $contract
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function delete(User $user, Department $department)
+    public function delete(User $user, contract $contract)
     {
-        return $user->can('delete departments') || $user->can('teammanagement');
+        return $contract->accessing_users->contains($user->id) || $contract->project->managerUsers->contains($user->id);
     }
 
     /**
      * Determine whether the user can restore the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \App\Models\contract  $contract
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function restore(User $user, Department $department)
+    public function restore(User $user, contract $contract)
     {
         //
     }
@@ -84,10 +84,10 @@ class DepartmentPolicy
      * Determine whether the user can permanently delete the model.
      *
      * @param  \App\Models\User  $user
-     * @param  \App\Models\Department  $department
+     * @param  \App\Models\contract  $contract
      * @return \Illuminate\Auth\Access\Response|bool
      */
-    public function forceDelete(User $user, Department $department)
+    public function forceDelete(User $user, contract $contract)
     {
         //
     }

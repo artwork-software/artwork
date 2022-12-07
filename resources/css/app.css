@@ -46,6 +46,12 @@
         color: #A7A6B1;
         opacity: 1;
     }
+    .headline4{
+        font: normal normal 600 20px/25px Lexend;
+        letter-spacing: -0.1px;
+        color: #27233C;
+        opacity: 1;
+    }
     .headline6Light{
         font: normal normal 600 10px/19px Inter;
         letter-spacing: 0.5px;
@@ -132,6 +138,11 @@
     }
     .eventBorder{
         border: 1px solid #D8D7DE;
+        opacity: 1;
+    }
+    .bigNumber{
+        font: normal normal 40px/48px Lexend;
+        color: #27233C;
         opacity: 1;
     }
     .linkText{

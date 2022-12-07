@@ -83,11 +83,7 @@ class MoneySourceController extends Controller
 
         foreach ($request->users as $requestUser){
             $user = User::find($requestUser);
-            $inputArray[$user->id] = [
-                'id' => $user->id,
-                'name' => $user->first_name . ' ' . $user->last_name,
-                'profile_photo_url' => $user->profile_photo_url
-            ];
+            $inputArray[] = $user;
             // create user Notification
             $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
             $this->notificationData->title = 'Du hast Zugriff auf "'. $request->name . '" erhalten';

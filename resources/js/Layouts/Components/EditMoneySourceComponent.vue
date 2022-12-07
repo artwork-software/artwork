@@ -437,7 +437,9 @@ export default {
 
     methods: {
         addUserToMoneySourceUserArray(user) {
-            this.usersToAdd.push(user);
+            if(!this.usersToAdd.find(userToAdd => userToAdd.id === user.id)){
+                this.usersToAdd.push(user);
+            }
             this.user_query = '';
         },
         addMoneySourceToGroup(moneySource) {

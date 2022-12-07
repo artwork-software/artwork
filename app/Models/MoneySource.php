@@ -26,11 +26,16 @@ class MoneySource extends Model
 
 
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
-
     {
         return $this->belongsTo(User::class);
     }
 
+
+    public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MoneySourceTask::class, 'money_source_id');
+
+    }
 
     public function toSearchableArray(): array
     {
@@ -40,9 +45,5 @@ class MoneySource extends Model
         ];
     }
 
-    public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
-    {
-        return $this->hasMany(MoneySourceTask::class, 'money_source_id');
 
-    }
 }

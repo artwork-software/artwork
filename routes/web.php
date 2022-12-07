@@ -276,9 +276,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 
     //ContractModules
-    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.management');
-    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.store');
-    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.download');
+    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
+    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.module.store');
+    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
 });

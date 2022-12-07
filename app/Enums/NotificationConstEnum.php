@@ -18,6 +18,11 @@ enum NotificationConstEnum: string
     case NOTIFICATION_EVENT_CHANGED = 'NOTIFICATION_EVENT_CHANGED';
     case NOTIFICATION_LOUD_ADJOINING_EVENT = 'NOTIFICATION_LOUD_ADJOINING_EVENT';
 
+    case NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED = 'NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED';
+    case NOTIFICATION_BUDGET_STATE_CHANGED = 'NOTIFICATION_BUDGET_STATE_CHANGED';
+    case NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED = 'NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED';
+    case NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED = 'NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED';
+
     case NOTIFICATION_UPSERT_ROOM_REQUEST = 'NOTIFICATION_UPSERT_ROOM_REQUEST';
     case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
     case NOTIFICATION_ROOM_CHANGED = 'NOTIFICATION_ROOM_CHANGED';
@@ -37,6 +42,11 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_EVENT_CHANGED,
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "EVENTS",
 
+            self::NOTIFICATION_BUDGET_STATE_CHANGED,
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED,
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED,
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => "BUDGET",
+
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
@@ -46,7 +56,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_CHANGED => "TASKS",
 
             self::NOTIFICATION_PROJECT,
-            self::NOTIFICATION_TEAM => "PROJECTS"
+            self::NOTIFICATION_TEAM => "PROJECTS",
         };
     }
 
@@ -69,7 +79,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_CHANGED => TaskNotification::class,
 
             self::NOTIFICATION_PROJECT => ProjectNotification::class,
-            self::NOTIFICATION_TEAM => TeamNotification::class
+            self::NOTIFICATION_TEAM => TeamNotification::class,
         };
     }
 
@@ -81,6 +91,11 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_EVENT_CHANGED => "Terminänderung",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Nebenveranstaltungen",
 
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => 'Budget- und Finanzierungsquellenzugriff',
+            self::NOTIFICATION_BUDGET_STATE_CHANGED => 'Änderungen am Budgetstatus',
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => 'Änderungen an Budget und Finanzierungsquellen',
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Änderungen an Dokumenten und Verträgen',
+
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Neue/geänderte Raumanfrage",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Erinnerung Raumanfragen",
             self::NOTIFICATION_ROOM_CHANGED => "Änderungen an Raum",
@@ -90,7 +105,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_CHANGED => "Änderungen an Aufgaben",
 
             self::NOTIFICATION_PROJECT => "Änderungen an Projekten",
-            self::NOTIFICATION_TEAM => "Teamzugehörigkeit"
+            self::NOTIFICATION_TEAM => "Teamzugehörigkeit",
         };
     }
 
@@ -102,6 +117,11 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_EVENT_CHANGED => "Erfahre, ob es Änderungen an deinen Terminen gibt oder ein Termin abgesagt wurde.",
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => "Erfahre, ob parallel zu einem deiner Termine in einem Nebenraum laute oder Termine mit Publikum eingestellt wurden.",
 
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED => 'Werde benachrichtigt wenn sich dein Zugriff auf Projektbudgets oder Finanzierungsquellen geändert hat.',
+            self::NOTIFICATION_BUDGET_STATE_CHANGED => 'Werde benachrichtigt wenn Teile deiner Kalkulation festgeschrieben, zur Verifizierung angefragt oder verifiziert wurden.',
+            self::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED => 'Werde benachrichtigt wenn es Änderungen am Budget, dem Kostenträger oder Urheberrechten deines Projektes gab. Erhalte außerdem eine Warnung, sobald deine Finanzierungsquelle ins Minus gerutscht ist.',
+            self::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED => 'Erfahre ob du eine Freigabe für Dokumente oder Verträge erhalten hast und ob es Änderungen an diesen Dokumenten gab.',
+
             self::NOTIFICATION_UPSERT_ROOM_REQUEST => "Erfahre ob es neue oder geänderte Raumanfragen gibt.",
             self::NOTIFICATION_REMINDER_ROOM_REQUEST => "Lass’ dich erinnern, wenn Raumanfragen dringend werden.",
             self::NOTIFICATION_ROOM_CHANGED => "Werde benachrichtigt, sobald es Änderungen an deinen Räumen oder deinen Raum-Zuständigkeiten gibt.",
@@ -111,7 +131,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_CHANGED => "Erfahre ob es Änderungen an deinen Aufgaben gibt",
 
             self::NOTIFICATION_PROJECT => "Erfahre ob es Änderungen an deinen Projekten gibt und welche Rolle du im Projektteam hast.",
-            self::NOTIFICATION_TEAM => "Werde benachrichtigt, sobald sich deine Teamzugehörigkeit ändert."
+            self::NOTIFICATION_TEAM => "Werde benachrichtigt, sobald sich deine Teamzugehörigkeit ändert.",
         };
     }
 }

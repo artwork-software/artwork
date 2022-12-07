@@ -2,14 +2,25 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Models\MoneySource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use stdClass;
 
 class MoneySourceController extends Controller
 {
+    protected ?NotificationController $notificationController = null;
+    protected ?stdClass $notificationData = null;
+
+    public function __construct()
+    {
+        $this->notificationController = new NotificationController();
+        $this->notificationData = new \stdClass();
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -66,13 +77,27 @@ class MoneySourceController extends Controller
      * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $inputArray = [];
 
-        foreach ($request->users as $requestUser) {
+        foreach ($request->users as $requestUser){
             $user = User::find($requestUser);
-            $inputArray[] = $user;
+            $inputArray[$user->id] = [
+                'id' => $user->id,
+                'name' => $user->first_name . ' ' . $user->last_name,
+                'profile_photo_url' => $user->profile_photo_url
+            ];
+            // create user Notification
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
+            $this->notificationData->title = 'Du hast Zugriff auf "'. $request->name . '" erhalten';
+            $this->notificationData->created_by = Auth::user();
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
         }
 
         if (!empty($request->amount)) {
@@ -158,6 +183,7 @@ class MoneySourceController extends Controller
      */
     public function update(Request $request, MoneySource $moneySource)
     {
+
         $inputArray = [];
 
         foreach ($request->users as $requestUser) {
@@ -195,6 +221,7 @@ class MoneySourceController extends Controller
                 $money_source->update(['group_id' => $moneySource->id]);
             }
         }
+
     }
 
     /**

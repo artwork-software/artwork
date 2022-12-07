@@ -4,8 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
+
+/**
+ * @property int $id
+ * @property string $name
+ * @property float $amount
+ * @property Date $start_date
+ * @property Date $end_date
+ * @property string $source_name
+ * @property string $description
+ * @property boolean $is_group
+ * @property array $users
+ * @property int $group_id
+ */
 class MoneySource extends Model
 {
     use HasFactory;

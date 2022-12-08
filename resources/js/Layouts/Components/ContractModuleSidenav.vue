@@ -4,14 +4,23 @@
             <div class="text-secondary text-md font-semibold">
                 Vertragsbausteine
             </div>
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="upload" />
+            <input
+                @change="upload"
+                class="hidden"
+                id="file"
+                type="file"
+                ref="module_files"
+                multiple
+            />
+            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="selectNewFiles"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
              v-for="contractModule in contractModules.data"
-             @click="download(contractModule)"
         >
-            <DownloadIcon class="w-4 h-4 mr-2 hover:text-white" />
-            <div>{{contractModule.name}}</div>
+            <DownloadIcon class="w-4 h-4 mr-2" @click="download(contractModule)"/>
+            <div @click="download(contractModule)">{{ contractModule.name }}</div>
+            <XCircleIcon class="w-4 h-4 ml-auto" @click="destroy(contractModule)"/>
+
         </div>
     </div>
 </template>
@@ -19,7 +28,8 @@
 <script>
 import {
     DownloadIcon,
-    UploadIcon
+    UploadIcon,
+    XCircleIcon
 } from '@heroicons/vue/outline';
 
 export default {
@@ -29,19 +39,49 @@ export default {
     },
     components: {
         DownloadIcon,
-        UploadIcon
+        UploadIcon,
+        XCircleIcon
     },
     methods: {
         download(module) {
-            axios.get(`/contract_modules/${module.id}/download`)
-                .then(res => console.log(res))
-                .catch(err => console.log(err))
+            let link = document.createElement('a');
+            link.href = route('contracts.module.download', {module: module});
+            link.target = '_blank';
+            link.click();
         },
-        upload() {
-            axios.post('/contract_modules', { })
-                .then(res => console.log(res))
-                .catch(err => console.log(err))
-        }
+        upload(event) {
+            this.validateTypeAndUpload([...event.target.files])
+        },
+        storeFile(file) {
+            this.$inertia.post('/contract_modules', {module: file}, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$emit('upload')
+                }
+
+            })
+        },
+        destroy(module) {
+            this.$inertia.delete(`/contract_modules/${module.id}`);
+        },
+        selectNewFiles() {
+            this.$refs.module_files.click();
+        },
+        validateTypeAndUpload(files) {
+            this.uploadDocumentFeedback = "";
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
+            ]
+            for (let file of files) {
+                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
+                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                } else {
+                    this.storeFile(file)
+                }
+            }
+        },
     }
 }
 </script>

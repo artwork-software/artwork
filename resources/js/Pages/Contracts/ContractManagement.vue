@@ -18,7 +18,7 @@
             </div>
         </div>
         <BaseSidenav :show="show" @change="this.show =! this.show">
-            <ContractModuleSidenav :contractModules="contract_modules" />
+            <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
     </app-layout>
 </template>

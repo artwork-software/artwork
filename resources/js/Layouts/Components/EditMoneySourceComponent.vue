@@ -11,7 +11,6 @@
                     <div class="flex-grow headline1 mb-6">
                         {{ moneySource.is_group ? 'Finanzierungsquellengruppe' : 'Finanzierungsquelle' }}
                     </div>
-                    {{usersToAdd}}
                     <div class="flex items-center w-full mt-4">
                         <div class="mt-2 xsDark text-xs flex items-center"
                              v-if="moneySource.users">

@@ -54,6 +54,10 @@
                                                       name="Projekte & Teams" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
                                                       :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                        <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
+                                                      name="Projektbudgets & Finanzierungsquellen" :rooms="rooms" :projects="projects"
+                                                      :event-types="eventTypes"
+                                                      :notifications="notifications['BUDGET']"></NotificationSectionComponent>
                     </div>
                     <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title" class="col-span-4 pr-4">
                         <div class="bg-backgroundGray">

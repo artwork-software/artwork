@@ -20,10 +20,10 @@ return new class extends Migration
             $table->string("contract_partner");
             $table->integer('amount');
             $table->unsignedBigInteger('project_id');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->string('legal_form');
-            $table->boolean('ksk_liable')->default(false);
-            $table->boolean('resident_abroad')->default(false);
+            $table->boolean('ksk_liable')->default(false)->nullable();
+            $table->boolean('resident_abroad')->default(false)->nullable();
             $table->string('type');
             $table->timestamps();
         });

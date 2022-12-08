@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Checklist;
+use App\Models\Contract;
+use App\Models\ContractModule;
 use App\Models\Department;
 use App\Models\Project;
 use App\Models\RoomCategory;
@@ -26,6 +28,55 @@ class ContentSeeder extends Seeder
         $this->seedProjects();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
+        $this->seedContracts();
+        $this->seedContractModules();
+    }
+
+    private function seedContracts()
+    {
+
+        Contract::create([
+            'name' => 'Basic Vertrag',
+            'basename' => 'basic_contract',
+            'contract_partner' => 'Deutscher Staat',
+            'amount' => 12000,
+            'project_id' => 1,
+            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
+                                Er steht hier als Platzhalter.',
+            'ksk_liable' => false,
+            'resident_abroad' => false,
+            'legal_form' => 'Werkvertrag',
+            'type' => 'Sponsoring'
+        ]);
+
+        Contract::create([
+            'name' => 'Advanced Vertrag',
+            'basename' => 'advanced_contract',
+            'contract_partner' => 'HAU',
+            'amount' => 8000,
+            'project_id' => 1,
+            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
+                                Er steht hier als Platzhalter.',
+            'ksk_liable' => false,
+            'resident_abroad' => false,
+            'legal_form' => 'Werkvertrag',
+            'type' => 'Collaboration'
+        ]);
+
+
+    }
+
+    private function seedContractModules()
+    {
+        ContractModule::create([
+            'name' => 'Baustein',
+            'basename' => 'baustein',
+        ]);
+
+        ContractModule::create([
+            'name' => 'Mittelteil',
+            'basename' => 'mittelteil',
+        ]);
     }
 
     private function seedDepartments()

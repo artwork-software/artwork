@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ContractUpdateRequest;
+use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
 use App\Models\Contract;
+use App\Models\ContractModule;
 use App\Models\Project;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -54,7 +56,8 @@ class ContractController extends Controller
         }
 
         return inertia('Contracts/ContractManagement', [
-            'contracts' => ContractResource::collection($contracts)
+            'contracts' => ContractResource::collection($contracts),
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
             ]);
 
     }

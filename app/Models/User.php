@@ -175,6 +175,15 @@ class User extends Authenticatable
         return $this->hasOne(GlobalNotification::class, 'created_by');
     }
 
+    public function money_sources(){
+        return $this->hasMany(MoneySource::class, 'creator_id');
+    }
+
+    public function money_source_tasks(): HasMany
+    {
+        return $this->hasMany(MoneySourceTask::class, 'user_id');
+    }
+
     public function toSearchableArray(): array
     {
         return [

@@ -18,7 +18,7 @@ class DepartmentPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view departments');
+        return $user->can('view departments') || $user->can('teammanagement');
     }
 
     /**
@@ -30,7 +30,7 @@ class DepartmentPolicy
      */
     public function view(User $user, Department $department)
     {
-        return $user->can('view departments');
+        return $user->can('view departments') || $user->can('teammanagement');
     }
 
     /**
@@ -41,7 +41,7 @@ class DepartmentPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create departments');
+        return $user->can('create departments') || $user->can('teammanagement');
     }
 
     /**
@@ -53,7 +53,7 @@ class DepartmentPolicy
      */
     public function update(User $user, Department $department)
     {
-        return $user->can('update departments');
+        return $user->can('update departments') || $user->can('teammanagement');
     }
 
     /**
@@ -65,7 +65,7 @@ class DepartmentPolicy
      */
     public function delete(User $user, Department $department)
     {
-        return $user->can('delete departments');
+        return $user->can('delete departments') || $user->can('teammanagement');
     }
 
     /**

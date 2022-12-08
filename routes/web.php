@@ -259,6 +259,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/globalNotification/create', [GlobalNotificationController::class, 'store'])->name('global_notification.store');
     Route::delete('/globalNotification/{globalNotification}', [GlobalNotificationController::class, 'destroy'])->name('global_notification.destroy');
 
+    // Money Sources
+    Route::get('/money_sources', [MoneySourceController::class, 'index'])->name('money_sources.index');
+    Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
+    Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
+    Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
+    Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
+    Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
+    Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
+
+
     //Contracts
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
@@ -268,12 +278,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
     //ContractModules
-    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contract_modules.management');
-    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contract_modules.store');
-    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contract_modules.download');
+    Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
+    Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.module.store');
+    Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
 });
 
-// Money Sources
-Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');

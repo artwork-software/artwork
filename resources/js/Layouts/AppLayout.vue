@@ -260,6 +260,12 @@ export default {
                     has_permission: this.$page.props.is_admin,
                     href: route('contracts.management'),
                     route: ['/contracts']
+                },
+                {
+                    name: 'Finanzierungsquellen',
+                    has_permission: true,
+                    href: route('money_sources.index'),
+                    route: ['/money_sources']
                 }
             ]
         }

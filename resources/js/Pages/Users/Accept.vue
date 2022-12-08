@@ -109,6 +109,7 @@
                     class="flex px-44 py-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
                 <p class="text-sm">Registrieren</p>
             </button>
+            {{this.error}}
         </form>
     </div>
 </template>
@@ -156,6 +157,7 @@ export default defineComponent({
     data() {
         return {
             pw_feedback: 0,
+            error: null,
             form: this.$inertia.form({
                 _method: 'POST',
                 first_name: '',

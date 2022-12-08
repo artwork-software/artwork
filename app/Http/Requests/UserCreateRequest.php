@@ -22,7 +22,7 @@ class UserCreateRequest extends FormRequest
             'last_name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => $this->passwordRules(),
-            'phone_number' => ['string', 'max:15'],
+            'phone_number' => ['nullable', 'string', 'max:15'],
             'position' => ['required', 'string', 'max:255'],
             'business' => ['required', 'string', 'max:255'],
             'description' => ['string', 'max:5000'],

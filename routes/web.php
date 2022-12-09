@@ -277,12 +277,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
 
-/* HIER BITTE NOCH CHECKEN WEGEN DOPPELTEN ROUTES
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
     Route::post('/contract_modules', [ContractModuleController::class, 'store'])->name('contracts.module.store');
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
-*/
 });

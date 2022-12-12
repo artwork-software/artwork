@@ -604,6 +604,20 @@
                                     </transition>
                                 </Menu>
                             </div>
+                            <div class="flex mb-2">
+                                <div v-for="categoryId in form.assignedCategoryIds">
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name" :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                </div>
+                                <div v-for="genreId in form.assignedGenreIds">
+                                    <TagComponent   hide-x="true"
+                                                    :displayed-text="this.genres.find(genre => genre.id === genreId).name" :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                </div>
+                                <div v-for="sectorId in form.assignedSectorIds">
+                                    <TagComponent  hide-x="true"
+                                                   :displayed-text="this.sectors.find(sector => sector.id === sectorId).name" :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                </div>
+                            </div>
                             <div class="mb-3">
                                             <textarea
                                                 placeholder="Kurzbeschreibung"
@@ -785,6 +799,20 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
+                            </div>
+                            <div class="flex mb-2">
+                                <div v-for="categoryId in form.assignedCategoryIds">
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name" :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                </div>
+                                <div v-for="genreId in form.assignedGenreIds">
+                                    <TagComponent   hide-x="true"
+                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name" :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                </div>
+                                <div v-for="sectorId in form.assignedSectorIds">
+                                    <TagComponent  hide-x="true"
+                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name" :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                </div>
                             </div>
                             <div class="mb-2">
                                             <textarea
@@ -1016,6 +1044,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import AddButton from "@/Layouts/Components/AddButton";
 import projects from "@/Pages/Trash/Projects";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1027,6 +1056,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        TagComponent,
         AddButton,
         CategoryIconCollection,
         TeamIconCollection,
@@ -1115,6 +1145,14 @@ export default defineComponent({
             this.form.cost_center = "";
             this.form.number_of_participants = "";
             this.selectedParticipantNumber = "";
+            this.form.projects = [];
+            this.form.isGroup = false;
+            this.form.selectedGroup = null;
+            this.form.assignedSectorIds = [];
+            this.form.assignedCategoryIds = [];
+            this.form.assignedGenreIds = [];
+            this.hasGroup = false;
+            this.selectedGroup = null;
         },
         addProject() {
             this.subProjects.forEach((projectToAdd) => {

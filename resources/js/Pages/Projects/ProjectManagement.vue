@@ -484,7 +484,7 @@
                                 <Menu as="div" class="inline-block text-left w-full">
                                     <div>
                                         <MenuButton
-                                            class="h-12 border sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                         >
                                             <span class="float-left xsLight">Eigenschaften wählen</span>
                                             <ChevronDownIcon

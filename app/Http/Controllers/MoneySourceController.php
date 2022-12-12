@@ -103,7 +103,6 @@ class MoneySourceController extends Controller
             $amount = 0.00;
         }
 
-        // user => Auth()::user()
         $user = Auth::user();
         $source = $user->money_sources()->create([
             'name' => $request->name,
@@ -178,7 +177,6 @@ class MoneySourceController extends Controller
      */
     public function update(Request $request, MoneySource $moneySource)
     {
-
         $oldMoneySourceUsers = json_decode($moneySource->users);
         $inputArray = [];
 
@@ -197,7 +195,6 @@ class MoneySourceController extends Controller
         foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
             $beforeSubMoneySource->update(['group_id' => null]);
         }
-
 
         $moneySource->update([
             'name' => $request->name,
@@ -219,8 +216,7 @@ class MoneySourceController extends Controller
         }
 
         $newMoneySourceUsers = json_decode($moneySource->users);
-        $this->checkUserChanges($moneySource->id, $moneySource->name, $oldMoneySourceUsers, $newMoneySourceUsers);
-
+        $this->checkUserChanges($moneySource->name, $oldMoneySourceUsers, $newMoneySourceUsers);
     }
 
     /**
@@ -235,11 +231,24 @@ class MoneySourceController extends Controller
         foreach ($beforeSubMoneySources as $beforeSubMoneySource) {
             $beforeSubMoneySource->update(['group_id' => null]);
         }
+        $users = json_decode($moneySource->users);
+        foreach ($users as $user){
+            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
+            $this->notificationData->title = 'Finanzierungsquelle/gruppe ' .$moneySource->name . ' wurde gelöscht';
+            $this->notificationData->created_by = Auth::user();
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($user->id), $this->notificationData, $broadcastMessage);
+        }
         $moneySource->delete();
         return Redirect::route('money_sources.index')->with('success', 'MoneySource deleted.');
     }
 
-    public function duplicate(MoneySource $moneySource){
+    public function duplicate(MoneySource $moneySource): \Illuminate\Http\RedirectResponse
+    {
         $user = Auth::user();
         $newMoneySource = $user->money_sources()->create([
             'name' => '(Kopie) ' . $moneySource->name,
@@ -256,7 +265,8 @@ class MoneySourceController extends Controller
         return Redirect::route('money_sources.index')->with('success', 'MoneySource duplicated.');
     }
 
-    private function checkUserChanges($moneySourceId, $moneySourceName, $oldUsers, $newUsers){
+
+    private function checkUserChanges($moneySourceName, $oldUsers, $newUsers){
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
         $oldUserIds = [];
         $newUserIds = [];
@@ -290,6 +300,7 @@ class MoneySourceController extends Controller
                 ];
                 $this->notificationController->create(User::where('id', $oldUserId)->first(), $this->notificationData, $broadcastMessage);
             }
+
         }
     }
 }

@@ -18,6 +18,7 @@ use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\Project;
+use App\Models\ProjectGroups;
 use App\Models\Sector;
 use App\Models\Task;
 use App\Models\User;
@@ -77,6 +78,8 @@ class ProjectController extends Controller
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectShowResource::collection($projects)->resolve(),
 
+            'projectGroups' => Project::where('is_group', 1)->get(),
+
             'users' => User::all(),
 
             'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
@@ -118,6 +121,18 @@ class ProjectController extends Controller
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
+    public function searchProjectsWithoutGroup(Request $request): array
+    {
+        $filteredObjects = [];
+        $projects = Project::search($request->input('query'))->get();
+        foreach ($projects as $project) {
+            if ($project->is_group !== 1 || $project->is_group !== true) {
+                $filteredObjects[] = $project;
+            }
+        }
+        return $filteredObjects;
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -135,6 +150,7 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request)
     {
+
         if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
@@ -155,6 +171,20 @@ class ProjectController extends Controller
         ]);
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
+
+        if($request->isGroup){
+            $project->is_group = true;
+            $project->groups()->sync(collect($request->projects));
+            $project->save();
+        }
+
+        if(!$request->isGroup && !empty($request->selectedGroup)){
+            $group = new ProjectGroups();
+            $group->create([
+                'project_groups_id' => $project->id,
+                'project_id' => $request->selectedGroup['id']
+            ]);
+        }
 
         if ($request->assigned_user_ids) {
             $project->users()->sync(collect($request->assigned_user_ids));

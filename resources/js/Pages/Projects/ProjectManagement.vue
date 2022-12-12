@@ -522,11 +522,12 @@
                                                              :key="category.id"
                                                              class="flex w-full mb-2">
                                                             <input type="checkbox"
-                                                                   v-model="form.category_id"
+                                                                   v-model="form.category_ids"
                                                                    :value="category.id"
                                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p
-                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            <p :class="[form.category_ids.includes(category.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ category.name }}
                                                             </p>
                                                         </div>
@@ -582,10 +583,12 @@
                                                              :key="sector.id"
                                                              class="flex w-full mb-2">
                                                             <input type="checkbox"
-                                                                   v-model="form.sector_id"
+                                                                   v-model="form.sector_ids"
                                                                    :value="sector.id"
                                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            <p :class="[form.sector_ids.includes(sector.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ sector.name }}
                                                             </p>
                                                         </div>
@@ -660,9 +663,9 @@
                                 <Menu as="div" class="inline-block text-left w-full">
                                     <div>
                                         <MenuButton
-                                            class="h-12 border sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                            class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                         >
-                                            <span class="float-left xsLight">Eigenschaften wählen</span>
+                                            <span class="float-left subpixel-antialiased xsLight">Eigenschaften wählen</span>
                                             <ChevronDownIcon
                                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                                 aria-hidden="true"
@@ -729,10 +732,12 @@
                                                              :key="genre.id"
                                                              class="flex w-full mb-2">
                                                             <input type="checkbox"
-                                                                   v-model="form.genre_id"
+                                                                   v-model="form.genre_ids"
                                                                    :value="genre.id"
                                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                            <p :class="[form.genre_ids.includes(genre.id)
+                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ genre.name }}
                                                             </p>
                                                         </div>
@@ -1240,9 +1245,9 @@ export default defineComponent({
                 description: "",
                 cost_center: null,
                 number_of_participants: "",
-                sector_id: null,
-                category_id: null,
-                genre_id: null,
+                sector_ids: [],
+                category_ids: [],
+                genre_ids: [],
                 isGroup: false,
                 projects: [],
                 selectedGroup: null

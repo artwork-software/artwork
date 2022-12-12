@@ -77,6 +77,8 @@ class ProjectController extends Controller
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectShowResource::collection($projects)->resolve(),
 
+            'projectGroups' => Project::where('is_group', 1)->get(),
+
             'users' => User::all(),
 
             'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
@@ -118,6 +120,18 @@ class ProjectController extends Controller
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
+    public function searchProjectsWithoutGroup(Request $request): array
+    {
+        $filteredObjects = [];
+        $projects = Project::search($request->input('query'))->get();
+        foreach ($projects as $project) {
+            if ($project->is_group !== 1 || $project->is_group !== true) {
+                $filteredObjects[] = $project;
+            }
+        }
+        return $filteredObjects;
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -135,6 +149,9 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request)
     {
+
+        dd($request->all());
+
         if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
@@ -155,6 +172,11 @@ class ProjectController extends Controller
         ]);
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
+
+        if($request->isGroup){
+            $project->update(['is_group' => 1]);
+            $project->groups()->sync(collect($request->projects));
+        }
 
         if ($request->assigned_user_ids) {
             $project->users()->sync(collect($request->assigned_user_ids));

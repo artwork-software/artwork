@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Antonrom\ModelChangesHistory\Models\Change;
+use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
@@ -195,7 +196,54 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
+        $this->generateBasicBudgetValues($project);
+
         return Redirect::route('projects', $project)->with('success', 'Project created.');
+    }
+
+
+    public function generateBasicBudgetValues(Project $project)
+    {
+        $mainPosition = $project->mainPositions()->create([
+            'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
+            'name' => 'Hauptpostion'
+        ]);
+
+        $subPosition = $mainPosition->subPositions()->create([
+            'name' => 'Unterposition'
+        ]);
+
+        $subPositionRows = $subPosition->subPositionRows()->create([
+            'commented' => false
+        ]);
+
+        $subPositionRows->columns()->create([
+            'name' => 'KTO',
+            'project_id' => $project->id,
+        ], [
+            'value' => '1234'
+        ]);
+
+        $subPositionRows->columns()->create([
+            'name' => 'A',
+            'project_id' => $project->id,
+        ], [
+            'value' => 'A.1.3'
+        ]);
+
+        $subPositionRows->columns()->create([
+            'name' => 'Position',
+            'project_id' => $project->id,
+        ], [
+            'value' => 'Lichtkran'
+        ]);
+
+        $subPositionRows->columns()->create([
+            'name' => 'Zahlen',
+            'project_id' => $project->id,
+        ], [
+            'value' => '1500'
+        ]);
     }
 
     /**
@@ -222,8 +270,36 @@ class ProjectController extends Controller
             'users.departments',
         ]);
 
+        $mainPositions = $project->mainPositions()->get();
+        $output = [];
+        foreach ($mainPositions as $mainPosition){
+            $output[$mainPosition->id] = [
+                'main' => [
+                    'type' => $mainPosition->type,
+                    'name' => $mainPosition->name,
+                ]
+            ];
+
+            $subPositions = $mainPosition->subPositions()->get();
+
+            foreach ($subPositions as $subPosition){
+                $output[$mainPosition->id]['sub'][$subPosition->id] = [
+                    'name' => $subPosition->name,
+
+                ];
+                $rows = $subPosition->subPositionRows()->get();
+                foreach ($rows as $row){
+                    $output[$mainPosition->id]['sub'][$subPosition->id]['rows'] = [
+                        $row->columns()->get()
+                    ];
+                }
+            }
+        }
+
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
+
+            'budget' => $output,
 
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),

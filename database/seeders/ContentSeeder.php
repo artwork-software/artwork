@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\Project;
@@ -198,6 +199,9 @@ class ContentSeeder extends Seeder
             'number_of_participants' => null,
             'cost_center' => null,
         ]);
+
+        $projectController = new ProjectController();
+        $projectController->generateBasicBudgetValues($project);
 
         $project->project_histories()->create([
             "user_id" => 1,

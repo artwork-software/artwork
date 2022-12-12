@@ -130,6 +130,16 @@ class Project extends Model
         return $this->belongsToMany(ProjectGroups::class, 'project_groups', 'project_id');
     }
 
+    public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Column::class);
+    }
+
+    public function mainPositions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MainPosition::class);
+    }
+
     public function toSearchableArray(): array
     {
         return [

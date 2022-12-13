@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
+        <div class="max-w-screen-2xl my-12 pl-10 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
@@ -231,8 +231,8 @@
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="w-full h-full mb-48 ">
-            <div class="ml-20">
+        <div class="w-full h-full mb-48">
+            <div class="ml-10">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
@@ -251,7 +251,7 @@
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14 p-5">
+                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-10 mt-14 p-5">
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
@@ -764,7 +764,7 @@
                     </div>
                 </div>
                 <!-- Info Tab -->
-                <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
+                <div v-if="isInfoTab" class="grid grid-cols-3 mx-10 mt-14 p-5">
                     <div class="col-span-2 mr-8">
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
@@ -914,7 +914,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="mx-20 mt-14 p-5 w-full">
+                <div v-if="isBudgetTab" class="mt-14 p-5 w-full">
                     <BudgetComponent :budget="budget"></BudgetComponent>
                 </div>
             </div>

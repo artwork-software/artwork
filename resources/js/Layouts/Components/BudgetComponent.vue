@@ -1,16 +1,16 @@
 <template>
     <div class="mx-4">
 
-        <table class="w-full ml-10">
+        <table class="w-full flex ml-16">
             <thead>
                 <tr>
-                    <th v-for="column in budget.columnNames" class="text-left w-40" >{{ column.name }}</th>
+                    <th v-for="(column,index) in budget.columnNames" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left" >{{ column.name }}</th>
                 </tr>
             </thead>
         </table>
 
         <div class="flex my-8 ">
-            <div class="flex w-full border border-2 border-gray-300">
+            <div class="flex w-full bg-secondaryHover border border-2 border-gray-300">
                 <button class="bg-buttonBlue w-6"
                         @click="costsOpened = !costsOpened">
                     <ChevronUpIcon v-if="costsOpened"
@@ -19,23 +19,24 @@
                                      class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                 </button>
 
-                <div class="ml-2 w-11/12" v-if="costsOpened">
-                    <h2>Ausgaben</h2>
+                <div class="bg-secondaryHover ml-8 w-full" v-if="costsOpened">
+                    <div class="headline4 my-10">Ausgaben</div>
                     <table class="w-full">
                         <tbody>
                             <tr v-for="mainPosition in tablesToShow[0]">
-                                <th class="bg-primary text-white text-left">
-                                    <div class="pl-2 flex items-center h-10">
+                                <th class="bg-primary text-left">
+                                    <div class="pl-2 xsWhiteBold flex items-center h-10">
                                         {{ mainPosition.name }}
                                         <button class="my-auto w-6 ml-3" @click="mainPosition.closed = !mainPosition.closed">
                                             <ChevronUpIcon v-if="!mainPosition.closed" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
                                             <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                         </button>
                                     </div>
+                                    <div class="bg-secondaryHover h-1"/>
                                     <table v-if="!mainPosition.closed" class="w-full">
                                         <thead>
                                             <tr v-for="subPosition in mainPosition.sub_positions">
-                                                <th class="bg-lightBackgroundGray xsDark" >
+                                                <th class="bg-silverGray xxsDark">
                                                     <div class="pl-2 flex items-center h-10">
                                                         {{ subPosition.name }}
                                                         <button class="my-auto w-6 ml-3" @click="subPosition.closed = !subPosition.closed">
@@ -43,17 +44,18 @@
                                                             <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                                                         </button>
                                                     </div>
-                                                    <table class="w-full" v-if="!subPosition.closed">
+                                                    <div class="bg-secondaryHover h-1"/>
+                                                    <table class="w-full flex" v-if="!subPosition.closed">
                                                         <tbody>
-                                                            <tr v-for="row in subPosition.sub_position_rows">
-                                                                <td v-for="column in row.columns" class="w-40">
-                                                                    <div @click="column.pivot.clicked = !column.pivot.clicked"  v-if="!column.pivot.clicked">{{ column.pivot.value }}</div>
+                                                            <tr class="bg-secondaryHover" v-for="row in subPosition.sub_position_rows">
+                                                                <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" v-for="(column,index) in row.columns">
+                                                                    <div class="ml-2 my-4" @click="column.pivot.clicked = !column.pivot.clicked"  v-if="!column.pivot.clicked">{{ column.pivot.value }}</div>
                                                                     <div v-else>
                                                                         <input type="text" v-model="column.pivot.value" @focusout="column.pivot.clicked = !column.pivot.clicked">
                                                                     </div>
                                                                 </td>
                                                             </tr>
-                                                            <tr class="bg-lightBackgroundGray xsDark h-10" style="background-color: #ccc !important">
+                                                            <tr class="bg-silverGray xsDark h-10">
                                                                 <td></td>
                                                                 <td></td>
                                                                 <td>SUM</td>
@@ -73,8 +75,8 @@
 
                 </div>
                 <!-- View if not opened Event -->
-                <div class="ml-2 w-11/12" v-else>
-                    <h2>Ausgaben</h2>
+                <div class="ml-2 w-full bg-secondaryHover" v-else>
+                    <div class="headline4 my-10">Ausgaben</div>
                 </div>
             </div>
         </div>

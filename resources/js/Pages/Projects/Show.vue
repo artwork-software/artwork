@@ -914,7 +914,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
+                <div v-if="isBudgetTab" class="mx-20 mt-14 p-5 w-full">
                     <BudgetComponent :budget="budget"></BudgetComponent>
                 </div>
             </div>

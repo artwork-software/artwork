@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BudgetTypesEnum;
 use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
 use App\Models\Department;
@@ -201,7 +202,9 @@ class ContentSeeder extends Seeder
         ]);
 
         $projectController = new ProjectController();
-        $projectController->generateBasicBudgetValues($project);
+        $projectController->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_COST);
+        $projectController->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_EARNING);
+
 
         $project->project_histories()->create([
             "user_id" => 1,

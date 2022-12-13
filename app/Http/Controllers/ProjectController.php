@@ -199,16 +199,17 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
-        $this->generateBasicBudgetValues($project);
+        $this->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_COST);
+        $this->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_EARNING);
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
 
-    public function generateBasicBudgetValues(Project $project)
+    public function generateBasicBudgetValues(Project $project, BudgetTypesEnum $enum)
     {
         $mainPosition = $project->mainPositions()->create([
-            'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
+            'type' => $enum,
             'name' => 'Hauptpostion'
         ]);
 

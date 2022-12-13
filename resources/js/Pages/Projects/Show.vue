@@ -763,6 +763,7 @@
                         </div>
                     </div>
                 </div>
+                <!-- Info Tab -->
                 <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
                     <div class="col-span-2 mr-8">
                         <div class="flex w-full items-center mb-8">
@@ -912,6 +913,9 @@
 
                         </div>
                     </div>
+                </div>
+                <div v-if="isBudgetTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
+                    <BudgetComponent :budget="budget"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -1615,7 +1619,7 @@
             </template>
 
         </jet-dialog-modal>
-        {{ budget }}
+
     </app-layout>
 </template>
 
@@ -1668,6 +1672,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1682,6 +1687,7 @@ export default {
     name: "ProjectShow",
     props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget'],
     components: {
+        BudgetComponent,
         TagComponent,
         AddButton,
         TeamTooltip,
@@ -1732,6 +1738,7 @@ export default {
                 {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                 {name: 'Checklisten', href: '#', current: this.isChecklistTab},
                 {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                {name: 'Budget', href:'#', current: this.isBudgetTab}
             ]
         },
         projectMembers() {
@@ -1797,6 +1804,7 @@ export default {
             isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
+            isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
             editingTeam: false,
             editingChecklistTeams: false,
             department_and_user_query: "",
@@ -2092,12 +2100,15 @@ export default {
             this.isScheduleTab = false;
             this.isChecklistTab = false;
             this.isInfoTab = false;
+            this.isBudgetTab = false;
             if (selectedTab.name === 'Ablaufplan') {
                 this.isScheduleTab = true;
             } else if (selectedTab.name === 'Checklisten') {
                 this.isChecklistTab = true;
-            } else {
+            } else if (selectedTab.name === 'Informationen & Dokumente') {
                 this.isInfoTab = true;
+            } else{
+                this.isBudgetTab = true;
             }
         },
         duplicateProject(project) {

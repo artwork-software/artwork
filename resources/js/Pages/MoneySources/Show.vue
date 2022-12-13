@@ -153,7 +153,6 @@
             :moneySources="this.moneySources"
             :moneySourceGroups="this.moneySourceGroups"
         />
-
     </app-layout>
     <confirmation-component
         v-if="showDeleteSourceModal"
@@ -208,7 +207,7 @@ export default {
         SvgCollection,
         Link,
         EditMoneySourceComponent,
-        ConfirmationComponent
+        ConfirmationComponent,
     },
     computed: {},
     data() {
@@ -216,6 +215,7 @@ export default {
             showEditMoneySourceModal: false,
             showDeleteSourceModal: false,
             sourceToDelete: null,
+            show: false,
         }
     },
     methods: {

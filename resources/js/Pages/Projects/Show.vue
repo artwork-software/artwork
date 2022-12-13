@@ -1615,10 +1615,7 @@
             </template>
 
         </jet-dialog-modal>
-
-        <pre>
-            {{ budget }}
-        </pre>
+        {{ budget }}
     </app-layout>
 </template>
 

@@ -15,12 +15,15 @@ use App\Http\Resources\ProjectShowResource;
 use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
+use App\Models\Column;
 use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
+use App\Models\MainPosition;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\Sector;
+use App\Models\SubPosition;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
@@ -217,6 +220,10 @@ class ProjectController extends Controller
             'commented' => false
         ]);
 
+        $subPositionRows2 = $subPosition->subPositionRows()->create([
+            'commented' => true
+        ]);
+
         $subPositionRows->columns()->create([
             'name' => 'KTO',
             'project_id' => $project->id,
@@ -239,6 +246,34 @@ class ProjectController extends Controller
         ]);
 
         $subPositionRows->columns()->create([
+            'name' => 'Zahlen',
+            'project_id' => $project->id,
+        ], [
+            'value' => '1500'
+        ]);
+
+        $subPositionRows2->columns()->create([
+            'name' => 'KTO',
+            'project_id' => $project->id,
+        ], [
+            'value' => '1234'
+        ]);
+
+        $subPositionRows2->columns()->create([
+            'name' => 'A',
+            'project_id' => $project->id,
+        ], [
+            'value' => 'A.1.3'
+        ]);
+
+        $subPositionRows2->columns()->create([
+            'name' => 'Position',
+            'project_id' => $project->id,
+        ], [
+            'value' => 'Lichtkran'
+        ]);
+
+        $subPositionRows2->columns()->create([
             'name' => 'Zahlen',
             'project_id' => $project->id,
         ], [
@@ -270,36 +305,16 @@ class ProjectController extends Controller
             'users.departments',
         ]);
 
-        $mainPositions = $project->mainPositions()->get();
-        $output = [];
-        foreach ($mainPositions as $mainPosition){
-            $output[$mainPosition->id] = [
-                'main' => [
-                    'type' => $mainPosition->type,
-                    'name' => $mainPosition->name,
-                ]
-            ];
-
-            $subPositions = $mainPosition->subPositions()->get();
-
-            foreach ($subPositions as $subPosition){
-                $output[$mainPosition->id]['sub'][$subPosition->id] = [
-                    'name' => $subPosition->name,
-
-                ];
-                $rows = $subPosition->subPositionRows()->get();
-                foreach ($rows as $row){
-                    $output[$mainPosition->id]['sub'][$subPosition->id]['rows'] = [
-                        $row->columns()->get()
-                    ];
-                }
-            }
-        }
+        $table = $project->mainPositions()->with('subPositions.subPositionRows.columns')->get();
+        $columnNames = $project->columns()->distinct()->get('name');
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 
-            'budget' => $output,
+            'budget' => [
+                'columnNames' => $columnNames,
+                'table' => $table
+            ],
 
             'categories' => Category::all(),
             'projectCategoryIds' => $project->categories()->pluck('category_id'),

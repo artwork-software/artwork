@@ -31,6 +31,7 @@ use Laravel\Scout\Searchable;
  * @property \Illuminate\Database\Eloquent\Collection<Category> $categories
  * @property \Illuminate\Database\Eloquent\Collection<Sector> $sectors
  * @property \Illuminate\Database\Eloquent\Collection<Genre> $genres
+ * @property \Illuminate\Database\Eloquent\Collection<Project> $groups
  * @property \Illuminate\Database\Eloquent\Collection<\App\Models\Room> $rooms
  * @property Sector $sector
  * @property Category $category
@@ -46,6 +47,8 @@ class Project extends Model
         'number_of_participants',
         'cost_center',
     ];
+
+    protected $with = ['historyChangesMorph'];
 
     public function users()
     {
@@ -125,10 +128,11 @@ class Project extends Model
         return static::where('deleted_at', '<=', now()->subMonth());
     }
 
-    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function groups()
     {
-        return $this->belongsToMany(ProjectGroups::class, 'project_groups', 'project_id');
+        return $this->belongsToMany(Project::class, 'project_groups', 'group_id');
     }
+
 
     public function toSearchableArray(): array
     {

@@ -858,7 +858,7 @@
                                 </div>
                                 <div v-if="subProjects.length > 0" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(subProjects,index) in subProjects"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex rounded-full items-center font-bold text-primary">
                                             <span
                                                 class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                                 {{ subProjects.name }}

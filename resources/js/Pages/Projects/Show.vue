@@ -103,7 +103,7 @@
                 </div>
 
                 <div class="mt-3" v-if="projectGroups.length > 0">
-                    <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFroGroup"
+                    <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFromGroup"
                                   :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
                 </div>
 
@@ -1116,7 +1116,7 @@
                                 <Listbox as="div" v-model="this.selectedGroup" id="room">
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow flex text-left xsDark">
-                                            {{ this.currentGroup.name ? this.currentGroup.name : 'Projektgruppe suchen'  }}
+                                            {{ this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'  }}
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
@@ -1664,10 +1664,6 @@
             </template>
 
         </jet-dialog-modal>
-
-        <pre>
-            {{ project }}
-        </pre>
     </app-layout>
 </template>
 
@@ -1943,14 +1939,15 @@ export default {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
     },
     methods: {
-        deleteProjectFroGroup(projectGroupId){
+        deleteProjectFromGroup(projectGroupId){
+
             axios.delete(route('projects.group.delete'), {
                params: {
                    projectIdToDelete: projectGroupId.id,
                    groupId: this.project.id
                }
             }).finally(() => {
-                this.groupProjects.splice(this.groupProjects.findIndex(index => index.id === projectGroupId.id), 1)
+                this.projectGroups.splice(this.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
             })
         },
         removeSelectedGroup(){

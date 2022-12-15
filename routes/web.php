@@ -284,4 +284,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
+
+    //Budget
+    Route::patch('/project/budget/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
+    Route::post('/project/budget/subposition', [ProjectController::class, 'addSubPosition'])->name('project.budget.subposition.add');
 });

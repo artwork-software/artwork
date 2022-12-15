@@ -205,7 +205,6 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
-
     public function generateBasicBudgetValues(Project $project)
     {
         $columns = $project->columns()->createMany([
@@ -255,6 +254,34 @@ class ProjectController extends Controller
                 'linked_money_source_id' => null
             ]);
         }
+    }
+
+    public function updateCellValue(Request $request){
+        DB::table('column_sub_position_row')->where('id', '=', $request->id)->update(['value' => $request->value]);
+    }
+
+    public function addSubPosition(Request $request){
+        $project = Project::find($request->project_id);
+        $columns = $project->columns()->get();
+        $mainPosition = MainPosition::find($request->main_position_id);
+
+        $subPosition = $mainPosition->subPositions()->create([
+            'name' => 'Neue Unterposition'
+        ]);
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+        ]);
+
+        foreach ($columns as $column) {
+            DB::table('column_sub_position_row')->insert([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => '',
+                'linked_money_source_id' => null
+            ]);
+        }
+
     }
 
     /**
@@ -814,4 +841,8 @@ class ProjectController extends Controller
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
     }
+
+
+
+
 }

@@ -84,14 +84,14 @@
                                                         v-for="(column,index) in row.columns">
                                                         <div :class="row.commented ? 'xsLight' : 'xsDark'" class="ml-2 my-4"
                                                              @click="column.pivot.clicked = !column.pivot.clicked"
-                                                             v-if="!column.pivot.clicked">{{ column.pivot.value }}
+                                                             v-if="!column.pivot.clicked && column.pivot.value !== ''">{{ column.pivot.value }}
                                                         </div>
                                                         <div v-else>
                                                             <input
                                                                 :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                                 class="my-2 xsDark" type="text"
                                                                 v-model="column.pivot.value"
-                                                                @focusout="column.pivot.clicked = !column.pivot.clicked">
+                                                                @focusout="updateCellValue(column)">
                                                         </div>
                                                     </td>
                                                 </tr>
@@ -309,6 +309,10 @@ export default {
         },
         closeAddColumnModal() {
             this.showAddColumnModal = false;
+        },
+        updateCellValue(column){
+            column.pivot.clicked = !column.pivot.clicked;
+            this.$inertia.patch(route('project.budget.cell.update'),{id: column.id, value: column.pivot.value});
         }
     },
 }

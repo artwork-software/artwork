@@ -66,12 +66,20 @@
                                 <div class="mr-6">
                                     <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)"
                                           class="flex w-full my-auto">
-                                        <p class="headline2">
-                                            {{ project.name }}</p>
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
                                     </Link>
                                     <div v-else class="flex w-full my-auto">
-                                        <p class="headline2">
-                                            {{ project.name }}</p>
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>

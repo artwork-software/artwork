@@ -125,6 +125,11 @@ class Project extends Model
         return static::where('deleted_at', '<=', now()->subMonth());
     }
 
+    public function groups(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(ProjectGroups::class, 'project_groups', 'project_id');
+    }
+
     public function toSearchableArray(): array
     {
         return [

@@ -96,7 +96,7 @@
                                 </Link>
                             </div>
                             <div class="mt-1.5 flex xxsLight my-auto"
-                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED'">
+                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED' || notification.data.type === 'NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED'" >
                                 <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
                                      class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
@@ -228,7 +228,7 @@
                                 </Link>
                             </div>
                             <div class="mt-1.5 flex xxsLight my-auto"
-                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED'">
+                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED' || notification.data.type === 'NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED'">
                                 <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
                                      class="xxsLight cursor-pointer items-center flex text-buttonBlue">
                                     <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
@@ -371,7 +371,7 @@ export default  {
             }
         },
         isErrorType(type, notification) {
-            if ((type.indexOf('RoomRequestNotification') !== -1 && this.isDateSoon(notification.data.event.start_time)) && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1) {
+            if ((type.indexOf('RoomRequestNotification') !== -1 && this.isDateSoon(notification.data.event.start_time)) && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1 || notification.data.title.indexOf('gelöscht') !== -1) {
                 return true;
             }
             return false;

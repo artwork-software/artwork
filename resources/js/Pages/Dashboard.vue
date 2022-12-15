@@ -13,7 +13,6 @@
                         Du kannst sie oben neben deinem Nutzernamen ausstellen.<br/>
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
-                    {{this.$page.props.can}}
                 </div>
                 <!-- Calendar Div -->
                 <div class="min-w-[50%] mt-5 overflow-x-auto px-2">

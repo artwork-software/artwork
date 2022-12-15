@@ -94,6 +94,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     //Projects
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects');
     Route::get('/projects/search', [ProjectController::class, 'search'])->name('projects.search');
+    Route::get('/projects/search/single', [ProjectController::class, 'searchProjectsWithoutGroup'])->name('projects.search.single');
     Route::get('/projects/trashed', [ProjectController::class, 'getTrashed'])->name('projects.trashed');
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');

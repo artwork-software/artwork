@@ -15,7 +15,7 @@ class SubPositionRow extends Model
 
     public function columns(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
-        return $this->belongsToMany(Column::class)->withPivot(['value']);
+        return $this->belongsToMany(Column::class)->withPivot(['value', 'linked_money_source_id']);
     }
 
 }

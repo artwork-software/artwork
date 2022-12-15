@@ -5,7 +5,7 @@
         <table class="w-full flex ml-16">
             <thead>
                 <tr>
-                    <th v-for="(column,index) in budget.columnNames" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left" >{{ column.name }}</th>
+                    <th v-for="(column,index) in budget.columns" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left" >{{ column.name }}</th>
                 </tr>
             </thead>
         </table>

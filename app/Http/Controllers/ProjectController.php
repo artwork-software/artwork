@@ -31,6 +31,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
@@ -199,87 +200,61 @@ class ProjectController extends Controller
         $project->genres()->sync($request->assignedGenreIds);
         $project->departments()->sync($departments->pluck('id'));
 
-        $this->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_COST);
-        $this->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_EARNING);
+        $this->generateBasicBudgetValues($project);
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
 
-    public function generateBasicBudgetValues(Project $project, BudgetTypesEnum $enum)
+    public function generateBasicBudgetValues(Project $project)
     {
-        $mainPosition = $project->mainPositions()->create([
-            'type' => $enum,
+        $columns = $project->columns()->createMany([
+            ['name' => 'KTO'],
+            ['name' => 'A'],
+            ['name' => 'Position'],
+            ['name' => date('Y') . ' €'],
+        ]);
+
+        $costMainPosition = $project->mainPositions()->create([
+            'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
             'name' => 'Hauptpostion'
         ]);
 
-        $subPosition = $mainPosition->subPositions()->create([
+        $earningMainPosition = $project->mainPositions()->create([
+            'type' => BudgetTypesEnum::BUDGET_TYPE_EARNING,
+            'name' => 'Hauptpostion'
+        ]);
+
+        $costSubPosition = $costMainPosition->subPositions()->create([
             'name' => 'Unterposition'
         ]);
 
-        $subPositionRows = $subPosition->subPositionRows()->create([
-            'commented' => false
+        $earningSubPosition = $earningMainPosition->subPositions()->create([
+            'name' => 'Unterposition'
         ]);
 
-        $subPositionRows2 = $subPosition->subPositionRows()->create([
-            'commented' => true
+        $costSubPositionRow = $costSubPosition->subPositionRows()->create([
+            'commented' => false,
         ]);
 
-        $subPositionRows->columns()->create([
-            'name' => 'KTO',
-            'project_id' => $project->id,
-        ], [
-            'value' => '1234'
+        $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
+            'commented' => false,
         ]);
 
-        $subPositionRows->columns()->create([
-            'name' => 'A',
-            'project_id' => $project->id,
-        ], [
-            'value' => 'A.1.3'
-        ]);
-
-        $subPositionRows->columns()->create([
-            'name' => 'Position',
-            'project_id' => $project->id,
-        ], [
-            'value' => 'Lichtkran'
-        ]);
-
-        $subPositionRows->columns()->create([
-            'name' => 'Zahlen',
-            'project_id' => $project->id,
-        ], [
-            'value' => '1500'
-        ]);
-
-        $subPositionRows2->columns()->create([
-            'name' => 'KTO',
-            'project_id' => $project->id,
-        ], [
-            'value' => '1234'
-        ]);
-
-        $subPositionRows2->columns()->create([
-            'name' => 'A',
-            'project_id' => $project->id,
-        ], [
-            'value' => 'A.1.3'
-        ]);
-
-        $subPositionRows2->columns()->create([
-            'name' => 'Position',
-            'project_id' => $project->id,
-        ], [
-            'value' => 'Lichtkran'
-        ]);
-
-        $subPositionRows2->columns()->create([
-            'name' => 'Zahlen',
-            'project_id' => $project->id,
-        ], [
-            'value' => '1500'
-        ]);
+        foreach ($columns as $column) {
+            DB::table('column_sub_position_row')->insert([
+               'column_id' => $column->id,
+                'sub_position_row_id' => $costSubPositionRow->id,
+                'value' => '',
+                'linked_money_source_id' => null
+            ]);
+            DB::table('column_sub_position_row')->insert([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $earningSubPositionRow->id,
+                'value' => '',
+                'linked_money_source_id' => null
+            ]);
+        }
     }
 
     /**
@@ -307,13 +282,14 @@ class ProjectController extends Controller
         ]);
 
         $table = $project->mainPositions()->with('subPositions.subPositionRows.columns')->get();
-        $columnNames = $project->columns()->distinct()->get('name');
+        $columns = $project->columns()->get();
+
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 
             'budget' => [
-                'columnNames' => $columnNames,
+                'columns' => $columns,
                 'table' => $table
             ],
 

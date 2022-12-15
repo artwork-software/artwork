@@ -202,8 +202,7 @@ class ContentSeeder extends Seeder
         ]);
 
         $projectController = new ProjectController();
-        $projectController->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_COST);
-        $projectController->generateBasicBudgetValues($project, BudgetTypesEnum::BUDGET_TYPE_EARNING);
+        $projectController->generateBasicBudgetValues($project);
 
 
         $project->project_histories()->create([

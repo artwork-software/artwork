@@ -35,7 +35,7 @@ import {
 export default {
     name: "ContractModuleSidenav",
     props: {
-        contractModules: Array
+        contractModules: Object
     },
     components: {
         DownloadIcon,

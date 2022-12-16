@@ -33,13 +33,15 @@ class ContractController extends Controller
     public function index(Request $request)
     {
         $contracts = Contract::all();
-        $filters = $request->input('contractFilters');
+        $costsFilter = $request->get('costsFilter');
+        $legalFormsFilter = $request->get('legalFormsFilter');
+        $contractTypesFilter = $request->get('contractTypesFilter');
 
-        if($filters) {
-            $ksk_filter = $filters->ksk_liable;
-            $resident_abroad = $filters->resident_abroad;
-            $legal_forms = $filters->legal_forms;
-            $contract_types = $filters->contract_types;
+        if($costsFilter || $legalFormsFilter || $contractTypesFilter) {
+            $ksk_filter = false;
+            $resident_abroad = false;
+            $legal_forms = $legalFormsFilter;
+            $contract_types = $contractTypesFilter;
 
             if($ksk_filter) {
                 $contracts = $contracts->where('ksk_liable', $ksk_filter)->all();

@@ -13,18 +13,24 @@
                         </div>
                     </h1>
                     <h2 class="xsLight mb-2 mt-8">
-                        Lege eine neue, leere Spalte an. Alternativ kannst du auch eine Funktionsspalte (Summe/Differenz) anlegen.
+                        Lege eine neue, leere Spalte an. Alternativ kannst du auch eine Funktionsspalte
+                        (Summe/Differenz) anlegen.
                     </h2>
                     <radio-group v-model="selectedType" class="mt-4">
                         <legend class="sr-only">Spaltenart</legend>
                         <div class="space-y-3">
-                            <radio-group-option :value="columnType.type" v-for="columnType in columnTypes" :key="columnType.type" class="flex items-center">
-                                <input  :id="columnType.type" name="notification-method" type="radio" :checked="columnType.type === 'empty'" class="h-5 w-5 border-gray-300 text-success focus:ring-success" />
-                                <label :for="columnType.type" :class="[selectedType === columnType.type ? 'xsDark' : 'xsLight']" class="ml-3 block">{{ columnType.title }}</label>
+                            <radio-group-option :value="columnType.type" v-for="columnType in columnTypes"
+                                                :key="columnType.type" class="flex items-center">
+                                <input :id="columnType.type" name="notification-method" type="radio"
+                                       :checked="columnType.type === 'empty'"
+                                       class="h-5 w-5 border-gray-300 text-success focus:ring-success"/>
+                                <label :for="columnType.type"
+                                       :class="[selectedType === columnType.type ? 'xsDark' : 'xsLight']"
+                                       class="ml-3 block">{{ columnType.title }}</label>
                             </radio-group-option>
                         </div>
                     </radio-group>
-                    <div v-if="selectedType !== 'empty'" class="bg-backgroundGray -mx-12">
+                    <div v-if="selectedType !== 'empty'" class="bg-backgroundGray -mx-12 pb-8">
                         <h2 v-if="selectedType === 'sum'" class="xsLight ml-12 mb-4 pt-4 mt-6">
                             Welche Summe möchtest du erhalten?
                         </h2>
@@ -36,7 +42,7 @@
                                      id="firstColumn">
                                 <ListboxButton
                                     class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                                    <div class="flex items-center my-auto" >
+                                    <div class="flex items-center my-auto">
                                         <span class="block truncate items-center ml-3 flex" v-if="selectedFirstColumn">
                                             <span>{{ selectedFirstColumn?.name }}</span>
                                         </span>
@@ -82,7 +88,8 @@
                             <div class="ml-2 mr-4 xsDark my-auto" v-if="selectedType === 'difference'">
                                 -
                             </div>
-                            <Listbox as="div" class="flex h-12 mr-2 w-1/2" v-model="selectedSecondColumn" v-if="selectedType !== 'empty'"
+                            <Listbox as="div" class="flex h-12 mr-2 w-1/2" v-model="selectedSecondColumn"
+                                     v-if="selectedType !== 'empty'"
                                      id="secondColumn">
                                 <ListboxButton
                                     class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
@@ -93,7 +100,8 @@
                                         <span class="block truncate items-center ml-3 flex" v-else>
                                             <span> Spalte wählen</span>
                                         </span>
-                                            <span class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                        <span
+                                            class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
                                      <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                 </span>
                                     </div>
@@ -125,7 +133,13 @@
                                     </ListboxOptions>
                                 </transition>
                             </Listbox>
+
                         </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <AddButton @click="addColumn()" :disabled="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn))" :class="selectedType !== 'empty' && ((selectedFirstColumn === null || selectedSecondColumn === null) || (selectedFirstColumn === selectedSecondColumn)) ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
+                                   class="mt-8 py-3 flex" text="Spalte anlegen"
+                                   mode="modal"></AddButton>
                     </div>
                 </div>
             </div>
@@ -139,18 +153,20 @@
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 
 const columnTypes = [
-    { type: 'empty', title: 'Leere Spalte' },
-    { type: 'sum', title: 'Summenspalte' },
-    { type: 'difference', title: 'Differenzspalte' },
+    {type: 'empty', title: 'Leere Spalte'},
+    {type: 'sum', title: 'Summenspalte'},
+    {type: 'difference', title: 'Differenzspalte'},
 ]
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
+import AddButton from "@/Layouts/Components/AddButton.vue";
 
 export default {
     name: 'AddColumnComponent',
 
     components: {
+        AddButton,
         ListboxOptions,
         ListboxOption,
         ListboxButton,
@@ -172,12 +188,11 @@ export default {
         }
     },
 
-    props: [],
+    props: ['columns'],
 
     emits: ['closed'],
 
-    watch: {
-    },
+    watch: {},
 
     methods: {
         openModal() {
@@ -186,6 +201,15 @@ export default {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
+        addColumn(){
+            if(this.selectedType === 'empty'){
+                this.$inertia.post(route('project.budget.column.add'),{column_type: this.selectedType});
+            }else{
+                //selectedType can be 'sum' or 'difference'
+                this.$inertia.post(route('project.budget.column.add'),{first_column_id: this.selectedFirstColumn.id, second_column_id: this.selectedSecondColumn.id, column_type: this.selectedType});
+            }
+            this.closeModal(true);
+        }
     },
 }
 </script>

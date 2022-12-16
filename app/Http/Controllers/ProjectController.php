@@ -257,7 +257,8 @@ class ProjectController extends Controller
     }
 
     public function updateCellValue(Request $request){
-        DB::table('column_sub_position_row')->where('id', '=', $request->id)->update(['value' => $request->value]);
+        // HIER NOCH SUBROW ID MIT ABFRAGEN
+        DB::table('column_sub_position_row')->where('column_id', '=', $request->column_id)->where('sub_position_row_id','=', $request->sub_position_row_id)->update(['value' => $request->value]);
     }
 
     public function addSubPosition(Request $request){

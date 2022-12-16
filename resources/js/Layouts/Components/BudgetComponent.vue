@@ -253,6 +253,7 @@
     <!-- Termin erstellen Modal-->
     <add-column-component
         v-if="showAddColumnModal"
+        :columns="budget.columns"
         @closed="closeAddColumnModal()"
     />
 
@@ -312,7 +313,7 @@ export default {
         },
         updateCellValue(column){
             column.pivot.clicked = !column.pivot.clicked;
-            this.$inertia.patch(route('project.budget.cell.update'),{id: column.id, value: column.pivot.value});
+            this.$inertia.patch(route('project.budget.cell.update'),{column_id: column.id, value: column.pivot.value, sub_position_row_id:column.pivot.sub_position_row_id});
         }
     },
 }

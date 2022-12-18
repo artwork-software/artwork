@@ -188,7 +188,7 @@ export default {
         }
     },
 
-    props: ['columns'],
+    props: ['columns', 'project'],
 
     emits: ['closed'],
 
@@ -203,10 +203,10 @@ export default {
         },
         addColumn(){
             if(this.selectedType === 'empty'){
-                this.$inertia.post(route('project.budget.column.add'),{column_type: this.selectedType});
+                this.$inertia.post(route('project.budget.column.add'),{column_type: this.selectedType, project_id: this.project.id});
             }else{
                 //selectedType can be 'sum' or 'difference'
-                this.$inertia.post(route('project.budget.column.add'),{first_column_id: this.selectedFirstColumn.id, second_column_id: this.selectedSecondColumn.id, column_type: this.selectedType});
+                this.$inertia.post(route('project.budget.column.add'),{first_column_id: this.selectedFirstColumn.id, second_column_id: this.selectedSecondColumn.id, column_type: this.selectedType, project_id: this.project.id});
             }
             this.closeModal(true);
         }

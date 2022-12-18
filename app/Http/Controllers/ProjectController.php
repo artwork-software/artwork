@@ -256,6 +256,67 @@ class ProjectController extends Controller
         }
     }
 
+    public function addColumn(Request $request)
+    {
+        $project = Project::find($request->project_id);
+        if($request->column_type === 'empty'){
+            $column = $project->columns()->create([
+                'name' => 'empty',
+            ]);
+            $mainPositions = $project->mainPositions()->get();
+            foreach ($mainPositions as $mainPosition){
+                $subPositions = $mainPosition->subPositions()->get();
+                foreach ($subPositions as $subPosition){
+                    $subPositionRows = $subPosition->subPositionRows()->get();
+                    foreach ($subPositionRows as $subPositionRow){
+                        DB::table('column_sub_position_row')->insert([
+                            'column_id' => $column->id,
+                            'sub_position_row_id' => $subPositionRow->id,
+                            'value' => '',
+                            'linked_money_source_id' => null
+                        ]);
+                    }
+                }
+            }
+        }
+
+        if($request->column_type === 'sum'){
+            $firstColumns = DB::table('column_sub_position_row')->where('column_id', '=', $request->first_column_id)->get();
+            $column = $project->columns()->create([
+                'name' => 'sum',
+            ]);
+            foreach ($firstColumns as $firstColumn){
+                $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
+                $sum = (int)$firstColumn->value + (int)$secondColumn->value;
+
+                DB::table('column_sub_position_row')->insert([
+                    'column_id' => $column->id,
+                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
+                    'value' => $sum,
+                    'linked_money_source_id' => null
+                ]);
+            }
+        }
+
+        if($request->column_type === 'difference'){
+            $firstColumns = DB::table('column_sub_position_row')->where('column_id', '=', $request->first_column_id)->get();
+            $column = $project->columns()->create([
+                'name' => 'difference',
+            ]);
+            foreach ($firstColumns as $firstColumn){
+                $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
+                $sum = (int)$firstColumn->value - (int)$secondColumn->value;
+
+                DB::table('column_sub_position_row')->insert([
+                    'column_id' => $column->id,
+                    'sub_position_row_id' => $firstColumn->sub_position_row_id,
+                    'value' => $sum,
+                    'linked_money_source_id' => null
+                ]);
+            }
+        }
+    }
+
     public function updateCellValue(Request $request){
         // HIER NOCH SUBROW ID MIT ABFRAGEN
         DB::table('column_sub_position_row')->where('column_id', '=', $request->column_id)->where('sub_position_row_id','=', $request->sub_position_row_id)->update(['value' => $request->value]);

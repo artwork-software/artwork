@@ -247,13 +247,13 @@
     </div>
 
     <pre>
-            {{ tablesToShow[0] }}
 
         </pre>
     <!-- Termin erstellen Modal-->
     <add-column-component
         v-if="showAddColumnModal"
         :columns="budget.columns"
+        :project="project"
         @closed="closeAddColumnModal()"
     />
 
@@ -287,7 +287,7 @@ export default {
         }
     },
 
-    props: ['budget'],
+    props: ['budget', 'project'],
 
     computed: {
         tablesToShow: function () {

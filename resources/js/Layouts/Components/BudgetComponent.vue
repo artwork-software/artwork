@@ -7,6 +7,7 @@
                 <tr>
                     <th v-for="(column,index) in budget.columns"
                         :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
+                        <p class="text-gray-500" style="font-size: 8px">{{ column.subName }}</p>
                         <div @click="column.clicked = !column.clicked" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
                              v-if="!column.clicked">
                             {{ column.name }}

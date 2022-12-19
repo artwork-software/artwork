@@ -11,7 +11,8 @@ class Column extends Model
 
     protected $fillable = [
         'project_id',
-        'name'
+        'name',
+        'subName'
     ];
 
     public function subPositionRows(): \Illuminate\Database\Eloquent\Relations\BelongsToMany

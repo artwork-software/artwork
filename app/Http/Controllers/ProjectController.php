@@ -267,17 +267,47 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function checkColumnSubName($project_id){
+    /**
+     * @param $project_id
+     * @return void
+     */
+    private function setColumnSubName($project_id): void
+    {
+        $project = Project::find($project_id);
+        $columns = $project->columns()->get();
 
+        $letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+        $count = 0;
+
+        foreach($columns as $column){
+            // GUARD: When the alphabet ends. Set the count to 0 again and start from the beginning.
+            if($count > 25){
+                $count = 0;
+            }
+            // Skip columns without subname
+            if($column->subName === null || empty($column->subName)){
+                continue;
+            }
+            $column->update([
+                'subName' => $letters[$count]
+            ]);
+            $count++;
+        }
     }
 
+    /**
+     * @param Request $request
+     * @return void
+     */
     public function addColumn(Request $request): void
     {
         $project = Project::find($request->project_id);
         if($request->column_type === 'empty'){
             $column = $project->columns()->create([
                 'name' => 'empty',
+                'subName' => '-'
             ]);
+            $this->setColumnSubName($request->project_id);
             $mainPositions = $project->mainPositions()->get();
             foreach ($mainPositions as $mainPosition){
                 $subPositions = $mainPosition->subPositions()->get();
@@ -299,12 +329,14 @@ class ProjectController extends Controller
         }
 
         if($request->column_type === 'sum'){
-            $firstColumns = DB::table('column_sub_position_row')->where('column_id', '=', $request->first_column_id)->get();
+            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'sum',
+                'subName' => '-'
             ]);
+            $this->setColumnSubName($request->project_id);
             foreach ($firstColumns as $firstColumn){
-                $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
+                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value + (int)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
@@ -319,12 +351,14 @@ class ProjectController extends Controller
         }
 
         if($request->column_type === 'difference'){
-            $firstColumns = DB::table('column_sub_position_row')->where('column_id', '=', $request->first_column_id)->get();
+            $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'difference',
+                'subName' => '-'
             ]);
+            $this->setColumnSubName($request->project_id);
             foreach ($firstColumns as $firstColumn){
-                $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
+                $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value - (int)$secondColumn->value;
                 ColumnCell::create([
                     'column_id' => $column->id,
@@ -339,11 +373,19 @@ class ProjectController extends Controller
         }
     }
 
-    public function updateCellValue(Request $request){
-        // HIER NOCH SUBROW ID MIT ABFRAGEN
-        DB::table('column_sub_position_row')->where('column_id', '=', $request->column_id)->where('sub_position_row_id','=', $request->sub_position_row_id)->update(['value' => $request->value]);
+    /**
+     * @param Request $request
+     * @return void
+     */
+    public function updateCellValue(Request $request): void
+    {
+        ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->update(['value' => $request->value]);
     }
 
+    /**
+     * @param Request $request
+     * @return void
+     */
     public function addMainPosition(Request $request): void
     {
         $project = Project::find($request->project_id);

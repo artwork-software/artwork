@@ -915,7 +915,7 @@
                     </div>
                 </div>
                 <div v-if="isBudgetTab" class="mt-14 p-5 w-full">
-                    <BudgetComponent :budget="budget" :project="project"></BudgetComponent>
+                    <BudgetComponent :budget="budget" :project="project" :money-sources="moneySources"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -1685,7 +1685,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget'],
+    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources'],
     components: {
         BudgetComponent,
         TagComponent,

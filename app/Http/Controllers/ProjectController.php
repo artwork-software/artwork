@@ -21,6 +21,7 @@ use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\MainPosition;
+use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\Sector;
@@ -470,6 +471,8 @@ class ProjectController extends Controller
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
+
+            'moneySources' => MoneySource::all(),
 
             'budget' => [
                 'columns' => $columns,

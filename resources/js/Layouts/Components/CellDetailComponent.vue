@@ -18,13 +18,13 @@
                         Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert entweder zur
                         Quelle/-gruppe addieren oder subtrahieren.
                     </h2>
-                    <div class="flex items-center justify-start">
+                    <div class="flex items-center justify-start my-6">
                         <input v-model="isLinked" type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         <p :class="[isLinked ? 'xsDark' : 'xsLight']"
                            class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle/-gruppe verlinken</p>
                     </div>
-                    <div v-if="isLinked" class="flex">
+                    <div v-if="isLinked" class="flex w-full">
                         <Listbox as="div" v-model="linkedType" id="linked_type">
                             <ListboxButton class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
                                 <div class="flex-grow xsLight text-left subpixel-antialiased">
@@ -32,7 +32,7 @@
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="type in linkTypes"
                                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                :key="type.name"
@@ -45,17 +45,17 @@
                                 </ListboxOption>
                             </ListboxOptions>
                         </Listbox>
-                        <Listbox as="div" v-model="selectedMoneySource" id="room">
-                            <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased" v-if="selectedMoneySource === null">
+                        <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
+                            <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
+                                <div class="w-full xsLight text-left subpixel-antialiased" v-if="selectedMoneySource === null">
                                     Quelle wählen*
                                 </div>
-                                <div class="flex-grow xsLight text-left subpixel-antialiased" v-else>
+                                <div class="w-full xsLight text-left subpixel-antialiased" v-else>
                                     {{ selectedMoneySource.name}}
                                 </div>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </ListboxButton>
-                            <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                            <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
                                 <ListboxOption v-for="moneySource in moneySources"
                                                class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
                                                :key="moneySource.name"
@@ -75,7 +75,6 @@
                                    mode="modal"></AddButton>
                     </div>
                 </div>
-                {{column}}
             </div>
         </template>
     </jet-dialog-modal>

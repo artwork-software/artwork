@@ -5,7 +5,11 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Models\ColumnCell;
+use App\Models\MainPosition;
 use App\Models\MoneySource;
+use App\Models\Project;
+use App\Models\SubPosition;
+use App\Models\SubPositionRow;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -134,12 +138,36 @@ class MoneySourceController extends Controller
      */
     public function show(MoneySource $moneySource)
     {
+        $amount = $moneySource->amount;
+        $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+        $positions = [];
+        foreach ($columns as $column) {
+            $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
+            $subPosition = SubPosition::find($subPositionRow->sub_position_id);
+            $mainPosition = MainPosition::find($subPosition->main_position_id);
+            $project = Project::find($mainPosition->project_id);
+            $positions[] = [
+                'type' => $column->linked_type,
+                'value' => $column->value,
+                'subPositionName' => $subPosition->name,
+                'mainPositionName' => $mainPosition->name,
+                'project' => $project,
+                'created_at' => date('d.m.Y', strtotime($column->created_at))
+            ];
+            if($column->linked_type === 'EARNING'){
+                $amount = (int)$amount + (int)$column->value;
+            } else {
+                $amount = (int)$amount - (int)$column->value;
+            }
+        }
+
         return inertia('MoneySources/Show', [
             'moneySource' => [
                 'id' => $moneySource->id,
                 'creator' => User::find($moneySource->creator_id),
                 'name' => $moneySource->name,
                 'amount' => $moneySource->amount,
+                'amount_available' => $amount,
                 'source_name' => $moneySource->source_name,
                 'start_date' => $moneySource->start_date,
                 'end_date' => $moneySource->end_date,
@@ -151,6 +179,7 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
+                'positions' => $positions
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),

@@ -256,7 +256,7 @@
     </div>
 
     <pre>
-
+        {{ budget }}
         </pre>
     <!-- Termin erstellen Modal-->
     <add-column-component
@@ -325,6 +325,13 @@ export default {
     },
 
     methods: {
+        currencyFormat(number){
+            const formatter = new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+            });
+            return formatter.format(number);
+        },
         openAddColumnModal() {
             this.showAddColumnModal = true;
         },

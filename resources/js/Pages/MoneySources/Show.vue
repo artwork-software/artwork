@@ -126,23 +126,42 @@
                     <div class="w-1/2 xsLight uppercase border-r-2">
                         Ursprungsvolumen
                         <div class="bigNumber my-4">
-                            {{moneySource.amount}}
+                            {{ currencyFormat(moneySource.amount) }}
                         </div>
                     </div>
                     <div class="w-1/2 xsLight uppercase ml-6">
                         Noch Verfügbar
-                        <div class="bigNumber my-4">
-                            {{moneySource.amount}}
+                        <div class="bigNumber my-4" :class="moneySource.amount_available < 0 ? 'text-red-500' : ''">
+                            {{ currencyFormat(moneySource.amount_available) }}
                         </div>
                     </div>
                 </div>
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="w-full h-full mb-48">
+        <div class="w-full h-full mb-48" v-if="moneySource.is_group">
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
                 <div class="headline4 py-12 ml-20">
                 Untergeordnete Finanzierungsquellen
+                </div>
+            </div>
+        </div>
+        <div class="w-full h-full mb-48" v-else>
+            <div class="max-w-screen-2xl bg-lightBackgroundGray">
+                <div class="headline4 py-12 ml-20">
+                    Verlinkte Positionen
+                </div>
+
+                <div class="w-full ml-20 py-12">
+                    <div class="flex border-b border-gray-300 pb-5 pt-5" v-for="position in moneySource.positions">
+                        <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
+                            <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span> {{ currencyFormat(position.value) }}
+                        </div>
+                        <div class="project">
+                            <div class="text-gray-400"><a :href="'/projects/' + position.project.id + '?openTab=budget'" class="text-buttonBlue ">{{ position.project.name }}</a> |<span class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
+                            <div class="text-gray-400 text-sm mt-2">{{ position.mainPositionName }} | {{ position.subPositionName }} | Position</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -153,6 +172,9 @@
             :moneySources="this.moneySources"
             :moneySourceGroups="this.moneySourceGroups"
         />
+        <pre>
+        {{ moneySource }}
+    </pre>
     </app-layout>
     <confirmation-component
         v-if="showDeleteSourceModal"
@@ -160,6 +182,8 @@
         titel="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
         @closed="afterConfirm"/>
+
+
 </template>
 
 <script>
@@ -219,6 +243,13 @@ export default {
         }
     },
     methods: {
+        currencyFormat(number){
+            const formatter = new Intl.NumberFormat('de-DE', {
+                style: 'currency',
+                currency: 'EUR',
+            });
+            return formatter.format(number);
+        },
         getEditHref(moneySourceId) {
             return route('money_sources.show', {moneySource: moneySourceId});
         },

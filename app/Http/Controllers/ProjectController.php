@@ -260,6 +260,15 @@ class ProjectController extends Controller
         }
     }
 
+    public function updateCellSource(Request $request): void
+    {
+        $column = ColumnCell::find($request->cell_id);
+        $column->update([
+            'linked_type' => $request->linked_type,
+            'linked_money_source_id' => $request->money_source_id
+        ]);
+    }
+
     public function updateColumnName(Request $request): void
     {
         $column = Column::find($request->column_id);

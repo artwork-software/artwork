@@ -14,6 +14,7 @@ class ColumnCell extends Model
         'sub_position_row_id',
         'value',
         'linked_money_source_id',
+        'linked_type',
         'type',
         'linked_first_column',
         'linked_second_column'

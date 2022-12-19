@@ -19,6 +19,7 @@ return new class extends Migration
             $table->bigInteger('sub_position_row_id');
             $table->string('value')->nullable();
             $table->bigInteger('linked_money_source_id')->nullable();
+            $table->string('linked_type')->nullable();
             $table->string('type')->nullable();
             $table->string('linked_first_column')->nullable();
             $table->string('linked_second_column')->nullable();

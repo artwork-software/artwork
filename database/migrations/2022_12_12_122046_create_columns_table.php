@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('project_id');
             $table->string('name')->nullable();
+            $table->string('subName')->nullable();
             $table->timestamps();
         });
     }

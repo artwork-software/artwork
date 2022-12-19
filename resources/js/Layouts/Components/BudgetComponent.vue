@@ -7,7 +7,7 @@
                 <tr>
                     <th v-for="(column,index) in budget.columns"
                         :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
-                        <div @click="column.clicked = !column.clicked"
+                        <div @click="column.clicked = !column.clicked" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
                              v-if="!column.clicked">
                             {{ column.name }}
                         </div>
@@ -16,7 +16,7 @@
                                     :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                     class="my-2 xsDark" type="text"
                                     v-model="column.name"
-                                    @focusout="column.clicked = !column.clicked">
+                                    @focusout="updateColumnName(column); column.clicked = !column.clicked">
                         </div>
                     </th>
                 </tr>
@@ -52,13 +52,15 @@
                                 </div>
                                 <!-- HIER ADD UNTERPOSITION Funktion -->
                                 <div
+                                    @click="addSubPosition(mainPosition.id)"
                                     class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
                                     @mouseover="hoveredBorder = mainIndex + 'subBefore'"
                                     @mouseout="hoveredBorder = null">
                                     <div v-if="hoveredBorder === mainIndex + 'subBefore'"
                                          class="uppercase text-secondaryHover text-sm -mt-8">
                                         Unterposition
-                                        <PlusCircleIcon v-if="hoveredBorder === mainIndex + 'subBefore'"
+                                        <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBefore'"
+                                                        @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBefore'" @click="addSubPosition(mainPosition.id)"
                                                         class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                     </div>
                                 </div>
@@ -82,9 +84,9 @@
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
-                                                        <div :class="row.commented ? 'xsLight' : 'xsDark'" class="ml-2 my-4"
+                                                        <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']" class="ml-2 my-4 h-6"
                                                              @click="column.pivot.clicked = !column.pivot.clicked"
-                                                             v-if="!column.pivot.clicked && column.pivot.value !== ''">{{ column.pivot.value }}
+                                                             v-if="!column.pivot.clicked">{{ column.pivot.value }}
                                                         </div>
                                                         <div v-else>
                                                             <input
@@ -107,13 +109,15 @@
                                     </tr>
                                     <!-- HIER ADD UNTERPOSITION -->
                                     <div
+                                        @click="addSubPosition(mainPosition.id)"
                                         class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
                                         @mouseover="hoveredBorder = mainIndex + 'subAfter'"
                                         @mouseout="hoveredBorder = null">
                                         <div v-if="hoveredBorder === mainIndex + 'subAfter'"
                                              class="uppercase text-buttonBlue text-sm -mt-8">
                                             Unterposition
-                                            <PlusCircleIcon v-if="hoveredBorder === mainIndex + 'subAfter'"
+                                            <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subAfter'"
+                                                            @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subAfter'" @click="addSubPosition(mainPosition.id)"
                                                             class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
 
@@ -128,13 +132,15 @@
                                     </thead>
                                     <!-- HIER ADD HAUPTPOSITION -->
                                     <div
+                                        @click="addMainPosition('BUDGET_TYPE_COST')"
                                         class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
                                         @mouseover="hoveredBorder = mainIndex + 'main'"
                                         @mouseout="hoveredBorder = null">
                                         <div v-if="hoveredBorder === mainIndex + 'main'"
                                              class="uppercase text-secondaryHover text-sm -mt-8">
                                             Hauptposition
-                                            <PlusCircleIcon v-if="hoveredBorder === mainIndex + 'main'"
+                                            <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'main'"
+                                                            @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'main'" @click="addMainPosition('BUDGET_TYPE_COST')"
                                                             class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
 
@@ -313,8 +319,18 @@ export default {
         },
         updateCellValue(column){
             column.pivot.clicked = !column.pivot.clicked;
-            this.$inertia.patch(route('project.budget.cell.update'),{column_id: column.id, value: column.pivot.value, sub_position_row_id:column.pivot.sub_position_row_id});
+            this.$inertia.patch(route('project.budget.cell.update'),{column_id: column.id, value: column.pivot.value, sub_position_row_id:column.pivot.sub_position_row_id}, {preserveState: true});
+        },
+        addSubPosition(mainPositionId){
+            this.$inertia.post(route('project.budget.sub-position.add'),{project_id: this.project.id, main_position_id: mainPositionId});
+        },
+        addMainPosition(type){
+            this.$inertia.post(route('project.budget.main-position.add'),{project_id: this.project.id, type: type});
+        },
+        updateColumnName(column){
+            this.$inertia.patch(route('project.budget.column.update-name'),{column_id: column.id, columnName: column.name});
         }
+
     },
 }
 </script>

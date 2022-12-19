@@ -16,6 +16,7 @@ use App\Models\Category;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Column;
+use App\Models\ColumnCell;
 use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
@@ -208,10 +209,10 @@ class ProjectController extends Controller
     public function generateBasicBudgetValues(Project $project)
     {
         $columns = $project->columns()->createMany([
-            ['name' => 'KTO'],
-            ['name' => 'A'],
-            ['name' => 'Position'],
-            ['name' => date('Y') . ' €'],
+            ['name' => 'KTO', 'subName' => ''],
+            ['name' => 'A', 'subName' => ''],
+            ['name' => 'Position', 'subName' => ''],
+            ['name' => date('Y') . ' €', 'subName' => 'A'],
         ]);
 
         $costMainPosition = $project->mainPositions()->create([
@@ -241,22 +242,36 @@ class ProjectController extends Controller
         ]);
 
         foreach ($columns as $column) {
-            DB::table('column_sub_position_row')->insert([
-               'column_id' => $column->id,
+            ColumnCell::create([
+                'column_id' => $column->id,
                 'sub_position_row_id' => $costSubPositionRow->id,
                 'value' => '',
-                'linked_money_source_id' => null
+                'linked_money_source_id' => null,
+                'type' => null,
             ]);
-            DB::table('column_sub_position_row')->insert([
+            ColumnCell::create([
                 'column_id' => $column->id,
                 'sub_position_row_id' => $earningSubPositionRow->id,
                 'value' => '',
-                'linked_money_source_id' => null
+                'linked_money_source_id' => null,
+                'type' => null,
             ]);
         }
     }
 
-    public function addColumn(Request $request)
+    public function updateColumnName(Request $request): void
+    {
+        $column = Column::find($request->column_id);
+        $column->update([
+            'name' => $request->columnName
+        ]);
+    }
+
+    private function checkColumnSubName($project_id){
+
+    }
+
+    public function addColumn(Request $request): void
     {
         $project = Project::find($request->project_id);
         if($request->column_type === 'empty'){
@@ -269,11 +284,14 @@ class ProjectController extends Controller
                 foreach ($subPositions as $subPosition){
                     $subPositionRows = $subPosition->subPositionRows()->get();
                     foreach ($subPositionRows as $subPositionRow){
-                        DB::table('column_sub_position_row')->insert([
+                        ColumnCell::create([
                             'column_id' => $column->id,
                             'sub_position_row_id' => $subPositionRow->id,
                             'value' => '',
-                            'linked_money_source_id' => null
+                            'linked_money_source_id' => null,
+                            'type' => 'empty',
+                            'linked_first_column' => null,
+                            'linked_second_column' => null,
                         ]);
                     }
                 }
@@ -288,12 +306,14 @@ class ProjectController extends Controller
             foreach ($firstColumns as $firstColumn){
                 $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value + (int)$secondColumn->value;
-
-                DB::table('column_sub_position_row')->insert([
+                ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
-                    'linked_money_source_id' => null
+                    'linked_money_source_id' => null,
+                    'type' => 'sum',
+                    'linked_first_column' => $firstColumn->column_id,
+                    'linked_second_column' => $secondColumn->column_id,
                 ]);
             }
         }
@@ -306,12 +326,14 @@ class ProjectController extends Controller
             foreach ($firstColumns as $firstColumn){
                 $secondColumn = DB::table('column_sub_position_row')->where('column_id', '=', $request->second_column_id)->where('sub_position_row_id', '=', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value - (int)$secondColumn->value;
-
-                DB::table('column_sub_position_row')->insert([
+                ColumnCell::create([
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
-                    'linked_money_source_id' => null
+                    'linked_money_source_id' => null,
+                    'type' => 'difference',
+                    'linked_first_column' => $firstColumn->column_id,
+                    'linked_second_column' => $secondColumn->column_id,
                 ]);
             }
         }
@@ -322,7 +344,37 @@ class ProjectController extends Controller
         DB::table('column_sub_position_row')->where('column_id', '=', $request->column_id)->where('sub_position_row_id','=', $request->sub_position_row_id)->update(['value' => $request->value]);
     }
 
-    public function addSubPosition(Request $request){
+    public function addMainPosition(Request $request): void
+    {
+        $project = Project::find($request->project_id);
+        $columns = $project->columns()->get();
+
+        $mainPosition = $project->mainPositions()->create([
+            'type' => $request->type,
+            'name' => 'Neue Hauptposition'
+        ]);
+
+        $subPosition = $mainPosition->subPositions()->create([
+            'name' => 'Neue Unterposition'
+        ]);
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+        ]);
+
+        foreach ($columns as $column) {
+            ColumnCell::create([
+                'column_id' => $column->id,
+                'sub_position_row_id' => $subPositionRow->id,
+                'value' => '',
+                'linked_money_source_id' => null,
+                'type' => null
+            ]);
+        }
+    }
+
+    public function addSubPosition(Request $request): void
+    {
         $project = Project::find($request->project_id);
         $columns = $project->columns()->get();
         $mainPosition = MainPosition::find($request->main_position_id);
@@ -336,14 +388,14 @@ class ProjectController extends Controller
         ]);
 
         foreach ($columns as $column) {
-            DB::table('column_sub_position_row')->insert([
+            ColumnCell::create([
                 'column_id' => $column->id,
                 'sub_position_row_id' => $subPositionRow->id,
                 'value' => '',
-                'linked_money_source_id' => null
+                'linked_money_source_id' => null,
+                'type' => null
             ]);
         }
-
     }
 
     /**

@@ -134,7 +134,7 @@ export default {
             this.$emit('closed', bool);
         },
         updateMoneySourceLink(){
-            this.$inertia.patch(route('project.budget.cell-source.update'),{cell_id: this.column.pivot.id , linked_type: this.linkedType, money_source_id: this.selectedMoneySource.id});
+            this.$inertia.patch(route('project.budget.cell-source.update'),{cell_id: this.column.pivot.id , linked_type: this.linkedType.type, money_source_id: this.selectedMoneySource.id});
         }
     },
 }

@@ -12,67 +12,83 @@
                             Details
                         </div>
                     </h1>
-                    HIER KOMMEN NOCH TABS
-
-                    <h2 class="xsLight mb-2 mt-8">
-                        Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert entweder zur
-                        Quelle/-gruppe addieren oder subtrahieren.
-                    </h2>
-                    <div class="flex items-center justify-start my-6">
-                        <input v-model="isLinked" type="checkbox"
-                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                        <p :class="[isLinked ? 'xsDark' : 'xsLight']"
-                           class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle/-gruppe verlinken</p>
+                    <div class="mb-4">
+                        <div class="hidden sm:block">
+                            <div class="border-gray-200">
+                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
+                                     aria-label="Tabs">
+                                    <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
+                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :aria-current="tab.current ? 'page' : undefined">
+                                        {{ tab.name }}
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
                     </div>
-                    <div v-if="isLinked" class="flex w-full">
-                        <Listbox as="div" v-model="linkedType" id="linked_type">
-                            <ListboxButton class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                    {{linkedType.name}}
-                                </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                            </ListboxButton>
-                            <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                <ListboxOption v-for="type in linkTypes"
-                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                               :key="type.name"
-                                               :value="type"
-                                               v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'text-white' : '']">
-                                        {{ type.name }}
+                    <!-- Link Tab -->
+                    <div v-if="isLinkTab">
+                        <h2 class="xsLight mb-2 mt-8">
+                            Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert entweder zur
+                            Quelle/-gruppe addieren oder subtrahieren.
+                        </h2>
+                        <div class="flex items-center justify-start my-6">
+                            <input v-model="isLinked" type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[isLinked ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle/-gruppe verlinken</p>
+                        </div>
+                        <div v-if="isLinked" class="flex w-full">
+                            <Listbox as="div" v-model="linkedType" id="linked_type">
+                                <ListboxButton class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
+                                    <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                        {{ linkedType.name }}
                                     </div>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </Listbox>
-                        <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
-                            <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
-                                <div class="w-full xsLight text-left subpixel-antialiased" v-if="selectedMoneySource === null">
-                                    Quelle wählen*
-                                </div>
-                                <div class="w-full xsLight text-left subpixel-antialiased" v-else>
-                                    {{ selectedMoneySource.name}}
-                                </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                            </ListboxButton>
-                            <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                <ListboxOption v-for="moneySource in moneySources"
-                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                               :key="moneySource.name"
-                                               :value="moneySource"
-                                               v-slot="{ active, selected }">
-                                    <div :class="[selected ? 'text-white' : '']">
-                                        {{ moneySource.name }}
+                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </ListboxButton>
+                                <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                    <ListboxOption v-for="type in linkTypes"
+                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                   :key="type.name"
+                                                   :value="type"
+                                                   v-slot="{ active, selected }">
+                                        <div :class="[selected ? 'text-white' : '']">
+                                            {{ type.name }}
+                                        </div>
+                                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </Listbox>
+                            <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
+                                <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
+                                    <div class="w-full xsLight text-left subpixel-antialiased"
+                                         v-if="selectedMoneySource === null">
+                                        Quelle wählen*
                                     </div>
-                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                </ListboxOption>
-                            </ListboxOptions>
-                        </Listbox>
-                    </div>
-                    <div class="flex justify-center">
-                        <AddButton @click="updateMoneySourceLink()"
-                                   class="mt-8 py-3 flex" text="Speichern"
-                                   mode="modal"></AddButton>
+                                    <div class="w-full xsDark text-left subpixel-antialiased" v-else>
+                                        {{ selectedMoneySource.name }}
+                                    </div>
+                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </ListboxButton>
+                                <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                    <ListboxOption v-for="moneySource in moneySources"
+                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                   :key="moneySource.name"
+                                                   :value="moneySource"
+                                                   v-slot="{ active, selected }">
+                                        <div :class="[selected ? 'text-white' : '']">
+                                            {{ moneySource.name }}
+                                        </div>
+                                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </Listbox>
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="updateMoneySourceLink()"
+                                       class="mt-8 py-3 flex" text="Speichern"
+                                       mode="modal"></AddButton>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -115,8 +131,12 @@ export default {
         return {
             isLinked: this.column.pivot.linked_money_source_id !== null,
             linkedType: this.column.pivot.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
-            selectedMoneySource: this.isLinked ? this.moneySources.find(moneySource => moneySource.id === this.column.pivot.linked_money_source_id) : null,
+            selectedMoneySource: this.column.pivot.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.column.pivot.linked_money_source_id) : null,
             linkTypes,
+            isCalculateTab: true,
+            isCommentTab: false,
+            isExcludeTab: false,
+            isLinkTab: false,
         }
     },
 
@@ -125,16 +145,45 @@ export default {
     emits: ['closed'],
 
     watch: {},
+    computed: {
+        tabs() {
+            return [
+                {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
+                {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+            ]
+        },
+
+    },
 
     methods: {
         openModal() {
         },
-
+        changeTab(selectedTab) {
+            this.isCalculateTab = false;
+            this.isCommentTab = false;
+            this.isExcludeTab = false;
+            this.isLinkTab = false;
+            if (selectedTab.name === 'Kalkulation') {
+                this.isCalculateTab = true;
+            } else if (selectedTab.name === 'Kommentar') {
+                this.isCommentTab = true;
+            } else if (selectedTab.name === 'Ausklammern') {
+                this.isExcludeTab = true;
+            } else {
+                this.isLinkTab = true;
+            }
+        },
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-        updateMoneySourceLink(){
-            this.$inertia.patch(route('project.budget.cell-source.update'),{cell_id: this.column.pivot.id , linked_type: this.linkedType.type, money_source_id: this.selectedMoneySource.id});
+        updateMoneySourceLink() {
+            this.$inertia.patch(route('project.budget.cell-source.update'), {
+                cell_id: this.column.pivot.id,
+                linked_type: this.linkedType.type,
+                money_source_id: this.selectedMoneySource.id
+            });
         }
     },
 }

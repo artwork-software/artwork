@@ -55,20 +55,34 @@
                                 <div
                                     @click="addSubPosition(mainPosition.id)"
                                     class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
-                                    @mouseover="hoveredBorder = mainIndex + 'subBefore'"
+                                    @mouseover="hoveredBorder = mainIndex + 'subBeforeOutside'"
                                     @mouseout="hoveredBorder = null">
-                                    <div v-if="hoveredBorder === mainIndex + 'subBefore'"
+                                    <div v-if="hoveredBorder === mainIndex + 'subBeforeOutside'"
                                          class="uppercase text-secondaryHover text-sm -mt-8">
                                         Unterposition
-                                        <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBefore'"
-                                                        @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBefore'" @click="addSubPosition(mainPosition.id)"
+                                        <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBeforeOutside'"
+                                                        @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeOutside'" @click="addSubPosition(mainPosition.id)"
                                                         class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                     </div>
                                 </div>
                                 <table v-if="!mainPosition.closed" class="w-full ">
                                     <thead class="">
-                                    <tr class="" v-for="subPosition in mainPosition.sub_positions">
+                                    <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
+
                                         <th class="bg-silverGray xxsDark ">
+                                            <div v-if="subIndex !== 0"
+                                                @click="addSubPosition(mainPosition.id)"
+                                                class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
+                                                @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
+                                                @mouseout="hoveredBorder = null">
+                                                <div v-if="hoveredBorder === mainIndex + 'subBeforeInside'"
+                                                     class="uppercase text-buttonBlue text-sm -mt-8">
+                                                    Unterposition
+                                                    <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
+                                                                    @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeInside'" @click="addSubPosition(mainPosition.id)"
+                                                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                </div>
+                                            </div>
                                             <div class="pl-2 flex items-center h-10">
                                                 {{ subPosition.name }}
                                                 <button class="my-auto w-6 ml-3"
@@ -85,9 +99,10 @@
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
-                                                        <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']" class="ml-2 my-4 h-6"
+                                                        <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']" class="ml-2 my-4 h-6 flex items-center"
                                                              @click="column.pivot.clicked = !column.pivot.clicked"
-                                                             v-if="!column.pivot.clicked">{{ column.pivot.value }}
+                                                             v-if="!column.pivot.clicked">
+                                                            <img v-if="column.pivot.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>{{ column.pivot.value }}
                                                         </div>
                                                         <div class="flex items-center" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" v-else>
                                                             <input

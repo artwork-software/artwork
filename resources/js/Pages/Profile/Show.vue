@@ -104,8 +104,9 @@
                                                 class="text-secondary my-auto -ml-3">In keinem Team </span>
                                             <span v-else class="flex mt-3 -ml-4"
                                                 v-for="(team,index) in userForm.departments">
-                                            <TeamIconCollection class="h-14 w-14 rounded-full ring-2 ring-white"
+                                            <TeamIconCollection :data-tooltip-target="team.name" class="h-14 w-14 rounded-full ring-2 ring-white"
                                                 :iconName="team.svg_name"/>
+                                                <TeamTooltip :team="team"/>
                                             </span>
                                         </div>
                                     </div>
@@ -329,9 +330,11 @@ import {Inertia} from "@inertiajs/inertia";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AddButton from "@/Layouts/Components/AddButton";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 
 export default defineComponent({
     components: {
+        TeamTooltip,
         AddButton,
         JetActionMessage,
         JetButton,

@@ -290,6 +290,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
     Route::patch('/project/budget/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
     Route::patch('/project/budget/cell-source/update', [ProjectController::class, 'updateCellSource'])->name('project.budget.cell-source.update');
+    Route::patch('/project/budget/cell-calculation/update', [ProjectController::class, 'updateCellCalculation'])->name('project.budget.cell-calculation.update');
     Route::post('/project/budget/sub-position/add', [ProjectController::class, 'addSubPosition'])->name('project.budget.sub-position.add');
     Route::post('/project/budget/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
 });

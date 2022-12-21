@@ -26,6 +26,75 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Calculate Tab -->
+                    <div v-if="isCalculateTab">
+                        <div v-if="this.calculationArray?.length > 0"
+                             v-for="(calculation,index) in this.calculationArray">
+                            <div class="h-1.5 my-2 bg-silverGray"/>
+                            <div class="flex space-x-4 mb-3">
+                                <div class="w-1/2">
+                                    <input type="text"
+                                           v-model="this.calculationNames[index]"
+                                           placeholder="Name"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="text"
+                                           v-model="this.calculationValues[index]"
+                                           placeholder="Wert"
+                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                            </div>
+                            <textarea placeholder="Kommentar"
+                                      v-model="this.calculationDescriptions[index]"
+                                      rows="4"
+                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        </div>
+                        <div v-else>
+                            <div class="flex space-x-4 mb-3">
+                                <div class="w-1/2">
+                                    <input type="text"
+                                           v-model="this.calculationNames[0]"
+                                           placeholder="Name"
+                                           class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                                <div class="w-1/2">
+                                    <input type="text"
+                                           v-model="this.calculationValues[0]"
+                                           placeholder="Wert"
+                                           class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                </div>
+                            </div>
+                            <textarea placeholder="Kommentar"
+                                      v-model="this.calculationDescriptions[0]"
+                                      rows="4"
+                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        </div>
+                        <div @click="addCalculation()"
+                             class="bg-secondaryHover h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue cursor-pointer"
+                             @mouseover="hoveredBorder = true"
+                             @mouseout="hoveredBorder = false">
+                            <div v-if="hoveredBorder"
+                                 class="uppercase text-buttonBlue text-sm -mt-8">
+                                Position
+                                <PlusCircleIcon @mouseover="hoveredBorder = true"
+                                                @mouseout="hoveredBorder = false" v-if="hoveredBorder"
+                                                @click="addCalculation()"
+                                                class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            </div>
+                        </div>
+                        <div class="py-2 bg-silverGray flex justify-between mt-2">
+                            <div class="ml-2 sDark">
+                                SUM
+                            </div>
+                            <div class="mr-2 sDark">
+                                {{this.calculationValues?.reduce((a, b) => a + b, 0)}}
+                            </div>
+                        </div>
+                        <div class="flex justify-center mt-6">
+                            <AddButton @click="saveCalculation()" text="Speichern" class="text-sm ml-0 px-12 py-5 xsWhiteBold"></AddButton>
+                        </div>
+                    </div>
                     <!-- Link Tab -->
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-8">
@@ -102,7 +171,7 @@
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
+import {XIcon, CheckIcon, ChevronDownIcon, PlusCircleIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 
 const linkTypes = [
@@ -124,7 +193,8 @@ export default {
         JetDialogModal,
         XIcon,
         CheckIcon,
-        ChevronDownIcon
+        ChevronDownIcon,
+        PlusCircleIcon
     },
 
     data() {
@@ -137,6 +207,7 @@ export default {
             isCommentTab: false,
             isExcludeTab: false,
             isLinkTab: false,
+            hoveredBorder: false,
         }
     },
 
@@ -154,7 +225,42 @@ export default {
                 {name: 'Verlinkung', href: '#', current: this.isLinkTab},
             ]
         },
+        calculationNames() {
+            let names = []
+            this.column.pivot.calculations?.forEach((calculation) => {
+                names.push(calculation.name);
+            })
+            return names;
+        },
+        calculationValues() {
+            let values = []
+            this.column.pivot.calculations?.forEach((calculation) => {
+                values.push(calculation.value);
+            })
+            return values;
+        },
+        calculationDescriptions() {
+            let descriptions = []
+            this.column.pivot.calculations?.forEach((calculation) => {
+                descriptions.push(calculation.description);
+            })
+            return descriptions;
+        },
+        calculationArray() {
+            let helperArray = [];
+            this.column.pivot.calculations?.forEach((calculation, index) => {
+                helperArray[index] = {
+                    name: this.calculationNames[index],
+                    value: this.calculationValues[index],
+                    description: this.calculationDescriptions[index]
+                };
+            });
+            return helperArray;
+        },
+        calculationSum() {
+            return this.calculationValues?.reduce((a, b) => a + b, 0);
 
+        },
     },
 
     methods: {
@@ -184,6 +290,28 @@ export default {
                 linked_type: this.linkedType.type,
                 money_source_id: this.selectedMoneySource.id
             });
+        },
+        addCalculation() {
+            if (this.calculationArray?.length > 0) {
+                this.calculationArray?.forEach((calculation, index) => {
+                    this.calculationArray[index] = {
+                        name: this.calculationNames[index],
+                        value: this.calculationValues[index],
+                        description: this.calculationDescriptions[index]
+                    };
+                })
+                this.calculationArray.push({name: '', value: '', description: ''})
+            } else {
+                this.calculationArray = [({
+                    name: this.calculationNames[0],
+                    value: this.calculationValues[0],
+                    description: this.calculationDescriptions[0]
+                })]
+                this.calculationArray.push({name: '', value: '', description: ''})
+            }
+        },
+        saveCalculation(){
+            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: column.id, calculations: this.calculationArray, sub_position_row_id:column.pivot.sub_position_row_id}, {preserveState: true});
         }
     },
 }

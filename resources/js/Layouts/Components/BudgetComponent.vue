@@ -68,7 +68,6 @@
                                 <table v-if="!mainPosition.closed" class="w-full ">
                                     <thead class="">
                                     <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-
                                         <th class="bg-silverGray xxsDark ">
                                             <div v-if="subIndex !== 0"
                                                 @click="addSubPosition(mainPosition.id)"

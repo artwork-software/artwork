@@ -354,7 +354,14 @@ export default {
         },
         updateCellValue(column){
             column.pivot.clicked = !column.pivot.clicked;
-            this.$inertia.patch(route('project.budget.cell.update'),{column_id: column.id, value: column.pivot.value, sub_position_row_id:column.pivot.sub_position_row_id}, {preserveState: true});
+            this.$inertia.patch(route('project.budget.cell.update'), {
+                column_id: column.id,
+                value: column.pivot.value,
+                sub_position_row_id: column.pivot.sub_position_row_id
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         addSubPosition(mainPositionId){
             this.$inertia.post(route('project.budget.sub-position.add'),{project_id: this.project.id, main_position_id: mainPositionId});

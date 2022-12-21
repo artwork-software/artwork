@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class SubPositionRow extends Model
 {
@@ -13,9 +14,11 @@ class SubPositionRow extends Model
         'commented'
     ];
 
-    public function columns(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function columns(): BelongsToMany
     {
-        return $this->belongsToMany(Column::class)->withPivot(['value', 'linked_money_source_id','id']);
+        return $this->belongsToMany(Column::class)
+            ->withPivot(['value', 'linked_money_source_id','id'])
+            ->withTimestamps();
     }
 
 }

@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Column extends Model
 {
@@ -15,12 +17,12 @@ class Column extends Model
         'subName'
     ];
 
-    public function subPositionRows(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function subPositionRows(): BelongsToMany
     {
         return $this->belongsToMany(SubPositionRow::class);
     }
 
-    public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }

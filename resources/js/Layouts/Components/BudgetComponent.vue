@@ -73,13 +73,13 @@
                                             <div v-if="subIndex !== 0"
                                                 @click="addSubPosition(mainPosition.id)"
                                                 class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
-                                                @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
+                                                @mouseover="hoveredBorder = mainIndex + 'subBeforeInside' + subIndex"
                                                 @mouseout="hoveredBorder = null">
-                                                <div v-if="hoveredBorder === mainIndex + 'subBeforeInside'"
+                                                <div v-if="hoveredBorder === mainIndex + 'subBeforeInside' + subIndex"
                                                      class="uppercase text-buttonBlue text-sm -mt-8">
                                                     Unterposition
                                                     <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
-                                                                    @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeInside'" @click="addSubPosition(mainPosition.id)"
+                                                                    @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeInside' + subIndex" @click="addSubPosition(mainPosition.id)"
                                                                     class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                 </div>
                                             </div>

@@ -311,7 +311,7 @@ export default {
             }
         },
         saveCalculation(){
-            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: column.id, calculations: this.calculationArray, sub_position_row_id:column.pivot.sub_position_row_id}, {preserveState: true});
+            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: this.column.id, calculations: this.calculationArray, sub_position_row_id: this.column.pivot.sub_position_row_id}, {preserveState: true});
         }
     },
 }

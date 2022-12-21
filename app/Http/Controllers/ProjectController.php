@@ -8,6 +8,7 @@ use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\BudgetResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
@@ -450,6 +451,12 @@ class ProjectController extends Controller
         }
     }
 
+    public function updateCellCalculation(Request $request){
+        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
+        $cell->update(['calculations' => json_encode($request->calculations)]);
+        return back()->with('success');
+    }
+
     /**
      * Display the specified resource.
      *
@@ -474,8 +481,9 @@ class ProjectController extends Controller
             'users.departments',
         ]);
 
-        $table = $project->mainPositions()->with('subPositions.subPositionRows.columns')->get();
         $columns = $project->columns()->get();
+
+        $budget = new BudgetResource($project->mainPositions()->with('subPositions.subPositionRows.columns')->get());
 
 
         return inertia('Projects/Show', [
@@ -485,7 +493,7 @@ class ProjectController extends Controller
 
             'budget' => [
                 'columns' => $columns,
-                'table' => $table
+                'table' => $project->mainPositions()->with('subPositions.subPositionRows.columns')->get()
             ],
 
             'categories' => Category::all(),

@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->string('linked_first_column')->nullable();
             $table->string('linked_second_column')->nullable();
+            $table->json('calculations')->nullable();
             $table->timestamps();
         });
     }

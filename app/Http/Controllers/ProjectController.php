@@ -242,22 +242,18 @@ class ProjectController extends Controller
             'commented' => false,
         ]);
 
-        foreach ($columns as $column) {
-            ColumnCell::create([
-                'column_id' => $column->id,
-                'sub_position_row_id' => $costSubPositionRow->id,
-                'value' => '',
-                'linked_money_source_id' => null,
-                'type' => null,
-            ]);
-            ColumnCell::create([
-                'column_id' => $column->id,
-                'sub_position_row_id' => $earningSubPositionRow->id,
-                'value' => '',
-                'linked_money_source_id' => null,
-                'type' => null,
-            ]);
-        }
+        $costSubPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'type' => null,
+        ]);
+
+        $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'type' => null,
+        ]);
+
     }
 
     public function updateCellSource(Request $request): void

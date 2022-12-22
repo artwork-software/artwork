@@ -1,5 +1,6 @@
 <template>
     <jet-dialog-modal :show="true" @close="closeModal()">
+
         <template #content>
             <img alt="Details" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
@@ -226,29 +227,33 @@ export default {
             ]
         },
         calculationNames() {
+            let calculations = JSON.parse(this.column.pivot.calculations);
             let names = []
-            this.column.pivot.calculations?.forEach((calculation) => {
+            calculations?.forEach((calculation) => {
                 names.push(calculation.name);
             })
             return names;
         },
         calculationValues() {
+            let calculations = JSON.parse(this.column.pivot.calculations);
             let values = []
-            this.column.pivot.calculations?.forEach((calculation) => {
+            calculations?.forEach((calculation) => {
                 values.push(calculation.value);
             })
             return values;
         },
         calculationDescriptions() {
+            let calculations = JSON.parse(this.column.pivot.calculations);
             let descriptions = []
-            this.column.pivot.calculations?.forEach((calculation) => {
+            calculations?.forEach((calculation) => {
                 descriptions.push(calculation.description);
             })
             return descriptions;
         },
         calculationArray() {
+            let calculations = JSON.parse(this.column.pivot.calculations);
             let helperArray = [];
-            this.column.pivot.calculations?.forEach((calculation, index) => {
+            calculations?.forEach((calculation, index) => {
                 helperArray[index] = {
                     name: this.calculationNames[index],
                     value: this.calculationValues[index],

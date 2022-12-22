@@ -17,7 +17,7 @@ class SubPositionRow extends Model
     public function columns(): BelongsToMany
     {
         return $this->belongsToMany(Column::class)
-            ->withPivot(['value', 'linked_money_source_id','id'])
+            ->withPivot(['value', 'linked_money_source_id','id', 'calculations'])
             ->withTimestamps();
     }
 

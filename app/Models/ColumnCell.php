@@ -17,7 +17,8 @@ class ColumnCell extends Model
         'linked_type',
         'type',
         'linked_first_column',
-        'linked_second_column'
+        'linked_second_column',
+        'calculations'
     ];
 
     protected $table = 'column_sub_position_row';

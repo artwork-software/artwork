@@ -61,7 +61,6 @@ export default {
                 contractTypesFilter: { array: filters.contractTypesFilter },
             }})
             .then(res => {
-                console.log(this.contractsCopy)
                 this.contractsCopy.data = res.data.contracts
             })
         }

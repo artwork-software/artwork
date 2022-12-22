@@ -89,11 +89,51 @@
                                 SUM
                             </div>
                             <div class="mr-2 sDark">
-                                {{this.calculationSum}}
+                                {{ this.calculationSum }}
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
-                            <AddButton @click="saveCalculation()" text="Speichern" class="text-sm ml-0 px-12 py-5 xsWhiteBold"></AddButton>
+                            <AddButton @click="saveCalculation()" text="Speichern"
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                        </div>
+                    </div>
+                    <!-- Commentary Tab -->
+                    <div v-if="isCommentTab">
+                         <textarea
+                             placeholder="Was gibt es zu diesem Posten zu beachten?"
+                             v-model="cellComment" rows="4"
+                             class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
+                        <div>
+                            <div class="my-6" v-for="comment in this.column.pivot.comments"
+                                 @mouseover="commentHovered = comment.id"
+                                 @mouseout="commentHovered = null">
+                                <div class="flex justify-between">
+                                    <div class="flex items-center">
+                                        <img v-if="comment.user" :data-tooltip-target="comment.user"
+                                             :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                             class="rounded-full h-7 w-7 object-cover"/>
+                                        <UserTooltip v-if="comment.user" :user="comment.user"/>
+                                        <div class="ml-2 text-secondary"
+                                             :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                            {{ comment.created_at }}
+                                        </div>
+                                    </div>
+                                    <button v-show="commentHovered === comment.id" type="button"
+                                            @click="deleteCommentFromProject(comment)">
+                                        <span class="sr-only">Kommentar von Projekt entfernen</span>
+                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                    </button>
+                                </div>
+                                <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
+                                    {{ comment.text }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="addCommentToCell()" text="Speichern"
+                                       :disabled="this.cellComment === null && this.cellComment === ''"
+                                       :class="this.cellComment === null || this.cellComment === '' ? 'bg-secondary hover:bg-secondary' : ''"
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
                     <!-- Link Tab -->
@@ -156,7 +196,7 @@
                         </div>
                         <div class="flex justify-center">
                             <AddButton @click="updateMoneySourceLink()"
-                                       class="mt-8 py-3 flex" text="Speichern"
+                                       class="mt-8 py-3 px-24 flex" text="Speichern"
                                        mode="modal"></AddButton>
                         </div>
                     </div>
@@ -174,6 +214,8 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, Radio
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon, PlusCircleIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import {XCircleIcon} from "@heroicons/vue/solid";
 
 const linkTypes = [
     {name: '+', type: 'EARNING'},
@@ -184,6 +226,7 @@ export default {
     name: 'CellDetailComponent',
 
     components: {
+        UserTooltip,
         AddButton,
         ListboxOptions,
         ListboxOption,
@@ -195,7 +238,8 @@ export default {
         XIcon,
         CheckIcon,
         ChevronDownIcon,
-        PlusCircleIcon
+        PlusCircleIcon,
+        XCircleIcon
     },
 
     data() {
@@ -209,7 +253,9 @@ export default {
             isExcludeTab: false,
             isLinkTab: false,
             hoveredBorder: false,
-            refreshSumKey: 0
+            refreshSumKey: 0,
+            cellComment: null,
+            commentHovered: null,
         }
     },
 
@@ -267,7 +313,7 @@ export default {
             this.refreshSumKey;
             let sum = 0;
             this.calculationValues?.forEach((value) => {
-                if(!isNaN(value) && value !== ''){
+                if (!isNaN(value) && value !== '') {
                     sum += parseInt(value);
                 }
             })
@@ -297,13 +343,13 @@ export default {
             this.$emit('closed', bool);
         },
         updateMoneySourceLink() {
-            if(this.isLinked){
+            if (this.isLinked) {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
                     cell_id: this.column.pivot.id,
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 });
-            }else{
+            } else {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
                     cell_id: this.column.pivot.id,
                     linked_type: null,
@@ -336,7 +382,7 @@ export default {
             }
             this.refreshSumKey++;
         },
-        saveCalculation(){
+        saveCalculation() {
             this.calculationArray?.forEach((calculation, index) => {
                 this.calculationArray[index] = {
                     name: this.calculationNames[index],
@@ -344,9 +390,21 @@ export default {
                     description: this.calculationDescriptions[index]
                 };
             })
-            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: this.column.id, calculations: this.calculationArray, sub_position_row_id: this.column.pivot.sub_position_row_id, calculationSum: this.calculationSum}, {preserveState: true});
+            this.$inertia.patch(route('project.budget.cell-calculation.update'), {
+                column_id: this.column.id,
+                calculations: this.calculationArray,
+                sub_position_row_id: this.column.pivot.sub_position_row_id,
+                calculationSum: this.calculationSum
+            }, {preserveState: true});
             this.closeModal(true);
-        }
+        },
+        deleteCommentFromProject(comment) {
+            this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
+        },
+        addCommentToCell() {
+            this.$inertia.post(route('comments.store'), {commentText: this.cellComment}, {preserveState: true, preserveScroll: true});
+            this.cellComment = '';
+        },
     },
 }
 </script>

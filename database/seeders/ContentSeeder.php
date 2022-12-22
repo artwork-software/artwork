@@ -44,7 +44,7 @@ class ContentSeeder extends Seeder
             'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
                                 Er steht hier als Platzhalter.',
             'ksk_liable' => false,
-            'resident_abroad' => false,
+            'resident_abroad' => true,
             'legal_form' => 'Werkvertrag',
             'type' => 'Sponsoring'
         ]);
@@ -57,7 +57,7 @@ class ContentSeeder extends Seeder
             'project_id' => 1,
             'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
                                 Er steht hier als Platzhalter.',
-            'ksk_liable' => false,
+            'ksk_liable' => true,
             'resident_abroad' => false,
             'legal_form' => 'Werkvertrag',
             'type' => 'Collaboration'

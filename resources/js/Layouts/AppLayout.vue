@@ -297,8 +297,8 @@ export default {
                 {
                     name: 'Verträge',
                     has_permission: this.$page.props.is_admin,
-                    href: route('contracts.management'),
-                    route: ['/contracts']
+                    href: route('contracts.view.index'),
+                    route: ['/contracts/view']
                 },
                 {
                     name: 'Finanzierungsquellen',

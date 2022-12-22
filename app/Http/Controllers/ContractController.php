@@ -30,38 +30,48 @@ class ContractController extends Controller
      *
      * @return Response|ResponseFactory
      */
-    public function index(Request $request)
+    public function viewIndex()
     {
         $contracts = Contract::all();
-        $costsFilter = $request->get('costsFilter');
-        $legalFormsFilter = $request->get('legalFormsFilter');
-        $contractTypesFilter = $request->get('contractTypesFilter');
-
-        if($costsFilter || $legalFormsFilter || $contractTypesFilter) {
-            $ksk_filter = false;
-            $resident_abroad = false;
-            $legal_forms = $legalFormsFilter;
-            $contract_types = $contractTypesFilter;
-
-            if($ksk_filter) {
-                $contracts = $contracts->where('ksk_liable', $ksk_filter)->all();
-            }
-            if($resident_abroad) {
-                $contracts = $contracts->where('resident_abroad', $resident_abroad)->all();
-            }
-            if($legal_forms) {
-                $contracts = $contracts->whereIn('legal_form', $legal_forms)->all();
-            }
-            if($legal_forms) {
-                $contracts = $contracts->whereIn('type', $contract_types)->all();
-            }
-        }
-
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all())
             ]);
 
+    }
+
+    public function index(Request $request)
+    {
+
+        $contracts = collect(Contract::all());
+        $costsFilter = json_decode($request->input('costsFilter'));
+        $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
+        $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
+
+        if($costsFilter || $legalFormsFilter || $contractTypesFilter) {
+            $legal_forms = collect($legalFormsFilter->array);
+            $contract_types = collect($contractTypesFilter->array);
+            $cost_filters = collect($costsFilter->array);
+
+            if($cost_filters->contains('name', 'KSK-pflichtig')) {
+                $ksk_filter = true;
+                $contracts = collect($contracts->where('ksk_liable', $ksk_filter)->all());
+            }
+            if($cost_filters->contains('name', 'Im Ausland ansässig')) {
+                $resident_abroad = true;
+                $contracts = collect($contracts->where('resident_abroad', $resident_abroad)->all());
+            }
+            if(count($legal_forms) > 0) {
+                $contracts = collect($contracts->whereIn('legal_form', $legal_forms)->all());
+            }
+            if(count($contract_types) > 0) {
+                $contracts = collect($contracts->whereIn('type', $contract_types)->all());
+            }
+        }
+        return [
+            'contracts' => ContractResource::collection($contracts),
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
+        ];
     }
 
     /**

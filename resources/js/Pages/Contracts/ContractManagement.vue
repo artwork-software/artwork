@@ -10,7 +10,7 @@
                                     <h2 class="headline1 mb-4">Verträge</h2>
                                     <ContractFilter class="ml-auto" @filter="filterContracts" />
                                 </div>
-                                <div v-for="contract in contracts.data" class="mt-6 w-full">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
                                 </div>
@@ -50,14 +50,19 @@ export default {
     data() {
         return {
             show: false,
+            contractsCopy: this.contracts
         }
     },
     methods: {
         async filterContracts(filters) {
-            await axios.get('/contracts', {
-                costsFilter: filters.costsFilter,
-                legalFormsFilter: filters.legalFormsFilter,
-                contractTypesFilter: filters.contractTypesFilter,
+            await axios.get('/contracts/', { params: {
+                costsFilter: { array: filters.costsFilter },
+                legalFormsFilter: { array: filters.legalFormsFilter },
+                contractTypesFilter: { array: filters.contractTypesFilter },
+            }})
+            .then(res => {
+                console.log(this.contractsCopy)
+                this.contractsCopy.data = res.data.contracts
             })
         }
     }

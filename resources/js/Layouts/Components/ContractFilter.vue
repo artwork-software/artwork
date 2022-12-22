@@ -75,11 +75,11 @@ export default {
             additionalCosts: [
                 {
                     "checked": false,
-                    "name": "Kosten 1"
+                    "name": "KSK-pflichtig",
                 },
                 {
                     "checked": false,
-                    "name": "Kosten 2"
+                    "name": "Im Ausland ansässig"
                 }
             ],
             legalForms: [

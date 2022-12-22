@@ -450,6 +450,7 @@ class ProjectController extends Controller
     public function updateCellCalculation(Request $request){
         $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
         $cell->update(['calculations' => json_encode($request->calculations)]);
+        $cell->update(['value' => $request->calculationSum]);
         return back()->with('success');
     }
 

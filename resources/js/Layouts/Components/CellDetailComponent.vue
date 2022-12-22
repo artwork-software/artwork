@@ -40,7 +40,7 @@
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <div class="w-1/2">
-                                    <input type="text"
+                                    <input type="text" @focusout="this.refreshSumKey++"
                                            v-model="this.calculationValues[index]"
                                            placeholder="Wert"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -89,7 +89,7 @@
                                 SUM
                             </div>
                             <div class="mr-2 sDark">
-                                {{this.calculationValues?.reduce((a, b) => a + b, 0)}}
+                                {{this.calculationSum}}
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
@@ -209,6 +209,7 @@ export default {
             isExcludeTab: false,
             isLinkTab: false,
             hoveredBorder: false,
+            refreshSumKey: 0
         }
     },
 
@@ -263,8 +264,14 @@ export default {
             return helperArray;
         },
         calculationSum() {
-            return this.calculationValues?.reduce((a, b) => a + b, 0);
-
+            this.refreshSumKey;
+            let sum = 0;
+            this.calculationValues?.forEach((value) => {
+                if(!isNaN(value) && value !== ''){
+                    sum += parseInt(value);
+                }
+            })
+            return sum;
         },
     },
 
@@ -290,11 +297,21 @@ export default {
             this.$emit('closed', bool);
         },
         updateMoneySourceLink() {
-            this.$inertia.patch(route('project.budget.cell-source.update'), {
-                cell_id: this.column.pivot.id,
-                linked_type: this.linkedType.type,
-                money_source_id: this.selectedMoneySource.id
-            });
+            if(this.isLinked){
+                this.$inertia.patch(route('project.budget.cell-source.update'), {
+                    cell_id: this.column.pivot.id,
+                    linked_type: this.linkedType.type,
+                    money_source_id: this.selectedMoneySource.id
+                });
+            }else{
+                this.$inertia.patch(route('project.budget.cell-source.update'), {
+                    cell_id: this.column.pivot.id,
+                    linked_type: null,
+                    money_source_id: null,
+                });
+            }
+
+            this.closeModal(true);
         },
         addCalculation() {
             if (this.calculationArray?.length > 0) {
@@ -307,16 +324,28 @@ export default {
                 })
                 this.calculationArray.push({name: '', value: '', description: ''})
             } else {
-                this.calculationArray = [({
-                    name: this.calculationNames[0],
-                    value: this.calculationValues[0],
-                    description: this.calculationDescriptions[0]
-                })]
+                this.calculationArray.push({name: '', value: '', description: ''})
+                this.calculationArray?.forEach((calculation, index) => {
+                    this.calculationArray[index] = {
+                        name: this.calculationNames[index],
+                        value: this.calculationValues[index],
+                        description: this.calculationDescriptions[index]
+                    };
+                })
                 this.calculationArray.push({name: '', value: '', description: ''})
             }
+            this.refreshSumKey++;
         },
         saveCalculation(){
-            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: this.column.id, calculations: this.calculationArray, sub_position_row_id: this.column.pivot.sub_position_row_id}, {preserveState: true});
+            this.calculationArray?.forEach((calculation, index) => {
+                this.calculationArray[index] = {
+                    name: this.calculationNames[index],
+                    value: this.calculationValues[index],
+                    description: this.calculationDescriptions[index]
+                };
+            })
+            this.$inertia.patch(route('project.budget.cell-calculation.update'),{column_id: this.column.id, calculations: this.calculationArray, sub_position_row_id: this.column.pivot.sub_position_row_id, calculationSum: this.calculationSum}, {preserveState: true});
+            this.closeModal(true);
         }
     },
 }

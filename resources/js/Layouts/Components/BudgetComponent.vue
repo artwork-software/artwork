@@ -105,11 +105,11 @@
                                                         </div>
                                                         <div class="flex items-center" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" v-else>
                                                             <input
-                                                                :class="index <= 1 ? 'w-20' : index === 2 ? 'w-68' : 'w-44'"
+                                                                :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
                                                                 class="my-2 xsDark" type="text"
                                                                 v-model="column.pivot.value"
                                                                 @focusout="updateCellValue(column)">
-                                                            <PlusCircleIcon @click="openCellDetailModal(column)"
+                                                            <PlusCircleIcon v-if="index > 2" @click="openCellDetailModal(column)"
                                                                             class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         </div>
                                                     </td>

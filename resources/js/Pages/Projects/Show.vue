@@ -3,8 +3,12 @@
         <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
-                    <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
-                        {{ project.name }}</h2>
+                    <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
+                        <span v-if="project.is_group">
+                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
+                        </span>
+                        {{ project.name }}
+                    </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
@@ -89,10 +93,25 @@
                         Verlauf ansehen
                     </button>
                 </div>
+                <div v-if="currentGroup">
+                    <div class="flex mt-2 items-center">
+                        <span v-if="!project.is_group">
+                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
+                        </span>
+                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1"> {{ currentGroup.name }}</a>
+                    </div>
+                </div>
+
+                <div class="mt-3" v-if="projectGroups.length > 0">
+                    <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFromGroup"
+                                  :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
+                </div>
+
+
                 <div class="mt-2 mr-14 subpixel-antialiased text-secondary">
                     {{ project.description }}
                 </div>
-                <div class="mt-4 text-xs text-secondary">
+                <div class="mt-4 text-xs text-secondary" style="display: none">
                     <span class="subpixel-antialiased">
                         Kostenträger:
                     </span>
@@ -928,32 +947,16 @@
                            aria-hidden="true"/>
                     <div class="mt-12">
                         <div class="flex">
-                            <div class="relative flex w-full mr-4">
-                                <input id="first_name" v-model="form.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="first_name"
-                                       class="absolute left-0 -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Projektname*</label>
+                            <div class="relative flex w-full">
+                                <input id="projectName" v-model="form.name" type="text" placeholder="Projektname*" class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
                             </div>
                         </div>
-                        <div class="mt-8 mr-4">
-                                            <textarea
-                                                placeholder="Kurzbeschreibung"
-                                                v-model="form.description" rows="8"
-                                                class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
-                        </div>
-                        <div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
-                            <div class="sm:col-span-3">
-                                <div>
-                                    <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
-                                </div>
-                            </div>
-                            <!-- Attribute Menu -->
-                            <Menu as="div" class="inline-block text-left w-80">
+                        <div class="flex mt-2">
+                            <Menu as="div" class="inline-block text-left w-full">
                                 <div>
                                     <MenuButton
-                                        class="border border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        class=" h-12 border border-2 border-gray-300 w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     >
                                         <span class="float-left">Eigenschaften wählen</span>
                                         <ChevronDownIcon
@@ -1073,7 +1076,7 @@
                                 </transition>
                             </Menu>
                         </div>
-                        <div class="flex mt-5">
+                        <div class="flex mt-2" v-if="projectCategories.length > 0 || projectGenres.length > 0 || projectSectors.length > 0">
                             <div>
                                 <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
                                               :displayed-text="category.name" :property="category"></TagComponent>
@@ -1087,7 +1090,53 @@
                                               :displayed-text="sector.name" :property="sector"></TagComponent>
                             </div>
                         </div>
-                        <div class="w-full items-center text-center mt-36">
+                        <div class="mt-2">
+                            <textarea placeholder="Kurzbeschreibung" v-model="form.description" rows="8" class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                        </div>
+                        <!-- TODO: Add cost center to sidebar -->
+                        <!--<div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
+                            <div class="sm:col-span-3">
+                                <div>
+                                    <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
+                                           class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
+                                </div>
+                            </div>
+
+                        </div>-->
+                        <div>
+                            <div class="flex items-center mb-2" v-if="!project.is_group">
+                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup" @change="removeSelectedGroup"
+                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    Gehört zu Projektgruppe
+                                </label>
+                            </div>
+                            <div v-if="this.hasGroup" class="mb-2">
+                                <Listbox as="div" v-model="this.selectedGroup" id="room">
+                                    <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
+                                        <div class="flex-grow flex text-left xsDark">
+                                            {{ this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'  }}
+                                        </div>
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </ListboxButton>
+                                    <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-for="projectGroup in groupProjects"
+                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                       :key="projectGroup.id"
+                                                       :value="projectGroup"
+                                                       v-slot="{ active, selected }">
+                                            <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                                {{ projectGroup.name }}
+                                            </div>
+                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </Listbox>
+                            </div>
+                        </div>
+
+                        <div class="w-full items-center text-center mt-2">
                             <AddButton
                                 :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
@@ -1679,7 +1728,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment'],
+    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
         TagComponent,
         AddButton,
@@ -1785,6 +1834,7 @@ export default {
     },
     data() {
         return {
+            hasGroup: !!this.currentGroup,
             deletingFile: false,
             project_file: null,
             uploadDocumentFeedback: "",
@@ -1816,6 +1866,7 @@ export default {
             allDoneTasks: [],
             projectToDelete: {},
             deletingProject: false,
+            selectedGroup: null,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -1825,8 +1876,8 @@ export default {
                 assigned_departments: [],
                 projectCategoryIds: this.projectCategoryIds,
                 projectGenreIds: this.projectGenreIds,
-                projectSectorIds: this.projectSectorIds
-
+                projectSectorIds: this.projectSectorIds,
+                selectedGroup: null
             }),
             checklistForm: useForm({
                 name: "",
@@ -1884,7 +1935,26 @@ export default {
             attributeForm: useForm({}),
         }
     },
+    mounted() {
+        this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
+    },
     methods: {
+        deleteProjectFromGroup(projectGroupId){
+
+            axios.delete(route('projects.group.delete'), {
+               params: {
+                   projectIdToDelete: projectGroupId.id,
+                   groupId: this.project.id
+               }
+            }).finally(() => {
+                this.projectGroups.splice(this.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
+            })
+        },
+        removeSelectedGroup(){
+            if(!this.hasGroup){
+                this.selectedGroup = null;
+            }
+        },
         formatDate(date, time) {
             if (date === null || time === null) return null;
             return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
@@ -2084,6 +2154,7 @@ export default {
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })
+            this.form.selectedGroup = this.selectedGroup;
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },
@@ -2340,7 +2411,7 @@ export default {
                 }
             },
             deep: true
-        }
+        },
     },
     setup() {
         return {

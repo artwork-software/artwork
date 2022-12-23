@@ -8,16 +8,17 @@
                     <th v-for="(column,index) in budget.columns"
                         :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
                         <p class="text-gray-500" style="font-size: 8px">{{ column.subName }}</p>
-                        <div @click="column.clicked = !column.clicked" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
+                        <div @click="column.clicked = !column.clicked"
+                             :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
                              v-if="!column.clicked">
                             {{ column.name }}
                         </div>
                         <div v-else>
-                                <input
-                                    :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                                    class="my-2 xsDark" type="text"
-                                    v-model="column.name"
-                                    @focusout="updateColumnName(column); column.clicked = !column.clicked">
+                            <input
+                                :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
+                                class="my-2 xsDark" type="text"
+                                v-model="column.name"
+                                @focusout="updateColumnName(column); column.clicked = !column.clicked">
                         </div>
                     </th>
                 </tr>
@@ -61,7 +62,9 @@
                                          class="uppercase text-secondaryHover text-sm -mt-8">
                                         Unterposition
                                         <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBeforeOutside'"
-                                                        @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeOutside'" @click="addSubPosition(mainPosition.id)"
+                                                        @mouseout="hoveredBorder = null"
+                                                        v-if="hoveredBorder === mainIndex + 'subBeforeOutside'"
+                                                        @click="addSubPosition(mainPosition.id)"
                                                         class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                     </div>
                                 </div>
@@ -70,16 +73,19 @@
                                     <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
                                         <th class="bg-silverGray xxsDark ">
                                             <div v-if="subIndex !== 0"
-                                                @click="addSubPosition(mainPosition.id)"
-                                                class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
-                                                @mouseover="hoveredBorder = mainIndex + 'subBeforeInside' + subIndex"
-                                                @mouseout="hoveredBorder = null">
+                                                 @click="addSubPosition(mainPosition.id)"
+                                                 class="bg-secondaryHover h-1 flex justify-end border-dashed hover:border-t-2 hover:border-buttonBlue "
+                                                 @mouseover="hoveredBorder = mainIndex + 'subBeforeInside' + subIndex"
+                                                 @mouseout="hoveredBorder = null">
                                                 <div v-if="hoveredBorder === mainIndex + 'subBeforeInside' + subIndex"
                                                      class="uppercase text-buttonBlue text-sm -mt-8">
                                                     Unterposition
-                                                    <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
-                                                                    @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subBeforeInside' + subIndex" @click="addSubPosition(mainPosition.id)"
-                                                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                    <PlusCircleIcon
+                                                        @mouseover="hoveredBorder = mainIndex + 'subBeforeInside'"
+                                                        @mouseout="hoveredBorder = null"
+                                                        v-if="hoveredBorder === mainIndex + 'subBeforeInside' + subIndex"
+                                                        @click="addSubPosition(mainPosition.id)"
+                                                        class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                 </div>
                                             </div>
                                             <div class="pl-2 flex items-center h-10">
@@ -94,22 +100,30 @@
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
-                                                <tr :class="rowIndex !== 0 ? 'border-t-2 border-silverGray': ''" class="bg-secondaryHover flex"
+                                                <tr :class="rowIndex !== 0 ? 'border-t-2 border-silverGray': ''"
+                                                    class="bg-secondaryHover flex"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
-                                                        <div :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']" class="ml-2 my-4 h-6 flex items-center"
-                                                             @click="column.pivot.clicked = !column.pivot.clicked"
-                                                             v-if="!column.pivot.clicked">
-                                                            <img v-if="column.pivot.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>{{ column.pivot.value }}
+                                                        <div
+                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']"
+                                                            class="ml-2 my-4 h-6 flex items-center"
+                                                            @click="column.pivot.clicked = !column.pivot.clicked"
+                                                            v-if="!column.pivot.clicked">
+                                                            <img v-if="column.pivot.linked_money_source_id !== null"
+                                                                 src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
+                                                                 class="h-6 w-6"/>{{ column.pivot.value }}
                                                         </div>
-                                                        <div class="flex items-center" :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" v-else>
+                                                        <div class="flex items-center"
+                                                             :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
+                                                             v-else>
                                                             <input
                                                                 :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
                                                                 class="my-2 xsDark" type="text"
                                                                 v-model="column.pivot.value"
                                                                 @focusout="updateCellValue(column)">
-                                                            <PlusCircleIcon v-if="index > 2" @click="openCellDetailModal(column)"
+                                                            <PlusCircleIcon v-if="index > 2"
+                                                                            @click="openCellDetailModal(column)"
                                                                             class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         </div>
                                                     </td>
@@ -118,7 +132,11 @@
                                                     <td class="w-24"></td>
                                                     <td class="w-24"></td>
                                                     <td class="w-72 ml-2 my-2">SUM</td>
-                                                    <td class="w-48 my-2">3000</td>
+                                                    <div class="flex items-center" v-for="column in subPosition.sub_position_rows[0].columns">
+                                                        <td v-if="column.pivot.column_id > 3" class="w-48 ml-2 my-4">
+                                                            {{ getSumsOfSubPosition(subPosition)[column.pivot.column_id] }}
+                                                        </td>
+                                                    </div>
                                                 </tr>
                                                 </tbody>
                                             </table>
@@ -134,7 +152,9 @@
                                              class="uppercase text-buttonBlue text-sm -mt-8">
                                             Unterposition
                                             <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'subAfter'"
-                                                            @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'subAfter'" @click="addSubPosition(mainPosition.id)"
+                                                            @mouseout="hoveredBorder = null"
+                                                            v-if="hoveredBorder === mainIndex + 'subAfter'"
+                                                            @click="addSubPosition(mainPosition.id)"
                                                             class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
 
@@ -157,7 +177,9 @@
                                              class="uppercase text-secondaryHover text-sm -mt-8">
                                             Hauptposition
                                             <PlusCircleIcon @mouseover="hoveredBorder = mainIndex + 'main'"
-                                                            @mouseout="hoveredBorder = null" v-if="hoveredBorder === mainIndex + 'main'" @click="addMainPosition('BUDGET_TYPE_COST')"
+                                                            @mouseout="hoveredBorder = null"
+                                                            v-if="hoveredBorder === mainIndex + 'main'"
+                                                            @click="addMainPosition('BUDGET_TYPE_COST')"
                                                             class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
 
@@ -269,8 +291,12 @@
         </div>
     </div>
 
+    <pre v-for="column in this.budget.table[0].sub_positions[0].sub_position_rows[0].columns">
+                                                        {{ column.pivot.column_id }}
+                                                    </pre>
+
     <pre>
-        {{ budget }}
+        {{ this.budget.table[0].sub_positions[0].sub_position_rows[0].columns }}
         </pre>
     <!-- Termin erstellen Modal-->
     <add-column-component
@@ -321,7 +347,7 @@ export default {
         }
     },
 
-    props: ['budget', 'project','moneySources'],
+    props: ['budget', 'project', 'moneySources'],
 
     computed: {
         tablesToShow: function () {
@@ -335,11 +361,53 @@ export default {
                 }
             })
             return [costTableArray, earningTableArray]
+        },
+        sumsToShow: function () {
+            let sums = [];
+            this.budget.table.forEach((mainPosition) => {
+                mainPosition.sub_positions?.forEach((subPosition) => {
+                    subPosition.sub_position_rows?.forEach((row) => {
+                        row.columns.forEach((column) => {
+                            if (column.pivot.column_id > 3) {
+                                if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
+                                    if (sums[subPosition.id + '' + column.pivot.column_id] === undefined) {
+                                        sums[subPosition.id + '' + column.pivot.column_id] = 0
+                                        sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
+                                        console.log(sums);
+                                    } else {
+                                        sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
+                                    }
+                                }
+                            }
+                        })
+                    })
+                })
+            })
+            return sums;
         }
     },
 
     methods: {
-        currencyFormat(number){
+        getSumsOfSubPosition(subPosition) {
+            let sums = [];
+            subPosition.sub_position_rows?.forEach((row) => {
+                row.columns.forEach((column) => {
+                    if (column.pivot.column_id > 3) {
+                        if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
+                            if (sums[column.pivot.column_id] === undefined) {
+                                sums[column.pivot.column_id] = 0
+                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                                console.log(sums);
+                            } else {
+                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                            }
+                        }
+                    }
+                })
+            })
+            return sums;
+        },
+        currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {
                 style: 'currency',
                 currency: 'EUR',
@@ -352,7 +420,7 @@ export default {
         closeAddColumnModal() {
             this.showAddColumnModal = false;
         },
-        updateCellValue(column){
+        updateCellValue(column) {
             column.pivot.clicked = !column.pivot.clicked;
             this.$inertia.patch(route('project.budget.cell.update'), {
                 column_id: column.id,
@@ -363,20 +431,26 @@ export default {
                 preserveScroll: true
             });
         },
-        addSubPosition(mainPositionId){
-            this.$inertia.post(route('project.budget.sub-position.add'),{project_id: this.project.id, main_position_id: mainPositionId});
+        addSubPosition(mainPositionId) {
+            this.$inertia.post(route('project.budget.sub-position.add'), {
+                project_id: this.project.id,
+                main_position_id: mainPositionId
+            });
         },
-        addMainPosition(type){
-            this.$inertia.post(route('project.budget.main-position.add'),{project_id: this.project.id, type: type});
+        addMainPosition(type) {
+            this.$inertia.post(route('project.budget.main-position.add'), {project_id: this.project.id, type: type});
         },
-        updateColumnName(column){
-            this.$inertia.patch(route('project.budget.column.update-name'),{column_id: column.id, columnName: column.name});
+        updateColumnName(column) {
+            this.$inertia.patch(route('project.budget.column.update-name'), {
+                column_id: column.id,
+                columnName: column.name
+            });
         },
-        openCellDetailModal(column){
+        openCellDetailModal(column) {
             this.columnToShow = column;
             this.showCellDetailModal = true;
         },
-        closeCellDetailModal(){
+        closeCellDetailModal() {
             this.showCellDetailModal = false;
         }
 

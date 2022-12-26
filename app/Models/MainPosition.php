@@ -11,7 +11,8 @@ class MainPosition extends Model
 
     protected $fillable = [
         'type',
-        'name'
+        'name',
+        'position'
     ];
 
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo

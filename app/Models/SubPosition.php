@@ -10,7 +10,8 @@ class SubPosition extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name'
+        'name',
+        'position'
     ];
     public function mainPosition(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

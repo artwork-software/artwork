@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('sub_positions', function (Blueprint $table) {
             $table->id();
             $table->string('name')->nullable();
+            $table->integer('position');
             $table->bigInteger('main_position_id');
             $table->timestamps();
         });

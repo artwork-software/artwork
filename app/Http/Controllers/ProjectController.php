@@ -27,9 +27,11 @@ use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\Sector;
 use App\Models\SubPosition;
+use App\Models\SubPositionRow;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -219,20 +221,26 @@ class ProjectController extends Controller
 
         $costMainPosition = $project->mainPositions()->create([
             'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
-            'name' => 'Hauptpostion'
+            'name' => 'Hauptpostion',
+            'position' => $project->mainPositions()
+                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1
         ]);
 
         $earningMainPosition = $project->mainPositions()->create([
             'type' => BudgetTypesEnum::BUDGET_TYPE_EARNING,
-            'name' => 'Hauptpostion'
+            'name' => 'Hauptpostion',
+            'position' => $project->mainPositions()
+                    ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
         ]);
 
         $costSubPosition = $costMainPosition->subPositions()->create([
-            'name' => 'Unterposition'
+            'name' => 'Unterposition',
+            'position' => $costMainPosition->subPositions()->max('position') + 1
         ]);
 
         $earningSubPosition = $earningMainPosition->subPositions()->create([
-            'name' => 'Unterposition'
+            'name' => 'Unterposition',
+            'position' => $earningMainPosition->subPositions()->max('position') + 1
         ]);
 
         $costSubPositionRow = $costSubPosition->subPositionRows()->create([
@@ -309,30 +317,26 @@ class ProjectController extends Controller
     public function addColumn(Request $request): void
     {
         $project = Project::find($request->project_id);
-        if($request->column_type === 'empty'){
+        if($request->column_type === 'empty') {
+
             $column = $project->columns()->create([
                 'name' => 'empty',
                 'subName' => '-'
             ]);
             $this->setColumnSubName($request->project_id);
-            $mainPositions = $project->mainPositions()->get();
-            foreach ($mainPositions as $mainPosition){
-                $subPositions = $mainPosition->subPositions()->get();
-                foreach ($subPositions as $subPosition){
-                    $subPositionRows = $subPosition->subPositionRows()->get();
-                    foreach ($subPositionRows as $subPositionRow){
-                        ColumnCell::create([
-                            'column_id' => $column->id,
-                            'sub_position_row_id' => $subPositionRow->id,
-                            'value' => '',
-                            'linked_money_source_id' => null,
-                            'type' => 'empty',
-                            'linked_first_column' => null,
-                            'linked_second_column' => null,
-                        ]);
-                    }
-                }
-            }
+
+            $subPositionRows = SubPositionRow::whereHas('subPosition.mainPosition', function (Builder $query) use ($request) {
+                $query->where('project_id', $request->project_id);
+            })->pluck('id');
+
+            $column->subPositionRows()->attach($subPositionRows, [
+                'value' => '',
+                'linked_money_source_id' => null,
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null,
+            ]);
+
         }
 
         if($request->column_type === 'sum'){
@@ -398,53 +402,60 @@ class ProjectController extends Controller
         $project = Project::find($request->project_id);
         $columns = $project->columns()->get();
 
+        MainPosition::query()
+            ->where('project_id', $request->project_id)
+            ->where('position', '>', $request->positionBefore)
+            ->increment('position');
+
         $mainPosition = $project->mainPositions()->create([
             'type' => $request->type,
-            'name' => 'Neue Hauptposition'
+            'name' => 'Neue Hauptposition',
+            'position' => $request->positionBefore + 1
         ]);
 
         $subPosition = $mainPosition->subPositions()->create([
-            'name' => 'Neue Unterposition'
+            'name' => 'Neue Unterposition',
+            'position' => $mainPosition->subPositions()->max('position') + 1
         ]);
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
         ]);
 
-        foreach ($columns as $column) {
-            ColumnCell::create([
-                'column_id' => $column->id,
-                'sub_position_row_id' => $subPositionRow->id,
-                'value' => '',
-                'linked_money_source_id' => null,
-                'type' => null
-            ]);
-        }
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'type' => null,
+        ]);
+
     }
 
     public function addSubPosition(Request $request): void
     {
+
         $project = Project::find($request->project_id);
         $columns = $project->columns()->get();
         $mainPosition = MainPosition::find($request->main_position_id);
 
+        SubPosition::query()
+            ->where('main_position_id', $request->main_position_id)
+            ->where('position', '>', $request->positionBefore)
+            ->increment('position');
+
         $subPosition = $mainPosition->subPositions()->create([
-            'name' => 'Neue Unterposition'
+            'name' => 'Neue Unterposition',
+            'position' => $request->positionBefore + 1
         ]);
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
         ]);
 
-        foreach ($columns as $column) {
-            ColumnCell::create([
-                'column_id' => $column->id,
-                'sub_position_row_id' => $subPositionRow->id,
-                'value' => '',
-                'linked_money_source_id' => null,
-                'type' => null
-            ]);
-        }
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'type' => null,
+        ]);
     }
 
     public function updateCellCalculation(Request $request){
@@ -480,8 +491,6 @@ class ProjectController extends Controller
 
         $columns = $project->columns()->get();
 
-        $budget = new BudgetResource($project->mainPositions()->with('subPositions.subPositionRows.columns')->get());
-
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -490,7 +499,12 @@ class ProjectController extends Controller
 
             'budget' => [
                 'columns' => $columns,
-                'table' => $project->mainPositions()->with('subPositions.subPositionRows.columns')->get()
+                'table' => $project->mainPositions()
+                    ->with(['subPositions' => function($query) {
+                        return $query->orderBy('position');
+                    }, 'subPositions.subPositionRows.columns'])
+                    ->orderBy('position')
+                    ->get()
             ],
 
             'categories' => Category::all(),

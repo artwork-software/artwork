@@ -393,6 +393,23 @@ class ProjectController extends Controller
         ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->update(['value' => $request->value]);
     }
 
+
+    public function addSubPositionRow(Request $request){
+        $project = Project::find($request->project_id);
+        $columns = $project->columns()->get();
+        $subPosition = SubPosition::find($request->sub_position_id);
+
+        $subPositionRow = $subPosition->subPositionRows()->create([
+            'commented' => false,
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => '',
+            'linked_money_source_id' => null,
+            'type' => null,
+        ]);
+    }
+
     /**
      * @param Request $request
      * @return void

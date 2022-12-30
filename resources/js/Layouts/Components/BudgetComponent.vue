@@ -82,6 +82,7 @@
                                                     <ChevronDownIcon v-else
                                                                      class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                                                 </button>
+                                                <button @click="addRowToSubPosition(subPosition)">Neue Row</button>
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
@@ -359,7 +360,7 @@ export default {
                                     if (sums[subPosition.id + '' + column.pivot.column_id] === undefined) {
                                         sums[subPosition.id + '' + column.pivot.column_id] = 0
                                         sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
-                                        console.log(sums);
+                                        //console.log(sums);
                                     } else {
                                         sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
                                     }
@@ -374,6 +375,15 @@ export default {
     },
 
     methods: {
+        addRowToSubPosition(subPosition){
+            this.$inertia.post(route('project.budget.sub-position-row.add'), {
+                project_id: this.project.id,
+                sub_position_id: subPosition.id
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            });
+        },
         getSumsOfSubPosition(subPosition) {
             let sums = [];
             subPosition.sub_position_rows?.forEach((row) => {
@@ -383,7 +393,7 @@ export default {
                             if (sums[column.pivot.column_id] === undefined) {
                                 sums[column.pivot.column_id] = 0
                                 sums[column.pivot.column_id] += parseInt(column.pivot.value);
-                                console.log(sums);
+                                //console.log(sums);
                             } else {
                                 sums[column.pivot.column_id] += parseInt(column.pivot.value);
                             }

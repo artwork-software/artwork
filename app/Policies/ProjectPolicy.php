@@ -59,6 +59,7 @@ class ProjectPolicy
      */
     public function createProperties(User $user,Project $project)
     {
+
         $isTeamMember = false;
         foreach ($project->departments as $department) {
             if($department->users->contains($user->id)) {
@@ -67,11 +68,17 @@ class ProjectPolicy
         }
         $isCreator = false;
         foreach($project->events as $event){
-            if($event->created_by->id === $user->id){
+            if($event->user_id === $user->id){
                 $isCreator = true;
             }
         }
-        return $user->can('create_and_edit_projects') || $project->users->contains($user->id) || $isTeamMember || $user->projects()->find($project->id)->pivot->is_admin == 1 || $user->projects()->find($project->id)->pivot->is_manager == 1 ||$isCreator;
+
+        return $user->can('create_and_edit_projects')
+            || $project->users->contains($user->id)
+            || $isTeamMember
+            || $user->projects()->find($project->id)->pivot->is_admin == 1
+            || $user->projects()->find($project->id)->pivot->is_manager == 1
+            || $isCreator;
     }
 
     /**

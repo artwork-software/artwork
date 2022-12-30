@@ -10,6 +10,7 @@ use App\Models\ContractModule;
 use App\Models\Project;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
@@ -44,32 +45,31 @@ class ContractController extends Controller
     public function index(Request $request)
     {
 
-        $contracts = Contract::query();
+        $contracts = Contract::all();
         $costsFilter = json_decode($request->input('costsFilter'));
         $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
 
-        if($costsFilter || $legalFormsFilter || $contractTypesFilter) {
+        if(count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
             $legal_forms = collect($legalFormsFilter->array);
             $contract_types = collect($contractTypesFilter->array);
             $cost_filters = collect($costsFilter->array);
 
-            if($cost_filters->contains('name', 'KSK-pflichtig')) {
-                $ksk_filter = true;
-                $contracts = $contracts->where('ksk_liable', $ksk_filter)->get();
+            Debugbar::info($legal_forms);
+            Debugbar::info($cost_filters);
+
+            if($cost_filters->contains('KSK-pflichtig')) {
+                $contracts = $contracts->where('ksk_liable', true);
             }
-            if($cost_filters->contains('name', 'Im Ausland ansässig')) {
-                $resident_abroad = true;
-                $contracts = $contracts->where('resident_abroad', $resident_abroad)->get();
+            if($cost_filters->contains( 'Im Ausland ansässig')) {
+                $contracts = $contracts->where('resident_abroad', true);
             }
             if(count($legal_forms) > 0) {
-                $contracts = $contracts->whereIn('legal_form', $legal_forms)->get();
+                $contracts = $contracts->whereIn('legal_form', $legal_forms);
             }
             if(count($contract_types) > 0) {
-                $contracts = $contracts->whereIn('type', $contract_types)->get();
+                $contracts = $contracts->whereIn('type', $contract_types);
             }
-
-            Debugbar::info($contracts);
         }
         return [
             'contracts' => ContractResource::collection($contracts),

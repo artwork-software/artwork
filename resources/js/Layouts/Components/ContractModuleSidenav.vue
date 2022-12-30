@@ -19,8 +19,13 @@
         >
             <DownloadIcon class="w-4 h-4 mr-2" @click="download(contractModule)"/>
             <div @click="download(contractModule)">{{ contractModule.name }}</div>
-            <XCircleIcon class="w-4 h-4 ml-auto" @click="destroy(contractModule)"/>
+            <XCircleIcon class="w-4 h-4 ml-auto" @click="openDeleteModal"/>
 
+            <ContractModuleDeleteModal
+                :show="showDeleteModal"
+                :close-modal="closeDeleteModal"
+                :contract-module="contractModule"
+            />
         </div>
     </div>
 </template>
@@ -31,6 +36,7 @@ import {
     UploadIcon,
     XCircleIcon
 } from '@heroicons/vue/outline';
+import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
 
 export default {
     name: "ContractModuleSidenav",
@@ -38,9 +44,15 @@ export default {
         contractModules: Object
     },
     components: {
+        ContractModuleDeleteModal,
         DownloadIcon,
         UploadIcon,
         XCircleIcon
+    },
+    data() {
+        return {
+            showDeleteModal: false
+        }
     },
     methods: {
         download(module) {
@@ -62,9 +74,6 @@ export default {
 
             })
         },
-        destroy(module) {
-            this.$inertia.delete(`/contract_modules/${module.id}`);
-        },
         selectNewFiles() {
             this.$refs.module_files.click();
         },
@@ -82,6 +91,12 @@ export default {
                 }
             }
         },
+        openDeleteModal() {
+            this.showDeleteModal = true
+        },
+        closeDeleteModal() {
+            this.showDeleteModal = false
+        }
     }
 }
 </script>

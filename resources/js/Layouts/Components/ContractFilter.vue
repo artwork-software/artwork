@@ -57,10 +57,10 @@ export default {
         },
         updateFilter(params) {
             if(params.item.checked) {
-                this.filter[params.filterName].push(params.item)
+                this.filter[params.filterName].push(params.item.name)
             }
             else {
-                this.filter[params.filterName] = this.filter[params.filterName].filter(it => params.item.name !== it.name)
+                this.filter[params.filterName] = this.filter[params.filterName].filter(item => params.item.name !== item)
             }
             this.$emit('filter', this.filter)
         }

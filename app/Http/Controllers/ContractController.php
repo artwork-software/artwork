@@ -8,6 +8,7 @@ use App\Http\Resources\ContractResource;
 use App\Models\Contract;
 use App\Models\ContractModule;
 use App\Models\Project;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -43,7 +44,7 @@ class ContractController extends Controller
     public function index(Request $request)
     {
 
-        $contracts = collect(Contract::all());
+        $contracts = Contract::query();
         $costsFilter = json_decode($request->input('costsFilter'));
         $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
@@ -55,18 +56,20 @@ class ContractController extends Controller
 
             if($cost_filters->contains('name', 'KSK-pflichtig')) {
                 $ksk_filter = true;
-                $contracts = collect($contracts->where('ksk_liable', $ksk_filter)->all());
+                $contracts = $contracts->where('ksk_liable', $ksk_filter)->get();
             }
             if($cost_filters->contains('name', 'Im Ausland ansässig')) {
                 $resident_abroad = true;
-                $contracts = collect($contracts->where('resident_abroad', $resident_abroad)->all());
+                $contracts = $contracts->where('resident_abroad', $resident_abroad)->get();
             }
             if(count($legal_forms) > 0) {
-                $contracts = collect($contracts->whereIn('legal_form', $legal_forms)->all());
+                $contracts = $contracts->whereIn('legal_form', $legal_forms)->get();
             }
             if(count($contract_types) > 0) {
-                $contracts = collect($contracts->whereIn('type', $contract_types)->all());
+                $contracts = $contracts->whereIn('type', $contract_types)->get();
             }
+
+            Debugbar::info($contracts);
         }
         return [
             'contracts' => ContractResource::collection($contracts),

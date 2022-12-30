@@ -85,21 +85,21 @@ export default {
             legalForms: [
                 {
                     "checked": false,
-                    "name": "GmbH"
-                },
-                {
-                    "checked": false,
-                    "name": "GbR"
-                }
-            ],
-            contractTypes: [
-                {
-                    "checked": false,
                     "name": "Werkvertrag"
                 },
                 {
                     "checked": false,
                     "name": "Lizenzvertrag"
+                }
+            ],
+            contractTypes: [
+                {
+                    "checked": false,
+                    "name": "Sponsoring"
+                },
+                {
+                    "checked": false,
+                    "name": "Collaboration"
                 }
             ],
         }

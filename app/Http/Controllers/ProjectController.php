@@ -282,6 +282,22 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function updateMainPositionName(Request $request): void
+    {
+        $mainPosition = MainPosition::find($request->mainPosition_id);
+        $mainPosition->update([
+            'name' => $request->mainPositionName
+        ]);
+    }
+
+    public function updateSubPositionName(Request $request): void
+    {
+        $subPosition = subPosition::find($request->subPosition_id);
+        $subPosition->update([
+            'name' => $request->subPositionName
+        ]);
+    }
+
     /**
      * @param $project_id
      * @return void
@@ -1044,6 +1060,9 @@ class ProjectController extends Controller
         return inertia('Trash/Projects', [
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
+    }
+    public function deleteRow(SubPositionRow $row){
+        $row->forceDelete();
     }
 
 

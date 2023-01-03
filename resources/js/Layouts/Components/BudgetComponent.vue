@@ -43,8 +43,24 @@
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                             <th class="bg-primary text-left p-0">
-                                <div class="pl-2 xsWhiteBold flex items-center h-10">
-                                    {{ mainPosition.name }}
+                                <div
+                                     class="pl-2 xsWhiteBold flex items-center h-10"
+                                     v-if="!mainPosition.clicked">
+                                    <div @click="mainPosition.clicked = !mainPosition.clicked">
+                                        {{ mainPosition.name }}
+                                    </div>
+                                    <button class="my-auto w-6 ml-3"
+                                            @click="mainPosition.closed = !mainPosition.closed">
+                                        <ChevronUpIcon v-if="!mainPosition.closed"
+                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                    </button>
+                                </div>
+                                <div v-else class="flex">
+                                    <input
+                                        class="my-2 ml-1 xsDark" type="text"
+                                        v-model="mainPosition.name"
+                                        @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
                                     <button class="my-auto w-6 ml-3"
                                             @click="mainPosition.closed = !mainPosition.closed">
                                         <ChevronUpIcon v-if="!mainPosition.closed"
@@ -72,28 +88,44 @@
                                     <thead class="">
                                     <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
                                         <th class="bg-silverGray xxsDark">
-
-                                            <div class="pl-2 flex items-center h-10">
-                                                {{ subPosition.name }}
+                                            <div
+                                                class="pl-2 xxsDark flex items-center h-10"
+                                                v-if="!subPosition.clicked">
+                                                <div @click="subPosition.clicked = !subPosition.clicked">
+                                                    {{ subPosition.name }}
+                                                </div>
                                                 <button class="my-auto w-6 ml-3"
                                                         @click="subPosition.closed = !subPosition.closed">
                                                     <ChevronUpIcon v-if="!subPosition.closed"
                                                                    class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                                                 </button>
-                                                <button @click="addRowToSubPosition(subPosition)">Neue Row</button>
+                                            </div>
+                                            <div v-else class="flex">
+                                                <input
+                                                    class="my-2 ml-1 xxsDark" type="text"
+                                                    v-model="subPosition.name"
+                                                    @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
+                                                <button class="my-auto w-6 ml-3"
+                                                        @click="subPosition.closed = !subPosition.closed">
+                                                    <ChevronUpIcon v-if="!subPosition.closed"
+                                                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                                    <ChevronDownIcon v-else class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                </button>
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
-                                                <tr :class="rowIndex !== 0 ? 'border-t-2 border-silverGray': ''"
-                                                    class="bg-secondaryHover flex"
+                                                <tr :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']" @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
+                                                    class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
+                                                    <div class="flex items-center">
+                                                    <PlusCircleIcon @click="addRowToSubPosition(subPosition)" :class="hoveredRow === row.id ? '' : 'hidden'"
+                                                                    class="h-6 w-6 relative -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
                                                         <div
-                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48']"
-                                                            class="ml-2 my-4 h-6 flex items-center"
+                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5']"
+                                                            class="my-4 h-6 flex items-center"
                                                             @click="column.pivot.clicked = !column.pivot.clicked"
                                                             v-if="!column.pivot.clicked">
                                                             <img v-if="column.pivot.linked_money_source_id !== null"
@@ -113,6 +145,9 @@
                                                                             class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         </div>
                                                     </td>
+                                                    </div>
+                                                    <XCircleIcon @click="deleteRowFromSubPosition(row)" :class="hoveredRow === row.id ? '' : 'hidden'"
+                                                                 class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
                                                 </tr>
                                                 <tr class="bg-silverGray xsDark flex h-10 w-full">
                                                     <td class="w-24"></td>
@@ -283,7 +318,7 @@
                                                     </pre>
 
     <pre>
-        {{ this.budget.table[0].sub_positions[0].sub_position_rows[0].columns }}
+        {{ this.budget.table[0] }}
         </pre>
     <!-- Termin erstellen Modal-->
     <add-column-component
@@ -305,8 +340,8 @@
 <script>
 
 
-import {ChevronDownIcon, PlusCircleIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon} from "@heroicons/vue/solid";
+import {PlusCircleIcon, XCircleIcon} from '@heroicons/vue/outline';
+import {ChevronUpIcon, ChevronDownIcon } from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
@@ -320,7 +355,8 @@ export default {
         AddButton,
         ChevronDownIcon,
         ChevronUpIcon,
-        PlusCircleIcon
+        PlusCircleIcon,
+        XCircleIcon
     },
 
     data() {
@@ -331,6 +367,7 @@ export default {
             showAddColumnModal: false,
             showCellDetailModal: false,
             columnToShow: null,
+            hoveredRow: null,
         }
     },
 
@@ -393,7 +430,24 @@ export default {
                             if (sums[column.pivot.column_id] === undefined) {
                                 sums[column.pivot.column_id] = 0
                                 sums[column.pivot.column_id] += parseInt(column.pivot.value);
-                                //console.log(sums);
+                            } else {
+                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                            }
+                        }
+                    }
+                })
+            })
+            return sums;
+        },
+        getSumsOfMainPosition(mainPosition) {
+            let sums = [];
+            mainPosition.sub_positions?.forEach((sub_position) => {
+                sub_position.columns.forEach((column) => {
+                    if (column.pivot.column_id > 3) {
+                        if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
+                            if (sums[column.pivot.column_id] === undefined) {
+                                sums[column.pivot.column_id] = 0
+                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
                             } else {
                                 sums[column.pivot.column_id] += parseInt(column.pivot.value);
                             }
@@ -418,6 +472,9 @@ export default {
         },
         updateCellValue(column) {
             column.pivot.clicked = !column.pivot.clicked;
+            if(column.pivot.value === null || column.pivot.value === '') {
+                column.pivot.value = 0;
+            }
             this.$inertia.patch(route('project.budget.cell.update'), {
                 column_id: column.id,
                 value: column.pivot.value,
@@ -447,7 +504,6 @@ export default {
             });
         },
         addMainPosition(type, mainPosition) {
-
             this.$inertia.post(route('project.budget.main-position.add'), {
                 project_id: this.project.id,
                 type: type,
@@ -463,14 +519,28 @@ export default {
                 columnName: column.name
             });
         },
+        updateMainPositionName(mainPosition){
+            this.$inertia.patch(route('project.budget.main-position.update-name'), {
+                mainPosition_id: mainPosition.id,
+                mainPositionName: mainPosition.name
+            });
+        },
+        updateSubPositionName(subPosition){
+            this.$inertia.patch(route('project.budget.sub-position.update-name'), {
+                subPosition_id: subPosition.id,
+                subPositionName: subPosition.name
+            });
+        },
         openCellDetailModal(column) {
             this.columnToShow = column;
             this.showCellDetailModal = true;
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
-        }
-
+        },
+        deleteRowFromSubPosition(row){
+            this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
+        },
     },
 }
 </script>

@@ -46,7 +46,16 @@
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         </div>
                         <div :class="task.done ? 'line-through' : ''">
-                            <div class="xsWhiteBold">{{ task.name }} <span class="text-red-500 xxsLight">bis {{ task.deadline }}</span></div>
+                            <div class="xsWhiteBold flex items-center gap-2">{{ task.name }} <span class="text-red-500 xxsLight" :class="Date.parse(task.deadline) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{ formatDate(task.deadline) }}</span><div class="flex">
+                                <span class="-ml-1 first:ml-0 -mt-3 " v-for="user in task.money_source_task_users">
+                                    <img v-if="user"
+                                         :data-tooltip-target="user?.id"
+                                         :src="user?.profile_photo_url"
+                                         :alt="user?.name"
+                                         class="mt-3 rounded-full h-5 w-5 object-cover"/>
+                                    <UserTooltip v-if="user" :user="user" />
+                                </span>
+                            </div></div>
                             <p>{{ task.description }}</p>
                         </div>
                     </li>
@@ -104,6 +113,10 @@ export default {
         },
         onCreateMoneySourceTask(){
 
+        },
+        formatDate(date) {
+            const dateFormate = new Date(date);
+            return dateFormate.toLocaleString('de-de',{year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
         }
     }
 }

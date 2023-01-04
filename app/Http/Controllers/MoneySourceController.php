@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Models\MoneySource;
+use App\Models\MoneySourceTask;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -150,7 +151,7 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
-                'tasks' => $moneySource->money_source_tasks()->get()
+                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),

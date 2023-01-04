@@ -40,7 +40,7 @@
                 <ul>
                     <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
                         <div class="mr-2">
-                            <input @change="updateTask(task)"
+                            <input @click="updateTask(task)"
                                    v-model="task.done"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -106,13 +106,13 @@ export default {
             const taskForm = useForm({
                 task
             })
-            taskForm.patch(route('money_source.task.update', {moneySourceTask: task}) );
+            taskForm.patch(route('money_source.task.update', {moneySourceTask: task}), {preserveState: true} );
         },
         openAddMoneySourceTask(){
             this.showMoneySourceTaskModal = true
         },
         onCreateMoneySourceTask(){
-
+            this.showMoneySourceTaskModal = false;
         },
         formatDate(date) {
             const dateFormate = new Date(date);

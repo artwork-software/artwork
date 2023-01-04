@@ -151,7 +151,17 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
-                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()
+
+                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()->map(fn ($task) => [
+                    'id' => $task->id,
+                    'money_source_id' => $task->money_source_id,
+                    'name' => $task->name,
+                    'description' => $task->description,
+                    'deadline' => $task->deadline,
+                    'done' => (bool) $task->done,
+                    'money_source_task_users' => $task->money_source_task_users,
+                    'pivot' => $task->pivot
+                    ]),
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),

@@ -154,6 +154,9 @@
             :moneySourceGroups="this.moneySourceGroups"
         />
 
+        <BaseSidenav :show="show" @change="this.show =! this.show">
+            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks" :money_source="moneySource"></MoneySourceSidenav>
+        </BaseSidenav>
     </app-layout>
     <confirmation-component
         v-if="showDeleteSourceModal"
@@ -161,6 +164,8 @@
         titel="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
         @closed="afterConfirm"/>
+
+
 </template>
 
 <script>
@@ -187,6 +192,8 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 
 
 
@@ -194,6 +201,8 @@ export default {
     name: "MoneySourceShow",
     props: ['moneySource','moneySourceGroups','moneySources'],
     components: {
+        MoneySourceSidenav,
+        BaseSidenav,
         AppLayout,
         UserTooltip,
         ChevronRightIcon,
@@ -216,6 +225,7 @@ export default {
             showEditMoneySourceModal: false,
             showDeleteSourceModal: false,
             sourceToDelete: null,
+            show: false
         }
     },
     methods: {

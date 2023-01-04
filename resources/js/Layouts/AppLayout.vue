@@ -215,7 +215,7 @@ const navigation = [
         href: route('money_sources.index'),
         route: ['/money_sources'],
         svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
-        svgSrc_active: 'Svgs/Sidebar/icon_money_sources_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg'
     }
 ]
 

@@ -150,6 +150,7 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
+                'tasks' => $moneySource->money_source_tasks()->get()
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),

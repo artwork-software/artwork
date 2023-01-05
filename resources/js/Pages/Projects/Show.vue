@@ -1664,6 +1664,10 @@
             </template>
 
         </jet-dialog-modal>
+
+        <BaseSidenav :show="show" @change="this.show =! this.show">
+            <ProjectSidenav />
+        </BaseSidenav>
     </app-layout>
 </template>
 
@@ -1716,6 +1720,8 @@ import AddButton from "@/Layouts/Components/AddButton";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav";
+import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1730,6 +1736,8 @@ export default {
     name: "ProjectShow",
     props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
+        ProjectSidenav,
+        BaseSidenav,
         TagComponent,
         AddButton,
         TeamTooltip,
@@ -1834,6 +1842,7 @@ export default {
     },
     data() {
         return {
+            show: false,
             hasGroup: !!this.currentGroup,
             deletingFile: false,
             project_file: null,

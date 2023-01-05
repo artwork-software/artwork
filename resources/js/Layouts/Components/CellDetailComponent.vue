@@ -101,21 +101,22 @@
                     <div v-if="isCommentTab">
                          <textarea
                              placeholder="Was gibt es zu diesem Posten zu beachten?"
-                             v-model="cellComment" rows="4"
+                             v-model="commentForm.description" rows="4"
                              class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
                         <div>
-                            <div class="my-6" v-for="comment in this.column.pivot.comments"
+                            <div class="my-6" v-for="comment in this.commentsToShow"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img v-if="comment.user" :data-tooltip-target="comment.user"
-                                             :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                        <img v-if="comment.user" :data-tooltip-target="comment.user.first_name"
+                                             :src="comment.user.profile_photo_url" :alt="comment.user.first_name"
                                              class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip v-if="comment.user" :user="comment.user"/>
+                                        <UserTooltip :user="comment.user" v-if="comment.user"/>
+                                        <!--<NewUserToolTip :user="comment.user"></NewUserToolTip>-->
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
-                                            {{ comment.created_at }}
+                                            {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
                                     <button v-show="commentHovered === comment.id" type="button"
@@ -125,14 +126,14 @@
                                     </button>
                                 </div>
                                 <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
-                                    {{ comment.text }}
+                                    {{ comment.description }}
                                 </div>
                             </div>
                         </div>
                         <div class="flex justify-center">
                             <AddButton @click="addCommentToCell()" text="Speichern"
-                                       :disabled="this.cellComment === null && this.cellComment === ''"
-                                       :class="this.cellComment === null || this.cellComment === '' ? 'bg-secondary hover:bg-secondary' : ''"
+                                       :disabled="this.commentForm.description === null && this.commentForm.description === ''"
+                                       :class="this.commentForm.description === null || this.commentForm.description === '' ? 'bg-secondary hover:bg-secondary' : ''"
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
@@ -212,10 +213,12 @@
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions, RadioGroup, RadioGroupOption} from "@headlessui/vue";
 
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {XIcon, CheckIcon, ChevronDownIcon, PlusCircleIcon} from '@heroicons/vue/outline';
+import {CheckIcon, ChevronDownIcon, PlusCircleIcon, XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
+import {useForm} from "@inertiajs/inertia-vue3";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 const linkTypes = [
     {name: '+', type: 'EARNING'},
@@ -226,6 +229,7 @@ export default {
     name: 'CellDetailComponent',
 
     components: {
+        NewUserToolTip,
         UserTooltip,
         AddButton,
         ListboxOptions,
@@ -244,9 +248,9 @@ export default {
 
     data() {
         return {
-            isLinked: this.column.pivot.linked_money_source_id !== null,
-            linkedType: this.column.pivot.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
-            selectedMoneySource: this.column.pivot.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.column.pivot.linked_money_source_id) : null,
+            isLinked: this.column.cell.linked_money_source_id !== null,
+            linkedType: this.column.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
+            selectedMoneySource: this.column.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.column.cell.linked_money_source_id) : null,
             linkTypes,
             isCalculateTab: true,
             isCommentTab: false,
@@ -256,6 +260,10 @@ export default {
             refreshSumKey: 0,
             cellComment: null,
             commentHovered: null,
+            commentForm: useForm({
+                description: '',
+                cellId: this.column.id
+            })
         }
     },
 
@@ -263,7 +271,9 @@ export default {
 
     emits: ['closed'],
 
-    watch: {},
+    watch: {
+
+    },
     computed: {
         tabs() {
             return [
@@ -273,8 +283,21 @@ export default {
                 {name: 'Verlinkung', href: '#', current: this.isLinkTab},
             ]
         },
+        commentsToShow(){
+            let comments = this.column.cell.comments;
+            let commentsShow = []
+            comments.forEach((item) => {
+                commentsShow.push({
+                    id: item.id,
+                    user: JSON.parse(item.user),
+                    created_at: item.created_at,
+                    description: item.description
+                });
+            })
+            return commentsShow
+        },
         calculationNames() {
-            let calculations = JSON.parse(this.column.pivot.calculations);
+            let calculations = JSON.parse(this.column.cell.calculations);
             let names = []
             calculations?.forEach((calculation) => {
                 names.push(calculation.name);
@@ -282,7 +305,7 @@ export default {
             return names;
         },
         calculationValues() {
-            let calculations = JSON.parse(this.column.pivot.calculations);
+            let calculations = JSON.parse(this.column.cell.calculations);
             let values = []
             calculations?.forEach((calculation) => {
                 values.push(calculation.value);
@@ -290,7 +313,7 @@ export default {
             return values;
         },
         calculationDescriptions() {
-            let calculations = JSON.parse(this.column.pivot.calculations);
+            let calculations = JSON.parse(this.column.cell.calculations);
             let descriptions = []
             calculations?.forEach((calculation) => {
                 descriptions.push(calculation.description);
@@ -298,7 +321,7 @@ export default {
             return descriptions;
         },
         calculationArray() {
-            let calculations = JSON.parse(this.column.pivot.calculations);
+            let calculations = JSON.parse(this.column.cell.calculations);
             let helperArray = [];
             calculations?.forEach((calculation, index) => {
                 helperArray[index] = {
@@ -322,6 +345,10 @@ export default {
     },
 
     methods: {
+        formatDate(date) {
+            const dateFormate = new Date(date);
+            return dateFormate.toLocaleString('de-de',{year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+        },
         openModal() {
         },
         changeTab(selectedTab) {
@@ -345,13 +372,13 @@ export default {
         updateMoneySourceLink() {
             if (this.isLinked) {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.column.pivot.id,
+                    cell_id: this.column.cell.id,
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 });
             } else {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.column.pivot.id,
+                    cell_id: this.column.cell.id,
                     linked_type: null,
                     money_source_id: null,
                 });
@@ -393,17 +420,18 @@ export default {
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {
                 column_id: this.column.id,
                 calculations: this.calculationArray,
-                sub_position_row_id: this.column.pivot.sub_position_row_id,
+                sub_position_row_id: this.column.cell.sub_position_row_id,
                 calculationSum: this.calculationSum
             }, {preserveState: true});
             this.closeModal(true);
         },
         deleteCommentFromProject(comment) {
-            this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
+            this.commentForm.post(route('project.budget.cell.comment.store'));
+            //this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
         },
         addCommentToCell() {
-            this.$inertia.post(route('comments.store'), {commentText: this.cellComment}, {preserveState: true, preserveScroll: true});
-            this.cellComment = '';
+            this.commentForm.post(route('project.budget.cell.comment.store'));
+            this.commentForm.reset('description');
         },
     },
 }

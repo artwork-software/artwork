@@ -14,7 +14,10 @@ class Column extends Model
     protected $fillable = [
         'project_id',
         'name',
-        'subName'
+        'subName',
+        'type',
+        'linked_first_column',
+        'linked_second_column'
     ];
 
     public function subPositionRows(): BelongsToMany
@@ -25,6 +28,11 @@ class Column extends Model
     public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
+    }
+
+    public function cell()
+    {
+        return $this->hasOne(ColumnCell::class, 'column_id');
     }
 
 }

@@ -297,4 +297,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
     Route::post('/project/budget/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
     Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
+    Route::post('/project/budget/cell/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
+    Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
 });

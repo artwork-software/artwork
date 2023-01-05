@@ -14,6 +14,7 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Models\Category;
+use App\Models\CellComments;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Column;
@@ -41,6 +42,7 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
+use function Clue\StreamFilter\fun;
 
 class ProjectController extends Controller
 {
@@ -213,10 +215,10 @@ class ProjectController extends Controller
     public function generateBasicBudgetValues(Project $project)
     {
         $columns = $project->columns()->createMany([
-            ['name' => 'KTO', 'subName' => ''],
-            ['name' => 'A', 'subName' => ''],
-            ['name' => 'Position', 'subName' => ''],
-            ['name' => date('Y') . ' €', 'subName' => 'A'],
+            ['name' => 'KTO', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
+            ['name' => 'A', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
+            ['name' => 'Position', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
+            ['name' => date('Y') . ' €', 'subName' => 'A', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
         ]);
 
         $costMainPosition = $project->mainPositions()->create([
@@ -254,13 +256,11 @@ class ProjectController extends Controller
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
-            'type' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
-            'type' => null,
         ]);
 
     }
@@ -334,10 +334,12 @@ class ProjectController extends Controller
     {
         $project = Project::find($request->project_id);
         if($request->column_type === 'empty') {
-
             $column = $project->columns()->create([
                 'name' => 'empty',
-                'subName' => '-'
+                'subName' => '-',
+                'type' => 'empty',
+                'linked_first_column' => null,
+                'linked_second_column' => null,
             ]);
             $this->setColumnSubName($request->project_id);
 
@@ -347,19 +349,18 @@ class ProjectController extends Controller
 
             $column->subPositionRows()->attach($subPositionRows, [
                 'value' => '',
-                'linked_money_source_id' => null,
-                'type' => 'empty',
-                'linked_first_column' => null,
-                'linked_second_column' => null,
+                'linked_money_source_id' => null
             ]);
-
         }
 
         if($request->column_type === 'sum'){
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'sum',
-                'subName' => '-'
+                'subName' => '-',
+                'type' => 'sum',
+                'linked_first_column' => $request->first_column_id,
+                'linked_second_column' => $request->second_column_id,
             ]);
             $this->setColumnSubName($request->project_id);
             foreach ($firstColumns as $firstColumn){
@@ -369,10 +370,7 @@ class ProjectController extends Controller
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
-                    'linked_money_source_id' => null,
-                    'type' => 'sum',
-                    'linked_first_column' => $firstColumn->column_id,
-                    'linked_second_column' => $secondColumn->column_id,
+                    'linked_money_source_id' => null
                 ]);
             }
         }
@@ -381,7 +379,10 @@ class ProjectController extends Controller
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'difference',
-                'subName' => '-'
+                'subName' => '-',
+                'type' => 'difference',
+                'linked_first_column' => $request->first_column_id,
+                'linked_second_column' => $request->second_column_id
             ]);
             $this->setColumnSubName($request->project_id);
             foreach ($firstColumns as $firstColumn){
@@ -392,9 +393,6 @@ class ProjectController extends Controller
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
                     'linked_money_source_id' => null,
-                    'type' => 'difference',
-                    'linked_first_column' => $firstColumn->column_id,
-                    'linked_second_column' => $secondColumn->column_id,
                 ]);
             }
         }
@@ -407,6 +405,7 @@ class ProjectController extends Controller
     public function updateCellValue(Request $request): void
     {
         ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->update(['value' => $request->value]);
+        $this->updateAutomaticCellValues($request->sub_position_row_id);
     }
 
 
@@ -422,7 +421,6 @@ class ProjectController extends Controller
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
-            'type' => null,
         ]);
     }
 
@@ -457,8 +455,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
-            'linked_money_source_id' => null,
-            'type' => null,
+            'linked_money_source_id' => null
         ]);
 
     }
@@ -487,7 +484,6 @@ class ProjectController extends Controller
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
-            'type' => null,
         ]);
     }
 
@@ -496,6 +492,35 @@ class ProjectController extends Controller
         $cell->update(['calculations' => json_encode($request->calculations)]);
         $cell->update(['value' => $request->calculationSum]);
         return back()->with('success');
+    }
+
+    private function updateAutomaticCellValues($subPositionRowId){
+
+        $rows = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
+
+        foreach ($rows as $row){
+            $column = Column::find($row->column_id);
+
+            if($column->type === 'empty'){
+                continue;
+            }
+            $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)->where('sub_position_row_id', $subPositionRowId)->first()->value;
+            $secondRowValue = ColumnCell::where('column_id', $column->linked_second_column)->where('sub_position_row_id', $subPositionRowId)->first()->value;
+
+            $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)->where('column_id', $column->id)->first();
+
+            if($column->type == 'sum'){
+                $sum = (int)$firstRowValue + (int)$secondRowValue;
+                $updateColumn->update([
+                    'value' => $sum
+                ]);
+            } else {
+                $sum = (int)$firstRowValue - (int)$secondRowValue;
+                $updateColumn->update([
+                    'value' => $sum
+                ]);
+            }
+        }
     }
 
     /**
@@ -523,7 +548,24 @@ class ProjectController extends Controller
         ]);
 
         $columns = $project->columns()->get();
-
+        $outputColumns = [];
+        foreach ($columns as $column){
+            $columnOutput = new stdClass();
+            $columnOutput->id = $column->id;
+            $columnOutput->name = $column->name;
+            $columnOutput->subName = $column->subName;
+            if($column->type === 'sum'){
+                $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
+                $columnOutput->calculateName = $firstName . ' + ' . $secondName;
+            }
+            if($column->type === 'difference'){
+                $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
+                $columnOutput->calculateName = $firstName . ' - ' . $secondName;
+            }
+            $outputColumns[] = $columnOutput;
+        }
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -531,7 +573,7 @@ class ProjectController extends Controller
             'moneySources' => MoneySource::all(),
 
             'budget' => [
-                'columns' => $columns,
+                'columns' => $outputColumns,
                 'table' => $project->mainPositions()
                     ->with(['subPositions' => function($query) {
                         return $query->orderBy('position');

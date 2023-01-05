@@ -15,12 +15,16 @@ class ColumnCell extends Model
         'value',
         'linked_money_source_id',
         'linked_type',
-        'type',
-        'linked_first_column',
-        'linked_second_column',
         'calculations'
     ];
 
+    protected $primaryKey = 'id';
+
     protected $table = 'column_sub_position_row';
 
+
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CellComments::class, 'cell_id', 'column_id');
+    }
 }

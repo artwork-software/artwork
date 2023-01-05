@@ -1,13 +1,15 @@
 <template>
     <div class="mx-4">
-
+        <div class="flex justify-end mb-10">
+            <AddButton @click="openAddColumnModal()" text="Neue Spalte" mode="page"></AddButton>
+        </div>
         <div class="w-full flex">
             <table class="w-full flex ml-16">
                 <thead>
                 <tr>
                     <th v-for="(column,index) in budget.columns"
                         :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
-                        <p class="text-gray-500" style="font-size: 8px">{{ column.subName }}</p>
+                        <p class="text-gray-500" style="font-size: 8px">{{ column.subName }} <span v-if="column.calculateName" class="ml-1">({{ column.calculateName }})</span></p>
                         <div @click="column.clicked = !column.clicked"
                              :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
                              v-if="!column.clicked">
@@ -24,7 +26,7 @@
                 </tr>
                 </thead>
             </table>
-            <AddButton @click="openAddColumnModal()" class="w-44" text="Neue Spalte" mode="page"></AddButton>
+
         </div>
 
         <div class="flex my-8 ">
@@ -124,25 +126,33 @@
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
                                                         <div
-                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5']"
+                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', column.cell.value < 0 ? 'text-red-500' : '']"
                                                             class="my-4 h-6 flex items-center"
                                                             @click="column.pivot.clicked = !column.pivot.clicked"
                                                             v-if="!column.pivot.clicked">
-                                                            <img v-if="column.pivot.linked_money_source_id !== null"
-                                                                 src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                                                 class="h-6 w-6"/>{{ column.pivot.value }}
+                                                            <img v-if="column.cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>
+                                                            {{ column.cell.value }}
                                                         </div>
                                                         <div class="flex items-center"
                                                              :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                                                             v-else>
+                                                             v-else-if="column.pivot.clicked && column.type === 'empty'">
                                                             <input
                                                                 :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
                                                                 class="my-2 xsDark" type="text"
-                                                                v-model="column.pivot.value"
+                                                                v-model="column.cell.value"
                                                                 @focusout="updateCellValue(column)">
                                                             <PlusCircleIcon v-if="index > 2"
                                                                             @click="openCellDetailModal(column)"
                                                                             class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                        </div>
+                                                        <div
+                                                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', column.cell.value < 0 ? 'text-red-500' : '']"
+                                                            class="my-4 h-6 flex items-center" @click="column.pivot.clicked = !column.pivot.clicked" v-else>
+                                                            <img v-if="column.pivot.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>
+                                                            {{ column.cell.value }}
+                                                            <PlusCircleIcon v-if="index > 2 && column.pivot.clicked"
+                                                                            @click="openCellDetailModal(column)"
+                                                                            class="h-6 w-6 ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         </div>
                                                     </td>
                                                     </div>
@@ -154,8 +164,8 @@
                                                     <td class="w-24"></td>
                                                     <td class="w-72 ml-2 my-2">SUM</td>
                                                     <div class="flex items-center" v-for="column in subPosition.sub_position_rows[0].columns">
-                                                        <td v-if="column.pivot.column_id > 3" class="w-48 ml-2 my-4">
-                                                            {{ getSumsOfSubPosition(subPosition)[column.pivot.column_id] }}
+                                                        <td v-if="column.pivot.column_id > 3" class="w-48 ml-0.5 my-4" :class="getSumsOfSubPosition(subPosition)[column.cell.column_id] < 0 ? 'text-red-500' : ''">
+                                                            {{ getSumsOfSubPosition(subPosition)[column.cell.column_id] }}
                                                         </td>
                                                     </div>
                                                 </tr>
@@ -278,10 +288,10 @@
                                                 <tr v-for="row in subPosition.sub_position_rows">
                                                     <td v-for="column in row.columns" class="w-40">
                                                         <div @click="column.pivot.clicked = !column.pivot.clicked"
-                                                             v-if="!column.pivot.clicked">{{ column.pivot.value }}
+                                                             v-if="!column.pivot.clicked">{{ column.cell.value }}
                                                         </div>
                                                         <div v-else>
-                                                            <input type="text" v-model="column.pivot.value"
+                                                            <input type="text" v-model="column.cell.value"
                                                                    @focusout="column.pivot.clicked = !column.pivot.clicked">
                                                         </div>
                                                     </td>
@@ -314,7 +324,7 @@
     </div>
 
     <pre v-for="column in this.budget.table[0].sub_positions[0].sub_position_rows[0].columns">
-                                                        {{ column.pivot.column_id }}
+                                                        {{ column.cell.column_id }}
                                                     </pre>
 
     <pre>
@@ -392,14 +402,14 @@ export default {
                 mainPosition.sub_positions?.forEach((subPosition) => {
                     subPosition.sub_position_rows?.forEach((row) => {
                         row.columns.forEach((column) => {
-                            if (column.pivot.column_id > 3) {
-                                if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
-                                    if (sums[subPosition.id + '' + column.pivot.column_id] === undefined) {
-                                        sums[subPosition.id + '' + column.pivot.column_id] = 0
-                                        sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
+                            if (column.cell.column_id > 3) {
+                                if (!isNaN(column.pivot.value) && column.cell.value !== '') {
+                                    if (sums[subPosition.id + '' + column.cell.column_id] === undefined) {
+                                        sums[subPosition.id + '' + column.cell.column_id] = 0
+                                        sums[subPosition.id + '' + column.cell.column_id] += parseInt(column.cell.value);
                                         //console.log(sums);
                                     } else {
-                                        sums[subPosition.id + '' + column.pivot.column_id] += parseInt(column.pivot.value);
+                                        sums[subPosition.id + '' + column.cell.column_id] += parseInt(column.cell.value);
                                     }
                                 }
                             }
@@ -425,13 +435,13 @@ export default {
             let sums = [];
             subPosition.sub_position_rows?.forEach((row) => {
                 row.columns.forEach((column) => {
-                    if (column.pivot.column_id > 3) {
-                        if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
-                            if (sums[column.pivot.column_id] === undefined) {
-                                sums[column.pivot.column_id] = 0
-                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                    if (column.cell.column_id > 3) {
+                        if (!isNaN(column.cell.value) && column.pivot.value !== '') {
+                            if (sums[column.cell.column_id] === undefined) {
+                                sums[column.cell.column_id] = 0
+                                sums[column.cell.column_id] += parseInt(column.cell.value);
                             } else {
-                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                                sums[column.cell.column_id] += parseInt(column.cell.value);
                             }
                         }
                     }
@@ -443,13 +453,13 @@ export default {
             let sums = [];
             mainPosition.sub_positions?.forEach((sub_position) => {
                 sub_position.columns.forEach((column) => {
-                    if (column.pivot.column_id > 3) {
-                        if (!isNaN(column.pivot.value) && column.pivot.value !== '') {
-                            if (sums[column.pivot.column_id] === undefined) {
-                                sums[column.pivot.column_id] = 0
-                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                    if (column.cell.column_id > 3) {
+                        if (!isNaN(column.cell.value) && column.pivot.value !== '') {
+                            if (sums[column.cell.column_id] === undefined) {
+                                sums[column.cell.column_id] = 0
+                                sums[column.cell.column_id] += parseInt(column.cell.value);
                             } else {
-                                sums[column.pivot.column_id] += parseInt(column.pivot.value);
+                                sums[column.cell.column_id] += parseInt(column.cell.value);
                             }
                         }
                     }
@@ -472,13 +482,13 @@ export default {
         },
         updateCellValue(column) {
             column.pivot.clicked = !column.pivot.clicked;
-            if(column.pivot.value === null || column.pivot.value === '') {
-                column.pivot.value = 0;
+            if(column.cell.value === null || column.cell.value === '') {
+                column.cell.value = 0;
             }
             this.$inertia.patch(route('project.budget.cell.update'), {
                 column_id: column.id,
-                value: column.pivot.value,
-                sub_position_row_id: column.pivot.sub_position_row_id
+                value: column.cell.value,
+                sub_position_row_id: column.cell.sub_position_row_id
             }, {
                 preserveState: true,
                 preserveScroll: true
@@ -541,6 +551,10 @@ export default {
         deleteRowFromSubPosition(row){
             this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
         },
+
+        checkIfWritable(column){
+
+        }
     },
 }
 </script>

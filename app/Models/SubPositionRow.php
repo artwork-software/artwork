@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use function Clue\StreamFilter\fun;
 
 class SubPositionRow extends Model
 {
@@ -23,7 +24,9 @@ class SubPositionRow extends Model
     public function columns(): BelongsToMany
     {
         return $this->belongsToMany(Column::class)
-            ->withPivot(['value', 'linked_money_source_id','id', 'calculations'])
+            ->with(['cell.comments' => function($query){
+                return $query->orderBy('id', 'DESC');
+            }])
             ->withTimestamps();
     }
 

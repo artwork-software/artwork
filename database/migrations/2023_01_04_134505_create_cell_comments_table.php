@@ -13,14 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('columns', function (Blueprint $table) {
+        Schema::create('cell_comments', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('project_id');
-            $table->string('name')->nullable();
-            $table->string('subName')->nullable();
-            $table->string('type')->nullable();
-            $table->integer('linked_first_column')->nullable();
-            $table->integer('linked_second_column')->nullable();
+            $table->bigInteger('cell_id');
+            $table->json('user');
+            $table->text('description');
             $table->timestamps();
         });
     }
@@ -32,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('columns');
+        Schema::dropIfExists('cell_comments');
     }
 };

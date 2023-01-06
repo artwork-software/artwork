@@ -16,6 +16,7 @@ return new class extends Migration
         Schema::create('sub_position_rows', function (Blueprint $table) {
             $table->id();
             $table->bigInteger('sub_position_id');
+            $table->integer('position');
             $table->boolean('commented')->default(false);
             $table->timestamps();
         });

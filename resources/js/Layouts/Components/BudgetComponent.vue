@@ -121,7 +121,8 @@
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <div class="flex items-center">
-                                                    <PlusCircleIcon @click="addRowToSubPosition(subPosition)" :class="hoveredRow === row.id ? '' : 'hidden'"
+
+                                                    <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)" :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                     class="h-6 w-6 relative -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                     <td :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                         v-for="(column,index) in row.columns">
@@ -422,10 +423,12 @@ export default {
     },
 
     methods: {
-        addRowToSubPosition(subPosition){
+        addRowToSubPosition(subPosition, row) {
+
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
                 project_id: this.project.id,
-                sub_position_id: subPosition.id
+                sub_position_id: subPosition.id,
+                positionBefore: row.position
             }, {
                 preserveState: true,
                 preserveScroll: true

@@ -13,7 +13,8 @@ class SubPositionRow extends Model
     use HasFactory;
 
     protected $fillable = [
-        'commented'
+        'commented',
+        'position'
     ];
 
     public function subPosition(): BelongsTo

@@ -94,19 +94,19 @@ class ProjectController extends Controller
 
             'users' => User::all(),
 
-            'categories' => Category::query()->with('projects')->get()->map(fn ($category) => [
+            'categories' => Category::query()->with('projects')->get()->map(fn($category) => [
                 'id' => $category->id,
                 'name' => $category->name,
                 'projects' => $category->projects
             ]),
 
-            'genres' => Genre::query()->with('projects')->get()->map(fn ($genre) => [
+            'genres' => Genre::query()->with('projects')->get()->map(fn($genre) => [
                 'id' => $genre->id,
                 'name' => $genre->name,
                 'projects' => $genre->projects
             ]),
 
-            'sectors' => Sector::query()->with('projects')->get()->map(fn ($sector) => [
+            'sectors' => Sector::query()->with('projects')->get()->map(fn($sector) => [
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
@@ -163,17 +163,17 @@ class ProjectController extends Controller
     public function store(StoreProjectRequest $request)
     {
 
-        if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
+        if (!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        if (! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
+        if (!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
         $departments = collect($request->assigned_departments)
-            ->map(fn ($department) => Department::query()->findOrFail($department['id']))
-            ->map(fn (Department $department) => $this->authorize('update', $department));
+            ->map(fn($department) => Department::query()->findOrFail($department['id']))
+            ->map(fn(Department $department) => $this->authorize('update', $department));
 
         $project = Project::create([
             'name' => $request->name,
@@ -184,13 +184,13 @@ class ProjectController extends Controller
 
         $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
 
-        if($request->isGroup){
+        if ($request->isGroup) {
             $project->is_group = true;
             $project->groups()->sync(collect($request->projects));
             $project->save();
         }
 
-        if(!$request->isGroup && !empty($request->selectedGroup)){
+        if (!$request->isGroup && !empty($request->selectedGroup)) {
             $group = new ProjectGroups();
             $group->create([
                 'project_groups_id' => $project->id,
@@ -242,15 +242,18 @@ class ProjectController extends Controller
 
         $earningSubPosition = $earningMainPosition->subPositions()->create([
             'name' => 'Unterposition',
-            'position' => $earningMainPosition->subPositions()->max('position') + 1
+            'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
         $costSubPositionRow = $costSubPosition->subPositionRows()->create([
             'commented' => false,
+            'position' => $costSubPosition->subPositionRows()->max('position') + 1
         ]);
 
         $earningSubPositionRow = $earningSubPosition->subPositionRows()->create([
             'commented' => false,
+            'position' => $earningSubPosition->subPositionRows()->max('position') + 1
+
         ]);
 
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
@@ -307,16 +310,16 @@ class ProjectController extends Controller
         $project = Project::find($project_id);
         $columns = $project->columns()->get();
 
-        $letters = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'];
+        $letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
         $count = 0;
 
-        foreach($columns as $column){
+        foreach ($columns as $column) {
             // GUARD: When the alphabet ends. Set the count to 0 again and start from the beginning.
-            if($count > 25){
+            if ($count > 25) {
                 $count = 0;
             }
             // Skip columns without subname
-            if($column->subName === null || empty($column->subName)){
+            if ($column->subName === null || empty($column->subName)) {
                 continue;
             }
             $column->update([
@@ -333,7 +336,7 @@ class ProjectController extends Controller
     public function addColumn(Request $request): void
     {
         $project = Project::find($request->project_id);
-        if($request->column_type === 'empty') {
+        if ($request->column_type === 'empty') {
             $column = $project->columns()->create([
                 'name' => 'empty',
                 'subName' => '-',
@@ -353,7 +356,7 @@ class ProjectController extends Controller
             ]);
         }
 
-        if($request->column_type === 'sum'){
+        if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'sum',
@@ -363,7 +366,7 @@ class ProjectController extends Controller
                 'linked_second_column' => $request->second_column_id,
             ]);
             $this->setColumnSubName($request->project_id);
-            foreach ($firstColumns as $firstColumn){
+            foreach ($firstColumns as $firstColumn) {
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value + (int)$secondColumn->value;
                 ColumnCell::create([
@@ -375,7 +378,7 @@ class ProjectController extends Controller
             }
         }
 
-        if($request->column_type === 'difference'){
+        if ($request->column_type === 'difference') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $project->columns()->create([
                 'name' => 'difference',
@@ -385,7 +388,7 @@ class ProjectController extends Controller
                 'linked_second_column' => $request->second_column_id
             ]);
             $this->setColumnSubName($request->project_id);
-            foreach ($firstColumns as $firstColumn){
+            foreach ($firstColumns as $firstColumn) {
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value - (int)$secondColumn->value;
                 ColumnCell::create([
@@ -409,13 +412,20 @@ class ProjectController extends Controller
     }
 
 
-    public function addSubPositionRow(Request $request){
+    public function addSubPositionRow(Request $request)
+    {
         $project = Project::find($request->project_id);
         $columns = $project->columns()->get();
         $subPosition = SubPosition::find($request->sub_position_id);
 
+        SubPositionRow::query()
+            ->where('sub_position_id', $request->sub_position_id)
+            ->where('position', '>', $request->positionBefore)
+            ->increment('position');
+
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
+            'position' => $request->positionBefore + 1
         ]);
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
@@ -487,21 +497,23 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function updateCellCalculation(Request $request){
+    public function updateCellCalculation(Request $request)
+    {
         $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
         $cell->update(['calculations' => json_encode($request->calculations)]);
         $cell->update(['value' => $request->calculationSum]);
         return back()->with('success');
     }
 
-    private function updateAutomaticCellValues($subPositionRowId){
+    private function updateAutomaticCellValues($subPositionRowId)
+    {
 
         $rows = ColumnCell::where('sub_position_row_id', $subPositionRowId)->get();
 
-        foreach ($rows as $row){
+        foreach ($rows as $row) {
             $column = Column::find($row->column_id);
 
-            if($column->type === 'empty'){
+            if ($column->type === 'empty') {
                 continue;
             }
             $firstRowValue = ColumnCell::where('column_id', $column->linked_first_column)->where('sub_position_row_id', $subPositionRowId)->first()->value;
@@ -509,7 +521,7 @@ class ProjectController extends Controller
 
             $updateColumn = ColumnCell::where('sub_position_row_id', $subPositionRowId)->where('column_id', $column->id)->first();
 
-            if($column->type == 'sum'){
+            if ($column->type == 'sum') {
                 $sum = (int)$firstRowValue + (int)$secondRowValue;
                 $updateColumn->update([
                     'value' => $sum
@@ -526,7 +538,7 @@ class ProjectController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  Project  $project
+     * @param Project $project
      * @return Response|ResponseFactory
      */
     public function show(Project $project, Request $request)
@@ -549,17 +561,17 @@ class ProjectController extends Controller
 
         $columns = $project->columns()->get();
         $outputColumns = [];
-        foreach ($columns as $column){
+        foreach ($columns as $column) {
             $columnOutput = new stdClass();
             $columnOutput->id = $column->id;
             $columnOutput->name = $column->name;
             $columnOutput->subName = $column->subName;
-            if($column->type === 'sum'){
+            if ($column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
                 $columnOutput->calculateName = $firstName . ' + ' . $secondName;
             }
-            if($column->type === 'difference'){
+            if ($column->type === 'difference') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
                 $columnOutput->calculateName = $firstName . ' - ' . $secondName;
@@ -575,9 +587,14 @@ class ProjectController extends Controller
             'budget' => [
                 'columns' => $outputColumns,
                 'table' => $project->mainPositions()
-                    ->with(['subPositions' => function($query) {
-                        return $query->orderBy('position');
-                    }, 'subPositions.subPositionRows.columns'])
+                    ->with([
+                        'subPositions' => function ($query) {
+                            return $query->orderBy('position');
+                        },
+                        'subPositions.subPositionRows' => function ($query) {
+                            return $query->orderBy('position');
+                        }, 'subPositions.subPositionRows.columns'
+                    ])
                     ->orderBy('position')
                     ->get()
             ],
@@ -594,10 +611,10 @@ class ProjectController extends Controller
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
 
-            'checklist_templates' => ChecklistTemplate::all()->map(fn ($checklist_template) => [
+            'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
                 'id' => $checklist_template->id,
                 'name' => $checklist_template->name,
-                'task_templates' => $checklist_template->task_templates->map(fn ($task_template) => [
+                'task_templates' => $checklist_template->task_templates->map(fn($task_template) => [
                     'id' => $task_template->id,
                     'name' => $task_template->name,
                     'description' => $task_template->description
@@ -614,7 +631,7 @@ class ProjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  Project  $project
+     * @param Project $project
      * @return Response|ResponseFactory
      */
     public function edit(Project $project)
@@ -629,8 +646,8 @@ class ProjectController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  UpdateProjectRequest  $request
-     * @param  Project  $project
+     * @param UpdateProjectRequest $request
+     * @param Project $project
      * @return JsonResponse|RedirectResponse
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
@@ -638,7 +655,7 @@ class ProjectController extends Controller
         $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
 
         // authorization
-        if ((! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
+        if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
             && $project->adminUsers->pluck('id')->doesntContain(Auth::id())
             && $project->managerUsers->pluck('id')->doesntContain(Auth::id())) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -693,7 +710,7 @@ class ProjectController extends Controller
 
         $scheduling = new SchedulingController();
         $projectId = $project->id;
-        foreach($project->users->all() as $user ){
+        foreach ($project->users->all() as $user) {
             $scheduling->create($user->id, 'PROJECT', $projectId);
         }
         return Redirect::back();
@@ -701,13 +718,13 @@ class ProjectController extends Controller
 
     private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
     {
-        if($newCostCenter === null && $oldCostCenter !== null){
+        if ($newCostCenter === null && $oldCostCenter !== null) {
             $this->history->createHistory($projectId, 'Kostenträger gelöscht');
         }
-        if($oldCostCenter === null && $newCostCenter !== null){
+        if ($oldCostCenter === null && $newCostCenter !== null) {
             $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
         }
-        if($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null){
+        if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
             $this->history->createHistory($projectId, 'Kostenträger geändert');
         }
     }
@@ -718,20 +735,20 @@ class ProjectController extends Controller
         $oldSectorNames = [];
         $newSectorIds = [];
 
-        foreach ($oldSectors as $oldSector){
+        foreach ($oldSectors as $oldSector) {
             $oldSectorIds[] = $oldSector->id;
             $oldSectorNames[$oldSector->id] = $oldSector->name;
         }
 
-        foreach ($newSectors as $newSector){
+        foreach ($newSectors as $newSector) {
             $newSectorIds[] = $newSector->id;
-            if(!in_array($newSector->id, $oldSectorIds)){
+            if (!in_array($newSector->id, $oldSectorIds)) {
                 $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt');
             }
         }
 
-        foreach ($oldSectorIds as $oldSectorId){
-            if(!in_array($oldSectorId, $newSectorIds)){
+        foreach ($oldSectorIds as $oldSectorId) {
+            if (!in_array($oldSectorId, $newSectorIds)) {
                 $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
             }
         }
@@ -749,20 +766,20 @@ class ProjectController extends Controller
         $oldGenreNames = [];
         $newGenreIds = [];
 
-        foreach ($oldGenres as $oldGenre){
+        foreach ($oldGenres as $oldGenre) {
             $oldGenreIds[] = $oldGenre->id;
             $oldGenreNames[$oldGenre->id] = $oldGenre->name;
         }
 
-        foreach ($newGenres as $newGenre){
+        foreach ($newGenres as $newGenre) {
             $newGenreIds[] = $newGenre->id;
-            if(!in_array($newGenre->id, $oldGenreIds)){
+            if (!in_array($newGenre->id, $oldGenreIds)) {
                 $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt');
             }
         }
 
-        foreach ($oldGenreIds as $oldGenreId){
-            if(!in_array($oldGenreId, $newGenreIds)){
+        foreach ($oldGenreIds as $oldGenreId) {
+            if (!in_array($oldGenreId, $newGenreIds)) {
                 $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht');
             }
         }
@@ -780,20 +797,20 @@ class ProjectController extends Controller
         $oldCategoryNames = [];
         $newCategoryIds = [];
 
-        foreach ($oldCategories as $oldCategory){
+        foreach ($oldCategories as $oldCategory) {
             $oldCategoryIds[] = $oldCategory->id;
             $oldCategoryNames[$oldCategory->id] = $oldCategory->name;
         }
 
-        foreach ($newCategories as $newCategory){
+        foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
-            if(!in_array($newCategory->id, $oldCategoryIds)){
+            if (!in_array($newCategory->id, $oldCategoryIds)) {
                 $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt');
             }
         }
 
-        foreach ($oldCategoryIds as $oldCategoryId){
-            if(!in_array($oldCategoryId, $newCategoryIds)){
+        foreach ($oldCategoryIds as $oldCategoryId) {
+            if (!in_array($oldCategoryId, $newCategoryIds)) {
                 $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht');
             }
         }
@@ -807,7 +824,7 @@ class ProjectController extends Controller
      */
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
-        if($oldName !== $newName){
+        if ($oldName !== $newName) {
             $this->history->createHistory($projectId, 'Projektname geändert');
         }
     }
@@ -823,20 +840,20 @@ class ProjectController extends Controller
         $oldDepartmentIds = [];
         $newDepartmentIds = [];
         $oldDepartmentNames = [];
-        foreach ($oldDepartments as $oldDepartment){
+        foreach ($oldDepartments as $oldDepartment) {
             $oldDepartmentIds[] = $oldDepartment->id;
             $oldDepartmentNames[$oldDepartment->id] = $oldDepartment->name;
         }
 
         foreach ($newDepartments as $newDepartment) {
             $newDepartmentIds[] = $newDepartment->id;
-            if(!in_array($newDepartment->id, $oldDepartmentIds)){
+            if (!in_array($newDepartment->id, $oldDepartmentIds)) {
                 $this->history->createHistory($projectId, 'Projektteam ' . $newDepartment->name . ' hinzugefügt');
             }
         }
 
-        foreach ($oldDepartmentIds as $oldDepartmentId){
-            if(!in_array($oldDepartmentId, $newDepartmentIds)){
+        foreach ($oldDepartmentIds as $oldDepartmentId) {
+            if (!in_array($oldDepartmentId, $newDepartmentIds)) {
                 $this->history->createHistory($projectId, 'Projektteam ' . $oldDepartmentNames[$oldDepartmentId] . ' entfernt');
             }
         }
@@ -844,13 +861,13 @@ class ProjectController extends Controller
 
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
     {
-        if(strlen($newDescription) === null){
+        if (strlen($newDescription) === null) {
             $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht');
         }
-        if($oldDescription === null && $newDescription !== null){
+        if ($oldDescription === null && $newDescription !== null) {
             $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt');
         }
-        if($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null){
+        if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
             $this->history->createHistory($projectId, 'Kurzbeschreibung geändert');
         }
     }
@@ -873,28 +890,28 @@ class ProjectController extends Controller
         $userIdsAfter = [];
         $managerIdsAfter = [];
         $adminIdsAfter = [];
-        foreach ($projectUsers as $projectUser){
+        foreach ($projectUsers as $projectUser) {
             $userIdsBefore[$projectUser->id] = $projectUser->id;
         }
-        foreach ($projectAdminsBefore as $adminBefore){
+        foreach ($projectAdminsBefore as $adminBefore) {
             $adminIdsBefore[$adminBefore->id] = $adminBefore->id;
-            if(in_array($adminBefore->id, $userIdsBefore)){
+            if (in_array($adminBefore->id, $userIdsBefore)) {
                 unset($userIdsBefore[$adminBefore->id]);
             }
         }
-        foreach ($projectManagerBefore as $managerBefore){
+        foreach ($projectManagerBefore as $managerBefore) {
             $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
-            if(in_array($managerBefore->id, $userIdsBefore)){
+            if (in_array($managerBefore->id, $userIdsBefore)) {
                 unset($userIdsBefore[$managerBefore->id]);
             }
         }
-        foreach ($projectUsersAfter as $projectUserAfter){
+        foreach ($projectUsersAfter as $projectUserAfter) {
             $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
         }
-        foreach ($projectAdminsAfter as $adminAfter){
+        foreach ($projectAdminsAfter as $adminAfter) {
             $adminIdsAfter[$adminAfter->id] = $adminAfter->id;
             // if added a new project admin, send notification to this user
-            if(!in_array($adminAfter->id, $adminIdsBefore)){
+            if (!in_array($adminAfter->id, $adminIdsBefore)) {
                 $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
@@ -906,14 +923,14 @@ class ProjectController extends Controller
                 ];
                 $this->notificationController->create($adminAfter, $this->notificationData, $broadcastMessage);
             }
-            if(in_array($adminAfter->id, $userIdsAfter)){
+            if (in_array($adminAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$adminAfter->id]);
             }
         }
-        foreach ($projectManagerAfter as $managerAfter){
+        foreach ($projectManagerAfter as $managerAfter) {
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
-            if(!in_array($managerAfter->id, $managerIdsBefore)){
+            if (!in_array($managerAfter->id, $managerIdsBefore)) {
                 $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
                 $this->notificationData->project->id = $project->id;
                 $this->notificationData->project->title = $project->name;
@@ -925,13 +942,13 @@ class ProjectController extends Controller
                 ];
                 $this->notificationController->create($managerAfter, $this->notificationData, $broadcastMessage);
             }
-            if(in_array($managerAfter->id, $userIdsAfter)){
+            if (in_array($managerAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$managerAfter->id]);
             }
         }
         // check if user remove as project admin
-        foreach ($adminIdsBefore as $adminBefore){
-            if(!in_array($adminBefore, $adminIdsAfter)){
+        foreach ($adminIdsBefore as $adminBefore) {
+            if (!in_array($adminBefore, $adminIdsAfter)) {
                 $user = User::find($adminBefore);
                 $this->notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
@@ -946,8 +963,8 @@ class ProjectController extends Controller
             }
         }
         // check if user remove as project manager
-        foreach ($managerIdsBefore as $managerBefore){
-            if(!in_array($managerBefore, $managerIdsAfter)){
+        foreach ($managerIdsBefore as $managerBefore) {
+            if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
                 $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
@@ -961,8 +978,8 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
-        foreach ($userIdsAfter as $userIdAfter){
-            if(!in_array($userIdAfter, $userIdsBefore)){
+        foreach ($userIdsAfter as $userIdAfter) {
+            if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
                 $this->notificationData->title = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
                 $this->notificationData->project->id = $project->id;
@@ -976,8 +993,8 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
-        foreach ($userIdsBefore as $userIdBefore){
-            if(!in_array($userIdBefore, $userIdsAfter)){
+        foreach ($userIdsBefore as $userIdBefore) {
+            if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
                 $this->notificationData->title = 'Du wurdest aus ' . $project->name . ' gelöscht';
                 $this->notificationData->project->id = $project->id;
@@ -1000,7 +1017,7 @@ class ProjectController extends Controller
     {
         // authorization
         if ($project->users->isNotEmpty()) {
-            if ((! Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
+            if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
                 && $project->adminUsers->pluck('id')->doesntContain(Auth::id())
                 && $project->managerUsers->pluck('id')->doesntContain(Auth::id())) {
                 return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
@@ -1008,7 +1025,7 @@ class ProjectController extends Controller
         }
 
         if ($project->departments->isNotEmpty()) {
-            $project->departments->map(fn ($department) => $this->authorize('update', $department));
+            $project->departments->map(fn($department) => $this->authorize('update', $department));
         }
 
         $newProject = Project::create([
@@ -1048,7 +1065,7 @@ class ProjectController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  Project  $project
+     * @param Project $project
      * @return RedirectResponse
      */
     public function destroy(Project $project)
@@ -1060,7 +1077,7 @@ class ProjectController extends Controller
         }
 
         //create notification data
-        $this->notificationData->title =  $project->name . ' wurde gelöscht';
+        $this->notificationData->title = $project->name . ' wurde gelöscht';
         $this->notificationData->project->id = $project->id;
         $this->notificationData->project->title = $project->name;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
@@ -1103,11 +1120,11 @@ class ProjectController extends Controller
             'trashed_projects' => ProjectIndexResource::collection(Project::onlyTrashed()->get())->resolve()
         ]);
     }
-    public function deleteRow(SubPositionRow $row){
+
+    public function deleteRow(SubPositionRow $row)
+    {
         $row->forceDelete();
     }
-
-
 
 
 }

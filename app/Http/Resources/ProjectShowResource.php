@@ -37,7 +37,6 @@ class ProjectShowResource extends JsonResource
             'name' => $this->name,
             'description' => $this->description,
             'number_of_participants' => $this->number_of_participants,
-            'cost_center' => $this->cost_center,
             'is_group' => $this->is_group,
             'sectors' => $this->sectors,
             'categories' => $this->categories,
@@ -46,11 +45,16 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
 
+            'cost_center' => $this->cost_center,
+            'copyright' => $this->copyright,
+            'moneySources' => $this->money_sources,
+
             'users' => UserIndexResource::collection($this->users)->resolve(),
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
             'project_files' => $this->project_files,
+            'contracts' => $this->contracts,
 
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
 

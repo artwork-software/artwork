@@ -1666,7 +1666,13 @@
         </jet-dialog-modal>
 
         <BaseSidenav :show="show" @change="this.show =! this.show">
-            <ProjectSidenav />
+            <ProjectSidenav
+                :cost-center="project.cost_center"
+                :copyright="project.copyright"
+                :documents="project.project_files"
+                :contracts="project.contracts"
+                :money-sources="project.moneySources"
+            />
         </BaseSidenav>
     </app-layout>
 </template>

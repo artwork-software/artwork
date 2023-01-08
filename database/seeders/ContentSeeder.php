@@ -5,7 +5,10 @@ namespace Database\Seeders;
 use App\Models\Checklist;
 use App\Models\Contract;
 use App\Models\ContractModule;
+use App\Models\Copyright;
+use App\Models\CostCenter;
 use App\Models\Department;
+use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\RoomCategory;
 use Carbon\Carbon;
@@ -30,6 +33,8 @@ class ContentSeeder extends Seeder
         $this->seedRoomAttributes();
         $this->seedContracts();
         $this->seedContractModules();
+        $this->seedCostCenters();
+        $this->seedCopyrights();
     }
 
     private function seedContracts()
@@ -247,7 +252,8 @@ class ContentSeeder extends Seeder
              Es handelt sich aber um keine ordinäre »Seebühne«, wie sie viele Provinztheater rund
               um den Globus mit stolz geschwellter Brust zelebrieren. Au contraire!',
             'number_of_participants' => null,
-            'cost_center' => null,
+            'cost_center_id' => 1,
+            'copyright_id' => 1
         ]);
 
         $project->project_histories()->create([
@@ -264,7 +270,6 @@ class ContentSeeder extends Seeder
             'name' => 'Hydrospektive - Fahim Amir',
             'description' => null,
             'number_of_participants' => null,
-            'cost_center' => null,
         ]);
 
         $second_project->project_histories()->create([
@@ -272,4 +277,25 @@ class ContentSeeder extends Seeder
             "description" => "Projekt angelegt",
         ]);
     }
+
+    private function seedCostCenters()
+    {
+        CostCenter::create([
+            'name' => '123456',
+            'description' => 'Some description',
+            'project_id' => 1
+        ]);
+    }
+
+    private function seedCopyrights()
+    {
+        Copyright::create([
+            'own_copyright' => true,
+            'live_music' => true,
+            'collecting_society' => 'GEMA',
+            'law_size' => 'small',
+            'project_id' => 1
+        ]);
+    }
+
 }

@@ -45,10 +45,26 @@ class Project extends Model
         'name',
         'description',
         'number_of_participants',
-        'cost_center',
+        'cost_center_id',
+        'copyright_id',
     ];
 
     protected $with = ['historyChangesMorph'];
+
+    public function cost_center()
+    {
+        return $this->belongsTo(CostCenter::class, 'cost_center_id');
+    }
+
+    public function copyright()
+    {
+        return $this->belongsTo(Copyright::class, 'copyright_id');
+    }
+
+    public function money_sources()
+    {
+        return $this->belongsToMany(MoneySource::class);
+    }
 
     public function users()
     {

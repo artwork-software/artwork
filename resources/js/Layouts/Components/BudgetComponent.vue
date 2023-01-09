@@ -149,7 +149,7 @@
                                                         <div
                                                             :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', column.cell.value < 0 ? 'text-red-500' : '']"
                                                             class="my-4 h-6 flex items-center" @click="column.pivot.clicked = !column.pivot.clicked" v-else>
-                                                            <img v-if="column.pivot.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>
+                                                            <img v-if="column.cell.linked_money_source_id !== null" src="/Svgs/IconSvgs/icon_linked_moneySource.svg" class="h-6 w-6"/>
                                                             {{ column.cell.value }}
                                                             <PlusCircleIcon v-if="index > 2 && column.pivot.clicked"
                                                                             @click="openCellDetailModal(column)"
@@ -165,7 +165,7 @@
                                                     <td class="w-24"></td>
                                                     <td class="w-72 ml-2 my-2">SUM</td>
                                                     <div class="flex items-center" v-for="column in subPosition.sub_position_rows[0].columns">
-                                                        <td v-if="column.pivot.column_id > 3" class="w-48 ml-0.5 my-4" :class="getSumsOfSubPosition(subPosition)[column.cell.column_id] < 0 ? 'text-red-500' : ''">
+                                                        <td v-if="column.cell.column_id > 3" class="w-48 ml-0.5 my-4" :class="getSumsOfSubPosition(subPosition)[column.cell.column_id] < 0 ? 'text-red-500' : ''">
                                                             {{ getSumsOfSubPosition(subPosition)[column.cell.column_id] }}
                                                         </td>
                                                     </div>
@@ -324,6 +324,8 @@
         </div>
     </div>
 
+
+
     <pre v-for="column in this.budget.table[0].sub_positions[0].sub_position_rows[0].columns">
                                                         {{ column.cell.column_id }}
                                                     </pre>
@@ -404,7 +406,7 @@ export default {
                     subPosition.sub_position_rows?.forEach((row) => {
                         row.columns.forEach((column) => {
                             if (column.cell.column_id > 3) {
-                                if (!isNaN(column.pivot.value) && column.cell.value !== '') {
+                                if (!isNaN(column.cell.value) && column.cell.value !== '') {
                                     if (sums[subPosition.id + '' + column.cell.column_id] === undefined) {
                                         sums[subPosition.id + '' + column.cell.column_id] = 0
                                         sums[subPosition.id + '' + column.cell.column_id] += parseInt(column.cell.value);
@@ -439,7 +441,7 @@ export default {
             subPosition.sub_position_rows?.forEach((row) => {
                 row.columns.forEach((column) => {
                     if (column.cell.column_id > 3) {
-                        if (!isNaN(column.cell.value) && column.pivot.value !== '') {
+                        if (!isNaN(column.cell.value) && column.cell.value !== '') {
                             if (sums[column.cell.column_id] === undefined) {
                                 sums[column.cell.column_id] = 0
                                 sums[column.cell.column_id] += parseInt(column.cell.value);
@@ -457,7 +459,7 @@ export default {
             mainPosition.sub_positions?.forEach((sub_position) => {
                 sub_position.columns.forEach((column) => {
                     if (column.cell.column_id > 3) {
-                        if (!isNaN(column.cell.value) && column.pivot.value !== '') {
+                        if (!isNaN(column.cell.value) && column.cell.value !== '') {
                             if (sums[column.cell.column_id] === undefined) {
                                 sums[column.cell.column_id] = 0
                                 sums[column.cell.column_id] += parseInt(column.cell.value);

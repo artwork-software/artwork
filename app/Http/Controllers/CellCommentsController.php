@@ -33,9 +33,8 @@ class CellCommentsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
         $cell = ColumnCell::find($request->cellId);
         $cell->comments()->create([
@@ -45,7 +44,8 @@ class CellCommentsController extends Controller
         return back()->with('success');
     }
 
-    public function get(Request $request){
+    public function get(Request $request): bool|string
+    {
         $comments = CellComments::where('cell_id', $request->cellId)->get();
         $output = [];
         foreach ($comments as $comment){
@@ -96,10 +96,10 @@ class CellCommentsController extends Controller
      * Remove the specified resource from storage.
      *
      * @param  \App\Models\CellComments  $cellComments
-     * @return \Illuminate\Http\Response
      */
-    public function destroy(CellComments $cellComments)
+    public function destroy(CellComments $cellComments): \Illuminate\Http\RedirectResponse
     {
-        //
+        $cellComments->delete();
+        return back()->with('success', 'comment deleted');
     }
 }

@@ -1,26 +1,34 @@
 <template>
-        <div class="container mb-12 mx-auto px-6 flex flex-col items-start pl-12 md:pl-0 md:items-center">
+        <div class="flex flex-col items-start md:pl-0 md:items-center" :id="id">
             <div class="flex-col md:flex-row flex items-center md:justify-center">
                 <!--Code Block for white tooltip starts-->
-                <div class="relative mt-20 md:mt-0" @mouseover="showTooltip(user.id)" @mouseout="hideTooltip(user.id)">
+                <div class="relative mt-20 md:mt-0">
                     <div class="mr-2 cursor-pointer">
-                        <svg aria-haspopup="true" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-info-circle" width="25" height="25" viewBox="0 0 24 24" stroke-width="1.5" stroke="#A0AEC0" fill="none" stroke-linecap="round" stroke-linejoin="round">
-                            <path stroke="none" d="M0 0h24v24H0z" />
-                            <circle cx="12" cy="12" r="9" />
-                            <line x1="12" y1="8" x2="12.01" y2="8" />
-                            <polyline points="11 12 12 12 12 16 13 16" />
-                        </svg>
+                        <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex mt-2 object-cover rounded-full" :class="['h-' + this.height, 'w-' + this.width]" @mouseover="showTooltip(id)" @mouseout="hideTooltip(id)">
                     </div>
-                    <div id="tooltip1" role="tooltip" class="z-20 -mt-20 w-64 absolute transition duration-150 ease-in-out left-0 ml-8 shadow-lg bg-white p-4 rounded">
-                        <p class="text-sm font-bold text-gray-800 pb-1">Keep track of follow ups</p>
-                        <p class="text-xs leading-4 text-gray-600 pb-3">Reach out to more prospects at the right moment.</p>
-                        <div class="flex justify-between">
-                            <div class="flex items-center">
-                                <span class="text-xs font-bold text-indigo-700">Step 1 of 4</span>
+                    <div :id="'tooltip' + id" role="tooltip" class="w-96 hidden z-20 -mt-40 -ml-6 absolute transition duration-150 ease-in-out left-0 ml-8 shadow-lg p-4 rounded text-secondary bg-primary">
+                        <div class="grid grid-cols-4 gap-x-2 flex items-center">
+                            <div class="col-span-1 shrink-0 flex">
+                                <img class="mx-auto shrink-0 flex  h-14 w-14 mt-2 object-cover rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
                             </div>
-                            <div class="flex items-center">
-                                <span class="text-xs text-gray-600 underline mr-2 cursor-pointer">Skip Tour</span>
-                                <button class="focus:outline-none bg-indigo-700 transition duration-150 ease-in-out hover:bg-indigo-600 rounded text-white px-5 py-1 text-xs">Next</button>
+                            <div class="col-span-3 ">
+                                <div class=" font-black font-lexend text-white text-lg">
+                                    {{ user.first_name }} {{ user.last_name }}
+                                </div>
+                                <div class="-mt-1">
+                                    {{ user.business }}, {{ user.position }}
+                                </div>
+                                <div class="mt-2">
+                                    {{ user.email }}
+                                </div>
+                                <div>
+                                    {{ user.phone_number }}
+                                </div>
+                            </div>
+                            <div class="col-span-4 mt-2">
+                                {{ user.description }}
                             </div>
                         </div>
                     </div>
@@ -34,13 +42,13 @@
 <script>
 export default {
     name: "NewUserToolTip",
-    props: ['user'],
+    props: ['user', 'id', 'height', 'width'],
     methods: {
         showTooltip(flag) {
-            document.getElementById("tooltip" + flag).classList.remove("opacity-0");
+            document.getElementById("tooltip" + flag).classList.remove("hidden");
         },
         hideTooltip(flag) {
-            document.getElementById("tooltip" + flag).classList.add("opacity-0");
+            document.getElementById("tooltip" + flag).classList.add("hidden");
         },
     },
 }

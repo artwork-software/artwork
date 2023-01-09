@@ -109,18 +109,14 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <img v-if="comment.user" :data-tooltip-target="comment.user.first_name"
-                                             :src="comment.user.profile_photo_url" :alt="comment.user.first_name"
-                                             class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip :user="comment.user" v-if="comment.user"/>
-                                        <!--<NewUserToolTip :user="comment.user"></NewUserToolTip>-->
+                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8" :width="8" ></NewUserToolTip>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
                                     <button v-show="commentHovered === comment.id" type="button"
-                                            @click="deleteCommentFromProject(comment)">
+                                            @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">Kommentar von Projekt entfernen</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
                                     </button>
@@ -425,9 +421,9 @@ export default {
             }, {preserveState: true});
             this.closeModal(true);
         },
-        deleteCommentFromProject(comment) {
-            this.commentForm.post(route('project.budget.cell.comment.store'));
-            //this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
+        deleteCommentFromCell(comment) {
+            //this.commentForm.delete(route('project.budget.cell.comment.delete'));
+            this.$inertia.delete(route('project.budget.cell.comment.delete', comment), {preserveState: true, preserveScroll: true});
         },
         addCommentToCell() {
             this.commentForm.post(route('project.budget.cell.comment.store'));

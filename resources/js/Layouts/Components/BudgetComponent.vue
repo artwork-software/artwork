@@ -93,8 +93,9 @@
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                             <th class="bg-primary text-left p-0">
-                                <div
-                                    class="pl-2 xsWhiteBold flex items-center h-10"
+                                <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
+                                     @mouseout="showMenu = null">
+                                <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
                                     v-if="!mainPosition.clicked">
                                     <div @click="mainPosition.clicked = !mainPosition.clicked">
                                         {{ mainPosition.name }}
@@ -106,7 +107,7 @@
                                         <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                     </button>
                                 </div>
-                                <div v-else class="flex">
+                                <div v-else class="flex items-center">
                                     <input
                                         class="my-2 ml-1 xsDark" type="text"
                                         v-model="mainPosition.name"
@@ -118,6 +119,48 @@
                                         <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                     </button>
                                 </div>
+                                    <div class="flex items-center justify-end">
+                                        <div class="flex flex-wrap w-full">
+                                            <div class="flex w-full">
+                                                <Menu as="div" class="my-auto relative"
+                                                      v-show="showMenu === 'MainPosition' + mainPosition.id">
+                                                    <div class="flex">
+                                                        <MenuButton
+                                                            class="flex ml-6">
+                                                            <DotsVerticalIcon
+                                                                class="mr-3 flex-shrink-0 h-6 w-6 text-secondaryHover my-auto"
+                                                                aria-hidden="true"/>
+                                                        </MenuButton>
+                                                    </div>
+                                                    <transition
+                                                        enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                        <MenuItems
+                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            <div class="py-1">
+                                                                <MenuItem v-slot="{ active }">
+                                                                                <span
+                                                                                    @click="openDeleteMainPositionModal(mainPosition)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Löschen
+                                                                                </span>
+                                                                </MenuItem>
+                                                            </div>
+                                                        </MenuItems>
+                                                    </transition>
+                                                </Menu>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- HIER ADD UNTERPOSITION Funktion -->
                                 <div
                                     @click="addSubPosition(mainPosition.id)"
@@ -410,6 +453,12 @@
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
+    <confirmation-component
+        v-if="showDeleteMainPositionModal"
+        confirm="Löschen"
+        titel="Hauptposition löschen"
+        :description="'Bist du sicher, dass du die Hauptposition ' + this.mainPositionToDelete.name + ' löschen möchtest?'"
+        @closed="afterConfirm"/>
 
 </template>
 
@@ -422,11 +471,13 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 export default {
     name: 'BudgetComponent',
 
     components: {
+        ConfirmationComponent,
         CellDetailComponent,
         AddColumnComponent,
         AddButton,
@@ -453,7 +504,9 @@ export default {
             showCellDetailModal: false,
             cellToShow: null,
             hoveredRow: null,
-            showMenu: null
+            showMenu: null,
+            showDeleteMainPositionModal: false,
+            mainPositionToDelete: null,
         }
     },
 
@@ -631,6 +684,16 @@ export default {
         },
         deleteRowFromSubPosition(row) {
             this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
+        },
+        openDeleteMainPositionModal(mainPosition){
+            this.mainPositionToDelete = mainPosition;
+            this.showDeleteMainPositionModal = true;
+        },
+        afterConfirm(bool) {
+            if (!bool) return this.showDeleteMainPositionModal = false;
+
+            this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`);
+            this.showDeleteMainPositionModal = false;
         },
 
         checkIfWritable(column) {

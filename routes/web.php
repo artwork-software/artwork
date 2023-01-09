@@ -301,4 +301,5 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/cell/comment/{cellComments}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
     Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
+    Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
 });

@@ -1136,5 +1136,10 @@ class ProjectController extends Controller
         $row->forceDelete();
     }
 
+    public function deleteMainPosition(MainPosition $mainPosition)
+    {
+        $mainPosition->forceDelete();
+    }
+
 
 }

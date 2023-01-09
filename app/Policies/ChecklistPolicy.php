@@ -56,8 +56,8 @@ class ChecklistPolicy
      */
     public function delete(User $user, Checklist $checklist)
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_DELETE)
-            && $user->departments->intersect($checklist->departments)->isNotEmpty();
+        return $user->projects()->find($checklist->project_id)->pivot->is_admin == 1 ||  ($user->can(PermissionNameEnum::CHECKLIST_DELETE)
+            && $user->departments->intersect($checklist->departments)->isNotEmpty());
     }
 
     /**

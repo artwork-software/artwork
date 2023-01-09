@@ -439,6 +439,32 @@
     <pre>
         {{ this.budget.table[0] }}
         </pre>
+
+    <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+
+                <div class="headline1 my-2">
+                    {{ successHeading }}
+                </div>
+                <XIcon @click="closeSuccessModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="successText">
+                    {{ successDescription }}
+                </div>
+                <div class="mt-6">
+                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
+                            @click="closeSuccessModal">
+                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                    </button>
+                </div>
+            </div>
+
+        </template>
+    </jet-dialog-modal>
     <!-- Termin erstellen Modal-->
     <add-column-component
         v-if="showAddColumnModal"
@@ -466,12 +492,13 @@
 
 
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
+import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import JetDialogModal from "@/Jetstream/DialogModal";
 
 export default {
     name: 'BudgetComponent',
@@ -493,6 +520,8 @@ export default {
         XIcon,
         PencilAltIcon,
         TrashIcon,
+        JetDialogModal,
+        CheckIcon
     },
 
     data() {
@@ -507,6 +536,9 @@ export default {
             showMenu: null,
             showDeleteMainPositionModal: false,
             mainPositionToDelete: null,
+            showSuccessModal: false,
+            successHeading: '',
+            successDescription: ''
         }
     },
 
@@ -692,10 +724,24 @@ export default {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteMainPositionModal = false;
 
-            this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`);
-            this.showDeleteMainPositionModal = false;
-        },
+            this.deleteMainPosition();
 
+        },
+        deleteMainPosition(){
+            this.showDeleteMainPositionModal = false;
+            this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`);
+            this.successHeading = "Hauptposition gelöscht"
+            this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
+            this.showSuccessModal = true;
+
+            setTimeout(() => this.closeSuccessModal(), 2000)
+        },
+        closeSuccessModal() {
+            this.mainPositionToDelete = null;
+            this.showSuccessModal = false;
+            this.successHeading = "";
+            this.successDescription = "";
+        },
         checkIfWritable(column) {
 
         }

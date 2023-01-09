@@ -30,9 +30,9 @@ class Column extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function cell()
+    public function cells()
     {
-        return $this->hasOne(ColumnCell::class, 'column_id');
+        return $this->hasMany(ColumnCell::class, 'column_id');
     }
 
 }

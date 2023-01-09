@@ -38,7 +38,7 @@ class CellCommentsController extends Controller
     {
         $cell = ColumnCell::find($request->cellId);
         $cell->comments()->create([
-           'user' => Auth::user(),
+            'user' => Auth::user(),
             'description' => $request->description
         ]);
         return back()->with('success');

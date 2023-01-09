@@ -285,6 +285,12 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function columnDelete(Column $column){
+        $column->deleting(function ($column){
+            $column->cell()->delete();
+        });
+    }
+
     public function updateMainPositionName(Request $request): void
     {
         $mainPosition = MainPosition::find($request->mainPosition_id);
@@ -461,6 +467,7 @@ class ProjectController extends Controller
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
+            'position' => 1,
         ]);
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
@@ -489,6 +496,7 @@ class ProjectController extends Controller
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
+            'position' => 1,
         ]);
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
@@ -593,7 +601,9 @@ class ProjectController extends Controller
                         },
                         'subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'subPositions.subPositionRows.columns'
+                        }, 'subPositions.subPositionRows.cells.comments' => function($query){
+                            return $query->orderBy('created_at', 'DESC');
+                        }, 'subPositions.subPositionRows.cells.column'
                     ])
                     ->orderBy('position')
                     ->get()

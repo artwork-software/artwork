@@ -244,9 +244,9 @@ export default {
 
     data() {
         return {
-            isLinked: this.column.cell.linked_money_source_id !== null,
-            linkedType: this.column.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
-            selectedMoneySource: this.column.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.column.cell.linked_money_source_id) : null,
+            isLinked: this.cell.linked_money_source_id !== null,
+            linkedType: this.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
+            selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
             linkTypes,
             isCalculateTab: true,
             isCommentTab: false,
@@ -258,12 +258,12 @@ export default {
             commentHovered: null,
             commentForm: useForm({
                 description: '',
-                cellId: this.column.id
+                cellId: this.cell.id
             })
         }
     },
 
-    props: ['column', 'moneySources'],
+    props: ['cell', 'moneySources'],
 
     emits: ['closed'],
 
@@ -280,7 +280,7 @@ export default {
             ]
         },
         commentsToShow(){
-            let comments = this.column.cell.comments;
+            let comments = this.cell.comments;
             let commentsShow = []
             comments.forEach((item) => {
                 commentsShow.push({
@@ -293,7 +293,7 @@ export default {
             return commentsShow
         },
         calculationNames() {
-            let calculations = JSON.parse(this.column.cell.calculations);
+            let calculations = JSON.parse(this.cell.calculations);
             let names = []
             calculations?.forEach((calculation) => {
                 names.push(calculation.name);
@@ -301,7 +301,7 @@ export default {
             return names;
         },
         calculationValues() {
-            let calculations = JSON.parse(this.column.cell.calculations);
+            let calculations = JSON.parse(this.cell.calculations);
             let values = []
             calculations?.forEach((calculation) => {
                 values.push(calculation.value);
@@ -309,7 +309,7 @@ export default {
             return values;
         },
         calculationDescriptions() {
-            let calculations = JSON.parse(this.column.cell.calculations);
+            let calculations = JSON.parse(this.cell.calculations);
             let descriptions = []
             calculations?.forEach((calculation) => {
                 descriptions.push(calculation.description);
@@ -317,7 +317,7 @@ export default {
             return descriptions;
         },
         calculationArray() {
-            let calculations = JSON.parse(this.column.cell.calculations);
+            let calculations = JSON.parse(this.cell.calculations);
             let helperArray = [];
             calculations?.forEach((calculation, index) => {
                 helperArray[index] = {
@@ -368,13 +368,13 @@ export default {
         updateMoneySourceLink() {
             if (this.isLinked) {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.column.cell.id,
+                    cell_id: this.cell.id,
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
                 });
             } else {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
-                    cell_id: this.column.cell.id,
+                    cell_id: this.cell.id,
                     linked_type: null,
                     money_source_id: null,
                 });
@@ -414,9 +414,9 @@ export default {
                 };
             })
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {
-                column_id: this.column.id,
+                column_id: this.cell.column.id,
                 calculations: this.calculationArray,
-                sub_position_row_id: this.column.cell.sub_position_row_id,
+                sub_position_row_id: this.cell.sub_position_row_id,
                 calculationSum: this.calculationSum
             }, {preserveState: true});
             this.closeModal(true);
@@ -428,6 +428,7 @@ export default {
         addCommentToCell() {
             this.commentForm.post(route('project.budget.cell.comment.store'));
             this.commentForm.reset('description');
+            this.closeModal(true);
         },
     },
 }

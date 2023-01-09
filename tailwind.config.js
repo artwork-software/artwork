@@ -33,7 +33,11 @@ module.exports = {
                 tagText: '#3017AD',
                 backgroundBlue: '#3017AD34',
                 lightBackgroundGray: '#F4F4F3',
-                silverGray:'#CECDD8'
+                silverGray:'#CECDD8',
+                greenColumn: '#50908E',
+                yellowColumn: '#F0B54C',
+                redColumn: '#D84387',
+                lightGreenColumn: '#35A965'
             },
             fontSize: {
                 header: '30px'

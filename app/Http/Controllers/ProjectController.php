@@ -286,9 +286,13 @@ class ProjectController extends Controller
     }
 
     public function columnDelete(Column $column){
-        $column->deleting(function ($column){
-            $column->cell()->delete();
-        });
+        $cells = ColumnCell::where('column_id', $column->id)->get();
+
+        $column->cells()->delete();
+        foreach ($cells as $cell){
+            $cell->comments()->delete();
+        }
+        $column->delete();
     }
 
     public function updateMainPositionName(Request $request): void
@@ -574,6 +578,7 @@ class ProjectController extends Controller
             $columnOutput->id = $column->id;
             $columnOutput->name = $column->name;
             $columnOutput->subName = $column->subName;
+            $columnOutput->color = $column->color;
             if ($column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
@@ -1138,7 +1143,24 @@ class ProjectController extends Controller
 
     public function deleteMainPosition(MainPosition $mainPosition)
     {
-        $mainPosition->forceDelete();
+        $subPositions = $mainPosition->subPositions()->get();
+        foreach ($subPositions as $subPosition){
+            $subRows = $subPosition->subPositionRows()->get();
+
+            foreach ($subRows as $subRow){
+                $cells = $subRow->cells()->get();
+                foreach ($cells as $cell){
+                    /*$comments = $cells->comments()->get();
+                    foreach ($comments as $comment){
+                        $comment->delete();
+                    }*/
+                    $cell->delete();
+                }
+                $subRow->delete();
+            }
+            $subPosition->delete();
+        }
+        $mainPosition->delete();
     }
 
 

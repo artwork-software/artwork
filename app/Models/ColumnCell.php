@@ -29,7 +29,8 @@ class ColumnCell extends Model
         return $this->belongsToMany(SubPositionRow::class);
     }
 
-    public function column(){
+    public function column(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
         return $this->belongsTo(Column::class);
     }
 

@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('type')->nullable();
             $table->integer('linked_first_column')->nullable();
             $table->integer('linked_second_column')->nullable();
+            $table->string('color')->default('bg-secondaryHover');
             $table->timestamps();
         });
     }

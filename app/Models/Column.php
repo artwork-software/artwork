@@ -17,7 +17,8 @@ class Column extends Model
         'subName',
         'type',
         'linked_first_column',
-        'linked_second_column'
+        'linked_second_column',
+        'color'
     ];
 
     public function subPositionRows(): BelongsToMany
@@ -30,7 +31,7 @@ class Column extends Model
         return $this->belongsTo(Project::class);
     }
 
-    public function cells()
+    public function cells(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(ColumnCell::class, 'column_id');
     }

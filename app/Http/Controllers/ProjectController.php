@@ -601,6 +601,17 @@ class ProjectController extends Controller
             $outputColumns[] = $columnOutput;
         }
 
+        if(!$project->is_group) {
+            $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
+            if(!empty($group)){
+                $groupOutput = Project::find($group?->group_id);
+            } else {
+                $groupOutput = '';
+            }
+        } else {
+            $groupOutput = '';
+        }
+
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 

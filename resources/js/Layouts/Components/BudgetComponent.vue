@@ -119,48 +119,7 @@
             </table>
 
         </div>
-        <!-- einfärben dropdown / listbox -->
-        <Listbox as="div" class="flex h-12 mr-2 hidden" v-model="selectedColor"
-                 id="eventType">
-            <ListboxButton
-                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                <div class="flex items-center my-auto">
-                    <span class="block truncate items-center ml-3 flex rounded-full h-8 w-8 border border-1"
-                          :class="selectedColor">
-                    </span>
-                    <span
-                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                    </span>
-                </div>
-            </ListboxButton>
 
-            <transition leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                <ListboxOptions
-                    class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                    <ListboxOption as="template" class="max-h-32" v-for="color in colors"
-                                   :key="color"
-                                   :value="color" v-slot="{ active, selected }">
-                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']">
-                            <div class="flex">
-                                <span
-                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
-                                    <span class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
-                                          :class="color">
-                                    </span>
-                                </span>
-                            </div>
-                            <span
-                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                        </li>
-                    </ListboxOption>
-                </ListboxOptions>
-            </transition>
-        </Listbox>
         <div class="flex my-8 ">
             <div class="flex w-full bg-secondaryHover border border-2 border-gray-300">
                 <button class="bg-buttonBlue w-6"
@@ -636,7 +595,6 @@ export default {
                 redColumn: 'redColumn',
                 lightGreenColumn: 'lightGreenColumn'
             },
-            selectedColor: 'whiteColumn',
         }
     },
 

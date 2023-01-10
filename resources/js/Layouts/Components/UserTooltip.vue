@@ -26,9 +26,9 @@
                     {{ user.description }}
                 </div>
             </div>
-                <div class="tooltip-arrow" data-popper-arrow></div>
-            </div>
+            <div class="tooltip-arrow" data-popper-arrow></div>
         </div>
+    </div>
 </template>
 
 <script>

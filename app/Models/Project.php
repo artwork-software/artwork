@@ -61,11 +61,6 @@ class Project extends Model
         return $this->belongsTo(Copyright::class, 'copyright_id');
     }
 
-    public function money_sources()
-    {
-        return $this->belongsToMany(MoneySource::class);
-    }
-
     public function users()
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
@@ -147,6 +142,17 @@ class Project extends Model
     public function groups()
     {
         return $this->belongsToMany(Project::class, 'project_groups', 'group_id');
+    }
+
+
+    public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Column::class);
+    }
+
+    public function mainPositions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MainPosition::class);
     }
 
 

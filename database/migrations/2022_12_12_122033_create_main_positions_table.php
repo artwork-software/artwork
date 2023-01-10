@@ -13,13 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('comments', function (Blueprint $table) {
+        Schema::create('main_positions', function (Blueprint $table) {
             $table->id();
-            $table->string('text');
-            $table->unsignedBigInteger('project_id')->nullable();
-            $table->unsignedBigInteger('project_file_id')->nullable();
-            $table->unsignedBigInteger('contract_id')->nullable();
-            $table->unsignedBigInteger('user_id');
+            $table->bigInteger('project_id');
+            $table->enum('type', ['BUDGET_TYPE_COST', 'BUDGET_TYPE_EARNING']);
+            $table->integer('position');
+            $table->string('name')->nullable();
             $table->timestamps();
         });
     }
@@ -31,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('comments');
+        Schema::dropIfExists('main_positions');
     }
 };

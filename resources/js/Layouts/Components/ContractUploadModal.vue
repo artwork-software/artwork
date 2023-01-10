@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Dokument hochladen
+                    Vertrags-Upload
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -33,7 +33,7 @@
                 <div>
                 <textarea placeholder="Kommentar / Notiz"
                           id="description"
-                          v-model="comment"
+                          v-model="description"
                           rows="4"
                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
@@ -58,7 +58,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 
 export default {
-    name: "ProjectFileUploadModal",
+    name: "ContractUploadModal",
     props: {
         show: Boolean,
         closeModal: Function,
@@ -74,7 +74,7 @@ export default {
         return {
             uploadDocumentFeedback: "",
             files: [],
-            comment: ""
+            description: ""
         }
     },
     methods: {
@@ -87,8 +87,8 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
-        storeFile(file) {
-            this.$inertia.post(`/projects/${this.projectId}/files`, {file: file, comment: this.comment}, {
+        storeFile(contract) {
+            this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
                 preserveState: true,
                 preserveScroll: true,
                 onSuccess: () => {

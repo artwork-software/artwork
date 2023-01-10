@@ -261,13 +261,12 @@
         </div>
         <!-- Nutzer*innen einladen Modal -->
         <flowbite-modal style="margin-top: 1rem;" class="h-fit" modal_id="invite-user" aria-hidden="true" @close="closeAddUserModal">
-            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 absolute top-0 mt-16"/>
-            <div class="mx-3 pt-16">
-
+            <img src="/Svgs/Overlays/illu_user_invite.svg" class="-ml-6 absolute top-24 mt-16"/>
+            <div class="mx-3 pt-40 ">
                 <XIcon @click="closeAddUserModal"
-                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10 mt-20"
+                       class="h-5 w-5 flex text-secondary cursor-pointer absolute right-0 mr-10 top-80 sm:mt-20"
                        aria-hidden="true"/>
-                <div class="mt-24 headline1">
+                <div class="mt-32 headline1">
                     Nutzer*innen einladen
                 </div>
                 <div class="xsLight my-3">

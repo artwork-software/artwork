@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -40,10 +41,19 @@ class ProjectFileController extends Controller
 
         Storage::putFileAs('project_files', $file, $basename);
 
-        $project->project_files()->create([
+        $projectFile =$project->project_files()->create([
             'name' => $original_name,
             'basename' => $basename,
         ]);
+
+        $projectFile->accessing_users()->attach($request->accessibleUsers);
+
+        $comment = Comment::create([
+            'text' => $request->comment,
+            'user_id' => Auth::id(),
+            'project_file_id' => $projectFile->id
+        ]);
+        $projectFile->comments()->save($comment);
 
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt');
 
@@ -62,6 +72,47 @@ class ProjectFileController extends Controller
         $this->authorize('view', $projectFile->project);
 
         return Storage::download('project_files/'. $projectFile->basename, $projectFile->name);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param Request $request
+     * @param ProjectFile $projectFile
+     * @return RedirectResponse
+     */
+    public function update(Request $request, ProjectFile $projectFile): RedirectResponse
+    {
+        $projectFile->fill($request->data());
+
+        if ($request->get('accessibleUsers')) {
+            $projectFile->accessing_users()->delete();
+            $projectFile->accessing_users()->createMany($request->accessibleUsers);
+        }
+
+        if($request->file('file')) {
+            Storage::delete('project_files/'. $projectFile->basename);
+            $file = $request->file('file');
+            $original_name = $file->getClientOriginalName();
+            $basename = Str::random(20).$original_name;
+
+            $projectFile->basename = $basename;
+            $projectFile->name = $original_name;
+
+            $comment = Comment::create([
+                'text' => $request->comment,
+                'user_id' => Auth::id(),
+                'project_file_id' => $projectFile->id
+            ]);
+            $projectFile->comments()->save($comment);
+            $projectFile->save();
+
+            Storage::putFileAs('project_files', $file, $basename);
+        }
+
+        return Redirect::back();
+
+
     }
 
     /**

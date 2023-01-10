@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Enums\BudgetTypesEnum;
+use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
 use App\Models\Contract;
 use App\Models\ContractModule;
@@ -255,6 +257,10 @@ class ContentSeeder extends Seeder
             'cost_center_id' => 1,
             'copyright_id' => 1
         ]);
+
+        $projectController = new ProjectController();
+        $projectController->generateBasicBudgetValues($project);
+
 
         $project->project_histories()->create([
             "user_id" => 1,

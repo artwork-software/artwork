@@ -4,13 +4,17 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Dokument hochladen
+                    Dokument bearbeiten
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-secondary text-sm my-6">
-                    Lade Dokumente hoch, die ausschließlich das Budget betreffen. Diese können nur User mit entsprechender Berechtigung einsehen.
+                <div class="flex items-center cursor-pointer" @click="downloadProjectFile(file)">
+                    <DownloadIcon class="w-4 h-4 mr-2 text-buttonBlue"/>
+                    <div class="text-buttonBlue text-sm my-6">{{ file.name }}</div>
+                </div>
+                <div class="text-secondary text-sm my-2">
+                   Dokument ersetzen
                 </div>
                 <div>
                     <input
@@ -38,11 +42,22 @@
                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
                 <div class="mb-6">
-                    <div v-for="file of files">{{ file.name }}</div>
+                    <div v-for="file of files">Neues Dokument: {{ file.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Dokument hochladen" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
-                               @click="storeFiles"/>
+                    <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                               @click="updateFile"/>
+                </div>
+                <div class="w-full my-4">
+                    <div v-for="comment in file.comments">
+                        <div class="flex items-center">
+                            <img :src="comment.user.profile_photo_url"  alt="profile_photo" class="h-5 w-5 mr-2 rounded-2xl"/>
+                            <div class="text-secondary text-sm">{{comment.created_at}}</div>
+                        </div>
+                        <div class="mt-2">
+                            {{comment.text}}
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -55,20 +70,22 @@
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/DialogModal.vue'
 import AddButton from "@/Layouts/Components/AddButton";
-import {XIcon} from "@heroicons/vue/outline";
+import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 
 export default {
-    name: "ProjectFileUploadModal",
+    name: "ProjectFileEditModal",
     props: {
         show: Boolean,
         closeModal: Function,
-        projectId: Number
+        projectId: Number,
+        file: Object
     },
     components: {
         JetDialogModal,
         JetInputError,
         AddButton,
-        XIcon
+        XIcon,
+        DownloadIcon
     },
     data() {
         return {
@@ -78,6 +95,12 @@ export default {
         }
     },
     methods: {
+        downloadProjectFile(file) {
+            let link = document.createElement('a');
+            link.href = route('download_file', {project_file: file});
+            link.target = '_blank';
+            link.click();
+        },
         selectNewFiles() {
             this.$refs.module_files.click();
         },
@@ -111,7 +134,7 @@ export default {
                 }
             }
         },
-        storeFiles() {
+        updateFile() {
             for (let file of this.files) {
                 this.storeFile(file)
             }

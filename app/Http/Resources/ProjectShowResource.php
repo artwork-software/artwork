@@ -53,7 +53,7 @@ class ProjectShowResource extends JsonResource
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
-            'project_files' => $this->project_files,
+            'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => $this->contracts,
 
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),

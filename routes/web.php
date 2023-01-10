@@ -286,5 +286,23 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
+
+    //Budget
+    Route::patch('/project/budget/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
+    Route::post('/project/budget/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
+    Route::patch('/project/budget/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
+    Route::patch('/project/budget/main-position/update-name', [ProjectController::class, 'updateMainPositionName'])->name('project.budget.main-position.update-name');
+    Route::patch('/project/budget/sub-position/update-name', [ProjectController::class, 'updateSubPositionName'])->name('project.budget.sub-position.update-name');
+    Route::patch('/project/budget/cell-source/update', [ProjectController::class, 'updateCellSource'])->name('project.budget.cell-source.update');
+    Route::patch('/project/budget/cell-calculation/update', [ProjectController::class, 'updateCellCalculation'])->name('project.budget.cell-calculation.update');
+    Route::post('/project/budget/sub-position/add', [ProjectController::class, 'addSubPosition'])->name('project.budget.sub-position.add');
+    Route::post('/project/budget/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
+    Route::post('/project/budget/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
+    Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
+    Route::post('/project/budget/cell/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
+    Route::delete('/project/budget/cell/comment/{cellComments}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+    Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
+    Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
+    Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
 });
 

@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl my-12 pl-20 pr-10 flex flex-row">
+        <div class="max-w-screen-2xl my-12 pl-10 pr-10 flex flex-row">
             <div class="flex w-8/12 flex-col">
                 <div class="flex ">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
@@ -250,8 +250,8 @@
             </div>
         </div>
         <!-- Div with Bg-Color -->
-        <div class="w-full h-full mb-48 ">
-            <div class="ml-20">
+        <div class="w-full h-full mb-48">
+            <div class="ml-10">
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
@@ -264,13 +264,13 @@
                     </div>
                 </div>
             </div>
-            <div class="max-w-screen-2xl bg-lightBackgroundGray">
+            <div class="">
                 <!-- Calendar Tab -->
-                <div v-if="isScheduleTab" class="p-5 mt-14">
+                <div v-if="isScheduleTab" class="p-5 mt-14 max-w-screen-2xl bg-lightBackgroundGray">
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-20 mt-14 p-5">
+                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
@@ -782,7 +782,8 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isInfoTab" class="grid grid-cols-3 mx-20 mt-14 p-5">
+                <!-- Info Tab -->
+                <div v-if="isInfoTab" class="grid grid-cols-3 mx-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray">
                     <div class="col-span-2 mr-8">
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
@@ -931,6 +932,9 @@
 
                         </div>
                     </div>
+                </div>
+                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
+                    <BudgetComponent :budget="budget" :project="project" :money-sources="moneySources"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -1667,7 +1671,7 @@
 
         <BaseSidenav :show="show" @change="this.show =! this.show">
             <ProjectSidenav
-                :project-id="project.id"
+                :project="project"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
                 :project-files="project.project_files"
@@ -1675,6 +1679,7 @@
                 :money-sources="project.moneySources"
             />
         </BaseSidenav>
+
     </app-layout>
 </template>
 
@@ -1727,6 +1732,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
 
@@ -1741,8 +1747,9 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'projectGroups', 'currentGroup', 'groupProjects'],
+    props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
+        BudgetComponent,
         ProjectSidenav,
         BaseSidenav,
         TagComponent,
@@ -1795,6 +1802,7 @@ export default {
                 {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                 {name: 'Checklisten', href: '#', current: this.isChecklistTab},
                 {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                {name: 'Budget', href:'#', current: this.isBudgetTab}
             ]
         },
         projectMembers() {
@@ -1862,6 +1870,7 @@ export default {
             isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
+            isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
             editingTeam: false,
             editingChecklistTeams: false,
             department_and_user_query: "",
@@ -2178,12 +2187,15 @@ export default {
             this.isScheduleTab = false;
             this.isChecklistTab = false;
             this.isInfoTab = false;
+            this.isBudgetTab = false;
             if (selectedTab.name === 'Ablaufplan') {
                 this.isScheduleTab = true;
             } else if (selectedTab.name === 'Checklisten') {
                 this.isChecklistTab = true;
-            } else {
+            } else if (selectedTab.name === 'Informationen & Dokumente') {
                 this.isInfoTab = true;
+            } else{
+                this.isBudgetTab = true;
             }
         },
         duplicateProject(project) {

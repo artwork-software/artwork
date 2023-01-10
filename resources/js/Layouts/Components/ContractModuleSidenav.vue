@@ -4,14 +4,6 @@
             <div class="text-secondary text-md font-semibold">
                 Vertragsbausteine
             </div>
-            <input
-                @change="upload"
-                class="hidden"
-                id="file"
-                type="file"
-                ref="module_files"
-                multiple
-            />
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"

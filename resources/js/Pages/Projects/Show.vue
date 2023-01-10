@@ -1667,9 +1667,10 @@
 
         <BaseSidenav :show="show" @change="this.show =! this.show">
             <ProjectSidenav
+                :project-id="project.id"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
-                :documents="project.project_files"
+                :project-files="project.project_files"
                 :contracts="project.contracts"
                 :money-sources="project.moneySources"
             />

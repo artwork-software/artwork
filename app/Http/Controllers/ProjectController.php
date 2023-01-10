@@ -431,6 +431,13 @@ class ProjectController extends Controller
     }
 
 
+    public function changeColumnColor(Request $request): RedirectResponse
+    {
+        $column = Column::find($request->columnId);
+        $column->update(['color' => $request->color]);
+        return back()->with('success', 'color changed');
+    }
+
     public function addSubPositionRow(Request $request)
     {
         $project = Project::find($request->project_id);

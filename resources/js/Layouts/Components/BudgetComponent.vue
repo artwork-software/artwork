@@ -9,10 +9,55 @@
                 <tr>
                     <th v-for="(column,index) in budget.columns"
                         :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
-                        <div class="flex items-center" @mouseover="showMenu = column.id" :key="column.id"
+                        <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
-                                <p class="columnSubName xsLight"> {{ column.subName }} <span v-if="column.calculateName" class="ml-1">({{ column.calculateName }})</span></p>
+                                <div class="flex items-center">
+                                    <p class="columnSubName xsLight">
+                                        {{ column.subName }}
+                                        <span v-if="column.calculateName" class="ml-1">
+                                            ({{ column.calculateName }})
+                                        </span>
+                                    </p>
+                                    <span class="ml-1"  v-if="index > 2 && column.showColorMenu === true || column.color !== 'whiteColumn'" >
+                                        <Listbox as="div" class="flex mr-2" v-model="column.color">
+                                                <ListboxButton>
+                                                   <button class="w-4 h-4 flex justify-center items-center rounded-full"
+                                                           :class="column.color === 'whiteColumn' ? 'whiteColumn border border-1' : column.color"
+                                                           @click="column.openColor = !column.openColor">
+                                                        <ChevronUpIcon v-if="column.openColor"
+                                                                       class="h-3 w-3 my-auto" :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-3 w-3 text-white my-auto" :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronDownIcon>
+                                                    </button>
+                                                </ListboxButton>
+
+                                                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                                    <ListboxOptions class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                        <ListboxOption as="template" class="max-h-32"
+                                                                       v-for="color in colors"
+                                                                       :key="color"
+                                                                       :value="color" v-slot="{ active, selected }">
+                                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']" @click="changeColumnColor(color, column.id)">
+                                                                <div class="flex">
+                                                                    <span
+                                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
+                                                                        <span
+                                                                            class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
+                                                                            :class="color">
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                                <span :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                                    <CheckIcon v-if="selected" class="h-5 w-5 flex text-success" aria-hidden="true"/>
+                                                                </span>
+                                                            </li>
+                                                        </ListboxOption>
+                                                    </ListboxOptions>
+                                                </transition>
+                                            </Listbox>
+                                    </span>
+                                </div>
                                 <div @click="column.clicked = !column.clicked"
                                      :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
                                      v-if="!column.clicked">
@@ -46,7 +91,7 @@
                                         class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                         <div class="py-1">
                                             <MenuItem v-slot="{ active }">
-                                                <a @click="openEditTaskModal(element)"
+                                                <a @click="column.showColorMenu = true"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -74,7 +119,48 @@
             </table>
 
         </div>
+        <!-- einfärben dropdown / listbox -->
+        <Listbox as="div" class="flex h-12 mr-2 hidden" v-model="selectedColor"
+                 id="eventType">
+            <ListboxButton
+                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                <div class="flex items-center my-auto">
+                    <span class="block truncate items-center ml-3 flex rounded-full h-8 w-8 border border-1"
+                          :class="selectedColor">
+                    </span>
+                    <span
+                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                    </span>
+                </div>
+            </ListboxButton>
 
+            <transition leave-active-class="transition ease-in duration-100"
+                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                <ListboxOptions
+                    class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                    <ListboxOption as="template" class="max-h-32" v-for="color in colors"
+                                   :key="color"
+                                   :value="color" v-slot="{ active, selected }">
+                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']">
+                            <div class="flex">
+                                <span
+                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
+                                    <span class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
+                                          :class="color">
+                                    </span>
+                                </span>
+                            </div>
+                            <span
+                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                        </li>
+                    </ListboxOption>
+                </ListboxOptions>
+            </transition>
+        </Listbox>
         <div class="flex my-8 ">
             <div class="flex w-full bg-secondaryHover border border-2 border-gray-300">
                 <button class="bg-buttonBlue w-6"
@@ -91,7 +177,8 @@
                          class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                         <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                             Hauptposition
-                            <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            <PlusCircleIcon
+                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         </div>
                     </div>
                     <table class="w-11/12 mb-6">
@@ -100,30 +187,32 @@
                             <th class="bg-primary text-left p-0">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
-                                <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
-                                    v-if="!mainPosition.clicked">
-                                    <div @click="mainPosition.clicked = !mainPosition.clicked">
-                                        {{ mainPosition.name }}
+                                    <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
+                                         v-if="!mainPosition.clicked">
+                                        <div @click="mainPosition.clicked = !mainPosition.clicked">
+                                            {{ mainPosition.name }}
+                                        </div>
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
                                     </div>
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
-                                <div v-else class="flex items-center">
-                                    <input
-                                        class="my-2 ml-1 xsDark" type="text"
-                                        v-model="mainPosition.name"
-                                        @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
+                                    <div v-else class="flex items-center">
+                                        <input
+                                            class="my-2 ml-1 xsDark" type="text"
+                                            v-model="mainPosition.name"
+                                            @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
+                                    </div>
                                     <div class="flex items-center justify-end">
                                         <div class="flex flex-wrap w-full">
                                             <div class="flex w-full">
@@ -168,10 +257,11 @@
 
                                 <!-- HIER ADD UNTERPOSITION Funktion -->
                                 <div @click="addSubPosition(mainPosition.id)"
-                                    class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                                     class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                     <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                                         Unterposition
-                                        <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                        <PlusCircleIcon
+                                            class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                     </div>
                                 </div>
                                 <table v-if="!mainPosition.closed" class="w-full ">
@@ -218,7 +308,8 @@
                                                         <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                                                        <td v-for="(cell,index) in row.cells"  :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'bg-secondaryHover' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
+                                                        <td v-for="(cell,index) in row.cells"
+                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                                                 class="my-4 h-6 flex items-center ml-2.5"
@@ -278,9 +369,11 @@
                                             </table>
                                             <div @click="addSubPosition(mainPosition.id, subPosition)"
                                                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                                <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                                                <div
+                                                    class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                                     Unterposition
-                                                    <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                    <PlusCircleIcon
+                                                        class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                 </div>
                                             </div>
                                         </th>
@@ -296,9 +389,11 @@
                                     <!-- HIER ADD HAUPTPOSITION -->
                                     <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
                                          class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                        <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                                        <div
+                                            class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                                             Hauptposition
-                                            <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                            <PlusCircleIcon
+                                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
                                     </div>
 
@@ -408,18 +503,9 @@
             </div>
         </div>
     </div>
-
-    <div class="bg-redColumn">
-
-    </div>
-
-    <pre v-for="cell in this.budget.table[0].sub_positions[0].sub_position_rows[0].cells">
-                                                        {{ cell.column_id }}
-                                                    </pre>
-
     <pre>
         {{ this.budget.table[0] }}
-        </pre>
+    </pre>
 
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
@@ -467,48 +553,11 @@
         :description="'Bist du sicher, dass du die Hauptposition ' + this.mainPositionToDelete.name + ' löschen möchtest?'"
         @closed="afterConfirm"/>
 
-    <div class="w-1/2">
-        <div class=" w-full flex cursor-pointer truncate" >
-            <p></p>
-        </div>
-        <Listbox as="div" class="flex h-12 mr-2"
-                 id="eventType">
-            <ListboxButton
-                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
-                <div class="flex items-center my-auto">
-                    <span class="block truncate items-center ml-3 flex rounded-full h-8 w-8 border border-1" :class="selectedColor">
-                    </span>
-                    <span
-                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
-                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                    </span>
-                </div>
-            </ListboxButton>
+    <div>
+        <div class=" w-full flex cursor-pointer truncate">
 
-            <transition leave-active-class="transition ease-in duration-100"
-                        leave-from-class="opacity-100" leave-to-class="opacity-0">
-                <ListboxOptions
-                    class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                    <ListboxOption as="template" class="max-h-8" v-for="color in colors"
-                                   :key="color"
-                                   :value="color" v-slot="{ active, selected }">
-                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                            <div class="flex">
-                                <span
-                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                    
-                                </span>
-                            </div>
-                            <span
-                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                        </li>
-                    </ListboxOption>
-                </ListboxOptions>
-            </transition>
-        </Listbox>
+        </div>
+
         <p class="text-xs text-red-800"></p>
     </div>
 </template>
@@ -587,7 +636,7 @@ export default {
                 redColumn: 'redColumn',
                 lightGreenColumn: 'lightGreenColumn'
             },
-            selectedColor: 'whiteColumn'
+            selectedColor: 'whiteColumn',
         }
     },
 
@@ -632,8 +681,14 @@ export default {
     },
 
     methods: {
-
-        deleteColumn(column){
+        changeColumnColor(color, columnId){
+            this.$inertia.patch(route('project.budget.column-color.change'), {
+                color: color,
+                columnId: columnId
+            })
+            console.log(columnId);
+        },
+        deleteColumn(column) {
             this.$inertia.delete(route('project.budget.column.delete', column))
         },
         addRowToSubPosition(subPosition, row) {
@@ -767,7 +822,7 @@ export default {
         deleteRowFromSubPosition(row) {
             this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
         },
-        openDeleteMainPositionModal(mainPosition){
+        openDeleteMainPositionModal(mainPosition) {
             this.mainPositionToDelete = mainPosition;
             this.showDeleteMainPositionModal = true;
         },
@@ -777,7 +832,7 @@ export default {
             this.deleteMainPosition();
 
         },
-        deleteMainPosition(){
+        deleteMainPosition() {
             this.showDeleteMainPositionModal = false;
             this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
             //this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`); Bitte wie oben
@@ -805,20 +860,24 @@ export default {
                 redColumn: '#D84387',
                 lightGreenColumn: '#35A965'
  */
-    .whiteColumn {
-        background-color: #FCFCFBFF;
-    }
-    .greenColumn {
-        background-color: #50908E;
-        border: 2px solid #1FC687;
-    }
-    .yellowColumn {
-        background-color: #F0B54C;
-    }
-    .redColumn {
-        background-color: #D84387;
-    }
-    .lightGreenColumn {
-        background-color: #35A965;
-    }
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
 </style>

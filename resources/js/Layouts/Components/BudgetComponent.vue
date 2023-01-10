@@ -218,7 +218,7 @@
                                                         <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                                                        <td v-for="(cell,index) in row.cells"  :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color === cell.column.color && index > 2 ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
+                                                        <td v-for="(cell,index) in row.cells"  :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'bg-secondaryHover' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', cell.value < 0 ? 'text-red-500' : '']"
                                                                 class="my-4 h-6 flex items-center"
@@ -297,8 +297,8 @@
                                     <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
                                          class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                         <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
-                                            Hauptposition
                                             <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                            Hauptposition
                                         </div>
                                     </div>
 
@@ -409,7 +409,7 @@
         </div>
     </div>
 
-    <div class="bg-greenColumn">
+    <div class="bg-redColumn">
 
     </div>
 
@@ -733,4 +733,27 @@ export default {
 </script>
 
 <style scoped>
+
+/*
+ greenColumn: '#50908E',
+                yellowColumn: '#F0B54C',
+                redColumn: '#D84387',
+                lightGreenColumn: '#35A965'
+ */
+    .whiteColumn {
+        background-color: #FCFCFBFF;
+    }
+    .greenColumn {
+        background-color: #50908E;
+        border: 2px solid #1FC687;
+    }
+    .yellowColumn {
+        background-color: #F0B54C;
+    }
+    .redColumn {
+        background-color: #D84387;
+    }
+    .lightGreenColumn {
+        background-color: #35A965;
+    }
 </style>

@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::create('project_groups', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('project_groups_id');
             $table->bigInteger('project_id');
+            $table->bigInteger('group_id');
             $table->timestamps();
         });
     }

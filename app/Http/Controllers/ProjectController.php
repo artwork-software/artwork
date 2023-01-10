@@ -43,6 +43,8 @@ use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
 use function Clue\StreamFilter\fun;
+use function Pest\Laravel\get;
+
 
 class ProjectController extends Controller
 {
@@ -190,12 +192,19 @@ class ProjectController extends Controller
             $project->save();
         }
 
-        if (!$request->isGroup && !empty($request->selectedGroup)) {
+
+        /*if (!$request->isGroup && !empty($request->selectedGroup)) {
             $group = new ProjectGroups();
             $group->create([
                 'project_groups_id' => $project->id,
                 'project_id' => $request->selectedGroup['id']
             ]);
+            */
+        if(!$request->isGroup && !empty($request->selectedGroup)){
+            $group = Project::find($request->selectedGroup['id']);
+            $group->groups()->syncWithoutDetaching($project->id);
+
+
         }
 
         if ($request->assigned_user_ids) {
@@ -618,6 +627,10 @@ class ProjectController extends Controller
             'projectCategoryIds' => $project->categories()->pluck('category_id'),
             'projectCategories' => $project->categories,
 
+            'groupProjects' => Project::where('is_group', 1)->get(),
+            'projectGroups' => $project->groups()->get(),
+            'currentGroup' => $groupOutput,
+
             'genres' => Genre::all(),
             'projectGenreIds' => $project->genres()->pluck('genre_id'),
             'projectGenres' => $project->genres,
@@ -675,6 +688,15 @@ class ProjectController extends Controller
             && $project->managerUsers->pluck('id')->doesntContain(Auth::id())) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
+
+        if($request->selectedGroup === null){
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+        } else {
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+            $group = Project::find($request->selectedGroup['id']);
+            $group->groups()->syncWithoutDetaching($project->id);
+        }
+
 
         $projectAdminsBefore = $project->adminUsers()->get();
         $projectManagerBefore = $project->managerUsers()->get();
@@ -767,6 +789,11 @@ class ProjectController extends Controller
                 $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
             }
         }
+    }
+
+    public function deleteProjectFromGroup(Request $request){
+        $group = Project::find($request->groupId);
+        $group->groups()->detach($request->projectIdToDelete);
     }
 
     /**

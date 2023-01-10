@@ -66,12 +66,20 @@
                                 <div class="mr-6">
                                     <Link v-if="this.$page.props.can.view_projects" :href="getEditHref(project)"
                                           class="flex w-full my-auto">
-                                        <p class="headline2">
-                                            {{ project.name }}</p>
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
                                     </Link>
                                     <div v-else class="flex w-full my-auto">
-                                        <p class="headline2">
-                                            {{ project.name }}</p>
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
                                     </div>
                                 </div>
                             </div>
@@ -850,7 +858,7 @@
                                 </div>
                                 <div v-if="subProjects.length > 0" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(subProjects,index) in subProjects"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                              class="flex rounded-full items-center font-bold text-primary">
                                             <span
                                                 class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                                 {{ subProjects.name }}

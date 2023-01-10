@@ -134,6 +134,17 @@ class Project extends Model
     }
 
 
+    public function columns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Column::class);
+    }
+
+    public function mainPositions(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MainPosition::class);
+    }
+
+
     public function toSearchableArray(): array
     {
         return [

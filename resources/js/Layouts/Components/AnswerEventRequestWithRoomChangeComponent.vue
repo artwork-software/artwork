@@ -109,7 +109,7 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
 export default {
-    name: 'ConfirmationComponent',
+    name: 'AnswerEventRequestWithRoomChangeComponent',
     components: {
         JetDialogModal,
         XIcon,

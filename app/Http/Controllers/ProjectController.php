@@ -1207,6 +1207,21 @@ class ProjectController extends Controller
         }
         $mainPosition->delete();
     }
+    public function deleteSubPosition(SubPosition $subPosition)
+    {
+        $subRows = $subPosition->subPositionRows()->get();
 
-
+        foreach ($subRows as $subRow) {
+            $cells = $subRow->cells()->get();
+            foreach ($cells as $cell) {
+                /*$comments = $cells->comments()->get();
+                foreach ($comments as $comment){
+                    $comment->delete();
+                }*/
+                $cell->delete();
+            }
+            $subRow->delete();
+        }
+        $subPosition->delete();
+    }
 }

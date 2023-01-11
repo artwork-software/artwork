@@ -560,6 +560,7 @@
         </div>
     </div>
 
+
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
             <img src="/Svgs/Overlays/illu_success.svg" class="-ml-6 -mt-8 mb-4"/>

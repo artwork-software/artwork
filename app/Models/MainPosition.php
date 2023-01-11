@@ -12,7 +12,8 @@ class MainPosition extends Model
     protected $fillable = [
         'type',
         'name',
-        'position'
+        'position',
+        'is_verified'
     ];
 
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -25,4 +26,8 @@ class MainPosition extends Model
         return $this->hasMany(SubPosition::class);
     }
 
+    public function verified(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(MainPositionVerified::class);
+    }
 }

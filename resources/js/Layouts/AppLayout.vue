@@ -67,7 +67,7 @@
     </div>
 
     <!--   Top Menu     -->
-    <div class="sm:pl-28 flex flex-col">
+    <div class="sm:pl-16 flex flex-col">
         <div class="sticky top-0 z-20 flex-shrink-0 flex h-16">
             <button type="button"
                     class="px-4 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"

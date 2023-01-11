@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
+use App\Models\Comment;
 use App\Models\Contract;
 use App\Models\ContractModule;
 use App\Models\Project;
@@ -13,6 +14,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -122,6 +124,12 @@ class ContractController extends Controller
             'type' => $request->type
         ]);
 
+        $comment = Comment::create([
+            'text' => $request->comment,
+            'user_id' => Auth::id(),
+            'project_file_id' => $contract->id
+        ]);
+        $contract->comments()->save($comment);
         $contract->accessing_users()->attach($request->accessibleUsers);
 
         $contract->save();
@@ -153,6 +161,13 @@ class ContractController extends Controller
     public function update(ContractUpdateRequest $request, Contract $contract)
     {
         $contract->fill($request->data());
+
+        $comment = Comment::create([
+            'text' => $request->comment,
+            'user_id' => Auth::id(),
+            'project_file_id' => $contract->id
+        ]);
+        $contract->comments()->save($comment);
 
         if ($request->get('accessibleUsers')) {
             $contract->accessing_users()->delete();

@@ -4,15 +4,7 @@
             <div class="text-secondary text-md font-semibold">
                 Vertragsbausteine
             </div>
-            <input
-                @change="upload"
-                class="hidden"
-                id="file"
-                type="file"
-                ref="module_files"
-                multiple
-            />
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="selectNewFiles"/>
+            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
              v-for="contractModule in contractModules.data"
@@ -26,6 +18,10 @@
                 :close-modal="closeDeleteModal"
                 :contract-module="contractModule"
             />
+            <ContractModuleUploadModal
+                :show="showUploadModal"
+                :close-modal="closeUploadModal"
+            />
         </div>
     </div>
 </template>
@@ -37,6 +33,7 @@ import {
     XCircleIcon
 } from '@heroicons/vue/outline';
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
+import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal";
 
 export default {
     name: "ContractModuleSidenav",
@@ -47,11 +44,13 @@ export default {
         ContractModuleDeleteModal,
         DownloadIcon,
         UploadIcon,
-        XCircleIcon
+        XCircleIcon,
+        ContractModuleUploadModal
     },
     data() {
         return {
-            showDeleteModal: false
+            showDeleteModal: false,
+            showUploadModal: false
         }
     },
     methods: {
@@ -61,35 +60,11 @@ export default {
             link.target = '_blank';
             link.click();
         },
-        upload(event) {
-            this.validateTypeAndUpload([...event.target.files])
+        openUploadModal() {
+            this.showUploadModal = true
         },
-        storeFile(file) {
-            this.$inertia.post('/contract_modules', {module: file}, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.$emit('upload')
-                }
-
-            })
-        },
-        selectNewFiles() {
-            this.$refs.module_files.click();
-        },
-        validateTypeAndUpload(files) {
-            this.uploadDocumentFeedback = "";
-            const forbiddenTypes = [
-                "application/vnd.microsoft.portable-executable",
-                "application/x-apple-diskimage",
-            ]
-            for (let file of files) {
-                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
-                } else {
-                    this.storeFile(file)
-                }
-            }
+        closeUploadModal() {
+            this.showUploadModal = false
         },
         openDeleteModal() {
             this.showDeleteModal = true

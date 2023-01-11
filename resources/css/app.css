@@ -152,4 +152,17 @@
         color: #3017AD;
         opacity: 1;
     }
+
+    .columnSubName {
+        font: normal normal 600 10px/19px Inter;
+        letter-spacing: 0.5px;
+        color: #A7A6B1;
+        text-transform: uppercase;
+        opacity: 1;
+    }
+
+
+
+
+
 }

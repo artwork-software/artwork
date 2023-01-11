@@ -16,7 +16,9 @@ return new class extends Migration
         Schema::create('comments', function (Blueprint $table) {
             $table->id();
             $table->string('text');
-            $table->unsignedBigInteger('project_id');
+            $table->unsignedBigInteger('project_id')->nullable();
+            $table->unsignedBigInteger('project_file_id')->nullable();
+            $table->unsignedBigInteger('contract_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });

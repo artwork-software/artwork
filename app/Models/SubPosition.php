@@ -25,5 +25,9 @@ class SubPosition extends Model
         return $this->hasMany(SubPositionRow::class);
     }
 
+    public function verified(){
+        return $this->hasOne(SubPositionVerified::class);
+    }
+
 
 }

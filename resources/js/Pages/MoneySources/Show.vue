@@ -172,9 +172,9 @@
             :moneySources="this.moneySources"
             :moneySourceGroups="this.moneySourceGroups"
         />
-        <pre>
-        {{ moneySource }}
-    </pre>
+        <BaseSidenav :show="show" @change="this.show =! this.show">
+            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks" :money_source="moneySource"></MoneySourceSidenav>
+        </BaseSidenav>
     </app-layout>
     <confirmation-component
         v-if="showDeleteSourceModal"
@@ -210,6 +210,8 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 
 
 
@@ -217,6 +219,8 @@ export default {
     name: "MoneySourceShow",
     props: ['moneySource','moneySourceGroups','moneySources'],
     components: {
+        MoneySourceSidenav,
+        BaseSidenav,
         AppLayout,
         UserTooltip,
         ChevronRightIcon,

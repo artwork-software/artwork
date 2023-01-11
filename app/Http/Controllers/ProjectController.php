@@ -32,6 +32,7 @@ use App\Models\SubPositionRow;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -582,6 +583,9 @@ class ProjectController extends Controller
             'genres',
             'managerUsers',
             'project_files',
+            'contracts',
+            'copyright',
+            'cost_center',
             'project_histories.user',
             'sectors',
             'users.departments',
@@ -623,6 +627,9 @@ class ProjectController extends Controller
             'project' => new ProjectShowResource($project),
 
             'moneySources' => MoneySource::all(),
+
+            // Needs to be adjusted, not correct yet.
+            'projectMoneySources' => MoneySource::where('projects', 'like', "%\"{$project->id}\"%"),
 
             'budget' => [
                 'columns' => $outputColumns,

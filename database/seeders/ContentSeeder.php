@@ -5,7 +5,12 @@ namespace Database\Seeders;
 use App\Enums\BudgetTypesEnum;
 use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
+use App\Models\Contract;
+use App\Models\ContractModule;
+use App\Models\Copyright;
+use App\Models\CostCenter;
 use App\Models\Department;
+use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\RoomCategory;
 use Carbon\Carbon;
@@ -28,6 +33,57 @@ class ContentSeeder extends Seeder
         $this->seedProjects();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
+        $this->seedContracts();
+        $this->seedContractModules();
+        $this->seedCostCenters();
+        $this->seedCopyrights();
+    }
+
+    private function seedContracts()
+    {
+
+        Contract::create([
+            'name' => 'Basic Vertrag',
+            'basename' => 'basic_contract',
+            'contract_partner' => 'Deutscher Staat',
+            'amount' => 12000,
+            'project_id' => 1,
+            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
+                                Er steht hier als Platzhalter.',
+            'ksk_liable' => false,
+            'resident_abroad' => true,
+            'legal_form' => 'Werkvertrag',
+            'type' => 'Sponsoring'
+        ]);
+
+        Contract::create([
+            'name' => 'Advanced Vertrag',
+            'basename' => 'advanced_contract',
+            'contract_partner' => 'HAU',
+            'amount' => 8000,
+            'project_id' => 1,
+            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
+                                Er steht hier als Platzhalter.',
+            'ksk_liable' => true,
+            'resident_abroad' => false,
+            'legal_form' => 'Werkvertrag',
+            'type' => 'Collaboration'
+        ]);
+
+
+    }
+
+    private function seedContractModules()
+    {
+        ContractModule::create([
+            'name' => 'Baustein',
+            'basename' => 'baustein',
+        ]);
+
+        ContractModule::create([
+            'name' => 'Mittelteil',
+            'basename' => 'mittelteil',
+        ]);
     }
 
     private function seedDepartments()
@@ -198,7 +254,8 @@ class ContentSeeder extends Seeder
              Es handelt sich aber um keine ordinäre »Seebühne«, wie sie viele Provinztheater rund
               um den Globus mit stolz geschwellter Brust zelebrieren. Au contraire!',
             'number_of_participants' => null,
-            'cost_center' => null,
+            'cost_center_id' => 1,
+            'copyright_id' => 1
         ]);
 
         $projectController = new ProjectController();
@@ -219,7 +276,6 @@ class ContentSeeder extends Seeder
             'name' => 'Hydrospektive - Fahim Amir',
             'description' => null,
             'number_of_participants' => null,
-            'cost_center' => null,
         ]);
 
         $second_project->project_histories()->create([
@@ -227,4 +283,25 @@ class ContentSeeder extends Seeder
             "description" => "Projekt angelegt",
         ]);
     }
+
+    private function seedCostCenters()
+    {
+        CostCenter::create([
+            'name' => '123456',
+            'description' => 'Some description',
+            'project_id' => 1
+        ]);
+    }
+
+    private function seedCopyrights()
+    {
+        Copyright::create([
+            'own_copyright' => true,
+            'live_music' => true,
+            'collecting_society' => 'GEMA',
+            'law_size' => 'small',
+            'project_id' => 1
+        ]);
+    }
+
 }

@@ -271,8 +271,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
 
+
     //Contracts
-    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
+    Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
+    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
@@ -285,6 +287,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
+    Route::patch('money_source/task/{moneySourceTask}/update', [\App\Http\Controllers\MoneySourceTaskController::class, 'update'])->name('money_source.task.update');
+    Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
 
     //Budget
     Route::patch('/project/budget/cell', [ProjectController::class, 'updateCellValue'])->name('project.budget.cell.update');
@@ -306,3 +310,4 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/main-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])->name('project.budget.sub-position.delete');
     Route::patch('/project/budget/column-color/change', [ProjectController::class, 'changeColumnColor'])->name('project.budget.column-color.change');
 });
+

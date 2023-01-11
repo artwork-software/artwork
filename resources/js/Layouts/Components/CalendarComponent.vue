@@ -4,8 +4,8 @@
         <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
-                    <MenuButton  id="menuButton"
-                        class="-mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
+                    <MenuButton id="menuButton"
+                                class="-mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
                     >
                         <CalendarIcon class="w-5 h-5 float-left mr-2"/>
                         <span class="float-left xsDark">{{ this.displayDate }}</span>
@@ -76,85 +76,212 @@
         <div class=" inline-flex mb-5 justify-end">
 
             <!-- Calendar Filter -->
-            <Menu as="div" class="relative inline-block flex items-center text-left">
-                <div class="">
-                    <MenuButton
-                        class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                    >
-                        <span class="float-left xsDark">Filter</span>
-                        <ChevronDownIcon
-                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                            aria-hidden="true"
-                        />
-                    </MenuButton>
+            <BaseFilter>
+                <div class="inline-flex border-none justify-end w-full">
+                    <button class="flex" @click="resetCalendarFilter">
+                        <XIcon class="w-3 mr-1 mt-0.5"/>
+                        <label class="text-xs">Zurücksetzen</label>
+                    </button>
+                    <button class="flex ml-4" @click="saving = !saving">
+                        <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
+                        <label class="text-xs">Speichern</label>
+                    </button>
                 </div>
-                <transition
-                    enter-active-class="transition duration-50 ease-out"
-                    enter-from-class="transform scale-100 opacity-100"
-                    enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-75 ease-in"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                >
-                    <MenuItems
-                        class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                        <!-- <div class="inline-flex border-none w-1/5">
-                            <button>
-                                <FilterIcon class="w-3 mr-1 mt-0.5"/>
-                            </button>
-                        </div> -->
-                        <div class="inline-flex border-none justify-end w-full">
-                            <button class="flex" @click="resetCalendarFilter">
-                                <XIcon class="w-3 mr-1 mt-0.5"/>
-                                <label class="text-xs">Zurücksetzen</label>
-                            </button>
-                            <button class="flex ml-4" @click="saving = !saving">
-                                <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                                <label class="text-xs">Speichern</label>
-                            </button>
-                        </div>
-                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
-                            <!-- Save Filter Section -->
-                            <Disclosure v-slot="{ open }" default-open>
+                    <!-- Save Filter Section -->
+                    <Disclosure v-slot="{ open }" default-open>
+                        <DisclosureButton
+                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                        >
+                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
+                            <ChevronDownIcon
+                                :class="open ? 'rotate-180 transform' : ''"
+                                class="h-4 w-4 mt-0.5 text-white"
+                            />
+                        </DisclosureButton>
+                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                            <div v-if="saving">
+                                <div class="flex">
+                                    <input id="saveFilter" v-model="filterName" type="text"
+                                           class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
+                                           placeholder="Name des Filters"/>
+                                    <button
+                                        class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
+                                        <label @click="saveFilter"
+                                               class="cursor-pointer text-white text-xs">Speichern</label>
+                                    </button>
+                                    <!-- <AddButton text="Speichern" class="text-sm ml-0"
+                                               @click="saveFilter"></AddButton> -->
+                                </div>
+                                <hr class="border-gray-500 mt-4 mb-4">
+                            </div>
+                            <button
+                                class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
+                                v-for="filter of filters">
+                                <label @click="applyFilter(filter)"
+                                       class="cursor-pointer text-white">{{ filter.name }}</label>
+                                <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
+                            </button>
+                            <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter
+                                gespeichert</p>
+                        </DisclosurePanel>
+                        <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
+                    </Disclosure>
+
+                    <!-- Room Filter Section -->
+                    <Disclosure v-slot="{ open }">
+                        <DisclosureButton
+                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                        >
+                                    <span
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
+                            <ChevronDownIcon
+                                :class="open ? 'rotate-180 transform' : ''"
+                                class="h-4 w-4 mt-0.5 text-white"
+                            />
+                        </DisclosureButton>
+                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                            <div v-if="currentView !== 'month' && currentView !== 'year'">
+                                <SwitchGroup>
+                                    <div class="flex items-center">
+                                        <Switch v-model="roomFilters.showAdjoiningRooms"
+                                                @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.changeDisplayedRooms()"
+                                                :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
+                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span
+                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
+                                        </Switch>
+                                        <SwitchLabel class="ml-4 text-xs"
+                                                     :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
+                                            Nebenräume anzeigen
+                                        </SwitchLabel>
+                                    </div>
+                                </SwitchGroup>
+                                <SwitchGroup v-if="currentView === 'day'">
+                                    <div class="flex items-center mt-2">
+                                        <Switch v-model="roomFilters.allDayFree"
+                                                @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree);"
+                                                :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
+                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span
+                                                :class="roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
+                                        </Switch>
+                                        <SwitchLabel class="ml-4 text-xs"
+                                                     :class="roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
+                                            ganztägig frei
+                                        </SwitchLabel>
+                                    </div>
+                                </SwitchGroup>
+
+                                <!--
+                                <Menu as="div" v-if="calendarFilters.allDayFree">
+                                    <div>
+                                        <MenuButton
+                                            class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
+                                            <label v-if="currentInterval === ''" class="text-sm">Zeitraum
+                                                auswählen</label>
+                                            <label v-else class="text-sm">{{ currentInterval }}</label>
+                                            <ChevronDownIcon
+                                                class="h-4 w-4 shadow-sm text-white mt-0.5 float-right"></ChevronDownIcon>
+                                        </MenuButton>
+                                    </div>
+                                    <transition enter-active-class="transition ease-out duration-100"
+                                                enter-from-class="transform opacity-0 scale-95"
+                                                enter-to-class="transform opacity-100 scale-100"
+                                                leave-active-class="transition ease-in duration-75"
+                                                leave-from-class="transform opacity-100 scale-100"
+                                                leave-to-class="transform opacity-0 scale-95">
+                                        <MenuItems
+                                            class="z-40 origin-top-left absolute overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none w-2/3">
+                                            <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
+                                                <div @click="currentInterval = interval"
+                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
+                                          'group px-3 py-2 text-sm subpixel-antialiased']">
+                                                    {{ interval }}
+                                                </div>
+                                            </MenuItem>
+                                        </MenuItems>
+                                    </transition>
+                                </Menu> -->
+                            </div>
+
+                            <hr class="border-gray-500 mt-2 mb-2">
+                            <Disclosure v-slot="{ open }">
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                 >
-                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
+                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
                                     <ChevronDownIcon
                                         :class="open ? 'rotate-180 transform' : ''"
                                         class="h-4 w-4 mt-0.5 text-white"
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="saving">
-                                        <div class="flex">
-                                            <input id="saveFilter" v-model="filterName" type="text"
-                                                   class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                                   placeholder="Name des Filters"/>
-                                            <button
-                                                class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
-                                                <label @click="saveFilter" class="cursor-pointer text-white text-xs">Speichern</label>
-                                            </button>
-                                            <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                                       @click="saveFilter"></AddButton> -->
-                                        </div>
-                                        <hr class="border-gray-500 mt-4 mb-4">
+                                    <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
+                                         class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="category.checked"
+                                               @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ category.name }}</p>
                                     </div>
-                                    <button
-                                        class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
-                                        v-for="filter of filters">
-                                        <label @click="applyFilter(filter)"
-                                               class="cursor-pointer text-white">{{ filter.name }}</label>
-                                        <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
-                                    </button>
-                                    <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter
-                                        gespeichert</p>
+                                    <div v-else class="text-secondary">Noch keine Kategorien angelegt</div>
                                 </DisclosurePanel>
-                                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                             </Disclosure>
-
-                            <!-- Room Filter Section -->
+                            <hr class="border-gray-500 mt-2 mb-2">
+                            <Disclosure v-slot="{ open }">
+                                <DisclosureButton
+                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                >
+                                    <span
+                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
+                                    <ChevronDownIcon
+                                        :class="open ? 'rotate-180 transform' : ''"
+                                        class="h-4 w-4 mt-0.5 text-white"
+                                    />
+                                </DisclosureButton>
+                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                    <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="area.checked"
+                                               @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ area.label || area.name }}</p>
+                                    </div>
+                                    <div v-else class="text-secondary">Keine Areale angelegt</div>
+                                </DisclosurePanel>
+                            </Disclosure>
+                            <hr class="border-gray-500 mt-2 mb-2">
+                            <Disclosure v-slot="{ open }">
+                                <DisclosureButton
+                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                >
+                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                                    <ChevronDownIcon
+                                        :class="open ? 'rotate-180 transform' : ''"
+                                        class="h-4 w-4 mt-0.5 text-white"
+                                    />
+                                </DisclosureButton>
+                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                    <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
+                                         class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="attribute.checked"
+                                               @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ attribute.name }}</p>
+                                    </div>
+                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
+                                    </div>
+                                </DisclosurePanel>
+                            </Disclosure>
+                            <hr class="border-gray-500 mt-2 mb-2">
                             <Disclosure v-slot="{ open }">
                                 <DisclosureButton
                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -167,237 +294,85 @@
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="currentView !== 'month' && currentView !== 'year'">
-                                        <SwitchGroup>
-                                            <div class="flex items-center">
-                                                <Switch v-model="roomFilters.showAdjoiningRooms"
-                                                        @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.changeDisplayedRooms()"
-                                                        :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
-                                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                                </Switch>
-                                                <SwitchLabel class="ml-4 text-xs"
-                                                             :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
-                                                    Nebenräume anzeigen
-                                                </SwitchLabel>
-                                            </div>
-                                        </SwitchGroup>
-                                        <SwitchGroup v-if="currentView === 'day'">
-                                            <div class="flex items-center mt-2">
-                                                <Switch v-model="roomFilters.allDayFree"
-                                                        @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree);"
-                                                        :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
-                                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                                </Switch>
-                                                <SwitchLabel class="ml-4 text-xs"
-                                                             :class="roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
-                                                    ganztägig frei
-                                                </SwitchLabel>
-                                            </div>
-                                        </SwitchGroup>
-
-                                        <!--
-                                        <Menu as="div" v-if="calendarFilters.allDayFree">
-                                            <div>
-                                                <MenuButton
-                                                    class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
-                                                    <label v-if="currentInterval === ''" class="text-sm">Zeitraum
-                                                        auswählen</label>
-                                                    <label v-else class="text-sm">{{ currentInterval }}</label>
-                                                    <ChevronDownIcon
-                                                        class="h-4 w-4 shadow-sm text-white mt-0.5 float-right"></ChevronDownIcon>
-                                                </MenuButton>
-                                            </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="z-40 origin-top-left absolute overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none w-2/3">
-                                                    <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
-                                                        <div @click="currentInterval = interval"
-                                                             :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
-                                                  'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                            {{ interval }}
-                                                        </div>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu> -->
+                                    <div v-if="rooms.length > 0" v-for="room in rooms"
+                                         class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="room.checked"
+                                               @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ room.label }}</p>
                                     </div>
-
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
-                                                 class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="category.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ category.name }}</p>
-                                            </div>
-                                            <div v-else class="text-secondary">Noch keine Kategorien angelegt</div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="area.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ area.label || area.name }}</p>
-                                            </div>
-                                            <div v-else class="text-secondary">Keine Areale angelegt</div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
-                                                 class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="attribute.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ attribute.name }}</p>
-                                            </div>
-                                            <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
-                                            </div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-if="rooms.length > 0" v-for="room in rooms"
-                                                 class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="room.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ room.label }}</p>
-                                            </div>
-                                            <div v-else class="text-secondary">Noch keine Räume angelegt</div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
+                                    <div v-else class="text-secondary">Noch keine Räume angelegt</div>
                                 </DisclosurePanel>
                             </Disclosure>
+                        </DisclosurePanel>
+                    </Disclosure>
 
-                            <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
+                    <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
 
-                            <!-- Event Filter Section -->
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
-                                >
+                    <!-- Event Filter Section -->
+                    <Disclosure v-slot="{ open }">
+                        <DisclosureButton
+                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
+                        >
                                 <span
                                     :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termine</span>
+                            <ChevronDownIcon
+                                :class="open ? 'rotate-180 transform' : ''"
+                                class="h-4 w-4 mt-0.5 text-white"
+                            />
+                        </DisclosureButton>
+                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                            <hr class="border-gray-500 mt-2 mb-2">
+                            <Disclosure v-slot="{ open }">
+                                <DisclosureButton
+                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
+                                >
+                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termintyp</span>
                                     <ChevronDownIcon
                                         :class="open ? 'rotate-180 transform' : ''"
                                         class="h-4 w-4 mt-0.5 text-white"
                                     />
                                 </DisclosureButton>
                                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termintyp</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-for="eventType in types" class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="eventType.checked"
-                                                       @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ eventType.name }}</p>
-                                            </div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
-                                    <hr class="border-gray-500 mt-2 mb-2">
-                                    <Disclosure v-slot="{ open }">
-                                        <DisclosureButton
-                                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
-                                        >
-                                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termineigenschaften</span>
-                                            <ChevronDownIcon
-                                                :class="open ? 'rotate-180 transform' : ''"
-                                                class="h-4 w-4 mt-0.5 text-white"
-                                            />
-                                        </DisclosureButton>
-                                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                            <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
-                                                <input type="checkbox" v-model="eventAttribute.checked"
-                                                       @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
-                                                       class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                   class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                    {{ eventAttribute.name }}</p>
-                                            </div>
-                                        </DisclosurePanel>
-                                    </Disclosure>
+                                    <div v-for="eventType in types" class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="eventType.checked"
+                                               @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ eventType.name }}</p>
+                                    </div>
                                 </DisclosurePanel>
                             </Disclosure>
+                            <hr class="border-gray-500 mt-2 mb-2">
+                            <Disclosure v-slot="{ open }">
+                                <DisclosureButton
+                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
+                                >
+                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termineigenschaften</span>
+                                    <ChevronDownIcon
+                                        :class="open ? 'rotate-180 transform' : ''"
+                                        class="h-4 w-4 mt-0.5 text-white"
+                                    />
+                                </DisclosureButton>
+                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
+                                    <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
+                                        <input type="checkbox" v-model="eventAttribute.checked"
+                                               @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
+                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
+                                        <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
+                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                            {{ eventAttribute.name }}</p>
+                                    </div>
+                                </DisclosurePanel>
+                            </Disclosure>
+                        </DisclosurePanel>
+                    </Disclosure>
 
-                        </div>
-                    </MenuItems>
-                </transition>
-            </Menu>
+                </div>
+            </BaseFilter>
             <AddButton class="bg-primary hover:bg-secondary text-white resize-none"
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
@@ -460,9 +435,9 @@
                     {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
                 </div>
             </template>
-            <template #week-number-cell=" weekNumber, view" >
+            <template #week-number-cell=" weekNumber, view">
                 <div>
-                KW {{weekNumber.week}}
+                    KW {{ weekNumber.week }}
                 </div>
             </template>
             <template #split-label="{ split, view }">
@@ -514,70 +489,70 @@
                     </span>
                         <!-- only show profile pics when event is longer than 90 minutes => has enough space to display -->
                         <div v-if="event.endTimeMinutes - event.startTimeMinutes >= 90">
-                        <div class="mt-3 -ml-3">
-                            <div v-if="event.projectLeaders && !project"
-                                 class="mt-1 flex flex-wrap w-full">
-                                <div class="-mr-3 flex flex-wrap flex-row"
-                                     v-for="user in event.projectLeaders?.slice(0,3)">
-                                    <img :data-tooltip-target="user.id"
-                                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                         class="rounded-full ring-2 ring-white object-cover"
-                                         :src="user.profile_photo_url"
-                                         alt=""/>
-                                    <UserTooltip :user="user"/>
-                                </div>
-                                <div v-if="event.projectLeaders.length >= 4" class="my-auto">
-                                    <Menu as="div" class="relative">
-                                        <div>
-                                            <MenuButton class="flex rounded-full focus:outline-none">
-                                                <div
-                                                    :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                    class="flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                                    <p class="">
-                                                        +{{ event.projectLeaders.length - 3 }}
-                                                    </p>
-                                                </div>
-                                            </MenuButton>
-                                        </div>
-                                        <transition enter-active-class="transition ease-out duration-100"
-                                                    enter-from-class="transform opacity-0 scale-95"
-                                                    enter-to-class="transform opacity-100 scale-100"
-                                                    leave-active-class="transition ease-in duration-75"
-                                                    leave-from-class="transform opacity-100 scale-100"
-                                                    leave-to-class="transform opacity-0 scale-95">
-                                            <MenuItems
-                                                class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
-                                                    <Link href="#"
-                                                          :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                             class="rounded-full"
-                                                             :src="user.profile_photo_url"
-                                                             alt=""/>
-                                                        <span class="ml-4">
+                            <div class="mt-3 -ml-3">
+                                <div v-if="event.projectLeaders && !project"
+                                     class="mt-1 flex flex-wrap w-full">
+                                    <div class="-mr-3 flex flex-wrap flex-row"
+                                         v-for="user in event.projectLeaders?.slice(0,3)">
+                                        <img :data-tooltip-target="user.id"
+                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                             class="rounded-full ring-2 ring-white object-cover"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                        <UserTooltip :user="user"/>
+                                    </div>
+                                    <div v-if="event.projectLeaders.length >= 4" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex rounded-full focus:outline-none">
+                                                    <div
+                                                        :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                        class="flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                        <p class="">
+                                                            +{{ event.projectLeaders.length - 3 }}
+                                                        </p>
+                                                    </div>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                                        <Link href="#"
+                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                                 class="rounded-full"
+                                                                 :src="user.profile_photo_url"
+                                                                 alt=""/>
+                                                            <span class="ml-4">
                                                                 {{ user.first_name }} {{ user.last_name }}
                                                             </span>
-                                                    </Link>
-                                                </MenuItem>
-                                            </MenuItems>
-                                        </transition>
-                                    </Menu>
+                                                        </Link>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
+                                    </div>
                                 </div>
-                            </div>
-                            <div v-else-if="event.created_by"
-                                 class="mt-1 ml-3 flex flex-wrap w-full">
-                                <div class="-mr-3 flex flex-wrap flex-row">
-                                    <img :data-tooltip-target="event.created_by.id"
-                                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                         class="rounded-full ring-2 ring-white object-cover"
-                                         :src="event.created_by.profile_photo_url"
-                                         alt=""/>
-                                    <UserTooltip :user="event.created_by"/>
+                                <div v-else-if="event.created_by"
+                                     class="mt-1 ml-3 flex flex-wrap w-full">
+                                    <div class="-mr-3 flex flex-wrap flex-row">
+                                        <img :data-tooltip-target="event.created_by.id"
+                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                             class="rounded-full ring-2 ring-white object-cover"
+                                             :src="event.created_by.profile_photo_url"
+                                             alt=""/>
+                                        <UserTooltip :user="event.created_by"/>
+                                    </div>
                                 </div>
-                            </div>
 
+                            </div>
                         </div>
-                    </div>
                     </div>
                 </div>
             </template>
@@ -655,10 +630,12 @@ import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagCo
 import Button from "@/Jetstream/Button";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
+import BaseFilter from "@/Layouts/Components/BaseFilter";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        BaseFilter,
         PlusCircleIcon,
         ExclamationIcon,
         Button,
@@ -845,33 +822,33 @@ export default {
                 // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
                 Object.entries(this.calendarFilters).forEach(entry => {
                     if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
-                        if(arrayName === 'rooms') {
+                        if (arrayName === 'rooms') {
                             const room = this.rooms.filter(room => element?.id === room.id)
-                            if(room){
+                            if (room) {
                                 room[0].checked = false
                             }
                         }
-                        if(arrayName === 'areas') {
+                        if (arrayName === 'areas') {
                             const area = this.areas.filter(area => element?.id === area.id)
-                            if(area){
+                            if (area) {
                                 area[0].checked = false
                             }
                         }
-                        if(arrayName === 'roomCategories') {
+                        if (arrayName === 'roomCategories') {
                             const category = this.roomCategories.filter(category => element?.id === category.id)
-                            if(category){
+                            if (category) {
                                 category[0].checked = false
                             }
                         }
-                        if(arrayName === 'roomAttributes') {
+                        if (arrayName === 'roomAttributes') {
                             const attribute = this.roomAttributes.filter(room => element?.id === room.id)
-                            if(attribute){
+                            if (attribute) {
                                 attribute[0].checked = false
                             }
                         }
-                        if(arrayName === 'eventTypes') {
+                        if (arrayName === 'eventTypes') {
                             const eventType = this.eventTypes.filter(type => element?.id === type.id)
-                            if(eventType){
+                            if (eventType) {
                                 eventType[0].checked = false
                             }
                         }
@@ -1055,13 +1032,13 @@ export default {
                 }
             }
 
-            if(event?.start && event?.end){
+            if (event?.start && event?.end) {
                 axios.post('/collision/room', {
-                        params: {
-                            start: event?.start,
-                            end:  event?.end,
-                        }
-                    })
+                    params: {
+                        start: event?.start,
+                        end: event?.end,
+                    }
+                })
                     .then(response => this.roomCollisions = response.data);
             }
             this.selectedEvent = event;
@@ -1235,9 +1212,10 @@ export default {
 
 .vuecal__flex {
 }
-.vuecal__cell-events-count{
-    color: #3017AD ;
-    background-color: rgba(48,23,173,0.1);
+
+.vuecal__cell-events-count {
+    color: #3017AD;
+    background-color: rgba(48, 23, 173, 0.1);
     height: 18px;
     width: 18px;
     justify-content: center; /* Centering Horizantly */

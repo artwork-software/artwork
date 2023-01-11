@@ -1669,6 +1669,17 @@
 
         </jet-dialog-modal>
 
+        <BaseSidenav :show="show" @change="this.show =! this.show">
+            <ProjectSidenav
+                :project="project"
+                :cost-center="project.cost_center"
+                :copyright="project.copyright"
+                :project-files="project.project_files"
+                :contracts="project.contracts"
+                :money-sources="project.moneySources"
+            />
+        </BaseSidenav>
+
     </app-layout>
 </template>
 
@@ -1722,6 +1733,8 @@ import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav";
+import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1734,9 +1747,11 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
+    props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
         BudgetComponent,
+        ProjectSidenav,
+        BaseSidenav,
         TagComponent,
         AddButton,
         TeamTooltip,
@@ -1842,6 +1857,7 @@ export default {
     },
     data() {
         return {
+            show: false,
             hasGroup: !!this.currentGroup,
             deletingFile: false,
             project_file: null,

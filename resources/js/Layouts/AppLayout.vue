@@ -294,6 +294,18 @@ export default {
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
+                {
+                    name: 'Verträge',
+                    has_permission: this.$page.props.is_admin,
+                    href: route('contracts.view.index'),
+                    route: ['/contracts/view']
+                },
+                {
+                    name: 'Finanzierungsquellen',
+                    has_permission: true,
+                    href: route('money_sources.index'),
+                    route: ['/money_sources']
+                }
             ]
         }
     },

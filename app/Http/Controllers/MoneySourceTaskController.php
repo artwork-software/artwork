@@ -42,7 +42,7 @@ class MoneySourceTaskController extends Controller
             'name' => $request->name,
             'description' => $request->description,
             'deadline' => $request->deadline,
-            'creator' => Auth::id()
+            'creator' => 1
         ]);
 
         $task->money_source_task_users()->sync(collect($request->users));
@@ -79,8 +79,8 @@ class MoneySourceTaskController extends Controller
      */
     public function update(Request $request, MoneySourceTask $moneySourceTask)
     {
-        $moneySourceTask->update($request->data());
-        $moneySourceTask->money_source_task_users()->sync(collect($request->users));
+        $moneySourceTask->fill($request->task);
+        $moneySourceTask->save();
     }
 
     /**

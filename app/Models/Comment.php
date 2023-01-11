@@ -12,6 +12,8 @@ class Comment extends Model
     protected $fillable = [
         'text',
         'project_id',
+        'project_file_id',
+        'contract_id',
         'user_id',
     ];
 
@@ -23,6 +25,16 @@ class Comment extends Model
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function contract()
+    {
+        return $this->belongsTo(Contract::class, 'contract_id');
+    }
+
+    public function project_file()
+    {
+        return $this->belongsTo(ProjectFile::class, 'project_file_id');
     }
 
 

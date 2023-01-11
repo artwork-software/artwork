@@ -278,6 +278,32 @@ class ProjectController extends Controller
 
     }
 
+    public function verifiedMainPosition(Request $request){
+        $mainPosition = MainPosition::find($request->id);
+        $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
+
+        // Angefragten Nutzer eine Benachrichtigung über eine neue Verifizierung Anfrage schicken
+        /*
+         * 'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'requested_position' => $notificationData->requested_position,
+                    'created_by' => $notificationData->created_by,
+         */
+        $this->notificationData->title = 'Neue Verifizierungsanfrage';
+        $this->notificationData->requested_position = $request->position;
+        $this->notificationData->project_title = $request->project_title;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->created_by = Auth::user();
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
+
+        return back()->with('success');
+    }
+
     public function updateCellSource(Request $request): void
     {
         $column = ColumnCell::find($request->cell_id);
@@ -622,6 +648,7 @@ class ProjectController extends Controller
         } else {
             $groupOutput = '';
         }
+
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),

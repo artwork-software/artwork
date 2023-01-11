@@ -13,6 +13,7 @@ use App\Models\NotificationSetting;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\User;
+use App\Notifications\BudgetVerified;
 use App\Notifications\ConflictNotification;
 use App\Notifications\DeadlineNotification;
 use App\Notifications\EventNotification;
@@ -228,6 +229,16 @@ class NotificationController extends Controller
                 ];
                 Notification::send($user, new MoneySourceNotification($notificationBody, $broadcastMessage));
                 break;
+            case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
+                $notificationBody = [
+                    'groupType' => 'BUDGET',
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'requested_position' => $notificationData->requested_position,
+                    'project_title' => $notificationData->project_title,
+                    'created_by' => $notificationData->created_by,
+                ];
+                Notification::send($user, new BudgetVerified($notificationBody, $broadcastMessage));
         }
     }
 

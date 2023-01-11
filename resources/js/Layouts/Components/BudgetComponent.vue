@@ -8,11 +8,11 @@
                 <thead>
                 <tr>
                     <th v-for="(column,index) in budget.columns"
-                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
+                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
-                                <div class="flex items-center">
+                                <div class="flex items-center justify-end pr-2">
                                     <p class="columnSubName xsLight">
                                         {{ column.subName }}
                                         <span v-if="column.calculateName" class="ml-1">
@@ -59,14 +59,14 @@
                                     </span>
                                 </div>
                                 <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
+                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="h-5 pr-2"
                                      v-if="!column.clicked">
                                     {{ column.name }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="my-2 xsDark" type="text"
+                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
+                                        class="my-2 xsDark pr-2 text-right" type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
@@ -112,6 +112,9 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
+                            <div v-if="showMenu !== column.id" class="w-6">
+
+                            </div>
                         </div>
                     </th>
                 </tr>
@@ -143,7 +146,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <th class="bg-primary text-left p-0">
+                            <th class="bg-primary p-0">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
                                     <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
@@ -304,7 +307,6 @@
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <div class="flex items-center">
-
                                                         <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -312,7 +314,7 @@
                                                             :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center ml-2.5"
+                                                                class="my-4 h-6 flex items-center pr-2 justify-end"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-if="!cell.clicked">
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -320,12 +322,12 @@
                                                                      class="h-6 w-6"/>
                                                                 {{ cell.value }}
                                                             </div>
-                                                            <div class="flex items-center"
+                                                            <div class="flex items-center justify-end pr-2"
                                                                  :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
                                                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
-                                                                    class="my-2 xsDark" type="text"
+                                                                    class="my-2 xsDark text-right" type="text"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"
@@ -440,7 +442,7 @@
                     <table class="w-full">
                         <tbody>
                         <tr v-for="mainPosition in tablesToShow[1]">
-                            <th class="bg-primary text-white text-left">
+                            <th class="bg-primary text-white">
                                 <div class="pl-2 flex items-center h-10">
                                     {{ mainPosition.name }}
                                     <button class="my-auto w-6 ml-3"

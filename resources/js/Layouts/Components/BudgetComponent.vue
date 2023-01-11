@@ -8,11 +8,11 @@
                 <thead>
                 <tr>
                     <th v-for="(column,index) in budget.columns"
-                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
+                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
-                                <div class="flex items-center">
+                                <div class="flex items-center justify-end pr-2">
                                     <p class="columnSubName xsLight">
                                         {{ column.subName }}
                                         <span v-if="column.calculateName" class="ml-1">
@@ -59,14 +59,14 @@
                                     </span>
                                 </div>
                                 <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
+                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="h-5 pr-2"
                                      v-if="!column.clicked">
                                     {{ column.name }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="my-2 xsDark" type="text"
+                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
+                                        class="my-2 xsDark pr-2 text-right" type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
@@ -112,6 +112,9 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
+                            <div v-if="showMenu !== column.id" class="w-6">
+
+                            </div>
                         </div>
                     </th>
                 </tr>
@@ -133,8 +136,8 @@
                 <div class="bg-secondaryHover ml-8 w-full" v-if="costsOpened">
                     <div class="headline4 my-10">Ausgaben</div>
                     <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                         class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                        <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                         class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                        <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                             Hauptposition
                             <PlusCircleIcon
                                 class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -143,7 +146,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <th class="bg-primary text-left p-0">
+                            <th class="bg-primary p-0">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
                                     <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
@@ -159,7 +162,7 @@
                                                              class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
                                         </button>
                                     </div>
-                                    <div v-else class="flex items-center">
+                                    <div v-else class="flex items-center w-full">
                                         <input
                                             class="my-2 ml-1 xsDark" type="text"
                                             v-model="mainPosition.name"
@@ -256,13 +259,13 @@
                                     </div>
                                 </div>
                                 <table v-if="!mainPosition.closed" class="w-full ">
-
-
                                     <thead class="">
                                     <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                                        <th class="bg-silverGray xxsDark">
+                                        <th class="bg-silverGray xxsDark w-full">
+                                            <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id"
+                                                 @mouseout="showMenu = null">
                                             <div
-                                                class="pl-2 xxsDark flex items-center h-10"
+                                                class="pl-2 xxsDark w-full flex items-center h-10"
                                                 v-if="!subPosition.clicked">
                                                 <div @click="subPosition.clicked = !subPosition.clicked">
                                                     {{ subPosition.name }}
@@ -275,7 +278,7 @@
                                                                      class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                                                 </button>
                                             </div>
-                                            <div v-else class="flex">
+                                            <div v-else class="flex w-full">
                                                 <input
                                                     class="my-2 ml-1 xxsDark" type="text"
                                                     v-model="subPosition.name"
@@ -288,6 +291,47 @@
                                                                      class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                                                 </button>
                                             </div>
+                                            <div class="flex items-center justify-end">
+                                                <div class="flex flex-wrap w-full">
+                                                    <div class="flex w-full">
+                                                        <Menu as="div" class="my-auto relative"
+                                                              v-show="showMenu === 'subPosition' + subPosition.id">
+                                                            <div class="flex">
+                                                                <MenuButton
+                                                                    class="flex ml-6">
+                                                                    <DotsVerticalIcon
+                                                                        class="mr-3 flex-shrink-0 h-6 w-6 text-darkGray my-auto"
+                                                                        aria-hidden="true"/>
+                                                                </MenuButton>
+                                                            </div>
+                                                            <transition
+                                                                enter-active-class="transition ease-out duration-100"
+                                                                enter-from-class="transform opacity-0 scale-95"
+                                                                enter-to-class="transform opacity-100 scale-100"
+                                                                leave-active-class="transition ease-in duration-75"
+                                                                leave-from-class="transform opacity-100 scale-100"
+                                                                leave-to-class="transform opacity-0 scale-95">
+                                                                <MenuItems
+                                                                    class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                    <div class="py-1">
+                                                                        <MenuItem v-slot="{ active }">
+                                                                                <span
+                                                                                    @click="openDeleteSubPositionModal(subPosition)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Löschen
+                                                                                </span>
+                                                                        </MenuItem>
+                                                                    </div>
+                                                                </MenuItems>
+                                                            </transition>
+                                                        </Menu>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
                                                 <tr :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
@@ -295,7 +339,6 @@
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <div class="flex items-center">
-
                                                         <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -303,7 +346,7 @@
                                                             :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center ml-2.5"
+                                                                class="my-4 h-6 flex items-center pr-2 justify-end"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-if="!cell.clicked">
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -311,12 +354,12 @@
                                                                      class="h-6 w-6"/>
                                                                 {{ cell.value }}
                                                             </div>
-                                                            <div class="flex items-center"
+                                                            <div class="flex items-center justify-end pr-2"
                                                                  :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
                                                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
-                                                                    class="my-2 xsDark" type="text"
+                                                                    class="my-2 xsDark text-right" type="text"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"
@@ -431,7 +474,7 @@
                     <table class="w-full">
                         <tbody>
                         <tr v-for="mainPosition in tablesToShow[1]">
-                            <th class="bg-primary text-white text-left">
+                            <th class="bg-primary text-white">
                                 <div class="pl-2 flex items-center h-10">
                                     {{ mainPosition.name }}
                                     <button class="my-auto w-6 ml-3"
@@ -623,10 +666,10 @@
         @closed="closeCellDetailModal()"
     />
     <confirmation-component
-        v-if="showDeleteMainPositionModal"
+        v-if="showDeleteModal"
         confirm="Löschen"
         titel="Hauptposition löschen"
-        :description="'Bist du sicher, dass du die Hauptposition ' + this.mainPositionToDelete.name + ' löschen möchtest?'"
+        :description="this.confirmationDescription"
         @closed="afterConfirm"/>
 
     <div>
@@ -697,13 +740,15 @@ export default {
             cellToShow: null,
             hoveredRow: null,
             showMenu: null,
-            showDeleteMainPositionModal: false,
+            showDeleteModal: false,
             mainPositionToDelete: null,
+            subPositionToDelete: null,
+            confirmationDescription: '',
             showSuccessModal: false,
             successHeading: '',
             successDescription: '',
             positionDefault: {
-                position: 1
+                position: 0
             },
             colors: {
                 whiteColumn: 'whiteColumn',
@@ -907,27 +952,39 @@ export default {
             this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
         },
         openDeleteMainPositionModal(mainPosition) {
+            this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'
             this.mainPositionToDelete = mainPosition;
-            this.showDeleteMainPositionModal = true;
+            this.showDeleteModal = true;
+        },
+        openDeleteSubPositionModal(subPosition){
+            this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
+            this.subPositionToDelete = subPosition;
+            this.showDeleteModal = true;
         },
         afterConfirm(bool) {
-            if (!bool) return this.showDeleteMainPositionModal = false;
+            if (!bool) return this.showDeleteModal = false;
 
-            this.deleteMainPosition();
+            this.deletePosition();
 
         },
-        deleteMainPosition() {
-            this.showDeleteMainPositionModal = false;
-            this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
-            //this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`); Bitte wie oben
-            this.successHeading = "Hauptposition gelöscht"
-            this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
+        deletePosition() {
+            if(this.mainPositionToDelete !== null){
+                this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
+                this.successHeading = "Hauptposition gelöscht"
+                this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
+            }else if(this.subPositionToDelete !== null){
+                this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
+                this.successHeading = "Unterposition gelöscht"
+                this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
+            }
+            this.showDeleteModal = false;
             this.showSuccessModal = true;
 
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal() {
             this.mainPositionToDelete = null;
+            this.subPositionToDelete = null;
             this.showSuccessModal = false;
             this.successHeading = "";
             this.successDescription = "";

@@ -272,7 +272,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
 
     //Contracts
-    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.management');
+    Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
+    Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
@@ -304,3 +305,4 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
     Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
 });
+

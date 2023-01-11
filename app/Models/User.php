@@ -116,6 +116,11 @@ class User extends Authenticatable
         return $this->hasMany(Contract::class);
     }
 
+    public function project_files()
+    {
+        return $this->hasMany(ProjectFile::class);
+    }
+
     public function notificationSettings(): HasMany {
         return $this->hasMany(NotificationSetting::class);
     }

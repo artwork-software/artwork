@@ -19,4 +19,14 @@ class ProjectFile extends Model
         return $this->belongsTo(Project::class);
     }
 
+    public function accessing_users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
 }

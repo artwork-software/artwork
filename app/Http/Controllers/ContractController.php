@@ -3,12 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ContractUpdateRequest;
+use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
+use App\Models\Comment;
 use App\Models\Contract;
+use App\Models\ContractModule;
 use App\Models\Project;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,31 +32,51 @@ class ContractController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
+     * @return Response|ResponseFactory
      */
-    public function index(Request $request)
+    public function viewIndex()
     {
         $contracts = Contract::all();
-        $filters = $request->input('contractFilters');
-        $ksk_filter = $filters->ksk_liable;
-        $resident_abroad = $filters->resident_abroad;
-        $legal_forms = $filters->legal_forms;
-        $contract_types = $filters->contract_types;
+        return inertia('Contracts/ContractManagement', [
+            'contracts' => ContractResource::collection($contracts),
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
+            ]);
 
-        if($ksk_filter) {
-            $contracts = $contracts->where('ksk_liable', $ksk_filter)->all();
-        }
-        if($resident_abroad) {
-            $contracts = $contracts->where('resident_abroad', $resident_abroad)->all();
-        }
-        if($legal_forms) {
-            $contracts = $contracts->whereIn('legal_form', $legal_forms)->all();
-        }
-        if($legal_forms) {
-            $contracts = $contracts->whereIn('type', $contract_types)->all();
-        }
-        return ContractResource::collection($contracts);
+    }
 
+    public function index(Request $request)
+    {
+
+        $contracts = Contract::all();
+        $costsFilter = json_decode($request->input('costsFilter'));
+        $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
+        $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
+
+        if(count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
+            $legal_forms = collect($legalFormsFilter->array);
+            $contract_types = collect($contractTypesFilter->array);
+            $cost_filters = collect($costsFilter->array);
+
+            Debugbar::info($legal_forms);
+            Debugbar::info($cost_filters);
+
+            if($cost_filters->contains('KSK-pflichtig')) {
+                $contracts = $contracts->where('ksk_liable', true);
+            }
+            if($cost_filters->contains( 'Im Ausland ansässig')) {
+                $contracts = $contracts->where('resident_abroad', true);
+            }
+            if(count($legal_forms) > 0) {
+                $contracts = $contracts->whereIn('legal_form', $legal_forms);
+            }
+            if(count($contract_types) > 0) {
+                $contracts = $contracts->whereIn('type', $contract_types);
+            }
+        }
+        return [
+            'contracts' => ContractResource::collection($contracts),
+            'contract_modules' => ContractModuleResource::collection(ContractModule::all())
+        ];
     }
 
     /**
@@ -98,6 +124,12 @@ class ContractController extends Controller
             'type' => $request->type
         ]);
 
+        $comment = Comment::create([
+            'text' => $request->comment,
+            'user_id' => Auth::id(),
+            'project_file_id' => $contract->id
+        ]);
+        $contract->comments()->save($comment);
         $contract->accessing_users()->attach($request->accessibleUsers);
 
         $contract->save();
@@ -129,6 +161,13 @@ class ContractController extends Controller
     public function update(ContractUpdateRequest $request, Contract $contract)
     {
         $contract->fill($request->data());
+
+        $comment = Comment::create([
+            'text' => $request->comment,
+            'user_id' => Auth::id(),
+            'project_file_id' => $contract->id
+        ]);
+        $contract->comments()->save($comment);
 
         if ($request->get('accessibleUsers')) {
             $contract->accessing_users()->delete();

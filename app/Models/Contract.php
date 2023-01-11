@@ -15,7 +15,6 @@ class Contract extends Model
         'contract_partner',
         'amount',
         'project_id',
-        'description',
         'ksk_liable',
         'resident_abroad',
         'legal_form',
@@ -39,6 +38,11 @@ class Contract extends Model
     public function accessing_users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
     }
 
 }

@@ -16,11 +16,12 @@ class ContractResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'project_name' => $this->project->name,
+            'project' => $this->project,
             'amount' => $this->amount,
             'legal_form' => $this->legal_form,
-            'contract_type' => $this->type,
+            'type' => $this->type,
             'ksk_liable' => $this->ksk_liable,
+            'partner' => $this->contract_partner,
             'resident_abroad' => $this->resident_abroad,
             'description' => $this->description
         ];

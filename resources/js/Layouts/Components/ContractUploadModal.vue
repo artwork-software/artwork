@@ -389,17 +389,17 @@ export default {
             showExtraSettings: false,
             contractAmount: '',
             contractForm: useForm({
-                files: this.files,
-                contractPartner: this.contractPartner,
-                legalForm: this.selectedLegalForm,
-                contractType: this.selectedContractType,
-                contractAmount: this.contractAmount,
-                kskLiable: this.kskLiable,
-                isAbroad: this.isAbroad,
-                hasPowerOfAttorney: this.hasPowerOfAttorney,
-                isFreed: this.isFreed,
+                files: [],
+                contract_partner: this.contractPartner,
+                legal_form: this.selectedLegalForm,
+                type: this.selectedContractType,
+                amount: this.contractAmount,
+                ksk_liable: this.kskLiable,
+                resident_abroad: this.isAbroad,
+                has_power_of_attorney: this.hasPowerOfAttorney,
+                is_freed: this.isFreed,
                 description: this.description,
-                usersWithAccess: this.usersWithAccess
+                accessibleUsers: this.usersWithAccess
             }),
         }
     },
@@ -457,20 +457,23 @@ export default {
         },
         storeContract(){
             this.contractForm.files = this.files;
-            this.contractForm.contractPartner = this.contractPartner;
-            this.contractForm.legalForm = this.selectedLegalForm;
-            this.contractForm.contractType = this.selectedContractType;
-            this.contractForm.contractAmount = this.contractAmount;
-            this.contractForm.kskLiable = this.kskLiable;
-            this.contractForm.isAbroad = this.isAbroad;
-            this.contractForm.hasPowerOfAttorney = this.hasPowerOfAttorney;
-            this.contractForm.isFreed = this.isFreed;
+            this.contractForm.contract_partner = this.contractPartner;
+           // this.contractForm.legal_form = this.selectedLegalForm;
+            this.contractForm.legal_form = 'GmbH';
+            this.contractForm.type = this.selectedContractType;
+            this.contractForm.amount = this.contractAmount;
+            this.contractForm.ksk_liable = this.kskLiable;
+            this.contractForm.resident_abroad = this.isAbroad;
+            this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
+            this.contractForm.is_freed = this.isFreed;
             this.contractForm.description = this.description;
-            this.contractForm.usersWithAccess = this.usersWithAccess;
+            const userIds = [];
+            this.usersWithAccess.forEach((user) => {
+                userIds.push(user.id);
+            })
+            this.contractForm.accessibleUsers = userIds;
 
-
-            // TODO: WELCHE ROUTE HIER NEHMEN ? EIGENE ODER CONTRACTS.STORE UND DIESE DANN ABÄNDERN?
-            this.contractForm.post(this.route('contracts.store'));
+            this.contractForm.post(this.route('contracts.store',this.projectId));
         }
     }
 }

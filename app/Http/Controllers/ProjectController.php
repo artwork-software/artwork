@@ -257,13 +257,25 @@ class ProjectController extends Controller
 
         ]);
 
+        $firstThreeColumns = $columns->shift(3);
+
+        $costSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
+            'value' => "",
+            'linked_money_source_id' => null,
+        ]);
+
+        $earningSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
+            'value' => "",
+            'linked_money_source_id' => null,
+        ]);
+
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => '',
+            'value' => 0,
             'linked_money_source_id' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => '',
+            'value' => 0,
             'linked_money_source_id' => null,
         ]);
 
@@ -412,7 +424,7 @@ class ProjectController extends Controller
             })->pluck('id');
 
             $column->subPositionRows()->attach($subPositionRows, [
-                'value' => '',
+                'value' => 0,
                 'linked_money_source_id' => null
             ]);
         }
@@ -497,10 +509,17 @@ class ProjectController extends Controller
             'position' => $request->positionBefore + 1
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
             'verified_value' => ''
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'linked_money_source_id' => null,
         ]);
     }
 
@@ -534,12 +553,13 @@ class ProjectController extends Controller
             'position' => 1,
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
-
     }
 
     public function addSubPosition(Request $request): void
@@ -564,10 +584,17 @@ class ProjectController extends Controller
             'position' => 1,
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
             'verified_value' => ''
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'linked_money_source_id' => null,
         ]);
     }
 

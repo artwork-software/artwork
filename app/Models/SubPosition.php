@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,8 @@ class SubPosition extends Model
         'name',
         'position'
     ];
+
+    protected $appends = ['columnSums'];
     public function mainPosition(): BelongsTo
     {
         return $this->belongsTo(MainPosition::class);
@@ -23,6 +26,20 @@ class SubPosition extends Model
     public function subPositionRows(): HasMany
     {
         return $this->hasMany(SubPositionRow::class);
+    }
+
+    public function getColumnSumsAttribute()
+    {
+        $subPositionRowIds = $this->subPositionRows()->pluck('id');
+
+        return ColumnCell::query()
+                ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
+                ->get()
+                ->groupBy('column_id')
+                ->skip(3)
+                ->mapWithKeys(function ($cells, $column_id) {
+                    return [ $column_id => $cells->sum('value')];
+                });
     }
 
     public function verified(){

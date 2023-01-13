@@ -411,12 +411,13 @@
                                                     <td class="w-24"></td>
                                                     <td class="w-24"></td>
                                                     <td class="w-72 ml-2 my-2">SUM</td>
-                                                    <div class="flex items-center"
-                                                         v-for="cell in subPosition.sub_position_rows[0].cells">
-                                                        <td v-if="cell.column_id > 3" class="w-48 ml-0.5 my-4"
-                                                            :class="getSumsOfSubPosition(subPosition)[cell.column_id] < 0 ? 'text-red-500' : ''">
+
+                                                    <div v-if="subPosition.sub_position_rows.length > 0" class="flex items-center"
+                                                         v-for="column in budget.columns.slice(3)">
+                                                        <td class="w-48 ml-0.5 my-4"
+                                                            :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                                                             {{
-                                                                getSumsOfSubPosition(subPosition)[cell.column_id]
+                                                                subPosition.columnSums[column.id]
                                                             }}
                                                         </td>
                                                     </div>
@@ -439,7 +440,15 @@
                                         <td class="w-24"></td>
                                         <td class="w-24"></td>
                                         <td class="w-72 ml-2 my-2">SUM</td>
-                                        <td class="w-48 my-2">3002</td>
+                                        <div v-if="mainPosition.sub_positions.length > 0" class="flex items-center"
+                                             v-for="column in budget.columns.slice(3)">
+                                            <td class="w-48 ml-0.5 my-4"
+                                                :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
+                                                {{
+                                                    mainPosition.columnSums[column.id]
+                                                }}
+                                            </td>
+                                        </div>
                                     </tr>
                                     </thead>
                                     <!-- HIER ADD HAUPTPOSITION -->
@@ -807,29 +816,6 @@ export default {
             })
             return [costTableArray, earningTableArray]
         },
-        sumsToShow: function () {
-            let sums = [];
-            this.budget.table.forEach((mainPosition) => {
-                mainPosition.sub_positions?.forEach((subPosition) => {
-                    subPosition.sub_position_rows?.forEach((row) => {
-                        row.cells.forEach((cell) => {
-                            if (cell.column_id > 3) {
-                                if (!isNaN(cell.value) && cell.value !== '') {
-                                    if (sums[subPosition.id + '' + cell.column_id] === undefined) {
-                                        sums[subPosition.id + '' + cell.column_id] = 0
-                                        sums[subPosition.id + '' + cell.column_id] += parseInt(cell.value);
-                                        //console.log(sums);
-                                    } else {
-                                        sums[subPosition.id + '' + cell.column_id] += parseInt(cell.value);
-                                    }
-                                }
-                            }
-                        })
-                    })
-                })
-            })
-            return sums;
-        }
     },
     watch: {
         user_query: {
@@ -876,42 +862,6 @@ export default {
                 preserveState: true,
                 preserveScroll: true
             });
-        },
-        getSumsOfSubPosition(subPosition) {
-            let sums = [];
-            subPosition.sub_position_rows?.forEach((row) => {
-                row.cells.forEach((cell) => {
-                    if (cell.column_id > 3) {
-                        if (!isNaN(cell.value) && cell.value !== '') {
-                            if (sums[cell.column_id] === undefined) {
-                                sums[cell.column_id] = 0
-                                sums[cell.column_id] += parseInt(cell.value);
-                            } else {
-                                sums[cell.column_id] += parseInt(cell.value);
-                            }
-                        }
-                    }
-                })
-            })
-            return sums;
-        },
-        getSumsOfMainPosition(mainPosition) {
-            let sums = [];
-            mainPosition.sub_positions?.forEach((sub_position) => {
-                sub_position.cells.forEach((cell) => {
-                    if (cell.column_id > 3) {
-                        if (!isNaN(cell.value) && cell.value !== '') {
-                            if (sums[cell.column_id] === undefined) {
-                                sums[cell.column_id] = 0
-                                sums[cell.column_id] += parseInt(cell.value);
-                            } else {
-                                sums[cell.column_id] += parseInt(cell.value);
-                            }
-                        }
-                    }
-                })
-            })
-            return sums;
         },
         currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {
@@ -973,18 +923,27 @@ export default {
             this.$inertia.patch(route('project.budget.column.update-name'), {
                 column_id: column.id,
                 columnName: column.name
+            }, {
+                preserveScroll: true,
+                preserveState: true
             });
         },
         updateMainPositionName(mainPosition) {
             this.$inertia.patch(route('project.budget.main-position.update-name'), {
                 mainPosition_id: mainPosition.id,
                 mainPositionName: mainPosition.name
+            }, {
+                preserveScroll: true,
+                preserveState: true
             });
         },
         updateSubPositionName(subPosition) {
             this.$inertia.patch(route('project.budget.sub-position.update-name'), {
                 subPosition_id: subPosition.id,
                 subPositionName: subPosition.name
+            }, {
+                preserveScroll: true,
+                preserveState: true
             });
         },
         openCellDetailModal(column) {
@@ -995,7 +954,10 @@ export default {
             this.showCellDetailModal = false;
         },
         deleteRowFromSubPosition(row) {
-            this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
+            this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`, {
+                preserveScroll: true,
+                preserveState: true
+            });
         },
         openDeleteMainPositionModal(mainPosition) {
             this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'

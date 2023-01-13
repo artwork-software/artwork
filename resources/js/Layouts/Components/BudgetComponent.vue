@@ -380,10 +380,10 @@
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         <td v-for="(cell,index) in row.cells"
-                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn ' ? 'xsWhiteBold' : 'xsDark', cell.value !== cell.verified_value ? mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-red-300' : cell.column.color : cell.column.color !== 'whiteColumn' ? cell.column.color : 'xsDark']">
+                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition)]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center pr-2 justify-end"
+                                                                class="my-4 h-6 flex items-center pr-2.5 ml-2 justify-end"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-if="!cell.clicked">
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -391,21 +391,21 @@
                                                                      class="h-6 w-6"/>
                                                                 {{ cell.value }}
                                                             </div>
-                                                            <div class="flex items-center justify-end pr-2"
+                                                            <div class="flex items-center justify-end"
                                                                  :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
-                                                                    :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
+                                                                    :class="index <= 1 ? 'w-20' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
                                                                     class="my-2 xsDark text-right" type="text"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"
                                                                                 @click="openCellDetailModal(cell)"
-                                                                                class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                             </div>
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center"
+                                                                class="my-4 h-6 flex items-center ml-2"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-else>
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -458,10 +458,10 @@
                                         </th>
                                     </tr>
 
-                                    <tr class=" xsWhiteBold flex h-10 w-full" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
+                                    <tr class=" xsWhiteBold flex h-10 w-full text-right" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                         <td class="w-24"></td>
                                         <td class="w-24"></td>
-                                        <td class="w-72 ml-2 my-2">SUM</td>
+                                        <td class="w-72 my-2">SUM</td>
                                         <div v-if="mainPosition.sub_positions.length > 0" class="flex items-center"
                                              v-for="column in budget.columns.slice(3)">
                                             <td class="w-48 ml-0.5 my-4"
@@ -487,17 +487,21 @@
 
                             </th>
                         </tr>
-                        <tr class="bg-secondaryHover xsDark flex h-10 w-full">
+                        <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                             <td class="w-24"></td>
                             <td class="w-24"></td>
-                            <td class="w-72 ml-2 my-2">SUM</td>
-                            <td class="w-48 my-2">3000</td>
+                            <td class="w-72 my-2">SUM</td>
+                            <td class="flex items-center"
+                                 v-for="column in budget.columns.slice(3)">
+                                <div class="w-48 my-2" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">{{this.getSumOfTable(0,column.id)}}</div>
+                            </td>
+
                         </tr>
                         <!-- TODO: Hier noch einfügen if(commented === true) -->
-                        <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full">
+                        <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
                             <td class="w-24"></td>
                             <td class="w-24"></td>
-                            <td class="w-72 ml-2 my-2">SUM ausgeklammerte Posten</td>
+                            <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
                             <td class="w-48 my-2">3000</td>
                         </tr>
                         </tbody>
@@ -857,6 +861,29 @@ export default {
     },
 
     methods: {
+        checkCellColor(cell, mainPosition){
+            let cssString = '';
+            if(cell.value !== cell.verified_value){
+                if(mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'){
+                    cssString += ' bg-red-300 '
+                }else{
+                    cssString += cell.column.color;
+                }
+            }
+            if(cell.column.color === 'whiteColumn'){
+                cssString += ' xsDark ';
+            }else{
+                cssString += ' xsWhiteBold ';
+            }
+            return cssString
+        },
+        getSumOfTable(tableType,columnId){
+            let sum = 0;
+            this.tablesToShow[tableType].forEach((mainPosition) => {
+                sum += mainPosition.columnSums[columnId];
+            })
+            return sum;
+        },
         addUserToVerifiedUserArray(user) {
             this.submitVerifiedModalData.user = user.id;
             this.usersToAdd = user

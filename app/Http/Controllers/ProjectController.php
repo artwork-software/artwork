@@ -37,6 +37,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -193,19 +194,9 @@ class ProjectController extends Controller
             $project->save();
         }
 
-
-        /*if (!$request->isGroup && !empty($request->selectedGroup)) {
-            $group = new ProjectGroups();
-            $group->create([
-                'project_groups_id' => $project->id,
-                'project_id' => $request->selectedGroup['id']
-            ]);
-            */
         if(!$request->isGroup && !empty($request->selectedGroup)){
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
-
-
         }
 
         if ($request->assigned_user_ids) {
@@ -278,22 +269,18 @@ class ProjectController extends Controller
 
     }
 
-    public function verifiedMainPosition(Request $request){
+    public function verifiedRequestMainPosition(Request $request): RedirectResponse
+    {
         $mainPosition = MainPosition::find($request->id);
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
 
-        // Angefragten Nutzer eine Benachrichtigung über eine neue Verifizierung Anfrage schicken
-        /*
-         * 'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'requested_position' => $notificationData->requested_position,
-                    'created_by' => $notificationData->created_by,
-         */
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project_title = $request->project_title;
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->position = $mainPosition->id;
         $this->notificationData->created_by = Auth::user();
+        $this->notificationData->requested_id = $request->user;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -301,6 +288,34 @@ class ProjectController extends Controller
         ];
         $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
 
+        $mainPosition->verified()->create([
+            'requested_by' => Auth::id(),
+            'requested' => $request->user
+        ]);
+
+        return back()->with('success');
+    }
+
+    public function verifiedMainPosition(Request $request)
+    {
+        $mainPosition = MainPosition::find($request->mainPositionId);
+        $subPositions = $mainPosition->subPositions()->get();
+        foreach ($subPositions as $subPosition){
+            $subPositionRows = $subPosition->subPositionRows()->get();
+            foreach ($subPositionRows as $subPositionRow){
+                $cells = $subPositionRow->cells()->get();
+                foreach ($cells as $cell){
+                    $cell->update(['verified_value' => @$cell->value]);
+                }
+            }
+        }
+        $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+        $mainPosition->verified()->delete();
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $mainPosition->id)
+            ->whereJsonContains("data->requested_id", Auth::id())
+            ->delete();
         return back()->with('success');
     }
 
@@ -471,6 +486,7 @@ class ProjectController extends Controller
         $columns = $project->columns()->get();
         $subPosition = SubPosition::find($request->sub_position_id);
 
+
         SubPositionRow::query()
             ->where('sub_position_id', $request->sub_position_id)
             ->where('position', '>', $request->positionBefore)
@@ -484,6 +500,7 @@ class ProjectController extends Controller
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
+            'verified_value' => ''
         ]);
     }
 
@@ -519,7 +536,8 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
-            'linked_money_source_id' => null
+            'linked_money_source_id' => null,
+            'verified_value' => ''
         ]);
 
     }
@@ -549,6 +567,7 @@ class ProjectController extends Controller
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => '',
             'linked_money_source_id' => null,
+            'verified_value' => ''
         ]);
     }
 
@@ -662,6 +681,7 @@ class ProjectController extends Controller
                 'columns' => $outputColumns,
                 'table' => $project->mainPositions()
                     ->with([
+                        'verified',
                         'subPositions' => function ($query) {
                             return $query->orderBy('position');
                         },

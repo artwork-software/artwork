@@ -155,7 +155,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <th class="bg-primary p-0">
+                            <th class="p-0" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
                                     <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
@@ -185,8 +185,7 @@
                                         </button>
                                     </div>
                                     <div class="flex items-center justify-end">
-                                        <div class="text-white w-28 flex items-center"
-                                             v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED'">
+                                        <div class="text-white w-28 flex items-center" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
                                             <p class="xxsLight">wird verifiziert </p>
                                             <!-- TODO: SVG ersetzen mit IMG TAG -->
                                             <svg xmlns="http://www.w3.org/2000/svg"
@@ -218,6 +217,24 @@
                                                 </g>
                                             </svg>
 
+                                        </div>
+                                        <div class="text-white w-44 flex items-center text-center cursor-pointer" @click="verifiedMainPosition(mainPosition.verified?.main_position_id)" v-if="mainPosition.verified?.requested === this.$page.props.user.id">
+                                            <p class="xxsLight">Als verifiziert markieren</p>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20" viewBox="0 0 20 20">
+                                                <g id="check_btn" transform="translate(-1234 -671.05)">
+                                                    <g id="Pfad_1370" data-name="Pfad 1370" transform="translate(1234 671.05)" fill="none">
+                                                        <path d="M10,0A10,10,0,1,1,0,10,10,10,0,0,1,10,0Z" stroke="none"/>
+                                                        <path d="M 10 1 C 5.037380218505859 1 1 5.037380218505859 1 10 C 1 14.96261978149414 5.037380218505859 19 10 19 C 14.96261978149414 19 19 14.96261978149414 19 10 C 19 5.037380218505859 14.96261978149414 1 10 1 M 10 0 C 15.52285003662109 0 20 4.477149963378906 20 10 C 20 15.52285003662109 15.52285003662109 20 10 20 C 4.477149963378906 20 0 15.52285003662109 0 10 C 0 4.477149963378906 4.477149963378906 0 10 0 Z" stroke="none" fill="#fcfcfb"/>
+                                                    </g>
+                                                    <path id="Pfad_157" data-name="Pfad 157" d="M-1151.25,4789.252l3.142,3.142,6.013-6.013" transform="translate(2390.673 -4108.337)" fill="none" stroke="#fcfcfb" stroke-width="1.5"/>
+                                                </g>
+                                            </svg>
+                                        </div>
+                                        <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                                            <p class="xxsLight">verifiziert</p>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1" viewBox="0 0 11.975 13.686">
+                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" fill="#fcfcfb"/>
+                                            </svg>
                                         </div>
                                         <div class="flex flex-wrap w-8">
                                             <div class="flex w-full">
@@ -365,7 +382,7 @@
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         <td v-for="(cell,index) in row.cells"
-                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
+                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn ' ? 'xsWhiteBold' : 'xsDark', cell.value !== cell.verified_value ? mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-red-300' : cell.column.color : cell.column.color !== 'whiteColumn' ? cell.column.color : 'xsDark']">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                                                 class="my-4 h-6 flex items-center pr-2 justify-end"
@@ -407,10 +424,10 @@
                                                                  :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                  class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
                                                 </tr>
-                                                <tr class="bg-silverGray xsDark flex h-10 w-full">
+                                                <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                                                     <td class="w-24"></td>
                                                     <td class="w-24"></td>
-                                                    <td class="w-72 ml-2 my-2">SUM</td>
+                                                    <td class="w-72 my-2">SUM</td>
                                                     <div class="flex items-center"
                                                          v-for="cell in subPosition.sub_position_rows[0].cells">
                                                         <td v-if="cell.column_id > 3" class="w-48 ml-0.5 my-4"
@@ -435,7 +452,7 @@
                                         </th>
                                     </tr>
 
-                                    <tr class="bg-primary xsWhiteBold flex h-10 w-full">
+                                    <tr class=" xsWhiteBold flex h-10 w-full" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                         <td class="w-24"></td>
                                         <td class="w-24"></td>
                                         <td class="w-72 ml-2 my-2">SUM</td>
@@ -662,7 +679,7 @@
                 <div class="mt-6">
                     <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
-                            @click="closeVerifiedModal">
+                            @click="submitVerifiedModal">
                         <CheckIcon class="h-6 w-6 text-secondaryHover"/>
                     </button>
                 </div>
@@ -692,6 +709,9 @@
         @closed="afterConfirm"/>
 
 
+    <pre>
+        {{ budget.table }}
+    </pre>
 </template>
 
 <script>
@@ -1036,7 +1056,6 @@ export default {
             this.successDescription = "";
         },
         closeVerifiedModal() {
-            this.submitVerifiedModalData.post(route('project.budget.verified.main-position'));
             this.showVerifiedModal = false;
             this.user_query = '';
             this.showUserAdd = true;
@@ -1045,12 +1064,21 @@ export default {
             this.submitVerifiedModalData.is_main = false;
             this.submitVerifiedModalData.position = [];
         },
+        submitVerifiedModal(){
+            this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+            this.closeVerifiedModal();
+        },
         openVerifiedModal(mainPosition) {
             this.verifiedTexts.mainPositionTitle = mainPosition.name
             this.submitVerifiedModalData.is_main = true
             this.submitVerifiedModalData.id = mainPosition.id
             this.submitVerifiedModalData.position = mainPosition
             this.showVerifiedModal = true
+        },
+        verifiedMainPosition(mainPositionId){
+            this.$inertia.patch(this.route('project.budget.verified.main-position'), {
+                mainPositionId: mainPositionId
+            })
         }
     },
 }

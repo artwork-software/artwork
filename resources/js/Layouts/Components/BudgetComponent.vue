@@ -287,8 +287,6 @@
                                         </div>
                                     </div>
                                 </div>
-
-                                <!-- HIER ADD UNTERPOSITION Funktion -->
                                 <div @click="addSubPosition(mainPosition.id)"
                                      class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                     <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
@@ -373,7 +371,7 @@
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
-                                                <tr :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
+                                                <tr v-if="subPosition.sub_position_rows?.length > 0" :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
                                                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
@@ -424,6 +422,14 @@
                                                                  :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                  class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
                                                 </tr>
+                                                <div v-else @click="addRowToSubPosition(subPosition, row)"
+                                                     class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                                                    <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                                                        Zeile
+                                                        <PlusCircleIcon
+                                                            class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                    </div>
+                                                </div>
                                                 <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
                                                     <td class="w-24"></td>
                                                     <td class="w-24"></td>
@@ -467,7 +473,6 @@
                                         </div>
                                     </tr>
                                     </thead>
-                                    <!-- HIER ADD HAUPTPOSITION -->
                                     <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
                                          class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                         <div
@@ -873,10 +878,11 @@ export default {
             this.$inertia.delete(route('project.budget.column.delete', column))
         },
         addRowToSubPosition(subPosition, row) {
+
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
                 project_id: this.project.id,
                 sub_position_id: subPosition.id,
-                positionBefore: row.position
+                positionBefore: row ? row.position : -1
             }, {
                 preserveState: true,
                 preserveScroll: true

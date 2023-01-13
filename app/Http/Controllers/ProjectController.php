@@ -194,7 +194,7 @@ class ProjectController extends Controller
             $project->save();
         }
 
-        if(!$request->isGroup && !empty($request->selectedGroup)){
+        if (!$request->isGroup && !empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
@@ -316,11 +316,11 @@ class ProjectController extends Controller
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition){
+        foreach ($subPositions as $subPosition) {
             $subPositionRows = $subPosition->subPositionRows()->get();
-            foreach ($subPositionRows as $subPositionRow){
+            foreach ($subPositionRows as $subPositionRow) {
                 $cells = $subPositionRow->cells()->get();
-                foreach ($cells as $cell){
+                foreach ($cells as $cell) {
                     $cell->update(['verified_value' => @$cell->value]);
                 }
             }
@@ -352,11 +352,12 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column){
+    public function columnDelete(Column $column)
+    {
         $cells = ColumnCell::where('column_id', $column->id)->get();
 
         $column->cells()->delete();
-        foreach ($cells as $cell){
+        foreach ($cells as $cell) {
             $cell->comments()->delete();
         }
         $column->delete();
@@ -508,6 +509,7 @@ class ProjectController extends Controller
             ->where('sub_position_id', $request->sub_position_id)
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
+
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
@@ -697,9 +699,9 @@ class ProjectController extends Controller
             $outputColumns[] = $columnOutput;
         }
 
-        if(!$project->is_group) {
+        if (!$project->is_group) {
             $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
-            if(!empty($group)){
+            if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
                 $groupOutput = '';
@@ -727,7 +729,7 @@ class ProjectController extends Controller
                         },
                         'subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'subPositions.subPositionRows.cells.comments' => function($query){
+                        }, 'subPositions.subPositionRows.cells.comments' => function ($query) {
                             return $query->orderBy('created_at', 'DESC');
                         }, 'subPositions.subPositionRows.cells.column'
                     ])
@@ -801,7 +803,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        if($request->selectedGroup === null){
+        if ($request->selectedGroup === null) {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
@@ -903,7 +905,8 @@ class ProjectController extends Controller
         }
     }
 
-    public function deleteProjectFromGroup(Request $request){
+    public function deleteProjectFromGroup(Request $request)
+    {
         $group = Project::find($request->groupId);
         $group->groups()->detach($request->projectIdToDelete);
     }
@@ -1283,12 +1286,12 @@ class ProjectController extends Controller
     public function deleteMainPosition(MainPosition $mainPosition)
     {
         $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition){
+        foreach ($subPositions as $subPosition) {
             $subRows = $subPosition->subPositionRows()->get();
 
-            foreach ($subRows as $subRow){
+            foreach ($subRows as $subRow) {
                 $cells = $subRow->cells()->get();
-                foreach ($cells as $cell){
+                foreach ($cells as $cell) {
                     /*$comments = $cells->comments()->get();
                     foreach ($comments as $comment){
                         $comment->delete();
@@ -1301,6 +1304,7 @@ class ProjectController extends Controller
         }
         $mainPosition->delete();
     }
+
     public function deleteSubPosition(SubPosition $subPosition)
     {
         $subRows = $subPosition->subPositionRows()->get();

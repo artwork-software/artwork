@@ -392,11 +392,11 @@
                                                                 {{ cell.value }}
                                                             </div>
                                                             <div class="flex items-center justify-end"
-                                                                 :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
+                                                                 :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 ml-10'"
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
-                                                                    :class="index <= 1 ? 'w-20' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
-                                                                    class="my-2 xsDark text-right" type="text"
+                                                                    :class="index <= 1 ? 'w-20 mr-0.5' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
+                                                                    class="my-2 xsDark text-right" :type="index > 2 ? 'number' : 'text'"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"

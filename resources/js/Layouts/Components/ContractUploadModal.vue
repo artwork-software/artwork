@@ -20,7 +20,6 @@
                         ref="module_files"
                         id="file"
                         type="file"
-                        multiple
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center

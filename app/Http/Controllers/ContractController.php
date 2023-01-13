@@ -21,7 +21,6 @@ use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Webklex\PDFMerger\Facades\PDFMergerFacade as PDFMerger;
 
 class ContractController extends Controller
 {
@@ -53,7 +52,7 @@ class ContractController extends Controller
         $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
 
-        if (count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
+        if(count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
             $legal_forms = collect($legalFormsFilter->array);
             $contract_types = collect($contractTypesFilter->array);
             $cost_filters = collect($costsFilter->array);
@@ -61,16 +60,16 @@ class ContractController extends Controller
             Debugbar::info($legal_forms);
             Debugbar::info($cost_filters);
 
-            if ($cost_filters->contains('KSK-pflichtig')) {
+            if($cost_filters->contains('KSK-pflichtig')) {
                 $contracts = $contracts->where('ksk_liable', true);
             }
-            if ($cost_filters->contains('Im Ausland ansässig')) {
+            if($cost_filters->contains( 'Im Ausland ansässig')) {
                 $contracts = $contracts->where('resident_abroad', true);
             }
-            if (count($legal_forms) > 0) {
+            if(count($legal_forms) > 0) {
                 $contracts = $contracts->whereIn('legal_form', $legal_forms);
             }
-            if (count($contract_types) > 0) {
+            if(count($contract_types) > 0) {
                 $contracts = $contracts->whereIn('type', $contract_types);
             }
         }
@@ -101,22 +100,15 @@ class ContractController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-        $oMerger = PDFMerger::init();
-
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
-        foreach ($request->file()['files'] as $file){
-            $currentFile = $file;
-            $original_name = $currentFile->getClientOriginalName();
-            $fileName = Str::random(20) . $original_name;
 
-            $path = Storage::putFileAs('contracts', $currentFile, $fileName);
-            $oMerger->addPDF($path, 'all');
-        }
-        $oMerger->merge();
-        $basename = 'Vertrag_' . trim($project->name) . Str::random(10);
-        $oMerger->save($basename);
+        $file = $request->file('files')[0];
+        $original_name = $file->getClientOriginalName();
+        $basename = Str::random(20).$original_name;
+
+        Storage::putFileAs('contracts', $file, $basename);
 
         $contract = $project->contracts()->create([
             'name' => $original_name,
@@ -127,9 +119,9 @@ class ContractController extends Controller
             'description' => $request->description,
             'ksk_liable' => $request->ksk_liable,
             'resident_abroad' => $request->resident_abroad,
-            'legal_form' => $request->legal_form,
             'is_freed' => @$request->is_freed,
             'has_power_of_attorney' => @$request->has_power_of_attorney,
+            'legal_form' => $request->legal_form,
             'type' => $request->type
         ]);
 
@@ -141,10 +133,10 @@ class ContractController extends Controller
             ]);
             $contract->comments()->save($comment);
         }
+
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
 
         $contract->save();
-
 
         return Redirect::back();
     }
@@ -160,7 +152,7 @@ class ContractController extends Controller
     {
         //$this->authorize('view contracts');
 
-        return Storage::download('contracts/' . $contract->basename, $contract->name);
+        return Storage::download('contracts/'. $contract->basename, $contract->name);
     }
 
     /**
@@ -186,11 +178,11 @@ class ContractController extends Controller
             $contract->accessing_users()->createMany($request->accessibleUsers);
         }
 
-        if ($request->file('contract')) {
-            Storage::delete('contracts/' . $contract->basename);
+        if($request->file('contract')) {
+            Storage::delete('contracts/'. $contract->basename);
             $file = $request->file('contract');
             $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
+            $basename = Str::random(20).$original_name;
 
             $contract->basename = $basename;
             $contract->name = $original_name;

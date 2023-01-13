@@ -61,6 +61,7 @@
                     <div @click="openContractEditModal()">{{ contract.name }}</div>
                     <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal"/>
                     <ContractDeleteModal :show="showContractDeleteModal" :close-modal="closeContractDeleteModal" :contract="contract" />
+                    <ContractEditModal :show="showContractEditModal" :close-modal="closeContractEditModal" :contract="contract" />
                 </div>
             </div>
             <div v-else>
@@ -107,10 +108,12 @@ import ProjectFileDeleteModal from "@/Layouts/Components/ProjectFileDeleteModal"
 import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal";
+import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 
 export default {
     name: "ProjectSidenav",
     components: {
+        ContractEditModal,
         ProjectDataEditModal,
         ContractUploadModal,
         ProjectFileEditModal,
@@ -123,7 +126,7 @@ export default {
         XCircleIcon,
         ContractModuleUploadModal,
         PencilAltIcon,
-        ChevronDownIcon
+        ChevronDownIcon,
     },
     props: {
         project: Object,

@@ -261,21 +261,25 @@ class ProjectController extends Controller
 
         $costSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => "",
+            'verified_value' => "",
             'linked_money_source_id' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => "",
+            'verified_value' => "",
             'linked_money_source_id' => null,
         ]);
 
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
 
@@ -425,6 +429,7 @@ class ProjectController extends Controller
 
             $column->subPositionRows()->attach($subPositionRows, [
                 'value' => 0,
+                'verified_value' => 0,
                 'linked_money_source_id' => null
             ]);
         }
@@ -519,6 +524,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
     }
@@ -560,6 +566,12 @@ class ProjectController extends Controller
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => 0,
+            'linked_money_source_id' => null,
+        ]);
     }
 
     public function addSubPosition(Request $request): void
@@ -594,6 +606,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
     }

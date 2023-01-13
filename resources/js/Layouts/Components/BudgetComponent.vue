@@ -154,7 +154,7 @@
                     </div>
                     <table class="w-11/12 mb-6">
                         <tbody class="">
-                        <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
+                        <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                             <th class="p-0" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">

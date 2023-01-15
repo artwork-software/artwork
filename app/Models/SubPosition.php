@@ -14,7 +14,8 @@ class SubPosition extends Model
 
     protected $fillable = [
         'name',
-        'position'
+        'position',
+        'is_verified'
     ];
 
     protected $appends = ['columnSums'];

@@ -312,5 +312,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::post('/project/budget/verified/main-position/request', [ProjectController::class, 'verifiedRequestMainPosition'])->name('project.budget.verified.main-position.request');
     Route::patch('/project/budget/verified/main-position', [ProjectController::class, 'verifiedMainPosition'])->name('project.budget.verified.main-position');
+
+    Route::post('/project/budget/verified/sub-position/request', [ProjectController::class, 'verifiedRequestSubPosition'])->name('project.budget.verified.sub-position.request');
+    Route::patch('/project/budget/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])->name('project.budget.verified.sub-position');
 });
 

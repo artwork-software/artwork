@@ -18,6 +18,11 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->integer('position');
             $table->bigInteger('main_position_id');
+            $table->enum('is_verified', [
+                'BUDGET_VERIFIED_TYPE_NOT_VERIFIED',
+                'BUDGET_VERIFIED_TYPE_CLOSED',
+                'BUDGET_VERIFIED_TYPE_REQUESTED'
+            ])->default('BUDGET_VERIFIED_TYPE_NOT_VERIFIED');
             $table->timestamps();
         });
     }

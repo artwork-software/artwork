@@ -312,7 +312,54 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function verifiedMainPosition(Request $request)
+    public function verifiedRequestSubPosition(Request $request): RedirectResponse
+    {
+        $subPosition = SubPosition::find($request->id);
+        $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
+
+        $this->notificationData->title = 'Neue Verifizierungsanfrage';
+        $this->notificationData->requested_position = $request->position;
+        $this->notificationData->project_title = $request->project_title;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->position = $subPosition->id;
+        $this->notificationData->created_by = Auth::user();
+        $this->notificationData->requested_id = $request->user;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
+
+        $subPosition->verified()->create([
+            'requested_by' => Auth::id(),
+            'requested' => $request->user
+        ]);
+
+        return back()->with('success');
+    }
+
+    public function verifiedSubPosition(Request $request)
+    {
+        $subPosition = SubPosition::find($request->subPositionId);
+        $subPositionRows = $subPosition->subPositionRows()->get();
+        foreach ($subPositionRows as $subPositionRow) {
+            $cells = $subPositionRow->cells()->get();
+            foreach ($cells as $cell) {
+                $cell->update(['verified_value' => @$cell->value]);
+            }
+        }
+        $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+        $subPosition->verified()->delete();
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $subPosition->id)
+            ->whereJsonContains("data->requested_id", Auth::id())
+            ->delete();
+        return back()->with('success');
+    }
+
+    public function verifiedMainPosition(Request $request): RedirectResponse
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $subPositions = $mainPosition->subPositions()->get();
@@ -727,6 +774,7 @@ class ProjectController extends Controller
                         'subPositions' => function ($query) {
                             return $query->orderBy('position');
                         },
+                        'subPositions.verified',
                         'subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
                         }, 'subPositions.subPositionRows.cells.comments' => function ($query) {

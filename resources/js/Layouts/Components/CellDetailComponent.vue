@@ -29,19 +29,29 @@
                     </div>
                     <!-- Calculate Tab -->
                     <div v-if="isCalculateTab">
-                        <div v-if="this.calculationArray?.length > 0"
-                             v-for="(calculation,index) in this.calculationArray">
+                        <div v-if="this.cell.calculations?.length === 0">
+                            <div @click="addCalculation(cell.id)"
+                                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                                <div class="group-hover:block uppercase hidden text-buttonBlue text-sm -mt-8 ">
+                                    Positionaaaa
+                                    <PlusCircleIcon
+                                        class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                </div>
+                            </div>
+                        </div>
+                        <div v-if="this.cell.calculations?.length > 0"
+                             v-for="(calculation,index) in this.cell.calculations">
                             <div class="h-1.5 my-2 bg-silverGray"/>
                             <div class="flex space-x-4 mb-3">
                                 <div class="w-1/2">
                                     <input type="text"
-                                           v-model="this.calculationNames[index]"
+                                           v-model="calculation.name"
                                            placeholder="Name"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
                                 <div class="w-1/2">
                                     <input type="text" @focusout="this.refreshSumKey++"
-                                           v-model="this.calculationValues[index]"
+                                           v-model="calculation.value"
                                            placeholder="Wert"
                                            class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                 </div>
@@ -51,37 +61,12 @@
                                       rows="4"
                                       class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
-                        <div v-else>
-                            <div class="flex space-x-4 mb-3">
-                                <div class="w-1/2">
-                                    <input type="text"
-                                           v-model="this.calculationNames[0]"
-                                           placeholder="Name"
-                                           class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <div class="w-1/2">
-                                    <input type="text"
-                                           v-model="this.calculationValues[0]"
-                                           placeholder="Wert"
-                                           class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                            </div>
-                            <textarea placeholder="Kommentar"
-                                      v-model="this.calculationDescriptions[0]"
-                                      rows="4"
-                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                        </div>
-                        <div @click="addCalculation()"
-                             class="bg-secondaryHover h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue cursor-pointer"
-                             @mouseover="hoveredBorder = true"
-                             @mouseout="hoveredBorder = false">
-                            <div v-if="hoveredBorder"
-                                 class="uppercase text-buttonBlue text-sm -mt-8">
+                        <div @click="addCalculation(cell.id)"
+                             class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Position
-                                <PlusCircleIcon @mouseover="hoveredBorder = true"
-                                                @mouseout="hoveredBorder = false" v-if="hoveredBorder"
-                                                @click="addCalculation()"
-                                                class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                <PlusCircleIcon
+                                    class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
                         </div>
                         <div class="py-2 bg-silverGray flex justify-between mt-2">
@@ -293,7 +278,7 @@ export default {
             return commentsShow
         },
         calculationNames() {
-            let calculations = JSON.parse(this.cell.calculations);
+            let calculations = this.cell.calculations;
             let names = []
             calculations?.forEach((calculation) => {
                 names.push(calculation.name);
@@ -301,7 +286,7 @@ export default {
             return names;
         },
         calculationValues() {
-            let calculations = JSON.parse(this.cell.calculations);
+            let calculations = this.cell.calculations;
             let values = []
             calculations?.forEach((calculation) => {
                 values.push(calculation.value);
@@ -309,7 +294,7 @@ export default {
             return values;
         },
         calculationDescriptions() {
-            let calculations = JSON.parse(this.cell.calculations);
+            let calculations = this.cell.calculations;
             let descriptions = []
             calculations?.forEach((calculation) => {
                 descriptions.push(calculation.description);
@@ -317,7 +302,7 @@ export default {
             return descriptions;
         },
         calculationArray() {
-            let calculations = JSON.parse(this.cell.calculations);
+            let calculations = this.cell.calculations;
             let helperArray = [];
             calculations?.forEach((calculation, index) => {
                 helperArray[index] = {
@@ -382,28 +367,8 @@ export default {
 
             this.closeModal(true);
         },
-        addCalculation() {
-            if (this.calculationArray?.length > 0) {
-                this.calculationArray?.forEach((calculation, index) => {
-                    this.calculationArray[index] = {
-                        name: this.calculationNames[index],
-                        value: this.calculationValues[index],
-                        description: this.calculationDescriptions[index]
-                    };
-                })
-                this.calculationArray.push({name: '', value: '', description: ''})
-            } else {
-                this.calculationArray.push({name: '', value: '', description: ''})
-                this.calculationArray?.forEach((calculation, index) => {
-                    this.calculationArray[index] = {
-                        name: this.calculationNames[index],
-                        value: this.calculationValues[index],
-                        description: this.calculationDescriptions[index]
-                    };
-                })
-                this.calculationArray.push({name: '', value: '', description: ''})
-            }
-            this.refreshSumKey++;
+        addCalculation(cellId) {
+            this.$inertia.post(route('project.budget.cell-calculation.add', cellId))
         },
         saveCalculation() {
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {

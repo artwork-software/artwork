@@ -14,6 +14,7 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Models\Category;
+use App\Models\CellCalculations;
 use App\Models\CellComments;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
@@ -662,9 +663,19 @@ class ProjectController extends Controller
 
     public function updateCellCalculation(Request $request)
     {
-        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
-        $cell->update(['calculations' => json_encode($request->calculations)]);
-        $cell->update(['value' => $request->calculationSum]);
+
+        foreach ($request->calculations as $calculation){
+            $cellCalculation = CellCalculations::find($calculation['id']);
+            $cellCalculation->update([
+                'name' => @$calculation['name'],
+                'value' => @$calculation['value'],
+                'description' => @$calculation['description']
+            ]);
+        }
+
+        $cell = ColumnCell::find($request->calculations[0]['cell_id']);
+        $cell->update(['value' => $cell->calculations()->sum('value')] );
+
         return back()->with('success');
     }
 

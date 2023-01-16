@@ -668,6 +668,14 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+    public function addCalculation(ColumnCell $cell){
+        $cell->calculations()->create([
+            'name' => '',
+            'value' => 0,
+            'description' => ''
+        ]);
+    }
+
     private function updateAutomaticCellValues($subPositionRowId)
     {
 
@@ -779,7 +787,7 @@ class ProjectController extends Controller
                             return $query->orderBy('position');
                         }, 'subPositions.subPositionRows.cells.comments' => function ($query) {
                             return $query->orderBy('created_at', 'DESC');
-                        }, 'subPositions.subPositionRows.cells.column'
+                        }, 'subPositions.subPositionRows.cells.column', 'subPositions.subPositionRows.cells.calculations'
                     ])
                     ->orderBy('position')
                     ->get()

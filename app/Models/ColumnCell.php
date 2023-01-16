@@ -39,4 +39,9 @@ class ColumnCell extends Model
     {
         return $this->hasMany(CellComments::class, 'cell_id');
     }
+
+    public function calculations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CellCalculations::class,'cell_id');
+    }
 }

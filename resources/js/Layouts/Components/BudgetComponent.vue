@@ -450,7 +450,7 @@
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                         <td v-for="(cell,index) in row.cells"
-                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition)]">
+                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                                                 class="my-4 h-6 flex items-center pr-2.5 ml-2 justify-end"
@@ -475,7 +475,7 @@
                                                             </div>
                                                             <div
                                                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center ml-2"
+                                                                class="my-4 h-6 flex items-center"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-else>
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -931,17 +931,24 @@ export default {
     },
 
     methods: {
-        checkCellColor(cell, mainPosition){
+        checkCellColor(cell, mainPosition, subPosition){
             let cssString = '';
             if(cell.value !== cell.verified_value){
-                if(mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'){
+                if(mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'){
                     cssString += ' bg-red-300 '
+                    if(cell.column.color !== 'whiteColumn'){
+                        cssString += ' xsWhiteBold '
+                    }
                 }else{
                     cssString += cell.column.color;
                 }
             }
             if(cell.column.color === 'whiteColumn'){
-                cssString += ' xsDark ';
+                if(cell.value !== cell.verified_value) {
+                    cssString += ' xsWhiteBold ';
+                }else{
+                    cssString += ' xsDark ';
+                }
             }else{
                 cssString += ' xsWhiteBold ';
             }

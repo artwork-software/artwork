@@ -47,7 +47,7 @@
                                 </div>
                             </div>
                             <textarea placeholder="Kommentar"
-                                      v-model="this.calculationDescriptions[index]"
+                                      v-model="calculation.description"
                                       rows="4"
                                       class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
@@ -406,18 +406,8 @@ export default {
             this.refreshSumKey++;
         },
         saveCalculation() {
-            this.calculationArray?.forEach((calculation, index) => {
-                this.calculationArray[index] = {
-                    name: this.calculationNames[index],
-                    value: this.calculationValues[index],
-                    description: this.calculationDescriptions[index]
-                };
-            })
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {
-                column_id: this.cell.column.id,
-                calculations: this.calculationArray,
-                sub_position_row_id: this.cell.sub_position_row_id,
-                calculationSum: this.calculationSum
+                calculations: this.cell.calculations,
             }, {preserveState: true});
             this.closeModal(true);
         },

@@ -53,8 +53,8 @@
                             <ListboxButton v-if="selectedLegalForm !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedLegalForm?.name }}</span>
+                                <span class="block truncate items-center flex">
+                                            <span>{{ selectedLegalForm }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -64,25 +64,28 @@
                             </ListboxButton>
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     Rechtsform
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <span
+                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="legalForm in legalForms"
-                                                   :key="legalForm.name"
+                                                   v-for="legalForm in legalFormArray"
+                                                   :key="legalForm"
                                                    :value="legalForm"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ legalForm.name }}
+                                                        {{ legalForm }}
                                                     </span>
                                             </div>
                                             <span
@@ -102,8 +105,8 @@
                             <ListboxButton v-if="selectedContractType !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedContractType?.name }}</span>
+                                <span class="block truncate items-center flex">
+                                            <span>{{ selectedContractType }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -113,25 +116,28 @@
                             </ListboxButton>
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     Vertragsart
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <span
+                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="contractType in contractTypes"
-                                                   :key="contractType.name"
+                                                   v-for="contractType in this.contractTypeArray"
+                                                   :key="contractType"
                                                    :value="contractType"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ contractType.name }}
+                                                        {{ contractType }}
                                                     </span>
                                             </div>
                                             <span
@@ -156,7 +162,7 @@
                                 class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
                                 <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency?.name }}</span>
+                                            <span>{{ selectedCurrency }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -167,17 +173,17 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    class="absolute w-[12%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="currency in currencies"
-                                                   :key="currency.name"
+                                                   v-for="currency in currencyArray"
+                                                   :key="currency"
                                                    :value="currency"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ currency.name }}
+                                                        {{ currency }}
                                                     </span>
                                             </div>
                                             <span
@@ -202,7 +208,8 @@
                         </div>
 
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad" @click="this.hasPowerOfAttorney = false; this.isFreed = false"
+                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad"
+                                   @click="this.hasPowerOfAttorney = false; this.isFreed = false"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
@@ -213,7 +220,8 @@
                             <div class="flex items-center mb-2">
                                 <input id="hasGroup" type="checkbox" v-model="this.hasPowerOfAttorney"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="hasGroup"
+                                       :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     Vollmacht liegt vor
                                 </label>
@@ -293,12 +301,13 @@
                     <div v-if="showExtraSettings">
                         <div class="flex items-center mb-2">
                             <div v-for="extraSetting in extraSettings">
-                            <input id="hasGroup" type="checkbox" v-model="extraSetting.checked"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                            <label for="hasGroup" :class="extraSetting.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                   class="ml-2">
-                                {{ extraSetting.name}}
-                            </label>
+                                <input id="hasGroup" type="checkbox" v-model="extraSetting.checked"
+                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                <label for="hasGroup"
+                                       :class="extraSetting.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    {{ extraSetting.name }}
+                                </label>
                             </div>
                         </div>
                         <button type="button"
@@ -329,6 +338,15 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 
+const contractTypeArray = [
+    'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
+]
+const currencyArray = [
+    '€','$','CHF','£'
+]
+const legalFormArray = [
+    'Einzelunternehmen', 'GbR', 'GmbH', 'UG', 'AG', 'Sonstige'
+]
 export default {
     name: "ContractUploadModal",
     props: {
@@ -336,9 +354,6 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
-        legalForms: Array,
-        contractTypes: Array,
-        currencies: Array,
     },
     components: {
         JetDialogModal,
@@ -371,13 +386,16 @@ export default {
     },
     data() {
         return {
+            legalFormArray,
+            currencyArray,
+            contractTypeArray,
             uploadDocumentFeedback: "",
             files: [],
             description: "",
             contractPartner: null,
             selectedLegalForm: null,
             selectedContractType: null,
-            selectedCurrency: {name: '€'},
+            selectedCurrency: '€',
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
@@ -421,8 +439,8 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
-        deleteFileFromArray(index){
-          this.files.splice(index,1);
+        deleteFileFromArray(index) {
+            this.files.splice(index, 1);
         },
         storeFile(contract) {
             this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
@@ -454,10 +472,10 @@ export default {
             }
             this.closeModal()
         },
-        storeContract(){
+        storeContract() {
             this.contractForm.files = this.files;
             this.contractForm.contract_partner = this.contractPartner;
-           // this.contractForm.legal_form = this.selectedLegalForm;
+            // this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.legal_form = 'GmbH';
             this.contractForm.type = this.selectedContractType;
             this.contractForm.amount = this.contractAmount;
@@ -472,7 +490,8 @@ export default {
             })
             this.contractForm.accessibleUsers = userIds;
 
-            this.contractForm.post(this.route('contracts.store',this.projectId));
+            this.contractForm.post(this.route('contracts.store', this.projectId));
+            this.closeModal()
         }
     }
 }

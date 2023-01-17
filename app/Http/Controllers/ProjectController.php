@@ -861,7 +861,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
+        $update_properties = $request->only('name', 'description', 'number_of_participants');
 
         // authorization
         if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))

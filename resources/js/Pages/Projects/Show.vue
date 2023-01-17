@@ -1895,7 +1895,6 @@ export default {
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
-                cost_center: this.project.cost_center,
                 number_of_participants: this.project.number_of_participants,
                 assigned_user_ids: {},
                 assigned_departments: [],
@@ -2172,6 +2171,7 @@ export default {
             this.form.assigned_user_ids = {};
         },
         editProject() {
+
             this.form.number_of_participants = this.selectedParticipantNumber;
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
@@ -2180,6 +2180,7 @@ export default {
                 this.form.assigned_departments.push(department);
             })
             this.form.selectedGroup = this.selectedGroup;
+            console.log(this.form);
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },

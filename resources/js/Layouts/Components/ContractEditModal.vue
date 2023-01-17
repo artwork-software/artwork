@@ -4,7 +4,7 @@
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
-                    Vertrags-Upload
+                    Vertrag bearbeiten
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
@@ -54,8 +54,8 @@
                             <ListboxButton v-if="selectedLegalForm !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedLegalForm?.name }}</span>
+                                <span class="block truncate items-center flex">
+                                            <span>{{ selectedLegalForm }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -65,25 +65,28 @@
                             </ListboxButton>
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     Rechtsform
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <span
+                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="legalForm in legalForms"
-                                                   :key="legalForm.name"
+                                                   v-for="legalForm in legalFormArray"
+                                                   :key="legalForm"
                                                    :value="legalForm"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ legalForm.name }}
+                                                        {{ legalForm }}
                                                     </span>
                                             </div>
                                             <span
@@ -103,8 +106,8 @@
                             <ListboxButton v-if="selectedContractType !== null"
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedContractType?.name }}</span>
+                                <span class="block truncate items-center flex">
+                                            <span>{{ selectedContractType }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -114,25 +117,28 @@
                             </ListboxButton>
                             <ListboxButton v-else
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
-                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                <div class="flex flex-grow xsLight text-left subpixel-antialiased">
                                     Vertragsart
                                 </div>
-                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                <span
+                                    class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
                             </ListboxButton>
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="contractType in contractTypes"
-                                                   :key="contractType.name"
+                                                   v-for="contractType in this.contractTypeArray"
+                                                   :key="contractType"
                                                    :value="contractType"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ contractType.name }}
+                                                        {{ contractType }}
                                                     </span>
                                             </div>
                                             <span
@@ -157,7 +163,7 @@
                                 class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
                                 <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency?.name }}</span>
+                                            <span>{{ selectedCurrency }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -170,15 +176,15 @@
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="currency in currencies"
-                                                   :key="currency.name"
+                                                   v-for="currency in currencyArray"
+                                                   :key="currency"
                                                    :value="currency"
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ currency.name }}
+                                                        {{ currency }}
                                                     </span>
                                             </div>
                                             <span
@@ -311,8 +317,8 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Vertrag hochladen" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
-                               @click="storeContract"/>
+                    <AddButton text="Vertrag bearbeiten" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                               @click="updateContract"/>
                 </div>
             </div>
 
@@ -330,6 +336,15 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 
+const contractTypeArray = [
+    'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
+]
+const currencyArray = [
+    '€','$','CHF','£'
+]
+const legalFormArray = [
+    'Einzelunternehmen', 'GbR', 'GmbH', 'UG', 'AG', 'Sonstige'
+]
 export default {
     name: "ContractEditModal",
     props: {
@@ -338,8 +353,7 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
-        legalForms: Array,
-        contractTypes: Array,
+
         currencies: Array,
     },
     components: {
@@ -371,15 +385,91 @@ export default {
             deep: true
         },
     },
+    methods: {
+        addUserToContractUserArray(user) {
+            if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
+                this.usersWithAccess.push(user);
+            }
+            this.user_query = '';
+        },
+        deleteUserFromContractUserArray(index) {
+            this.usersWithAccess.splice(index, 1);
+        },
+        selectNewFiles() {
+            this.$refs.module_files.click();
+        },
+        uploadDraggedDocuments(event) {
+            this.validateType([...event.dataTransfer.files])
+        },
+        upload(event) {
+            this.validateType([...event.target.files])
+        },
+        deleteFileFromArray(index) {
+            this.files.splice(index, 1);
+        },
+        storeFile(contract) {
+            this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.$emit('upload')
+                }
+
+            })
+        },
+        validateType(files) {
+            this.uploadDocumentFeedback = "";
+            const forbiddenTypes = [
+                "application/vnd.microsoft.portable-executable",
+                "application/x-apple-diskimage",
+            ]
+            for (let file of files) {
+                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
+                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+                } else {
+                    this.files.push(file)
+                }
+            }
+        },
+        storeFiles() {
+            for (let file of this.files) {
+                this.storeFile(file)
+            }
+            this.closeModal()
+        },
+        updateContract() {
+            this.contractForm.files = this.files;
+            this.contractForm.contract_partner = this.contractPartner;
+            this.contractForm.legal_form = this.selectedLegalForm;
+            this.contractForm.type = this.selectedContractType;
+            this.contractForm.amount = this.contractAmount;
+            this.contractForm.ksk_liable = this.kskLiable;
+            this.contractForm.resident_abroad = this.isAbroad;
+            this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
+            this.contractForm.is_freed = this.isFreed;
+            this.contractForm.description = this.description;
+            this.contractForm.currency = this.selectedCurrency;
+            const userIds = [];
+            this.usersWithAccess.forEach((user) => {
+                userIds.push(user.id);
+            })
+            this.contractForm.accessibleUsers = userIds;
+            this.contractForm.patch(this.route('contracts.update', this.contract.id));
+            this.closeModal()
+        }
+    },
     data() {
         return {
+            legalFormArray,
+            currencyArray,
+            contractTypeArray,
             uploadDocumentFeedback: "",
             files: this.contract.basename,
             description: this.contract.description,
             contractPartner: this.contract.contract_partner,
             selectedLegalForm: this.contract.legal_form,
             selectedContractType: this.contract.type,
-            selectedCurrency: {name: '€'},
+            selectedCurrency: this.contract.currency,
             user_search_results: [],
             user_query: '',
             usersWithAccess: this.contract.accessibleUsers ? this.contract.accessibleUsers : [],

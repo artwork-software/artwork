@@ -13,12 +13,16 @@ class Contract extends Model
         'name',
         'basename',
         'contract_partner',
+        'description',
+        'is_freed',
+        'has_power_of_attorney',
         'amount',
         'project_id',
         'ksk_liable',
         'resident_abroad',
         'legal_form',
-        'type'
+        'type',
+        'currency'
     ];
 
     protected $guarded = [
@@ -27,7 +31,9 @@ class Contract extends Model
 
     protected $casts = [
         'ksk_liable' => 'boolean',
-        'resident_abroad' => 'boolean'
+        'resident_abroad' => 'boolean',
+        'is_freed' => 'boolean',
+        'has_power_of_attorney' => 'boolean',
     ];
 
     public function project()

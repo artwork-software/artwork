@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string("name");
             $table->string('basename');
             $table->string("contract_partner");
+            $table->string('currency')->default('€');
             $table->integer('amount');
             $table->unsignedBigInteger('project_id');
             $table->string('description')->nullable();

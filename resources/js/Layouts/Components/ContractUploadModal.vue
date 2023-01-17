@@ -182,7 +182,7 @@
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-4 block truncate']">
                                                         {{ currency }}
                                                     </span>
                                             </div>
@@ -411,6 +411,7 @@ export default {
                 legal_form: this.selectedLegalForm,
                 type: this.selectedContractType,
                 amount: this.contractAmount,
+                currency: this.selectedCurrency,
                 ksk_liable: this.kskLiable,
                 resident_abroad: this.isAbroad,
                 has_power_of_attorney: this.hasPowerOfAttorney,
@@ -475,8 +476,7 @@ export default {
         storeContract() {
             this.contractForm.files = this.files;
             this.contractForm.contract_partner = this.contractPartner;
-            // this.contractForm.legal_form = this.selectedLegalForm;
-            this.contractForm.legal_form = 'GmbH';
+            this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.type = this.selectedContractType;
             this.contractForm.amount = this.contractAmount;
             this.contractForm.ksk_liable = this.kskLiable;
@@ -484,12 +484,12 @@ export default {
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
             this.contractForm.is_freed = this.isFreed;
             this.contractForm.description = this.description;
+            this.contractForm.currency = this.selectedCurrency;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
-
             this.contractForm.post(this.route('contracts.store', this.projectId));
             this.closeModal()
         }

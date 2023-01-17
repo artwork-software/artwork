@@ -979,12 +979,50 @@
                     <div class="text-secondary subpixel-antialiased">
                         Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                     </div>
-                    <div class="flex w-full flex-wrap mt-4">
+                    <div class="mb-4">
+                        <div class="hidden sm:block">
+                            <div class="border-gray-200">
+                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
+                                     aria-label="Tabs">
+                                    <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
+                                       :key="tab.name"
+                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :aria-current="tab.current ? 'page' : undefined">
+                                        {{ tab.name }}
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
                         <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                {{ historyItem.created_at }}:
-                            </span>
-                            <div class="flex w-full">
+                            <div v-if="historyItem.changes[0].type === 'project'">
+                                <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                    {{ historyItem.created_at }}:
+                                </span>
+                                <img v-if="historyItem.changes[0].changed_by"
+                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                     :alt="historyItem.changes[0].changed_by?.first_name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                             :user="historyItem.changes[0].changed_by"/>
+                                <div v-else class="xsLight ml-3">
+                                    gelöschte Nutzer:in
+                                </div>
+                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
+                                    {{ historyItem.changes[0].message }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
+                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
+                            <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
+                                <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                    {{ historyItem.created_at }}:
+                                </span>
                                 <img v-if="historyItem.changes[0].changed_by"
                                      :data-tooltip-target="historyItem.changes[0].changed_by?.id"
                                      :src="historyItem.changes[0].changed_by?.profile_photo_url"
@@ -1124,9 +1162,24 @@ export default defineComponent({
                 {name: 'Projektgruppe', href: '#', current: this.isGroupTab},
             ]
         },
+        historyTabs() {
+            return [
+                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
+                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
+            ]
+        },
 
     },
     methods: {
+        changeHistoryTabs(selectedTab) {
+            this.showProjectHistoryTab = false;
+            this.showBudgetHistoryTab = false;
+            if (selectedTab.name === 'Projekt') {
+                this.showProjectHistoryTab = true;
+            } else {
+                this.showBudgetHistoryTab = true;
+            }
+        },
         changeTab(selectedTab) {
             this.usersToAdd = [];
             this.isSingleTab = false;
@@ -1271,6 +1324,8 @@ export default defineComponent({
     },
     data() {
         return {
+            showProjectHistoryTab: true,
+            showBudgetHistoryTab: false,
             projectGroup_search_results: [],
             projectGroup_query: '',
             subProjects: [],

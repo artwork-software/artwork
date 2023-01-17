@@ -155,7 +155,8 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <th class="p-0" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
+                            <th class="p-0"
+                                :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
                                     <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
@@ -185,7 +186,8 @@
                                         </button>
                                     </div>
                                     <div class="flex items-center justify-end">
-                                        <div class="text-white w-28 flex items-center" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
+                                        <div class="text-white w-28 flex items-center"
+                                             v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
                                             <p class="xxsLight">wird verifiziert </p>
                                             <!-- TODO: SVG ersetzen mit IMG TAG -->
                                             <svg xmlns="http://www.w3.org/2000/svg"
@@ -218,22 +220,36 @@
                                             </svg>
 
                                         </div>
-                                        <div class="text-white w-44 flex items-center text-center cursor-pointer" @click="verifiedMainPosition(mainPosition.verified?.main_position_id)" v-if="mainPosition.verified?.requested === this.$page.props.user.id">
+                                        <div class="text-white w-44 flex items-center text-center cursor-pointer"
+                                             @click="verifiedMainPosition(mainPosition.verified?.main_position_id)"
+                                             v-if="mainPosition.verified?.requested === this.$page.props.user.id">
                                             <p class="xxsLight">Als verifiziert markieren</p>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20" viewBox="0 0 20 20">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20"
+                                                 viewBox="0 0 20 20">
                                                 <g id="check_btn" transform="translate(-1234 -671.05)">
-                                                    <g id="Pfad_1370" data-name="Pfad 1370" transform="translate(1234 671.05)" fill="none">
-                                                        <path d="M10,0A10,10,0,1,1,0,10,10,10,0,0,1,10,0Z" stroke="none"/>
-                                                        <path d="M 10 1 C 5.037380218505859 1 1 5.037380218505859 1 10 C 1 14.96261978149414 5.037380218505859 19 10 19 C 14.96261978149414 19 19 14.96261978149414 19 10 C 19 5.037380218505859 14.96261978149414 1 10 1 M 10 0 C 15.52285003662109 0 20 4.477149963378906 20 10 C 20 15.52285003662109 15.52285003662109 20 10 20 C 4.477149963378906 20 0 15.52285003662109 0 10 C 0 4.477149963378906 4.477149963378906 0 10 0 Z" stroke="none" fill="#fcfcfb"/>
+                                                    <g id="Pfad_1370" data-name="Pfad 1370"
+                                                       transform="translate(1234 671.05)" fill="none">
+                                                        <path d="M10,0A10,10,0,1,1,0,10,10,10,0,0,1,10,0Z"
+                                                              stroke="none"/>
+                                                        <path
+                                                            d="M 10 1 C 5.037380218505859 1 1 5.037380218505859 1 10 C 1 14.96261978149414 5.037380218505859 19 10 19 C 14.96261978149414 19 19 14.96261978149414 19 10 C 19 5.037380218505859 14.96261978149414 1 10 1 M 10 0 C 15.52285003662109 0 20 4.477149963378906 20 10 C 20 15.52285003662109 15.52285003662109 20 10 20 C 4.477149963378906 20 0 15.52285003662109 0 10 C 0 4.477149963378906 4.477149963378906 0 10 0 Z"
+                                                            stroke="none" fill="#fcfcfb"/>
                                                     </g>
-                                                    <path id="Pfad_157" data-name="Pfad 157" d="M-1151.25,4789.252l3.142,3.142,6.013-6.013" transform="translate(2390.673 -4108.337)" fill="none" stroke="#fcfcfb" stroke-width="1.5"/>
+                                                    <path id="Pfad_157" data-name="Pfad 157"
+                                                          d="M-1151.25,4789.252l3.142,3.142,6.013-6.013"
+                                                          transform="translate(2390.673 -4108.337)" fill="none"
+                                                          stroke="#fcfcfb" stroke-width="1.5"/>
                                                 </g>
                                             </svg>
                                         </div>
-                                        <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                                        <div class="text-white w-44 flex items-center text-center justify-end mr-2"
+                                             v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
                                             <p class="xxsLight">verifiziert</p>
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1" viewBox="0 0 11.975 13.686">
-                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" fill="#fcfcfb"/>
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686"
+                                                 class="ml-1" viewBox="0 0 11.975 13.686">
+                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                      fill="#fcfcfb"/>
                                             </svg>
                                         </div>
                                         <div class="flex flex-wrap w-8">
@@ -329,61 +345,79 @@
                                                     </button>
                                                 </div>
                                                 <div class="flex items-center justify-end">
-                                                    <div class="flex items-center justify-end">
-                                                        <div class="text-white w-28 flex items-center" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && subPosition.verified?.requested !== this.$page.props.user.id">
-                                                            <p class="xxsLight">wird verifiziert </p>
-                                                            <!-- TODO: SVG ersetzen mit IMG TAG -->
-                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                 xmlns:xlink="http://www.w3.org/1999/xlink" class="ml-1" width="19"
-                                                                 height="14.292" viewBox="0 0 19 14.292">
-                                                                <defs>
-                                                                    <clipPath id="clip-path">
-                                                                        <rect id="Rechteck_458" data-name="Rechteck 458" width="5.138"
-                                                                              height="3.634" fill="#fcfcfb"/>
-                                                                    </clipPath>
-                                                                </defs>
-                                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                                                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                                                                      transform="translate(0 0.607)" fill="#fcfcfb"/>
-                                                                <g id="Gruppe_962" data-name="Gruppe 962"
-                                                                   transform="translate(-412 -311)">
-                                                                    <g id="Ellipse_147" data-name="Ellipse 147"
-                                                                       transform="translate(418 311)" fill="#27233c" stroke="#fcfcfb"
-                                                                       stroke-width="1">
-                                                                        <circle cx="6.5" cy="6.5" r="6.5" stroke="none"/>
-                                                                        <circle cx="6.5" cy="6.5" r="6" fill="none"/>
-                                                                    </g>
-                                                                    <g id="Gruppe_962-2" data-name="Gruppe 962"
-                                                                       transform="translate(423 314.945)" clip-path="url(#clip-path)">
-                                                                        <path id="Pfad_1344" data-name="Pfad 1344"
-                                                                              d="M5.1,1.418a.534.534,0,0,0-.7-.286L1.775,2.23,1.029.337a.533.533,0,1,0-.992.39L1.183,3.633,4.811,2.115a.533.533,0,0,0,.286-.7"
-                                                                              transform="translate(0 0)" fill="#fcfcfb"/>
-                                                                    </g>
+                                                    <div class="text-white w-28 flex items-center"
+                                                         v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && subPosition.verified?.requested !== this.$page.props.user.id">
+                                                        <p class="xxsLight">wird verifiziert </p>
+                                                        <!-- TODO: SVG ersetzen mit IMG TAG -->
+                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                             xmlns:xlink="http://www.w3.org/1999/xlink" class="ml-1"
+                                                             width="19"
+                                                             height="14.292" viewBox="0 0 19 14.292">
+                                                            <defs>
+                                                                <clipPath id="clip-path">
+                                                                    <rect id="Rechteck_458" data-name="Rechteck 458"
+                                                                          width="5.138"
+                                                                          height="3.634" fill="#fcfcfb"/>
+                                                                </clipPath>
+                                                            </defs>
+                                                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                                  d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                                  transform="translate(0 0.607)" fill="#fcfcfb"/>
+                                                            <g id="Gruppe_962" data-name="Gruppe 962"
+                                                               transform="translate(-412 -311)">
+                                                                <g id="Ellipse_147" data-name="Ellipse 147"
+                                                                   transform="translate(418 311)" fill="#27233c"
+                                                                   stroke="#fcfcfb"
+                                                                   stroke-width="1">
+                                                                    <circle cx="6.5" cy="6.5" r="6.5" stroke="none"/>
+                                                                    <circle cx="6.5" cy="6.5" r="6" fill="none"/>
                                                                 </g>
-                                                            </svg>
-
-                                                        </div>
-                                                        <div class="text-white w-44 flex items-center text-center cursor-pointer" @click="verifiedSubPosition(subPosition.verified?.sub_position_id)" v-if="subPosition.verified?.requested === this.$page.props.user.id">
-                                                            <p class="xxsLight">Als verifiziert markieren</p>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20" viewBox="0 0 20 20">
-                                                                <g id="check_btn" transform="translate(-1234 -671.05)">
-                                                                    <g id="Pfad_1370" data-name="Pfad 1370" transform="translate(1234 671.05)" fill="none">
-                                                                        <path d="M10,0A10,10,0,1,1,0,10,10,10,0,0,1,10,0Z" stroke="none"/>
-                                                                        <path d="M 10 1 C 5.037380218505859 1 1 5.037380218505859 1 10 C 1 14.96261978149414 5.037380218505859 19 10 19 C 14.96261978149414 19 19 14.96261978149414 19 10 C 19 5.037380218505859 14.96261978149414 1 10 1 M 10 0 C 15.52285003662109 0 20 4.477149963378906 20 10 C 20 15.52285003662109 15.52285003662109 20 10 20 C 4.477149963378906 20 0 15.52285003662109 0 10 C 0 4.477149963378906 4.477149963378906 0 10 0 Z" stroke="none" fill="#fcfcfb"/>
-                                                                    </g>
-                                                                    <path id="Pfad_157" data-name="Pfad 157" d="M-1151.25,4789.252l3.142,3.142,6.013-6.013" transform="translate(2390.673 -4108.337)" fill="none" stroke="#fcfcfb" stroke-width="1.5"/>
+                                                                <g id="Gruppe_962-2" data-name="Gruppe 962"
+                                                                   transform="translate(423 314.945)"
+                                                                   clip-path="url(#clip-path)">
+                                                                    <path id="Pfad_1344" data-name="Pfad 1344"
+                                                                          d="M5.1,1.418a.534.534,0,0,0-.7-.286L1.775,2.23,1.029.337a.533.533,0,1,0-.992.39L1.183,3.633,4.811,2.115a.533.533,0,0,0,.286-.7"
+                                                                          transform="translate(0 0)" fill="#fcfcfb"/>
                                                                 </g>
-                                                            </svg>
-                                                        </div>
-                                                        <div class="text-white w-44 flex items-center text-center justify-end mr-2" v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
-                                                            <p class="xxsLight">verifiziert</p>
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686" class="ml-1" viewBox="0 0 11.975 13.686">
-                                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock" d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z" fill="#fcfcfb"/>
-                                                            </svg>
-                                                        </div>
+                                                            </g>
+                                                        </svg>
                                                     </div>
-                                                    <div class="flex flex-wrap w-full">
-                                                        <div class="flex w-full">
+                                                    <div
+                                                        class="text-white w-44 flex items-center text-center cursor-pointer"
+                                                        @click="verifiedSubPosition(subPosition.verified?.sub_position_id)"
+                                                        v-if="subPosition.verified?.requested === this.$page.props.user.id">
+                                                        <p class="xxsLight">Als verifiziert markieren</p>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1"
+                                                             height="20" viewBox="0 0 20 20">
+                                                            <g id="check_btn" transform="translate(-1234 -671.05)">
+                                                                <g id="Pfad_1370" data-name="Pfad 1370"
+                                                                   transform="translate(1234 671.05)" fill="none">
+                                                                    <path d="M10,0A10,10,0,1,1,0,10,10,10,0,0,1,10,0Z"
+                                                                          stroke="none"/>
+                                                                    <path
+                                                                        d="M 10 1 C 5.037380218505859 1 1 5.037380218505859 1 10 C 1 14.96261978149414 5.037380218505859 19 10 19 C 14.96261978149414 19 19 14.96261978149414 19 10 C 19 5.037380218505859 14.96261978149414 1 10 1 M 10 0 C 15.52285003662109 0 20 4.477149963378906 20 10 C 20 15.52285003662109 15.52285003662109 20 10 20 C 4.477149963378906 20 0 15.52285003662109 0 10 C 0 4.477149963378906 4.477149963378906 0 10 0 Z"
+                                                                        stroke="none" fill="#fcfcfb"/>
+                                                                </g>
+                                                                <path id="Pfad_157" data-name="Pfad 157"
+                                                                      d="M-1151.25,4789.252l3.142,3.142,6.013-6.013"
+                                                                      transform="translate(2390.673 -4108.337)"
+                                                                      fill="none" stroke="#fcfcfb" stroke-width="1.5"/>
+                                                            </g>
+                                                        </svg>
+                                                    </div>
+                                                    <div
+                                                        class="text-white w-44 flex items-center text-center justify-end mr-2"
+                                                        v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                                                        <p class="xxsLight">verifiziert</p>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="11.975"
+                                                             height="13.686" class="ml-1" viewBox="0 0 11.975 13.686">
+                                                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                                  d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                                  fill="#fcfcfb"/>
+                                                        </svg>
+                                                    </div>
+                                                    <div class="flex flex-wrap w-8">
+                                                        <div class="flex">
                                                             <Menu as="div" class="my-auto relative"
                                                                   v-show="showMenu === 'subPosition' + subPosition.id">
                                                                 <div class="flex">
@@ -402,33 +436,32 @@
                                                                     leave-from-class="transform opacity-100 scale-100"
                                                                     leave-to-class="transform opacity-0 scale-95">
                                                                     <MenuItems
-                                                                        class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                        class="origin-top-right absolute right-0 w-64 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
 
                                                                             <MenuItem v-slot="{ active }"
                                                                                       v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
-                                                                                <span
-                                                                                    @click="openVerifiedModalSub(subPosition)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Von User verifizieren lassen
-                                                                                </span>
+                                                                                    <span
+                                                                                        @click="openVerifiedModalSub(subPosition)"
+                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                        <TrashIcon
+                                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                            aria-hidden="true"/>
+                                                                                        Von User verifizieren lassen
+                                                                                    </span>
                                                                             </MenuItem>
 
 
                                                                             <MenuItem v-slot="{ active }">
-                                                                                <span
-                                                                                    @click="openDeleteSubPositionModal(subPosition)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <TrashIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Löschen
-                                                                                </span>
+                                                                                    <span
+                                                                                        @click="openDeleteSubPositionModal(subPosition)"
+                                                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                        <TrashIcon
+                                                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                            aria-hidden="true"/>
+                                                                                        Löschen
+                                                                                    </span>
                                                                             </MenuItem>
-
 
 
                                                                         </div>
@@ -441,7 +474,8 @@
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
-                                                <tr v-if="subPosition.sub_position_rows?.length > 0" :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
+                                                <tr v-if="subPosition.sub_position_rows?.length > 0"
+                                                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
                                                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
@@ -466,7 +500,8 @@
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
                                                                     :class="index <= 1 ? 'w-20 mr-0.5' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
-                                                                    class="my-2 xsDark text-right" :type="index > 2 ? 'number' : 'text'"
+                                                                    class="my-2 xsDark text-right"
+                                                                    :type="index > 2 ? 'number' : 'text'"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"
@@ -494,7 +529,8 @@
                                                 </tr>
                                                 <div v-else @click="addRowToSubPosition(subPosition, row)"
                                                      class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                                    <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                                                    <div
+                                                        class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                                                         Zeile
                                                         <PlusCircleIcon
                                                             class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -504,7 +540,8 @@
                                                     <td class="w-24"></td>
                                                     <td class="w-24"></td>
                                                     <td class="w-72 my-2">SUM</td>
-                                                    <div v-if="subPosition.sub_position_rows.length > 0" class="flex items-center"
+                                                    <div v-if="subPosition.sub_position_rows.length > 0"
+                                                         class="flex items-center"
                                                          v-for="column in budget.columns.slice(3)">
                                                         <td class="w-48 ml-0.5 my-4"
                                                             :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
@@ -528,7 +565,8 @@
                                         </th>
                                     </tr>
 
-                                    <tr class=" xsWhiteBold flex h-10 w-full text-right" :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
+                                    <tr class=" xsWhiteBold flex h-10 w-full text-right"
+                                        :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
                                         <td class="w-24"></td>
                                         <td class="w-24"></td>
                                         <td class="w-72 my-2">SUM</td>
@@ -562,8 +600,11 @@
                             <td class="w-24"></td>
                             <td class="w-72 my-2">SUM</td>
                             <td class="flex items-center"
-                                 v-for="column in budget.columns.slice(3)">
-                                <div class="w-48 my-2" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">{{this.getSumOfTable(0,column.id)}}</div>
+                                v-for="column in budget.columns.slice(3)">
+                                <div class="w-48 my-2"
+                                     :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                    {{ this.getSumOfTable(0, column.id) }}
+                                </div>
                             </td>
 
                         </tr>
@@ -751,13 +792,15 @@
                     <div v-if="submitVerifiedModalData.user !== ''" class="mt-2 mb-4 flex items-center">
                         <span class="flex mr-5 rounded-full items-center font-bold text-primary">
                             <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full object-cover" :src="usersToAdd.profile_photo_url" alt=""/>
+                                <img class="flex h-11 w-11 rounded-full object-cover"
+                                     :src="usersToAdd.profile_photo_url" alt=""/>
                                 <span class="flex ml-4 sDark">
                                     {{ usersToAdd.first_name }} {{ usersToAdd.last_name }}
                                 </span>
                                 <button type="button" @click="deleteUserFromVerifiedUserArray">
                                     <span class="sr-only">User aus Finanzierungsquelle entfernen</span>
-                                    <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                    <XIcon
+                                        class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                 </button>
                             </div>
                         </span>
@@ -931,30 +974,30 @@ export default {
     },
 
     methods: {
-        checkCellColor(cell, mainPosition, subPosition){
+        checkCellColor(cell, mainPosition, subPosition) {
             let cssString = '';
-            if(cell.value !== cell.verified_value){
-                if(mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'){
+            if (cell.value !== cell.verified_value) {
+                if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED') {
                     cssString += ' bg-red-300 '
-                    if(cell.column.color !== 'whiteColumn'){
+                    if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsWhiteBold '
                     }
-                }else{
+                } else {
                     cssString += cell.column.color;
                 }
             }
-            if(cell.column.color === 'whiteColumn'){
-                if(cell.value !== cell.verified_value) {
+            if (cell.column.color === 'whiteColumn') {
+                if (cell.value !== cell.verified_value) {
                     cssString += ' xsWhiteBold ';
-                }else{
+                } else {
                     cssString += ' xsDark ';
                 }
-            }else{
+            } else {
                 cssString += ' xsWhiteBold ';
             }
             return cssString
         },
-        getSumOfTable(tableType,columnId){
+        getSumOfTable(tableType, columnId) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
                 sum += mainPosition.columnSums[columnId];
@@ -1136,8 +1179,8 @@ export default {
             this.submitVerifiedModalData.is_sub = false;
             this.submitVerifiedModalData.position = [];
         },
-        submitVerifiedModal(){
-            if(this.submitVerifiedModalData.is_main){
+        submitVerifiedModal() {
+            if (this.submitVerifiedModalData.is_main) {
                 this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
             } else {
                 this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
@@ -1152,19 +1195,19 @@ export default {
             this.submitVerifiedModalData.position = mainPosition
             this.showVerifiedModal = true
         },
-        openVerifiedModalSub(subPosition){
+        openVerifiedModalSub(subPosition) {
             this.verifiedTexts.positionTitle = subPosition.name
             this.submitVerifiedModalData.is_sub = true
             this.submitVerifiedModalData.id = subPosition.id
             this.submitVerifiedModalData.position = subPosition
             this.showVerifiedModal = true
         },
-        verifiedMainPosition(mainPositionId){
+        verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId
             })
         },
-        verifiedSubPosition(subPositionId){
+        verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId
             })

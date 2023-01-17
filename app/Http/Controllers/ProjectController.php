@@ -538,7 +538,16 @@ class ProjectController extends Controller
      */
     public function updateCellValue(Request $request): void
     {
-        ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->update(['value' => $request->value]);
+        $column = Column::find($request->column_id);
+        $project = $column->project()->first();
+        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
+
+        if($cell->value !== $request->value){
+            $this->history->createHistory($project->id, '„'. $cell->value .'“ in „' . $request->value . '“ geändert', 'budget');
+        }
+
+        $cell->update(['value' => $request->value]);
+
         $this->updateAutomaticCellValues($request->sub_position_row_id);
     }
 

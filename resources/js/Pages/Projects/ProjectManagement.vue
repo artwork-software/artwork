@@ -996,7 +996,7 @@
                     </div>
                     <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
                         <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <div v-if="historyItem.changes[0].type === 'project'">
+                            <div v-if="historyItem.changes[0].type === 'project'" class="flex w-full ">
                                 <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                     {{ historyItem.created_at }}:
                                 </span>

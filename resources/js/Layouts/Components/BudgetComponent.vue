@@ -937,7 +937,8 @@ export default {
                 id: null,
                 user: '',
                 position: [],
-                project_title: this.project.name
+                project_title: this.project.name,
+                project_id: this.project.id
             })
         }
     },
@@ -1204,12 +1205,14 @@ export default {
         },
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
-                mainPositionId: mainPositionId
+                mainPositionId: mainPositionId,
+                project_id: this.project.id
             })
         },
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
-                subPositionId: subPositionId
+                subPositionId: subPositionId,
+                project_id: this.project.id
             })
         }
     },

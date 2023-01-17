@@ -309,12 +309,13 @@ class ProjectController extends Controller
             'requested_by' => Auth::id(),
             'requested' => $request->user
         ]);
-
+        $this->history->createHistory($request->project_id, 'Hauptposition „'. $mainPosition->name .'“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {
+
         $subPosition = SubPosition::find($request->id);
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
 
@@ -337,6 +338,7 @@ class ProjectController extends Controller
             'requested' => $request->user
         ]);
 
+        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 
@@ -357,6 +359,7 @@ class ProjectController extends Controller
             ->whereJsonContains("data->position", $subPosition->id)
             ->whereJsonContains("data->requested_id", Auth::id())
             ->delete();
+        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ verifiziert', 'budget');
         return back()->with('success');
     }
 
@@ -380,6 +383,7 @@ class ProjectController extends Controller
             ->whereJsonContains("data->position", $mainPosition->id)
             ->whereJsonContains("data->requested_id", Auth::id())
             ->delete();
+        $this->history->createHistory($request->project_id, 'Hauptposition „'. $subPosition->name .'“ verifiziert', 'budget');
         return back()->with('success');
     }
 

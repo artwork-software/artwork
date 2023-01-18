@@ -156,7 +156,7 @@
                         <tbody class="">
                         <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                             <th class="p-0"
-                                :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
+                                :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
                                     <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
@@ -222,7 +222,7 @@
                                         </div>
                                         <div class="text-white w-44 flex items-center text-center cursor-pointer"
                                              @click="verifiedMainPosition(mainPosition.verified?.main_position_id)"
-                                             v-if="mainPosition.verified?.requested === this.$page.props.user.id">
+                                             v-if="mainPosition.verified?.requested === this.$page.props.user.id  && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
                                             <p class="xxsLight">Als verifiziert markieren</p>
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20"
                                                  viewBox="0 0 20 20">
@@ -272,7 +272,7 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                         <MenuItems
-                                                            class="origin-top-right absolute right-0 w-64 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            class="origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                             <div class="py-1">
                                                                 <MenuItem v-slot="{ active }"
                                                                           v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
@@ -283,6 +283,28 @@
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                                         aria-hidden="true"/>
                                                                                     Von User verifizieren lassen
+                                                                                </span>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }"
+                                                                          v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.verified?.requested === this.$page.props.user.id">
+                                                                                <span
+                                                                                    @click="openVerifiedModal(mainPosition)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Verifizierung aufheben
+                                                                                </span>
+                                                                </MenuItem>
+                                                                <MenuItem v-slot="{ active }"
+                                                                          v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested_by === this.$page.props.user.id">
+                                                                                <span
+                                                                                    @click="requestRemove(mainPosition, 'main')"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Verifizierungsanfrage zurücknehmen
                                                                                 </span>
                                                                 </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
@@ -436,7 +458,7 @@
                                                                     leave-from-class="transform opacity-100 scale-100"
                                                                     leave-to-class="transform opacity-0 scale-95">
                                                                     <MenuItems
-                                                                        class="origin-top-right absolute right-0 w-64 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                        class="origin-top-right absolute right-0 w-80 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                         <div class="py-1">
 
                                                                             <MenuItem v-slot="{ active }"
@@ -450,7 +472,17 @@
                                                                                         Von User verifizieren lassen
                                                                                     </span>
                                                                             </MenuItem>
-
+                                                                            <MenuItem v-slot="{ active }"
+                                                                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && subPosition.verified?.requested_by === this.$page.props.user.id">
+                                                                                <span
+                                                                                    @click="requestRemove(subPosition, 'sub')"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Verifizierungsanfrage zurücknehmen
+                                                                                </span>
+                                                                            </MenuItem>
 
                                                                             <MenuItem v-slot="{ active }">
                                                                                     <span
@@ -566,7 +598,7 @@
                                     </tr>
 
                                     <tr class=" xsWhiteBold flex h-10 w-full text-right"
-                                        :class="mainPosition.verified?.requested === this.$page.props.user.id ? 'bg-buttonBlue' : 'bg-primary'">
+                                        :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
                                         <td class="w-24"></td>
                                         <td class="w-24"></td>
                                         <td class="w-72 my-2">SUM</td>
@@ -1215,6 +1247,12 @@ export default {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
                 project_id: this.project.id
+            })
+        },
+        requestRemove(position, type){
+            this.$inertia.post(this.route('project.budget.take-back.verification'), {
+                position: position,
+                type: type
             })
         }
     },

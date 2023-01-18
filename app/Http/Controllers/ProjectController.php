@@ -313,6 +313,33 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+    public function takeBackVerification(Request $request){
+        if($request->type === 'main'){
+            $mainPosition = MainPosition::find($request->position['id']);
+            DatabaseNotification::query()
+                ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+                ->whereJsonContains("data->position", $mainPosition->id)
+                ->whereJsonContains("data->requested_id", Auth::id())
+                ->delete();
+            $mainPosition->verified()->delete();
+            $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            return back()->with(['success']);
+        }
+
+        if($request->type === 'sub'){
+            $subPosition = SubPosition::find($request->position['id']);
+            DatabaseNotification::query()
+                ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+                ->whereJsonContains("data->position", $subPosition->id)
+                ->whereJsonContains("data->requested_id", Auth::id())
+                ->delete();
+            $subPosition->verified()->delete();
+            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            return back()->with(['success']);
+        }
+
+    }
+
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {
 
@@ -353,7 +380,7 @@ class ProjectController extends Controller
             }
         }
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
-        $subPosition->verified()->delete();
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $subPosition->id)
@@ -377,7 +404,7 @@ class ProjectController extends Controller
             }
         }
         $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
-        $mainPosition->verified()->delete();
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $mainPosition->id)

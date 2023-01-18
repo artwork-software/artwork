@@ -13,9 +13,6 @@
                     Lade Dokumente hoch, die ausschließlich das Budget betreffen. Diese können nur User mit
                     entsprechender Berechtigung einsehen.
                 </div>
-                <pre>
-                    {{contract}}
-                </pre>
                 <div>
                     <input
                         @change="upload"
@@ -436,7 +433,6 @@ export default {
             this.closeModal()
         },
         updateContract() {
-            //this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.type = this.selectedContractType;

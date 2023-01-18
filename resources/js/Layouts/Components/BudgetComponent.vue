@@ -288,7 +288,7 @@
                                                                 <MenuItem v-slot="{ active }"
                                                                           v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.verified?.requested === this.$page.props.user.id">
                                                                                 <span
-                                                                                    @click="openVerifiedModal(mainPosition)"
+                                                                                    @click="removeVerification(mainPosition, 'main')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <TrashIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -407,7 +407,7 @@
                                                     <div
                                                         class="text-white w-44 flex items-center text-center cursor-pointer"
                                                         @click="verifiedSubPosition(subPosition.verified?.sub_position_id)"
-                                                        v-if="subPosition.verified?.requested === this.$page.props.user.id">
+                                                        v-if="subPosition.verified?.requested === this.$page.props.user.id && subPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
                                                         <p class="xxsLight">Als verifiziert markieren</p>
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1"
                                                              height="20" viewBox="0 0 20 20">
@@ -483,7 +483,17 @@
                                                                                     Verifizierungsanfrage zurücknehmen
                                                                                 </span>
                                                                             </MenuItem>
-
+                                                                            <MenuItem v-slot="{ active }"
+                                                                                      v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && subPosition.verified?.requested === this.$page.props.user.id">
+                                                                                <span
+                                                                                    @click="removeVerification(subPosition, 'sub')"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Verifizierung aufheben
+                                                                                </span>
+                                                                            </MenuItem>
                                                                             <MenuItem v-slot="{ active }">
                                                                                     <span
                                                                                         @click="openDeleteSubPositionModal(subPosition)"
@@ -1251,6 +1261,12 @@ export default {
         },
         requestRemove(position, type){
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
+                position: position,
+                type: type
+            })
+        },
+        removeVerification(position, type){
+            this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
             })

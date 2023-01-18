@@ -323,7 +323,7 @@ class ProjectController extends Controller
                 ->delete();
             $mainPosition->verified()->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            return back()->with(['success']);
+
         }
 
         if($request->type === 'sub'){
@@ -335,10 +335,50 @@ class ProjectController extends Controller
                 ->delete();
             $subPosition->verified()->delete();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            return back()->with(['success']);
+
+        }
+        return back()->with(['success']);
+    }
+
+
+    public function removeVerification(Request $request){
+
+        if($request->type === 'main'){
+            $mainPosition = MainPosition::find($request->position['id']);
+
+            $subPositions = $mainPosition->subPositions()->get();
+            foreach ($subPositions as $subPosition) {
+                $subPositionRows = $subPosition->subPositionRows()->get();
+                foreach ($subPositionRows as $subPositionRow) {
+                    $cells = $subPositionRow->cells()->get();
+                    foreach ($cells as $cell) {
+                        $cell->update(['verified_value' => 0]);
+                    }
+                }
+            }
+            $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $mainPosition->verified()->delete();
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierung aufgehoben', 'budget');
         }
 
+        if($request->type === 'sub'){
+            $subPosition = SubPosition::find($request->position['id']);
+            $subPositionRows = $subPosition->subPositionRows()->get();
+            foreach ($subPositionRows as $subPositionRow) {
+                $cells = $subPositionRow->cells()->get();
+                foreach ($cells as $cell) {
+                    $cell->update(['verified_value' => 0]);
+                }
+            }
+            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $mainPosition = $subPosition->mainPosition()->first();
+            $subPosition->verified()->delete();
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierung aufgehoben', 'budget');
+        }
+
+        return back()->with(['success']);
     }
+
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {

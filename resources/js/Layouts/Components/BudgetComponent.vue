@@ -503,7 +503,7 @@
                                                                     class="my-2 xsDark text-right"
                                                                     :type="index > 2 ? 'number' : 'text'"
                                                                     v-model="cell.value"
-                                                                    @focusout="updateCellValue(cell)">
+                                                                    @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                                                 <PlusCircleIcon v-if="index > 2"
                                                                                 @click="openCellDetailModal(cell)"
                                                                                 class="h-6 w-6 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -1049,15 +1049,17 @@ export default {
         closeAddColumnModal() {
             this.showAddColumnModal = false;
         },
-        updateCellValue(cell) {
+        updateCellValue(cell, mainPositionVerified, subPositionVerified) {
             cell.clicked = !cell.clicked;
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }
+
             this.$inertia.patch(route('project.budget.cell.update'), {
                 column_id: cell.column.id,
                 value: cell.value,
-                sub_position_row_id: cell.sub_position_row_id
+                sub_position_row_id: cell.sub_position_row_id,
+                is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
             }, {
                 preserveState: true,
                 preserveScroll: true

@@ -323,7 +323,7 @@ class ProjectController extends Controller
                 ->delete();
             $mainPosition->verified()->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
 
         if($request->type === 'sub'){
@@ -335,11 +335,13 @@ class ProjectController extends Controller
                 ->delete();
             $subPosition->verified()->delete();
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-
+            $mainPosition = $subPosition->mainPosition()->first();
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
         return back()->with(['success']);
     }
 
+    //86g6R%%Sl
 
     public function removeVerification(Request $request){
 

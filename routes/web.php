@@ -279,6 +279,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+    Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
 
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');

@@ -13,7 +13,9 @@
                     Lade Dokumente hoch, die ausschließlich das Budget betreffen. Diese können nur User mit
                     entsprechender Berechtigung einsehen.
                 </div>
-                {{contract}}
+                <pre>
+                    {{contract}}
+                </pre>
                 <div>
                     <input
                         @change="upload"
@@ -32,7 +34,7 @@
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
                 <div v-if="this.file !== null" class="mb-6">
-                    <div class="group flex">{{ contract.name }}
+                    <div class="group flex"><span v-if="this.file.name">{{ this.file.name }}</span><span v-else>{{ contract.name }}</span>
                         <XCircleIcon
                             @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
@@ -353,7 +355,6 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
-
         currencies: Array,
     },
     components: {
@@ -404,36 +405,38 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
-        storeFile(contract) {
-            this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
+        storeFile() {
+            this.$inertia.post(route('contracts.store.file'), {
+                file: this.file,
+                contract: this.contract.id
+            }, {
                 preserveState: true,
                 preserveScroll: true,
-                onSuccess: () => {
+                onSuccess: (data) => {
                     this.$emit('upload')
                 }
 
             })
         },
-        validateType(files) {
+        validateType(file) {
             this.uploadDocumentFeedback = "";
             const forbiddenTypes = [
                 "application/vnd.microsoft.portable-executable",
                 "application/x-apple-diskimage",
             ]
-            for (let file of files) {
-                if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
-                    this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
-                } else {
-                    this.files = file;
-                }
+            if (forbiddenTypes.includes(file[0].type) || file[0].type.match('video.*') || file[0].type === "") {
+                this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
+            } else {
+                this.file = file[0];
+
             }
         },
         storeFiles() {
-            this.storeFile(this.files)
+            this.storeFile(this.file)
             this.closeModal()
         },
         updateContract() {
-            this.contractForm.file = this.file;
+            //this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.type = this.selectedContractType;
@@ -449,10 +452,10 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
-            console.log(this.contractForm);
+            this.storeFile()
             this.contractForm.patch(this.route('contracts.update', this.contract.id));
             this.closeModal()
-        }
+        },
     },
     data() {
         return {
@@ -489,7 +492,7 @@ export default {
                 accessibleUsers: this.contract?.accessibleUsers
             }),
         }
-    },
+    }
 }
 </script>
 

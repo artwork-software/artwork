@@ -18,9 +18,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use function Pest\Laravel\json;
 
 class ContractController extends Controller
 {
@@ -159,12 +161,14 @@ class ContractController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param ContractUpdateRequest $request
+
      * @param Contract $contract
      * @return RedirectResponse
      */
-    public function update(ContractUpdateRequest $request, Contract $contract)
+    public function update(Contract $contract, ContractUpdateRequest $request)
     {
+
+
         $contract->fill($request->data());
 
         if ($request->comment) {
@@ -180,21 +184,29 @@ class ContractController extends Controller
             $contract->accessing_users()->sync(collect($request->accessibleUsers));
         }
 
-        if ($request->file('contract')) {
-            Storage::delete('contracts/' . $contract->basename);
-            $file = $request->file('contract');
-            $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20) . $original_name;
-
-            $contract->basename = $basename;
-            $contract->name = $original_name;
-            $contract->save();
-
-            Storage::putFileAs('contracts', $file, $basename);
-        }
+        $contract->save();
 
         return Redirect::back();
 
+
+    }
+
+    public function storeFile(Request $request){
+
+        if (!Storage::exists("contracts")) {
+            Storage::makeDirectory("contracts");
+        }
+
+        $file = $request->file;
+        $original_name = $file->getClientOriginalName();
+        $basename = Str::random(20) . $original_name;
+
+        Storage::putFileAs('contracts', $file, $basename);
+
+        $contract = Contract::find($request->contract);
+        $contract->basename = $basename;
+        $contract->name = $original_name;
+        $contract->save();
 
     }
 

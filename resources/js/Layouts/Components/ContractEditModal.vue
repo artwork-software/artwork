@@ -31,10 +31,10 @@
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
-                <div class="mb-6">
-                    <div class="group flex" v-for="(file,index) of files">{{ file.name }}
+                <div v-if="this.file !== null" class="mb-6">
+                    <div class="group flex">{{ contract.name }}
                         <XCircleIcon
-                            @click="deleteFileFromArray(index)"
+                            @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
                     </div>
@@ -174,7 +174,7 @@
                             <transition leave-active-class="transition ease-in duration-100"
                                         leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
-                                    class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    class="absolute w-[12%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
                                                    v-for="currency in currencyArray"
                                                    :key="currency"
@@ -183,7 +183,7 @@
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-4 block truncate']">
                                                         {{ currency }}
                                                     </span>
                                             </div>
@@ -317,7 +317,7 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Vertrag bearbeiten" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                    <AddButton text="Vertrag bearbeiten" mode="modal" class="px-6 py-3" :disabled="this.file === null"
                                @click="updateContract"/>
                 </div>
             </div>
@@ -404,9 +404,6 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
-        deleteFileFromArray(index) {
-            this.files.splice(index, 1);
-        },
         storeFile(contract) {
             this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
                 preserveState: true,
@@ -427,18 +424,16 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.files.push(file)
+                    this.files = file;
                 }
             }
         },
         storeFiles() {
-            for (let file of this.files) {
-                this.storeFile(file)
-            }
+            this.storeFile(this.files)
             this.closeModal()
         },
         updateContract() {
-            this.contractForm.files = this.files;
+            this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.type = this.selectedContractType;
@@ -454,6 +449,7 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
+            console.log(this.contractForm);
             this.contractForm.patch(this.route('contracts.update', this.contract.id));
             this.closeModal()
         }
@@ -464,33 +460,33 @@ export default {
             currencyArray,
             contractTypeArray,
             uploadDocumentFeedback: "",
-            files: this.contract.basename,
-            description: this.contract.description,
-            contractPartner: this.contract.contract_partner,
-            selectedLegalForm: this.contract.legal_form,
-            selectedContractType: this.contract.type,
-            selectedCurrency: this.contract.currency,
+            file: this.contract?.basename,
+            description: this.contract?.description,
+            contractPartner: this.contract?.partner,
+            selectedLegalForm: this.contract?.legal_form,
+            selectedContractType: this.contract?.type,
+            selectedCurrency: this.contract?.currency,
             user_search_results: [],
             user_query: '',
-            usersWithAccess: this.contract.accessibleUsers ? this.contract.accessibleUsers : [],
-            kskLiable: this.contract.ksk_liable,
-            isAbroad: this.contract.resident_abroad,
-            hasPowerOfAttorney: this.contract.has_power_of_attorney,
-            isFreed: this.contract.is_freed,
+            usersWithAccess: this.contract?.accessibleUsers ? this.contract.accessibleUsers : [],
+            kskLiable: this.contract?.ksk_liable,
+            isAbroad: this.contract?.resident_abroad,
+            hasPowerOfAttorney: this.contract?.has_power_of_attorney,
+            isFreed: this.contract?.is_freed,
             showExtraSettings: false,
-            contractAmount: this.contract.amount,
+            contractAmount: this.contract?.amount,
             contractForm: useForm({
-                files: this.contract.basename,
-                contract_partner: this.contract.contract_partner,
-                legal_form: this.contract.legal_form,
-                type: this.contract.type,
-                amount: this.contract.amount,
-                ksk_liable: this.contract.ksk_liable,
-                resident_abroad: this.contract.resident_abroad,
-                has_power_of_attorney: this.contract.has_power_of_attorney,
-                is_freed: this.contract.is_freed,
-                description: this.contract.description,
-                accessibleUsers: this.contract.accessibleUsers
+                file: this.contract?.basename,
+                contract_partner: this.contract?.partner,
+                legal_form: this.contract?.legal_form,
+                type: this.contract?.type,
+                amount: this.contract?.amount,
+                ksk_liable: this.contract?.ksk_liable,
+                resident_abroad: this.contract?.resident_abroad,
+                has_power_of_attorney: this.contract?.has_power_of_attorney,
+                is_freed: this.contract?.is_freed,
+                description: this.contract?.description,
+                accessibleUsers: this.contract?.accessibleUsers
             }),
         }
     },

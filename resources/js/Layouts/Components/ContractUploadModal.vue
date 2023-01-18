@@ -30,10 +30,10 @@
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
-                <div class="mb-6">
-                    <div class="group flex" v-for="(file,index) of files">{{ file.name }}
+                <div class="mb-2">
+                    <div class="group flex" v-if="this.file">{{ this.file.name }}
                         <XCircleIcon
-                            @click="deleteFileFromArray(index)"
+                            @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                             aria-hidden="true"/>
                     </div>
@@ -319,7 +319,7 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Vertrag hochladen" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                    <AddButton text="Vertrag hochladen" mode="modal" class="px-6 py-3" :disabled="this.file === null"
                                @click="storeContract"/>
                 </div>
             </div>
@@ -390,7 +390,7 @@ export default {
             currencyArray,
             contractTypeArray,
             uploadDocumentFeedback: "",
-            files: [],
+            file: null,
             description: "",
             contractPartner: null,
             selectedLegalForm: null,
@@ -406,7 +406,7 @@ export default {
             showExtraSettings: false,
             contractAmount: '',
             contractForm: useForm({
-                files: [],
+                file: null,
                 contract_partner: this.contractPartner,
                 legal_form: this.selectedLegalForm,
                 type: this.selectedContractType,
@@ -440,9 +440,6 @@ export default {
         upload(event) {
             this.validateType([...event.target.files])
         },
-        deleteFileFromArray(index) {
-            this.files.splice(index, 1);
-        },
         storeFile(contract) {
             this.$inertia.post(`/projects/${this.projectId}/contracts`, {contract: contract}, {
                 preserveState: true,
@@ -450,7 +447,6 @@ export default {
                 onSuccess: () => {
                     this.$emit('upload')
                 }
-
             })
         },
         validateType(files) {
@@ -463,18 +459,16 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.files.push(file)
+                    this.file = file
                 }
             }
         },
         storeFiles() {
-            for (let file of this.files) {
-                this.storeFile(file)
-            }
+            this.storeFile(this.file)
             this.closeModal()
         },
         storeContract() {
-            this.contractForm.files = this.files;
+            this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.legal_form = this.selectedLegalForm;
             this.contractForm.type = this.selectedContractType;

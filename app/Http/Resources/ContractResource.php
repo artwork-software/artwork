@@ -16,6 +16,8 @@ class ContractResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'name' => $this->name,
+            'basename' => $this->basename,
             'project' => $this->project,
             'amount' => $this->amount,
             'legal_form' => $this->legal_form,
@@ -23,7 +25,11 @@ class ContractResource extends JsonResource
             'ksk_liable' => $this->ksk_liable,
             'partner' => $this->contract_partner,
             'resident_abroad' => $this->resident_abroad,
-            'description' => $this->description
+            'has_power_of_attorney' => $this->has_power_of_attorney,
+            'currency' => $this->currency,
+            'is_freed' => $this->is_freed,
+            'description' => $this->description,
+            'accessibleUsers' => UserIndexResource::collection($this->accessing_users)->resolve(),
         ];
     }
 }

@@ -58,16 +58,18 @@
                      v-for="contract in contracts"
                 >
                     <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
-                    <div @click="openContractEditModal()">{{ contract.name }}</div>
-                    <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal"/>
-                    <ContractDeleteModal :show="showContractDeleteModal" :close-modal="closeContractDeleteModal" :contract="contract" />
-                    <ContractEditModal :show="showContractEditModal" :close-modal="closeContractEditModal" :contract="contract" />
+                    <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
+                    <ContractDeleteModal :show="showContractDeleteModal === contract.id" :close-modal="closeContractDeleteModal" :contract="contract" />
+                    <ContractEditModal :show="showContractEditModal === contract.id" :close-modal="closeContractEditModal" :contract="contract" />
+                    <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
                 </div>
             </div>
             <div v-else>
                 <div class="text-secondary text-sm mt-2">Keine Verträge vorhanden</div>
             </div>
+
         </div>
+
 
         <hr class="my-10 border-darkGray">
 
@@ -147,7 +149,8 @@ export default {
             showMoneySources: false,
             showFileEditModal: false,
             showContractEditModal: false,
-            showProjectDataModal: false
+            showProjectDataModal: false,
+
 
         }
     },
@@ -173,14 +176,14 @@ export default {
         openFileEditModal() {
             this.showFileEditModal = true
         },
-        openContractEditModal() {
-            this.showContractEditModal = true
+        openContractEditModal(contract) {
+            this.showContractEditModal = contract.id
         },
         closeFileEditModal() {
             this.showFileEditModal = false
         },
         closeContractEditModal() {
-            this.showContractEditModal = false
+            this.showContractEditModal = null
         },
         openFileUploadModal() {
             this.showFileUploadModal = true
@@ -200,11 +203,11 @@ export default {
         closeContractUploadModal() {
             this.showContractUploadModal = false
         },
-        openContractDeleteModal() {
-            this.showContractDeleteModal = true
+        openContractDeleteModal(contract) {
+            this.showContractDeleteModal = contract.id
         },
         closeContractDeleteModal() {
-            this.showContractDeleteModal = false
+            this.showContractDeleteModal = null;
         },
     }
 }

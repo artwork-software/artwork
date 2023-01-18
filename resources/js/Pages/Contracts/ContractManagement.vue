@@ -22,6 +22,7 @@
                                     </div>
                                 </div>
                                 <div v-for="contract in contractsCopy.data" class="mt-6 w-full">
+                                    {{contract}}
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
                                 </div>

@@ -104,7 +104,7 @@ class ContractController extends Controller
             Storage::makeDirectory("contracts");
         }
 
-        $file = $request->file('files')[0];
+        $file = $request->file;
         $original_name = $file->getClientOriginalName();
         $basename = Str::random(20) . $original_name;
 
@@ -177,8 +177,7 @@ class ContractController extends Controller
         }
 
         if ($request->get('accessibleUsers')) {
-            $contract->accessing_users()->delete();
-            $contract->accessing_users()->createMany($request->accessibleUsers);
+            $contract->accessing_users()->sync(collect($request->accessibleUsers));
         }
 
         if ($request->file('contract')) {

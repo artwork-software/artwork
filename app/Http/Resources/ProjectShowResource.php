@@ -54,7 +54,7 @@ class ProjectShowResource extends JsonResource
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
             'project_files' => ProjectFileResource::collection($this->project_files),
-            'contracts' => $this->contracts,
+            'contracts' => ContractResource::collection($this->contracts),
 
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
 

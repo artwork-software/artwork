@@ -29,6 +29,9 @@ class ContractUpdateRequest extends FormRequest
             'resident_abroad',
             'legal_form',
             'type',
+            'has_power_of_attorney',
+            'is_freed',
+            'currency'
         ]);
     }
 }

@@ -290,14 +290,15 @@ class ProjectController extends Controller
     {
         $mainPosition = MainPosition::find($request->id);
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-
+        $project = $mainPosition->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
-        $this->notificationData->project_title = $request->project_title;
+        $this->notificationData->project = $project;
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
         $this->notificationData->position = $mainPosition->id;
         $this->notificationData->created_by = Auth::user();
         $this->notificationData->requested_id = $request->user;
+        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -309,39 +310,77 @@ class ProjectController extends Controller
             'requested_by' => Auth::id(),
             'requested' => $request->user
         ]);
-        $this->history->createHistory($request->project_id, 'Hauptposition „'. $mainPosition->name .'“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory($project->id, 'Hauptposition „'. $mainPosition->name .'“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 
     public function takeBackVerification(Request $request){
+        // create Notification Basic data
+        $this->createNotificationHeader($request->position);
         if($request->type === 'main'){
             $mainPosition = MainPosition::find($request->position['id']);
-            DatabaseNotification::query()
-                ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
-                ->whereJsonContains("data->position", $mainPosition->id)
-                ->whereJsonContains("data->requested_id", Auth::id())
-                ->delete();
-            $mainPosition->verified()->delete();
+            $verifiedRequest = $mainPosition->verified()->first();
+
+            $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
+
+            // create Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+
+            $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
 
         if($request->type === 'sub'){
             $subPosition = SubPosition::find($request->position['id']);
-            DatabaseNotification::query()
-                ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
-                ->whereJsonContains("data->position", $subPosition->id)
-                ->whereJsonContains("data->requested_id", Auth::id())
-                ->delete();
-            $subPosition->verified()->delete();
-            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $mainPosition = $subPosition->mainPosition()->first();
+            $verifiedRequest = $subPosition->verified()->first();
+
+            $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
+
+            // create Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+
+            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $verifiedRequest->delete();
             $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
         return back()->with(['success']);
     }
 
-    //86g6R%%Sl
+    private function createNotificationHeader($position){
+        $this->notificationData->title = 'Verifizierungsanfrage gelöscht';
+        $this->notificationData->requested_position = $position;
+        $this->notificationData->created_by = Auth::user();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK;
+    }
+    private function createNotificationBody($project, $positionId, $requestedId){
+        $this->notificationData->project = $project;
+        $this->notificationData->position = $positionId;
+        $this->notificationData->requested_id = $requestedId;
+    }
+
+    private function deleteOldNotification($positionId, $requestedId){
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $positionId)
+            ->whereJsonContains("data->requested_id", $requestedId)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
+            ->delete();
+    }
 
     public function removeVerification(Request $request){
 
@@ -387,14 +426,16 @@ class ProjectController extends Controller
 
         $subPosition = SubPosition::find($request->id);
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-
+        $mainPosition = $subPosition->mainPosition()->first();
+        $project = $mainPosition->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
-        $this->notificationData->project_title = $request->project_title;
+        $this->notificationData->project = $project;
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
         $this->notificationData->position = $subPosition->id;
         $this->notificationData->created_by = Auth::user();
         $this->notificationData->requested_id = $request->user;
+        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',

@@ -995,49 +995,54 @@
                         </div>
                     </div>
                     <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
-                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <div v-if="historyItem.changes[0].type === 'project'" class="flex w-full ">
-                                <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                    {{ historyItem.created_at }}:
-                                </span>
-                                <img v-if="historyItem.changes[0].changed_by"
-                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                     :alt="historyItem.changes[0].changed_by?.first_name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                             :user="historyItem.changes[0].changed_by"/>
-                                <div v-else class="xsLight ml-3">
-                                    gelöschte Nutzer:in
-                                </div>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.changes[0].message }}
+                        <div v-for="historyItem in projectHistoryToDisplay">
+                            <div class="flex w-full my-1" v-if="historyItem.changes[0].type === 'project'">
+                                <div class="flex w-full">
+                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                        {{ historyItem.created_at }}:
+                                    </span>
+                                    <img v-if="historyItem.changes[0].changed_by"
+                                             :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                             :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                             :alt="historyItem.changes[0].changed_by?.first_name"
+                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                                     :user="historyItem.changes[0].changed_by"/>
+                                    <div v-else class="xsLight ml-3">
+                                            gelöschte Nutzer:in
+                                    </div>
+                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
+                                            {{ historyItem.changes[0].message }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
-                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
-                                <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                    {{ historyItem.created_at }}:
-                                </span>
-                                <img v-if="historyItem.changes[0].changed_by"
-                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                     :alt="historyItem.changes[0].changed_by?.first_name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                             :user="historyItem.changes[0].changed_by"/>
-                                <div v-else class="xsLight ml-3">
-                                    gelöschte Nutzer:in
-                                </div>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                    {{ historyItem.changes[0].message }}
+                        <div  v-for="historyItem in projectHistoryToDisplay">
+                            <div class="flex w-full my-1" v-if="historyItem.changes[0].type === 'budget'">
+                                <div class="flex w-full ">
+                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                        {{ historyItem.created_at }}:
+                                    </span>
+                                    <img v-if="historyItem.changes[0].changed_by"
+                                         :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                         :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                         :alt="historyItem.changes[0].changed_by?.first_name"
+                                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                                 :user="historyItem.changes[0].changed_by"/>
+                                    <div v-else class="xsLight ml-3">
+                                        gelöschte Nutzer:in
+                                    </div>
+                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
+                                        {{ historyItem.changes[0].message }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
 

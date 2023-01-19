@@ -15,7 +15,7 @@
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                              aria-hidden="true"/>
                     </a>
-                    <Menu as="div" class="my-auto relative">
+                    <Menu as="div" class="my-auto">
                         <div class="flex">
                             <MenuButton v-if="$page.props.can.change_tool_settings
                                                    || $page.props.can.usermanagement
@@ -42,8 +42,8 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="z-60 origin-top-left absolute ml-14 -mt-12 w-20 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                <div class="py-1">
+                                class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                <div class="py-1 z-50">
                                     <MenuItem v-for="item in managementNavigation" :key="item.name" v-slot="{ active }">
                                         <Link v-if="item.has_permission"
                                               :href="item.href"
@@ -210,6 +210,7 @@ const navigation = [
         svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg'
     },
+    /* TODO: WIEDER EINFÜGEN + ICON für Verträge und unten aus dem extra-Settings-Dropdown rausnehmen
     {
         name: 'Finanzierungsquellen',
         href: route('money_sources.index'),
@@ -217,6 +218,8 @@ const navigation = [
         svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg'
     }
+
+     */
 ]
 
 const userNavigation = [
@@ -302,7 +305,7 @@ export default {
                 },
                 {
                     name: 'Finanzierungsquellen',
-                    has_permission: true,
+                    has_permission: this.$page.props.is_admin,
                     href: route('money_sources.index'),
                     route: ['/money_sources']
                 }

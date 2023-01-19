@@ -565,17 +565,17 @@
                                                             </div>
                                                         </td>
                                                     </div>
-                                                    <XCircleIcon @click="deleteRowFromSubPosition(row)"
+                                                    <XCircleIcon @click="openDeleteRowModal(row)"
                                                                  :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                  class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
                                                 </tr>
                                                 <div v-else @click="addRowToSubPosition(subPosition, row)"
                                                      class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                                     <div
-                                                        class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                                                        class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                                         Zeile
                                                         <PlusCircleIcon
-                                                            class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                            class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                     </div>
                                                 </div>
                                                 <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
@@ -876,7 +876,7 @@
     <confirmation-component
         v-if="showDeleteModal"
         confirm="Löschen"
-        titel="Hauptposition löschen"
+        :titel="this.confirmationTitle"
         :description="this.confirmationDescription"
         @closed="afterConfirm"/>
 
@@ -949,6 +949,8 @@ export default {
             showDeleteModal: false,
             mainPositionToDelete: null,
             subPositionToDelete: null,
+            rowToDelete: null,
+            confirmationTitle:'',
             confirmationDescription: '',
             showSuccessModal: false,
             successHeading: '',
@@ -1170,18 +1172,20 @@ export default {
         closeCellDetailModal() {
             this.showCellDetailModal = false;
         },
-        deleteRowFromSubPosition(row) {
-            this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`, {
-                preserveScroll: true,
-                preserveState: true
-            });
+        openDeleteRowModal(row){
+          this.confirmationTitle = 'Zeile löschen';
+          this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+          this.rowToDelete = row;
+          this.showDeleteModal = true;
         },
         openDeleteMainPositionModal(mainPosition) {
+            this.confirmationTitle = 'Hauptposition löschen';
             this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'
             this.mainPositionToDelete = mainPosition;
             this.showDeleteModal = true;
         },
         openDeleteSubPositionModal(subPosition) {
+            this.confirmationTitle = 'Unterposition löschen';
             this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
             this.subPositionToDelete = subPosition;
             this.showDeleteModal = true;
@@ -1201,6 +1205,13 @@ export default {
                 this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
                 this.successHeading = "Unterposition gelöscht"
                 this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
+            }else{
+                this.$inertia.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
+                    preserveScroll: true,
+                    preserveState: true
+                });
+                this.successHeading = "Zeile gelöscht"
+                this.successDescription = "Zeile erfolgreich gelöscht"
             }
             this.showDeleteModal = false;
             this.showSuccessModal = true;

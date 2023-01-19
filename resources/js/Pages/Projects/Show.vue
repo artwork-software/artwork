@@ -1852,12 +1852,20 @@ export default {
     },
     computed: {
         tabs() {
-            return [
-                {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
-                {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
-                {name: 'Budget', href: '#', current: this.isBudgetTab}
-            ]
+            if(this.$page.props.is_admin) {
+                return [
+                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
+                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
+                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                    {name: 'Budget', href: '#', current: this.isBudgetTab}
+                ]
+            }else{
+                return [
+                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
+                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
+                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                ]
+            }
         },
         historyTabs() {
             return [

@@ -4,7 +4,7 @@
             <div class="text-secondary text-md">Kostenträger: {{ costCenter.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                            @click="openProjectDataModal"/>
-            <ProjectDataEditModal :show="showProjectDataModal" :close-modal="closeProjectDataModal" :project="project" />
+            <ProjectDataEditModal :show="showProjectDataModal" :close-modal="closeProjectDataModal" :project="project" :traits="traits" />
         </div>
         <div class="text-secondary text-md">Urheberrecht: {{ copyright.own_copyright ? 'Ja' : 'Nein' }}</div>
         <div class="text-secondary text-sm mt-2">
@@ -136,7 +136,8 @@ export default {
         copyright: Object,
         projectFiles: Array,
         contracts: Array,
-        moneySources: Array
+        moneySources: Array,
+        traits: Object
     },
     data() {
         return {

@@ -38,6 +38,7 @@ class ProjectShowResource extends JsonResource
             'description' => $this->description,
             'number_of_participants' => $this->number_of_participants,
             'is_group' => $this->is_group,
+            'group' => $this->groups,
             'sectors' => $this->sectors,
             'categories' => $this->categories,
             'genres' => $this->genres,

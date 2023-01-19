@@ -29,16 +29,6 @@
                     </div>
                     <!-- Calculate Tab -->
                     <div v-if="isCalculateTab">
-                        <div v-if="this.cell.calculations?.length === 0">
-                            <div @click="addCalculation(cell.id)"
-                                 class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                <div class="group-hover:block uppercase hidden text-buttonBlue text-sm -mt-8 ">
-                                    Positionaaaa
-                                    <PlusCircleIcon
-                                        class="h-6 w-6 ml-5 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                                </div>
-                            </div>
-                        </div>
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
                             <div class="h-1.5 my-2 bg-silverGray"/>

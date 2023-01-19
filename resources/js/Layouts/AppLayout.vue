@@ -1,7 +1,7 @@
 <template>
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
-        <div class="sidebar fixed top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
+        <div class="sidebar fixed z-10 top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
             <div class="w-full py-2 mt-3 flex flex-col items-center">
                 <div  class="text-2xl font-bold text-secondaryHover">
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>

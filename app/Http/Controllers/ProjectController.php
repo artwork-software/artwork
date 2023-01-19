@@ -314,15 +314,15 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function takeBackVerification(Request $request){
+    public function takeBackVerification(Request $request): RedirectResponse
+    {
         // create Notification Basic data
-        $this->createNotificationHeader($request->position);
+        $this->createVerificationNotificationHeader('Verifizierungsanfrage gelöscht', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK);
         if($request->type === 'main'){
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
 
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
-
             // create Notification
             $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
@@ -331,7 +331,6 @@ class ProjectController extends Controller
                 'message' => $this->notificationData->title
             ];
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
-
             $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
@@ -352,7 +351,6 @@ class ProjectController extends Controller
                 'message' => $this->notificationData->title
             ];
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
-
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
             $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
@@ -360,12 +358,12 @@ class ProjectController extends Controller
         return back()->with(['success']);
     }
 
-    private function createNotificationHeader($position){
-        $this->notificationData->title = 'Verifizierungsanfrage gelöscht';
+    private function createVerificationNotificationHeader($title, $position , $type){
+        $this->notificationData->title = $title;
         $this->notificationData->requested_position = $position;
         $this->notificationData->created_by = Auth::user();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
-        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK;
+        $this->notificationData->changeType = $type;
     }
     private function createNotificationBody($project, $positionId, $requestedId){
         $this->notificationData->project = $project;
@@ -384,9 +382,10 @@ class ProjectController extends Controller
 
     public function removeVerification(Request $request){
 
+        $this->createVerificationNotificationHeader('Verifizierung in Budget aufgehoben', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_DELETED);
         if($request->type === 'main'){
             $mainPosition = MainPosition::find($request->position['id']);
-
+            $verifiedRequest = $mainPosition->verified()->first();
             $subPositions = $mainPosition->subPositions()->get();
             foreach ($subPositions as $subPosition) {
                 $subPositionRows = $subPosition->subPositionRows()->get();
@@ -397,23 +396,43 @@ class ProjectController extends Controller
                     }
                 }
             }
+
+            // Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $mainPosition->verified()->delete();
+            $verifiedRequest->delete();
             $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierung aufgehoben', 'budget');
         }
 
         if($request->type === 'sub'){
             $subPosition = SubPosition::find($request->position['id']);
             $subPositionRows = $subPosition->subPositionRows()->get();
+            $mainPosition = $subPosition->mainPosition()->first();
+            $verifiedRequest = $subPosition->verified()->first();
             foreach ($subPositionRows as $subPositionRow) {
                 $cells = $subPositionRow->cells()->get();
                 foreach ($cells as $cell) {
                     $cell->update(['verified_value' => 0]);
                 }
             }
+
+            // Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $mainPosition = $subPosition->mainPosition()->first();
-            $subPosition->verified()->delete();
+            $verifiedRequest->delete();
             $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierung aufgehoben', 'budget');
         }
 

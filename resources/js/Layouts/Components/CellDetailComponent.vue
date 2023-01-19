@@ -304,7 +304,7 @@ export default {
             return helperArray;
         },
         calculationSum() {
-            this.refreshSumKey;
+            this.refreshSumKey++;
             let sum = 0;
             this.calculationValues?.forEach((value) => {
                 if (!isNaN(value) && value !== '') {
@@ -346,24 +346,30 @@ export default {
                     cell_id: this.cell.id,
                     linked_type: this.linkedType.type,
                     money_source_id: this.selectedMoneySource.id
+                }, {
+                    preserveScroll: true
                 });
             } else {
                 this.$inertia.patch(route('project.budget.cell-source.update'), {
                     cell_id: this.cell.id,
                     linked_type: null,
                     money_source_id: null,
+                }, {
+                    preserveScroll: true
                 });
             }
 
             this.closeModal(true);
         },
         addCalculation(cellId) {
-            this.$inertia.post(route('project.budget.cell-calculation.add', cellId))
+            this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {}, {
+                preserveScroll: true
+            })
         },
         saveCalculation() {
             this.$inertia.patch(route('project.budget.cell-calculation.update'), {
                 calculations: this.cell.calculations,
-            }, {preserveState: true});
+            }, {preserveState: true, preserveScroll: true});
             this.closeModal(true);
         },
         deleteCommentFromCell(comment) {

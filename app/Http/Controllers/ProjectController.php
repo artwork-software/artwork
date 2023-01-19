@@ -917,6 +917,9 @@ class ProjectController extends Controller
             $groupOutput = '';
         }
 
+        $selectedCell = request('selectedCell')
+            ? ColumnCell::find(request('selectedCell'))
+            : null;
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -939,10 +942,11 @@ class ProjectController extends Controller
                             return $query->orderBy('position');
                         }, 'subPositions.subPositionRows.cells.comments' => function ($query) {
                             return $query->orderBy('created_at', 'DESC');
-                        }, 'subPositions.subPositionRows.cells.column', 'subPositions.subPositionRows.cells.calculations'
+                        }, 'subPositions.subPositionRows.cells.column'
                     ])
                     ->orderBy('position')
-                    ->get()
+                    ->get(),
+                'selectedCell' => $selectedCell->load('calculations')
             ],
 
             'categories' => Category::all(),

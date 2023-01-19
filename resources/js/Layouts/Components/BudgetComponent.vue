@@ -869,7 +869,7 @@
     <!-- Cell Detail Modal-->
     <cell-detail-component
         v-if="showCellDetailModal"
-        :cell="cellToShow"
+        :cell="budget.selectedCell"
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
@@ -907,6 +907,7 @@ import {
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {useForm} from "@inertiajs/inertia-vue3";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'BudgetComponent',
@@ -943,7 +944,6 @@ export default {
             hoveredBorder: null,
             showAddColumnModal: false,
             showCellDetailModal: false,
-            cellToShow: null,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
@@ -1166,8 +1166,14 @@ export default {
             });
         },
         openCellDetailModal(column) {
-            this.cellToShow = column;
-            this.showCellDetailModal = true;
+            Inertia.reload({
+                data: {
+                    selectedCell: column.id,
+                },
+                onSuccess: () => {
+                    this.showCellDetailModal = true;
+                }
+            })
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

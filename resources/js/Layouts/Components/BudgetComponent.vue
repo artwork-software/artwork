@@ -8,20 +8,74 @@
                 <thead>
                 <tr>
                     <th v-for="(column,index) in budget.columns"
-                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="text-left">
-                        <div class="flex items-center" @mouseover="showMenu = column.id" :key="column.id"
+                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
+                        <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
-                                <p class="columnSubName"> {{ column.subName }} <span v-if="column.calculateName" class="ml-1">({{ column.calculateName }})</span></p>
+                                <div class="flex items-center justify-end pr-2">
+                                    <p class="columnSubName xsLight">
+                                        {{ column.subName }}
+                                        <span v-if="column.calculateName" class="ml-1">
+                                            ({{ column.calculateName }})
+                                        </span>
+                                    </p>
+                                    <span class="ml-1"
+                                          v-if="index > 2 && column.showColorMenu === true || column.color !== 'whiteColumn'">
+                                        <Listbox as="div" class="flex mr-2" v-model="column.color">
+                                                <ListboxButton>
+                                                   <button class="w-4 h-4 flex justify-center items-center rounded-full"
+                                                           :class="column.color === 'whiteColumn' ? 'whiteColumn border border-1' : column.color"
+                                                           @click="column.openColor = !column.openColor">
+                                                        <ChevronUpIcon v-if="column.openColor"
+                                                                       class="h-3 w-3 my-auto"
+                                                                       :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-3 w-3 text-white my-auto"
+                                                                         :class="column.color === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronDownIcon>
+                                                    </button>
+                                                </ListboxButton>
+
+                                                <transition leave-active-class="transition ease-in duration-100"
+                                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                                    <ListboxOptions
+                                                        class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                        <ListboxOption as="template" class="max-h-32"
+                                                                       v-for="color in colors"
+                                                                       :key="color"
+                                                                       :value="color" v-slot="{ active, selected }">
+                                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
+                                                                @click="changeColumnColor(color, column.id)">
+                                                                <div class="flex">
+                                                                    <span
+                                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'block truncate']">
+                                                                        <span
+                                                                            class="block truncate items-center ml-3 flex rounded-full h-10 w-10"
+                                                                            :class="color">
+                                                                        </span>
+                                                                    </span>
+                                                                </div>
+                                                                <span
+                                                                    :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                                    <CheckIcon v-if="selected"
+                                                                               class="h-5 w-5 flex text-success"
+                                                                               aria-hidden="true"/>
+                                                                </span>
+                                                            </li>
+                                                        </ListboxOption>
+                                                    </ListboxOptions>
+                                                </transition>
+                                            </Listbox>
+                                    </span>
+                                </div>
                                 <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'" class="h-5"
+                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="h-5 pr-2"
                                      v-if="!column.clicked">
                                     {{ column.name }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                                        class="my-2 xsDark" type="text"
+                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
+                                        class="my-2 xsDark pr-2 text-right" type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
@@ -46,12 +100,12 @@
                                         class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                         <div class="py-1">
                                             <MenuItem v-slot="{ active }">
-                                                <a @click="openEditTaskModal(element)"
+                                                <a @click="column.showColorMenu = true"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
-                                                    Bearbeiten
+                                                    Einfärben
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
@@ -67,6 +121,9 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
+                            <div v-if="showMenu !== column.id" class="w-6">
+
+                            </div>
                         </div>
                     </th>
                 </tr>
@@ -88,50 +145,87 @@
                 <div class="bg-secondaryHover ml-8 w-full" v-if="costsOpened">
                     <div class="headline4 my-10">Ausgaben</div>
                     <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                         class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                        <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
+                         class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                        <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                             Hauptposition
-                            <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            <PlusCircleIcon
+                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         </div>
                     </div>
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr class="" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <th class="bg-primary text-left p-0">
+                            <th class="bg-primary p-0">
                                 <div class="flex" @mouseover="showMenu = 'MainPosition' + mainPosition.id"
                                      @mouseout="showMenu = null">
-                                <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
-                                    v-if="!mainPosition.clicked">
-                                    <div @click="mainPosition.clicked = !mainPosition.clicked">
-                                        {{ mainPosition.name }}
+                                    <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
+                                         v-if="!mainPosition.clicked">
+                                        <div @click="mainPosition.clicked = !mainPosition.clicked">
+                                            {{ mainPosition.name }}
+                                        </div>
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
                                     </div>
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
-                                <div v-else class="flex items-center">
-                                    <input
-                                        class="my-2 ml-1 xsDark" type="text"
-                                        v-model="mainPosition.name"
-                                        @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
+                                    <div v-else class="flex items-center w-full">
+                                        <input
+                                            class="my-2 ml-1 xsDark" type="text"
+                                            v-model="mainPosition.name"
+                                            @focusout="updateMainPositionName(mainPosition); mainPosition.clicked = !mainPosition.clicked">
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
+                                    </div>
                                     <div class="flex items-center justify-end">
-                                        <div class="flex flex-wrap w-full">
+                                        <div class="text-white w-28 flex items-center"
+                                             v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED'">
+                                            <p class="xxsLight">wird verifiziert </p>
+                                            <!-- TODO: SVG ersetzen mit IMG TAG -->
+                                            <svg xmlns="http://www.w3.org/2000/svg"
+                                                 xmlns:xlink="http://www.w3.org/1999/xlink" class="ml-1" width="19"
+                                                 height="14.292" viewBox="0 0 19 14.292">
+                                                <defs>
+                                                    <clipPath id="clip-path">
+                                                        <rect id="Rechteck_458" data-name="Rechteck 458" width="5.138"
+                                                              height="3.634" fill="#fcfcfb"/>
+                                                    </clipPath>
+                                                </defs>
+                                                <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                                      d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                                      transform="translate(0 0.607)" fill="#fcfcfb"/>
+                                                <g id="Gruppe_962" data-name="Gruppe 962"
+                                                   transform="translate(-412 -311)">
+                                                    <g id="Ellipse_147" data-name="Ellipse 147"
+                                                       transform="translate(418 311)" fill="#27233c" stroke="#fcfcfb"
+                                                       stroke-width="1">
+                                                        <circle cx="6.5" cy="6.5" r="6.5" stroke="none"/>
+                                                        <circle cx="6.5" cy="6.5" r="6" fill="none"/>
+                                                    </g>
+                                                    <g id="Gruppe_962-2" data-name="Gruppe 962"
+                                                       transform="translate(423 314.945)" clip-path="url(#clip-path)">
+                                                        <path id="Pfad_1344" data-name="Pfad 1344"
+                                                              d="M5.1,1.418a.534.534,0,0,0-.7-.286L1.775,2.23,1.029.337a.533.533,0,1,0-.992.39L1.183,3.633,4.811,2.115a.533.533,0,0,0,.286-.7"
+                                                              transform="translate(0 0)" fill="#fcfcfb"/>
+                                                    </g>
+                                                </g>
+                                            </svg>
+
+                                        </div>
+                                        <div class="flex flex-wrap w-8">
                                             <div class="flex w-full">
                                                 <Menu as="div" class="my-auto relative"
                                                       v-show="showMenu === 'MainPosition' + mainPosition.id">
                                                     <div class="flex">
                                                         <MenuButton
-                                                            class="flex ml-6">
+                                                            class="flex">
                                                             <DotsVerticalIcon
                                                                 class="mr-3 flex-shrink-0 h-6 w-6 text-secondaryHover my-auto"
                                                                 aria-hidden="true"/>
@@ -145,8 +239,19 @@
                                                         leave-from-class="transform opacity-100 scale-100"
                                                         leave-to-class="transform opacity-0 scale-95">
                                                         <MenuItems
-                                                            class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                            class="origin-top-right absolute right-0 w-64 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                             <div class="py-1">
+                                                                <MenuItem v-slot="{ active }"
+                                                                          v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
+                                                                                <span
+                                                                                    @click="openVerifiedModal(mainPosition)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Von User verifizieren lassen
+                                                                                </span>
+                                                                </MenuItem>
                                                                 <MenuItem v-slot="{ active }">
                                                                                 <span
                                                                                     @click="openDeleteMainPositionModal(mainPosition)"
@@ -168,44 +273,86 @@
 
                                 <!-- HIER ADD UNTERPOSITION Funktion -->
                                 <div @click="addSubPosition(mainPosition.id)"
-                                    class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                                     class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                                     <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                                         Unterposition
-                                        <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                        <PlusCircleIcon
+                                            class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                     </div>
                                 </div>
                                 <table v-if="!mainPosition.closed" class="w-full ">
-
-
                                     <thead class="">
                                     <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                                        <th class="bg-silverGray xxsDark">
-                                            <div
-                                                class="pl-2 xxsDark flex items-center h-10"
-                                                v-if="!subPosition.clicked">
-                                                <div @click="subPosition.clicked = !subPosition.clicked">
-                                                    {{ subPosition.name }}
+                                        <th class="bg-silverGray xxsDark w-full">
+                                            <div class="flex" @mouseover="showMenu = 'subPosition' + subPosition.id"
+                                                 @mouseout="showMenu = null">
+                                                <div
+                                                    class="pl-2 xxsDark w-full flex items-center h-10"
+                                                    v-if="!subPosition.clicked">
+                                                    <div @click="subPosition.clicked = !subPosition.clicked">
+                                                        {{ subPosition.name }}
+                                                    </div>
+                                                    <button class="my-auto w-6 ml-3"
+                                                            @click="subPosition.closed = !subPosition.closed">
+                                                        <ChevronUpIcon v-if="!subPosition.closed"
+                                                                       class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                    </button>
                                                 </div>
-                                                <button class="my-auto w-6 ml-3"
-                                                        @click="subPosition.closed = !subPosition.closed">
-                                                    <ChevronUpIcon v-if="!subPosition.closed"
-                                                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
-                                                </button>
-                                            </div>
-                                            <div v-else class="flex">
-                                                <input
-                                                    class="my-2 ml-1 xxsDark" type="text"
-                                                    v-model="subPosition.name"
-                                                    @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
-                                                <button class="my-auto w-6 ml-3"
-                                                        @click="subPosition.closed = !subPosition.closed">
-                                                    <ChevronUpIcon v-if="!subPosition.closed"
-                                                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
-                                                </button>
+                                                <div v-else class="flex w-full">
+                                                    <input
+                                                        class="my-2 ml-1 xxsDark" type="text"
+                                                        v-model="subPosition.name"
+                                                        @focusout="updateSubPositionName(subPosition); subPosition.clicked = !subPosition.clicked">
+                                                    <button class="my-auto w-6 ml-3"
+                                                            @click="subPosition.closed = !subPosition.closed">
+                                                        <ChevronUpIcon v-if="!subPosition.closed"
+                                                                       class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                    </button>
+                                                </div>
+                                                <div class="flex items-center justify-end">
+                                                    <div class="flex flex-wrap w-full">
+                                                        <div class="flex w-full">
+                                                            <Menu as="div" class="my-auto relative"
+                                                                  v-show="showMenu === 'subPosition' + subPosition.id">
+                                                                <div class="flex">
+                                                                    <MenuButton
+                                                                        class="flex ml-6">
+                                                                        <DotsVerticalIcon
+                                                                            class="mr-3 flex-shrink-0 h-6 w-6 text-darkGray my-auto"
+                                                                            aria-hidden="true"/>
+                                                                    </MenuButton>
+                                                                </div>
+                                                                <transition
+                                                                    enter-active-class="transition ease-out duration-100"
+                                                                    enter-from-class="transform opacity-0 scale-95"
+                                                                    enter-to-class="transform opacity-100 scale-100"
+                                                                    leave-active-class="transition ease-in duration-75"
+                                                                    leave-from-class="transform opacity-100 scale-100"
+                                                                    leave-to-class="transform opacity-0 scale-95">
+                                                                    <MenuItems
+                                                                        class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                                        <div class="py-1">
+                                                                            <MenuItem v-slot="{ active }">
+                                                                                <span
+                                                                                    @click="openDeleteSubPositionModal(subPosition)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Löschen
+                                                                                </span>
+                                                                            </MenuItem>
+                                                                        </div>
+                                                                    </MenuItems>
+                                                                </transition>
+                                                            </Menu>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <table class="w-full" v-if="!subPosition.closed">
                                                 <tbody class="bg-secondaryHover w-full">
@@ -214,14 +361,14 @@
                                                     class="bg-secondaryHover flex justify-between items-center border-2"
                                                     v-for="(row,rowIndex) in subPosition.sub_position_rows">
                                                     <div class="flex items-center">
-
                                                         <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
                                                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                                                         class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                                                        <td v-for="(cell,index) in row.cells"  :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'bg-secondaryHover' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
+                                                        <td v-for="(cell,index) in row.cells"
+                                                            :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.column.color !== 'whiteColumn' ? 'xsWhiteBold' : 'xsDark', cell.column.color]">
                                                             <div
-                                                                :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', cell.value < 0 ? 'text-red-500' : '']"
-                                                                class="my-4 h-6 flex items-center"
+                                                                :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
+                                                                class="my-4 h-6 flex items-center pr-2 justify-end"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-if="!cell.clicked">
                                                                 <img v-if="cell.linked_money_source_id !== null"
@@ -229,12 +376,12 @@
                                                                      class="h-6 w-6"/>
                                                                 {{ cell.value }}
                                                             </div>
-                                                            <div class="flex items-centert"
+                                                            <div class="flex items-center justify-end pr-2"
                                                                  :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                                                                  v-else-if="cell.clicked && cell.column.type === 'empty'">
                                                                 <input
                                                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
-                                                                    class="my-2 xsDark" type="text"
+                                                                    class="my-2 xsDark text-right" type="text"
                                                                     v-model="cell.value"
                                                                     @focusout="updateCellValue(cell)">
                                                                 <PlusCircleIcon v-if="index > 2"
@@ -242,7 +389,7 @@
                                                                                 class="h-6 w-6 -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                             </div>
                                                             <div
-                                                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48',hoveredRow === row.id ? '' : 'ml-2.5', cell.value < 0 ? 'text-red-500' : '']"
+                                                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                                                 class="my-4 h-6 flex items-center"
                                                                 @click="cell.clicked = !cell.clicked"
                                                                 v-else>
@@ -278,9 +425,11 @@
                                             </table>
                                             <div @click="addSubPosition(mainPosition.id, subPosition)"
                                                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                                <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                                                <div
+                                                    class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                                     Unterposition
-                                                    <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                    <PlusCircleIcon
+                                                        class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                                 </div>
                                             </div>
                                         </th>
@@ -296,9 +445,11 @@
                                     <!-- HIER ADD HAUPTPOSITION -->
                                     <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
                                          class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                                        <div class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
-                                            <PlusCircleIcon class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                        <div
+                                            class="group-hover:block hidden uppercase text-secondaryHover text-sm -mt-8">
                                             Hauptposition
+                                            <PlusCircleIcon
+                                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                                         </div>
                                     </div>
 
@@ -345,7 +496,7 @@
                     <table class="w-full">
                         <tbody>
                         <tr v-for="mainPosition in tablesToShow[1]">
-                            <th class="bg-primary text-white text-left">
+                            <th class="bg-primary text-white">
                                 <div class="pl-2 flex items-center h-10">
                                     {{ mainPosition.name }}
                                     <button class="my-auto w-6 ml-3"
@@ -409,17 +560,6 @@
         </div>
     </div>
 
-    <div class="bg-redColumn">
-
-    </div>
-
-    <pre v-for="cell in this.budget.table[0].sub_positions[0].sub_position_rows[0].cells">
-                                                        {{ cell.column_id }}
-                                                    </pre>
-
-    <pre>
-        {{ this.budget.table[0] }}
-        </pre>
 
     <jet-dialog-modal :show="showSuccessModal" @close="closeSuccessModal">
         <template #content>
@@ -446,6 +586,90 @@
 
         </template>
     </jet-dialog-modal>
+
+
+    <jet-dialog-modal :show="showVerifiedModal" @close="closeVerifiedModal">
+        <template #content>
+            <img alt="Neue Spalte" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="headline1 my-2">
+                    {{ verifiedTexts.title }} <span class="xsDark">{{ verifiedTexts.mainPositionTitle }}</span>
+                </div>
+                <XIcon @click="closeVerifiedModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="mb-2 xsLight">
+                    {{ verifiedTexts.description }}
+                </div>
+                <p class="xsLight flex mb-2">
+                    <!-- TODO: SVG ersetzen mit IMG TAG -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" class="mr-2">
+                        <g id="warning" transform="translate(-453 -292)">
+                            <rect id="Rechteck_468" data-name="Rechteck 468" width="20" height="20"
+                                  transform="translate(453 292)" fill="#e0e000"/>
+                            <path id="Icon_metro-warning" data-name="Icon metro-warning"
+                                  d="M8.4,2.984l4.884,9.734H3.514L8.4,2.984Zm0-1.056a.842.842,0,0,0-.693.508L2.731,12.351c-.381.678-.057,1.232.72,1.232h9.894c.777,0,1.1-.554.72-1.232h0L9.091,2.436A.842.842,0,0,0,8.4,1.928ZM9.126,11.4a.728.728,0,1,1-.728-.728A.728.728,0,0,1,9.126,11.4ZM8.4,9.941a.728.728,0,0,1-.728-.728V7.027a.728.728,0,1,1,1.457,0V9.212A.728.728,0,0,1,8.4,9.941Z"
+                                  transform="translate(454.602 294.245)" fill="#fcfcfb" stroke="#fcfcfb"
+                                  stroke-width="0.2"/>
+                        </g>
+                    </svg>
+                    Achtung: Du gibst der/dem Nutzer*in dadurch Budgetzugriff!
+                </p>
+                <div class="mb-2">
+                    <div class="relative w-full">
+                        <div class="w-full" v-if="showUserAdd">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   placeholder="Wer soll deine Kalkulation verifizieren?*"
+                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        </div>
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                        text-base ring-1 ring-black ring-opacity-5
+                                                        overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(user, index) in user_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addUserToVerifiedUserArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+
+                    <div v-if="submitVerifiedModalData.user !== ''" class="mt-2 mb-4 flex items-center">
+                        <span class="flex mr-5 rounded-full items-center font-bold text-primary">
+                            <div class="flex items-center">
+                                <img class="flex h-11 w-11 rounded-full object-cover" :src="usersToAdd.profile_photo_url" alt=""/>
+                                <span class="flex ml-4 sDark">
+                                    {{ usersToAdd.first_name }} {{ usersToAdd.last_name }}
+                                </span>
+                                <button type="button" @click="deleteUserFromVerifiedUserArray">
+                                    <span class="sr-only">User aus Finanzierungsquelle entfernen</span>
+                                    <XIcon class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                </button>
+                            </div>
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
+                            @click="closeVerifiedModal">
+                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                    </button>
+                </div>
+            </div>
+
+        </template>
+    </jet-dialog-modal>
     <!-- Termin erstellen Modal-->
     <add-column-component
         v-if="showAddColumnModal"
@@ -461,11 +685,12 @@
         @closed="closeCellDetailModal()"
     />
     <confirmation-component
-        v-if="showDeleteMainPositionModal"
+        v-if="showDeleteModal"
         confirm="Löschen"
         titel="Hauptposition löschen"
-        :description="'Bist du sicher, dass du die Hauptposition ' + this.mainPositionToDelete.name + ' löschen möchtest?'"
+        :description="this.confirmationDescription"
         @closed="afterConfirm"/>
+
 
 </template>
 
@@ -477,9 +702,19 @@ import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@hero
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
-import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {
+    Listbox,
+    ListboxButton,
+    ListboxOption,
+    ListboxOptions,
+    Menu,
+    MenuButton,
+    MenuItem,
+    MenuItems
+} from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
     name: 'BudgetComponent',
@@ -502,7 +737,11 @@ export default {
         PencilAltIcon,
         TrashIcon,
         JetDialogModal,
-        CheckIcon
+        CheckIcon,
+        Listbox,
+        ListboxButton,
+        ListboxOption,
+        ListboxOptions,
     },
 
     data() {
@@ -515,14 +754,41 @@ export default {
             cellToShow: null,
             hoveredRow: null,
             showMenu: null,
-            showDeleteMainPositionModal: false,
+            showDeleteModal: false,
             mainPositionToDelete: null,
+            subPositionToDelete: null,
+            confirmationDescription: '',
             showSuccessModal: false,
             successHeading: '',
             successDescription: '',
             positionDefault: {
-                position: 1
-            }
+                position: 0
+            },
+            colors: {
+                whiteColumn: 'whiteColumn',
+                greenColumn: 'greenColumn',
+                yellowColumn: 'yellowColumn',
+                redColumn: 'redColumn',
+                lightGreenColumn: 'lightGreenColumn'
+            },
+            verifiedTexts: {
+                title: 'Verifizierung',
+                mainPositionTitle: '',
+                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
+            },
+            showVerifiedModal: false,
+            user_search_results: [],
+            user_query: '',
+            usersToAdd: '',
+            showUserAdd: true,
+            submitVerifiedModalData: useForm({
+                is_main: false,
+                is_sub: false,
+                id: null,
+                user: '',
+                position: [],
+                project_title: this.project.name
+            })
         }
     },
 
@@ -565,14 +831,43 @@ export default {
             return sums;
         }
     },
+    watch: {
+        user_query: {
+            handler() {
+                if (this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
+                    }).then(response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        },
+    },
 
     methods: {
-
-        deleteColumn(column){
+        addUserToVerifiedUserArray(user) {
+            this.submitVerifiedModalData.user = user.id;
+            this.usersToAdd = user
+            this.user_query = '';
+            this.showUserAdd = false;
+        },
+        deleteUserFromVerifiedUserArray() {
+            this.submitVerifiedModalData.user = '';
+            this.usersToAdd = ''
+            this.showUserAdd = true
+        },
+        changeColumnColor(color, columnId) {
+            this.$inertia.patch(route('project.budget.column-color.change'), {
+                color: color,
+                columnId: columnId
+            })
+        },
+        deleteColumn(column) {
             this.$inertia.delete(route('project.budget.column.delete', column))
         },
         addRowToSubPosition(subPosition, row) {
-
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
                 project_id: this.project.id,
                 sub_position_id: subPosition.id,
@@ -702,31 +997,60 @@ export default {
         deleteRowFromSubPosition(row) {
             this.$inertia.delete(`/project/budget/sub-position-row/${row.id}`);
         },
-        openDeleteMainPositionModal(mainPosition){
+        openDeleteMainPositionModal(mainPosition) {
+            this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'
             this.mainPositionToDelete = mainPosition;
-            this.showDeleteMainPositionModal = true;
+            this.showDeleteModal = true;
+        },
+        openDeleteSubPositionModal(subPosition) {
+            this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
+            this.subPositionToDelete = subPosition;
+            this.showDeleteModal = true;
         },
         afterConfirm(bool) {
-            if (!bool) return this.showDeleteMainPositionModal = false;
+            if (!bool) return this.showDeleteModal = false;
 
-            this.deleteMainPosition();
+            this.deletePosition();
 
         },
-        deleteMainPosition(){
-            this.showDeleteMainPositionModal = false;
-            this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
-            //this.$inertia.delete(`/project/budget/main-position/${this.mainPositionToDelete.id}`); Bitte wie oben
-            this.successHeading = "Hauptposition gelöscht"
-            this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
+        deletePosition() {
+            if (this.mainPositionToDelete !== null) {
+                this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
+                this.successHeading = "Hauptposition gelöscht"
+                this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
+            } else if (this.subPositionToDelete !== null) {
+                this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
+                this.successHeading = "Unterposition gelöscht"
+                this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
+            }
+            this.showDeleteModal = false;
             this.showSuccessModal = true;
 
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
         closeSuccessModal() {
             this.mainPositionToDelete = null;
+            this.subPositionToDelete = null;
             this.showSuccessModal = false;
             this.successHeading = "";
             this.successDescription = "";
+        },
+        closeVerifiedModal() {
+            this.submitVerifiedModalData.post(route('project.budget.verified.main-position'));
+            this.showVerifiedModal = false;
+            this.user_query = '';
+            this.showUserAdd = true;
+            this.submitVerifiedModalData.user = '';
+            this.submitVerifiedModalData.id = null;
+            this.submitVerifiedModalData.is_main = false;
+            this.submitVerifiedModalData.position = [];
+        },
+        openVerifiedModal(mainPosition) {
+            this.verifiedTexts.mainPositionTitle = mainPosition.name
+            this.submitVerifiedModalData.is_main = true
+            this.submitVerifiedModalData.id = mainPosition.id
+            this.submitVerifiedModalData.position = mainPosition
+            this.showVerifiedModal = true
         }
     },
 }
@@ -740,20 +1064,24 @@ export default {
                 redColumn: '#D84387',
                 lightGreenColumn: '#35A965'
  */
-    .whiteColumn {
-        background-color: #FCFCFBFF;
-    }
-    .greenColumn {
-        background-color: #50908E;
-        border: 2px solid #1FC687;
-    }
-    .yellowColumn {
-        background-color: #F0B54C;
-    }
-    .redColumn {
-        background-color: #D84387;
-    }
-    .lightGreenColumn {
-        background-color: #35A965;
-    }
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
 </style>

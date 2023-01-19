@@ -15,7 +15,8 @@ class MoneySourceTask extends Model
         'name',
         'description',
         'deadline',
-        'creator'
+        'creator',
+        'done'
     ];
 
 

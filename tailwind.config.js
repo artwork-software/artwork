@@ -33,8 +33,8 @@ module.exports = {
                 tagText: '#3017AD',
                 backgroundBlue: '#3017AD34',
                 lightBackgroundGray: '#F4F4F3',
+                checkBoxBg: '#474459',
                 silverGray:'#CECDD8',
-
             },
             fontSize: {
                 header: '30px'

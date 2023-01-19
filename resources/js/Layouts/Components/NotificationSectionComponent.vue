@@ -83,6 +83,11 @@
                                 :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
                                 :rooms="this.rooms"
                                 :eventTypes="this.eventTypes"></NotificationEventInfoRow>
+                            <NotificationBudgetRequest
+                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'"
+                            :budget="notification.data">
+
+                            </NotificationBudgetRequest>
                             <div class="flex">
                                 <div class="mt-1.5 flex xxsLight my-auto"
                                      v-if="notification.type === 'App\\Notifications\\DeadlineNotification'">
@@ -312,11 +317,13 @@ import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequest
 import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/AnswerEventRequestWithRoomChangeComponent";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
+import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
 
 export default  {
     name: 'NotificationSectionComponent',
 
     components: {
+        NotificationBudgetRequest,
         TeamIconCollection,
         EventTypeIconCollection,
         ChevronDownIcon,

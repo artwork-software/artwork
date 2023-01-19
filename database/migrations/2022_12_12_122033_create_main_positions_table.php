@@ -19,6 +19,11 @@ return new class extends Migration
             $table->enum('type', ['BUDGET_TYPE_COST', 'BUDGET_TYPE_EARNING']);
             $table->integer('position');
             $table->string('name')->nullable();
+            $table->enum('is_verified', [
+                'BUDGET_VERIFIED_TYPE_NOT_VERIFIED',
+                'BUDGET_VERIFIED_TYPE_CLOSED',
+                'BUDGET_VERIFIED_TYPE_REQUESTED'
+            ])->default('BUDGET_VERIFIED_TYPE_NOT_VERIFIED');
             $table->timestamps();
         });
     }

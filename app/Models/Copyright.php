@@ -20,6 +20,11 @@ class Copyright extends Model
         'project_id'
     ];
 
+    protected $casts = [
+        'own_copyright' => 'boolean',
+        'live_music' => 'boolean'
+    ];
+
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');

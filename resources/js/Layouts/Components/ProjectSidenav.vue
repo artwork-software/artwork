@@ -3,8 +3,14 @@
         <div class="w-full flex items-center">
             <div class="text-secondary text-md">Kostenträger: {{ costCenter.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                           @click="openProjectDataModal"/>
-            <ProjectDataEditModal :show="showProjectDataModal" :close-modal="closeProjectDataModal" :project="project" :traits="traits" />
+                           @click="openCopyrightModal"/>
+            <ProjectCopyrightModal
+                :show="showCopyrightModal"
+                @close-modal="closeCopyrightModal"
+                :project="project"
+                :copyright="copyright"
+                :costCenter="costCenter"
+            />
         </div>
         <div class="text-secondary text-md">Urheberrecht: {{ copyright.own_copyright ? 'Ja' : 'Nein' }}</div>
         <div class="text-secondary text-sm mt-2">
@@ -109,14 +115,13 @@ import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal";
 import ProjectFileDeleteModal from "@/Layouts/Components/ProjectFileDeleteModal";
 import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal";
-import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
+import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
 
 export default {
     name: "ProjectSidenav",
     components: {
         ContractEditModal,
-        ProjectDataEditModal,
         ContractUploadModal,
         ProjectFileEditModal,
         ProjectFileDeleteModal,
@@ -129,6 +134,7 @@ export default {
         ContractModuleUploadModal,
         PencilAltIcon,
         ChevronDownIcon,
+        ProjectCopyrightModal
     },
     props: {
         project: Object,
@@ -150,8 +156,7 @@ export default {
             showMoneySources: false,
             showFileEditModal: false,
             showContractEditModal: false,
-            showProjectDataModal: false,
-
+            showCopyrightModal: false,
 
         }
     },
@@ -168,11 +173,11 @@ export default {
             link.target = '_blank';
             link.click();
         },
-        openProjectDataModal() {
-            this.showProjectDataModal = true
+        openCopyrightModal() {
+            this.showCopyrightModal = true
         },
-        closeProjectDataModal() {
-            this.showProjectDataModal = false
+        closeCopyrightModal() {
+            this.showCopyrightModal = false
         },
         openFileEditModal() {
             this.showFileEditModal = true

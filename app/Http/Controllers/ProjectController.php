@@ -474,6 +474,7 @@ class ProjectController extends Controller
     public function verifiedSubPosition(Request $request)
     {
         $subPosition = SubPosition::find($request->subPositionId);
+        $verifiedRequest = $subPosition->verified()->first();
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
@@ -486,7 +487,8 @@ class ProjectController extends Controller
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $subPosition->id)
-            ->whereJsonContains("data->requested_id", Auth::id())
+            ->whereJsonContains("data->requested_id", $verifiedRequest->requested)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
         $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ verifiziert', 'budget');
         return back()->with('success');
@@ -496,6 +498,7 @@ class ProjectController extends Controller
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $subPositions = $mainPosition->subPositions()->get();
+        $verifiedRequest = $mainPosition->verified()->first();
         foreach ($subPositions as $subPosition) {
             $subPositionRows = $subPosition->subPositionRows()->get();
             foreach ($subPositionRows as $subPositionRow) {
@@ -510,7 +513,8 @@ class ProjectController extends Controller
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $mainPosition->id)
-            ->whereJsonContains("data->requested_id", Auth::id())
+            ->whereJsonContains("data->requested_id",  $verifiedRequest->requested)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
         $this->history->createHistory($request->project_id, 'Hauptposition „'. $subPosition->name .'“ verifiziert', 'budget');
         return back()->with('success');

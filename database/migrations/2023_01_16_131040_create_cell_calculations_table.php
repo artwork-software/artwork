@@ -13,16 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('sub_positions', function (Blueprint $table) {
+        Schema::create('cell_calculations', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('cell_id');
             $table->string('name')->nullable();
-            $table->integer('position');
-            $table->bigInteger('main_position_id');
-            $table->enum('is_verified', [
-                'BUDGET_VERIFIED_TYPE_NOT_VERIFIED',
-                'BUDGET_VERIFIED_TYPE_CLOSED',
-                'BUDGET_VERIFIED_TYPE_REQUESTED'
-            ])->default('BUDGET_VERIFIED_TYPE_NOT_VERIFIED');
+            $table->integer('value')->nullable();
+            $table->string('description')->nullable();
             $table->timestamps();
         });
     }
@@ -34,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('sub_positions');
+        Schema::dropIfExists('cell_calculations');
     }
 };

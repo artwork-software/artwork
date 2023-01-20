@@ -235,8 +235,11 @@ class NotificationController extends Controller
                     'type' => $notificationData->type,
                     'title' => $notificationData->title,
                     'requested_position' => $notificationData->requested_position,
-                    'project_title' => $notificationData->project_title,
+                    'project' => $notificationData->project,
                     'created_by' => $notificationData->created_by,
+                    'requested_id' => $notificationData->requested_id,
+                    'position' => $notificationData->position,
+                    'changeType' => $notificationData->changeType
                 ];
                 Notification::send($user, new BudgetVerified($notificationBody, $broadcastMessage));
         }

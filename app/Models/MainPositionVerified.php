@@ -9,6 +9,12 @@ class MainPositionVerified extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'main_position_id',
+        'requested_by',
+        'requested'
+    ];
+
     public function main_position(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(MainPosition::class);

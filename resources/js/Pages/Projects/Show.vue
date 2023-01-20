@@ -71,7 +71,8 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center" v-if="project.project_history.length">
+                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
+                     v-if="project.project_history.length">
                     <div>
                         zuletzt geändert:
                     </div>
@@ -98,7 +99,8 @@
                         <span v-if="!project.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
-                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1"> {{ currentGroup.name }}</a>
+                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
+                        {{ currentGroup.name }}</a>
                     </div>
                 </div>
 
@@ -270,7 +272,8 @@
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
-                <div v-if="isChecklistTab" class="grid grid-cols-3 ml-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
+                <div v-if="isChecklistTab"
+                     class="grid grid-cols-3 ml-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
                     <div class="col-span-2">
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
@@ -934,7 +937,8 @@
                     </div>
                 </div>
                 <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
-                    <BudgetComponent :budget="budget" :project="project" :money-sources="moneySources"></BudgetComponent>
+                    <BudgetComponent :budget="budget" :project="project"
+                                     :money-sources="moneySources"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -952,7 +956,8 @@
                     <div class="mt-12">
                         <div class="flex">
                             <div class="relative flex w-full">
-                                <input id="projectName" v-model="form.name" type="text" placeholder="Projektname*" class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                <input id="projectName" v-model="form.name" type="text" placeholder="Projektname*"
+                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                             </div>
                         </div>
@@ -1080,7 +1085,8 @@
                                 </transition>
                             </Menu>
                         </div>
-                        <div class="flex mt-2" v-if="projectCategories.length > 0 || projectGenres.length > 0 || projectSectors.length > 0">
+                        <div class="flex mt-2"
+                             v-if="projectCategories.length > 0 || projectGenres.length > 0 || projectSectors.length > 0">
                             <div>
                                 <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
                                               :displayed-text="category.name" :property="category"></TagComponent>
@@ -1095,7 +1101,8 @@
                             </div>
                         </div>
                         <div class="mt-2">
-                            <textarea placeholder="Kurzbeschreibung" v-model="form.description" rows="8" class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
+                            <textarea placeholder="Kurzbeschreibung" v-model="form.description" rows="8"
+                                      class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
                         <!-- TODO: Add cost center to sidebar -->
                         <!--<div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
@@ -1109,7 +1116,8 @@
                         </div>-->
                         <div>
                             <div class="flex items-center mb-2" v-if="!project.is_group">
-                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup" @change="removeSelectedGroup"
+                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
+                                       @change="removeSelectedGroup"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                 <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
@@ -1120,7 +1128,9 @@
                                 <Listbox as="div" v-model="this.selectedGroup" id="room">
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
                                         <div class="flex-grow flex text-left xsDark">
-                                            {{ this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'  }}
+                                            {{
+                                                this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'
+                                            }}
                                         </div>
                                         <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                                     </ListboxButton>
@@ -1586,28 +1596,72 @@
                     <div class="text-secondary subpixel-antialiased">
                         Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                     </div>
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
+
+                    <div class="mb-4">
+                        <div class="hidden sm:block">
+                            <div class="border-gray-200">
+                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
+                                     aria-label="Tabs">
+                                    <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
+                                       :key="tab.name"
+                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
+                                       :aria-current="tab.current ? 'page' : undefined">
+                                        {{ tab.name }}
+                                    </a>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
+                        <div v-for="historyItem in project.project_history">
+                            <div class="flex w-full my-1"  v-if="historyItem.changes[0].type === 'project'">
+                                <div  class="flex w-full ">
+                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
+                                        {{ historyItem.created_at }}:
+                                    </span>
+                                    <img v-if="historyItem.changes[0].changed_by"
+                                         :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                         :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                         :alt="historyItem.changes[0].changed_by?.first_name"
+                                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                                 :user="historyItem.changes[0].changed_by"/>
+                                    <div v-else class="xsLight ml-3">
+                                        gelöschte Nutzer:in
+                                    </div>
+                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
+                                        {{ historyItem.changes[0].message }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
                         <div class="flex w-full my-1" v-for="historyItem in project.project_history">
+                            <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                            <img v-if="historyItem.changes[0].changed_by"
-                                 :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                 :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                 :alt="historyItem.changes[0].changed_by?.first_name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                         :user="historyItem.changes[0].changed_by"/>
-                            <div v-else class="xsLight ml-3">
-                                gelöschte Nutzer:in
-                            </div>
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{ historyItem.changes[0].message }}
+                                <img v-if="historyItem.changes[0].changed_by"
+                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
+                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
+                                     :alt="historyItem.changes[0].changed_by?.first_name"
+                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                                <UserTooltip v-if="historyItem.changes[0].changed_by"
+                                             :user="historyItem.changes[0].changed_by"/>
+                                <div v-else class="xsLight ml-3">
+                                    gelöschte Nutzer:in
+                                </div>
+                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
+                                    {{ historyItem.changes[0].message }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
             </template>
         </jet-dialog-modal>
         <!-- Checkliste Bearbeiten-->
@@ -1798,11 +1852,25 @@ export default {
     },
     computed: {
         tabs() {
+            if(this.$page.props.is_admin) {
+                return [
+                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
+                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
+                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                    {name: 'Budget', href: '#', current: this.isBudgetTab}
+                ]
+            }else{
+                return [
+                    {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
+                    {name: 'Checklisten', href: '#', current: this.isChecklistTab},
+                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                ]
+            }
+        },
+        historyTabs() {
             return [
-                {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
-                {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
-                {name: 'Budget', href:'#', current: this.isBudgetTab}
+                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
+                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
             ]
         },
         projectMembers() {
@@ -1857,6 +1925,8 @@ export default {
     },
     data() {
         return {
+            showProjectHistoryTab: true,
+            showBudgetHistoryTab: false,
             show: false,
             hasGroup: !!this.currentGroup,
             deletingFile: false,
@@ -1895,7 +1965,6 @@ export default {
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
-                cost_center: this.project.cost_center,
                 number_of_participants: this.project.number_of_participants,
                 assigned_user_ids: {},
                 assigned_departments: [],
@@ -1964,19 +2033,28 @@ export default {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
     },
     methods: {
-        deleteProjectFromGroup(projectGroupId){
+        changeHistoryTabs(selectedTab) {
+            this.showProjectHistoryTab = false;
+            this.showBudgetHistoryTab = false;
+            if (selectedTab.name === 'Projekt') {
+                this.showProjectHistoryTab = true;
+            } else {
+                this.showBudgetHistoryTab = true;
+            }
+        },
+        deleteProjectFromGroup(projectGroupId) {
 
             axios.delete(route('projects.group.delete'), {
-               params: {
-                   projectIdToDelete: projectGroupId.id,
-                   groupId: this.project.id
-               }
+                params: {
+                    projectIdToDelete: projectGroupId.id,
+                    groupId: this.project.id
+                }
             }).finally(() => {
                 this.projectGroups.splice(this.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
             })
         },
-        removeSelectedGroup(){
-            if(!this.hasGroup){
+        removeSelectedGroup() {
+            if (!this.hasGroup) {
                 this.selectedGroup = null;
             }
         },
@@ -2172,6 +2250,7 @@ export default {
             this.form.assigned_user_ids = {};
         },
         editProject() {
+
             this.form.number_of_participants = this.selectedParticipantNumber;
             this.assignedUsers.forEach(user => {
                 this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
@@ -2180,6 +2259,7 @@ export default {
                 this.form.assigned_departments.push(department);
             })
             this.form.selectedGroup = this.selectedGroup;
+            console.log(this.form);
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },
@@ -2194,7 +2274,7 @@ export default {
                 this.isChecklistTab = true;
             } else if (selectedTab.name === 'Informationen & Dokumente') {
                 this.isInfoTab = true;
-            } else{
+            } else {
                 this.isBudgetTab = true;
             }
         },

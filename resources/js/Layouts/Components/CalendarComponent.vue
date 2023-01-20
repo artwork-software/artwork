@@ -1,6 +1,6 @@
 <template>
 
-    <div class="mt-10 ml-12 flex justify-between items-center w-[95%]">
+    <div class="mt-10 ml-12 flex justify-between items-center w-[95%] relative -z-10">
         <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>

@@ -23,6 +23,6 @@ composer.lock
 data.ms/instance-uid
 composer.lock
 public/mix-manifest.json
-.env.example
-package-lock.json
 public/mix-manifest.json
+webpack.mix.js
+

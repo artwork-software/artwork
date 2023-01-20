@@ -946,7 +946,7 @@ class ProjectController extends Controller
                     ])
                     ->orderBy('position')
                     ->get(),
-                'selectedCell' => $selectedCell->load('calculations')
+                'selectedCell' => $selectedCell?->load('calculations')
             ],
 
             'categories' => Category::all(),

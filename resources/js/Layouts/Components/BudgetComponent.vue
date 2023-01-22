@@ -1021,6 +1021,21 @@ export default {
     methods: {
         checkCellColor(cell, mainPosition, subPosition) {
             let cssString = '';
+            if (cell.column.color === 'whiteColumn') {
+                if (cell.value !== cell.verified_value) {
+                    cssString += ' xsWhiteBold ';
+                } else {
+                    cssString += ' xsDark ';
+                }
+            } else {
+                cssString += ' xsWhiteBold ';
+                if(cell.value !== cell.verified_value){
+                    cssString += ' bg-red-300 '
+                } else {
+                    cssString += cell.column.color;
+                }
+            }
+
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED') {
                     cssString += ' bg-red-300 '
@@ -1031,15 +1046,7 @@ export default {
                     cssString += cell.column.color;
                 }
             }
-            if (cell.column.color === 'whiteColumn') {
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' xsWhiteBold ';
-                } else {
-                    cssString += ' xsDark ';
-                }
-            } else {
-                cssString += ' xsWhiteBold ';
-            }
+
             return cssString
         },
         getSumOfTable(tableType, columnId) {

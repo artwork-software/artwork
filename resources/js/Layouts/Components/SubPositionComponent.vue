@@ -107,7 +107,7 @@
                               v-show="showMenu === 'subPosition' + subPosition.id">
                             <div class="flex">
                                 <MenuButton
-                                    class="flex ml-6">
+                                    class="flex">
                                     <DotsVerticalIcon
                                         class="mr-3 flex-shrink-0 h-6 w-6 text-darkGray my-auto"
                                         aria-hidden="true"/>

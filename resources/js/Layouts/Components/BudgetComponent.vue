@@ -856,5 +856,30 @@ export default {
 </script>
 
 <style scoped>
+/*
+ greenColumn: '#50908E',
+                yellowColumn: '#F0B54C',
+                redColumn: '#D84387',
+                lightGreenColumn: '#35A965'
+ */
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
 
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
 </style>

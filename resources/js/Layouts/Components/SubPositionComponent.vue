@@ -202,7 +202,7 @@
                         </div>
                         <div class="flex items-center justify-end"
                              :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 ml-10'"
-                             v-else-if="cell.clicked && cell.column.type === 'empty'">
+                             v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                             <input
                                 :class="index <= 1 ? 'w-20 mr-0.5' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
                                 class="my-2 xsDark text-right"
@@ -216,7 +216,7 @@
                         <div
                             :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                             class="my-4 h-6 flex items-center"
-                            @click="cell.clicked = !cell.clicked"
+                            @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                             v-else>
                             <img v-if="cell.linked_money_source_id !== null"
                                  src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
@@ -482,6 +482,7 @@ export default {
 
             return cssString
         },
+
     },
 
 }

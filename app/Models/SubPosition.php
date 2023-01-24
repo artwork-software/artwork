@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property int $position
+ * @property int $main_position_id
+ * @property string $is_verified
+ * @property boolean $is_fixed
+ */
 class SubPosition extends Model
 {
     use HasFactory;
@@ -15,7 +23,12 @@ class SubPosition extends Model
     protected $fillable = [
         'name',
         'position',
-        'is_verified'
+        'is_verified',
+        'is_fixed'
+    ];
+
+    protected $casts = [
+        'is_fixed' => 'boolean',
     ];
 
     protected $appends = ['columnSums'];

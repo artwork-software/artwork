@@ -323,5 +323,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // Lock
     Route::patch('/project/budget/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
     Route::patch('/project/budget/unlock/column', [ProjectController::class, 'unlockColumn'])->name('project.budget.unlock.column');
+
+    // fixed
+    Route::patch('/project/budget/fix/sub-position', [ProjectController::class, 'fixSubPosition'])->name('project.budget.fix.sub-position');
+    Route::patch('/project/budget/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
 });
 

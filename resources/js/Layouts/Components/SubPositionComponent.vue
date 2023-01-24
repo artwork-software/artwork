@@ -157,6 +157,28 @@
                                                                                     Verifizierung aufheben
                                                                                 </span>
                                         </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !subPosition.is_fixed">
+                                                                                <span
+                                                                                    @click="fixSubPosition(subPosition.id)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Festschreiben
+                                                                                </span>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && subPosition.is_fixed">
+                                                                                <span
+                                                                                    @click="unfixSubPosition(subPosition.id)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Festschreibung aufheben
+                                                                                </span>
+                                        </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                                                                     <span
                                                                                         @click="openDeleteSubPositionModal(subPosition)"
@@ -489,6 +511,16 @@ export default {
 
             return cssString
         },
+        fixSubPosition(subPositionId){
+            this.$inertia.patch(this.route('project.budget.fix.sub-position'), {
+                subPositionId: subPositionId
+            })
+        },
+        unfixSubPosition(subPositionId){
+            this.$inertia.patch(this.route('project.budget.unfix.sub-position'), {
+                subPositionId: subPositionId
+            })
+        }
 
     },
 

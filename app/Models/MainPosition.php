@@ -9,6 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use function Clue\StreamFilter\fun;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property string $type
+ * @property int $position
+ * @property string $name
+ * @property string $is_verified
+ * @property boolean $is_fixed
+ */
 class MainPosition extends Model
 {
     use HasFactory;
@@ -17,7 +26,12 @@ class MainPosition extends Model
         'type',
         'name',
         'position',
-        'is_verified'
+        'is_verified',
+        'is_fixed'
+    ];
+
+    protected $casts = [
+        'is_fixed' => 'boolean',
     ];
 
     protected $appends = ['columnSums'];

@@ -7,6 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+/**
+ * @property int $project_id
+ * @property string $name
+ * @property string $subName
+ * @property string $type
+ * @property int $linked_first_column
+ * @property int $linked_second_column
+ * @property string $color
+ * @property boolean $is_locked
+ */
 class Column extends Model
 {
     use HasFactory;
@@ -18,7 +28,12 @@ class Column extends Model
         'type',
         'linked_first_column',
         'linked_second_column',
-        'color'
+        'color',
+        'is_locked'
+    ];
+
+    protected $casts = [
+        'is_locked' => 'boolean',
     ];
 
     public function subPositionRows(): BelongsToMany

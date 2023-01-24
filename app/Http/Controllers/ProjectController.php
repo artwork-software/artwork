@@ -494,6 +494,34 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+    public function fixSubPosition(Request $request){
+        $subPosition = SubPosition::find($request->subPositionId);
+        $subPositionRows = $subPosition->subPositionRows()->get();
+        foreach ($subPositionRows as $subPositionRow) {
+            $cells = $subPositionRow->cells()->get();
+            foreach ($cells as $cell) {
+                $cell->update(['verified_value' => @$cell->value]);
+            }
+        }
+        $subPosition->is_fixed = true;
+        $subPosition->save();
+        return back()->with('success');
+    }
+
+    public function unfixSubPosition(Request $request){
+        $subPosition = SubPosition::find($request->subPositionId);
+        $subPositionRows = $subPosition->subPositionRows()->get();
+        foreach ($subPositionRows as $subPositionRow) {
+            $cells = $subPositionRow->cells()->get();
+            foreach ($cells as $cell) {
+                $cell->update(['verified_value' => 0]);
+            }
+        }
+        $subPosition->is_fixed = false;
+        $subPosition->save();
+        return back()->with('success');
+    }
+
     public function verifiedMainPosition(Request $request): RedirectResponse
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
@@ -832,6 +860,11 @@ class ProjectController extends Controller
         ]);
     }
 
+    /**
+     * This function automatically recalculates the linked columns when changes are made.
+     * @param $subPositionRowId
+     * @return void
+     */
     private function updateAutomaticCellValues($subPositionRowId)
     {
 
@@ -862,6 +895,11 @@ class ProjectController extends Controller
         }
     }
 
+    /**
+     * Function to lock a column
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function lockColumn(Request $request){
         $column = Column::find($request->columnId);
         $column->is_locked = true;
@@ -869,6 +907,11 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+    /**
+     * Function to unlock a column
+     * @param Request $request
+     * @return RedirectResponse
+     */
     public function unlockColumn(Request $request){
         $column = Column::find($request->columnId);
         $column->is_locked = false;

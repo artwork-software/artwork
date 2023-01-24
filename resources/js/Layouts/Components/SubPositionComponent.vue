@@ -211,22 +211,24 @@
                                     :class="hoveredRow === row.id ? '' : 'hidden'"
                                     class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                     <td v-for="(cell,index) in row.cells"
-                        :class="[index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
+                        :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
                         <div
                             :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                            class="my-4 h-6 flex items-center pr-2.5 ml-2 justify-end"
+                            class="my-4 h-6 flex items-center justify-end"
                             @click="cell.clicked = !cell.clicked"
                             v-if="!cell.clicked">
-                            <img v-if="cell.linked_money_source_id !== null"
-                                 src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                 class="h-6 w-6"/>
-                            {{ cell.value }}
+                            <div class="pr-2">
+                                <img v-if="cell.linked_money_source_id !== null"
+                                     src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
+                                     class="h-6 w-6"/>
+                                {{ cell.value }}
+                            </div>
                         </div>
                         <div class="flex items-center justify-end"
-                             :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 ml-10'"
+                             :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
                              v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                             <input
-                                :class="index <= 1 ? 'w-20 mr-0.5' : index === 2 ? 'w-60 mr-0.5' : 'w-44'"
+                                :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44'"
                                 class="my-2 xsDark text-right"
                                 :type="index > 2 ? 'number' : 'text'"
                                 v-model="cell.value"
@@ -264,19 +266,19 @@
                 </div>
             </div>
             <tr class="bg-silverGray xsDark flex h-10 w-full text-right">
-                <td class="w-24"></td>
-                <td class="w-24"></td>
+                <td class="w-28"></td>
+                <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
-                <div v-if="subPosition.sub_position_rows.length > 0"
-                     class="flex items-center"
+                <td v-if="subPosition.sub_position_rows.length > 0"
+                     class="flex items-center w-48"
                      v-for="column in columns.slice(3)">
-                    <td class="w-48 ml-0.5 my-4"
+                    <div class="my-4 w-48 p-1"
                         :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
                             subPosition.columnSums[column.id]
                         }}
-                    </td>
-                </div>
+                    </div>
+                </td>
             </tr>
             </tbody>
         </table>
@@ -327,17 +329,17 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['subPosition','mainPosition','columns','project'],
-    emits:['openDeleteModal','openVerifiedModal'],
-    data(){
-        return{
+    props: ['subPosition', 'mainPosition', 'columns', 'project'],
+    emits: ['openDeleteModal', 'openVerifiedModal'],
+    data() {
+        return {
             showMenu: null,
             hoveredRow: null,
             showDeleteModal: false,
             rowToDelete: null,
             subPositionToDelete: null,
             showSuccessModal: false,
-            confirmationTitle:'',
+            confirmationTitle: '',
             confirmationDescription: '',
             successHeading: '',
             successDescription: '',
@@ -396,15 +398,15 @@ export default {
             this.submitVerifiedModalData.id = subPosition.id
             this.submitVerifiedModalData.position = subPosition
             this.showVerifiedModal = true
-            this.$emit('openVerifiedModal',this.submitVerifiedModalData.is_main, this.submitVerifiedModalData.is_sub,this.submitVerifiedModalData.id,this.submitVerifiedModalData.position)
+            this.$emit('openVerifiedModal', this.submitVerifiedModalData.is_main, this.submitVerifiedModalData.is_sub, this.submitVerifiedModalData.id, this.submitVerifiedModalData.position)
         },
-        requestRemove(position, type){
+        requestRemove(position, type) {
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
             })
         },
-        removeVerification(position, type){
+        removeVerification(position, type) {
             this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
@@ -444,12 +446,12 @@ export default {
             });
         },
         openCellDetailModal(column) {
-            this.$emit('openCellDetailModal',column)
+            this.$emit('openCellDetailModal', column)
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
         },
-        openDeleteRowModal(row){
+        openDeleteRowModal(row) {
             this.confirmationTitle = 'Zeile löschen';
             this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
             this.rowToDelete = row;
@@ -485,7 +487,7 @@ export default {
                 }
             } else {
                 cssString += ' xsWhiteBold ';
-                if(cell.value !== cell.verified_value){
+                if (cell.value !== cell.verified_value) {
                     cssString += ' bg-red-300 '
                 } else {
                     cssString += cell.column.color;
@@ -494,7 +496,7 @@ export default {
 
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
-                || mainPosition.is_fixed || subPosition.is_fixed) {
+                    || mainPosition.is_fixed || subPosition.is_fixed) {
                     cssString += ' bg-red-300 '
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsWhiteBold '
@@ -507,12 +509,12 @@ export default {
 
             return cssString
         },
-        fixSubPosition(subPositionId){
+        fixSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.fix.sub-position'), {
                 subPositionId: subPositionId
             })
         },
-        unfixSubPosition(subPositionId){
+        unfixSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.unfix.sub-position'), {
                 subPositionId: subPositionId
             })

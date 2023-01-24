@@ -84,7 +84,8 @@
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8" :width="8" ></NewUserToolTip>
+                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
+                                                        :width="8"></NewUserToolTip>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
@@ -242,9 +243,7 @@ export default {
 
     emits: ['closed'],
 
-    watch: {
-
-    },
+    watch: {},
     computed: {
         tabs() {
             return [
@@ -254,17 +253,19 @@ export default {
                 {name: 'Verlinkung', href: '#', current: this.isLinkTab},
             ]
         },
-        commentsToShow(){
+        commentsToShow() {
             let comments = this.cell.comments;
             let commentsShow = []
-            comments.forEach((item) => {
-                commentsShow.push({
-                    id: item.id,
-                    user: JSON.parse(item.user),
-                    created_at: item.created_at,
-                    description: item.description
-                });
-            })
+            if (comments !== null) {
+                comments.forEach((item) => {
+                    commentsShow.push({
+                        id: item.id,
+                        user: JSON.parse(item.user),
+                        created_at: item.created_at,
+                        description: item.description
+                    });
+                })
+            }
             return commentsShow
         },
         calculationNames() {
@@ -318,7 +319,13 @@ export default {
     methods: {
         formatDate(date) {
             const dateFormate = new Date(date);
-            return dateFormate.toLocaleString('de-de',{year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+            return dateFormate.toLocaleString('de-de', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
         openModal() {
         },
@@ -374,7 +381,10 @@ export default {
         },
         deleteCommentFromCell(comment) {
             //this.commentForm.delete(route('project.budget.cell.comment.delete'));
-            this.$inertia.delete(route('project.budget.cell.comment.delete', comment), {preserveState: true, preserveScroll: true});
+            this.$inertia.delete(route('project.budget.cell.comment.delete', comment), {
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         addCommentToCell() {
             this.commentForm.post(route('project.budget.cell.comment.store'));

@@ -176,12 +176,12 @@
                             <MainPositionComponent @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
                         </tr>
                         <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
-                            <td class="w-24"></td>
-                            <td class="w-24"></td>
+                            <td class="w-28"></td>
+                            <td class="w-28"></td>
                             <td class="w-72 my-2">SUM</td>
-                            <td class="flex items-center"
+                            <td class="flex items-center w-48"
                                 v-for="column in budget.columns.slice(3)">
-                                <div class="w-48 my-2"
+                                <div class="w-48 my-2 p-1"
                                      :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
                                     {{ this.getSumOfTable(0, column.id) }}
                                 </div>
@@ -190,10 +190,10 @@
                         </tr>
                         <!-- TODO: Hier noch einfügen if(commented === true) -->
                         <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                            <td class="w-24"></td>
-                            <td class="w-24"></td>
+                            <td class="w-28"></td>
+                            <td class="w-28"></td>
                             <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
-                            <td class="w-48 my-2">3000</td>
+                            <td class="w-48 my-2 p-1">3000</td>
                         </tr>
                         </tbody>
                     </table>

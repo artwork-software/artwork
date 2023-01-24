@@ -207,12 +207,12 @@
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
                 :class="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' ? 'bg-buttonBlue' : 'bg-primary'">
-                <td class="w-24"></td>
-                <td class="w-24"></td>
+                <td class="w-28"></td>
+                <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
-                <div v-if="mainPosition.sub_positions.length > 0" class="flex items-center"
+                <div v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
                      v-for="column in budget.columns.slice(3)">
-                    <td class="w-48 ml-0.5 my-4"
+                    <td class="w-48 my-4 p-1"
                         :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
                             mainPosition.columnSums[column.id]

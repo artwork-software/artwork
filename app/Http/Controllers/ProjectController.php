@@ -902,8 +902,7 @@ class ProjectController extends Controller
      */
     public function lockColumn(Request $request){
         $column = Column::find($request->columnId);
-        $column->is_locked = true;
-        $column->save();
+        $column->update(['is_locked' => true]);
         return back()->with('success');
     }
 
@@ -914,8 +913,7 @@ class ProjectController extends Controller
      */
     public function unlockColumn(Request $request){
         $column = Column::find($request->columnId);
-        $column->is_locked = false;
-        $column->save();
+        $column->update(['is_locked' => false]);
         return back()->with('success');
     }
 

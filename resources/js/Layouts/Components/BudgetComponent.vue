@@ -155,7 +155,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <MainPositionComponent @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
+                            <MainPositionComponent @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
                         </tr>
                         <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                             <td class="w-24"></td>
@@ -829,30 +829,4 @@ export default {
 
 <style scoped>
 
-/*
- greenColumn: '#50908E',
-                yellowColumn: '#F0B54C',
-                redColumn: '#D84387',
-                lightGreenColumn: '#35A965'
- */
-.whiteColumn {
-    background-color: #FCFCFBFF;
-}
-
-.greenColumn {
-    background-color: #50908E;
-    border: 2px solid #1FC687;
-}
-
-.yellowColumn {
-    background-color: #F0B54C;
-}
-
-.redColumn {
-    background-color: #D84387;
-}
-
-.lightGreenColumn {
-    background-color: #35A965;
-}
 </style>

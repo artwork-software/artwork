@@ -6,7 +6,7 @@
             <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
                  v-if="!mainPosition.clicked">
                 <div @click="mainPosition.clicked = !mainPosition.clicked">
-                    {{ mainPosition.name }} {{this.showDeleteModal}}
+                    {{ mainPosition.name }}
                 </div>
                 <button class="my-auto w-6 ml-3"
                         @click="mainPosition.closed = !mainPosition.closed">
@@ -180,7 +180,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @open-delete-row-modal="openDeleteRowModal" @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
+                <SubPositionComponent @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -231,6 +231,7 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: "MainPositionComponent",
@@ -307,9 +308,6 @@ export default {
             this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.positionToDelete, type)
         },
-        openDeleteRowModal(title,description,row){
-
-        },
         updateMainPositionName(mainPosition) {
             this.$inertia.patch(route('project.budget.main-position.update-name'), {
                 mainPosition_id: mainPosition.id,
@@ -380,38 +378,14 @@ export default {
                 preserveState: true
             });
         },
+        openCellDetailModal(column) {
+            this.$emit('openCellDetailModal',column)
+        },
     },
 
 }
 </script>
 
 <style scoped>
-/*
- greenColumn: '#50908E',
-                yellowColumn: '#F0B54C',
-                redColumn: '#D84387',
-                lightGreenColumn: '#35A965'
- */
-.whiteColumn {
-    background-color: #FCFCFBFF;
-}
-
-.greenColumn {
-    background-color: #50908E;
-    border: 2px solid #1FC687;
-}
-
-.yellowColumn {
-    background-color: #F0B54C;
-}
-
-.redColumn {
-    background-color: #D84387;
-}
-
-.lightGreenColumn {
-    background-color: #35A965;
-}
-
 
 </style>

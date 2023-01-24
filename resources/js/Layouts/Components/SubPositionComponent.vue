@@ -421,14 +421,7 @@ export default {
             });
         },
         openCellDetailModal(column) {
-            Inertia.reload({
-                data: {
-                    selectedCell: column.id,
-                },
-                onSuccess: () => {
-                    this.showCellDetailModal = true;
-                }
-            })
+            this.$emit('openCellDetailModal',column)
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

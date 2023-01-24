@@ -380,22 +380,13 @@ class ProjectController extends Controller
             ->delete();
     }
 
-    public function removeVerification(Request $request){
-
+    public function removeVerification(Request $request): RedirectResponse
+    {
         $this->createVerificationNotificationHeader('Verifizierung in Budget aufgehoben', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_DELETED);
         if($request->type === 'main'){
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
-            $subPositions = $mainPosition->subPositions()->get();
-            foreach ($subPositions as $subPosition) {
-                $subPositionRows = $subPosition->subPositionRows()->get();
-                foreach ($subPositionRows as $subPositionRow) {
-                    $cells = $subPositionRow->cells()->get();
-                    foreach ($cells as $cell) {
-                        $cell->update(['verified_value' => 0]);
-                    }
-                }
-            }
+            $this->removeMainPositionCellVerifiedValue($mainPosition);
 
             // Notification
             $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
@@ -412,15 +403,9 @@ class ProjectController extends Controller
 
         if($request->type === 'sub'){
             $subPosition = SubPosition::find($request->position['id']);
-            $subPositionRows = $subPosition->subPositionRows()->get();
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
-            foreach ($subPositionRows as $subPositionRow) {
-                $cells = $subPositionRow->cells()->get();
-                foreach ($cells as $cell) {
-                    $cell->update(['verified_value' => 0]);
-                }
-            }
+            $this->removeSubPositionCellVerifiedValue($subPosition);
 
             // Notification
             $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
@@ -475,13 +460,7 @@ class ProjectController extends Controller
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $verifiedRequest = $subPosition->verified()->first();
-        $subPositionRows = $subPosition->subPositionRows()->get();
-        foreach ($subPositionRows as $subPositionRow) {
-            $cells = $subPositionRow->cells()->get();
-            foreach ($cells as $cell) {
-                $cell->update(['verified_value' => @$cell->value]);
-            }
-        }
+        $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
 
         DatabaseNotification::query()
@@ -496,6 +475,44 @@ class ProjectController extends Controller
 
     public function fixSubPosition(Request $request){
         $subPosition = SubPosition::find($request->subPositionId);
+        $this->setSubPositionCellVerifiedValue($subPosition);
+        $subPosition->update(['is_fixed' => true]);
+        return back()->with('success');
+    }
+
+    public function unfixSubPosition(Request $request){
+        $subPosition = SubPosition::find($request->subPositionId);
+        $this->removeSubPositionCellVerifiedValue($subPosition);
+        $subPosition->update(['is_fixed' => false]);
+        return back()->with('success');
+    }
+
+    public function fixMainPosition(Request $request){
+        $mainPosition = MainPosition::find($request->mainPositionId);
+        $this->setMainPositionCellVerifiedValue($mainPosition);
+        $mainPosition->update(['is_fixed' => true]);
+        return back()->with('success');
+    }
+
+    public function verifiedMainPosition(Request $request): RedirectResponse
+    {
+        $mainPosition = MainPosition::find($request->mainPositionId);
+        $this->setMainPositionCellVerifiedValue($mainPosition);
+        $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+        $verifiedRequest = $mainPosition->verified()->first();
+
+
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $mainPosition->id)
+            ->whereJsonContains("data->requested_id",  $verifiedRequest->requested)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
+            ->delete();
+        $this->history->createHistory($request->project_id, 'Hauptposition „'. $mainPosition->name .'“ verifiziert', 'budget');
+        return back()->with('success');
+    }
+
+    private function setSubPositionCellVerifiedValue(SubPosition $subPosition){
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
@@ -503,13 +520,9 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => @$cell->value]);
             }
         }
-        $subPosition->is_fixed = true;
-        $subPosition->save();
-        return back()->with('success');
     }
 
-    public function unfixSubPosition(Request $request){
-        $subPosition = SubPosition::find($request->subPositionId);
+    private function removeSubPositionCellVerifiedValue(SubPosition $subPosition){
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
@@ -517,16 +530,10 @@ class ProjectController extends Controller
                 $cell->update(['verified_value' => 0]);
             }
         }
-        $subPosition->is_fixed = false;
-        $subPosition->save();
-        return back()->with('success');
     }
 
-    public function verifiedMainPosition(Request $request): RedirectResponse
-    {
-        $mainPosition = MainPosition::find($request->mainPositionId);
+    private function setMainPositionCellVerifiedValue(MainPosition $mainPosition){
         $subPositions = $mainPosition->subPositions()->get();
-        $verifiedRequest = $mainPosition->verified()->first();
         foreach ($subPositions as $subPosition) {
             $subPositionRows = $subPosition->subPositionRows()->get();
             foreach ($subPositionRows as $subPositionRow) {
@@ -536,16 +543,19 @@ class ProjectController extends Controller
                 }
             }
         }
-        $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+    }
 
-        DatabaseNotification::query()
-            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
-            ->whereJsonContains("data->position", $mainPosition->id)
-            ->whereJsonContains("data->requested_id",  $verifiedRequest->requested)
-            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
-            ->delete();
-        $this->history->createHistory($request->project_id, 'Hauptposition „'. $subPosition->name .'“ verifiziert', 'budget');
-        return back()->with('success');
+    private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition){
+        $subPositions = $mainPosition->subPositions()->get();
+        foreach ($subPositions as $subPosition) {
+            $subPositionRows = $subPosition->subPositionRows()->get();
+            foreach ($subPositionRows as $subPositionRow) {
+                $cells = $subPositionRow->cells()->get();
+                foreach ($cells as $cell) {
+                    $cell->update(['verified_value' => 0]);
+                }
+            }
+        }
     }
 
     public function updateCellSource(Request $request): void

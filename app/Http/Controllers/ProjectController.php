@@ -456,7 +456,7 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function verifiedSubPosition(Request $request)
+    public function verifiedSubPosition(Request $request): RedirectResponse
     {
         $subPosition = SubPosition::find($request->subPositionId);
         $verifiedRequest = $subPosition->verified()->first();
@@ -473,24 +473,35 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
-    public function fixSubPosition(Request $request){
+    public function fixSubPosition(Request $request): RedirectResponse
+    {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => true]);
         return back()->with('success');
     }
 
-    public function unfixSubPosition(Request $request){
+    public function unfixSubPosition(Request $request): RedirectResponse
+    {
         $subPosition = SubPosition::find($request->subPositionId);
         $this->removeSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => false]);
         return back()->with('success');
     }
 
-    public function fixMainPosition(Request $request){
+    public function fixMainPosition(Request $request): RedirectResponse
+    {
         $mainPosition = MainPosition::find($request->mainPositionId);
         $this->setMainPositionCellVerifiedValue($mainPosition);
         $mainPosition->update(['is_fixed' => true]);
+        return back()->with('success');
+    }
+
+    public function unfixMainPosition(Request $request): RedirectResponse
+    {
+        $mainPosition = MainPosition::find($request->mainPositionId);
+        $this->removeMainPositionCellVerifiedValue($mainPosition);
+        $mainPosition->update(['is_fixed' => false]);
         return back()->with('success');
     }
 

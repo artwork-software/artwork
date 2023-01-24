@@ -327,5 +327,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // fixed
     Route::patch('/project/budget/fix/sub-position', [ProjectController::class, 'fixSubPosition'])->name('project.budget.fix.sub-position');
     Route::patch('/project/budget/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
+    Route::patch('/project/budget/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
+    Route::patch('/project/budget/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
 });
 

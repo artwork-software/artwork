@@ -151,6 +151,28 @@
                                                                                     Verifizierungsanfrage zurücknehmen
                                                                                 </span>
                                         </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && !mainPosition.is_fixed">
+                                                                                <span
+                                                                                    @click="fixMainPosition(mainPosition.id)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Festschreiben
+                                                                                </span>
+                                        </MenuItem>
+                                        <MenuItem v-slot="{ active }"
+                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED' && mainPosition.is_fixed">
+                                                                                <span
+                                                                                    @click="unfixMainPosition(mainPosition.id)"
+                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                                    <TrashIcon
+                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                                        aria-hidden="true"/>
+                                                                                    Festschreibung aufheben
+                                                                                </span>
+                                        </MenuItem>
                                         <MenuItem v-slot="{ active }">
                                                                                 <span
                                                                                     @click="openDeleteMainPositionModal(mainPosition)"
@@ -381,6 +403,16 @@ export default {
         openCellDetailModal(column) {
             this.$emit('openCellDetailModal',column)
         },
+        fixMainPosition(mainPositionId){
+            this.$inertia.patch(this.route('project.budget.fix.main-position'), {
+                mainPositionId: mainPositionId
+            })
+        },
+        unfixMainPosition(mainPositionId){
+            this.$inertia.patch(this.route('project.budget.unfix.main-position'), {
+                mainPositionId: mainPositionId
+            })
+        }
     },
 
 }

@@ -366,8 +366,7 @@ export default {
             this.closeModal(true);
         },
         deleteCommentFromCell(comment) {
-            //this.commentForm.delete(route('project.budget.cell.comment.delete'));
-            this.$inertia.delete(route('project.budget.cell.comment.delete', comment), {
+            this.$inertia.delete(route('project.budget.cell.comment.delete', {cellComment: comment.id}), {
                 preserveState: true,
                 preserveScroll: true
             });

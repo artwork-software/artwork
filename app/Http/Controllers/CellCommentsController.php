@@ -97,9 +97,9 @@ class CellCommentsController extends Controller
      *
      * @param  \App\Models\CellComment  $cellComments
      */
-    public function destroy(CellComment $cellComments): \Illuminate\Http\RedirectResponse
+    public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
     {
-        $cellComments->delete();
-        return back()->with('success', 'comment deleted');
+        $cellComment->delete();
+        return back();
     }
 }

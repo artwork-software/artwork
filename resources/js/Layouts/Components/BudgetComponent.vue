@@ -108,6 +108,24 @@
                                                     Einfärben
                                                 </a>
                                             </MenuItem>
+                                            <MenuItem v-slot="{ active }" v-if="!column.is_locked">
+                                                <a @click="lockColumn(column.id)"
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <PencilAltIcon
+                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                        aria-hidden="true"/>
+                                                    Sperren
+                                                </a>
+                                            </MenuItem>
+                                            <MenuItem v-slot="{ active }" v-if="column.is_locked">
+                                                <a @click="unlockColumn(column.id)"
+                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                    <PencilAltIcon
+                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                        aria-hidden="true"/>
+                                                    Entsperren
+                                                </a>
+                                            </MenuItem>
                                             <MenuItem v-slot="{ active }">
                                                 <a @click="deleteColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -822,6 +840,16 @@ export default {
                 position: position,
                 type: type
             })
+        },
+        lockColumn(columnId){
+            this.$inertia.patch(this.route('project.budget.lock.column'), {
+                columnId: columnId
+            });
+        },
+        unlockColumn(columnId){
+            this.$inertia.patch(this.route('project.budget.unlock.column'), {
+                columnId: columnId
+            });
         }
     },
 }

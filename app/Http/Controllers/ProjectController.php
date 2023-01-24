@@ -862,6 +862,20 @@ class ProjectController extends Controller
         }
     }
 
+    public function lockColumn(Request $request){
+        $column = Column::find($request->columnId);
+        $column->is_locked = true;
+        $column->save();
+        return back()->with('success');
+    }
+
+    public function unlockColumn(Request $request){
+        $column = Column::find($request->columnId);
+        $column->is_locked = false;
+        $column->save();
+        return back()->with('success');
+    }
+
     /**
      * Display the specified resource.
      *
@@ -897,6 +911,7 @@ class ProjectController extends Controller
             $columnOutput->name = $column->name;
             $columnOutput->subName = $column->subName;
             $columnOutput->color = $column->color;
+            $columnOutput->is_locked = $column->is_locked;
             if ($column->type === 'sum') {
                 $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
                 $secondName = Column::where('id', $column->linked_second_column)->first()->subName;

@@ -318,5 +318,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project/budget/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])->name('project.budget.verified.sub-position');
     Route::post('/project/budget/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])->name('project.budget.take-back.verification');
     Route::post('/project/budget/verified/remove/position', [ProjectController::class, 'removeVerification'])->name('project.budget.remove.verification');
+
+
+    // Lock
+    Route::patch('/project/budget/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
+    Route::patch('/project/budget/unlock/column', [ProjectController::class, 'unlockColumn'])->name('project.budget.unlock.column');
 });
 

@@ -287,7 +287,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
-    Route::patch('money_source/task/{moneySourceTask}/update', [\App\Http\Controllers\MoneySourceTaskController::class, 'update'])->name('money_source.task.update');
+    Route::patch('money_source/task/{moneySourceTask}/done', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsDone'])->name('money_source.task.done');
+    Route::patch('money_source/task/{moneySourceTask}/undone', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
+
+
     Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
 
     //Budget

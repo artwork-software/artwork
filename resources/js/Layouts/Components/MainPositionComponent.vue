@@ -121,7 +121,7 @@
                                         <MenuItem v-slot="{ active }"
                                                   v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_NOT_VERIFIED'">
                                                                                 <span
-                                                                                    @click="openVerifiedModal(mainPosition)"
+                                                                                    @click="openVerifiedModal(true, false, mainPosition.id, mainPosition)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <TrashIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -202,7 +202,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
+                <SubPositionComponent @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -315,7 +315,7 @@ export default {
 
       }
     },
-    emit:['openDeleteModal'],
+    emit:['openDeleteModal','openVerifiedModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -345,12 +345,14 @@ export default {
                 project_id: this.project.id
             })
         },
-        openVerifiedModal(mainPosition) {
-            this.verifiedTexts.positionTitle = mainPosition.name
-            this.submitVerifiedModalData.is_main = true
-            this.submitVerifiedModalData.id = mainPosition.id
-            this.submitVerifiedModalData.position = mainPosition
+        openVerifiedModal(is_main,is_sub,id,position) {
+            this.verifiedTexts.positionTitle = position.name
+            this.submitVerifiedModalData.is_main = is_main
+            this.submitVerifiedModalData.is_sub = is_sub
+            this.submitVerifiedModalData.id = id
+            this.submitVerifiedModalData.position = position
             this.showVerifiedModal = true
+            this.$emit('openVerifiedModal',this.submitVerifiedModalData.is_main, this.submitVerifiedModalData.is_sub,this.submitVerifiedModalData.id,this.submitVerifiedModalData.position)
         },
         removeVerification(position, type){
             this.$inertia.post(this.route('project.budget.remove.verification'), {

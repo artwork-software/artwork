@@ -328,7 +328,7 @@ export default {
         ConfirmationComponent
     },
     props: ['subPosition','mainPosition','columns','project'],
-    emits:['openDeleteModal'],
+    emits:['openDeleteModal','openVerifiedModal'],
     data(){
         return{
             showMenu: null,
@@ -396,6 +396,7 @@ export default {
             this.submitVerifiedModalData.id = subPosition.id
             this.submitVerifiedModalData.position = subPosition
             this.showVerifiedModal = true
+            this.$emit('openVerifiedModal',this.submitVerifiedModalData.is_main, this.submitVerifiedModalData.is_sub,this.submitVerifiedModalData.id,this.submitVerifiedModalData.position)
         },
         requestRemove(position, type){
             this.$inertia.post(this.route('project.budget.take-back.verification'), {

@@ -173,7 +173,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <MainPositionComponent @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
+                            <MainPositionComponent @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
                         </tr>
                         <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                             <td class="w-24"></td>
@@ -803,11 +803,12 @@ export default {
 
             this.closeVerifiedModal();
         },
-        openVerifiedModal(mainPosition) {
-            this.verifiedTexts.positionTitle = mainPosition.name
-            this.submitVerifiedModalData.is_main = true
-            this.submitVerifiedModalData.id = mainPosition.id
-            this.submitVerifiedModalData.position = mainPosition
+        openVerifiedModal(is_main,is_sub,id,position) {
+            this.verifiedTexts.positionTitle = position.name
+            this.submitVerifiedModalData.is_main = is_main
+            this.submitVerifiedModalData.is_sub = is_sub
+            this.submitVerifiedModalData.id = id
+            this.submitVerifiedModalData.position = position
             this.showVerifiedModal = true
         },
         openVerifiedModalSub(subPosition) {

@@ -492,7 +492,8 @@ export default {
             }
 
             if (cell.value !== cell.verified_value) {
-                if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED') {
+                if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
+                || mainPosition.is_fixed || subPosition.is_fixed) {
                     cssString += ' bg-red-300 '
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsWhiteBold '
@@ -501,6 +502,7 @@ export default {
                     cssString += cell.column.color;
                 }
             }
+
 
             return cssString
         },

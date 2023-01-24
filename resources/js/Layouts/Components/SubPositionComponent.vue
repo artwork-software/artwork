@@ -306,7 +306,7 @@ export default {
         ConfirmationComponent
     },
     props: ['subPosition','mainPosition','columns','project'],
-    emits:[],
+    emits:['openDeleteModal'],
     data(){
         return{
             showMenu: null,
@@ -392,6 +392,7 @@ export default {
             this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
             this.subPositionToDelete = subPosition;
             this.showDeleteModal = true;
+            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.subPositionToDelete, 'sub')
         },
         addRowToSubPosition(subPosition, row) {
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
@@ -437,6 +438,7 @@ export default {
             this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
             this.rowToDelete = row;
             this.showDeleteModal = true;
+            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
         },
         addSubPosition(mainPositionId, subPosition = null) {
 

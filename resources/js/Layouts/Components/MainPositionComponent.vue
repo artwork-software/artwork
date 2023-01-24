@@ -6,7 +6,7 @@
             <div class="pl-2 xsWhiteBold flex w-full items-center h-10"
                  v-if="!mainPosition.clicked">
                 <div @click="mainPosition.clicked = !mainPosition.clicked">
-                    {{ mainPosition.name }}
+                    {{ mainPosition.name }} {{this.showDeleteModal}}
                 </div>
                 <button class="my-auto w-6 ml-3"
                         @click="mainPosition.closed = !mainPosition.closed">
@@ -180,7 +180,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent :main-position="mainPosition" :sub-position="subPosition" :columns="columns" :project="project"></SubPositionComponent>
+                <SubPositionComponent @open-delete-row-modal="openDeleteRowModal" @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -189,7 +189,7 @@
                 <td class="w-24"></td>
                 <td class="w-72 my-2">SUM</td>
                 <div v-if="mainPosition.sub_positions.length > 0" class="flex items-center"
-                     v-for="column in columns.slice(3)">
+                     v-for="column in budget.columns.slice(3)">
                     <td class="w-48 ml-0.5 my-4"
                         :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
@@ -251,13 +251,14 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['mainPosition','columns','project'],
-    emits:[],
+    props: ['mainPosition','budget','project'],
+    emits:['openDeleteModal'],
     data(){
       return{
           showMenu: null,
           showDeleteModal: false,
           confirmationTitle:'',
+          positionToDelete:'',
           mainPositionToDelete: null,
           showSuccessModal: false,
           confirmationDescription: '',
@@ -291,11 +292,22 @@ export default {
 
       }
     },
+    emit:['openDeleteModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
 
             this.deletePosition();
+
+        },
+        openDeleteModal(title, description, position, type) {
+            this.confirmationTitle = title;
+            this.confirmationDescription = description
+            this.positionToDelete = position;
+            this.showDeleteModal = true;
+            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.positionToDelete, type)
+        },
+        openDeleteRowModal(title,description,row){
 
         },
         updateMainPositionName(mainPosition) {
@@ -337,6 +349,7 @@ export default {
             this.confirmationDescription = 'Bist du sicher, dass du die Hauptposition ' + mainPosition.name + ' löschen möchtest?'
             this.mainPositionToDelete = mainPosition;
             this.showDeleteModal = true;
+            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.mainPositionToDelete, 'main')
         },
         addSubPosition(mainPositionId, subPosition = null) {
 

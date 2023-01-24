@@ -37,7 +37,7 @@ class ColumnCell extends Model
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(CellComments::class, 'cell_id');
+        return $this->hasMany(CellComment::class);
     }
 
     public function calculations(): \Illuminate\Database\Eloquent\Relations\HasMany

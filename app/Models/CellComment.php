@@ -4,19 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class CellComments extends Model
+class CellComment extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'cell_id',
-        'user',
+        'column_cell_id',
+        'user_id',
         'description'
     ];
 
-    public function cell(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(ColumnCell::class);
+        return $this->belongsTo(User::class);
     }
 }

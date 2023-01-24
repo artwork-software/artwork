@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellComments;
+use App\Models\CellComment;
 use App\Models\ColumnCell;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -34,19 +34,19 @@ class CellCommentsController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      */
-    public function store(Request $request): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, ColumnCell $columnCell): \Illuminate\Http\RedirectResponse
     {
-        $cell = ColumnCell::find($request->cellId);
-        $cell->comments()->create([
-            'user' => Auth::user(),
+        $columnCell->comments()->create([
+            'user_id' => Auth::id(),
             'description' => $request->description
         ]);
-        return back()->with('success');
+
+        return back();
     }
 
     public function get(Request $request): bool|string
     {
-        $comments = CellComments::where('cell_id', $request->cellId)->get();
+        $comments = CellComment::where('cell_id', $request->cellId)->get();
         $output = [];
         foreach ($comments as $comment){
             $output[] = [
@@ -61,10 +61,10 @@ class CellCommentsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\CellComments  $cellComments
+     * @param  \App\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
-    public function show(CellComments $cellComments)
+    public function show(CellComment $cellComments)
     {
         //
     }
@@ -72,10 +72,10 @@ class CellCommentsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\CellComments  $cellComments
+     * @param  \App\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
-    public function edit(CellComments $cellComments)
+    public function edit(CellComment $cellComments)
     {
         //
     }
@@ -84,10 +84,10 @@ class CellCommentsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\CellComments  $cellComments
+     * @param  \App\Models\CellComment  $cellComments
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, CellComments $cellComments)
+    public function update(Request $request, CellComment $cellComments)
     {
         //
     }
@@ -95,9 +95,9 @@ class CellCommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellComments  $cellComments
+     * @param  \App\Models\CellComment  $cellComments
      */
-    public function destroy(CellComments $cellComments): \Illuminate\Http\RedirectResponse
+    public function destroy(CellComment $cellComments): \Illuminate\Http\RedirectResponse
     {
         $cellComments->delete();
         return back()->with('success', 'comment deleted');

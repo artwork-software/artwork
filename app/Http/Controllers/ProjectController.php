@@ -15,7 +15,7 @@ use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use App\Models\CellComments;
+use App\Models\CellComment;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Column;
@@ -1021,13 +1021,13 @@ class ProjectController extends Controller
                         'subPositions.verified',
                         'subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'subPositions.subPositionRows.cells.comments' => function ($query) {
-                            return $query->orderBy('created_at', 'DESC');
                         }, 'subPositions.subPositionRows.cells.column'
                     ])
                     ->orderBy('position')
                     ->get(),
-                'selectedCell' => $selectedCell?->load('calculations')
+                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }])
             ],
 
             'categories' => Category::all(),

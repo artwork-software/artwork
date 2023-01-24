@@ -79,7 +79,8 @@
                              v-model="commentForm.description" rows="4"
                              class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
                         <div>
-                            <div class="my-6" v-for="comment in this.commentsToShow"
+
+                            <div class="my-6" v-for="comment in this.cell.comments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
@@ -253,21 +254,6 @@ export default {
                 {name: 'Verlinkung', href: '#', current: this.isLinkTab},
             ]
         },
-        commentsToShow() {
-            let comments = this.cell.comments;
-            let commentsShow = []
-            if (comments !== null) {
-                comments.forEach((item) => {
-                    commentsShow.push({
-                        id: item.id,
-                        user: JSON.parse(item.user),
-                        created_at: item.created_at,
-                        description: item.description
-                    });
-                })
-            }
-            return commentsShow
-        },
         calculationNames() {
             let calculations = this.cell.calculations;
             let names = []
@@ -387,9 +373,11 @@ export default {
             });
         },
         addCommentToCell() {
-            this.commentForm.post(route('project.budget.cell.comment.store'));
+            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
+                preserveState: true,
+                preserveScroll: true
+            });
             this.commentForm.reset('description');
-            this.closeModal(true);
         },
     },
 }

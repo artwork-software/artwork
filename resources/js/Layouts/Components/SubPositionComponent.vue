@@ -204,9 +204,9 @@
             <div v-if="subPosition.sub_position_rows?.length > 0"
                  v-for="(row,rowIndex) in subPosition.sub_position_rows">
                 <tr
-                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
+                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
                     @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                    class="bg-secondaryHover flex justify-between items-center border-2"
+                    class="bg-secondaryHover flex justify-between items-center"
                 >
                     <div class="flex items-center">
                         <PlusCircleIcon @click="openRowDetailModal(row)"
@@ -262,7 +262,7 @@
 
                 </tr>
                 <div @click="addRowToSubPosition(subPosition, row)"
-                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-t-2 border-silverGray hover:border-t-2 hover:border-buttonBlue">
                     <div
                         class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                         Zeile

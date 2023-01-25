@@ -174,6 +174,23 @@
                                        mode="modal"></AddButton>
                         </div>
                     </div>
+                    <div v-if="isExcludeTab">
+                        <h2 class="xsLight mb-2 mt-8">
+                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
+                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
+                            das Projektbudget haben.
+                        </h2>
+                        <div class="flex items-center justify-start my-6">
+                            <input v-model="isExcluded" type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto text-sm"> Ausklammern</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="updateCommentedStatus()" text="Speichern"
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -231,6 +248,7 @@ export default {
             isLinkTab: false,
             hoveredBorder: false,
             refreshSumKey: 0,
+            isExcluded:this.cell.commented,
             cellComment: null,
             commentHovered: null,
             commentForm: useForm({
@@ -378,6 +396,13 @@ export default {
             });
             this.commentForm.reset('description');
         },
+        updateCommentedStatus(){
+            this.$inertia.patch(route('project.budget.cell.commented',{columnCell:this.cell.id}), {
+                commented: this.isExcluded
+            },{preserveState: true,
+                preserveScroll: true});
+            this.closeModal(true);
+        }
     },
 }
 </script>

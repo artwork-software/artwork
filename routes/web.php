@@ -309,6 +309,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
     Route::delete('/project/budget/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
     Route::post('/project/budget/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
+    Route::patch('/project/budget/row/{row}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfRow'])->name('project.budget.row.commented');
+    Route::patch('/project/budget/cell/{columnCell}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfCell'])->name('project.budget.cell.commented');
     Route::delete('/project/budget/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
     Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');

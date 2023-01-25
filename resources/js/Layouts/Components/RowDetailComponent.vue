@@ -161,14 +161,12 @@ export default {
             this.$emit('closed', bool);
         },
         deleteCommentFromRow(comment) {
-            //TODO HIER NOCH NEUE ROUTE FÜR ROW COMMENTS
             this.$inertia.delete(route('project.budget.row.comment.delete', {rowComment: comment.id}), {
                 preserveState: true,
                 preserveScroll: true
             });
         },
         addCommentToRow() {
-            //TODO HIER NOCH NEUE ROUTE FÜR ROW COMMENTS#
             this.commentForm.post(route('project.budget.row.comment.store', { row: this.row.id }), {
                 preserveState: true,
                 preserveScroll: true

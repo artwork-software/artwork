@@ -17,6 +17,10 @@ class SubPositionRow extends Model
         'position'
     ];
 
+    protected $casts = [
+        'commented' => 'boolean'
+    ];
+
     public function subPosition(): BelongsTo
     {
         return $this->belongsTo(SubPosition::class);

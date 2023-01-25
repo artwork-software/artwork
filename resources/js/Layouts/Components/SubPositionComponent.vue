@@ -201,61 +201,76 @@
         </div>
         <table class="w-full" v-if="!subPosition.closed">
             <tbody class="bg-secondaryHover w-full">
-            <tr v-if="subPosition.sub_position_rows?.length > 0"
-                :class="[rowIndex !== 0 && hoveredRow !== row.id ? 'border-t-2 border-silverGray': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
-                @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
-                class="bg-secondaryHover flex justify-between items-center border-2"
-                v-for="(row,rowIndex) in subPosition.sub_position_rows">
-                <div class="flex items-center">
-                    <PlusCircleIcon @click="addRowToSubPosition(subPosition, row)"
-                                    :class="hoveredRow === row.id ? '' : 'hidden'"
-                                    class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                    <td v-for="(cell,index) in row.cells"
-                        :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
-                        <div
-                            :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                            class="my-4 h-6 flex items-center justify-end"
-                            @click="cell.clicked = !cell.clicked"
-                            v-if="!cell.clicked">
-                            <div class="pr-2">
+            <div v-if="subPosition.sub_position_rows?.length > 0"
+                 v-for="(row,rowIndex) in subPosition.sub_position_rows">
+                <tr
+                    :class="[rowIndex !== 0 && hoveredRow !== row.id ? '': '', hoveredRow === row.id ? 'border-buttonBlue ' : '']"
+                    @mouseover="hoveredRow = row.id" @mouseout="hoveredRow = null"
+                    class="bg-secondaryHover flex justify-between items-center"
+                >
+                    <div class="flex items-center">
+                        <PlusCircleIcon @click="openRowDetailModal(row)"
+                                        :class="hoveredRow === row.id ? '' : 'hidden'"
+                                        class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                        <td v-for="(cell,index) in row.cells"
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
+                            <div
+                                :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
+                                class="my-4 h-6 flex items-center justify-end"
+                                @click="cell.clicked = !cell.clicked"
+                                v-if="!cell.clicked">
+                                <div class="pr-2">
+                                    <img v-if="cell.linked_money_source_id !== null"
+                                         src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
+                                         class="h-6 w-6"/>
+                                    {{ cell.value }}
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-end"
+                                 :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
+                                 v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
+                                <input
+                                    :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44'"
+                                    class="my-2 xsDark text-right"
+                                    :type="index > 2 ? 'number' : 'text'"
+                                    v-model="cell.value"
+                                    @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
+                                <PlusCircleIcon v-if="index > 2"
+                                                @click="openCellDetailModal(cell)"
+                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            </div>
+                            <div
+                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
+                                class="my-4 h-6 flex items-center"
+                                @click="cell.clicked = !cell.clicked && cell.column.is_locked"
+                                v-else>
                                 <img v-if="cell.linked_money_source_id !== null"
                                      src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
                                      class="h-6 w-6"/>
                                 {{ cell.value }}
+                                <PlusCircleIcon v-if="index > 2 && cell.clicked"
+                                                @click="openCellDetailModal(cell)"
+                                                class="h-6 w-6 ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
-                        </div>
-                        <div class="flex items-center justify-end"
-                             :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
-                             v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
-                            <input
-                                :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44'"
-                                class="my-2 xsDark text-right"
-                                :type="index > 2 ? 'number' : 'text'"
-                                v-model="cell.value"
-                                @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
-                            <PlusCircleIcon v-if="index > 2"
-                                            @click="openCellDetailModal(cell)"
-                                            class="h-6 w-6 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                        </div>
-                        <div
-                            :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                            class="my-4 h-6 flex items-center"
-                            @click="cell.clicked = !cell.clicked && cell.column.is_locked"
-                            v-else>
-                            <img v-if="cell.linked_money_source_id !== null"
-                                 src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                 class="h-6 w-6"/>
-                            {{ cell.value }}
-                            <PlusCircleIcon v-if="index > 2 && cell.clicked"
-                                            @click="openCellDetailModal(cell)"
-                                            class="h-6 w-6 ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
-                        </div>
-                    </td>
+
+                        </td>
+
+                    </div>
+                    <XCircleIcon @click="openDeleteRowModal(row)"
+                                 :class="hoveredRow === row.id ? '' : 'hidden'"
+                                 class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
+
+                </tr>
+                <div @click="addRowToSubPosition(subPosition, row)"
+                     class="group cursor-pointer z-10 relative h-0.5 flex justify-center hover:border-dashed border-t-2 border-silverGray hover:border-t-2 hover:border-buttonBlue">
+                    <div
+                        class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                        Zeile
+                        <PlusCircleIcon
+                            class="h-6 w-6 ml-2 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                    </div>
                 </div>
-                <XCircleIcon @click="openDeleteRowModal(row)"
-                             :class="hoveredRow === row.id ? '' : 'hidden'"
-                             class="h-6 w-6 -mr-3 cursor-pointer justify-end text-secondaryHover bg-error rounded-full"></XCircleIcon>
-            </tr>
+            </div>
             <div v-else @click="addRowToSubPosition(subPosition, row)"
                  class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                 <div
@@ -270,10 +285,10 @@
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
                 <td v-if="subPosition.sub_position_rows.length > 0"
-                     class="flex items-center w-48"
-                     v-for="column in columns.slice(3)">
+                    class="flex items-center w-48"
+                    v-for="column in columns.slice(3)">
                     <div class="my-4 w-48 p-1"
-                        :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
+                         :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
                             subPosition.columnSums[column.id]
                         }}
@@ -330,7 +345,7 @@ export default {
         ConfirmationComponent
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project'],
-    emits: ['openDeleteModal', 'openVerifiedModal'],
+    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
     data() {
         return {
             showMenu: null,
@@ -445,6 +460,9 @@ export default {
                 preserveScroll: true
             });
         },
+        openRowDetailModal(row){
+          this.$emit('openRowDetailModal',row)
+        },
         openCellDetailModal(column) {
             this.$emit('openCellDetailModal', column)
         },
@@ -479,30 +497,24 @@ export default {
         },
         checkCellColor(cell, mainPosition, subPosition) {
             let cssString = '';
-            if (cell.column.color === 'whiteColumn') {
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' xsWhiteBold ';
-                } else {
-                    cssString += ' xsDark ';
-                }
-            } else {
-                cssString += ' xsWhiteBold ';
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' bg-red-300 '
-                } else {
-                    cssString += cell.column.color;
-                }
-            }
-
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
                     || mainPosition.is_fixed || subPosition.is_fixed) {
                     cssString += ' bg-red-300 '
+                    cssString += ' xsWhiteBold '
+                } else {
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsWhiteBold '
+                        cssString += cell.column.color;
+                    } else {
+                        cssString += ' xsDark '
                     }
+                }
+            } else {
+                if (cell.column.color !== 'whiteColumn') {
+                    cssString += ' xsWhiteBold '
                 } else {
-                    cssString += cell.column.color;
+                    cssString += ' xsDark '
                 }
             }
 

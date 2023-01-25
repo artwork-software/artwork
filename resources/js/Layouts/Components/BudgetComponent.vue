@@ -414,7 +414,7 @@
     <!-- Row Detail Modal-->
     <row-detail-component
         v-if="showRowDetailModal"
-        :row="this.selectedRow"
+        :row="budget.selectedRow"
         :moneySources="moneySources"
         @closed="closeRowDetailModal()"
     />
@@ -534,7 +534,6 @@ export default {
                 project_title: this.project.name,
                 project_id: this.project.id
             }),
-            selectedRow: null,
         }
     },
 
@@ -734,8 +733,14 @@ export default {
             })
         },
         openRowDetailModal(row) {
-            this.selectedRow = row
-            this.showRowDetailModal = true;
+            Inertia.reload({
+                data: {
+                    selectedRow: row.id,
+                },
+                onSuccess: () => {
+                    this.showRowDetailModal = true;
+                }
+            })
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

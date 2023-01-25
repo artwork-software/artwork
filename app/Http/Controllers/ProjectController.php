@@ -310,7 +310,7 @@ class ProjectController extends Controller
             'requested_by' => Auth::id(),
             'requested' => $request->user
         ]);
-        $this->history->createHistory($project->id, 'Hauptposition „'. $mainPosition->name .'“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 
@@ -318,7 +318,7 @@ class ProjectController extends Controller
     {
         // create Notification Basic data
         $this->createVerificationNotificationHeader('Verifizierungsanfrage gelöscht', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK);
-        if($request->type === 'main'){
+        if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
 
@@ -333,10 +333,10 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
 
-        if($request->type === 'sub'){
+        if ($request->type === 'sub') {
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
@@ -353,25 +353,29 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
         return back()->with(['success']);
     }
 
-    private function createVerificationNotificationHeader($title, $position , $type){
+    private function createVerificationNotificationHeader($title, $position, $type)
+    {
         $this->notificationData->title = $title;
         $this->notificationData->requested_position = $position;
         $this->notificationData->created_by = Auth::user();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
         $this->notificationData->changeType = $type;
     }
-    private function createNotificationBody($project, $positionId, $requestedId){
+
+    private function createNotificationBody($project, $positionId, $requestedId)
+    {
         $this->notificationData->project = $project;
         $this->notificationData->position = $positionId;
         $this->notificationData->requested_id = $requestedId;
     }
 
-    private function deleteOldNotification($positionId, $requestedId){
+    private function deleteOldNotification($positionId, $requestedId)
+    {
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $positionId)
@@ -383,7 +387,7 @@ class ProjectController extends Controller
     public function removeVerification(Request $request): RedirectResponse
     {
         $this->createVerificationNotificationHeader('Verifizierung in Budget aufgehoben', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_DELETED);
-        if($request->type === 'main'){
+        if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $this->removeMainPositionCellVerifiedValue($mainPosition);
@@ -398,10 +402,10 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben', 'budget');
         }
 
-        if($request->type === 'sub'){
+        if ($request->type === 'sub') {
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
@@ -418,7 +422,7 @@ class ProjectController extends Controller
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben', 'budget');
         }
 
         return back()->with(['success']);
@@ -452,7 +456,7 @@ class ProjectController extends Controller
             'requested' => $request->user
         ]);
 
-        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 
@@ -469,7 +473,7 @@ class ProjectController extends Controller
             ->whereJsonContains("data->requested_id", $verifiedRequest->requested)
             ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
-        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ verifiziert', 'budget');
+        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ verifiziert', 'budget');
         return back()->with('success');
     }
 
@@ -516,14 +520,15 @@ class ProjectController extends Controller
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
             ->whereJsonContains("data->position", $mainPosition->id)
-            ->whereJsonContains("data->requested_id",  $verifiedRequest->requested)
+            ->whereJsonContains("data->requested_id", $verifiedRequest->requested)
             ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
             ->delete();
-        $this->history->createHistory($request->project_id, 'Hauptposition „'. $mainPosition->name .'“ verifiziert', 'budget');
+        $this->history->createHistory($request->project_id, 'Hauptposition „' . $mainPosition->name . '“ verifiziert', 'budget');
         return back()->with('success');
     }
 
-    private function setSubPositionCellVerifiedValue(SubPosition $subPosition){
+    private function setSubPositionCellVerifiedValue(SubPosition $subPosition)
+    {
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
@@ -533,7 +538,8 @@ class ProjectController extends Controller
         }
     }
 
-    private function removeSubPositionCellVerifiedValue(SubPosition $subPosition){
+    private function removeSubPositionCellVerifiedValue(SubPosition $subPosition)
+    {
         $subPositionRows = $subPosition->subPositionRows()->get();
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
@@ -543,7 +549,8 @@ class ProjectController extends Controller
         }
     }
 
-    private function setMainPositionCellVerifiedValue(MainPosition $mainPosition){
+    private function setMainPositionCellVerifiedValue(MainPosition $mainPosition)
+    {
         $subPositions = $mainPosition->subPositions()->get();
         foreach ($subPositions as $subPosition) {
             $subPositionRows = $subPosition->subPositionRows()->get();
@@ -556,7 +563,8 @@ class ProjectController extends Controller
         }
     }
 
-    private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition){
+    private function removeMainPositionCellVerifiedValue(MainPosition $mainPosition)
+    {
         $subPositions = $mainPosition->subPositions()->get();
         foreach ($subPositions as $subPosition) {
             $subPositionRows = $subPosition->subPositionRows()->get();
@@ -724,8 +732,8 @@ class ProjectController extends Controller
         $project = $column->project()->first();
         $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
 
-        if($request->is_verified){
-            $this->history->createHistory($project->id, '„'. $cell->value .'“ in „' . $request->value . '“ geändert', 'budget');
+        if ($request->is_verified) {
+            $this->history->createHistory($project->id, '„' . $cell->value . '“ in „' . $request->value . '“ geändert', 'budget');
         }
 
         $cell->update(['value' => $request->value]);
@@ -858,7 +866,7 @@ class ProjectController extends Controller
     public function updateCellCalculation(Request $request)
     {
 
-        foreach ($request->calculations as $calculation){
+        foreach ($request->calculations as $calculation) {
             $cellCalculation = CellCalculations::find($calculation['id']);
             $cellCalculation->update([
                 'name' => @$calculation['name'],
@@ -868,12 +876,13 @@ class ProjectController extends Controller
         }
 
         $cell = ColumnCell::find($request->calculations[0]['cell_id']);
-        $cell->update(['value' => $cell->calculations()->sum('value')] );
+        $cell->update(['value' => $cell->calculations()->sum('value')]);
 
         return back()->with('success');
     }
 
-    public function addCalculation(ColumnCell $cell){
+    public function addCalculation(ColumnCell $cell)
+    {
         $cell->calculations()->create([
             'name' => '',
             'value' => 0,
@@ -921,7 +930,8 @@ class ProjectController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function lockColumn(Request $request){
+    public function lockColumn(Request $request)
+    {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => true]);
         return back()->with('success');
@@ -932,7 +942,8 @@ class ProjectController extends Controller
      * @param Request $request
      * @return RedirectResponse
      */
-    public function unlockColumn(Request $request){
+    public function unlockColumn(Request $request)
+    {
         $column = Column::find($request->columnId);
         $column->update(['is_locked' => false]);
         return back()->with('success');
@@ -1002,6 +1013,10 @@ class ProjectController extends Controller
             ? ColumnCell::find(request('selectedCell'))
             : null;
 
+        $selectedRow = request('selectedRow')
+            ? SubPositionRow::find(request('selectedRow'))
+            : null;
+
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
 
@@ -1026,6 +1041,9 @@ class ProjectController extends Controller
                     ->orderBy('position')
                     ->get(),
                 'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }]),
+                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }])
             ],

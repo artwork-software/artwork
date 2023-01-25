@@ -11,6 +11,7 @@
                         <div class="flex-grow headline1">
                             Details
                         </div>
+                        {{row}}
                     </h1>
                     <div class="mb-4">
                         <div class="hidden sm:block">
@@ -161,14 +162,14 @@ export default {
         },
         deleteCommentFromRow(comment) {
             //TODO HIER NOCH NEUE ROUTE FÜR ROW COMMENTS
-            this.$inertia.delete(route('project.budget.cell.comment.delete', {cellComment: comment.id}), {
+            this.$inertia.delete(route('project.budget.row.comment.delete', {rowComment: comment.id}), {
                 preserveState: true,
                 preserveScroll: true
             });
         },
         addCommentToRow() {
-            //TODO HIER NOCH NEUE ROUTE FÜR ROW COMMENTS
-            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
+            //TODO HIER NOCH NEUE ROUTE FÜR ROW COMMENTS#
+            this.commentForm.post(route('project.budget.row.comment.store', { row: this.row.id }), {
                 preserveState: true,
                 preserveScroll: true
             });

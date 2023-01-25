@@ -308,6 +308,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
     Route::post('/project/budget/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
     Route::delete('/project/budget/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+    Route::post('/project/budget/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
+    Route::delete('/project/budget/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
     Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
     Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');

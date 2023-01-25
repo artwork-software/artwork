@@ -32,6 +32,10 @@ class SubPositionRow extends Model
         return $this->hasMany(ColumnCell::class);
     }
 
+    public function comments(){
+        return $this->hasMany(RowComment::class);
+    }
+
 }
 
 

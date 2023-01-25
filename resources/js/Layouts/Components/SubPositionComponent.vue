@@ -479,30 +479,24 @@ export default {
         },
         checkCellColor(cell, mainPosition, subPosition) {
             let cssString = '';
-            if (cell.column.color === 'whiteColumn') {
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' xsWhiteBold ';
-                } else {
-                    cssString += ' xsDark ';
-                }
-            } else {
-                cssString += ' xsWhiteBold ';
-                if (cell.value !== cell.verified_value) {
-                    cssString += ' bg-red-300 '
-                } else {
-                    cssString += cell.column.color;
-                }
-            }
-
             if (cell.value !== cell.verified_value) {
                 if (mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'
                     || mainPosition.is_fixed || subPosition.is_fixed) {
                     cssString += ' bg-red-300 '
+                    cssString += ' xsWhiteBold '
+                } else {
                     if (cell.column.color !== 'whiteColumn') {
                         cssString += ' xsWhiteBold '
+                        cssString += cell.column.color;
+                    }else{
+                        cssString += ' xsDark '
                     }
-                } else {
-                    cssString += cell.column.color;
+                }
+            }else{
+                if (cell.column.color !== 'whiteColumn') {
+                    cssString += ' xsWhiteBold '
+                }else{
+                    cssString += ' xsDark '
                 }
             }
 

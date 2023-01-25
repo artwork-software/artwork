@@ -274,13 +274,13 @@ class ProjectController extends Controller
 
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
-            'verified_value' => 0,
+            'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
-            'verified_value' => 0,
+            'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
 
@@ -538,7 +538,7 @@ class ProjectController extends Controller
         foreach ($subPositionRows as $subPositionRow) {
             $cells = $subPositionRow->cells()->get();
             foreach ($cells as $cell) {
-                $cell->update(['verified_value' => 0]);
+                $cell->update(['verified_value' => null]);
             }
         }
     }
@@ -563,7 +563,7 @@ class ProjectController extends Controller
             foreach ($subPositionRows as $subPositionRow) {
                 $cells = $subPositionRow->cells()->get();
                 foreach ($cells as $cell) {
-                    $cell->update(['verified_value' => 0]);
+                    $cell->update(['verified_value' => null]);
                 }
             }
         }
@@ -664,7 +664,7 @@ class ProjectController extends Controller
 
             $column->subPositionRows()->attach($subPositionRows, [
                 'value' => 0,
-                'verified_value' => 0,
+                'verified_value' => null,
                 'linked_money_source_id' => null
             ]);
         }
@@ -768,7 +768,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
-            'verified_value' => 0,
+            'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
     }
@@ -813,7 +813,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
-            'verified_value' => 0,
+            'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
     }
@@ -850,7 +850,7 @@ class ProjectController extends Controller
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
-            'verified_value' => 0,
+            'verified_value' => null,
             'linked_money_source_id' => null,
         ]);
     }

@@ -173,7 +173,7 @@
                     <table class="w-11/12 mb-6">
                         <tbody class="">
                         <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <MainPositionComponent @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
+                            <MainPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
                         </tr>
                         <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                             <td class="w-28"></td>
@@ -411,6 +411,13 @@
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
+    <!-- Row Detail Modal-->
+    <row-detail-component
+        v-if="showRowDetailModal"
+        :row="this.selectedRow"
+        :moneySources="moneySources"
+        @closed="closeRowDetailModal()"
+    />
     <confirmation-component
         v-if="showDeleteModal"
         confirm="Löschen"
@@ -447,6 +454,7 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
+import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 
 export default {
     name: 'BudgetComponent',
@@ -475,6 +483,7 @@ export default {
         ListboxButton,
         ListboxOption,
         ListboxOptions,
+        RowDetailComponent
     },
 
     data() {
@@ -484,6 +493,7 @@ export default {
             hoveredBorder: null,
             showAddColumnModal: false,
             showCellDetailModal: false,
+            showRowDetailModal: false,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
@@ -523,7 +533,8 @@ export default {
                 position: [],
                 project_title: this.project.name,
                 project_id: this.project.id
-            })
+            }),
+            selectedRow: null,
         }
     },
 
@@ -722,8 +733,15 @@ export default {
                 }
             })
         },
+        openRowDetailModal(row) {
+            this.selectedRow = row
+            this.showRowDetailModal = true;
+        },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
+        },
+        closeRowDetailModal() {
+            this.showRowDetailModal = false;
         },
         openDeleteRowModal(row){
           this.confirmationTitle = 'Zeile löschen';

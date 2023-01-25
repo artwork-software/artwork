@@ -202,7 +202,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
+                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -315,7 +315,7 @@ export default {
 
       }
     },
-    emit:['openDeleteModal','openVerifiedModal'],
+    emit:['openDeleteModal','openVerifiedModal','openRowDetailModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -401,6 +401,9 @@ export default {
                 preserveScroll: true,
                 preserveState: true
             });
+        },
+        openRowDetailModal(row){
+            this.$emit('openRowDetailModal',row)
         },
         openCellDetailModal(column) {
             this.$emit('openCellDetailModal',column)

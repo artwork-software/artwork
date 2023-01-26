@@ -1,7 +1,71 @@
 <template>
     <div class="mx-4">
+        <div class="flex mb-10 justify-between">
+        <div class="flex justify-start headline2">
+            {{budget.table.name}}
+            <Menu as="div" class="ml-4">
+                <div class="flex">
+                    <MenuButton
+                        class="flex ">
+                        <DotsVerticalIcon
+                            class="flex-shrink-0 h-6 w-6 text-gray-600"
+                            aria-hidden="true"/>
+                    </MenuButton>
+                </div>
+                <transition
+                    enter-active-class="transition ease-out duration-100"
+                    enter-from-class="transform opacity-0 scale-95"
+                    enter-to-class="transform opacity-100 scale-100"
+                    leave-active-class="transition ease-in duration-75"
+                    leave-from-class="transform opacity-100 scale-100"
+                    leave-to-class="transform opacity-0 scale-95">
+                    <MenuItems
+                        class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                        <div class="py-1">
+                            <MenuItem v-slot="{ active }">
+                                <a @click="openUseTemplateModal()"
+                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <TrashIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Vorlage einlesen
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click="openUseTemplateFromProjectModal()"
+                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <TrashIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Aus Projekt einlesen
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click="openAddBudgetTemplateModal()"
+                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <TrashIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Als Vorlage speichern
+                                </a>
+                            </MenuItem>
+                            <MenuItem v-slot="{ active }">
+                                <a @click=""
+                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                    <TrashIcon
+                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                        aria-hidden="true"/>
+                                    Zurücksetzen
+                                </a>
+                            </MenuItem>
+                        </div>
+                    </MenuItems>
+                </transition>
+            </Menu>
+        </div>
         <div class="flex justify-end mb-10">
             <AddButton @click="openAddColumnModal()" text="Neue Spalte" mode="page"></AddButton>
+        </div>
         </div>
         <div class="w-full flex">
             <table class="w-full flex ml-16">
@@ -411,6 +475,25 @@
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
+    <!-- Vorlage einlesen Modal-->
+    <use-template-component
+        v-if="showUseTemplateModal"
+        :projectId="project.id"
+        :templates="templates"
+        @closed="closeUseTemplateModal()"
+    />
+    <!-- Aus Projekt einlesen Modal-->
+    <use-template-from-project-budget-component
+        v-if="showUseTemplateFromProjectModal"
+        :projectId="project.id"
+        @closed="closeUseTemplateFromProjectModal()"
+    />
+    <!-- Als Vorlage speichern Modal-->
+    <add-budget-template-component
+        v-if="showAddBudgetTemplateModal"
+        :projectId="project.id"
+        @closed="closeAddBudgetTemplateModal()"
+    />
     <!-- Row Detail Modal-->
     <row-detail-component
         v-if="showRowDetailModal"
@@ -455,11 +538,15 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
+import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
+import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
+import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
 
 export default {
     name: 'BudgetComponent',
 
     components: {
+        UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
         ConfirmationComponent,
         CellDetailComponent,
@@ -483,7 +570,9 @@ export default {
         ListboxButton,
         ListboxOption,
         ListboxOptions,
-        RowDetailComponent
+        RowDetailComponent,
+        UseTemplateComponent,
+        AddBudgetTemplateComponent,
     },
 
     data() {
@@ -494,6 +583,9 @@ export default {
             showAddColumnModal: false,
             showCellDetailModal: false,
             showRowDetailModal: false,
+            showUseTemplateModal: false,
+            showUseTemplateFromProjectModal: false,
+            showAddBudgetTemplateModal: false,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
@@ -649,6 +741,24 @@ export default {
         },
         closeAddColumnModal() {
             this.showAddColumnModal = false;
+        },
+        openUseTemplateModal(){
+            this.showUseTemplateModal = true;
+        },
+        closeUseTemplateModal(){
+            this.showUseTemplateModal = false;
+        },
+        openUseTemplateFromProjectModal(){
+          this.showUseTemplateFromProjectModal = true;
+        },
+        closeUseTemplateFromProjectModal(){
+            this.showUseTemplateFromProjectModal = false;
+        },
+        openAddBudgetTemplateModal(){
+            this.showAddBudgetTemplateModal = true;
+        },
+        closeAddBudgetTemplateModal(){
+            this.showAddBudgetTemplateModal = false;
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
             cell.clicked = !cell.clicked;

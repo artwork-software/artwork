@@ -1280,7 +1280,6 @@ export default defineComponent({
             departments.forEach((department) => {
                 department.users.forEach((user) => {
                     if (user.id === this.$page.props.user.id) {
-                        console.log("moin");
                         return true;
                     }
                 })
@@ -1306,7 +1305,6 @@ export default defineComponent({
                         if (this.projectFilter.name === 'Alle Projekte') {
                             this.project_search_results = response.data
                         } else {
-                            console.log(response.data)
                             this.project_search_results = response.data.filter(project => project.curr_user_is_related === true)
                         }
                     })

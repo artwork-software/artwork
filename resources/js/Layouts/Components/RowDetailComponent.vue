@@ -11,7 +11,7 @@
                         <div class="flex-grow headline1">
                             Details
                         </div>
-                        {{row}}
+                        {{ row }}
                     </h1>
                     <div class="mb-4">
                         <div class="hidden sm:block">
@@ -65,6 +65,23 @@
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
+                    <div v-if="isExcludeTab">
+                        <h2 class="xsLight mb-2 mt-8">
+                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
+                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
+                            das Projektbudget haben.
+                        </h2>
+                        <div class="flex items-center justify-start my-6">
+                            <input v-model="isExcluded" type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto text-sm"> Ausklammern</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="updateCommentedStatus()" text="Speichern"
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -83,7 +100,6 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-
 
 
 export default {
@@ -109,11 +125,12 @@ export default {
 
     data() {
         return {
-            isCommentTab: false,
+            isCommentTab: true,
             isExcludeTab: false,
             hoveredBorder: false,
             cellComment: null,
             commentHovered: null,
+            isExcluded: this.row.commented,
             commentForm: useForm({
                 description: '',
                 rowId: this.row.id
@@ -167,12 +184,19 @@ export default {
             });
         },
         addCommentToRow() {
-            this.commentForm.post(route('project.budget.row.comment.store', { row: this.row.id }), {
+            this.commentForm.post(route('project.budget.row.comment.store', {row: this.row.id}), {
                 preserveState: true,
                 preserveScroll: true
             });
             this.commentForm.reset('description');
         },
+        updateCommentedStatus(){
+            this.$inertia.patch(route('project.budget.row.commented',{row:this.row.id}), {
+                commented: this.isExcluded
+            },{preserveState: true,
+                preserveScroll: true});
+            this.closeModal(true);
+        }
     },
 }
 </script>

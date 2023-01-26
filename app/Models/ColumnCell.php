@@ -17,9 +17,13 @@ class ColumnCell extends Model
         'linked_money_source_id',
         'linked_type',
         'calculations',
-        'verified_value'
+        'verified_value',
+        'commented'
     ];
 
+    protected $casts = [
+        'commented' => 'boolean'
+    ];
 
     protected $primaryKey = 'id';
 

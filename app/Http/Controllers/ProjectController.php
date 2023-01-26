@@ -1639,4 +1639,18 @@ class ProjectController extends Controller
         }
         $subPosition->delete();
     }
+    public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
+    {
+        $cells = $row->cells()->get();
+        $row->update(['commented' => $request->commented]);
+        foreach ( $cells as $cell){
+            $cell->update(['commented' => $request->commented]);
+        }
+        return back()->with('success');
+    }
+    public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse
+    {
+        $columnCell->update(['commented' => $request->commented]);
+        return back()->with('success');
+    }
 }

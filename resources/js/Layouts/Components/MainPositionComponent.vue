@@ -202,7 +202,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project"></SubPositionComponent>
+                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project" :budget="budget"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -303,7 +303,7 @@ export default {
               user: '',
               position: [],
               project_title: this.project.name,
-              project_id: this.project.id
+              table_id: this.budget.table.id,
           }),
           colors: {
               whiteColumn: 'whiteColumn',
@@ -342,7 +342,7 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
-                project_id: this.project.id
+                table_id: this.budget.table.id,
             })
         },
         openVerifiedModal(is_main,is_sub,id,position) {
@@ -384,7 +384,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {
@@ -394,7 +394,7 @@ export default {
         },
         addMainPosition(type, mainPosition) {
             this.$inertia.post(route('project.budget.main-position.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 type: type,
                 positionBefore: mainPosition.position
             }, {

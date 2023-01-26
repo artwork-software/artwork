@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('main_positions', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('project_id');
+            $table->bigInteger('table_id');
             $table->enum('type', ['BUDGET_TYPE_COST', 'BUDGET_TYPE_EARNING']);
             $table->integer('position');
             $table->string('name')->nullable();

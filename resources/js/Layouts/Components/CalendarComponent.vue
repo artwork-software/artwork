@@ -1132,7 +1132,7 @@ export default {
                 return;
             }
             const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
+            calendar?.scrollTo({top: 9 * 120, behavior: 'smooth'})
 
         },
         areChecked(array) {

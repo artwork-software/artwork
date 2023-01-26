@@ -30,6 +30,7 @@ use App\Models\ProjectGroups;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
+use App\Models\Table;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
@@ -216,24 +217,28 @@ class ProjectController extends Controller
 
     public function generateBasicBudgetValues(Project $project)
     {
-        $columns = $project->columns()->createMany([
+        $table = $project->table()->create([
+            'name' => $project->name . ' Budgettabelle'
+        ]);
+
+        $columns = $table->columns()->createMany([
             ['name' => 'KTO', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
             ['name' => 'A', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
             ['name' => 'Position', 'subName' => '', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
             ['name' => date('Y') . ' €', 'subName' => 'A', 'type' => 'empty', 'linked_first_column' => null, 'linked_second_column' => null,],
         ]);
 
-        $costMainPosition = $project->mainPositions()->create([
+        $costMainPosition = $table->mainPositions()->create([
             'type' => BudgetTypesEnum::BUDGET_TYPE_COST,
             'name' => 'Hauptpostion',
-            'position' => $project->mainPositions()
+            'position' => $table->mainPositions()
                     ->where('type', BudgetTypesEnum::BUDGET_TYPE_COST)->max('position') + 1
         ]);
 
-        $earningMainPosition = $project->mainPositions()->create([
+        $earningMainPosition = $table->mainPositions()->create([
             'type' => BudgetTypesEnum::BUDGET_TYPE_EARNING,
             'name' => 'Hauptpostion',
-            'position' => $project->mainPositions()
+            'position' => $table->mainPositions()
                     ->where('type', BudgetTypesEnum::BUDGET_TYPE_EARNING)->max('position') + 1
         ]);
 
@@ -290,7 +295,7 @@ class ProjectController extends Controller
     {
         $mainPosition = MainPosition::find($request->id);
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-        $project = $mainPosition->project()->first();
+        $project = $mainPosition->table()->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project = $project;
@@ -324,7 +329,7 @@ class ProjectController extends Controller
 
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
             // create Notification
-            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -344,7 +349,7 @@ class ProjectController extends Controller
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
 
             // create Notification
-            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $subPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -393,7 +398,7 @@ class ProjectController extends Controller
             $this->removeMainPositionCellVerifiedValue($mainPosition);
 
             // Notification
-            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -435,7 +440,7 @@ class ProjectController extends Controller
         $subPosition = SubPosition::find($request->id);
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $mainPosition = $subPosition->mainPosition()->first();
-        $project = $mainPosition->project()->first();
+        $project = $mainPosition->table()->first()->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project = $project;
@@ -625,10 +630,10 @@ class ProjectController extends Controller
      * @param $project_id
      * @return void
      */
-    private function setColumnSubName($project_id): void
+    private function setColumnSubName($table_id): void
     {
-        $project = Project::find($project_id);
-        $columns = $project->columns()->get();
+        $table = Table::find($table_id);
+        $columns = $table->columns()->get();
 
         $letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
         $count = 0;
@@ -655,19 +660,19 @@ class ProjectController extends Controller
      */
     public function addColumn(Request $request): void
     {
-        $project = Project::find($request->project_id);
+        $table = Table::find($request->table_id);
         if ($request->column_type === 'empty') {
-            $column = $project->columns()->create([
+            $column = $table->columns()->create([
                 'name' => 'empty',
                 'subName' => '-',
                 'type' => 'empty',
                 'linked_first_column' => null,
                 'linked_second_column' => null,
             ]);
-            $this->setColumnSubName($request->project_id);
+            $this->setColumnSubName($request->table_id);
 
             $subPositionRows = SubPositionRow::whereHas('subPosition.mainPosition', function (Builder $query) use ($request) {
-                $query->where('project_id', $request->project_id);
+                $query->where('table_id', $request->table_id);
             })->pluck('id');
 
             $column->subPositionRows()->attach($subPositionRows, [
@@ -679,14 +684,14 @@ class ProjectController extends Controller
 
         if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
-            $column = $project->columns()->create([
+            $column = $table->columns()->create([
                 'name' => 'sum',
                 'subName' => '-',
                 'type' => 'sum',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id,
             ]);
-            $this->setColumnSubName($request->project_id);
+            $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value + (int)$secondColumn->value;
@@ -701,14 +706,14 @@ class ProjectController extends Controller
 
         if ($request->column_type === 'difference') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
-            $column = $project->columns()->create([
+            $column = $table->columns()->create([
                 'name' => 'difference',
                 'subName' => '-',
                 'type' => 'difference',
                 'linked_first_column' => $request->first_column_id,
                 'linked_second_column' => $request->second_column_id
             ]);
-            $this->setColumnSubName($request->project_id);
+            $this->setColumnSubName($request->table_id);
             foreach ($firstColumns as $firstColumn) {
                 $secondColumn = ColumnCell::where('column_id', $request->second_column_id)->where('sub_position_row_id', $firstColumn->sub_position_row_id)->first();
                 $sum = (int)$firstColumn->value - (int)$secondColumn->value;
@@ -729,7 +734,7 @@ class ProjectController extends Controller
     public function updateCellValue(Request $request): void
     {
         $column = Column::find($request->column_id);
-        $project = $column->project()->first();
+        $project = $column->table()->first()->project()->first();
         $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
 
         if ($request->is_verified) {
@@ -750,8 +755,8 @@ class ProjectController extends Controller
 
     public function addSubPositionRow(Request $request)
     {
-        $project = Project::find($request->project_id);
-        $columns = $project->columns()->get();
+        $table = Table::find($request->table_id);
+        $columns = $table->columns()->get();
         $subPosition = SubPosition::find($request->sub_position_id);
 
 
@@ -787,15 +792,15 @@ class ProjectController extends Controller
      */
     public function addMainPosition(Request $request): void
     {
-        $project = Project::find($request->project_id);
-        $columns = $project->columns()->get();
+        $table = Table::find($request->table_id);
+        $columns = $table->columns()->get();
 
         MainPosition::query()
-            ->where('project_id', $request->project_id)
+            ->where('table_id', $request->table_id)
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
 
-        $mainPosition = $project->mainPositions()->create([
+        $mainPosition = $table->mainPositions()->create([
             'type' => $request->type,
             'name' => 'Neue Hauptposition',
             'position' => $request->positionBefore + 1
@@ -829,8 +834,8 @@ class ProjectController extends Controller
     public function addSubPosition(Request $request): void
     {
 
-        $project = Project::find($request->project_id);
-        $columns = $project->columns()->get();
+        $table = Table::find($request->table_id);
+        $columns = $table->columns()->get();
         $mainPosition = MainPosition::find($request->main_position_id);
 
         SubPosition::query()
@@ -976,7 +981,7 @@ class ProjectController extends Controller
             'users.departments',
         ]);
 
-        $columns = $project->columns()->get();
+        $columns = $project->table()->first()->columns()->get();
         $outputColumns = [];
         foreach ($columns as $column) {
             $columnOutput = new stdClass();
@@ -1027,19 +1032,20 @@ class ProjectController extends Controller
 
             'budget' => [
                 'columns' => $outputColumns,
-                'table' => $project->mainPositions()
+                'table' => $project->table()
                     ->with([
-                        'verified',
-                        'subPositions' => function ($query) {
+                        'columns',
+                        'mainPositions',
+                        'mainPositions.verified',
+                        'mainPositions.subPositions' => function ($query) {
                             return $query->orderBy('position');
                         },
-                        'subPositions.verified',
-                        'subPositions.subPositionRows' => function ($query) {
+                        'mainPositions.subPositions.verified',
+                        'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'subPositions.subPositionRows.cells.column'
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
-                    ->orderBy('position')
-                    ->get(),
+                    ->first(),
                 'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),

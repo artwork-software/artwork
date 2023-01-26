@@ -344,7 +344,7 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['subPosition', 'mainPosition', 'columns', 'project'],
+    props: ['subPosition', 'mainPosition', 'columns', 'project', 'budget'],
     emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
     data() {
         return {
@@ -374,7 +374,7 @@ export default {
                 user: '',
                 position: [],
                 project_title: this.project.name,
-                project_id: this.project.id
+                table_id: this.budget.table.id,
             }),
             colors: {
                 whiteColumn: 'whiteColumn',
@@ -404,7 +404,7 @@ export default {
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
-                project_id: this.project.id
+                table_id: this.budget.table.id,
             })
         },
         openVerifiedModalSub(subPosition) {
@@ -436,7 +436,7 @@ export default {
         },
         addRowToSubPosition(subPosition, row) {
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
@@ -487,7 +487,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {

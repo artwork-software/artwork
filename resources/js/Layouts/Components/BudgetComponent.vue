@@ -400,8 +400,8 @@
     <!-- Termin erstellen Modal-->
     <add-column-component
         v-if="showAddColumnModal"
-        :columns="budget.columns"
         :project="project"
+        :table="budget.table"
         @closed="closeAddColumnModal()"
     />
     <!-- Cell Detail Modal-->
@@ -532,7 +532,7 @@ export default {
                 user: '',
                 position: [],
                 project_title: this.project.name,
-                project_id: this.project.id
+                table_id: this.budget.table.id
             }),
         }
     },
@@ -543,7 +543,7 @@ export default {
         tablesToShow: function () {
             let costTableArray = [];
             let earningTableArray = [];
-            this.budget.table.forEach((mainPosition) => {
+            this.budget.table.main_positions.forEach((mainPosition) => {
                 if (mainPosition.type === 'BUDGET_TYPE_COST') {
                     costTableArray.push(mainPosition);
                 } else {
@@ -629,7 +629,7 @@ export default {
         addRowToSubPosition(subPosition, row) {
 
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
@@ -677,7 +677,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {
@@ -687,7 +687,7 @@ export default {
         },
         addMainPosition(type, mainPosition) {
             this.$inertia.post(route('project.budget.main-position.add'), {
-                project_id: this.project.id,
+                table_id: this.budget.table.id,
                 type: type,
                 positionBefore: mainPosition.position
             }, {
@@ -844,13 +844,13 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
-                project_id: this.project.id
+                table_id: this.budget.table.id,
             })
         },
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
-                project_id: this.project.id
+                table_id: this.budget.table.id,
             })
         },
         requestRemove(position, type){

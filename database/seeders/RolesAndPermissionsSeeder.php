@@ -50,6 +50,30 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        Permission::create([
+            'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD,
+            'name_de' => "Finanzierungsquellen anlegen und verwalten",
+            'group' => 'Finanzierungsquellen',
+            'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung von Finanzierungsquellen eingeladen werden.',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::CONTRACT_EDIT_UPLOAD,
+            'name_de' => "Vertragsbausteine editieren",
+            'group' => 'Verträge',
+            'tooltipText' => 'User darf Vertragsbausteine hochladen/löschen.',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_MANAGEMENT,
+            'name_de' => "Projektleitung sein",
+            'group' => 'Projekte',
+            'tooltipText' => 'User darf in Projekten Projektleitung sein.',
+            'checked' => false
+        ]);
+
         //System
         //Tool
         Permission::create([

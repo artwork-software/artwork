@@ -22,7 +22,7 @@ class Column extends Model
     use HasFactory;
 
     protected $fillable = [
-        'project_id',
+        'table_id',
         'name',
         'subName',
         'type',
@@ -41,9 +41,9 @@ class Column extends Model
         return $this->belongsToMany(SubPositionRow::class);
     }
 
-    public function project(): BelongsTo
+    public function table(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Table::class);
     }
 
     public function cells(): \Illuminate\Database\Eloquent\Relations\HasMany

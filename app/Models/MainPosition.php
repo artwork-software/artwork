@@ -36,9 +36,9 @@ class MainPosition extends Model
 
     protected $appends = ['columnSums'];
 
-    public function project(): BelongsTo
+    public function table(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Table::class);
     }
 
     public function subPositions(): HasMany

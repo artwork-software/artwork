@@ -295,7 +295,7 @@ class ProjectController extends Controller
     {
         $mainPosition = MainPosition::find($request->id);
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-        $project = $mainPosition->table()->project()->first();
+        $project = $mainPosition->table()->first()->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project = $project;
@@ -397,8 +397,9 @@ class ProjectController extends Controller
             $verifiedRequest = $mainPosition->verified()->first();
             $this->removeMainPositionCellVerifiedValue($mainPosition);
 
+            $project = $mainPosition->table()->first()->project()->first();
             // Notification
-            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project, $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -407,7 +408,7 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben', 'budget');
         }
 
         if ($request->type === 'sub') {
@@ -415,9 +416,9 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $this->removeSubPositionCellVerifiedValue($subPosition);
-
+            $project = $mainPosition->table()->first()->project()->first();
             // Notification
-            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project, $subPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -427,7 +428,7 @@ class ProjectController extends Controller
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben', 'budget');
+            $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben', 'budget');
         }
 
         return back()->with(['success']);
@@ -461,7 +462,7 @@ class ProjectController extends Controller
             'requested' => $request->user
         ]);
 
-        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt', 'budget');
+        $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ zur Verifizierung angefragt', 'budget');
         return back()->with('success');
     }
 

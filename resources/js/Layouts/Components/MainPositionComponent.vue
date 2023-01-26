@@ -303,6 +303,7 @@ export default {
               user: '',
               position: [],
               project_title: this.project.name,
+              project_id: this.project.id,
               table_id: this.budget.table.id,
           }),
           colors: {
@@ -342,6 +343,7 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
+                project_id: this.project.id,
                 table_id: this.budget.table.id,
             })
         },

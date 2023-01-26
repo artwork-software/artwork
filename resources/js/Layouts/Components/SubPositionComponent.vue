@@ -404,6 +404,7 @@ export default {
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
+                project_id: this.project.id,
                 table_id: this.budget.table.id,
             })
         },

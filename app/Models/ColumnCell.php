@@ -16,7 +16,8 @@ class ColumnCell extends Model
         'value',
         'linked_money_source_id',
         'linked_type',
-        'calculations'
+        'calculations',
+        'verified_value'
     ];
 
 
@@ -37,5 +38,10 @@ class ColumnCell extends Model
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(CellComments::class, 'cell_id');
+    }
+
+    public function calculations(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CellCalculations::class,'cell_id');
     }
 }

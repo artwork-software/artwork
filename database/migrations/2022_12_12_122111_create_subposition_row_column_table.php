@@ -21,6 +21,7 @@ return new class extends Migration
             $table->bigInteger('linked_money_source_id')->nullable();
             $table->string('linked_type')->nullable();
             $table->json('calculations')->nullable();
+            $table->string('verified_value')->nullable();
             $table->timestamps();
         });
     }

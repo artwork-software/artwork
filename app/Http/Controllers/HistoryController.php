@@ -13,9 +13,9 @@ class HistoryController extends Controller
 
     }
 
-    public function createHistory(int $modelId, string $historyText): void
+    public function createHistory(int $modelId, string $historyText, string $type = 'project'): void
     {
-        $array[] = ['message' => $historyText, 'changed_by' => Auth::user()];
+        $array[] = ['type' => $type, 'message' => $historyText, 'changed_by' => Auth::user()];
         Change::create([
             'model_id' => $modelId,
             'model_type' => $this->modelObject,

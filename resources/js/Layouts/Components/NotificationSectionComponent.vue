@@ -84,9 +84,7 @@
                                 :rooms="this.rooms"
                                 :eventTypes="this.eventTypes"></NotificationEventInfoRow>
                             <NotificationBudgetRequest
-                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'"
-                            :budget="notification.data">
-
+                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'" :budget="notification.data">
                             </NotificationBudgetRequest>
                             <div class="flex">
                                 <div class="mt-1.5 flex xxsLight my-auto"
@@ -141,8 +139,10 @@
                                        text="Termin löschen"></AddButton>
                         </div>
                     </div>
+
                     <!-- Archive Button -->
                     <img v-else @click="setOnRead(notification.id)" v-show="notification.hovered"
+                         v-if="notification.data?.changeType !== 'BUDGET_VERIFICATION_REQUEST'"
                          src="/Svgs/IconSvgs/icon_archive_white.svg"
                          class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-buttonBlue rounded-full"
                          aria-hidden="true"/>

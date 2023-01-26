@@ -9,6 +9,11 @@ class SubPositionVerified extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'sub_position_id',
+        'requested_by',
+        'requested'
+    ];
 
     public function sub_position(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

@@ -14,6 +14,7 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Models\Category;
+use App\Models\CellCalculations;
 use App\Models\CellComments;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
@@ -37,6 +38,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -193,19 +195,9 @@ class ProjectController extends Controller
             $project->save();
         }
 
-
-        /*if (!$request->isGroup && !empty($request->selectedGroup)) {
-            $group = new ProjectGroups();
-            $group->create([
-                'project_groups_id' => $project->id,
-                'project_id' => $request->selectedGroup['id']
-            ]);
-            */
-        if(!$request->isGroup && !empty($request->selectedGroup)){
+        if (!$request->isGroup && !empty($request->selectedGroup)) {
             $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
-
-
         }
 
         if ($request->assigned_user_ids) {
@@ -266,34 +258,47 @@ class ProjectController extends Controller
 
         ]);
 
+        $firstThreeColumns = $columns->shift(3);
+
+        $costSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
+            'value' => "",
+            'verified_value' => "",
+            'linked_money_source_id' => null,
+        ]);
+
+        $earningSubPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
+            'value' => "",
+            'verified_value' => "",
+            'linked_money_source_id' => null,
+        ]);
+
         $costSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => '',
+            'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => '',
+            'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
 
     }
 
-    public function verifiedMainPosition(Request $request){
+    public function verifiedRequestMainPosition(Request $request): RedirectResponse
+    {
         $mainPosition = MainPosition::find($request->id);
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
-
-        // Angefragten Nutzer eine Benachrichtigung über eine neue Verifizierung Anfrage schicken
-        /*
-         * 'type' => $notificationData->type,
-                    'title' => $notificationData->title,
-                    'requested_position' => $notificationData->requested_position,
-                    'created_by' => $notificationData->created_by,
-         */
+        $project = $mainPosition->project()->first();
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
-        $this->notificationData->project_title = $request->project_title;
+        $this->notificationData->project = $project;
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->position = $mainPosition->id;
         $this->notificationData->created_by = Auth::user();
+        $this->notificationData->requested_id = $request->user;
+        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -301,6 +306,217 @@ class ProjectController extends Controller
         ];
         $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
 
+        $mainPosition->verified()->create([
+            'requested_by' => Auth::id(),
+            'requested' => $request->user
+        ]);
+        $this->history->createHistory($project->id, 'Hauptposition „'. $mainPosition->name .'“ zur Verifizierung angefragt', 'budget');
+        return back()->with('success');
+    }
+
+    public function takeBackVerification(Request $request): RedirectResponse
+    {
+        // create Notification Basic data
+        $this->createVerificationNotificationHeader('Verifizierungsanfrage gelöscht', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_TAKE_BACK);
+        if($request->type === 'main'){
+            $mainPosition = MainPosition::find($request->position['id']);
+            $verifiedRequest = $mainPosition->verified()->first();
+
+            $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
+            // create Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $verifiedRequest->delete();
+            $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
+        }
+
+        if($request->type === 'sub'){
+            $subPosition = SubPosition::find($request->position['id']);
+            $mainPosition = $subPosition->mainPosition()->first();
+            $verifiedRequest = $subPosition->verified()->first();
+
+            $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
+
+            // create Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $verifiedRequest->delete();
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierungsanfrage zurückgenommen', 'budget');
+        }
+        return back()->with(['success']);
+    }
+
+    private function createVerificationNotificationHeader($title, $position , $type){
+        $this->notificationData->title = $title;
+        $this->notificationData->requested_position = $position;
+        $this->notificationData->created_by = Auth::user();
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->changeType = $type;
+    }
+    private function createNotificationBody($project, $positionId, $requestedId){
+        $this->notificationData->project = $project;
+        $this->notificationData->position = $positionId;
+        $this->notificationData->requested_id = $requestedId;
+    }
+
+    private function deleteOldNotification($positionId, $requestedId){
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $positionId)
+            ->whereJsonContains("data->requested_id", $requestedId)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
+            ->delete();
+    }
+
+    public function removeVerification(Request $request){
+
+        $this->createVerificationNotificationHeader('Verifizierung in Budget aufgehoben', $request->position, BudgetTypesEnum::BUDGET_VERIFICATION_DELETED);
+        if($request->type === 'main'){
+            $mainPosition = MainPosition::find($request->position['id']);
+            $verifiedRequest = $mainPosition->verified()->first();
+            $subPositions = $mainPosition->subPositions()->get();
+            foreach ($subPositions as $subPosition) {
+                $subPositionRows = $subPosition->subPositionRows()->get();
+                foreach ($subPositionRows as $subPositionRow) {
+                    $cells = $subPositionRow->cells()->get();
+                    foreach ($cells as $cell) {
+                        $cell->update(['verified_value' => 0]);
+                    }
+                }
+            }
+
+            // Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $verifiedRequest->delete();
+            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „'. $mainPosition->name .'“ Verifizierung aufgehoben', 'budget');
+        }
+
+        if($request->type === 'sub'){
+            $subPosition = SubPosition::find($request->position['id']);
+            $subPositionRows = $subPosition->subPositionRows()->get();
+            $mainPosition = $subPosition->mainPosition()->first();
+            $verifiedRequest = $subPosition->verified()->first();
+            foreach ($subPositionRows as $subPositionRow) {
+                $cells = $subPositionRow->cells()->get();
+                foreach ($cells as $cell) {
+                    $cell->update(['verified_value' => 0]);
+                }
+            }
+
+            // Notification
+            $this->createNotificationBody($mainPosition->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
+            $mainPosition = $subPosition->mainPosition()->first();
+            $verifiedRequest->delete();
+            $this->history->createHistory($mainPosition->project_id, 'Unterposition „'. $subPosition->name .'“ Verifizierung aufgehoben', 'budget');
+        }
+
+        return back()->with(['success']);
+    }
+
+
+    public function verifiedRequestSubPosition(Request $request): RedirectResponse
+    {
+
+        $subPosition = SubPosition::find($request->id);
+        $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
+        $mainPosition = $subPosition->mainPosition()->first();
+        $project = $mainPosition->project()->first();
+        $this->notificationData->title = 'Neue Verifizierungsanfrage';
+        $this->notificationData->requested_position = $request->position;
+        $this->notificationData->project = $project;
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED;
+        $this->notificationData->position = $subPosition->id;
+        $this->notificationData->created_by = Auth::user();
+        $this->notificationData->requested_id = $request->user;
+        $this->notificationData->changeType = BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
+
+        $subPosition->verified()->create([
+            'requested_by' => Auth::id(),
+            'requested' => $request->user
+        ]);
+
+        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ zur Verifizierung angefragt', 'budget');
+        return back()->with('success');
+    }
+
+    public function verifiedSubPosition(Request $request)
+    {
+        $subPosition = SubPosition::find($request->subPositionId);
+        $verifiedRequest = $subPosition->verified()->first();
+        $subPositionRows = $subPosition->subPositionRows()->get();
+        foreach ($subPositionRows as $subPositionRow) {
+            $cells = $subPositionRow->cells()->get();
+            foreach ($cells as $cell) {
+                $cell->update(['verified_value' => @$cell->value]);
+            }
+        }
+        $subPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $subPosition->id)
+            ->whereJsonContains("data->requested_id", $verifiedRequest->requested)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
+            ->delete();
+        $this->history->createHistory($request->project_id, 'Unterposition „'. $subPosition->name .'“ verifiziert', 'budget');
+        return back()->with('success');
+    }
+
+    public function verifiedMainPosition(Request $request): RedirectResponse
+    {
+        $mainPosition = MainPosition::find($request->mainPositionId);
+        $subPositions = $mainPosition->subPositions()->get();
+        $verifiedRequest = $mainPosition->verified()->first();
+        foreach ($subPositions as $subPosition) {
+            $subPositionRows = $subPosition->subPositionRows()->get();
+            foreach ($subPositionRows as $subPositionRow) {
+                $cells = $subPositionRow->cells()->get();
+                foreach ($cells as $cell) {
+                    $cell->update(['verified_value' => @$cell->value]);
+                }
+            }
+        }
+        $mainPosition->update(['is_verified' => 'BUDGET_VERIFIED_TYPE_CLOSED']);
+
+        DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_BUDGET_STATE_CHANGED")
+            ->whereJsonContains("data->position", $mainPosition->id)
+            ->whereJsonContains("data->requested_id",  $verifiedRequest->requested)
+            ->whereJsonContains("data->changeType", BudgetTypesEnum::BUDGET_VERIFICATION_REQUEST)
+            ->delete();
+        $this->history->createHistory($request->project_id, 'Hauptposition „'. $subPosition->name .'“ verifiziert', 'budget');
         return back()->with('success');
     }
 
@@ -321,11 +537,12 @@ class ProjectController extends Controller
         ]);
     }
 
-    public function columnDelete(Column $column){
+    public function columnDelete(Column $column)
+    {
         $cells = ColumnCell::where('column_id', $column->id)->get();
 
         $column->cells()->delete();
-        foreach ($cells as $cell){
+        foreach ($cells as $cell) {
             $cell->comments()->delete();
         }
         $column->delete();
@@ -397,7 +614,8 @@ class ProjectController extends Controller
             })->pluck('id');
 
             $column->subPositionRows()->attach($subPositionRows, [
-                'value' => '',
+                'value' => 0,
+                'verified_value' => 0,
                 'linked_money_source_id' => null
             ]);
         }
@@ -453,7 +671,15 @@ class ProjectController extends Controller
      */
     public function updateCellValue(Request $request): void
     {
-        ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->update(['value' => $request->value]);
+        $column = Column::find($request->column_id);
+        $project = $column->project()->first();
+        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
+
+        if($request->is_verified){
+            $this->history->createHistory($project->id, '„'. $cell->value .'“ in „' . $request->value . '“ geändert', 'budget');
+        }
+
+        $cell->update(['value' => $request->value]);
         $this->updateAutomaticCellValues($request->sub_position_row_id);
     }
 
@@ -471,18 +697,29 @@ class ProjectController extends Controller
         $columns = $project->columns()->get();
         $subPosition = SubPosition::find($request->sub_position_id);
 
+
         SubPositionRow::query()
             ->where('sub_position_id', $request->sub_position_id)
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
+
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => $request->positionBefore + 1
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
+            'linked_money_source_id' => null,
+            'verified_value' => ''
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
     }
@@ -517,11 +754,19 @@ class ProjectController extends Controller
             'position' => 1,
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
-            'linked_money_source_id' => null
+            'linked_money_source_id' => null,
+            'verified_value' => ''
         ]);
 
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => 0,
+            'linked_money_source_id' => null,
+        ]);
     }
 
     public function addSubPosition(Request $request): void
@@ -546,18 +791,45 @@ class ProjectController extends Controller
             'position' => 1,
         ]);
 
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
+        $firstThreeColumns = $columns->shift(3);
+
+        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
             'value' => '',
+            'linked_money_source_id' => null,
+            'verified_value' => ''
+        ]);
+
+        $subPositionRow->columns()->attach($columns->pluck('id'), [
+            'value' => 0,
+            'verified_value' => 0,
             'linked_money_source_id' => null,
         ]);
     }
 
     public function updateCellCalculation(Request $request)
     {
-        $cell = ColumnCell::where('column_id', $request->column_id)->where('sub_position_row_id', $request->sub_position_row_id)->first();
-        $cell->update(['calculations' => json_encode($request->calculations)]);
-        $cell->update(['value' => $request->calculationSum]);
+
+        foreach ($request->calculations as $calculation){
+            $cellCalculation = CellCalculations::find($calculation['id']);
+            $cellCalculation->update([
+                'name' => @$calculation['name'],
+                'value' => @$calculation['value'],
+                'description' => @$calculation['description']
+            ]);
+        }
+
+        $cell = ColumnCell::find($request->calculations[0]['cell_id']);
+        $cell->update(['value' => $cell->calculations()->sum('value')] );
+
         return back()->with('success');
+    }
+
+    public function addCalculation(ColumnCell $cell){
+        $cell->calculations()->create([
+            'name' => '',
+            'value' => 0,
+            'description' => ''
+        ]);
     }
 
     private function updateAutomaticCellValues($subPositionRowId)
@@ -638,9 +910,9 @@ class ProjectController extends Controller
             $outputColumns[] = $columnOutput;
         }
 
-        if(!$project->is_group) {
+        if (!$project->is_group) {
             $group = DB::table('project_groups')->select('*')->where('project_id', '=', $project->id)->first();
-            if(!empty($group)){
+            if (!empty($group)) {
                 $groupOutput = Project::find($group?->group_id);
             } else {
                 $groupOutput = '';
@@ -649,6 +921,9 @@ class ProjectController extends Controller
             $groupOutput = '';
         }
 
+        $selectedCell = request('selectedCell')
+            ? ColumnCell::find(request('selectedCell'))
+            : null;
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -662,17 +937,20 @@ class ProjectController extends Controller
                 'columns' => $outputColumns,
                 'table' => $project->mainPositions()
                     ->with([
+                        'verified',
                         'subPositions' => function ($query) {
                             return $query->orderBy('position');
                         },
+                        'subPositions.verified',
                         'subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'subPositions.subPositionRows.cells.comments' => function($query){
+                        }, 'subPositions.subPositionRows.cells.comments' => function ($query) {
                             return $query->orderBy('created_at', 'DESC');
                         }, 'subPositions.subPositionRows.cells.column'
                     ])
                     ->orderBy('position')
-                    ->get()
+                    ->get(),
+                'selectedCell' => $selectedCell?->load('calculations')
             ],
 
             'categories' => Category::all(),
@@ -732,7 +1010,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants', 'cost_center');
+        $update_properties = $request->only('name', 'description', 'number_of_participants');
 
         // authorization
         if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
@@ -741,7 +1019,7 @@ class ProjectController extends Controller
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
-        if($request->selectedGroup === null){
+        if ($request->selectedGroup === null) {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
@@ -843,7 +1121,8 @@ class ProjectController extends Controller
         }
     }
 
-    public function deleteProjectFromGroup(Request $request){
+    public function deleteProjectFromGroup(Request $request)
+    {
         $group = Project::find($request->groupId);
         $group->groups()->detach($request->projectIdToDelete);
     }
@@ -1223,12 +1502,12 @@ class ProjectController extends Controller
     public function deleteMainPosition(MainPosition $mainPosition)
     {
         $subPositions = $mainPosition->subPositions()->get();
-        foreach ($subPositions as $subPosition){
+        foreach ($subPositions as $subPosition) {
             $subRows = $subPosition->subPositionRows()->get();
 
-            foreach ($subRows as $subRow){
+            foreach ($subRows as $subRow) {
                 $cells = $subRow->cells()->get();
-                foreach ($cells as $cell){
+                foreach ($cells as $cell) {
                     /*$comments = $cells->comments()->get();
                     foreach ($comments as $comment){
                         $comment->delete();
@@ -1241,6 +1520,7 @@ class ProjectController extends Controller
         }
         $mainPosition->delete();
     }
+
     public function deleteSubPosition(SubPosition $subPosition)
     {
         $subRows = $subPosition->subPositionRows()->get();

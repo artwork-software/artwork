@@ -13,6 +13,7 @@ class SubPositionRow extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sub_position_id',
         'commented',
         'position'
     ];

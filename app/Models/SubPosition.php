@@ -21,6 +21,7 @@ class SubPosition extends Model
     use HasFactory;
 
     protected $fillable = [
+        'main_position_id',
         'name',
         'position',
         'is_verified',

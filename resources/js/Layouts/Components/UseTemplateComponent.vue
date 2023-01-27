@@ -116,7 +116,7 @@ export default {
             this.$emit('closed', bool);
         },
         useTemplate() {
-            this.$inertia.post(route('project.budget.template.use'), {template_id: this.selectedTemplate.id, project_id: this.projectId});
+            this.$inertia.post(route('project.budget.template.use', this.selectedTemplate.id), { project_id: this.projectId });
             this.closeModal(true);
         }
     },

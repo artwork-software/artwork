@@ -210,16 +210,22 @@ const navigation = [
         svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg'
     },
-    /* TODO: WIEDER EINFÜGEN + ICON für Verträge und unten aus dem extra-Settings-Dropdown rausnehmen
+
     {
         name: 'Finanzierungsquellen',
         href: route('money_sources.index'),
         route: ['/money_sources'],
         svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg'
-    }
+    },
 
-     */
+    {
+        name: 'Finanzierungsquellen',
+        href: route('contracts.view.index'),
+        route: ['/contracts/view'],
+        svgSrc: '/Svgs/Sidebar/icon_contract.svg',
+        svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg'
+    }
 ]
 
 const userNavigation = [
@@ -303,12 +309,6 @@ export default {
                     href: route('contracts.view.index'),
                     route: ['/contracts/view']
                 },
-                {
-                    name: 'Finanzierungsquellen',
-                    has_permission: this.$page.props.is_admin,
-                    href: route('money_sources.index'),
-                    route: ['/money_sources']
-                }
             ]
         }
     },

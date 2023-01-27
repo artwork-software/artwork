@@ -336,5 +336,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project/budget/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
     Route::patch('/project/budget/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
     Route::patch('/project/budget/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+
+    Route::post('/project/budget/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
+    Route::post('/project/budget/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
+    Route::post('/project/budget/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
+    Route::patch('/project/{project}/budget/reset', [\App\Http\Controllers\ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
 });
 

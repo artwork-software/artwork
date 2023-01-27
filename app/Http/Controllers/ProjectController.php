@@ -515,6 +515,14 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+    public function resetTable(Project $project){
+        $budgetTemplateController = new BudgetTemplateController();
+        $budgetTemplateController->deleteOldTable($project);
+        $this->generateBasicBudgetValues($project);
+
+        return back()->with('success');
+    }
+
     public function verifiedMainPosition(Request $request): RedirectResponse
     {
         $mainPosition = MainPosition::find($request->mainPositionId);
@@ -982,7 +990,23 @@ class ProjectController extends Controller
             'users.departments',
         ]);
 
+        /*dd($project->table()
+            ->with([
+                'columns',
+                'mainPositions',
+                'mainPositions.verified',
+                'mainPositions.subPositions' => function ($query) {
+                    return $query->orderBy('position');
+                },
+                'mainPositions.subPositions.verified',
+                'mainPositions.subPositions.subPositionRows' => function ($query) {
+                    return $query->orderBy('position');
+                }, 'mainPositions.subPositions.subPositionRows.cells.column'
+            ])
+            ->first());*/
+
         $columns = $project->table()->first()->columns()->get();
+
         $outputColumns = [];
         foreach ($columns as $column) {
             $columnOutput = new stdClass();
@@ -992,13 +1016,13 @@ class ProjectController extends Controller
             $columnOutput->color = $column->color;
             $columnOutput->is_locked = $column->is_locked;
             if ($column->type === 'sum') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
+                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
                 $columnOutput->calculateName = $firstName . ' + ' . $secondName;
             }
             if ($column->type === 'difference') {
-                $firstName = Column::where('id', $column->linked_first_column)->first()->subName;
-                $secondName = Column::where('id', $column->linked_second_column)->first()->subName;
+                $firstName = Column::where('id', $column->linked_first_column)->first()?->subName;
+                $secondName = Column::where('id', $column->linked_second_column)->first()?->subName;
                 $columnOutput->calculateName = $firstName . ' - ' . $secondName;
             }
             $outputColumns[] = $columnOutput;
@@ -1022,6 +1046,14 @@ class ProjectController extends Controller
         $selectedRow = request('selectedRow')
             ? SubPositionRow::find(request('selectedRow'))
             : null;
+
+        $templates = null;
+
+        if(request('useTemplates')){
+            $templates = Table::where('is_template', true)->get();
+        }
+
+
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -1052,7 +1084,8 @@ class ProjectController extends Controller
                 }]),
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
-                }])
+                }]),
+                'templates' => $templates
             ],
 
             'categories' => Category::all(),
@@ -1524,6 +1557,7 @@ class ProjectController extends Controller
                 $replicated_task->save();
             });
         });
+
 
         $newProject->users()->attach([Auth::id() => ['is_admin' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));

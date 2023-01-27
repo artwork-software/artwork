@@ -16,7 +16,6 @@ class ColumnCell extends Model
         'value',
         'linked_money_source_id',
         'linked_type',
-        'calculations',
         'verified_value',
         'commented'
     ];

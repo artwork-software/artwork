@@ -1364,7 +1364,7 @@
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
                             <div class="flex justify-between items-center ml-16 my-1.5 h-5">
-                                <div class="flex items-center justify-start">
+                                <div class="flex items-center justify-start" v-if="this.$page.props.can.project_management">
                                     <input v-model="user.is_admin"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>

@@ -23,6 +23,7 @@ class MainPosition extends Model
     use HasFactory;
 
     protected $fillable = [
+        'table_id',
         'type',
         'name',
         'position',

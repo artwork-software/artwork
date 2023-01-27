@@ -64,7 +64,7 @@ export default {
     },
 
 
-    props: ['projectId'],
+    props: ['tableId'],
 
     emits: ['closed'],
 
@@ -76,8 +76,7 @@ export default {
             this.$emit('closed', bool);
         },
         createBudgetTemplate() {
-            this.$inertia.post(route('project.budget.template.create'), {
-                project_id: this.projectId,
+            this.$inertia.post(route('project.budget.template.create', this.tableId), {
                 template_name: this.templateName
             });
             this.closeModal(true);

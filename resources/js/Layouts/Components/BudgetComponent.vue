@@ -1,4 +1,5 @@
 <template>
+
     <div class="mx-4">
         <div class="flex mb-10 justify-between">
         <div class="flex justify-start headline2">
@@ -50,7 +51,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a @click=""
+                                <a @click="resetBudgetTable"
                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <TrashIcon
                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -479,7 +480,7 @@
     <use-template-component
         v-if="showUseTemplateModal"
         :projectId="project.id"
-        :templates="templates"
+        :templates="budget.templates"
         @closed="closeUseTemplateModal()"
     />
     <!-- Aus Projekt einlesen Modal-->
@@ -491,7 +492,7 @@
     <!-- Als Vorlage speichern Modal-->
     <add-budget-template-component
         v-if="showAddBudgetTemplateModal"
-        :projectId="project.id"
+        :table-id="budget.table.id"
         @closed="closeAddBudgetTemplateModal()"
     />
     <!-- Row Detail Modal-->
@@ -743,7 +744,15 @@ export default {
             this.showAddColumnModal = false;
         },
         openUseTemplateModal(){
-            this.showUseTemplateModal = true;
+
+            Inertia.reload({
+                data: {
+                    useTemplates: true
+                },
+                onSuccess: () => {
+                    this.showUseTemplateModal = true;
+                }
+            })
         },
         closeUseTemplateModal(){
             this.showUseTemplateModal = false;
@@ -984,6 +993,9 @@ export default {
             this.$inertia.patch(this.route('project.budget.unlock.column'), {
                 columnId: columnId
             });
+        },
+        resetBudgetTable(){
+            this.$inertia.patch(this.route('project.budget.reset.table', this.project.id))
         }
     },
 }

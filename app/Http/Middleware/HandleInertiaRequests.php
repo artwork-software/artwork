@@ -101,6 +101,7 @@ class HandleInertiaRequests extends Middleware
                 'admin_globalNotification' => Auth::guest() ? false : Auth::user()->can("admin globalNotification"),
                 'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
                 'project_management' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT),
+                'contract_edit_upload' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD),
             ],
             'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin'),
             'small_logo' => $this->small_logo(),

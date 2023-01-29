@@ -13,6 +13,7 @@ use App\Models\SubPosition;
 use App\Models\SubPositionRow;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use function Clue\StreamFilter\fun;
 
 class BudgetTemplateController extends Controller
@@ -28,11 +29,27 @@ class BudgetTemplateController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\Response
      */
     public function index()
     {
-        //
+        return Inertia::render('Template/Index', [
+            'budget' => [
+                'table' => Table::where('is_template', true)
+                    ->with([
+                        'columns',
+                        'mainPositions',
+                        'mainPositions.verified',
+                        'mainPositions.subPositions' => function ($query) {
+                            return $query->orderBy('position');
+                        },
+                        'mainPositions.subPositions.verified',
+                        'mainPositions.subPositions.subPositionRows' => function ($query) {
+                            return $query->orderBy('position');
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
+                    ])
+                    ->first(),
+            ],
+        ]);
     }
 
     /**

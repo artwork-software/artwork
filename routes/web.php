@@ -274,6 +274,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
+
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
@@ -341,5 +342,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
     Route::post('/project/budget/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
     Route::patch('/project/{project}/budget/reset', [\App\Http\Controllers\ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
+
+    // Templates
+    Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
 });
 

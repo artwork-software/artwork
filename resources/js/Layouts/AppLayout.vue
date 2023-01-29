@@ -309,6 +309,12 @@ export default {
                     href: route('contracts.view.index'),
                     route: ['/contracts/view']
                 },
+                {
+                    name: 'Budget Vorlagen',
+                    has_permission: this.$page.props.is_admin,
+                    href: route('templates.view.index'),
+                    route: ['/templates/index']
+                },
             ]
         }
     },

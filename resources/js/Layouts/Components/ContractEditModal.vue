@@ -31,7 +31,8 @@
                     <jet-input-error :message="uploadDocumentFeedback"/>
                 </div>
                 <div v-if="this.file !== null" class="mb-6">
-                    <div class="group flex"><span v-if="this.file.name">{{ this.file.name }}</span><span v-else>{{ contract.name }}</span>
+                    <div class="group flex"><span v-if="this.file.name">{{ this.file.name }}</span><span
+                        v-else>{{ contract.name }}</span>
                         <XCircleIcon
                             @click="this.file = null"
                             class="ml-2 group-hover:cursor-pointer my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
@@ -208,7 +209,8 @@
                         </div>
 
                         <div class="flex items-center mb-2">
-                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad" @click="this.hasPowerOfAttorney = false; this.isFreed = false"
+                            <input id="hasGroup" type="checkbox" v-model="this.isAbroad"
+                                   @click="this.hasPowerOfAttorney = false; this.isFreed = false"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <label for="hasGroup" :class="this.isAbroad ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                    class="ml-2">
@@ -219,7 +221,8 @@
                             <div class="flex items-center mb-2">
                                 <input id="hasGroup" type="checkbox" v-model="this.hasPowerOfAttorney"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                <label for="hasGroup"
+                                       :class="this.hasPowerOfAttorney ? 'xsDark' : 'xsLight subpixel-antialiased'"
                                        class="ml-2">
                                     Vollmacht liegt vor
                                 </label>
@@ -290,28 +293,36 @@
                     </div>
                 </div>
                 <div class="bg-backgroundGray -mx-12 pt-6 pb-12 mt-6">
-                    <div class="xxsDarkBold ml-12 flex items-center" @click="showExtraSettings = !showExtraSettings">
-                        Weitere Angaben oder Aufgabe hinzufügen
-                        <ChevronUpIcon v-if="showExtraSettings"
-                                       class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                        <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                    </div>
-                    <div v-if="showExtraSettings">
-                        <div class="flex items-center mb-2">
-                            <div v-for="extraSetting in extraSettings">
-                                <input id="hasGroup" type="checkbox" v-model="extraSetting.checked"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup" :class="extraSetting.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                       class="ml-2">
-                                    {{ extraSetting.name}}
-                                </label>
-                            </div>
+                    <div class="px-12 w-full">
+                        <div class="xxsDarkBold flex items-center"
+                             @click="showExtraSettings = !showExtraSettings">
+                            Weitere Angaben oder Aufgabe hinzufügen
+                            <ChevronUpIcon v-if="showExtraSettings"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </div>
-                        <button type="button"
-                                class="flex py-3 px-8 mt-1 items-center border border-2 ml-12 mt-12 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
-                            <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
-                            <p class="text-sm">Neue Aufgabe</p>
-                        </button>
+                        <div v-if="showExtraSettings">
+                            <div class="flex items-center mb-2 mt-6">
+                                <div v-for="task in tasks">
+                                    <input id="hasGroup" type="checkbox" v-model="task.checked"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <label for="hasGroup"
+                                           :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           class="ml-2">
+                                        {{ task.name }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <ContractTaskForm :show="creatingNewTask" ref="task_form" @add-task="addTask"/>
+
+                            <button type="button"
+                                    @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"
+                                    class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                <p class="text-sm">Neue Aufgabe</p>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -334,12 +345,13 @@ import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 
 const contractTypeArray = [
     'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
 ]
 const currencyArray = [
-    '€','$','CHF','£'
+    '€', '$', 'CHF', '£'
 ]
 const legalFormArray = [
     'Einzelunternehmen', 'GbR', 'GmbH', 'UG', 'AG', 'Sonstige'
@@ -355,6 +367,7 @@ export default {
         currencies: Array,
     },
     components: {
+        ContractTaskForm,
         JetDialogModal,
         JetInputError,
         AddButton,
@@ -432,6 +445,9 @@ export default {
             this.storeFile(this.file)
             this.closeModal()
         },
+        addTask(task) {
+            this.tasks.push(task)
+        },
         updateContract() {
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.legal_form = this.selectedLegalForm;
@@ -448,6 +464,7 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
+            this.contractForm.tasks = this.tasks
             this.storeFile()
             this.contractForm.patch(this.route('contracts.update', this.contract.id));
             this.closeModal()
@@ -458,6 +475,7 @@ export default {
             legalFormArray,
             currencyArray,
             contractTypeArray,
+            creatingNewTask: false,
             uploadDocumentFeedback: "",
             file: this.contract?.basename,
             description: this.contract?.description,
@@ -472,6 +490,7 @@ export default {
             isAbroad: this.contract?.resident_abroad,
             hasPowerOfAttorney: this.contract?.has_power_of_attorney,
             isFreed: this.contract?.is_freed,
+            tasks: this.contract?.tasks,
             showExtraSettings: false,
             contractAmount: this.contract?.amount,
             contractForm: useForm({
@@ -485,7 +504,8 @@ export default {
                 has_power_of_attorney: this.contract?.has_power_of_attorney,
                 is_freed: this.contract?.is_freed,
                 description: this.contract?.description,
-                accessibleUsers: this.contract?.accessibleUsers
+                accessibleUsers: this.contract?.accessibleUsers,
+                tasks: this.contract?.tasks
             }),
         }
     }

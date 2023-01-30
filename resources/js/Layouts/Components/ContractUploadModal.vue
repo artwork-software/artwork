@@ -292,29 +292,36 @@
                     </div>
                 </div>
                 <div class="bg-backgroundGray -mx-12 pt-6 pb-12 mt-6">
-                    <div class="xxsDarkBold ml-12 flex items-center" @click="showExtraSettings = !showExtraSettings">
-                        Weitere Angaben oder Aufgabe hinzufügen
-                        <ChevronUpIcon v-if="showExtraSettings"
-                                       class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
-                        <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
-                    </div>
-                    <div v-if="showExtraSettings">
-                        <div class="flex items-center mb-2">
-                            <div v-for="extraSetting in extraSettings">
-                                <input id="hasGroup" type="checkbox" v-model="extraSetting.checked"
-                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <label for="hasGroup"
-                                       :class="extraSetting.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                       class="ml-2">
-                                    {{ extraSetting.name }}
-                                </label>
-                            </div>
+                    <div class="px-12 w-full">
+                        <div class="xxsDarkBold flex items-center"
+                             @click="showExtraSettings = !showExtraSettings">
+                            Weitere Angaben oder Aufgabe hinzufügen
+                            <ChevronUpIcon v-if="showExtraSettings"
+                                           class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                            <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </div>
-                        <button type="button"
-                                class="flex py-3 px-8 mt-1 items-center border border-2 ml-12 mt-12 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
-                            <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
-                            <p class="text-sm">Neue Aufgabe</p>
-                        </button>
+                        <div v-if="showExtraSettings">
+                            <div class="flex items-center mb-2 mt-6">
+                                <div v-for="task in tasks">
+                                    <input id="hasGroup" type="checkbox" v-model="task.checked"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <label for="hasGroup"
+                                           :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                           class="ml-2">
+                                        {{ task.name }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <ContractTaskForm :show="creatingNewTask" ref="task_form" @add-task="addTask"/>
+
+                            <button type="button"
+                                    @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"
+                                    class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                <p class="text-sm">Neue Aufgabe</p>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -337,12 +344,13 @@ import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 
 const contractTypeArray = [
     'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
 ]
 const currencyArray = [
-    '€','$','CHF','£'
+    '€', '$', 'CHF', '£'
 ]
 const legalFormArray = [
     'Einzelunternehmen', 'GbR', 'GmbH', 'UG', 'AG', 'Sonstige'
@@ -356,6 +364,7 @@ export default {
         extraSettings: Array,
     },
     components: {
+        ContractTaskForm,
         JetDialogModal,
         JetInputError,
         AddButton,
@@ -389,6 +398,8 @@ export default {
             legalFormArray,
             currencyArray,
             contractTypeArray,
+            creatingNewTask: false,
+            tasks: [],
             uploadDocumentFeedback: "",
             file: null,
             description: "",
@@ -417,11 +428,15 @@ export default {
                 has_power_of_attorney: this.hasPowerOfAttorney,
                 is_freed: this.isFreed,
                 description: this.description,
-                accessibleUsers: this.usersWithAccess
+                accessibleUsers: this.usersWithAccess,
+                tasks: this.tasks
             }),
         }
     },
     methods: {
+        addTask(task) {
+            this.tasks.push(task)
+        },
         addUserToContractUserArray(user) {
             if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
                 this.usersWithAccess.push(user);
@@ -484,6 +499,7 @@ export default {
                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
+            this.contractForm.tasks = this.tasks
             this.contractForm.post(this.route('contracts.store', this.projectId));
             this.closeModal()
         }

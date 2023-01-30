@@ -52,6 +52,11 @@ class Task extends Model
         return $this->belongsTo(Checklist::class, 'checklist_id');
     }
 
+    public function task_users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'task_user', 'task_id');
+    }
+
     public function user_who_done(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');

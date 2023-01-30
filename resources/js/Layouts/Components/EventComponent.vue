@@ -390,7 +390,7 @@
                     </div>
                 </div>
                 <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book)" >
+                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects)" >
                     <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                             @click="updateOrCreateEvent()">
                         Belegen

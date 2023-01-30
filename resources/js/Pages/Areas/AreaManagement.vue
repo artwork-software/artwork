@@ -580,6 +580,9 @@
                                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
 
                                             <div v-for="area in areas">
+                                                <div class="mb-2">
+                                                {{area.name}}
+                                                </div>
                                                 <div v-if="area.rooms.length > 0"
                                                      v-for="room in area.rooms"
                                                      :key="room.id"

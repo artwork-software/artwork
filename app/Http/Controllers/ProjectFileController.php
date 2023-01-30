@@ -48,12 +48,15 @@ class ProjectFileController extends Controller
 
         $projectFile->accessing_users()->attach($request->accessibleUsers);
 
-        $comment = Comment::create([
-            'text' => $request->comment,
-            'user_id' => Auth::id(),
-            'project_file_id' => $projectFile->id
-        ]);
-        $projectFile->comments()->save($comment);
+        if($request->comment){
+            $comment = Comment::create([
+                'text' => $request->comment,
+                'user_id' => Auth::id(),
+                'project_file_id' => $projectFile->id
+            ]);
+            $projectFile->comments()->save($comment);
+        }
+
 
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt');
 

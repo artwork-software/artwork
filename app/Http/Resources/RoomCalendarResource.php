@@ -21,14 +21,7 @@ class RoomCalendarResource extends JsonResource
      */
     public function toArray($request)
     {
-        $requestedDay = Carbon::parse($request->query('wanted_day'));
-
-        /** @var \Illuminate\Database\Eloquent\Collection $events */
-        $events = $this->events()
-            /** @see \App\Builders\EventBuilder::visibleForUser() */
-            ->visibleForUser(Auth::user())
-            ->occursAt($requestedDay)
-            ->get();
+        $events = $this->events()->get();
 
         $historyArray = [];
         $historyComplete = $this->historyChanges()->all();

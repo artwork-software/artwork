@@ -210,7 +210,7 @@ const navigation = [
         svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg'
     },
-
+    /*
     {
         name: 'Finanzierungsquellen',
         href: route('money_sources.index'),
@@ -220,12 +220,13 @@ const navigation = [
     },
 
     {
-        name: 'Finanzierungsquellen',
+        name: 'Verträge',
         href: route('contracts.view.index'),
         route: ['/contracts/view'],
         svgSrc: '/Svgs/Sidebar/icon_contract.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg'
     }
+    */
 ]
 
 const userNavigation = [

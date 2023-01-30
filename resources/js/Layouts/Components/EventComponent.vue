@@ -247,28 +247,31 @@
                                   :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
                                 Bestehendes Projekt
                             </span>
-                            <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
-                                <input type="checkbox"
-                                       v-model="creatingProject"
-                                       :disabled="!canEdit"
-                                       id="project-toggle"
-                                       class="sr-only peer">
-                                <div class="w-9 h-5 bg-gray-200 rounded-full
+                            <div  v-if="this.$page.props.can.create_and_edit_projects">
+                                <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
+                                    <input type="checkbox"
+                                           v-model="creatingProject"
+                                           :disabled="!canEdit"
+                                           id="project-toggle"
+                                           class="sr-only peer">
+                                    <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
                             after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
-                                </div>
-                            </label>
-                            <span class="ml-4 text-sm"
-                                  :class="[creatingProject ? 'xsDark' : 'xsLight']">
+                                    </div>
+                                </label>
+                                <span class="ml-4 text-sm"
+                                      :class="[creatingProject ? 'xsDark' : 'xsLight']">
                                 Neues Projekt
                             </span>
-                            <div v-if="showHints" class="ml-3 flex">
-                                <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                <div class=" ml-1 my-auto hind">
-                                    Lege gleichzeitig ein neues Projekt an
+                                <div v-if="showHints" class="ml-3 flex">
+                                    <SvgCollection svgName="arrowLeft" class="mt-1"/>
+                                    <div class=" ml-1 my-auto hind">
+                                        Lege gleichzeitig ein neues Projekt an
+                                    </div>
                                 </div>
                             </div>
+
                         </div>
                         <inputComponent id="projectName" :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
 
@@ -532,7 +535,7 @@ export default {
 
     methods: {
         openModal() {
-            this.canEdit = (!this.event?.id) || this.event?.canEdit;
+            this.canEdit = (!this.event?.id) || this.event?.canEdit || this.$page.props.can.create_and_edit_projects;
             if (!this.event){
                 if(this.project){
                     this.selectedProject = {id: this.project.id, name: this.project.name};

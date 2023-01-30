@@ -509,10 +509,6 @@
         :description="this.confirmationDescription"
         @closed="afterConfirm"/>
 
-
-    <pre>
-        {{ budget.table }}
-    </pre>
 </template>
 
 <script>

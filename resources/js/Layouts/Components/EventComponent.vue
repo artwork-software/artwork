@@ -247,7 +247,7 @@
                                   :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
                                 Bestehendes Projekt
                             </span>
-                            <div  v-if="this.$page.props.can.create_and_edit_projects">
+                            <div class="flex" v-if="this.$page.props.can.create_and_edit_projects">
                                 <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
                                     <input type="checkbox"
                                            v-model="creatingProject"

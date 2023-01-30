@@ -32,6 +32,7 @@ class ContractUpdateRequest extends FormRequest
             'has_power_of_attorney',
             'is_freed',
             'currency',
+            'tasks'
         ]);
     }
 }

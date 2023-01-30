@@ -294,7 +294,7 @@
                 </div>
                 <div class="bg-backgroundGray -mx-12 pt-6 pb-12 mt-6">
                     <div class="px-12 w-full">
-                        <div class="xxsDarkBold flex items-center"
+                        <div class="xxsDarkBold flex items-center cursor-pointer"
                              @click="showExtraSettings = !showExtraSettings">
                             Weitere Angaben oder Aufgabe hinzufügen
                             <ChevronUpIcon v-if="showExtraSettings"
@@ -302,8 +302,8 @@
                             <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
                         </div>
                         <div v-if="showExtraSettings">
-                            <div class="flex items-center mb-2 mt-6">
-                                <div v-for="task in tasks">
+                            <div class="items-center mb-2 mt-4">
+                                <div v-for="task in tasks" class="mt-2">
                                     <input id="hasGroup" type="checkbox" v-model="task.checked"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <label for="hasGroup"
@@ -446,7 +446,13 @@ export default {
             this.closeModal()
         },
         addTask(task) {
-            this.tasks.push(task)
+            if(this.tasks) {
+                this.tasks.push(task)
+            }
+            else {
+                this.tasks = []
+                this.tasks.push(task)
+            }
         },
         updateContract() {
             this.contractForm.contract_partner = this.contractPartner;

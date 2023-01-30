@@ -35,7 +35,8 @@ class Task extends Model
         'checklist_id',
         'order',
         'user_id',
-        'done_at'
+        'done_at',
+        'contract_id'
     ];
 
     protected $casts = [
@@ -46,6 +47,11 @@ class Task extends Model
         'done_at',
         'deadline',
     ];
+
+    public function contract(): BelongsTo
+    {
+        return $this->belongsTo(Contract::class, 'contract_id');
+    }
 
     public function checklist(): BelongsTo
     {

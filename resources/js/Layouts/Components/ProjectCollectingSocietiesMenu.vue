@@ -3,7 +3,7 @@
         <ListboxButton
             class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4">
             <div v-if="copyright.collecting_society" class="flex-grow text-left">
-                {{ this.collectingSocieties.find(society => society.id === copyright.collecting_society.id) }}
+                {{copyright.collecting_society}}
             </div>
             <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
                 Verwertungsgesellschaft wählen*

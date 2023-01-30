@@ -23,6 +23,7 @@ return new class extends Migration
             $table->integer('order');
             $table->unsignedBigInteger('checklist_id')->nullable();
             $table->unsignedBigInteger('user_id')->nullable()->default(null);
+            $table->unsignedBigInteger('contract_id')->nullable()->default(null);
             $table->timestamps();
         });
     }

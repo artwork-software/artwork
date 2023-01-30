@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Task;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class ContractResource extends JsonResource
@@ -30,6 +31,7 @@ class ContractResource extends JsonResource
             'is_freed' => $this->is_freed,
             'description' => $this->description,
             'accessibleUsers' => UserIndexResource::collection($this->accessing_users)->resolve(),
+            'tasks' => Task::where('contract_id', $this->id)->get()
         ];
     }
 }

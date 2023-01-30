@@ -46,6 +46,11 @@ class Contract extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class);
+    }
+
     public function comments()
     {
         return $this->hasMany(Comment::class);

@@ -12,7 +12,7 @@
                 <div class="text-secondary w-full mt-2">Lege einen Kostenträger und Urheberregelungen für dein Projekt
                     fest.
                 </div>
-                <input :placeholder="copyright.name || 'Name des Kostenträgers'"
+                <input :placeholder="[copyright.name ? copyright.name : 'Name des Kostenträgers']"
                        id="title"
                        v-model="copyright.name"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>

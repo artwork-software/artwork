@@ -9,6 +9,8 @@ use App\Models\Comment;
 use App\Models\Contract;
 use App\Models\ContractModule;
 use App\Models\Project;
+use App\Models\Task;
+use App\Models\User;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -128,14 +130,7 @@ class ContractController extends Controller
             'type' => $request->type
         ]);
 
-        if ($request->comment) {
-            $comment = Comment::create([
-                'text' => $request->comment,
-                'user_id' => Auth::id(),
-                'project_file_id' => $contract->id
-            ]);
-            $contract->comments()->save($comment);
-        }
+        $this->store_contract_tasks_and_comment($request, $contract);
 
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
 
@@ -171,14 +166,7 @@ class ContractController extends Controller
 
         $contract->fill($request->data());
 
-        if ($request->comment) {
-            $comment = Comment::create([
-                'text' => $request->comment,
-                'user_id' => Auth::id(),
-                'project_file_id' => $contract->id
-            ]);
-            $contract->comments()->save($comment);
-        }
+        $this->store_contract_tasks_and_comment($request, $contract);
 
         if ($request->get('accessibleUsers')) {
             $contract->accessing_users()->sync(collect($request->accessibleUsers));
@@ -220,5 +208,41 @@ class ContractController extends Controller
     {
         $contract->delete();
         Redirect::back();
+    }
+
+    /**
+     * @param Request $request
+     * @param \Illuminate\Database\Eloquent\Model $contract
+     * @return void
+     */
+    public function store_contract_tasks_and_comment(Request $request, \Illuminate\Database\Eloquent\Model $contract): void
+    {
+        foreach ($request->tasks as $task) {
+            $task_obj = (object)$task;
+            $new_task = Task::create([
+                'name' => $task_obj->name,
+                'description' => $task_obj->description,
+                'deadline' => $task_obj->deadline,
+                'done' => false,
+                'contract_id' => $contract->id,
+                'order' => 1
+            ]);
+
+            foreach ($task_obj->assigned_users as $assigned_user) {
+                $user_obj = (object)$assigned_user;
+                $user = User::where('id', $user_obj->id)->first();
+                $new_task->task_users()->save($user);
+                $user->tasks()->save($new_task);
+            }
+        }
+
+        if ($request->comment) {
+            $comment = Comment::create([
+                'text' => $request->comment,
+                'user_id' => Auth::id(),
+                'project_file_id' => $contract->id
+            ]);
+            $contract->comments()->save($comment);
+        }
     }
 }

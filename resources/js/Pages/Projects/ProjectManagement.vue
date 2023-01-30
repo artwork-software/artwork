@@ -52,12 +52,12 @@
                                 <SearchIcon class="h-5 w-5" aria-hidden="true"/>
                             </div>
                             <div v-else class="flex items-center w-full w-64 mr-2">
-                                <inputComponent v-model="this.project_query" placeholder="Suche nach Projekten"/>
+                                <inputComponent v-model="project_search" placeholder="Suche nach Projekten"/>
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
                     </div>
-                    <div v-if="projects.length > 0 && project_query < 1" v-for="(project,index) in this.currentProjects"
+                    <div v-for="(project,index) in filteredProjects"
                          :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
@@ -259,7 +259,7 @@
 
                         </div>
                     </div>
-                    <div v-else v-for="(project,index) in project_search_results" :key="project.id"
+                    <div  v-for="(project,index) in project_search_results" :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-5 flex">
@@ -1173,6 +1173,12 @@ export default defineComponent({
                 {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
             ]
         },
+        filteredProjects() {
+            return this.projects.filter(project => {
+                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+            });
+        }
+
 
     },
     methods: {
@@ -1199,7 +1205,7 @@ export default defineComponent({
         },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
-            this.project_query = ''
+            this.project_search = '';
         },
         openAddProjectModal() {
             this.addingProject = true;
@@ -1296,22 +1302,6 @@ export default defineComponent({
 
     },
     watch: {
-        project_query: {
-            handler() {
-                if (this.project_query.length > 0) {
-                    axios.get('/projects/search', {
-                        params: {query: this.project_query}
-                    }).then(response => {
-                        if (this.projectFilter.name === 'Alle Projekte') {
-                            this.project_search_results = response.data
-                        } else {
-                            this.project_search_results = response.data.filter(project => project.curr_user_is_related === true)
-                        }
-                    })
-                }
-            },
-            deep: true
-        },
         projectGroup_query: {
             handler() {
                 if (this.projectGroup_query.length > 0) {
@@ -1327,6 +1317,7 @@ export default defineComponent({
     },
     data() {
         return {
+            project_search: '',
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
             projectGroup_search_results: [],

@@ -510,9 +510,6 @@
         @closed="afterConfirm"/>
 
 
-    <pre>
-        {{ budget.table }}
-    </pre>
 </template>
 
 <script>

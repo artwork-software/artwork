@@ -40,8 +40,6 @@ class CollisionService
                     ->where('end_time', '>=', $endDate)
                     ->where('room_id', '=', $request->roomId);
             })->where('room_id', '=', $request->roomId);
-
-        dd($events->count());
         return $events;
     }
 

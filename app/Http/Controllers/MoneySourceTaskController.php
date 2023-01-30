@@ -77,10 +77,14 @@ class MoneySourceTaskController extends Controller
      * @param  \App\Models\MoneySourceTask  $moneySourceTask
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, MoneySourceTask $moneySourceTask)
+    public function markAsDone(MoneySourceTask $moneySourceTask)
     {
-        $moneySourceTask->fill($request->task);
-        $moneySourceTask->save();
+        $moneySourceTask->update(['done' => true]);
+    }
+
+    public function markAsUnDone(MoneySourceTask $moneySourceTask)
+    {
+        $moneySourceTask->update(['done' => false]);
     }
 
     /**

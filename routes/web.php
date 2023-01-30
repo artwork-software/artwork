@@ -274,6 +274,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
+
     Route::get('/contracts', [ContractController::class, 'index'])->name('contracts.index');
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
@@ -287,7 +288,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
-    Route::patch('money_source/task/{moneySourceTask}/update', [\App\Http\Controllers\MoneySourceTaskController::class, 'update'])->name('money_source.task.update');
+    Route::patch('money_source/task/{moneySourceTask}/done', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsDone'])->name('money_source.task.done');
+    Route::patch('money_source/task/{moneySourceTask}/undone', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
+
+
     Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
 
     //Budget
@@ -303,8 +307,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/main-position/add', [ProjectController::class, 'addMainPosition'])->name('project.budget.main-position.add');
     Route::post('/project/budget/sub-position-row/add', [ProjectController::class, 'addSubPositionRow'])->name('project.budget.sub-position-row.add');
     Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
-    Route::post('/project/budget/cell/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
-    Route::delete('/project/budget/cell/comment/{cellComments}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+    Route::post('/project/budget/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
+    Route::delete('/project/budget/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+    Route::post('/project/budget/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
+    Route::patch('/project/budget/row/{row}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfRow'])->name('project.budget.row.commented');
+    Route::patch('/project/budget/cell/{columnCell}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfCell'])->name('project.budget.cell.commented');
+    Route::delete('/project/budget/row/comment/{rowComment}', [\App\Http\Controllers\RowCommentController::class, 'destroy'])->name('project.budget.row.comment.delete');
     Route::get('/project/budget/cell/comments', [\App\Http\Controllers\CellCommentsController::class, 'get'])->name('project.budget.cell.comment.get');
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
     Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
@@ -318,5 +326,24 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project/budget/verified/sub-position', [ProjectController::class, 'verifiedSubPosition'])->name('project.budget.verified.sub-position');
     Route::post('/project/budget/verified/take-back/position', [ProjectController::class, 'takeBackVerification'])->name('project.budget.take-back.verification');
     Route::post('/project/budget/verified/remove/position', [ProjectController::class, 'removeVerification'])->name('project.budget.remove.verification');
+
+
+    // Lock
+    Route::patch('/project/budget/lock/column', [ProjectController::class, 'lockColumn'])->name('project.budget.lock.column');
+    Route::patch('/project/budget/unlock/column', [ProjectController::class, 'unlockColumn'])->name('project.budget.unlock.column');
+
+    // fixed
+    Route::patch('/project/budget/fix/sub-position', [ProjectController::class, 'fixSubPosition'])->name('project.budget.fix.sub-position');
+    Route::patch('/project/budget/unfix/sub-position', [ProjectController::class, 'unfixSubPosition'])->name('project.budget.unfix.sub-position');
+    Route::patch('/project/budget/fix/main-position', [ProjectController::class, 'fixMainPosition'])->name('project.budget.fix.main-position');
+    Route::patch('/project/budget/unfix/main-position', [ProjectController::class, 'unfixMainPosition'])->name('project.budget.unfix.main-position');
+
+    Route::post('/project/budget/template/{table}/create', [\App\Http\Controllers\BudgetTemplateController::class, 'store'])->name('project.budget.template.create');
+    Route::post('/project/budget/template/{table}/use', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplate'])->name('project.budget.template.use');
+    Route::post('/project/budget/template/use/project', [\App\Http\Controllers\BudgetTemplateController::class, 'useTemplateFromProject'])->name('project.budget.template.project');
+    Route::patch('/project/{project}/budget/reset', [\App\Http\Controllers\ProjectController::class, 'resetTable'])->name('project.budget.reset.table');
+
+    // Templates
+    Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
 });
 

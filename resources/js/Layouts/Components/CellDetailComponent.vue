@@ -79,12 +79,14 @@
                              v-model="commentForm.description" rows="4"
                              class="resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 inputMain pt-3 mb-8 placeholder-secondary  w-full"/>
                         <div>
-                            <div class="my-6" v-for="comment in this.commentsToShow"
+
+                            <div class="my-6" v-for="comment in this.cell.comments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
                                     <div class="flex items-center">
-                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8" :width="8" ></NewUserToolTip>
+                                        <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
+                                                        :width="8"></NewUserToolTip>
                                         <div class="ml-2 text-secondary"
                                              :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
                                             {{ formatDate(comment.created_at) }}
@@ -172,6 +174,23 @@
                                        mode="modal"></AddButton>
                         </div>
                     </div>
+                    <div v-if="isExcludeTab">
+                        <h2 class="xsLight mb-2 mt-8">
+                            Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
+                            Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
+                            das Projektbudget haben.
+                        </h2>
+                        <div class="flex items-center justify-start my-6">
+                            <input v-model="isExcluded" type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto text-sm"> Ausklammern</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="updateCommentedStatus()" text="Speichern"
+                                       class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
+                        </div>
+                    </div>
                 </div>
             </div>
         </template>
@@ -229,6 +248,7 @@ export default {
             isLinkTab: false,
             hoveredBorder: false,
             refreshSumKey: 0,
+            isExcluded:this.cell.commented,
             cellComment: null,
             commentHovered: null,
             commentForm: useForm({
@@ -242,9 +262,7 @@ export default {
 
     emits: ['closed'],
 
-    watch: {
-
-    },
+    watch: {},
     computed: {
         tabs() {
             return [
@@ -253,19 +271,6 @@ export default {
                 {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                 {name: 'Verlinkung', href: '#', current: this.isLinkTab},
             ]
-        },
-        commentsToShow(){
-            let comments = this.cell.comments;
-            let commentsShow = []
-            comments.forEach((item) => {
-                commentsShow.push({
-                    id: item.id,
-                    user: JSON.parse(item.user),
-                    created_at: item.created_at,
-                    description: item.description
-                });
-            })
-            return commentsShow
         },
         calculationNames() {
             let calculations = this.cell.calculations;
@@ -318,7 +323,13 @@ export default {
     methods: {
         formatDate(date) {
             const dateFormate = new Date(date);
-            return dateFormate.toLocaleString('de-de',{year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'});
+            return dateFormate.toLocaleString('de-de', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         },
         openModal() {
         },
@@ -373,14 +384,25 @@ export default {
             this.closeModal(true);
         },
         deleteCommentFromCell(comment) {
-            //this.commentForm.delete(route('project.budget.cell.comment.delete'));
-            this.$inertia.delete(route('project.budget.cell.comment.delete', comment), {preserveState: true, preserveScroll: true});
+            this.$inertia.delete(route('project.budget.cell.comment.delete', {cellComment: comment.id}), {
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         addCommentToCell() {
-            this.commentForm.post(route('project.budget.cell.comment.store'));
+            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
+                preserveState: true,
+                preserveScroll: true
+            });
             this.commentForm.reset('description');
-            this.closeModal(true);
         },
+        updateCommentedStatus(){
+            this.$inertia.patch(route('project.budget.cell.commented',{columnCell:this.cell.id}), {
+                commented: this.isExcluded
+            },{preserveState: true,
+                preserveScroll: true});
+            this.closeModal(true);
+        }
     },
 }
 </script>

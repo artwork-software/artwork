@@ -7,6 +7,7 @@ class PermissionNameEnum
     public const PROJECT_VIEW = 'view projects';
     public const PROJECT_UPDATE = 'create and edit projects';
     public const PROJECT_ADMIN = 'admin projects';
+    public const PROJECT_MANAGEMENT = 'management projects';
     public const PROJECT_DELETE = 'delete projects';
     public const PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
     public const GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
@@ -30,4 +31,8 @@ class PermissionNameEnum
 
     public const EVENT_REQUEST = 'request room occupancy';
     public const EVENT_REQUEST_CONFIRM = 'view occupancy requests';
+
+    public const MONEY_SOURCE_EDIT_VIEW_ADD = 'view edit add money_sources';
+
+    public const CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';
 }

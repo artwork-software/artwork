@@ -4,7 +4,7 @@
         <img src="/Svgs/IconSvgs/sidebar_icon.svg"
              class="pl-2 pr-1 py-2 w-5 h-auto right-[26rem] bg-primary top-36" alt="sidenav_icon"
              :class="show ? 'fixed' : 'rotate-180 bg-primary absolute'"
-             @click="$emit('change')"/>
+             @click="$emit('toggle')"/>
             <div class="mt-32 ml-8 mr-8 text-secondary">
                 <slot></slot>
             </div>

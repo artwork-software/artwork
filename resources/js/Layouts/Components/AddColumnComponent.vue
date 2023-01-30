@@ -61,7 +61,7 @@
                                     <ListboxOptions
                                         class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="column in columns"
+                                                       v-for="column in table.columns.slice(3)"
                                                        :key="column.id"
                                                        :value="column"
                                                        v-slot="{ active, selected }">
@@ -112,7 +112,7 @@
                                     <ListboxOptions
                                         class="absolute w-72 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
-                                                       v-for="column in columns"
+                                                       v-for="column in table.columns.slice(3)"
                                                        :key="column.id"
                                                        :value="column"
                                                        v-slot="{ active, selected }">
@@ -188,7 +188,7 @@ export default {
         }
     },
 
-    props: ['columns', 'project'],
+    props: ['project', 'table'],
 
     emits: ['closed'],
 
@@ -203,10 +203,10 @@ export default {
         },
         addColumn(){
             if(this.selectedType === 'empty'){
-                this.$inertia.post(route('project.budget.column.add'),{column_type: this.selectedType, project_id: this.project.id});
+                this.$inertia.post(route('project.budget.column.add'),{column_type: this.selectedType, table_id: this.table.id});
             }else{
                 //selectedType can be 'sum' or 'difference'
-                this.$inertia.post(route('project.budget.column.add'),{first_column_id: this.selectedFirstColumn.id, second_column_id: this.selectedSecondColumn.id, column_type: this.selectedType, project_id: this.project.id});
+                this.$inertia.post(route('project.budget.column.add'),{first_column_id: this.selectedFirstColumn.id, second_column_id: this.selectedSecondColumn.id, column_type: this.selectedType, table_id: this.table.id});
             }
             this.closeModal(true);
         }

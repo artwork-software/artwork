@@ -13,15 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('column_sub_position_row', function (Blueprint $table) {
+        Schema::create('row_comments', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('column_id');
             $table->bigInteger('sub_position_row_id');
-            $table->string('value')->nullable();
-            $table->boolean('commented')->default(false);
-            $table->bigInteger('linked_money_source_id')->nullable();
-            $table->string('linked_type')->nullable();
-            $table->string('verified_value')->nullable();
+            $table->unsignedBigInteger('user_id');
+            $table->text('description');
             $table->timestamps();
         });
     }
@@ -33,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('column_subposition_row');
+        Schema::dropIfExists('row_comments');
     }
 };

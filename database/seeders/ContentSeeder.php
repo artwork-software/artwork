@@ -282,6 +282,8 @@ class ContentSeeder extends Seeder
             "user_id" => 1,
             "description" => "Projekt angelegt",
         ]);
+
+        $projectController->generateBasicBudgetValues($second_project);
     }
 
     private function seedCostCenters()

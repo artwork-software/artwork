@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellComment;
-use App\Models\ColumnCell;
+use App\Models\Table;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
-class CellCommentsController extends Controller
+class TableController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -33,18 +31,9 @@ class CellCommentsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
      */
-    public function store(Request $request, ColumnCell $columnCell): \Illuminate\Http\RedirectResponse
-    {
-        $columnCell->comments()->create([
-            'user_id' => Auth::id(),
-            'description' => $request->description
-        ]);
-
-        return back();
-    }
-
-    public function get(Request $request)
+    public function store(Request $request)
     {
         //
     }
@@ -52,10 +41,10 @@ class CellCommentsController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
-    public function show(CellComment $cellComments)
+    public function show(Table $table)
     {
         //
     }
@@ -63,10 +52,10 @@ class CellCommentsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
-    public function edit(CellComment $cellComments)
+    public function edit(Table $table)
     {
         //
     }
@@ -75,10 +64,10 @@ class CellCommentsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\Table  $table
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, CellComment $cellComments)
+    public function update(Request $request, Table $table)
     {
         //
     }
@@ -86,11 +75,11 @@ class CellCommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\Table  $table
+     * @return \Illuminate\Http\Response
      */
-    public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
+    public function destroy(Table $table)
     {
-        $cellComment->delete();
-        return back();
+        //
     }
 }

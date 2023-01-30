@@ -9,22 +9,37 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use function Clue\StreamFilter\fun;
 
+/**
+ * @property int $id
+ * @property int $project_id
+ * @property string $type
+ * @property int $position
+ * @property string $name
+ * @property string $is_verified
+ * @property boolean $is_fixed
+ */
 class MainPosition extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'table_id',
         'type',
         'name',
         'position',
-        'is_verified'
+        'is_verified',
+        'is_fixed'
+    ];
+
+    protected $casts = [
+        'is_fixed' => 'boolean',
     ];
 
     protected $appends = ['columnSums'];
 
-    public function project(): BelongsTo
+    public function table(): BelongsTo
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Table::class);
     }
 
     public function subPositions(): HasMany

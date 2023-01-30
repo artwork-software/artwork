@@ -1,0 +1,126 @@
+<template>
+    <jet-dialog-modal :show="true" @close="closeModal()">
+        <template #content>
+            <img alt="Vorlage einlesen" src="/Svgs/Overlays/illu_budget_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                   aria-hidden="true"/>
+            <div class="mx-4">
+                <!--   Heading   -->
+                <div>
+                    <h1 class="my-1 flex">
+                        <div class="flex-grow headline1">
+                            Aus Projekt einlesen
+                        </div>
+                    </h1>
+                    <h2 class="xsLight mb-2 mt-8">
+                        Um deine Arbeit einfacher zu machen, nutze eine bestehende Kalkulation aus einem anderen
+                        Projekt.
+                    </h2>
+                    <div v-if="selectedProject !== null" class="flex items-center my-3 xsDark">
+                        Aktuell gewählte Projekt-Vorlage: {{ this.selectedProject?.name }}
+                        <div v-if="this.selectedProject" class="flex items-center my-auto">
+                            <button type="button"
+                                    @click="selectedProject = null">
+                                <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center w-full mr-2">
+                        <div class="w-full">
+                            <inputComponent v-model="this.project_query" placeholder="Aus welchem Projekt?*"/>
+                            <div
+                                v-if="project_search_results.length > 0"
+                                class="bg-primary truncate sm:text-sm">
+                                <div v-for="(project, index) in project_search_results"
+                                     :key="index"
+                                     @click="this.selectedProject = project;"
+                                     class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                    {{ project.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center">
+                        <AddButton @click="useProjectBudgetAsTemplate()" :disabled="selectedProject === null"
+                                   :class="selectedProject === null ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
+                                   class="mt-8 py-3 flex" text="Kalkulation einlesen"
+                                   mode="modal"></AddButton>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </jet-dialog-modal>
+
+</template>
+
+<script>
+
+import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+
+
+import JetDialogModal from "@/Jetstream/DialogModal";
+import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
+import AddButton from "@/Layouts/Components/AddButton.vue";
+import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import {XCircleIcon} from "@heroicons/vue/solid";
+
+export default {
+    name: 'UseTemplateFromProjectBudgetComponent',
+
+    components: {
+        AddButton,
+        JetDialogModal,
+        XIcon,
+        CheckIcon,
+        ChevronDownIcon,
+        InputComponent,
+        XCircleIcon
+    },
+
+    data() {
+        return {
+            selectedProject: null,
+            project_query: '',
+            project_search_results: [],
+        }
+    },
+
+
+    props: ['projectId', 'templates'],
+
+    emits: ['closed'],
+
+    watch: {
+        project_query: {
+            handler() {
+                if (this.project_query.length > 0) {
+                    axios.get('/projects/search', {
+                        params: {query: this.project_query}
+                    }).then(response => {
+                        this.project_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        },
+    },
+
+    methods: {
+        openModal() {
+        },
+
+        closeModal(bool) {
+            this.$emit('closed', bool);
+        },
+        useProjectBudgetAsTemplate() {
+            this.$inertia.post(route('project.budget.template.project'), {
+                template_project_id: this.selectedProject.id,
+                project_id: this.projectId
+            });
+            this.closeModal(true);
+        }
+    },
+}
+</script>
+
+<style scoped></style>

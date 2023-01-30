@@ -45,6 +45,7 @@ import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
 import ContractFilter from "@/Layouts/Components/ContractFilter";
 import {Inertia} from "@inertiajs/inertia";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import {usePage} from "@inertiajs/inertia-vue3";
 
 export default {
     name: "ContractManagement",
@@ -68,6 +69,7 @@ export default {
         }
     },
     methods: {
+        usePage,
         async filterContracts(filters) {
             if(filters.costsFilter ||
                 filters.legalFormsFilter ||

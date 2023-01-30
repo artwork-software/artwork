@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Http\Requests\ChecklistUpdateRequest;
 use App\Http\Resources\ChecklistShowResource;
 use App\Models\Checklist;
@@ -87,7 +89,7 @@ class ChecklistController extends Controller
             ]);
         }
 
-        if (Auth::user()->can('update departments')) {
+        if (Auth::user()->can('update departments') && Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE)) {
             foreach ($template->departments as $department) {
                 if (! $project->departments->contains($department)) {
                     $project->departments()->attach($department);
@@ -129,7 +131,7 @@ class ChecklistController extends Controller
             ]);
         }
 
-        if (Auth::user()->can('update departments')) {
+        if (Auth::user()->can('update departments') && Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE)) {
             $checklist->departments()->sync(
                 collect($request->assigned_department_ids)
                     ->map(function ($department_id) {

@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CellComment;
-use App\Models\ColumnCell;
+use App\Models\RowComment;
+use App\Models\SubPositionRow;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class CellCommentsController extends Controller
+class RowCommentController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -33,10 +33,12 @@ class CellCommentsController extends Controller
      * Store a newly created resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function store(Request $request, ColumnCell $columnCell): \Illuminate\Http\RedirectResponse
+    public function store(Request $request, SubPositionRow $row)
     {
-        $columnCell->comments()->create([
+
+        $row->comments()->create([
             'user_id' => Auth::id(),
             'description' => $request->description
         ]);
@@ -44,18 +46,13 @@ class CellCommentsController extends Controller
         return back();
     }
 
-    public function get(Request $request)
-    {
-        //
-    }
-
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
-    public function show(CellComment $cellComments)
+    public function show(RowComment $rowComment)
     {
         //
     }
@@ -63,10 +60,10 @@ class CellCommentsController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
-    public function edit(CellComment $cellComments)
+    public function edit(RowComment $rowComment)
     {
         //
     }
@@ -75,10 +72,10 @@ class CellCommentsController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\RowComment  $rowComment
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, CellComment $cellComments)
+    public function update(Request $request, RowComment $rowComment)
     {
         //
     }
@@ -86,11 +83,12 @@ class CellCommentsController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\CellComment  $cellComments
+     * @param  \App\Models\RowComment  $rowComment
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function destroy(CellComment $cellComment): \Illuminate\Http\RedirectResponse
+    public function destroy(RowComment $rowComment)
     {
-        $cellComment->delete();
+        $rowComment->delete();
         return back();
     }
 }

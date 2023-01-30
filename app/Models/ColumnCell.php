@@ -16,10 +16,13 @@ class ColumnCell extends Model
         'value',
         'linked_money_source_id',
         'linked_type',
-        'calculations',
-        'verified_value'
+        'verified_value',
+        'commented'
     ];
 
+    protected $casts = [
+        'commented' => 'boolean'
+    ];
 
     protected $primaryKey = 'id';
 
@@ -37,7 +40,7 @@ class ColumnCell extends Model
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(CellComments::class, 'cell_id');
+        return $this->hasMany(CellComment::class);
     }
 
     public function calculations(): \Illuminate\Database\Eloquent\Relations\HasMany

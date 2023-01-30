@@ -41,7 +41,6 @@
                     <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
                         <div class="mr-2">
                             <input @click="updateTask(task)"
-                                   v-model="task.done"
                                    type="checkbox"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                         </div>
@@ -82,6 +81,7 @@ import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDelete
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 
 export default {
@@ -103,10 +103,12 @@ export default {
     methods: {
         updateTask(task){
 
-            const taskForm = useForm({
-                task
-            })
-            taskForm.patch(route('money_source.task.update', {moneySourceTask: task}), {preserveState: true} );
+            if(!task.done) {
+                Inertia.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true} );
+            } else {
+                Inertia.patch(route('money_source.task.undone', {moneySourceTask: task.id}), {}, {preserveState: true} );
+            }
+
         },
         openAddMoneySourceTask(){
             this.showMoneySourceTaskModal = true

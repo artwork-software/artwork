@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Enums\PermissionNameEnum;
 use App\Events\DepartmentUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreDepartmentRequest;
@@ -37,7 +38,11 @@ class DepartmentController extends Controller
 
     public function search(SearchRequest $request)
     {
-        $this->authorize('viewAny', Department::class);
+
+        //;
+        if(Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE)){
+            return;
+        }
 
         return Department::search($request->input('query'))->get()->map(fn ($department) => [
             'id' => $department->id,

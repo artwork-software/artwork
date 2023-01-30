@@ -13,12 +13,8 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('cell_comments', function (Blueprint $table) {
-            $table->id();
-            $table->bigInteger('column_cell_id');
-            $table->unsignedBigInteger('user_id');
-            $table->text('description');
-            $table->timestamps();
+        Schema::table('columns', function (Blueprint $table) {
+            $table->boolean('is_locked')->default(false);
         });
     }
 
@@ -29,6 +25,8 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('cell_comments');
+        Schema::table('columns', function (Blueprint $table) {
+            $table->dropColumn('is_locked');
+        });
     }
 };

@@ -13,8 +13,13 @@ class SubPositionRow extends Model
     use HasFactory;
 
     protected $fillable = [
+        'sub_position_id',
         'commented',
         'position'
+    ];
+
+    protected $casts = [
+        'commented' => 'boolean'
     ];
 
     public function subPosition(): BelongsTo
@@ -30,6 +35,10 @@ class SubPositionRow extends Model
 
     public function cells(){
         return $this->hasMany(ColumnCell::class);
+    }
+
+    public function comments(){
+        return $this->hasMany(RowComment::class);
     }
 
 }

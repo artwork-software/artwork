@@ -329,10 +329,10 @@
                 </div>
 
                 <div class="flex flex-wrap">
-                    <span class="mt-12 headline2 w-full" v-if="room.event_requests.length !== 0">
+                    <span class="mt-12 headline2 w-full" v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
                     Offene Belegungsanfragen
                     </span>
-                    <div v-for="eventRequest in room.event_requests" class="flex flex-wrap w-full items-center">
+                    <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
                         <div class="flex w-full items-center flex-wrap">
                             <div class="flex items-center w-full mt-8">
                                 <div class="flex items-center w-full">
@@ -944,6 +944,13 @@ export default {
             })
             return filters;
         },
+        requestsToShow: function () {
+            let requestsToShow;
+            if(this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin){
+                requestsToShow = this.room.event_requests
+            }
+            return requestsToShow
+        }
     },
     data() {
         return {

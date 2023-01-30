@@ -172,7 +172,7 @@
             :moneySources="this.moneySources"
             :moneySourceGroups="this.moneySourceGroups"
         />
-        <BaseSidenav :show="show" @change="this.show =! this.show">
+        <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks" :money_source="moneySource"></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>

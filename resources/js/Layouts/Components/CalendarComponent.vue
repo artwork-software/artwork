@@ -496,7 +496,7 @@
                                          v-for="user in event.projectLeaders?.slice(0,3)">
                                         <img :data-tooltip-target="user.id"
                                              :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                             class="rounded-full ring-2 ring-white object-cover"
+                                             class="ml-2 rounded-full ring-2 ring-white object-cover"
                                              :src="user.profile_photo_url"
                                              alt=""/>
                                         <UserTooltip :user="user"/>
@@ -507,7 +507,7 @@
                                                 <MenuButton class="flex rounded-full focus:outline-none">
                                                     <div
                                                         :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                        class="flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                        class="ml-2 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
                                                         <p class="">
                                                             +{{ event.projectLeaders.length - 3 }}
                                                         </p>
@@ -1132,7 +1132,7 @@ export default {
                 return;
             }
             const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar.scrollTo({top: 9 * 120, behavior: 'smooth'})
+            calendar?.scrollTo({top: 9 * 120, behavior: 'smooth'})
 
         },
         areChecked(array) {

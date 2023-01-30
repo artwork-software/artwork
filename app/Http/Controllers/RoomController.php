@@ -158,6 +158,8 @@ class RoomController extends Controller
      */
     public function update(Request $request, Room $room): RedirectResponse
     {
+        //dd($request->all());
+
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;
         $roomAdminsBefore = $room->room_admins()->get();

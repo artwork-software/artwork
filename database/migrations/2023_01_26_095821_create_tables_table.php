@@ -13,15 +13,11 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('columns', function (Blueprint $table) {
+        Schema::create('tables', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('table_id');
             $table->string('name')->nullable();
-            $table->string('subName')->nullable();
-            $table->string('type')->nullable();
-            $table->integer('linked_first_column')->nullable();
-            $table->integer('linked_second_column')->nullable();
-            $table->string('color')->default('whiteColumn');
+            $table->boolean('is_template')->default(false);
+            $table->bigInteger('project_id')->nullable();
             $table->timestamps();
         });
     }
@@ -33,6 +29,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('columns');
+        Schema::dropIfExists('tables');
     }
 };

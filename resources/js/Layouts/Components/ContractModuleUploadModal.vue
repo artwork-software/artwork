@@ -1,5 +1,5 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
+    <jet-dialog-modal :show="show" @close="closeModal" >
         <template #content>
             <img src="/Svgs/Overlays/illu_new_contract_module.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">

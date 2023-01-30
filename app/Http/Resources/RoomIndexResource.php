@@ -43,6 +43,9 @@ class RoomIndexResource extends JsonResource
             'end_date' => Carbon::parse($this->end_date)->format('d.m.Y'),
             'end_date_dt_local' => Carbon::parse($this->end_date)->toDateString(),
             'room_admins' => UserIconResource::collection($this->room_admins)->resolve(),
+            'room_categories' => $this->categories()->get(),
+            'room_attributes' => $this->attributes,
+            'adjoining_rooms' => $this->adjoining_rooms()->get()
         ];
     }
 }

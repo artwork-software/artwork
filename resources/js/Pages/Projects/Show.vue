@@ -7,7 +7,7 @@
                         <span v-if="project.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
-                        {{ project.name }}
+                        {{ project?.name }}
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
@@ -100,7 +100,7 @@
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
                         </span>
                         Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
-                        {{ currentGroup.name }}</a>
+                        {{ currentGroup?.name }}</a>
                     </div>
                 </div>
 
@@ -257,10 +257,10 @@
                 <div class="hidden sm:block">
                     <div class="border-gray-200">
                         <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8" aria-label="Tabs">
-                            <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab.name"
+                            <a @click="changeTab(tab)" v-for="tab in tabs" href="#" :key="tab?.name"
                                :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
                                :aria-current="tab.current ? 'page' : undefined">
-                                {{ tab.name }}
+                                {{ tab?.name }}
                             </a>
                         </nav>
                     </div>
@@ -1364,7 +1364,7 @@
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
                             <div class="flex justify-between items-center ml-16 my-1.5 h-5">
-                                <div class="flex items-center justify-start">
+                                <div class="flex items-center justify-start" v-if="this.$page.props.can.project_management">
                                     <input v-model="user.is_admin"
                                            type="checkbox"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>

@@ -31,30 +31,34 @@
                     <div v-if="isCalculateTab">
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
-                            <div class="h-1.5 my-2 bg-silverGray"/>
-                            <div class="flex space-x-4 mb-3">
-                                <div class="w-1/2">
-                                    <input type="text"
-                                           v-model="calculation.name"
-                                           placeholder="Name"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <div @mouseover="calculationHovered = calculation.id"
+                                 @mouseout="calculationHovered = null">
+                                <div class="h-1.5 my-2 bg-silverGray"
+                                />
+                                <div class="flex space-x-4 mb-3">
+                                    <div class="w-1/2">
+                                        <input type="text"
+                                               v-model="calculation.name"
+                                               placeholder="Name"
+                                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <div class="w-1/2">
+                                        <input type="text" @focusout="this.refreshSumKey++"
+                                               v-model="calculation.value"
+                                               placeholder="Wert"
+                                               class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <button v-show="calculationHovered === calculation.id" type="button"
+                                            @click="deleteCalculationFromCell(calculation)">
+                                        <span class="sr-only">Rechnung von Zelle entfernen</span>
+                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                    </button>
                                 </div>
-                                <div class="w-1/2">
-                                    <input type="text" @focusout="this.refreshSumKey++"
-                                           v-model="calculation.value"
-                                           placeholder="Wert"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <button v-show="calculationHovered === calculation.id" type="button"
-                                        @click="deleteCalculationFromCell(calculation)">
-                                    <span class="sr-only">Rechnung von Zelle entfernen</span>
-                                    <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
-                                </button>
+                                <textarea placeholder="Kommentar"
+                                          v-model="calculation.description"
+                                          rows="4"
+                                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
-                            <textarea placeholder="Kommentar"
-                                      v-model="calculation.description"
-                                      rows="4"
-                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div @click="addCalculation(cell.id)"
                              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
@@ -253,7 +257,7 @@ export default {
             isLinkTab: false,
             hoveredBorder: false,
             refreshSumKey: 0,
-            isExcluded:this.cell.commented,
+            isExcluded: this.cell.commented,
             cellComment: null,
             commentHovered: null,
             calculationHovered: null,
@@ -271,14 +275,14 @@ export default {
     watch: {},
     computed: {
         tabs() {
-            if(this.cell.column.type === 'empty'){
+            if (this.cell.column.type === 'empty') {
                 return [
                     {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
                     {name: 'Kommentar', href: '#', current: this.isCommentTab},
                     {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                     {name: 'Verlinkung', href: '#', current: this.isLinkTab},
                 ]
-            }else{
+            } else {
                 return [
                     {name: 'Kommentar', href: '#', current: this.isCommentTab},
                     {name: 'Verlinkung', href: '#', current: this.isLinkTab},
@@ -375,21 +379,26 @@ export default {
                 preserveScroll: true
             });
         },
-        deleteCalculationFromCell(calculation){
-
+        deleteCalculationFromCell(calculation) {
+            this.$inertia.delete(route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}), {
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         addCommentToCell() {
-            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
+            this.commentForm.post(route('project.budget.cell.comment.store', {columnCell: this.cell.id}), {
                 preserveState: true,
                 preserveScroll: true
             });
             this.commentForm.reset('description');
         },
-        updateCommentedStatus(){
-            this.$inertia.patch(route('project.budget.cell.commented',{columnCell:this.cell.id}), {
+        updateCommentedStatus() {
+            this.$inertia.patch(route('project.budget.cell.commented', {columnCell: this.cell.id}), {
                 commented: this.isExcluded
-            },{preserveState: true,
-                preserveScroll: true});
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            });
             this.closeModal(true);
         }
     },

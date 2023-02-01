@@ -502,6 +502,7 @@
         :moneySources="moneySources"
         @closed="closeRowDetailModal()"
     />
+    <!-- Nachfrage-Modal bei Löschfunktionalitäten -->
     <confirmation-component
         v-if="showDeleteModal"
         confirm="Löschen"

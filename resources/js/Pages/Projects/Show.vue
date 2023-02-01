@@ -1723,7 +1723,7 @@
 
         </jet-dialog-modal>
 
-        <BaseSidenav :show="show" @change="this.show =! this.show">
+        <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
                 :project="project"
                 :cost-center="project.cost_center"

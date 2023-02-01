@@ -219,10 +219,15 @@
                                 class="my-4 h-6 flex items-center justify-end"
                                 @click="cell.clicked = !cell.clicked"
                                 v-if="!cell.clicked">
-                                <div class="pr-2">
-                                    <img v-if="cell.linked_money_source_id !== null"
-                                         src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                         class="h-6 w-6"/>
+                                <div class="pr-2 flex">
+                                    <div v-if="cell.linked_money_source_id !== null">
+                                        <Link
+                                            :href="route('money_sources.show',{moneySource: cell.linked_money_source_id})">
+                                            <img
+                                                src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
+                                                class="h-6 w-6 -mt-1" alt=""/>
+                                        </Link>
+                                    </div>
                                     {{ cell.value }}
                                 </div>
                             </div>
@@ -241,16 +246,24 @@
                             </div>
                             <div
                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                class="my-4 h-6 flex items-center"
+                                class="my-4 h-6 flex items-center justify-end text-right"
                                 @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                 v-else>
-                                <img v-if="cell.linked_money_source_id !== null"
-                                     src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                     class="h-6 w-6"/>
-                                {{ cell.value }}
+                                <div class="text-right text-red-500 flex items-center">
+{{cell.comments}}
+                                    <div v-if="cell.linked_money_source_id !== null">
+                                        <Link
+                                            :href="route('money_sources.show',{moneySource: cell.linked_money_source_id})">
+                                            <img
+                                                src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
+                                                class="h-6 w-6 -mt-1" alt=""/>
+                                        </Link>
+                                    </div>
+                                    {{ cell.value }}
+                                </div>
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
 
                         </td>
@@ -322,7 +335,7 @@ import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@her
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Inertia} from "@inertiajs/inertia";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 
@@ -342,10 +355,11 @@ export default {
         MenuItem,
         MenuItems,
         MenuButton,
-        ConfirmationComponent
+        ConfirmationComponent,
+        Link
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project', 'budget'],
-    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
+    emits: ['openDeleteModal', 'openVerifiedModal', 'openRowDetailModal'],
     data() {
         return {
             showMenu: null,
@@ -461,8 +475,8 @@ export default {
                 preserveScroll: true
             });
         },
-        openRowDetailModal(row){
-          this.$emit('openRowDetailModal',row)
+        openRowDetailModal(row) {
+            this.$emit('openRowDetailModal', row)
         },
         openCellDetailModal(column) {
             this.$emit('openCellDetailModal', column)

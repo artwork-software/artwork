@@ -51,7 +51,7 @@
                                 </a>
                             </MenuItem>
                             <MenuItem v-slot="{ active }">
-                                <a @click="resetBudgetTable"
+                                <a @click="openResetConfirmation()"
                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                     <TrashIcon
                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -587,6 +587,7 @@ export default {
             showUseTemplateModal: false,
             showUseTemplateFromProjectModal: false,
             showAddBudgetTemplateModal: false,
+            resetWanted:false,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
@@ -892,9 +893,17 @@ export default {
             this.showDeleteModal = true;
         },
         afterConfirm(bool) {
-            if (!bool) return this.showDeleteModal = false;
+            if (!bool){
+                this.resetWanted = false;
+                return this.showDeleteModal = false;
+            }
+            if(this.resetWanted === true)
+            {
+                this.resetBudgetTable();
+            }else{
+                this.deletePosition();
+            }
 
-            this.deletePosition();
 
         },
         deletePosition() {
@@ -994,8 +1003,16 @@ export default {
                 columnId: columnId
             });
         },
+        openResetConfirmation(){
+            this.confirmationTitle = 'Budgettabellen zurücksetzen';
+            this.confirmationDescription = 'Bist du sicher, dass du diese Tabellen zurücksetzen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+            this.resetWanted = true;
+            this.showDeleteModal = true;
+        },
         resetBudgetTable(){
             this.$inertia.patch(this.route('project.budget.reset.table', this.project.id))
+            this.resetWanted= false;
+            this.showDeleteModal = false;
         }
     },
 }

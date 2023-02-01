@@ -1076,10 +1076,10 @@ class ProjectController extends Controller
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column',
                     ])
                     ->first(),
-                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
+                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {

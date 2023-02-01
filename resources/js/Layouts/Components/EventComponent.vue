@@ -535,7 +535,7 @@ export default {
     computed:{
         roomAdminIds(){
             let adminIds = []
-            this.selectedRoom.room_admins.forEach(admin => {
+            this.selectedRoom?.room_admins?.forEach(admin => {
                 adminIds.push(admin.id);
             })
             return adminIds;

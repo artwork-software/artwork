@@ -127,7 +127,7 @@ class RoomController extends Controller
     public function show(Room $room, Request $request)
     {
         $room->load('creator');
-        $projects = Project::query()->with(['adminUsers', 'managerUsers'])->get();
+        $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),

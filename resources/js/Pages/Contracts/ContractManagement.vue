@@ -10,7 +10,7 @@
                                     <h2 class="headline1">Verträge</h2>
                                     <ContractFilter class="ml-auto" @filter="filterContracts" />
                                 </div>
-                                <div class="flex w-full mb-4">
+                                <div class="flex w-full mb-4" >
                                     <div v-for="filter in filters.costsFilter">
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
@@ -21,9 +21,12 @@
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
+                                </div>
+                                <div v-else>
+                                    <p>Bisher wurden für dich noch keine Verträge freigegeben.</p>
                                 </div>
                             </div>
                         </div>
@@ -31,7 +34,7 @@
                 </div>
             </div>
         </div>
-        <BaseSidenav :show="show" @change="this.show =! this.show">
+        <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
     </app-layout>

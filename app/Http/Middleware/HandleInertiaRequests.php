@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
 use App\Models\GlobalNotification;
 use Illuminate\Http\Request;
@@ -85,7 +86,30 @@ class HandleInertiaRequests extends Middleware
             'roles' => Auth::guest() ? [] : Auth::user()->getRoleNames(),
             'permissions' => Auth::guest() ? [] : Auth::user()->getPermissionNames(),
             'can' => [
-                'view_projects' => Auth::guest() ? false : Auth::user()->can("view projects"),
+                // Projects
+                'view_projects' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_VIEW->value),
+                'project_management' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+                'own_projects' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value),
+                'edit_projects' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::WRITE_PROJECTS->value),
+
+                // ROOM
+                'request_room' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::EVENT_REQUEST->value),
+                'read_room_request_details' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value),
+                'confirm_room_request' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_REQUEST_CONFIRM->value),
+
+                // Docs & Budget
+                'contract_upload_edit' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),
+                'money_source_edit_add' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value),
+
+                // Systems
+                'add_user' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::USER_UPDATE->value),
+                'edit_teams' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::TEAM_UPDATE->value),
+                'edit_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SETTINGS_UPDATE->value),
+                'edit_room_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_ADMIN->value),
+                'edit_checklist_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value),
+
+                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
+                /*'view_projects' => Auth::guest() ? false : Auth::user()->can("view projects"),
                 'create_and_edit_projects' => Auth::guest() ? false : Auth::user()->can("create and edit projects"),
                 'admin_projects' => Auth::guest() ? false : Auth::user()->can("admin projects"),
                 'delete_projects' => Auth::guest() ? false : Auth::user()->can("delete projects"),
@@ -99,11 +123,14 @@ class HandleInertiaRequests extends Middleware
                 'request_room_occupancy' => Auth::guest() ? false : Auth::user()->can("request room occupancy"),
                 'view_occupancy_requests' => Auth::guest() ? false : Auth::user()->can("view occupancy requests"),
                 'admin_globalNotification' => Auth::guest() ? false : Auth::user()->can("admin globalNotification"),
-                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
-                'project_management' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT),
-                'contract_edit_upload' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD),
+
+                'project_management' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
+                'contract_edit_upload' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),*/
             ],
-            'is_admin' => Auth::guest() ? false : Auth::user()->hasRole('admin'),
+            'is_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value),
+            'is_budget_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::BUDGET_ADMIN->value),
+            'is_contract_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::CONTRACT_ADMIN->value),
+            'is_money_source_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value),
             'small_logo' => $this->small_logo(),
             'big_logo' => $this->big_logo(),
             'banner' => $this->banner(),

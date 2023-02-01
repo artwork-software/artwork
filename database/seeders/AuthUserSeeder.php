@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\NotificationConstEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\Checklist;
 use App\Models\Department;
 use App\Models\GeneralSettings;
@@ -57,7 +58,10 @@ class AuthUserSeeder extends Seeder
 
         }
 
-        $user->assignRole('admin');
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
+        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
+        $user->assignRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value);
 
         $user = User::create([
             'first_name' => 'Lisa',
@@ -85,7 +89,6 @@ class AuthUserSeeder extends Seeder
 
         }
 
-        $user->assignRole('user');
 
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;

@@ -53,14 +53,21 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
+
+    // TOOL SETTING ROUTE
+    Route::group(['prefix' => 'tool'], function(){
+        Route::get('/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
+        Route::put('/settings',             [AppController::class, 'updateTool'])->name('tool.update');
+        Route::put('/settings/email',       [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
+    });
+
+
+
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
     Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
-    Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
-    Route::put('/tool/settings', [AppController::class, 'updateTool'])->name('tool.update');
-    Route::put('/tool/settings/email', [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');

@@ -18,8 +18,8 @@ abstract class TestCase extends BaseTestCase
     public function adminUser(User $user = null): User
     {
         $user = $user ?? User::factory()->create();
-        Role::firstOrCreate(['name' => RoleNameEnum::ADMIN]);
-        $user->assignRole(RoleNameEnum::ADMIN);
+        Role::firstOrCreate(['name' => RoleNameEnum::ARTWORK_ADMIN->value]);
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
 
         return $user;
     }

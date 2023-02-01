@@ -17,8 +17,9 @@ return new class extends Migration
             $table->id();
             $table->integer('project_id');
             $table->integer('user_id');
-            $table->boolean('is_admin')->default(false);
+            $table->boolean('access_budget')->default(false);
             $table->boolean('is_manager')->default(false);
+            $table->boolean('can_write')->default(false);
             $table->timestamps();
         });
     }

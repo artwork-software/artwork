@@ -19,7 +19,7 @@ class EventPolicy
 
     public function update(User $user, Event $event)
     {
-        if ($user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN])) {
+        if ($user->canAny([PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
             return true;
         }
 
@@ -28,7 +28,7 @@ class EventPolicy
 
     public function delete(User $user, Event $event)
     {
-        if ($user->canAny([PermissionNameEnum::PROJECT_UPDATE, PermissionNameEnum::PROJECT_ADMIN])) {
+        if ($user->canAny([PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
             return true;
         }
         return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() || $event->creator?->id === $user->id ?? false;

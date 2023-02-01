@@ -15,7 +15,7 @@ class CreateAdminTest extends TestCase
 
     public function testAbortsInvalidTokens()
     {
-        Role::firstOrCreate(['name' => RoleNameEnum::ADMIN]);
+        Role::firstOrCreate(['name' => RoleNameEnum::ARTWORK_ADMIN->value]);
 
         $this->post('/setup', [
             'first_name' => 'Benjamin',
@@ -36,7 +36,7 @@ class CreateAdminTest extends TestCase
         /** @var User $user */
         $user = User::where('email', 'admin@example.com',)->first();
 
-        $this->assertTrue($user->refresh()->hasRole(RoleNameEnum::ADMIN));
+        $this->assertTrue($user->refresh()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value));
         $this->assertTrue(app(GeneralSettings::class)->setup_finished);
     }
 }

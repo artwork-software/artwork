@@ -2,37 +2,45 @@
 
 namespace App\Enums;
 
-class PermissionNameEnum
+enum PermissionNameEnum : string
 {
-    public const PROJECT_VIEW = 'view projects';
-    public const PROJECT_UPDATE = 'create and edit projects';
-    public const PROJECT_ADMIN = 'admin projects';
-    public const PROJECT_MANAGEMENT = 'management projects';
-    public const PROJECT_DELETE = 'delete projects';
-    public const PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
-    public const GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
+    // New Permissions
 
-    public const SETTINGS_UPDATE = 'change tool settings';
 
-    public const DEPARTMENT_UPDATE = 'update departments';
+    // Projects
+    case PROJECT_MANAGEMENT = 'management projects';
+    case PROJECT_VIEW = 'view projects';
+    case ADD_EDIT_OWN_PROJECT = 'create and edit own project';
+    case WRITE_PROJECTS = 'write projects';
 
-    public const USER_UPDATE = 'usermanagement';
 
-    public const TEAM_UPDATE = 'teammanagement';
+    // ROOM
+    case EVENT_REQUEST = 'request room occupancy';
+    case ROOM_REQUEST_READING_DETAILS = 'read details room request';
+    case ROOM_REQUEST_CONFIRM = 'confirm prioritize edit room requests';
 
-    public const EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
+    // Docs & Budget
+    case CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';
+    case MONEY_SOURCE_EDIT_VIEW_ADD = 'view edit add money_sources';
 
-    public const CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
-    public const CHECKLIST_UPDATE = 'update checklists';
-    public const CHECKLIST_VIEW = 'view checklists';
-    public const CHECKLIST_DELETE = 'delete checklists';
+    // System
+    case USER_UPDATE = 'usermanagement';
+    case CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
+    case TEAM_UPDATE = 'teammanagement';
+    case DEPARTMENT_UPDATE = 'update departments';
+    case ROOM_ADMIN = 'admin rooms';
+    case SETTINGS_UPDATE = 'change tool settings';
 
-    public const ROOM_ADMIN = 'admin rooms';
 
-    public const EVENT_REQUEST = 'request room occupancy';
-    public const EVENT_REQUEST_CONFIRM = 'view occupancy requests';
+    // deleted
+    case PROJECT_DELETE = 'delete projects';
+    case EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
+    case PROJECT_ADMIN = 'admin projects';
+    case CHECKLIST_UPDATE = 'update checklists';
 
-    public const MONEY_SOURCE_EDIT_VIEW_ADD = 'view edit add money_sources';
-
-    public const CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';
+    case CHECKLIST_VIEW = 'view checklists';
+    case PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
+    case CHECKLIST_DELETE = 'delete checklists';
+    case GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
+    case PROJECT_UPDATE = 'create and edit projects';
 }

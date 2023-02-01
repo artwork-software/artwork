@@ -2,6 +2,7 @@
 
 namespace App\Builders;
 
+use App\Enums\RoleNameEnum;
 use App\Models\User;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -53,7 +54,7 @@ class EventBuilder extends Builder
 
     public function visibleForUser(User $user): self
     {
-        if ($user->can("admin rooms") || $user->hasRole('admin')) {
+        if ($user->can("admin rooms") || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             return $this;
         }
 

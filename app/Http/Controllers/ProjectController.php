@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
@@ -13,6 +15,7 @@ use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
+use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
 use App\Models\CellCalculations;
 use App\Models\CellComment;
@@ -59,7 +62,6 @@ class ProjectController extends Controller
 
     public function __construct()
     {
-        $this->authorizeResource(Project::class);
 
         // init notification controller
         $this->notificationController = new NotificationController();
@@ -79,7 +81,7 @@ class ProjectController extends Controller
         $projects = Project::query()
             ->with([
                 'checklists.tasks.checklist.project',
-                'adminUsers',
+                'access_budget',
                 'categories',
                 'checklists.departments',
                 'comments.user',
@@ -90,6 +92,7 @@ class ProjectController extends Controller
                 'project_histories.user',
                 'sectors',
                 'users.departments',
+                'writeUsers'
             ])
             ->get();
 
@@ -122,12 +125,13 @@ class ProjectController extends Controller
 
     public function search_departments_and_users(SearchRequest $request): array
     {
-        $this->authorize('viewAny', Department::class);
-        $this->authorize('viewAny', User::class);
+        // TODO: Hier bitte gucken wie man die Policy wieder zum laufen bekommt
+        /*$this->authorize('viewAny', Department::class);
+        $this->authorize('viewAny', User::class);*/
 
         return [
             'departments' => Department::search($request->input('query'))->get(),
-            'users' => User::search($request->input('query'))->get()
+            'users' => UserIndexResource::collection(User::search($request->input('query'))->get())
         ];
     }
 
@@ -169,11 +173,7 @@ class ProjectController extends Controller
     public function store(StoreProjectRequest $request)
     {
 
-        if (!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
-        }
-
-        if (!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects'])) {
+        if (!Auth::user()->canAny([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
 
@@ -188,7 +188,7 @@ class ProjectController extends Controller
             'cost_center' => $request->cost_center,
         ]);
 
-        $project->users()->save(Auth::user(), ['is_admin' => true, 'is_manager' => false]);
+        $project->users()->save(Auth::user(), ['access_budget' => true, 'is_manager' => false, 'can_write' => true]);
 
         if ($request->isGroup) {
             $project->is_group = true;
@@ -972,7 +972,7 @@ class ProjectController extends Controller
     public function show(Project $project, Request $request)
     {
         $project->load([
-            'adminUsers',
+            'access_budget',
             'categories',
             'checklists.departments',
             'checklists.tasks.checklist.project',
@@ -981,6 +981,7 @@ class ProjectController extends Controller
             'departments.users.departments',
             'genres',
             'managerUsers',
+            'writeUsers',
             'project_files',
             'contracts',
             'copyright',
@@ -1147,11 +1148,15 @@ class ProjectController extends Controller
     {
         $update_properties = $request->only('name', 'description', 'number_of_participants');
 
-        // authorization
-        if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
-            && $project->adminUsers->pluck('id')->doesntContain(Auth::id())
-            && $project->managerUsers->pluck('id')->doesntContain(Auth::id())) {
-            return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+        if(!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)){
+            // authorization
+            if ((!Auth::user()->canAny([PermissionNameEnum::PROJECT_MANAGEMENT->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value]))
+                && $project->access_budget->pluck('id')->doesntContain(Auth::id())
+                && $project->managerUsers->pluck('id')->doesntContain(Auth::id())
+                && $project->writeUsers->pluck('id')->doesntContain(Auth::id())
+            ) {
+                return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
+            }
         }
 
         if ($request->selectedGroup === null) {
@@ -1163,7 +1168,7 @@ class ProjectController extends Controller
         }
 
 
-        $projectAdminsBefore = $project->adminUsers()->get();
+        $projectAdminsBefore = $project->access_budget()->get();
         $projectManagerBefore = $project->managerUsers()->get();
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
@@ -1191,7 +1196,7 @@ class ProjectController extends Controller
         $newProjectCategories = $project->categories()->get();
 
         $newProjectDepartments = $project->departments()->get();
-        $projectAdminsAfter = $project->adminUsers()->get();
+        $projectAdminsAfter = $project->access_budget()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
         $newProjectGenres = $project->genres()->get();
@@ -1524,10 +1529,11 @@ class ProjectController extends Controller
     public function duplicate(Project $project, HistoryService $historyService)
     {
         // authorization
-        if ($project->users->isNotEmpty()) {
-            if ((!Auth::user()->canAny(['update users', 'create and edit projects', 'admin projects']))
-                && $project->adminUsers->pluck('id')->doesntContain(Auth::id())
-                && $project->managerUsers->pluck('id')->doesntContain(Auth::id())) {
+        if ($project->users->isNotEmpty() || !Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
+            if ((!Auth::user()->canAny([PermissionNameEnum::PROJECT_MANAGEMENT->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value]))
+                && $project->access_budget->pluck('id')->doesntContain(Auth::id())
+                && $project->managerUsers->pluck('id')->doesntContain(Auth::id())
+            ) {
                 return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
             }
         }
@@ -1559,7 +1565,7 @@ class ProjectController extends Controller
         });
 
 
-        $newProject->users()->attach([Auth::id() => ['is_admin' => true]]);
+        $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));
         $newProject->sectors()->sync($project->sectors->pluck('id'));
         $newProject->genres()->sync($project->genres->pluck('id'));

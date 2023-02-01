@@ -2,8 +2,14 @@
 
 namespace App\Enums;
 
-class RoleNameEnum
+enum RoleNameEnum: string
 {
-    public const ADMIN = 'admin';
-    public const USER = 'user';
+
+    // Gobale
+    case ARTWORK_ADMIN = 'artwork admin';
+    case BUDGET_ADMIN = 'budget admin';
+    case CONTRACT_ADMIN = 'contract admin';
+    case MONEY_SOURCE_ADMIN = 'money source admin';
+
+    case USER = 'user';
 }

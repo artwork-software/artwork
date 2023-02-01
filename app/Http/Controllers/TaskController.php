@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
+use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
@@ -75,8 +76,7 @@ class TaskController extends Controller
         $created = false;
         $user = User::where('id', Auth::id())->first();
 
-        if (Auth::user()->hasRole('admin')
-            || $user->projects()->find($checklist->project->id)->pivot->is_admin == 1
+        if (Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)
             || $user->projects()->find($checklist->project->id)->pivot->is_manager == 1
         ) {
             $authorized = true;

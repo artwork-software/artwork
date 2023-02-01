@@ -4,9 +4,7 @@
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
                 <div class="ml-12 mt-10">
-                    <h2 class="headline1 flex mb-4">Hallo {{
-                            $page.props.user.first_name
-                                                                                       }}</h2>
+                    <h2 class="headline1 flex mb-4">Hallo {{ $page.props.user.first_name }}</h2>
                     <p class="xsLight">
                         Herzlich willkommen im artwork! Um dich hier gut zurechtzufinden, haben wir die Hilfetexte
                         aktiviert.<br/>

@@ -52,7 +52,7 @@ class AppController extends Controller
 
     public function updateTool(Request $request, GeneralSettings $settings)
     {
-        if (! Auth::user()->can(PermissionNameEnum::SETTINGS_UPDATE)) {
+        if (! Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             throw new MethodNotAllowedHttpException(['update'], 'Fehlende Berechtigung zum Ändern der Seiten Einstellungen');
         }
 
@@ -93,7 +93,7 @@ class AppController extends Controller
 
         }
 
-        $user->assignRole(RoleNameEnum::ADMIN);
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
 
         $guard->login($user);
 
@@ -106,7 +106,7 @@ class AppController extends Controller
 
     public function updateEmailSettings(Request $request, GeneralSettings $settings)
     {
-        if (! Auth::user()->hasRole(RoleNameEnum::ADMIN)) {
+        if (! Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             throw new MethodNotAllowedHttpException(['update'], 'Nur Admins können Email Einstellungen ändern');
         }
 

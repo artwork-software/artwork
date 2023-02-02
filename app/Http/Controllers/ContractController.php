@@ -217,22 +217,30 @@ class ContractController extends Controller
      */
     public function store_contract_tasks_and_comment(Request $request, \Illuminate\Database\Eloquent\Model $contract): void
     {
-        foreach ($request->tasks as $task) {
-            $task_obj = (object)$task;
-            $new_task = Task::create([
-                'name' => $task_obj->name,
-                'description' => $task_obj->description,
-                'deadline' => $task_obj->deadline,
-                'done' => false,
-                'contract_id' => $contract->id,
-                'order' => 1
-            ]);
+        foreach ($request->tasks as $task_from_req) {
+            $task_obj = (object)$task_from_req;
+            if(isset($task_obj->new)) {
+                $task = Task::create([
+                    'name' => $task_obj->name,
+                    'description' => $task_obj->description,
+                    'deadline' => $task_obj->deadline,
+                    'done' => false,
+                    'contract_id' => $contract->id,
+                    'order' => 1
+                ]);
+            }
+            else {
+                //dd($task_obj);
+                $task = Task::where('id', $task_obj->id)->update(['done' => $task_obj->done]);
+            }
 
-            foreach ($task_obj->assigned_users as $assigned_user) {
-                $user_obj = (object)$assigned_user;
-                $user = User::where('id', $user_obj->id)->first();
-                $new_task->task_users()->save($user);
-                $user->tasks()->save($new_task);
+            if(isset($task_obj->assigned_users)) {
+                foreach ($task_obj->assigned_users as $assigned_user) {
+                    $user_obj = (object)$assigned_user;
+                    $user = User::where('id', $user_obj->id)->first();
+                    $task->task_users()->save($user);
+                    $user->tasks()->save($task);
+                }
             }
         }
 

@@ -89,7 +89,8 @@ export default {
         XIcon
     },
     props: {
-        show: Boolean
+        show: Boolean,
+        users: Array
     },
     data () {
         return {
@@ -110,7 +111,12 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.task_user_query}
                     }).then(response => {
-                        this.task_user_search_results = response.data
+                        console.log(response.data)
+                        console.log(this.users)
+                        this.task_user_search_results = response.data.filter(user => this.users.some(docUser => {
+                            return docUser.id === user.id
+                        }))
+                        console.log(this.task_user_search_results)
                     })
                 }
             },
@@ -139,7 +145,8 @@ export default {
                 "description": this.taskDescription,
                 "deadline": this.deadline,
                 "assigned_users": this.taskUsers,
-                "checked": false
+                "done": false,
+                "new": true
             }
             this.$emit('addTask', task)
             this.newTaskName = ''

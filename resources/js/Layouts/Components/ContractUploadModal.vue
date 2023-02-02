@@ -313,7 +313,7 @@
                                 </div>
                             </div>
 
-                            <ContractTaskForm :show="creatingNewTask" ref="task_form" @add-task="addTask"/>
+                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form" @add-task="addTask"/>
 
                             <button type="button"
                                     @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"

@@ -304,7 +304,7 @@
                         <div v-if="showExtraSettings">
                             <div class="items-center mb-2 mt-4">
                                 <div v-for="task in tasks" class="mt-2">
-                                    <input id="hasGroup" type="checkbox" v-model="task.checked"
+                                    <input id="hasGroup" type="checkbox" v-model="task.done"
                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <label for="hasGroup"
                                            :class="task.checked ? 'xsDark' : 'xsLight subpixel-antialiased'"
@@ -314,7 +314,7 @@
                                 </div>
                             </div>
 
-                            <ContractTaskForm :show="creatingNewTask" ref="task_form" @add-task="addTask"/>
+                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form" @add-task="addTask"/>
 
                             <button type="button"
                                     @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"
@@ -396,6 +396,11 @@ export default {
             deep: true
         },
     },
+    mounted() {
+        this.contract?.tasks.forEach(task => {
+            this.tasks.push(task)
+        })
+    },
     methods: {
         addUserToContractUserArray(user) {
             if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
@@ -422,9 +427,6 @@ export default {
             }, {
                 preserveState: true,
                 preserveScroll: true,
-                onSuccess: (data) => {
-                    this.$emit('upload')
-                }
 
             })
         },
@@ -446,6 +448,8 @@ export default {
             this.closeModal()
         },
         addTask(task) {
+            console.log(task)
+            console.log(this.tasks)
             if(this.tasks) {
                 this.tasks.push(task)
             }
@@ -453,6 +457,7 @@ export default {
                 this.tasks = []
                 this.tasks.push(task)
             }
+            console.log(this.tasks)
         },
         updateContract() {
             this.contractForm.contract_partner = this.contractPartner;
@@ -467,12 +472,13 @@ export default {
             this.contractForm.currency = this.selectedCurrency;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
-                userIds.push(user.id);
+                 userIds.push(user.id);
             })
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
             this.storeFile()
             this.contractForm.patch(this.route('contracts.update', this.contract.id));
+
             this.closeModal()
         },
     },
@@ -496,7 +502,7 @@ export default {
             isAbroad: this.contract?.resident_abroad,
             hasPowerOfAttorney: this.contract?.has_power_of_attorney,
             isFreed: this.contract?.is_freed,
-            tasks: this.contract?.tasks,
+            tasks: [],
             showExtraSettings: false,
             contractAmount: this.contract?.amount,
             contractForm: useForm({

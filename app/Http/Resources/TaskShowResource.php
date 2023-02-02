@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use phpDocumentor\Reflection\Types\Nullable;
 
 /**
  * @mixin \App\Models\Task
@@ -32,12 +33,12 @@ class TaskShowResource extends JsonResource
             'deadline' => $this->deadline?->timestamp,
             'isDeadlineInFuture' => $this->deadline?->isFuture(),
 
-            'isPrivate' => (bool) $this->checklist->user_id,
-            'projectId' => $this->checklist->project->id,
-            'projectName' => $this->checklist->project->name,
-            'departments' => DepartmentIconResource::collection($this->checklist->departments),
-            'checklistName' => $this->checklist->name,
-            'checklistId' => $this->checklist->id,
+            'isPrivate' => (bool) $this->checklist?->user_id,
+            'projectId' => $this->checklist?->project->id,
+            'projectName' => $this->checklist?->project->name,
+            'departments' => $this->checklist ? DepartmentIconResource::collection($this->checklist->departments) : null,
+            'checklistName' => $this->checklist?->name,
+            'checklistId' => $this->checklist?->id,
         ];
     }
 }

@@ -546,8 +546,8 @@
 <script>
 
 
-import {PencilAltIcon, PlusCircleIcon, PlusIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
+import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";

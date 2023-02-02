@@ -1076,6 +1076,9 @@ class ProjectController extends Controller
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
+                        }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
+                            $query->withCount('comments')
+                                ->withCount('calculations');
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),

@@ -12,19 +12,14 @@
                 <div class="text-secondary subpixel-antialiased">
                     Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                 </div>
-                <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
-                    <div class="flex w-full my-1" v-for="historyItem in this.event_history">
+                <div class="flex w-full flex-wrap mt-4 ">
+                    <div class="flex w-full my-1" v-for="(historyItem,index) in this.event_history">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
                         <div class="flex w-full">
-                            <img v-if="historyItem.changes[0].changed_by"
-                                 :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                 :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                 :alt="historyItem.changes[0].changed_by?.first_name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                         :user="historyItem.changes[0].changed_by"/>
+                            <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
+                                            :user="historyItem.changes[0].changed_by" :id="index"/>
                             <div v-else class="xsLight ml-3">
                                 gelöschte Nutzer:in
                             </div>
@@ -47,16 +42,16 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: 'RoomHistoryComponent',
     components: {
+        NewUserToolTip,
         JetDialogModal,
         XIcon,
         AddButton,
-        CheckIcon,
-        UserTooltip
+        CheckIcon
     },
     props: ['event_history'],
     emits: ['closed'],

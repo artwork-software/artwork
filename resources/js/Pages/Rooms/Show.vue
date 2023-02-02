@@ -693,11 +693,9 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<img :data-tooltip-target="requestToApprove.created_by.id"
-                                                   :src="requestToApprove.created_by.profile_photo_url"
-                                                   :alt="requestToApprove.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToApprove.created_by"/>
+                                    angefragt:
+                                    <NewUserToolTip :height="7" :width="7" v-if="requestToApprove.created_by"
+                                                    :user="requestToApprove.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToApprove.created_at }}</span>
                                 </div>
                                 <div>
@@ -793,11 +791,8 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<img :data-tooltip-target="requestToDecline.created_by.id"
-                                                   :src="requestToDecline.created_by.profile_photo_url"
-                                                   :alt="requestToDecline.created_by.name"
-                                                   class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip :user="requestToDecline.created_by"/>
+                                    angefragt:<NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
+                                                              :user="requestToDecline.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
@@ -873,6 +868,7 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import AddButton from "@/Layouts/Components/AddButton";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -898,6 +894,7 @@ export default {
         'adjoiningRooms'
     ],
     components: {
+        NewUserToolTip,
         PlusIcon,
         MinusIcon,
         Disclosure,

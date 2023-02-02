@@ -46,13 +46,9 @@
                         </div>
                         <div :class="task.done ? 'line-through' : ''">
                             <div class="xsWhiteBold flex items-center gap-2">{{ task.name }} <span class="text-red-500 xxsLight" :class="Date.parse(task.deadline) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{ formatDate(task.deadline) }}</span><div class="flex">
-                                <span class="-ml-1 first:ml-0 -mt-3 " v-for="user in task.money_source_task_users">
-                                    <img v-if="user"
-                                         :data-tooltip-target="user?.id"
-                                         :src="user?.profile_photo_url"
-                                         :alt="user?.name"
-                                         class="mt-3 rounded-full h-5 w-5 object-cover"/>
-                                    <UserTooltip v-if="user" :user="user" />
+                                <span class="-ml-1" v-for="(user,index) in task.money_source_task_users">
+                                    <NewUserToolTip :height="7" :width="7" v-if="user"
+                                                    :user="user" :id="index"/>
                                 </span>
                             </div></div>
                             <p>{{ task.description }}</p>
@@ -82,12 +78,14 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
 import {Inertia} from "@inertiajs/inertia";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 
 export default {
     name: "MoneySourceSidenav",
     props: ['users', 'tasks', 'money_source'],
     components: {
+        NewUserToolTip,
         ContractModuleDeleteModal,
         DownloadIcon,
         UploadIcon,

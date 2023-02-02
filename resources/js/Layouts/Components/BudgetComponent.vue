@@ -1,86 +1,88 @@
 <template>
 
     <div class="mx-4">
-        <div class="flex mb-10 justify-between">
-        <div class="flex justify-start headline2">
-            {{budget.table.name}}
-            <Menu as="div" class="ml-4">
-                <div class="flex">
-                    <MenuButton
-                        class="flex ">
-                        <DotsVerticalIcon
-                            class="flex-shrink-0 h-6 w-6 text-gray-600"
-                            aria-hidden="true"/>
-                    </MenuButton>
-                </div>
-                <transition
-                    enter-active-class="transition ease-out duration-100"
-                    enter-from-class="transform opacity-0 scale-95"
-                    enter-to-class="transform opacity-100 scale-100"
-                    leave-active-class="transition ease-in duration-75"
-                    leave-from-class="transform opacity-100 scale-100"
-                    leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems
-                        class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                        <div class="py-1">
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openUseTemplateModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Vorlage einlesen
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openUseTemplateFromProjectModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Aus Projekt einlesen
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openAddBudgetTemplateModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Als Vorlage speichern
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="resetBudgetTable"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Zurücksetzen
-                                </a>
-                            </MenuItem>
-                        </div>
-                    </MenuItems>
-                </transition>
-            </Menu>
-        </div>
-        <div class="flex justify-end mb-10">
-            <AddButton @click="openAddColumnModal()" text="Neue Spalte" mode="page"></AddButton>
-        </div>
+        <div class="flex justify-between">
+            <div class="flex justify-start headline2">
+                {{ budget.table.name }}
+                <Menu as="div" class="ml-4">
+                    <div class="flex">
+                        <MenuButton
+                            class="flex ">
+                            <DotsVerticalIcon
+                                class="flex-shrink-0 h-6 w-6 text-gray-600"
+                                aria-hidden="true"/>
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems
+                            class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <div class="py-1">
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="openUseTemplateModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Vorlage einlesen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="openUseTemplateFromProjectModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Aus Projekt einlesen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="openAddBudgetTemplateModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Als Vorlage speichern
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="resetBudgetTable"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Zurücksetzen
+                                    </a>
+                                </MenuItem>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+            </div>
+            <div class=" mb-5">
+                <button @click="openAddColumnModal()" class="text-white font-bold text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                    <PlusIcon class="h-5 w-5"></PlusIcon>
+                </button>
+            </div>
         </div>
         <div class="w-full flex">
             <table class="w-full flex ml-16">
                 <thead>
                 <tr>
-                    <th v-for="(column,index) in budget.columns"
+                    <th v-for="(column,index) in budget.table.columns"
                         :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
                                 <div class="flex items-center justify-end pr-2">
-                                    <p class="columnSubName xsLight">
+                                    <p v-if="column.subName" class="columnSubName -mt-4 xsLight">
                                         {{ column.subName }}
-                                        <span v-if="column.calculateName" class="ml-1">
+                                        <span v-if="column.calculateName" class="ml-1 truncate">
                                             ({{ column.calculateName }})
                                         </span>
                                     </p>
@@ -184,7 +186,7 @@
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }" v-if="column.is_locked">
                                                 <a @click="unlockColumn(column.id)"
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
@@ -212,142 +214,170 @@
                 </tr>
                 </thead>
             </table>
-
         </div>
+        <div class="w-full flex my-8">
+            <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
+                <div class="w-full flex">
+                    <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
+                        <div class="headline4 my-10 flex">Ausgaben
+                            <button class="w-6"
+                                    @click="costsOpened = !costsOpened">
+                                <ChevronUpIcon v-if="costsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                        <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
+                             class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                                Hauptposition
+                                <PlusCircleIcon
+                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            </div>
+                        </div>
+                        <table class="w-11/12 mb-6">
+                            <tbody class="">
+                            <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
+                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
+                                                       @openVerifiedModal="openVerifiedModal"
+                                                       @openCellDetailModal="openCellDetailModal"
+                                                       @openDeleteModal="openDeleteModal" :budget="budget"
+                                                       :project="project"
+                                                       :main-position="mainPosition"></MainPositionComponent>
+                            </tr>
+                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM</td>
+                                <td class="flex items-center w-48"
+                                    v-for="column in budget.table.columns.slice(3)">
+                                    <div class="w-48 my-2 p-1"
+                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                        {{ this.getSumOfTable(0, column.id) }}
+                                    </div>
+                                </td>
 
-        <div class="flex my-8 ">
-            <div class="flex w-full bg-secondaryHover border border-2 border-gray-300">
-                <button class="bg-buttonBlue w-6"
-                        @click="costsOpened = !costsOpened">
-                    <ChevronUpIcon v-if="costsOpened"
-                                   class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                </button>
+                            </tr>
+                            <!-- TODO: Hier noch einfügen if(commented === true) -->
+                            <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
+                                <td class="w-48 my-2 p-1">3000</td>
+                            </tr>
+                            </tbody>
+                        </table>
 
-                <div class="bg-secondaryHover ml-8 w-full" v-if="costsOpened">
-                    <div class="headline4 my-10">Ausgaben</div>
-                    <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                         class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                        <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                            Hauptposition
-                            <PlusCircleIcon
-                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                    </div>
+                    <!-- View if not opened Event -->
+                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                        <div class="headline4 my-10 flex">Ausgaben
+                            <button class="w-6"
+                                    @click="costsOpened = !costsOpened">
+                                <ChevronUpIcon v-if="costsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
                         </div>
                     </div>
-                    <table class="w-11/12 mb-6">
-                        <tbody class="">
-                        <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <MainPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
-                        </tr>
-                        <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
-                            <td class="w-28"></td>
-                            <td class="w-28"></td>
-                            <td class="w-72 my-2">SUM</td>
-                            <td class="flex items-center w-48"
-                                v-for="column in budget.columns.slice(3)">
-                                <div class="w-48 my-2 p-1"
-                                     :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                    {{ this.getSumOfTable(0, column.id) }}
-                                </div>
-                            </td>
-
-                        </tr>
-                        <!-- TODO: Hier noch einfügen if(commented === true) -->
-                        <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                            <td class="w-28"></td>
-                            <td class="w-28"></td>
-                            <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
-                            <td class="w-48 my-2 p-1">3000</td>
-                        </tr>
-                        </tbody>
-                    </table>
-
                 </div>
-                <!-- View if not opened Event -->
-                <div class="ml-2 w-full bg-secondaryHover" v-else>
-                    <div class="headline4 my-10">Ausgaben</div>
+                <!-- Divider -->
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
+                    <div class="w-full flex">
+                    <div class="ml-2" v-if="earningsOpened">
+                        <div class="headline4 my-10 flex">Einnahmen
+                            <button class="w-6"
+                                    @click="earningsOpened = !earningsOpened">
+                                <ChevronUpIcon v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                        <table class="w-full">
+                            <tbody>
+                            <tr v-for="mainPosition in tablesToShow[1]">
+                                <th class="bg-primary text-white">
+                                    <div class="pl-2 flex items-center h-10">
+                                        {{ mainPosition.name }}
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
+                                    </div>
+                                    <table v-if="!mainPosition.closed" class="w-full">
+                                        <thead>
+                                        <tr v-for="subPosition in mainPosition.sub_positions">
+                                            <th class="bg-lightBackgroundGray xsDark">
+                                                <div class="pl-2 flex items-center h-10">
+                                                    {{ subPosition.name }}
+                                                    <button class="my-auto w-6 ml-3"
+                                                            @click="subPosition.closed = !subPosition.closed">
+                                                        <ChevronUpIcon v-if="!subPosition.closed"
+                                                                       class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                    </button>
+                                                </div>
+                                                <table class="w-full" v-if="!subPosition.closed">
+                                                    <tbody>
+                                                    <tr v-for="row in subPosition.sub_position_rows">
+                                                        <td v-for="cell in row.cells" class="w-40">
+                                                            <div @click="cell.clicked = !cell.clicked"
+                                                                 v-if="!cell.clicked">{{ cell.value }}
+                                                            </div>
+                                                            <div v-else>
+                                                                <input type="text" v-model="cell.value"
+                                                                       @focusout="cell.clicked = !cell.clicked">
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-lightBackgroundGray xsDark h-10"
+                                                        style="background-color: #ccc !important">
+                                                        <td></td>
+                                                        <td></td>
+                                                        <td>SUM</td>
+                                                        <td>3000</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </th>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- View if not opened Event -->
+                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                        <div class="headline4 my-10 flex">Einnahmen
+                            <button class="w-6"
+                                    @click="earningsOpened = !earningsOpened">
+                                <ChevronUpIcon v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="flex my-8 ">
-            <div class="flex w-full border border-2 border-gray-300">
-                <button class="bg-buttonBlue w-6"
-                        @click="earningsOpened = !earningsOpened">
-                    <ChevronUpIcon v-if="earningsOpened"
-                                   class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                </button>
-
-                <div class="ml-2 w-11/12" v-if="earningsOpened">
-                    <h2>Einahmen</h2>
-                    <table class="w-full">
-                        <tbody>
-                        <tr v-for="mainPosition in tablesToShow[1]">
-                            <th class="bg-primary text-white">
-                                <div class="pl-2 flex items-center h-10">
-                                    {{ mainPosition.name }}
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
-                                <table v-if="!mainPosition.closed" class="w-full">
-                                    <thead>
-                                    <tr v-for="subPosition in mainPosition.sub_positions">
-                                        <th class="bg-lightBackgroundGray xsDark">
-                                            <div class="pl-2 flex items-center h-10">
-                                                {{ subPosition.name }}
-                                                <button class="my-auto w-6 ml-3"
-                                                        @click="subPosition.closed = !subPosition.closed">
-                                                    <ChevronUpIcon v-if="!subPosition.closed"
-                                                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
-                                                </button>
-                                            </div>
-                                            <table class="w-full" v-if="!subPosition.closed">
-                                                <tbody>
-                                                <tr v-for="row in subPosition.sub_position_rows">
-                                                    <td v-for="cell in row.cells" class="w-40">
-                                                        <div @click="cell.clicked = !cell.clicked"
-                                                             v-if="!cell.clicked">{{ cell.value }}
-                                                        </div>
-                                                        <div v-else>
-                                                            <input type="text" v-model="cell.value"
-                                                                   @focusout="cell.clicked = !cell.clicked">
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="bg-lightBackgroundGray xsDark h-10"
-                                                    style="background-color: #ccc !important">
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td>SUM</td>
-                                                    <td>3000</td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                </table>
-                            </th>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-                <!-- View if not opened Event -->
-                <div class="ml-2 w-11/12" v-else>
-                    <h2>Einahmen</h2>
+                <!-- Divider -->
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
+                <div class="ml-5 my-6 xsDark uppercase">
+                    Einnahmen - Ausgaben
                 </div>
             </div>
+
         </div>
+
+
     </div>
 
 
@@ -479,14 +509,14 @@
     <!-- Vorlage einlesen Modal-->
     <use-template-component
         v-if="showUseTemplateModal"
-        :projectId="project.id"
+        :projectId="project?.id"
         :templates="budget.templates"
         @closed="closeUseTemplateModal()"
     />
     <!-- Aus Projekt einlesen Modal-->
     <use-template-from-project-budget-component
         v-if="showUseTemplateFromProjectModal"
-        :projectId="project.id"
+        :projectId="project?.id"
         @closed="closeUseTemplateFromProjectModal()"
     />
     <!-- Als Vorlage speichern Modal-->
@@ -516,7 +546,7 @@
 <script>
 
 
-import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
+import {PencilAltIcon, PlusCircleIcon, PlusIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
@@ -540,11 +570,13 @@ import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
+import Button from "@/Jetstream/Button.vue";
 
 export default {
     name: 'BudgetComponent',
 
     components: {
+        Button,
         UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
         ConfirmationComponent,
@@ -572,6 +604,7 @@ export default {
         RowDetailComponent,
         UseTemplateComponent,
         AddBudgetTemplateComponent,
+        PlusIcon
     },
 
     data() {
@@ -591,7 +624,7 @@ export default {
             mainPositionToDelete: null,
             subPositionToDelete: null,
             rowToDelete: null,
-            confirmationTitle:'',
+            confirmationTitle: '',
             confirmationDescription: '',
             showSuccessModal: false,
             successHeading: '',
@@ -622,7 +655,7 @@ export default {
                 id: null,
                 user: '',
                 position: [],
-                project_title: this.project.name,
+                project_title: this.project?.name,
                 table_id: this.budget.table.id
             }),
         }
@@ -670,7 +703,7 @@ export default {
                 }
             } else {
                 cssString += ' xsWhiteBold ';
-                if(cell.value !== cell.verified_value){
+                if (cell.value !== cell.verified_value) {
                     cssString += ' bg-red-300 '
                 } else {
                     cssString += cell.column.color;
@@ -741,7 +774,7 @@ export default {
         closeAddColumnModal() {
             this.showAddColumnModal = false;
         },
-        openUseTemplateModal(){
+        openUseTemplateModal() {
 
             Inertia.reload({
                 data: {
@@ -752,19 +785,19 @@ export default {
                 }
             })
         },
-        closeUseTemplateModal(){
+        closeUseTemplateModal() {
             this.showUseTemplateModal = false;
         },
-        openUseTemplateFromProjectModal(){
-          this.showUseTemplateFromProjectModal = true;
+        openUseTemplateFromProjectModal() {
+            this.showUseTemplateFromProjectModal = true;
         },
-        closeUseTemplateFromProjectModal(){
+        closeUseTemplateFromProjectModal() {
             this.showUseTemplateFromProjectModal = false;
         },
-        openAddBudgetTemplateModal(){
+        openAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = true;
         },
-        closeAddBudgetTemplateModal(){
+        closeAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = false;
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
@@ -865,20 +898,20 @@ export default {
         closeRowDetailModal() {
             this.showRowDetailModal = false;
         },
-        openDeleteRowModal(row){
-          this.confirmationTitle = 'Zeile löschen';
-          this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
-          this.rowToDelete = row;
-          this.showDeleteModal = true;
+        openDeleteRowModal(row) {
+            this.confirmationTitle = 'Zeile löschen';
+            this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+            this.rowToDelete = row;
+            this.showDeleteModal = true;
         },
         openDeleteModal(title, description, position, type) {
             this.confirmationTitle = title;
             this.confirmationDescription = description
-            if(type === 'main'){
+            if (type === 'main') {
                 this.mainPositionToDelete = position;
-            }else if(type === 'sub'){
+            } else if (type === 'sub') {
                 this.subPositionToDelete = position;
-            }else{
+            } else {
                 this.rowToDelete = position;
             }
             this.showDeleteModal = true;
@@ -904,7 +937,7 @@ export default {
                 this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
                 this.successHeading = "Unterposition gelöscht"
                 this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
-            }else{
+            } else {
                 this.$inertia.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
                     preserveState: true
@@ -943,7 +976,7 @@ export default {
 
             this.closeVerifiedModal();
         },
-        openVerifiedModal(is_main,is_sub,id,position) {
+        openVerifiedModal(is_main, is_sub, id, position) {
             this.verifiedTexts.positionTitle = position.name
             this.submitVerifiedModalData.is_main = is_main
             this.submitVerifiedModalData.is_sub = is_sub
@@ -970,30 +1003,30 @@ export default {
                 table_id: this.budget.table.id,
             })
         },
-        requestRemove(position, type){
+        requestRemove(position, type) {
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
             })
         },
-        removeVerification(position, type){
+        removeVerification(position, type) {
             this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
             })
         },
-        lockColumn(columnId){
+        lockColumn(columnId) {
             this.$inertia.patch(this.route('project.budget.lock.column'), {
                 columnId: columnId
             });
         },
-        unlockColumn(columnId){
+        unlockColumn(columnId) {
             this.$inertia.patch(this.route('project.budget.unlock.column'), {
                 columnId: columnId
             });
         },
-        resetBudgetTable(){
-            this.$inertia.patch(this.route('project.budget.reset.table', this.project.id))
+        resetBudgetTable() {
+            this.$inertia.patch(this.route('project.budget.reset.table', this.project?.id))
         }
     },
 }

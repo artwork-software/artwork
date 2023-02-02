@@ -32,7 +32,7 @@ class BudgetTemplateController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Template/Index', [
+        return Inertia::render('BudgetTemplates/BudgetTemplateManagement', [
             'budget' => [
                 'table' => Table::where('is_template', true)
                     ->with([

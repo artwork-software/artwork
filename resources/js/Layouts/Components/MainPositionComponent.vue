@@ -202,7 +202,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.columns" :project="project" :budget="budget"></SubPositionComponent>
+                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="budget.table.columns" :project="project" :budget="budget"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -211,7 +211,7 @@
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
                 <div v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
-                     v-for="column in budget.columns.slice(3)">
+                     v-for="column in budget.table.columns.slice(3)">
                     <td class="w-48 my-4 p-1"
                         :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
@@ -302,8 +302,8 @@ export default {
               id: null,
               user: '',
               position: [],
-              project_title: this.project.name,
-              project_id: this.project.id,
+              project_title: this.project?.name,
+              project_id: this.project?.id,
               table_id: this.budget.table.id,
           }),
           colors: {
@@ -343,7 +343,7 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
-                project_id: this.project.id,
+                project_id: this.project?.id,
                 table_id: this.budget.table.id,
             })
         },

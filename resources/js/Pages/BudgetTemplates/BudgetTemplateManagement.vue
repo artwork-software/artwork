@@ -1,7 +1,8 @@
 <template>
     <AppLayout>
 
-
+        <BudgetComponent :budget="budget" :project="project"
+                         :money-sources="moneySources"></BudgetComponent>
         <pre>
         {{ budget }}
     </pre>
@@ -13,7 +14,7 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 
 export default {
-    name: "Index",
+    name: "BudgetTemplateManagement",
     components: {BudgetComponent, AppLayout},
     props: ['budget']
 }

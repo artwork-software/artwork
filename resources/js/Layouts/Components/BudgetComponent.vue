@@ -3,7 +3,7 @@
     <div class="mx-4">
         <div class="flex justify-between">
             <div class="flex justify-start headline2">
-                {{ budget.table.name }}
+                {{ table.name }}
                 <Menu as="div" class="ml-4">
                     <div class="flex">
                         <MenuButton
@@ -74,7 +74,7 @@
             <table class="w-full flex ml-16">
                 <thead>
                 <tr>
-                    <th v-for="(column,index) in budget.table.columns"
+                    <th v-for="(column,index) in table.columns"
                         :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
@@ -242,7 +242,7 @@
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
                                                        @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
-                                                       @openDeleteModal="openDeleteModal" :budget="budget"
+                                                       @openDeleteModal="openDeleteModal" :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"></MainPositionComponent>
                             </tr>
@@ -251,7 +251,7 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in budget.table.columns.slice(3)">
+                                    v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
                                         {{ this.getSumOfTable(0, column.id) }}
@@ -496,13 +496,13 @@
     <add-column-component
         v-if="showAddColumnModal"
         :project="project"
-        :table="budget.table"
+        :table="table"
         @closed="closeAddColumnModal()"
     />
     <!-- Cell Detail Modal-->
     <cell-detail-component
         v-if="showCellDetailModal"
-        :cell="budget.selectedCell"
+        :cell="selectedCell"
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
@@ -510,7 +510,7 @@
     <use-template-component
         v-if="showUseTemplateModal"
         :projectId="project?.id"
-        :templates="budget.templates"
+        :templates="templates"
         @closed="closeUseTemplateModal()"
     />
     <!-- Aus Projekt einlesen Modal-->
@@ -522,13 +522,13 @@
     <!-- Als Vorlage speichern Modal-->
     <add-budget-template-component
         v-if="showAddBudgetTemplateModal"
-        :table-id="budget.table.id"
+        :table-id="table.id"
         @closed="closeAddBudgetTemplateModal()"
     />
     <!-- Row Detail Modal-->
     <row-detail-component
         v-if="showRowDetailModal"
-        :row="budget.selectedRow"
+        :row="selectedRow"
         :moneySources="moneySources"
         @closed="closeRowDetailModal()"
     />
@@ -656,18 +656,18 @@ export default {
                 user: '',
                 position: [],
                 project_title: this.project?.name,
-                table_id: this.budget.table.id
+                table_id: this.table.id
             }),
         }
     },
 
-    props: ['budget', 'project', 'moneySources'],
+    props: ['table', 'project', 'moneySources', 'selectedCell','selectedRow','templates'],
 
     computed: {
         tablesToShow: function () {
             let costTableArray = [];
             let earningTableArray = [];
-            this.budget.table.main_positions.forEach((mainPosition) => {
+            this.table.main_positions.forEach((mainPosition) => {
                 if (mainPosition.type === 'BUDGET_TYPE_COST') {
                     costTableArray.push(mainPosition);
                 } else {
@@ -753,7 +753,7 @@ export default {
         addRowToSubPosition(subPosition, row) {
 
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
@@ -827,7 +827,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {
@@ -837,7 +837,7 @@ export default {
         },
         addMainPosition(type, mainPosition) {
             this.$inertia.post(route('project.budget.main-position.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 type: type,
                 positionBefore: mainPosition.position
             }, {
@@ -994,13 +994,13 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
             })
         },
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
             })
         },
         requestRemove(position, type) {

@@ -1,10 +1,10 @@
 <template>
     <AppLayout>
-
-        <BudgetComponent :budget="budget" :project="project"
+        <BudgetComponent :table="budget.table[0]" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
                          :money-sources="moneySources"></BudgetComponent>
+
         <pre>
-        {{ budget }}
+        {{ budget.table }}
     </pre>
     </AppLayout>
 </template>

@@ -47,7 +47,7 @@ class BudgetTemplateController extends Controller
                             return $query->orderBy('position');
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
-                    ->first(),
+                    ->get(),
             ],
         ]);
     }

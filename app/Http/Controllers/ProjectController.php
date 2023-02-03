@@ -1079,7 +1079,7 @@ class ProjectController extends Controller
                         }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
                             $query->withCount('comments')
                                 ->withCount('calculations');
-                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column',
                     ])
                     ->first(),
                 'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
@@ -1088,7 +1088,7 @@ class ProjectController extends Controller
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
-                'templates' => $templates
+                'templates' => $templates,
             ],
 
             'categories' => Category::all(),

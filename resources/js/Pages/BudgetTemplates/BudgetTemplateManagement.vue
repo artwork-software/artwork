@@ -9,20 +9,17 @@
                                  class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
             </button>
             <div class="ml-4 my-4">
-            <BudgetComponent v-if="!table.closed" :table="table" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
-                             :money-sources="moneySources"></BudgetComponent>
-            <div v-else>
-                <div class="headline2 ">
-                    {{table.name}}
+                <BudgetComponent v-if="!table.closed" :table="table" :project="project"
+                                 :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow"
+                                 :templates="budget.templates"
+                                 :money-sources="moneySources"></BudgetComponent>
+                <div v-else>
+                    <div class="headline2 ">
+                        {{ table.name }}
+                    </div>
                 </div>
-
-            </div>
             </div>
         </div>
-
-        <pre>
-        {{ budget.table }}
-    </pre>
     </AppLayout>
 </template>
 

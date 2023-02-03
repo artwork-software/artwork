@@ -2347,7 +2347,6 @@ export default {
                 }
                 this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
             }
-            console.log(this.taskForm.deadline);
             this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
             this.closeAddTaskModal();
         },
@@ -2476,8 +2475,6 @@ export default {
             this.editChecklistForm.user_id = null;
         },
         editChecklist() {
-            console.log(this.editChecklistForm);
-
             if (this.editChecklistForm.private) {
                 this.editChecklistForm.user_id = this.$page.props.user.id;
                 this.editChecklistForm.assigned_department_ids = [];

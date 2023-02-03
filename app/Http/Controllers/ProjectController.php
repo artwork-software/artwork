@@ -607,6 +607,13 @@ class ProjectController extends Controller
             'name' => $request->columnName
         ]);
     }
+    public function updateTableName(Request $request): void
+    {
+        $table = Table::find($request->table_id);
+        $table->update([
+            'name' => $request->table_name
+        ]);
+    }
 
     public function columnDelete(Column $column)
     {
@@ -1636,6 +1643,11 @@ class ProjectController extends Controller
     public function deleteRow(SubPositionRow $row)
     {
         $row->forceDelete();
+    }
+
+    public function deleteTable(Table $table)
+    {
+        $table->forceDelete();
     }
 
     public function deleteMainPosition(MainPosition $mainPosition)

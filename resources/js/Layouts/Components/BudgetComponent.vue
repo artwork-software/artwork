@@ -24,7 +24,16 @@
                             class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                             <div class="py-1">
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="openUseTemplateModal()"
+                                    <a @click="openRenameTableModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Umbenennen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -33,7 +42,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="openUseTemplateFromProjectModal()"
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -42,7 +51,7 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="openAddBudgetTemplateModal()"
+                                    <a v-show="!tableIsEmpty && !table.is_template" @click="openAddBudgetTemplateModal()"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -51,12 +60,21 @@
                                     </a>
                                 </MenuItem>
                                 <MenuItem v-slot="{ active }">
-                                    <a @click="resetBudgetTable"
+                                    <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                         <TrashIcon
                                             class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                             aria-hidden="true"/>
                                         Zurücksetzen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="table.is_template" @click="deleteBudgetTemplate()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Löschen
                                     </a>
                                 </MenuItem>
                             </div>
@@ -525,6 +543,12 @@
         :table-id="table.id"
         @closed="closeAddBudgetTemplateModal()"
     />
+    <!-- Tabelle umbenennen Modal-->
+    <rename-table-component
+        v-if="showRenameTableModal"
+        :table="table"
+        @closed="closeRenameBudgetTemplateModal()"
+    />
     <!-- Row Detail Modal-->
     <row-detail-component
         v-if="showRowDetailModal"
@@ -571,6 +595,7 @@ import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue"
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
 import Button from "@/Jetstream/Button.vue";
+import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 
 export default {
     name: 'BudgetComponent',
@@ -604,7 +629,8 @@ export default {
         RowDetailComponent,
         UseTemplateComponent,
         AddBudgetTemplateComponent,
-        PlusIcon
+        PlusIcon,
+        RenameTableComponent
     },
 
     data() {
@@ -616,6 +642,7 @@ export default {
             showCellDetailModal: false,
             showRowDetailModal: false,
             showUseTemplateModal: false,
+            showRenameTableModal: false,
             showUseTemplateFromProjectModal: false,
             showAddBudgetTemplateModal: false,
             hoveredRow: null,
@@ -676,6 +703,13 @@ export default {
             })
             return [costTableArray, earningTableArray]
         },
+        tableIsEmpty: function () {
+            if(this.table.main_positions.length === 2 && this.table.main_positions[0].sub_positions.length === 1 && this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1 && this.table.columns.length === 4){
+                return true;
+            }else{
+                return false;
+            }
+        }
     },
     watch: {
         user_query: {
@@ -785,6 +819,9 @@ export default {
                 }
             })
         },
+        openRenameTableModal(){
+          this.showRenameTableModal = true;
+        },
         closeUseTemplateModal() {
             this.showUseTemplateModal = false;
         },
@@ -799,6 +836,9 @@ export default {
         },
         closeAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = false;
+        },
+        closeRenameBudgetTemplateModal(){
+          this.showRenameTableModal = false;
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
             cell.clicked = !cell.clicked;
@@ -1027,7 +1067,10 @@ export default {
         },
         resetBudgetTable() {
             this.$inertia.patch(this.route('project.budget.reset.table', this.project?.id))
-        }
+        },
+        deleteBudgetTemplate(){
+          this.$inertia.delete(this.route('project.budget.table.delete', this.table.id))
+        },
     },
 }
 </script>

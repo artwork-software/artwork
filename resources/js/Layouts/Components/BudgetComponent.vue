@@ -1,6 +1,6 @@
 <template>
 
-    <div class="mx-4">
+    <div class="mx-1 bg-lightBackgroundGray">
         <div class="flex justify-between">
             <div class="flex justify-start headline2">
                 {{ table.name }}
@@ -82,7 +82,7 @@
                     </transition>
                 </Menu>
             </div>
-            <div class=" mb-5">
+            <div class=" mb-5 mr-6">
                 <button @click="openAddColumnModal()" class="text-white font-bold text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
                     <PlusIcon class="h-5 w-5"></PlusIcon>
                 </button>
@@ -93,7 +93,7 @@
                 <thead>
                 <tr>
                     <th v-for="(column,index) in table.columns"
-                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
+                        :class="index <= 1 ? 'w-16' : index === 2 ? 'w-64' : 'w-52'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
@@ -153,13 +153,13 @@
                                     </span>
                                 </div>
                                 <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="h-5 pr-2"
+                                     :class="index <= 1 ? 'w-16' : index === 2 ? 'w-64' : 'w-40'" class="h-5 pr-2 mr-1"
                                      v-if="!column.clicked">
                                     {{ column.name }}
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'"
+                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-40'"
                                         class="my-2 xsDark pr-2 text-right" type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
@@ -302,9 +302,9 @@
                     </div>
                 </div>
                 <!-- Divider -->
-                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12" />
                     <div class="w-full flex">
-                    <div class="ml-2" v-if="earningsOpened">
+                    <div class="ml-5" v-if="earningsOpened">
                         <div class="headline4 my-10 flex">Einnahmen
                             <button class="w-6"
                                     @click="earningsOpened = !earningsOpened">
@@ -314,61 +314,35 @@
                                                  class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                             </button>
                         </div>
-                        <table class="w-full">
-                            <tbody>
-                            <tr v-for="mainPosition in tablesToShow[1]">
-                                <th class="bg-primary text-white">
-                                    <div class="pl-2 flex items-center h-10">
-                                        {{ mainPosition.name }}
-                                        <button class="my-auto w-6 ml-3"
-                                                @click="mainPosition.closed = !mainPosition.closed">
-                                            <ChevronUpIcon v-if="!mainPosition.closed"
-                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                            <ChevronDownIcon v-else
-                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                        </button>
+                        <table class="w-11/12 mb-6">
+                            <tbody class="">
+                            <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[1]">
+                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
+                                                       @openVerifiedModal="openVerifiedModal"
+                                                       @openCellDetailModal="openCellDetailModal"
+                                                       @openDeleteModal="openDeleteModal" :table="table"
+                                                       :project="project"
+                                                       :main-position="mainPosition"></MainPositionComponent>
+                            </tr>
+                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM</td>
+                                <td class="flex items-center w-48"
+                                    v-for="column in table.columns.slice(3)">
+                                    <div class="w-48 my-2 p-1"
+                                         :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
+                                        {{ this.getSumOfTable(1, column.id) }}
                                     </div>
-                                    <table v-if="!mainPosition.closed" class="w-full">
-                                        <thead>
-                                        <tr v-for="subPosition in mainPosition.sub_positions">
-                                            <th class="bg-lightBackgroundGray xsDark">
-                                                <div class="pl-2 flex items-center h-10">
-                                                    {{ subPosition.name }}
-                                                    <button class="my-auto w-6 ml-3"
-                                                            @click="subPosition.closed = !subPosition.closed">
-                                                        <ChevronUpIcon v-if="!subPosition.closed"
-                                                                       class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                        <ChevronDownIcon v-else
-                                                                         class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
-                                                    </button>
-                                                </div>
-                                                <table class="w-full" v-if="!subPosition.closed">
-                                                    <tbody>
-                                                    <tr v-for="row in subPosition.sub_position_rows">
-                                                        <td v-for="cell in row.cells" class="w-40">
-                                                            <div @click="cell.clicked = !cell.clicked"
-                                                                 v-if="!cell.clicked">{{ cell.value }}
-                                                            </div>
-                                                            <div v-else>
-                                                                <input type="text" v-model="cell.value"
-                                                                       @focusout="cell.clicked = !cell.clicked">
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr class="bg-lightBackgroundGray xsDark h-10"
-                                                        style="background-color: #ccc !important">
-                                                        <td></td>
-                                                        <td></td>
-                                                        <td>SUM</td>
-                                                        <td>3000</td>
-                                                    </tr>
-                                                    </tbody>
-                                                </table>
-                                            </th>
-                                        </tr>
-                                        </thead>
-                                    </table>
-                                </th>
+                                </td>
+
+                            </tr>
+                            <!-- TODO: Hier noch einfügen if(commented === true) -->
+                            <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
+                                <td class="w-48 my-2 p-1">3000</td>
                             </tr>
                             </tbody>
                         </table>
@@ -387,10 +361,23 @@
                     </div>
                 </div>
                 <!-- Divider -->
-                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
-                <div class="ml-5 my-6 xsDark uppercase">
-                    Einnahmen - Ausgaben
-                </div>
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12" />
+                <tr class="bg-secondaryHover items-center xsDark flex h-10 mt-4 mb-2 w-full text-right">
+                    <td class="w-44 xsDark uppercase flex ml-6">
+                        Einnahmen - Ausgaben
+                    </td>
+                    <td class="w-10 mr-1"></td>
+                    <td class="w-72 my-2">SUM</td>
+                    <td class="flex items-center w-48"
+                        v-for="column in table.columns.slice(3)">
+                        <div class="w-48 my-2 p-1"
+                             :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
+                            {{ this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) }}
+                        </div>
+                    </td>
+
+                </tr>
+
             </div>
 
         </div>

@@ -20,6 +20,14 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_VIEW->value,
+            'name_de' => "Leserechte für alle Projekte",
+            'group' => 'Projekte',
+            'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch die Belegungen im Kalender.',
+            'checked' => false
+        ]);
+
         //Projekte
         Permission::create([
             'name' => PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value,
@@ -30,18 +38,18 @@ class RolesAndPermissionsSeeder extends Seeder
         ]);
 
         Permission::create([
-            'name' => PermissionNameEnum::PROJECT_VIEW->value,
-            'name_de' => "Leserechte für alle Projekte",
-            'group' => 'Projekte',
-            'tooltipText' => 'Nutzer*in darf sämtliche Projekte einsehen – sowohl die Projektdetails als auch die Belegungen im Kalender.',
-            'checked' => false
-        ]);
-
-        Permission::create([
             'name' => PermissionNameEnum::WRITE_PROJECTS->value,
             'name_de' => "Schreibrechte für alle Projekte",
             'group' => 'Projekte',
             'tooltipText' => 'Nutzer*in hat auf alle Projekte Projektadmin-Rechte, auch wenn er/sie nicht zum Projektteam gehört.',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_DELETE->value,
+            'name_de' => "Löschrecht für alle Projekte",
+            'group' => 'Projekte',
+            'tooltipText' => 'Nutzer*in darf alle Projekte löschen, auch wenn er/sie nicht zum Projektteam gehört',
             'checked' => false
         ]);
 
@@ -65,19 +73,13 @@ class RolesAndPermissionsSeeder extends Seeder
 
         Permission::create([
             'name' => PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value,
-            'name_de' => "Lesezugriff auf Details von Raumbelegungs-Anfragen",
+            'name_de' => "Belegungs-Anfragen einsehen",
             'group' => 'Raumbelegungen',
             'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.',
             'checked' => false
         ]);
 
-        Permission::create([
-            'name' => PermissionNameEnum::ROOM_REQUEST_CONFIRM->value,
-            'name_de' => "Raumbelegungen bestätigen, priorisieren & bearbeiten",
-            'group' => 'Raumbelegungen',
-            'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.',
-            'checked' => false
-        ]);
+
 
         // Dokumente & Budget
         Permission::create([
@@ -96,49 +98,72 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+
         // Systemeinstellungen
         Permission::create([
+            'name' => PermissionNameEnum::SETTINGS_UPDATE->value,
+            'name_de' => "Tooleinstellungen editieren",
+            'group' => 'Systemeinstellungen',
+            'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, Impressum definieren etc.',
+            'checked' => false
+        ]);
+        Permission::create([
             'name' => PermissionNameEnum::USER_UPDATE->value,
-            'name_de' => "Nutzer*innen einladen, bearbeiten, Nutzerrechte definieren",
+            'name_de' => "Nutzer*innenverwaltung",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.',
             'checked' => false
         ]);
         Permission::create([
             'name' => PermissionNameEnum::TEAM_UPDATE->value,
-            'name_de' => "Teams anlegen & bearbeiten",
+            'name_de' => "Teamverwaltung",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf Teams (Abteilungen) im System anlegen, editieren & löschen. Diese Teams können anschließend z.B. Projekten zugeordnet werden.',
             'checked' => false
         ]);
         Permission::create([
-            'name' => PermissionNameEnum::SETTINGS_UPDATE->value,
-            'name_de' => "Projektkategorien, Genres etc. definieren & bearbeiten",
+            'name' => PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value,
+            'name_de' => "Systemeinstellungen für Projekte definieren",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Projektkategorien, Genres & Bereiche definieren, bearbeiten & löschen.',
             'checked' => false
         ]);
         Permission::create([
-            'name' => PermissionNameEnum::ROOM_ADMIN->value,
-            'name_de' => "Räume & Areale anlegen & bearbeiten",
+            'name' => PermissionNameEnum::EVENT_SETTINGS_UPDATE->value,
+            'name_de' => "Systemeinstellungen für Termine definieren",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf alle Räume & Areale anlegen, bearbeiten und löschen. Nutzer*in hat für sämtliche Räume Raumadminrechte – darf
-             also Belegungsanfragen zusagen oder ablehnen. Er/sie darf zusätzlich Projekte in andere Räume verlegen und Räume direkt buchen – ohne vorherige Anfrage.
-              Nutzer*in darf Raumadmin-Rechte für einzelne Räume an andere Nutzer*innen vergeben.',
+            'tooltipText' => 'Nutzer*in darf in den Systemeinstellungen Termintypen definieren, editieren & löschen.  ',
             'checked' => false
         ]);
+
         Permission::create([
             'name' => PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value,
-            'name_de' => "Globale Checklisten-Vorlagen erstellen & bearbeiten",
+            'name_de' => "Verwaltung von Checklisten-Vorlagen",
             'group' => 'Systemeinstellungen',
-            'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen können anschließend von allen anderen Usern verwendet werden.',
+            'tooltipText' => 'Nutzer*in darf Checklisten-Vorlagen erstellen, bearbeiten & löschen. Alle Vorlagen können anschließend von allen anderen Usern verwendet werden..',
             'checked' => false
         ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::SYSTEM_NOTIFICATION->value,
+            'name_de' => "Systemnachrichten verwalten",
+            'group' => 'Systemeinstellungen',
+            'tooltipText' => 'Nutzer*in darf Systemnachrichten anlegen, editieren und löschen. Diese Benachrichtigungen werden allen Usern angezeigt.',
+            'checked' => false
+        ]);
+
 
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",
         ]);
+
+        $user = Role::create([
+            'name' => RoleNameEnum::USER->value,
+            'name_de' => "Standard-Nutzer*in",
+        ]);
+
+        $user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value]);
 
         Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
@@ -154,6 +179,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'name' => RoleNameEnum::MONEY_SOURCE_ADMIN->value,
             'name_de' => "Finanzierungsquellenadmin",
         ]);
+
+
 
         // Gibt es nicht mehr
         /*Permission::create([

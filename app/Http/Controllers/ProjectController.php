@@ -437,7 +437,6 @@ class ProjectController extends Controller
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {
-
         $subPosition = SubPosition::find($request->id);
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $mainPosition = $subPosition->mainPosition()->first();
@@ -1077,7 +1076,10 @@ class ProjectController extends Controller
                         'mainPositions.subPositions.verified',
                         'mainPositions.subPositions.subPositionRows' => function ($query) {
                             return $query->orderBy('position');
-                        }, 'mainPositions.subPositions.subPositionRows.cells.column',
+                        }, 'mainPositions.subPositions.subPositionRows.cells' => function($query){
+                            $query->withCount('comments')
+                            ->withCount('calculations');
+                        }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
                     ->first(),
                 'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {

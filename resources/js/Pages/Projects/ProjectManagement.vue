@@ -1,5 +1,7 @@
 <template>
     <app-layout>
+
+
         <div class="py-4">
             <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
@@ -57,7 +59,9 @@
                             </div>
                         </div>
                     </div>
-
+                    <pre>
+            {{ filteredProjects }}
+        </pre>
                     <div v-for="(project,index) in filteredProjects"
                          :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
@@ -1119,6 +1123,7 @@ export default defineComponent({
                 project.write_auth.forEach((user) => {
                     writePermissionIds.push(user.id);
                 });
+                console.log(writePermissionIds);
                 if(writePermissionIds.includes(this.$page.props.user.id)){
                     return true;
                 }

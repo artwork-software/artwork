@@ -936,7 +936,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab && access_budget.includes(this.$page.props.user.id)" class="mt-14 p-5 bg-lightBackgroundGray" >
+                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray" >
                     <BudgetComponent :budget="budget" :project="project"
                                      :money-sources="moneySources"></BudgetComponent>
                 </div>
@@ -1386,14 +1386,14 @@
 
                                         <template #content>
                                             <div class="w-44 p-4">
-                                                <div class="flex mb-4">
+                                                <div class="flex">
                                                     <input v-model="user.access_budget"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
                                                    class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
                                                 </div>
-                                                <div class="flex">
+                                                <div class="flex mt-4" v-if="user.project_management">
                                                     <input v-model="user.is_manager"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -1403,10 +1403,8 @@
                                             </div>
                                         </template>
                                     </Dropdown>
-
                                 </div>
                             </div>
-
                         </span>
                         <span v-for="department in assignedDepartments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
@@ -1421,7 +1419,6 @@
                                 <span class="sr-only">Team aus dem Projekt entfernen</span>
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
-
                         </span>
                     </div>
                     <div class="w-full items-center text-center">
@@ -1429,9 +1426,7 @@
                                    class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
                         />
                     </div>
-
                 </div>
-
             </template>
 
         </jet-dialog-modal>
@@ -1920,6 +1915,9 @@ export default {
                 }
                 if (this.project.access_budget.findIndex((access_budget) => access_budget.id === user.id) !== -1) {
                     user.access_budget = true;
+                }
+                if (this.project.write_auth.findIndex((writeAuth) => writeAuth.id === user.id) !== -1) {
+                    user.can_write = true;
                 }
             })
             return projectMembers;

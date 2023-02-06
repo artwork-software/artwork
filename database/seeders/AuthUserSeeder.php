@@ -89,6 +89,7 @@ class AuthUserSeeder extends Seeder
 
         }
 
+        $user->assignRole(RoleNameEnum::USER->value);
 
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;

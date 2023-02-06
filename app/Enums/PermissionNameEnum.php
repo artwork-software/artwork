@@ -9,6 +9,7 @@ enum PermissionNameEnum : string
 
     // Projects
     case PROJECT_MANAGEMENT = 'management projects';
+    case PROJECT_DELETE = 'delete projects';
     case PROJECT_VIEW = 'view projects';
     case ADD_EDIT_OWN_PROJECT = 'create and edit own project';
     case WRITE_PROJECTS = 'write projects';
@@ -30,10 +31,13 @@ enum PermissionNameEnum : string
     case DEPARTMENT_UPDATE = 'update departments';
     case ROOM_ADMIN = 'admin rooms';
     case SETTINGS_UPDATE = 'change tool settings';
+    case PROJECT_SETTINGS_UPDATE = 'change project settings';
+    case EVENT_SETTINGS_UPDATE = 'change event settings';
 
+    case SYSTEM_NOTIFICATION = 'change system notification';
 
     // deleted
-    case PROJECT_DELETE = 'delete projects';
+    //case PROJECT_DELETE = 'delete projects';
     case EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
     case PROJECT_ADMIN = 'admin projects';
     case CHECKLIST_UPDATE = 'update checklists';

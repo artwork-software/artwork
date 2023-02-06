@@ -11,5 +11,6 @@ enum RoleNameEnum: string
     case CONTRACT_ADMIN = 'contract admin';
     case MONEY_SOURCE_ADMIN = 'money source admin';
 
+
     case USER = 'user';
 }

@@ -683,7 +683,7 @@ export default {
                 user: '',
                 position: [],
                 project_title: this.project?.name,
-                table_id: this.table.id
+                table_id: this.table?.id
             }),
         }
     },

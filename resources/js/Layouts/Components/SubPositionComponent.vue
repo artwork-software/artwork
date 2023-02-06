@@ -217,12 +217,18 @@
                             <div
                                 :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                 class="my-4 h-6 flex items-center justify-end"
-                                @click="cell.clicked = !cell.clicked"
+                                @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
-                                <div class="pr-2">
-                                    <img v-if="cell.linked_money_source_id !== null"
-                                         src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                         class="h-6 w-6"/>
+                                <div class="pr-2 flex items-center">
+                                    <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
+                                    src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                    class="h-6 w-6 mr-1"/>
+                                    <img v-else-if="cell.comments_count > 0 || cell.calculations_count > 0"
+                                         src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                         class="h-5 w-5 mr-1"/>
+                                    <img v-else-if="cell.linked_money_source_id !== null"
+                                         src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                         class="h-6 w-6 mr-1"/>
                                     {{ cell.value }}
                                 </div>
                             </div>
@@ -244,9 +250,15 @@
                                 class="my-4 h-6 flex items-center"
                                 @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                 v-else>
-                                <img v-if="cell.linked_money_source_id !== null"
-                                     src="/Svgs/IconSvgs/icon_linked_moneySource.svg"
-                                     class="h-6 w-6"/>
+                                <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
+                                     src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                     class="h-6 w-6 mr-1"/>
+                                <img v-else-if="cell.comments_count > 0 || cell.calculations_count > 0"
+                                     src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                     class="h-5 w-5 mr-1"/>
+                                <img v-else-if="cell.linked_money_source_id !== null"
+                                     src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                     class="h-6 w-6 mr-1"/>
                                 {{ cell.value }}
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked"
                                                 @click="openCellDetailModal(cell)"
@@ -344,7 +356,7 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['subPosition', 'mainPosition', 'columns', 'project', 'budget'],
+    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table'],
     emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
     data() {
         return {
@@ -373,8 +385,8 @@ export default {
                 id: null,
                 user: '',
                 position: [],
-                project_title: this.project.name,
-                table_id: this.budget.table.id,
+                project_title: this.project?.name,
+                table_id: this.table.id,
             }),
             colors: {
                 whiteColumn: 'whiteColumn',
@@ -404,8 +416,8 @@ export default {
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
-                project_id: this.project.id,
-                table_id: this.budget.table.id,
+                project_id: this.project?.id,
+                table_id: this.table.id,
             })
         },
         openVerifiedModalSub(subPosition) {
@@ -437,7 +449,7 @@ export default {
         },
         addRowToSubPosition(subPosition, row) {
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
@@ -464,8 +476,8 @@ export default {
         openRowDetailModal(row){
           this.$emit('openRowDetailModal',row)
         },
-        openCellDetailModal(column) {
-            this.$emit('openCellDetailModal', column)
+        openCellDetailModal(cell) {
+            this.$emit('openCellDetailModal', cell)
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;
@@ -476,6 +488,14 @@ export default {
             this.rowToDelete = row;
             this.showDeleteModal = true;
             this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
+        },
+        handleCellClick(cell){
+            if(cell.calculations_count > 0){
+                this.$emit('openCellDetailModal', cell)
+            }else{
+                cell.clicked = !cell.clicked
+            }
+
         },
         addSubPosition(mainPositionId, subPosition = null) {
 
@@ -488,7 +508,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {

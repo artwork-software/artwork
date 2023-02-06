@@ -93,7 +93,7 @@ class RolesAndPermissionsSeeder extends Seeder
         Permission::create([
             'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,
             'name_de' => "Finanzierungsquellen anlegen und verwalten",
-            'group' => 'Finanzierungsquellen',
+            'group' => 'Dokumente & Budget',
             'tooltipText' => 'User darf eigene Finanzierungsquellen anlegen und zur Einsicht & Verwaltung von Finanzierungsquellen eingeladen werden.',
             'checked' => false
         ]);

@@ -69,7 +69,7 @@
                 <div class="ml-4 flex items-center md:ml-6">
                     <div class="flex items-center mr-6">
 
-                        <Link v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        <Link v-if="this.$page.props.is_admin || this.$page.props.is_room_admin"
                               class="inset-y-0 mr-5"
                               :href="getTrashRoute()">
                             <TrashIcon class="h-5 w-5" aria-hidden="true"/>
@@ -263,7 +263,7 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.checkPermissionAdmin(),
+                    has_permission: this.checkPermissionGlobalMessageAndToolSettings(),
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']

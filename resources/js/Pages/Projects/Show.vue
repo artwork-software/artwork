@@ -10,7 +10,7 @@
                         {{ project?.name }}
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.project_management || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
+                          v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex ml-6">
@@ -36,7 +36,7 @@
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem
-                                        v-if="this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || this.$page.props.can.edit_projects"
                                         v-slot="{ active }">
                                         <a @click="openEditProjectModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -56,7 +56,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem
-                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.delete_projects || projectManagerIds.includes(this.$page.props.user.id)"
                                         v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -278,7 +278,7 @@
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
                             <div class="flex items-center"
-                                 v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                 v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -455,7 +455,7 @@
                                             <div class="flex w-full mt-6"
                                                  v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="flex"
-                                                     v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                                     v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
                                                         <AddButton @click="openAddTaskModal(checklist)"
                                                                    text="Neue Aufgabe" mode="page"/>
@@ -515,7 +515,7 @@
                                                                         {{ element.done_at }}
                                                                     </span>
                                                                     <Menu
-                                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                                                         as="div" class="my-auto relative"
                                                                         v-show="showMenu === element.id">
                                                                         <div class="flex">
@@ -793,7 +793,7 @@
                                 Informationen </h3>
                         </div>
                         <div
-                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                            v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
@@ -844,7 +844,7 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
                         <div
-                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                            v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id)">
                             <input
                                 @change="uploadChosenDocuments"
                                 class="hidden"
@@ -909,7 +909,7 @@
                         </jet-dialog-modal>
 
                         <div class="space-y-1"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
+                             v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <div :data-tooltip-target="project_file.name" class="flex truncate">
@@ -918,7 +918,7 @@
                                         {{ project_file.name }}</p>
 
                                     <XCircleIcon
-                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         @click="openConfirmDeleteModal(project_file)"
                                         class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                         aria-hidden="true"/>
@@ -1878,7 +1878,7 @@ export default {
     },
     computed: {
         tabs() {
-            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
+            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return [
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},

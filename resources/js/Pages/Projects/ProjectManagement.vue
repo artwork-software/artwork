@@ -39,7 +39,7 @@
                                 </transition>
                             </Listbox>
                             <div class="flex"
-                                 v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.own_projects">
+                                 v-if="this.$page.props.is_admin || this.$page.props.can.own_projects">
                                 <AddButton @click="openAddProjectModal" text="Neues Projekt" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -59,9 +59,6 @@
                             </div>
                         </div>
                     </div>
-                    <pre>
-            {{ filteredProjects }}
-        </pre>
                     <div v-for="(project,index) in filteredProjects"
                          :key="project.id"
                          class="mt-5 border-b-2 border-gray-200 w-full">
@@ -69,7 +66,7 @@
                             class="py-4 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link v-if="checkPermissions(project, 'edit')" :href="getEditHref(project)"
+                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || checkPermission(project, 'edit')" :href="getEditHref(project)"
                                           class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">
                                             <span v-if="project.is_group">
@@ -171,7 +168,6 @@
                                     </div>
                                 </div>
                                 <Menu
-                                    v-if="checkPermissions(project, 'edit')"
                                     as="div" class="my-auto relative">
                                     <div class="flex">
                                         <MenuButton
@@ -199,7 +195,7 @@
                                         <MenuItems
                                             class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                             <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
                                                     <a :href="getEditHref(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
@@ -208,7 +204,7 @@
                                                         Bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" >
                                                     <a href="#" @click="duplicateProject(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <DuplicateIcon
@@ -217,7 +213,7 @@
                                                         Duplizieren
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'delete')">
                                                     <a href="#" @click="openDeleteProjectModal(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
@@ -233,7 +229,7 @@
                             </div>
                         </div>
                         <div
-                            v-if="checkPermissions(project, 'edit')"
+                            v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit')"
                             class="mb-12 -mt-2 text-secondary flex items-center">
                             <div v-if="project.project_history.length" class="flex items-center">
                             <span class=" xsLight">
@@ -905,6 +901,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import projects from "@/Pages/Trash/Projects";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import {write} from "../../../../public/js/app";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1108,33 +1105,23 @@ export default defineComponent({
         deleteSubProjectFromGroup(index){
             this.subProjects.splice(index,1);
         },
-        checkPermissions(project, func){
-            if(func === 'edit'){
-                const writePermissionIds = [];
-                if(this.$page.props.can.view_projects){
-                    return true;
-                }
-                if(this.$page.props.is_admin){
-                    return true;
-                }
-                if(this.$page.props.can.project_management){
-                    return true;
-                }
-                project.write_auth.forEach((user) => {
-                    writePermissionIds.push(user.id);
-                });
-                console.log(writePermissionIds);
-                if(writePermissionIds.includes(this.$page.props.user.id)){
-                    return true;
-                }
+        checkPermission(project, type){
+            const writeAuth = [];
+            const managerAuth = [];
+
+            project.project_managers.forEach((user) => {
+                managerAuth.push(user.id);
+            })
+
+            project.write_auth.forEach((user) => {
+                writeAuth.push(user.id);
+            });
+
+            if(writeAuth.includes(this.$page.props.user.id) && type === 'edit'){
+                return true;
             }
-            if(func === 'open'){
-                if(this.$page.props.can.view_projects){
-                    return true;
-                }
-                if(this.$page.props.is_admin){
-                    return true;
-                }
+            if(managerAuth.includes(this.$page.props.user.id) && type === 'delete'){
+                return true;
             }
             return false;
         }

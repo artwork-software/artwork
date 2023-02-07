@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
 use App\Models\ChecklistTemplate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -18,7 +19,7 @@ class ChecklistTemplatePolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view checklist_templates');
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     /**
@@ -30,7 +31,7 @@ class ChecklistTemplatePolicy
      */
     public function view(User $user, ChecklistTemplate $checklistTemplate)
     {
-        return $user->can('view checklist_templates');
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     /**
@@ -41,7 +42,7 @@ class ChecklistTemplatePolicy
      */
     public function create(User $user)
     {
-        return $user->can('create checklist_templates');
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     /**
@@ -53,7 +54,7 @@ class ChecklistTemplatePolicy
      */
     public function update(User $user, ChecklistTemplate $checklistTemplate)
     {
-        return $user->can('update checklist_templates');
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     /**
@@ -65,7 +66,7 @@ class ChecklistTemplatePolicy
      */
     public function delete(User $user, ChecklistTemplate $checklistTemplate)
     {
-        return $user->can('delete checklist_templates');
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value);
     }
 
     /**

@@ -166,6 +166,11 @@ class RolesAndPermissionsSeeder extends Seeder
         $user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value]);
 
         Role::create([
+            'name' => RoleNameEnum::ROOM_ADMIN->value,
+            'name_de' => "Raumadmin für alle Räume (Dispo)",
+        ]);
+
+        Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
             'name_de' => "Budgetadmin",
         ]);

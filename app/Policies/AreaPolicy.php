@@ -20,7 +20,7 @@ class AreaPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->canAny([PermissionNameEnum::ROOM_ADMIN, RoleNameEnum::ARTWORK_ADMIN]);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -32,7 +32,7 @@ class AreaPolicy
      */
     public function view(User $user, Area $area)
     {
-        return $user->canAny([PermissionNameEnum::ROOM_ADMIN, RoleNameEnum::ARTWORK_ADMIN]);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -43,7 +43,7 @@ class AreaPolicy
      */
     public function create(User $user)
     {
-        return $user->canAny([PermissionNameEnum::ROOM_ADMIN, RoleNameEnum::ARTWORK_ADMIN]);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -55,7 +55,7 @@ class AreaPolicy
      */
     public function update(User $user, Area $area)
     {
-        return $user->canAny([PermissionNameEnum::ROOM_ADMIN, RoleNameEnum::ARTWORK_ADMIN]);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -67,7 +67,7 @@ class AreaPolicy
      */
     public function delete(User $user, Area $area)
     {
-        return $user->canAny([PermissionNameEnum::ROOM_ADMIN, RoleNameEnum::ARTWORK_ADMIN]);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**

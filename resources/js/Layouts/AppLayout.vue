@@ -15,7 +15,7 @@
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                              aria-hidden="true"/>
                     </a>
-                    <Menu as="div" class="my-auto">
+                    <Menu as="div" class="my-auto" v-if="checkPermissionAdmin">
                         <div class="flex">
                             <MenuButton
                             >
@@ -33,12 +33,10 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
-                                <div class="py-1 z-50">
-                                    <MenuItem v-for="item in managementNavigation" :key="item.name" v-slot="{ active }">
-                                        <Link v-if="item.has_permission"
-                                              :href="item.href"
+                            <MenuItems class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                <div class="z-50" v-for="item in managementNavigation" :key="item.name">
+                                    <MenuItem v-if="item.has_permission"  v-slot="{ active }">
+                                        <Link :href="item.href"
                                               :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center ']">
                                             {{ item.name }}
                                         </Link>
@@ -265,50 +263,50 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.checkPermissionAdmin(),
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']
                 },
                 {
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.add_user,
                     name: 'Nutzer*innen',
                     href: route('users'),
                     route: ['/users']
                 },
                 {
                     name: 'Teams',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_teams,
                     href: route('departments'),
                     route: ['/departments']
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.is_room_admin,
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.request_room,
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
                 {
                     name: 'Projekte',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_project_settings,
                     href: route('project.settings'),
                     route: ['/settings/projects']
                 },
                 {
                     name: 'Termine',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_event_settings,
                     href: route('event_types.management'),
                     route: ['/event_types']
                 },
                 {
                     name: 'Checklisten',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_checklist_settings,
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
@@ -328,6 +326,29 @@ export default {
         }
     },
     methods: {
+        checkPermissionGlobalMessageAndToolSettings(){
+            if(this.$page.props.can.edit_settings || this.$page.props.can.global_notifiaction){
+                return true;
+            }
+            return false
+        },
+        checkPermissionAdmin(){
+            if(
+                this.$page.props.can.edit_settings ||
+                this.$page.props.can.add_user ||
+                this.$page.props.can.edit_teams ||
+                this.$page.props.can.edit_project_settings ||
+                this.$page.props.can.edit_event_settings ||
+                this.$page.props.can.edit_checklist_settings ||
+                this.$page.props.can.global_notifiaction ||
+                this.$page.props.can.request_room ||
+                this.$page.props.can.read_room_request_details ||
+                this.$page.props.room_admin
+            ) {
+                return true
+            }
+            return false;
+        },
         checkPermission(item){
             if(item.has_permission === 'is_money_source_admin'){
                 if(this.$page.props.is_money_source_admin){

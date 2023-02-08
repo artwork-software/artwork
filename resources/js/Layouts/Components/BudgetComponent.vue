@@ -744,7 +744,7 @@ export default {
 
             return cssString
         },
-        getSumOfTable(tableType, columnId) {
+        getSumOfTable(tableType, columnId, isCommented) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
                 sum += mainPosition.columnSums[columnId];

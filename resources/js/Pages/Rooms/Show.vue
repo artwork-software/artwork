@@ -393,10 +393,10 @@
                                     Keinem Projekt zugeordnet
                                 </div>
 
-                                <div class="flex xsLight items-center">
-                                    angefragt:<img :data-tooltip-target="eventRequest.created_by.id"
-                                                   :src="eventRequest.created_by.profile_photo_url"
-                                                   :alt="eventRequest.created_by.name"
+                                <div class="flex xsLight items-center" v-if="eventRequest.created_by">
+                                    angefragt:<img :data-tooltip-target="eventRequest.created_by?.id"
+                                                   :src="eventRequest.created_by?.profile_photo_url"
+                                                   :alt="eventRequest.created_by?.name"
                                                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                     <UserTooltip :user="eventRequest.created_by"/>
                                     <span class="ml-2 xsLight"> {{ eventRequest.created_at }}</span>

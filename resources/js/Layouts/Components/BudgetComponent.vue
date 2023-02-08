@@ -212,7 +212,7 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
-                                                <a @click="deleteColumn(column.id)"
+                                                <a v-show="index > 2" @click="deleteColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <TrashIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -269,7 +269,7 @@
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
-                                    v-for="column in table.columns.slice(3)">
+                                    v-for="column in table.columns?.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
                                         {{ this.getSumOfTable(0, column.id) }}
@@ -704,7 +704,7 @@ export default {
             return [costTableArray, earningTableArray]
         },
         tableIsEmpty: function () {
-            if(this.table.main_positions.length === 2 && this.table.main_positions[0].sub_positions.length === 1 && this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1 && this.table.columns.length === 4){
+            if(this.table.main_positions.length === 2 && this.table.main_positions[0].sub_positions.length === 1 && this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1 && this.table.columns?.length === 4){
                 return true;
             }else{
                 return false;

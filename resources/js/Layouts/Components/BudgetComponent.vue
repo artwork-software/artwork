@@ -278,11 +278,17 @@
 
                             </tr>
                             <!-- TODO: Hier noch einfügen if(commented === true) -->
+
                             <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
                                 <td class="w-28"></td>
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
-                                <td class="w-48 my-2 p-1">3000</td>
+                                <td class="flex items-center w-48"
+                                    v-for="column in table.columns.slice(3)">
+                                    <div class="w-48 my-2 p-1">
+                                        {{ table.commentedCostSums[column.id] }}
+                                    </div>
+                                </td>
                             </tr>
                             </tbody>
                         </table>

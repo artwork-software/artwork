@@ -167,7 +167,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                <Menu
+                                <Menu   v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
                                     as="div" class="my-auto relative">
                                     <div class="flex">
                                         <MenuButton
@@ -204,7 +204,7 @@
                                                         Bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }" >
+                                                <MenuItem v-slot="{ active }"  v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
                                                     <a href="#" @click="duplicateProject(project)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <DuplicateIcon

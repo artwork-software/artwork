@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
 use App\Models\Category;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -18,7 +19,7 @@ class CategoryPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     /**
@@ -29,7 +30,7 @@ class CategoryPolicy
      */
     public function create(User $user)
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     /**
@@ -41,7 +42,7 @@ class CategoryPolicy
      */
     public function update(User $user, Category $category)
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     /**
@@ -53,7 +54,7 @@ class CategoryPolicy
      */
     public function delete(User $user, Category $category)
     {
-        return $user->can('manage categories_etc');
+        return $user->can(PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value);
     }
 
     /**

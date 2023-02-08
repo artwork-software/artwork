@@ -50,7 +50,7 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return ($user->can(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value));
+        return $user->can(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value);
     }
 
     /**
@@ -102,7 +102,7 @@ class ProjectPolicy
                 $isCreator = true;
             }
         }
-        return $user->can('update projects');
+        return $user->can(PermissionNameEnum::PROJECT_UPDATE->value);
             //&& (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 
@@ -128,7 +128,7 @@ class ProjectPolicy
                 $isCreator = true;
             }
         }
-        return $user->can('delete projects') || $isCreator;
+        return $user->can(PermissionNameEnum::PROJECT_DELETE->value) || $isCreator;
            // && (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 

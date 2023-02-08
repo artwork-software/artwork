@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
 use App\Models\Invitation;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -29,7 +30,7 @@ class InvitationPolicy
      */
     public function create(User $user)
     {
-        return $user->can('invite users');
+        return $user->can(PermissionNameEnum::USER_UPDATE->value);
     }
 
     /**
@@ -41,7 +42,7 @@ class InvitationPolicy
      */
     public function update(User $user, Invitation $invitation)
     {
-        return $user->can('invite users');
+        return $user->can(PermissionNameEnum::USER_UPDATE->value);
     }
 
     /**
@@ -53,7 +54,7 @@ class InvitationPolicy
      */
     public function delete(User $user, Invitation $invitation)
     {
-        return $user->can('invite users');
+        return $user->can(PermissionNameEnum::USER_UPDATE->value);
     }
 
     /**

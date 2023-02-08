@@ -49,7 +49,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment)
     {
-        return $comment->user->id == $user->id || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN) ;
+        return $comment->user->id == $user->id;
     }
 
     /**

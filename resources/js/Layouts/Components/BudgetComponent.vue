@@ -707,7 +707,7 @@ export default {
         }
     },
 
-    props: ['budget', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
+    props: ['table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
 
     computed: {
         tablesToShow: function () {

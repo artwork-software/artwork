@@ -91,21 +91,12 @@ class BudgetTemplateController extends Controller
      */
     public function store(Table $table, Request $request)
     {
-        $oldTable = $table
-            ->with([
-                'columns',
-                'mainPositions',
-                'mainPositions.verified',
-                'mainPositions.subPositions',
-                'mainPositions.subPositions.verified',
-                'mainPositions.subPositions.subPositionRows',
-                'mainPositions.subPositions.subPositionRows.cells.column'
-            ])->first();
-
+        $oldTable = $table->first();
         $this->createTemplate($request->template_name, $oldTable);
     }
 
     private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null){
+
         $newTable = Table::create([
             'name' => $name,
             'is_template' => $isTemplate,
@@ -134,6 +125,7 @@ class BudgetTemplateController extends Controller
                     $replicated_subPositionRow->save();
                     $subPositionRow->cells->map(function (ColumnCell $columnCell) use ($replicated_subPositionRow) {
                         $replicated_columnCell = $columnCell->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
+                        $replicated_columnCell->value = $columnCell->value;
                         $replicated_columnCell->linked_money_source_id = null;
                         $replicated_columnCell->linked_type = null;
                         $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];

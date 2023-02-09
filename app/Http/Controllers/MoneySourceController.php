@@ -11,6 +11,7 @@ use App\Models\MoneySourceTask;
 use App\Models\Project;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
+use App\Models\Table;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -146,7 +147,8 @@ class MoneySourceController extends Controller
             $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
             $subPosition = SubPosition::find($subPositionRow->sub_position_id);
             $mainPosition = MainPosition::find($subPosition->main_position_id);
-            $project = Project::find($mainPosition->project_id);
+            $table = Table::find($mainPosition->table_id);
+            $project = Project::find($table->project_id);
             $positions[] = [
                 'type' => $column->linked_type,
                 'value' => $column->value,

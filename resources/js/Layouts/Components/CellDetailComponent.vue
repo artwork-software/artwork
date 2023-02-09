@@ -31,25 +31,34 @@
                     <div v-if="isCalculateTab">
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
-                            <div class="h-1.5 my-2 bg-silverGray"/>
-                            <div class="flex space-x-4 mb-3">
-                                <div class="w-1/2">
-                                    <input type="text"
-                                           v-model="calculation.name"
-                                           placeholder="Name"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <div @mouseover="calculationHovered = calculation.id"
+                                 @mouseout="calculationHovered = null">
+                                <div class="h-1.5 my-2 bg-silverGray"
+                                />
+                                <div class="flex space-x-4 mb-3">
+                                    <div class="w-1/2">
+                                        <input type="text"
+                                               v-model="calculation.name"
+                                               placeholder="Name"
+                                               class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <div class="w-1/2">
+                                        <input type="text" @focusout="this.refreshSumKey++"
+                                               v-model="calculation.value"
+                                               placeholder="Wert"
+                                               class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <button v-show="calculationHovered === calculation.id" type="button"
+                                            @click="deleteCalculationFromCell(calculation)">
+                                        <span class="sr-only">Rechnung von Zelle entfernen</span>
+                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                    </button>
                                 </div>
-                                <div class="w-1/2">
-                                    <input type="text" @focusout="this.refreshSumKey++"
-                                           v-model="calculation.value"
-                                           placeholder="Wert"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
+                                <textarea placeholder="Kommentar"
+                                          v-model="calculation.description"
+                                          rows="4"
+                                          class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
-                            <textarea placeholder="Kommentar"
-                                      v-model="calculation.description"
-                                      rows="4"
-                                      class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div @click="addCalculation(cell.id)"
                              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
@@ -242,15 +251,16 @@ export default {
             linkedType: this.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
             selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
             linkTypes,
-            isCalculateTab: true,
-            isCommentTab: false,
+            isCalculateTab: this.cell.column.type === 'empty',
+            isCommentTab: this.cell.column.type !== 'empty',
             isExcludeTab: false,
             isLinkTab: false,
             hoveredBorder: false,
             refreshSumKey: 0,
-            isExcluded:this.cell.commented,
+            isExcluded: this.cell.commented,
             cellComment: null,
             commentHovered: null,
+            calculationHovered: null,
             commentForm: useForm({
                 description: '',
                 cellId: this.cell.id
@@ -265,20 +275,20 @@ export default {
     watch: {},
     computed: {
         tabs() {
-            return [
-                {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
-                {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
-                {name: 'Verlinkung', href: '#', current: this.isLinkTab},
-            ]
-        },
-        calculationNames() {
-            let calculations = this.cell.calculations;
-            let names = []
-            calculations?.forEach((calculation) => {
-                names.push(calculation.name);
-            })
-            return names;
+            if (this.cell.column.type === 'empty') {
+                return [
+                    {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
+                    {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                    {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                    {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+                ]
+            } else {
+                return [
+                    {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                    {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+                ]
+            }
+
         },
         calculationValues() {
             let calculations = this.cell.calculations;
@@ -287,26 +297,6 @@ export default {
                 values.push(calculation.value);
             })
             return values;
-        },
-        calculationDescriptions() {
-            let calculations = this.cell.calculations;
-            let descriptions = []
-            calculations?.forEach((calculation) => {
-                descriptions.push(calculation.description);
-            })
-            return descriptions;
-        },
-        calculationArray() {
-            let calculations = this.cell.calculations;
-            let helperArray = [];
-            calculations?.forEach((calculation, index) => {
-                helperArray[index] = {
-                    name: this.calculationNames[index],
-                    value: this.calculationValues[index],
-                    description: this.calculationDescriptions[index]
-                };
-            });
-            return helperArray;
         },
         calculationSum() {
             this.refreshSumKey++;
@@ -389,6 +379,12 @@ export default {
                 preserveScroll: true
             });
         },
+        deleteCalculationFromCell(calculation) {
+            this.$inertia.delete(route('project.budget.cell.calculation.delete', {cellCalculation: calculation.id}), {
+                preserveState: true,
+                preserveScroll: true
+            });
+        },
         addCommentToCell() {
             if(!this.commentForm.description){
                 return;
@@ -399,11 +395,13 @@ export default {
             });
             this.commentForm.reset('description');
         },
-        updateCommentedStatus(){
-            this.$inertia.patch(route('project.budget.cell.commented',{columnCell:this.cell.id}), {
+        updateCommentedStatus() {
+            this.$inertia.patch(route('project.budget.cell.commented', {columnCell: this.cell.id}), {
                 commented: this.isExcluded
-            },{preserveState: true,
-                preserveScroll: true});
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            });
             this.closeModal(true);
         }
     },

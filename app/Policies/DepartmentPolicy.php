@@ -2,7 +2,10 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\Department;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -18,7 +21,8 @@ class DepartmentPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('view departments') || $user->can('teammanagement');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value)  || $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
+        //return $user->can('view departments') || $user->can('teammanagement');
     }
 
     /**
@@ -30,7 +34,8 @@ class DepartmentPolicy
      */
     public function view(User $user, Department $department)
     {
-        return $user->can('view departments') || $user->can('teammanagement');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) || $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
+        //return $user->can('view departments') || $user->can('teammanagement');
     }
 
     /**
@@ -41,7 +46,8 @@ class DepartmentPolicy
      */
     public function create(User $user)
     {
-        return $user->can('create departments') || $user->can('teammanagement');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) || $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        //return $user->can('create departments') || $user->can('teammanagement');
     }
 
     /**
@@ -53,7 +59,8 @@ class DepartmentPolicy
      */
     public function update(User $user, Department $department)
     {
-        return $user->can('update departments') || $user->can('teammanagement');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) || $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        //return $user->can('update departments') || $user->can('teammanagement');
     }
 
     /**
@@ -65,7 +72,8 @@ class DepartmentPolicy
      */
     public function delete(User $user, Department $department)
     {
-        return $user->can('delete departments') || $user->can('teammanagement');
+        return $user->can(PermissionNameEnum::TEAM_UPDATE->value) || $user->can(PermissionNameEnum::DEPARTMENT_UPDATE->value);
+        //return $user->can('delete departments') || $user->can('teammanagement');
     }
 
     /**

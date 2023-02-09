@@ -10,7 +10,7 @@
                         {{ project?.name }}
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                          v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex ml-6">
@@ -36,7 +36,7 @@
                                 class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem
-                                        v-if="this.$page.props.is_admin || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || this.$page.props.can.edit_projects"
                                         v-slot="{ active }">
                                         <a @click="openEditProjectModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -56,7 +56,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem
-                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.delete_projects || projectManagerIds.includes(this.$page.props.user.id)"
                                         v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -140,7 +140,7 @@
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
                     <div class="flex"
-                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                         v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.project_management || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                         <div class="cursor-pointer" @click="openEditProjectTeamModal">
                             <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
                                               aria-hidden="true"/>
@@ -278,7 +278,7 @@
                         <div class="flex w-full items-center mb-8 ">
                             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
                             <div class="flex items-center"
-                                 v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                 v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
                                 <div v-if="$page.props.can.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -358,7 +358,7 @@
                                                         </Menu>
                                                     </div>
                                                     <Menu
-                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                                         as="div" class="my-auto relative">
                                                         <div class="flex">
                                                             <MenuButton
@@ -455,7 +455,7 @@
                                             <div class="flex w-full mt-6"
                                                  v-if="this.opened_checklists.includes(checklist.id)">
                                                 <div class="flex"
-                                                     v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                                     v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                                     <div>
                                                         <AddButton @click="openAddTaskModal(checklist)"
                                                                    text="Neue Aufgabe" mode="page"/>
@@ -515,7 +515,7 @@
                                                                         {{ element.done_at }}
                                                                     </span>
                                                                     <Menu
-                                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                                                         as="div" class="my-auto relative"
                                                                         v-show="showMenu === element.id">
                                                                         <div class="flex">
@@ -631,7 +631,7 @@
                                                                         </a>
                                                                     </MenuItem>
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click=""
+                                                                        <a @click="createTemplateFromChecklist(checklist)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -793,7 +793,7 @@
                                 Informationen </h3>
                         </div>
                         <div
-                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                            v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
@@ -844,7 +844,7 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
                         </div>
                         <div
-                            v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                            v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id)">
                             <input
                                 @change="uploadChosenDocuments"
                                 class="hidden"
@@ -909,7 +909,7 @@
                         </jet-dialog-modal>
 
                         <div class="space-y-1"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin || this.$page.props.can.view_projects">
+                             v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                             <div v-for="project_file in project.project_files"
                                  class="cursor-pointer group flex items-center">
                                 <div :data-tooltip-target="project_file.name" class="flex truncate">
@@ -918,7 +918,7 @@
                                         {{ project_file.name }}</p>
 
                                     <XCircleIcon
-                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectAdminIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         @click="openConfirmDeleteModal(project_file)"
                                         class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                         aria-hidden="true"/>
@@ -938,7 +938,7 @@
                 </div>
                 <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
                     <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
-                                     :money-sources="moneySources"></BudgetComponent>
+                                     :money-sources="moneySources" :budget-access="access_budget" :project-manager="projectManagerIds"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -1292,8 +1292,9 @@
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen der Nutzer*innen ein, die du zum Team hinzufügen möchtest ein. Einzelne
-                        Mitglieder kannst du zum Projektadmin oder zur Projektleitung ernennen.
+                        Tippe den Namen der Nutzer*innen, die du zum Team hinzufügen möchtest.
+                        Die Nutzer*innen erhalten Lesezugriff auf dieses Projekt.
+                        Weiterreichende Rechte kann nur die Projektleitung vergeben.
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
@@ -1349,35 +1350,61 @@
                         </transition>
                     </div>
                     <div class="mt-4">
-                        <span v-for="user in assignedUsers"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4">
-                                {{ user.first_name }} {{ user.last_name }}
+                        <span v-for="user in assignedUsers" class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                            <div class="flex items-center w-64">
+                                <div class="flex items-center">
+                                    <img class="flex h-11 w-11 rounded-full"
+                                         :src="user.profile_photo_url"
+                                         alt=""/>
+                                    <span class="flex ml-4">
+                                        {{ user.first_name }} {{ user.last_name }}
                                     </span>
+                                </div>
+                                <button type="button" @click="deleteUserFromProjectTeam(user)">
+                                    <span class="sr-only">User aus Team entfernen</span>
+                                    <XCircleIcon class="ml-3 h-5 w-5 hover:text-error "/>
+                                </button>
                             </div>
-                            <button type="button" @click="deleteUserFromProjectTeam(user)">
-                                <span class="sr-only">User aus Team entfernen</span>
-                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
-                            </button>
-                            <div class="flex justify-between items-center ml-16 my-1.5 h-5">
-                                <div class="flex items-center justify-start" v-if="this.$page.props.can.project_management">
-                                    <input v-model="user.is_admin"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.is_admin ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Projektadmin</p>
-                                    <input v-model="user.is_manager"
-                                           type="checkbox"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none ml-4 h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.is_manager ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Projektleitung</p>
+                            <div class="flex justify-between items-center my-1.5 h-5 w-80">
+                                <div class="flex items-center justify-between" v-if="checkUserAuth(user)">
+
+                                   <div class="flex">
+                                        <input v-model="user.can_write"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.can_write ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Schreibrecht</p>
+                                   </div>
+                                    <Dropdown align="right" width="60" class="text-right">
+                                        <template #trigger>
+                                            <span class="inline-flex">
+                                                <button type="button" class="text-sm ml-14 my-auto text-sm text-secondary focus:outline-none transition">
+                                                    Weitere Rechte
+                                                </button>
+                                            </span>
+                                        </template>
+
+                                        <template #content>
+                                            <div class="w-44 p-4">
+                                                <div class="flex">
+                                                    <input v-model="user.access_budget"
+                                                           type="checkbox"
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                <p
+                                                   class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
+                                                </div>
+                                                <div class="flex mt-4" v-if="user.project_management">
+                                                    <input v-model="user.is_manager"
+                                                           type="checkbox"
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                <p
+                                                   class="ml-4 my-auto text-sm text-secondary">Projektleitung</p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </Dropdown>
                                 </div>
                             </div>
-
                         </span>
                         <span v-for="department in assignedDepartments"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
@@ -1392,7 +1419,6 @@
                                 <span class="sr-only">Team aus dem Projekt entfernen</span>
                                 <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
                             </button>
-
                         </span>
                     </div>
                     <div class="w-full items-center text-center">
@@ -1400,9 +1426,7 @@
                                    class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
                         />
                     </div>
-
                 </div>
-
             </template>
 
         </jet-dialog-modal>
@@ -1723,7 +1747,7 @@
 
         </jet-dialog-modal>
 
-        <BaseSidenav :show="show" @change="this.show =! this.show">
+        <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
                 :project="project"
                 :cost-center="project.cost_center"
@@ -1789,6 +1813,7 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
+import Dropdown from "@/Jetstream/Dropdown.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1803,6 +1828,7 @@ export default {
     name: "ProjectShow",
     props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
+        Dropdown,
         BudgetComponent,
         ProjectSidenav,
         BaseSidenav,
@@ -1852,7 +1878,7 @@ export default {
     },
     computed: {
         tabs() {
-            if(this.$page.props.is_admin) {
+            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return [
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},
@@ -1868,10 +1894,16 @@ export default {
             }
         },
         historyTabs() {
-            return [
-                {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
-                {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
-            ]
+            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
+                return [
+                    {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
+                    {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
+                ]
+            } else {
+                return [
+                    {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
+                ]
+            }
         },
         projectMembers() {
             let projectMembers = [];
@@ -1881,8 +1913,11 @@ export default {
                 } else {
                     projectMembers.push(user);
                 }
-                if (this.project.project_admins.findIndex((projectAdmin) => projectAdmin.id === user.id) !== -1) {
-                    user.is_admin = true;
+                if (this.project.access_budget.findIndex((access_budget) => access_budget.id === user.id) !== -1) {
+                    user.access_budget = true;
+                }
+                if (this.project.write_auth.findIndex((writeAuth) => writeAuth.id === user.id) !== -1) {
+                    user.can_write = true;
                 }
             })
             return projectMembers;
@@ -1906,13 +1941,13 @@ export default {
 
             return commentCopy.sort(compare);
         },
-        projectAdminIds: function () {
-            let adminIdArray = [];
-            this.project.project_admins.forEach(admin => {
-                    adminIdArray.push(admin.id)
+        access_budget: function () {
+            let access_budget = [];
+            this.project.access_budget.forEach(admin => {
+                    access_budget.push(admin.id)
                 }
             )
-            return adminIdArray;
+            return access_budget;
         },
         projectManagerIds: function () {
             let managerIdArray = [];
@@ -1921,6 +1956,14 @@ export default {
                 }
             )
             return managerIdArray;
+        },
+        projectCanWriteIds: function () {
+            let canWriteArray = [];
+            this.project.write_auth.forEach(write => {
+                    canWriteArray.push(write.id)
+                }
+            )
+            return canWriteArray;
         },
     },
     data() {
@@ -2065,7 +2108,7 @@ export default {
         deleteCategoryFromProject(category) {
             this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2075,7 +2118,7 @@ export default {
         deleteGenreFromProject(genre) {
             this.form.projectGenreIds.splice(this.form.projectGenreIds.indexOf(genre.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2085,7 +2128,7 @@ export default {
         deleteSectorFromProject(sector) {
             this.form.projectSectorIds.splice(this.form.projectSectorIds.indexOf(sector.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2253,7 +2296,7 @@ export default {
 
             this.form.number_of_participants = this.selectedParticipantNumber;
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2318,7 +2361,7 @@ export default {
         editProjectTeam() {
             this.form.assigned_user_ids = {};
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {is_admin: user.is_admin, is_manager: user.is_manager};
+                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
             })
             this.form.assigned_departments = [];
             this.assignedDepartments.forEach(department => {
@@ -2489,6 +2532,7 @@ export default {
             this.closeEditChecklistModal();
         },
         createTemplateFromChecklist(checklist) {
+            console.log('HEHE');
             this.templateForm.checklist_id = checklist.id;
             this.templateForm.post(route('checklist_templates.store'));
         },
@@ -2503,6 +2547,20 @@ export default {
                 preserveScroll: true,
             });
         },
+        checkUserAuth(user){
+            if(this.projectManagerIds.includes(this.$page.props.user.id)){
+                return true;
+            }
+            if(this.$page.props.user.id === user.id && user.project_management) {
+                return true;
+            }
+            if (this.$page.props.is_admin){
+                return true;
+            }
+
+
+            return false;
+        }
     },
     watch: {
         department_and_user_query: {

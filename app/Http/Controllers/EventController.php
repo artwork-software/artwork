@@ -62,7 +62,7 @@ class EventController extends Controller
 
     public function showDashboardPage(Request $request): Response
     {
-        $projects = Project::query()->with(['adminUsers', 'managerUsers'])->get();
+        $projects = Project::query()->with( ['managerUsers'])->get();
 
         $tasks = Task::query()
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
@@ -197,7 +197,7 @@ class EventController extends Controller
 
     private function associateProject($request, $event) {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $project->users()->save(Auth::user(), ['is_admin' => true]);
+        $project->users()->save(Auth::user(), ['access_budget' => true]);
         $event->project()->associate($project);
         $event->save();
     }
@@ -272,7 +272,7 @@ class EventController extends Controller
 
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
-            $project->users()->save(Auth::user(), ['is_admin' => true]);
+            $project->users()->save(Auth::user(), ['access_budget' => true]);
             $event->project()->associate($project);
             $event->save();
         }

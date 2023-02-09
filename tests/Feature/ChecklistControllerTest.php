@@ -20,8 +20,8 @@ class ChecklistControllerTest extends TestCase
         /** @var Department $department */
         $department = Department::factory()->create();
         $checklist->departments()->sync([$department->id]);
-        Permission::firstOrCreate(['name' => PermissionNameEnum::DEPARTMENT_UPDATE]);
-        Permission::firstOrCreate(['name' => PermissionNameEnum::CHECKLIST_UPDATE]);
+        Permission::firstOrCreate(['name' => PermissionNameEnum::DEPARTMENT_UPDATE->value]);
+        Permission::firstOrCreate(['name' => PermissionNameEnum::CHECKLIST_UPDATE->value]);
 
         // assert unauthenticated
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]))->assertUnauthorized();
@@ -35,7 +35,7 @@ class ChecklistControllerTest extends TestCase
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])
             ->assertForbidden();
 
-        $user->givePermissionTo(PermissionNameEnum::CHECKLIST_UPDATE);
+        $user->givePermissionTo(PermissionNameEnum::CHECKLIST_UPDATE->value);
         $user->departments()->sync([$department->id]);
 
         // user not authorized to add departments
@@ -44,7 +44,7 @@ class ChecklistControllerTest extends TestCase
         ])
             ->assertUnprocessable();
 
-        $user->givePermissionTo(PermissionNameEnum::DEPARTMENT_UPDATE);
+        $user->givePermissionTo(PermissionNameEnum::DEPARTMENT_UPDATE->value);
 
         // user not authorized
         $this->patchJson(route('checklists.update', ['checklist' => $checklist->id]), [])

@@ -24,8 +24,9 @@ class ProjectIndexAdminResource extends JsonResource
             'resource' => class_basename($this),
             'id' => $this->id,
             'name' => $this->name,
-            'project_admins' => $this->adminUsers,
+            'access_budget' => $this->access_budget,
             'project_managers' => $this->managerUsers,
+            'can_write' => $this->writeUsers,
         ];
     }
 }

@@ -78,8 +78,9 @@ class CellCalculationsController extends Controller
      * @param  \App\Models\CellCalculations  $cellCalculations
      * @return \Illuminate\Http\Response
      */
-    public function destroy(CellCalculations $cellCalculations)
+    public function destroy(CellCalculations $cellCalculation): \Illuminate\Http\RedirectResponse
     {
-        //
+        $cellCalculation->delete();
+        return back();
     }
 }

@@ -20,8 +20,9 @@ use Laravel\Scout\Searchable;
  * @property \Illuminate\Support\Carbon $deleted_at
  *
  * @property \Illuminate\Database\Eloquent\Collection<User> $users
- * @property \Illuminate\Database\Eloquent\Collection<User> $adminUsers
+ * @property \Illuminate\Database\Eloquent\Collection<User> $access_budget
  * @property \Illuminate\Database\Eloquent\Collection<User> $managerUsers
+ * @property \Illuminate\Database\Eloquent\Collection<User> $writeUsers
  * @property \Illuminate\Database\Eloquent\Collection<event> $events
  * @property \Illuminate\Database\Eloquent\Collection<Department> $departments
  * @property \Illuminate\Database\Eloquent\Collection<ProjectHistory> $project_histories
@@ -64,13 +65,19 @@ class Project extends Model
     public function users()
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->withPivot('is_admin', 'is_manager');
+            ->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
-    public function adminUsers()
+    public function access_budget()
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
-            ->wherePivot('is_admin', true);
+            ->wherePivot('access_budget', true);
+    }
+
+    public function writeUsers()
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->wherePivot('can_write', true);
     }
 
     public function managerUsers()

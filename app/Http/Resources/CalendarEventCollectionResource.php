@@ -68,7 +68,7 @@ class CalendarEventCollectionResource extends ResourceCollection
             'projects' => Project::all()->map(fn(Project $project) => [
                 'id' => $project->id,
                 'label' => $project->name,
-                'project_admins' => $project->adminUsers
+                'access_budget' => $project->access_budget
             ]),
 
             'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [

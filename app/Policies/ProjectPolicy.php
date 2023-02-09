@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -37,7 +39,7 @@ class ProjectPolicy
                 $isTeamMember = true;
             }
         }
-        return ($user->projects->contains($project->id) || $project->users->contains($user->id) || $isTeamMember || $user->can('view projects'));
+        return ($user->projects->contains($project->id) || $project->users->contains($user->id) || $isTeamMember || $user->can(PermissionNameEnum::PROJECT_VIEW->value));
     }
 
     /**
@@ -48,7 +50,7 @@ class ProjectPolicy
      */
     public function create(User $user)
     {
-        return ($user->can("create and edit projects") || $user->can("admin projects"));
+        return $user->can(PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value);
     }
 
     /**
@@ -76,7 +78,6 @@ class ProjectPolicy
         return $user->can('create_and_edit_projects')
             || $project->users->contains($user->id)
             || $isTeamMember
-            || $user->projects()->find($project->id)->pivot->is_admin == 1
             || $user->projects()->find($project->id)->pivot->is_manager == 1
             || $isCreator;
     }
@@ -101,7 +102,7 @@ class ProjectPolicy
                 $isCreator = true;
             }
         }
-        return ($user->can('update projects') || $user->projects()->find($project->id)->pivot->is_admin == 1) ||$isCreator;
+        return $user->can(PermissionNameEnum::PROJECT_UPDATE->value);
             //&& (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 
@@ -127,7 +128,7 @@ class ProjectPolicy
                 $isCreator = true;
             }
         }
-        return $user->can('delete projects') || $isCreator;
+        return $user->can(PermissionNameEnum::PROJECT_DELETE->value) || $isCreator;
            // && (($user->projects->contains($project->id) && $project->users->contains($user->id)));
     }
 

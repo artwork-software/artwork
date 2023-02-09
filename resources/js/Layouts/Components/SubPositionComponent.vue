@@ -247,7 +247,7 @@
                             </div>
                             <div
                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                class="my-4 h-6 flex items-center"
+                                class="my-4 h-6 flex items-center justify-end text-right"
                                 @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                 v-else>
                                 <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
@@ -262,7 +262,7 @@
                                 {{ cell.value }}
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
 
                         </td>
@@ -334,7 +334,7 @@ import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@her
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Inertia} from "@inertiajs/inertia";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 
 
@@ -354,7 +354,8 @@ export default {
         MenuItem,
         MenuItems,
         MenuButton,
-        ConfirmationComponent
+        ConfirmationComponent,
+        Link
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project', 'table'],
     emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
@@ -473,8 +474,8 @@ export default {
                 preserveScroll: true
             });
         },
-        openRowDetailModal(row){
-          this.$emit('openRowDetailModal',row)
+        openRowDetailModal(row) {
+            this.$emit('openRowDetailModal', row)
         },
         openCellDetailModal(cell) {
             this.$emit('openCellDetailModal', cell)

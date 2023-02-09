@@ -1,10 +1,10 @@
 <template>
     <app-layout>
         <div>
-            <div class="max-w-screen-lg py-4 pl-20 pr-4">
+            <div>
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
                     <form @submit.prevent="editUser">
-                        <div>
+                        <div class="max-w-screen-lg py-4 pl-20 pr-4">
                             <div class="flex">
                                 <img class="mt-6 h-16 w-16 rounded-full flex justify-start object-cover"
                                      :src="user_to_edit.profile_photo_url"
@@ -113,34 +113,46 @@
                             </div>
                         </div>
                     </form>
-                    <div class="flex mt-6" v-if="$page.props.is_admin">
-                        <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
+                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                        <div class="flex mt-6" v-if="$page.props.is_admin">
+                            <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
+                        </div>
+                        <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
+                            {{ password_reset_status }}
+                        </div>
                     </div>
-                    <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
-                        {{ password_reset_status }}
-                    </div>
+
 
                     <jet-validation-errors class="mb-4"/>
 
-                    <div class="pb-5 my-2 border-gray-200 sm:pb-0">
+
+                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
                         <h2 class="mt-16 mb-8 headline2">Nutzerrechte</h2>
+                    </div>
 
-                        <div class="mb-8">
-
-                            <div class="relative justify-between flex items-center" v-for="(role, index) in available_roles" :key=index>
+                    <div class="bg-userBg py-10">
+                        <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                            <div class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer" @click="showGlobalRoles = !showGlobalRoles">
+                                globale Rollen
+                                <div class="flex items-center ml-2">
+                                    <SvgCollection svg-name="arrowUp" v-if="showGlobalRoles"></SvgCollection>
+                                    <SvgCollection svg-name="arrowDown" v-if="!showGlobalRoles"></SvgCollection>
+                                </div>
+                            </div>
+                            <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
                                 <div class="flex items-center h-7">
                                     <input
-                                           v-model="userForm.roles"
-                                           :value="role.name"
-                                           name="roles" type="checkbox"
-                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
+                                        v-model="userForm.roles"
+                                        :value="role.name"
+                                        name="roles" type="checkbox"
+                                        class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
 
-                                <div class="ml-3 text-sm">
-                                    <label for="roles"
-                                           :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                            role.name_de
-                                        }}</label>
-                                </div>
+                                    <div class="ml-3 text-sm">
+                                        <label for="roles"
+                                               :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                                role.name_de
+                                            }}</label>
+                                    </div>
                                 </div>
                                 <div class="justify-end">
                                     <div :data-tooltip-target="role.name">
@@ -159,59 +171,62 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
-
                     </div>
-                    <div v-if="showUserPermissions" class="flex flex-col w-full">
-
-                        <div class="w-full" v-for="(permissions, group) in all_permissions">
-
-                            <h3 class="xxsLight mt-5 mb-1">{{ group }}</h3>
-
-                            <div class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
-                                 :key=index>
-                                <div class="flex items-center h-7">
-                                    <input
-                                           :key="permission.name"
-                                           v-model="userForm.permissions"
-                                           :value="permission.name"
-                                           name="permissions" type="checkbox"
-                                           class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
-
-                                    <div class="ml-3 text-sm">
-                                        <label for="permissions"
-                                               :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                                permission.name_de
-                                            }}</label>
+                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                        <div v-if="showUserPermissions" class="flex flex-col w-full ">
+                            <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
+                                <div class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer" @click="permissions.show = !permissions.show">
+                                    {{ group }}
+                                    <div class="flex items-center ml-2">
+                                        <SvgCollection svg-name="arrowUp" v-if="!permissions.show"></SvgCollection>
+                                        <SvgCollection svg-name="arrowDown" v-if="permissions.show"></SvgCollection>
                                     </div>
                                 </div>
-                                <div class="justify-end">
-                                    <div :data-tooltip-target="permission.name">
-                                        <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
-                                                               aria-hidden="true"/>
+                                <div v-if="!permissions.show" class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
+                                     :key=index>
+                                    <div class="flex items-center h-7">
+                                        <input
+                                            :key="permission.name"
+                                            v-model="userForm.permissions"
+                                            :value="permission.name"
+                                            name="permissions" type="checkbox"
+                                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
+
+                                        <div class="ml-3 text-sm">
+                                            <label for="permissions"
+                                                   :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                                    permission.name_de
+                                                }}</label>
+                                        </div>
                                     </div>
-                                    <div :id="permission.name" role="tooltip"
-                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                        {{ permission.tooltipText }}
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                    <div class="justify-end">
+                                        <div :data-tooltip-target="permission.name">
+                                            <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
+                                                                   aria-hidden="true"/>
+                                        </div>
+                                        <div :id="permission.name" role="tooltip"
+                                             class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                            {{ permission.tooltipText }}
+                                            <div class="tooltip-arrow" data-popper-arrow></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
 
+                        </div>
+                        <div class="mt-8">
+                            <div class="flex">
+                                <AddButton @click="editUser"
+                                           class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                           text="Einstellungen ändern" mode="modal"/>
+                            </div>
+                        </div>
+                        <div class="flex mt-12">
+                            <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
+                        </div>
                     </div>
 
-                    <div class="mt-8">
-                        <div class="flex">
-                            <AddButton @click="editUser"
-                                       class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                       text="Einstellungen ändern" mode="modal"/>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex mt-12">
-                    <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
                 </div>
             </div>
         </div>
@@ -351,10 +366,12 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import AddButton from "@/Layouts/Components/AddButton";
+import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 
 export default defineComponent({
     name: 'Edit',
     components: {
+        SvgCollection,
         AddButton,
         DotsVerticalIcon,
         PencilAltIcon,
@@ -390,6 +407,7 @@ export default defineComponent({
     props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles'],
     data() {
         return {
+            showGlobalRoles: true,
             showUserPermissions: true,
             deletingUser: false,
             showChangeTeamsModal: false,

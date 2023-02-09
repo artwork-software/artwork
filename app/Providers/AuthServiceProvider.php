@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\RoleNameEnum;
 use App\Models\Area;
 use App\Models\Category;
 use App\Models\Checklist;
@@ -69,7 +70,7 @@ class AuthServiceProvider extends ServiceProvider
         // Implicitly grant "admin" role all permissions
         // This works in the app by using gate-related functions like auth()->user->can() and @can()
         Gate::before(function ($user, $ability) {
-            return $user->hasRole('admin') ? true : null;
+            return $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) ? true : null;
         });
     }
 }

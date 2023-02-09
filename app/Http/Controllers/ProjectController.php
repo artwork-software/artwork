@@ -293,9 +293,16 @@ class ProjectController extends Controller
 
     public function verifiedRequestMainPosition(Request $request): RedirectResponse
     {
+
         $mainPosition = MainPosition::find($request->id);
-        $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $project = $mainPosition->table()->first()->project()->first();
+
+        if($request->giveBudgetAccess){
+           $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
+           $user = User::find($request->user);
+
+        }
+        $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project = $project;
@@ -326,10 +333,10 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
-
+            $project = $mainPosition->table()->first()->project()->first();
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
             // create Notification
-            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $mainPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project->id, $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -338,18 +345,18 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $this->history->createHistory($mainPosition->project_id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
+            $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
 
         if ($request->type === 'sub') {
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
-
+            $project = $mainPosition->table()->first()->project()->first();
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
 
             // create Notification
-            $this->createNotificationBody($mainPosition->table()->first()->project()->first(), $subPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project->id, $subPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -358,7 +365,7 @@ class ProjectController extends Controller
             $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
-            $this->history->createHistory($mainPosition->project_id, 'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
+            $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
         }
         return back()->with(['success']);
     }

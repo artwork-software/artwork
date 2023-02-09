@@ -388,23 +388,9 @@
                 <XIcon @click="closeVerifiedModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="mb-2 xsLight">
-                    {{ verifiedTexts.description }}
+                <div class="mb-3 xsLight" v-html="verifiedTexts.description">
+
                 </div>
-                <p class="xsLight flex mb-2">
-                    <!-- TODO: SVG ersetzen mit IMG TAG -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" class="mr-2">
-                        <g id="warning" transform="translate(-453 -292)">
-                            <rect id="Rechteck_468" data-name="Rechteck 468" width="20" height="20"
-                                  transform="translate(453 292)" fill="#e0e000"/>
-                            <path id="Icon_metro-warning" data-name="Icon metro-warning"
-                                  d="M8.4,2.984l4.884,9.734H3.514L8.4,2.984Zm0-1.056a.842.842,0,0,0-.693.508L2.731,12.351c-.381.678-.057,1.232.72,1.232h9.894c.777,0,1.1-.554.72-1.232h0L9.091,2.436A.842.842,0,0,0,8.4,1.928ZM9.126,11.4a.728.728,0,1,1-.728-.728A.728.728,0,0,1,9.126,11.4ZM8.4,9.941a.728.728,0,0,1-.728-.728V7.027a.728.728,0,1,1,1.457,0V9.212A.728.728,0,0,1,8.4,9.941Z"
-                                  transform="translate(454.602 294.245)" fill="#fcfcfb" stroke="#fcfcfb"
-                                  stroke-width="0.2"/>
-                        </g>
-                    </svg>
-                    Achtung: Du gibst der/dem Nutzer*in dadurch Budgetzugriff!
-                </p>
                 <div class="mb-2">
                     <div class="relative w-full">
                         <div class="w-full" v-if="showUserAdd">
@@ -420,9 +406,14 @@
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
+                                    <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
+                                            <p @click="addUserToVerifiedUserArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                        <div class="flex-1 text-sm py-4" v-if="projectManager.includes(this.$page.props.user.id) && !budgetAccess.includes(user.id)">
                                             <p @click="addUserToVerifiedUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
@@ -451,11 +442,37 @@
                         </span>
                     </div>
                 </div>
-                <div class="mt-6">
-                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
+                <div class="mt-6 flex justify-center">
+                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
                             @click="submitVerifiedModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        Zur Verifizierung auffordern
+                    </button>
+                </div>
+            </div>
+
+        </template>
+    </jet-dialog-modal>
+
+    <jet-dialog-modal :show="showBudgetAccessModal" @close="closeBudgetAccessModal">
+        <template #content>
+            <img alt="Neue Spalte" src="/Svgs/Overlays/illu_budget_access.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="headline1 my-2">
+                    Budgetzugriff erteilen
+                </div>
+                <p>
+                    Die/der von dir zur Verifizierung angefragte Nutzer*in hat bisher keinen Budgetzugriff auf dein Projekt. Mit der Verifizierungsanfrage erteilst du ihr/ihm dieses Recht. Bist du sicher, dass du ihr/ihm dieses Recht geben möchtest?
+                </p>
+                <XIcon @click="closeBudgetAccessModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+
+                <div class="mt-6">
+                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            @click="submitVerifiedModalWithBudgetAccess">
+                        Anfragen & Budgetzugriff erteilen
                     </button>
                 </div>
             </div>
@@ -511,6 +528,9 @@
 
 
     <pre>
+        {{ project }}
+    </pre>
+    <pre>
         {{ budget.table }}
     </pre>
 </template>
@@ -535,7 +555,7 @@ import {
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
@@ -578,6 +598,7 @@ export default {
 
     data() {
         return {
+            showBudgetAccessModal: false,
             costsOpened: true,
             earningsOpened: true,
             hoveredBorder: null,
@@ -612,7 +633,7 @@ export default {
             verifiedTexts: {
                 title: 'Verifizierung',
                 positionTitle: '',
-                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
+                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? <br> Lasse deine Hauptposition durch eine Nutzer*in verifizieren.'
             },
             showVerifiedModal: false,
             user_search_results: [],
@@ -626,12 +647,13 @@ export default {
                 user: '',
                 position: [],
                 project_title: this.project.name,
-                table_id: this.budget.table.id
+                table_id: this.budget.table.id,
+                giveBudgetAccess: false,
             }),
         }
     },
 
-    props: ['budget', 'project', 'moneySources'],
+    props: ['budget', 'project', 'moneySources', 'budgetAccess', 'projectManager'],
 
     computed: {
         tablesToShow: function () {
@@ -935,8 +957,20 @@ export default {
             this.successHeading = "";
             this.successDescription = "";
         },
-        closeVerifiedModal() {
+        closeVerifiedModal(deleteAll = false) {
             this.showVerifiedModal = false;
+            if(deleteAll){
+                this.user_query = '';
+                this.showUserAdd = true;
+                this.submitVerifiedModalData.user = '';
+                this.submitVerifiedModalData.id = null;
+                this.submitVerifiedModalData.is_main = false;
+                this.submitVerifiedModalData.is_sub = false;
+                this.submitVerifiedModalData.position = [];
+            }
+        },
+        closeBudgetAccessModal(){
+            this.showBudgetAccessModal = false;
             this.user_query = '';
             this.showUserAdd = true;
             this.submitVerifiedModalData.user = '';
@@ -945,14 +979,29 @@ export default {
             this.submitVerifiedModalData.is_sub = false;
             this.submitVerifiedModalData.position = [];
         },
+        submitVerifiedModalWithBudgetAccess(){
+            this.submitVerifiedModalData.giveBudgetAccess = true;
+            this.submitVerifiedModal();
+        },
         submitVerifiedModal() {
-            if (this.submitVerifiedModalData.is_main) {
-                this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+            console.log(this.submitVerifiedModalData);
+            if(this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess){
+                if (this.submitVerifiedModalData.is_main) {
+                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+                } else {
+                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
+                }
+                this.closeVerifiedModal(true);
             } else {
-                this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
+                this.showBudgetAccessModal = true;
+                this.closeVerifiedModal(false);
             }
 
-            this.closeVerifiedModal();
+            if(this.submitVerifiedModalData.giveBudgetAccess){
+                this.closeBudgetAccessModal()
+            }
+
+
         },
         openVerifiedModal(is_main,is_sub,id,position) {
             this.verifiedTexts.positionTitle = position.name

@@ -938,7 +938,7 @@
                 </div>
                 <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray" >
                     <BudgetComponent :budget="budget" :project="project"
-                                     :money-sources="moneySources"></BudgetComponent>
+                                     :money-sources="moneySources" :budget-access="access_budget" :project-manager="projectManagerIds"></BudgetComponent>
                 </div>
             </div>
         </div>

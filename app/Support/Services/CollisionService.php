@@ -4,6 +4,7 @@ namespace App\Support\Services;
 
 use App\Models\Event;
 use App\Models\Room;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Request;
 
@@ -26,20 +27,22 @@ class CollisionService
 
         $events =  Event::query()
             ->whereBetween('start_time', [$startDate, $endDate])
+            ->where('room_id', $request->roomId)
             ->orWhere(function($query) use ($request, $endDate, $startDate) {
                 $query->whereBetween('end_time', [$startDate, $endDate])
-                    ->where('room_id', '=', $request->roomId);
+                    ->where('room_id', $request->roomId);
             })
             ->orWhere(function($query) use ($request, $endDate, $startDate) {
                 $query->where('start_time', '>=', $startDate)
                         ->where('end_time', '<=', $endDate)
-                    ->where('room_id', '=', $request->roomId);
+                    ->where('room_id', $request->roomId);
             })
             ->orWhere(function($query) use ($request, $endDate, $startDate) {
                 $query->where('start_time', '<=', $startDate)
                     ->where('end_time', '>=', $endDate)
-                    ->where('room_id', '=', $request->roomId);
-            })->where('room_id', '=', $request->roomId);
+                    ->where('room_id', $request->roomId);
+            });
+
         return $events;
     }
 

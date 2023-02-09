@@ -9,22 +9,17 @@
                 <XIcon @click="closeRoomHistoryModal(false)"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="text-secondary subpixel-antialiased">
+                <div class="text-secondary subpixel-antialiased relative z-5">
                     Hier kannst du nachvollziehen, was von wem wann geändert wurde.
                 </div>
-                <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96">
-                    <div class="flex w-full my-1" v-for="historyItem in this.room_history">
+                <div class="flex w-full flex-wrap mt-4 max-h-96">
+                    <div class="flex items-center w-full my-1" v-for="(historyItem,index) in this.room_history">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                 {{ historyItem.created_at }}:
                             </span>
-                        <div class="flex w-full">
-                            <img v-if="historyItem.changes[0].changed_by"
-                                 :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                 :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                 :alt="historyItem.changes[0].changed_by?.first_name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                         :user="historyItem.changes[0].changed_by"/>
+                        <div class="flex items-center w-full relative z-20">
+                            <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
+                                         :user="historyItem.changes[0].changed_by" :id="index"/>
                             <div v-else class="xsLight ml-3">
                                 gelöschte Nutzer:in
                             </div>
@@ -47,16 +42,16 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton";
 import {CheckIcon} from "@heroicons/vue/solid";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: 'RoomHistoryComponent',
     components: {
+        NewUserToolTip,
         JetDialogModal,
         XIcon,
         AddButton,
         CheckIcon,
-        UserTooltip
     },
     props: ['room_history'],
     emits: ['closed'],

@@ -936,8 +936,8 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray" >
-                    <BudgetComponent :budget="budget" :project="project"
+                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
+                    <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
                                      :money-sources="moneySources" :budget-access="access_budget" :project-manager="projectManagerIds"></BudgetComponent>
                 </div>
             </div>
@@ -2390,7 +2390,6 @@ export default {
                 }
                 this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
             }
-            console.log(this.taskForm.deadline);
             this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
             this.closeAddTaskModal();
         },
@@ -2519,8 +2518,6 @@ export default {
             this.editChecklistForm.user_id = null;
         },
         editChecklist() {
-            console.log(this.editChecklistForm);
-
             if (this.editChecklistForm.private) {
                 this.editChecklistForm.user_id = this.$page.props.user.id;
                 this.editChecklistForm.assigned_department_ids = [];

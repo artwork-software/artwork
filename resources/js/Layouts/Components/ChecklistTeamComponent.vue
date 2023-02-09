@@ -15,7 +15,6 @@
                 <div class="text-secondary tracking-tight leading-6 sub">
                     Tippe den Namen des Teams ein, dem du die Checkliste zuweisen möchtest.
                 </div>
-
                 <div class="mt-10">
                     <!--   Search for Departments    -->
                     <div class="my-auto w-full">
@@ -132,8 +131,10 @@ export default {
                 if (!this.departmentQuery) {
                     return
                 }
-                axios.get('/departments/search', {params: {query: this.departmentQuery}})
-                    .then(response => this.searchedDepartments = response.data)
+                axios.get('/departments/search', {params: {query: this.departmentQuery}
+                }).then(response => {
+                    this.searchedDepartments = response.data
+                })
             },
         },
         departments: {

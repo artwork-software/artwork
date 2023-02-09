@@ -218,7 +218,7 @@
                 </div>
             </div>
             <div class="flex ml-20 mt-12">
-                <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Konto endgültig löschen</span>
+                <span v-if="$page.props.can.usermanagement" @click="openDeleteUserModal()" class="xsLight cursor-pointer">Konto endgültig löschen</span>
             </div>
         </div>
         <!-- Change Profile Picture Modal -->

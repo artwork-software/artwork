@@ -799,20 +799,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
-                        <div v-for="historyItem in projectHistoryToDisplay">
+                    <div class="flex w-full flex-wrap mt-4" v-if="showProjectHistoryTab">
+                        <div v-for="(historyItem,index) in projectHistoryToDisplay">
                             <div class="flex w-full my-1" v-if="historyItem.changes[0].type === 'project'">
                                 <div class="flex w-full">
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
-                                    <img v-if="historyItem.changes[0].changed_by"
-                                             :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                             :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                             :alt="historyItem.changes[0].changed_by?.first_name"
-                                             class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                                     :user="historyItem.changes[0].changed_by"/>
+                                    <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
+                                                    :user="historyItem.changes[0].changed_by" :id="index"/>
                                     <div v-else class="xsLight ml-3">
                                             gelöschte Nutzer:in
                                     </div>
@@ -901,7 +896,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import projects from "@/Pages/Trash/Projects";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
-import {write} from "../../../../public/js/app";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -913,6 +908,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        NewUserToolTip,
         TagComponent,
         AddButton,
         CategoryIconCollection,

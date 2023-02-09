@@ -616,6 +616,13 @@ class ProjectController extends Controller
             'name' => $request->columnName
         ]);
     }
+    public function updateTableName(Request $request): void
+    {
+        $table = Table::find($request->table_id);
+        $table->update([
+            'name' => $request->table_name
+        ]);
+    }
 
     public function columnDelete(Column $column)
     {
@@ -1098,7 +1105,7 @@ class ProjectController extends Controller
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
-                'templates' => $templates
+                'templates' => $templates,
             ],
 
             'categories' => Category::all(),
@@ -1651,6 +1658,11 @@ class ProjectController extends Controller
     public function deleteRow(SubPositionRow $row)
     {
         $row->forceDelete();
+    }
+
+    public function deleteTable(Table $table)
+    {
+        $table->forceDelete();
     }
 
     public function deleteMainPosition(MainPosition $mainPosition)

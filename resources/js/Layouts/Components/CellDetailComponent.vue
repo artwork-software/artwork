@@ -386,7 +386,10 @@ export default {
             });
         },
         addCommentToCell() {
-            this.commentForm.post(route('project.budget.cell.comment.store', {columnCell: this.cell.id}), {
+            if(!this.commentForm.description){
+                return;
+            }
+            this.commentForm.post(route('project.budget.cell.comment.store', { columnCell: this.cell.id }), {
                 preserveState: true,
                 preserveScroll: true
             });

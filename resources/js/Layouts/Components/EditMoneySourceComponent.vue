@@ -18,26 +18,18 @@
                                 <div class="mr-2">
                                     zuständig:
                                 </div>
-                                <div class="-ml-3" v-for="user in moneySource.users">
-                                    <img v-if="user"
-                                         :data-tooltip-target="user?.id"
-                                         :src="user?.profile_photo_url"
-                                         :alt="user?.name"
-                                         class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip v-if="user"
-                                                 :user="user"/>
+                                <div v-for="(user,index) in moneySource.users">
+                                    <NewUserToolTip :height="7" :width="7" v-if="user"
+                                                    :user="user" :id="index"/>
                                 </div>
                             </div>
                         </div>
                         <div class="flex mt-2 mb-4 ml-12 xsDark items-center">
                             erstellt von
-                            <img v-if="moneySource.creator"
-                                 :data-tooltip-target="moneySource.creator?.id"
-                                 :src="moneySource.creator?.profile_photo_url"
-                                 :alt="moneySource.creator?.first_name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip v-if="moneySource.creator"
-                                         :user="moneySource.creator"/>
+                            <div class="ml-1">
+                            <NewUserToolTip :height="7" :width="7" v-if="moneySource.creator"
+                                            :user="moneySource.creator" :id="moneySource.creator.id"/>
+                            </div>
                         </div>
                     </div>
                     <!-- Form when Single Source -->
@@ -314,12 +306,13 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
-import UserTooltip from "@/Layouts/Components/UserTooltip";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: 'EventComponent',
 
     components: {
+        NewUserToolTip,
         Input,
         JetDialogModal,
         XIcon,
@@ -344,7 +337,6 @@ export default {
         TagComponent,
         InputComponent,
         AddButton,
-        UserTooltip
     },
     computed: {
         tabs() {

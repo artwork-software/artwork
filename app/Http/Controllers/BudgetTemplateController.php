@@ -32,7 +32,21 @@ class BudgetTemplateController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Template/Index', [
+        $selectedCell = request('selectedCell')
+            ? ColumnCell::find(request('selectedCell'))
+            : null;
+
+        $selectedRow = request('selectedRow')
+            ? SubPositionRow::find(request('selectedRow'))
+            : null;
+
+        $templates = null;
+
+        if(request('useTemplates')){
+            $templates = Table::where('is_template', true)->get();
+        }
+
+        return Inertia::render('BudgetTemplates/BudgetTemplateManagement', [
             'budget' => [
                 'table' => Table::where('is_template', true)
                     ->with([
@@ -47,7 +61,14 @@ class BudgetTemplateController extends Controller
                             return $query->orderBy('position');
                         }, 'mainPositions.subPositions.subPositionRows.cells.column'
                     ])
-                    ->first(),
+                    ->get(),
+                'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }]),
+                'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
+                    $query->orderBy('created_at', 'desc');
+                }]),
+                'templates' => $templates,
             ],
         ]);
     }

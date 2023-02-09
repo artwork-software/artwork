@@ -277,7 +277,7 @@
                                 </td>
 
                             </tr>
-                            <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                            <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
                                 <td class="w-28"></td>
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
@@ -308,7 +308,7 @@
                 <!-- Divider -->
                 <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-12" />
                     <div class="w-full flex">
-                    <div class="ml-5" v-if="earningsOpened">
+                    <div class="ml-5 w-full bg-secondaryHover" v-if="earningsOpened">
                         <div class="headline4 my-10 flex">Einnahmen
                             <button class="w-6"
                                     @click="earningsOpened = !earningsOpened">
@@ -341,12 +341,16 @@
                                 </td>
 
                             </tr>
-                            <!-- TODO: Hier noch einfügen if(commented === true) -->
-                            <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                            <tr class="bg-secondaryHover xsLight flex h-10 w-full text-right">
                                 <td class="w-28"></td>
                                 <td class="w-28"></td>
                                 <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
-                                <td class="w-48 my-2 p-1">3000</td>
+                                <td class="flex items-center w-48"
+                                    v-for="column in table.columns.slice(3)">
+                                    <div class="w-48 my-2 p-1">
+                                        {{ table.commentedEarningSums[column.id] }}
+                                    </div>
+                                </td>
                             </tr>
                             </tbody>
                         </table>

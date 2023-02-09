@@ -215,7 +215,7 @@
                         <td v-for="(cell,index) in row.cells"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
                             <div
-                                :class="[row.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
+                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
                                 class="my-4 h-6 flex items-center justify-end"
                                 @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">

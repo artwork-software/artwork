@@ -272,13 +272,11 @@
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(0, column.id) }}
+                                        {{ this.getSumOfTable(0, column.id)}}
                                     </div>
                                 </td>
 
                             </tr>
-                            <!-- TODO: Hier noch einfügen if(commented === true) -->
-
                             <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
                                 <td class="w-28"></td>
                                 <td class="w-28"></td>
@@ -755,7 +753,12 @@ export default {
             this.tablesToShow[tableType].forEach((mainPosition) => {
                 sum += mainPosition.columnSums[columnId];
             })
-            return sum;
+            if(isNaN(sum)){
+                return 0;
+            }else{
+                return sum;
+            }
+
         },
         addUserToVerifiedUserArray(user) {
             this.submitVerifiedModalData.user = user.id;

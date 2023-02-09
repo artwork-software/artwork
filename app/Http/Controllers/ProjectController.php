@@ -300,6 +300,7 @@ class ProjectController extends Controller
         if($request->giveBudgetAccess){
            $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
            $user = User::find($request->user);
+            // Notification
 
         }
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
@@ -333,10 +334,11 @@ class ProjectController extends Controller
         if ($request->type === 'main') {
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
-            $project = $mainPosition->table()->first()->project()->first();
+            $table = $mainPosition->table()->first();
+            $project = $table->project()->first();
             $this->deleteOldNotification($mainPosition->id, $verifiedRequest->requested);
             // create Notification
-            $this->createNotificationBody($project->id, $mainPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project, $mainPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
@@ -352,11 +354,12 @@ class ProjectController extends Controller
             $subPosition = SubPosition::find($request->position['id']);
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
-            $project = $mainPosition->table()->first()->project()->first();
+            $table = $mainPosition->table()->first();
+            $project = $table->project()->first();
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
 
             // create Notification
-            $this->createNotificationBody($project->id, $subPosition->id, $verifiedRequest->requested);
+            $this->createNotificationBody($project, $subPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',

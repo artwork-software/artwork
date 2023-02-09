@@ -984,7 +984,6 @@ export default {
             this.submitVerifiedModal();
         },
         submitVerifiedModal() {
-            console.log(this.submitVerifiedModalData);
             if(this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess){
                 if (this.submitVerifiedModalData.is_main) {
                     this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));

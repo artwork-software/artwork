@@ -461,7 +461,8 @@
                                                 {{ user.first_name }} {{ user.last_name }}
                                             </p>
                                         </div>
-                                        <div class="flex-1 text-sm py-4" v-if="projectManager.includes(this.$page.props.user.id) && !budgetAccess.includes(user.id)">
+                                        <!-- Project Members -->
+                                        <div class="flex-1 text-sm py-4" v-if="projectMembers.includes(user.id) && !budgetAccess.includes(user.id)">
                                             <p @click="addUserToVerifiedUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
@@ -651,6 +652,7 @@ export default {
 
     data() {
         return {
+
             showBudgetAccessModal: false,
             costsOpened: true,
             earningsOpened: true,
@@ -728,7 +730,16 @@ export default {
             }else{
                 return false;
             }
-        }
+        },
+        projectMembers: function () {
+
+            let projectMemberArray = [];
+            this.project.users.forEach(member => {
+                    projectMemberArray.push(member.id)
+                }
+            )
+            return projectMemberArray;
+        },
     },
     watch: {
         user_query: {

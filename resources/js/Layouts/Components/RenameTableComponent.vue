@@ -23,7 +23,7 @@
                     <div class="flex justify-center">
                         <AddButton @click="createBudgetTemplate()" :disabled="tableName === ''"
                                    :class="tableName === '' ? 'bg-secondary hover:bg-secondary cursor-pointer-none' : ''"
-                                   class="mt-8 py-3 flex" text="Als Vorlage speichern"
+                                   class="mt-8 py-3 flex" text="Umbenennen"
                                    mode="modal"></AddButton>
                     </div>
                 </div>

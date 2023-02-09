@@ -66,7 +66,7 @@
                             class="py-4 flex">
                             <div class="flex w-full">
                                 <div class="mr-6">
-                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || checkPermission(project, 'edit')" :href="getEditHref(project)"
+                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
                                           class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">
                                             <span v-if="project.is_group">
@@ -229,7 +229,7 @@
                             </div>
                         </div>
                         <div
-                            v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit')"
+                            v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects"
                             class="mb-12 -mt-2 text-secondary flex items-center">
                             <div v-if="project.project_history.length" class="flex items-center">
                             <span class=" xsLight">
@@ -246,7 +246,7 @@
                                     {{ project.project_history[0].created_at }}
                                 </span>
                                 <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                                        @click="openProjectHistoryModal(project.project_history)">
+                                        @click="openProjectHistoryModal(project)">
                                     <ChevronRightIcon
                                         class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
                                         aria-hidden="true"/>
@@ -770,84 +770,13 @@
 
             </template>
         </jet-dialog-modal>
-        <!-- Project History Modal-->
-        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projektverlauf
-                    </div>
-                    <XIcon @click="closeProjectHistoryModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
-                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
-                    </div>
-                    <div class="mb-4">
-                        <div class="hidden sm:block">
-                            <div class="border-gray-200">
-                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                     aria-label="Tabs">
-                                    <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
-                                       :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                                       :aria-current="tab.current ? 'page' : undefined">
-                                        {{ tab.name }}
-                                    </a>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex w-full flex-wrap mt-4" v-if="showProjectHistoryTab">
-                        <div v-for="(historyItem,index) in projectHistoryToDisplay">
-                            <div class="flex w-full my-1" v-if="historyItem.changes[0].type === 'project'">
-                                <div class="flex w-full">
-                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                        {{ historyItem.created_at }}:
-                                    </span>
-                                    <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
-                                                    :user="historyItem.changes[0].changed_by" :id="index"/>
-                                    <div v-else class="xsLight ml-3">
-                                            gelöschte Nutzer:in
-                                    </div>
-                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                            {{ historyItem.changes[0].message }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
-                        <div  v-for="historyItem in projectHistoryToDisplay">
-                            <div class="flex w-full my-1" v-if="historyItem.changes[0].type === 'budget'">
-                                <div class="flex w-full ">
-                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                        {{ historyItem.created_at }}:
-                                    </span>
-                                    <img v-if="historyItem.changes[0].changed_by"
-                                         :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                         :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                         :alt="historyItem.changes[0].changed_by?.first_name"
-                                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                                 :user="historyItem.changes[0].changed_by"/>
-                                    <div v-else class="xsLight ml-3">
-                                        gelöschte Nutzer:in
-                                    </div>
-                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                        {{ historyItem.changes[0].message }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-            </template>
-        </jet-dialog-modal>
+        <!-- Project History Modal -->
+        <project-history-component
+            @closed="closeProjectHistoryModal"
+            v-if="showProjectHistory"
+            :project_history="projectHistoryToDisplay"
+            :access_budget="projectBudgetAccess"
+        ></project-history-component>
     </app-layout>
 </template>
 
@@ -897,6 +826,7 @@ import projects from "@/Pages/Trash/Projects";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -908,6 +838,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
         AddButton,
@@ -1076,8 +1007,9 @@ export default defineComponent({
             this.showSuccessModal2 = false;
             this.closeSearchbar()
         },
-        openProjectHistoryModal(projectHistory) {
-            this.projectHistoryToDisplay = projectHistory;
+        openProjectHistoryModal(project) {
+            this.projectHistoryToDisplay = project.project_history;
+            this.projectBudgetAccess = project.access_budget;
             this.showProjectHistory = true;
         },
         closeProjectHistoryModal() {
@@ -1141,6 +1073,7 @@ export default defineComponent({
             project_search: '',
             showProjectHistoryTab: true,
             showBudgetHistoryTab: false,
+            projectBudgetAccess: {},
             projectGroup_search_results: [],
             projectGroup_query: '',
             subProjects: [],

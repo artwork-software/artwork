@@ -1,6 +1,6 @@
 <template>
 
-    <div class="mx-1 bg-lightBackgroundGray">
+    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 ">
         <div class="flex justify-between">
             <div class="flex justify-start headline2">
                 {{ table.name }}

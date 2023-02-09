@@ -141,28 +141,77 @@ class MoneySourceController extends Controller
     public function show(MoneySource $moneySource)
     {
         $amount = $moneySource->amount;
+        $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+        $linked_projects = [];
         $positions = [];
-        foreach ($columns as $column) {
-            $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
-            $subPosition = SubPosition::find($subPositionRow->sub_position_id);
-            $mainPosition = MainPosition::find($subPosition->main_position_id);
-            $table = Table::find($mainPosition->table_id);
-            $project = Project::find($table->project_id);
-            $positions[] = [
-                'type' => $column->linked_type,
-                'value' => $column->value,
-                'subPositionName' => $subPosition->name,
-                'mainPositionName' => $mainPosition->name,
-                'project' => $project,
-                'created_at' => date('d.m.Y', strtotime($column->created_at))
-            ];
-            if($column->linked_type === 'EARNING'){
-                $amount = (int)$amount + (int)$column->value;
-            } else {
-                $amount = (int)$amount - (int)$column->value;
+        $subMoneySourcePositions = [];
+        if($moneySource->is_group){
+            foreach ($subMoneySources as $subMoneySource){
+                $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->get();
+                foreach ($columns as $column) {
+                    $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
+                    $subPosition = SubPosition::find($subPositionRow->sub_position_id);
+                    $mainPosition = MainPosition::find($subPosition->main_position_id);
+                    $table = Table::find($mainPosition->table_id);
+                    $project = Project::find($table->project_id);
+                    if(!isset($linked_projects[$table->project_id])){
+                        $linked_projects[$project->project_id] = [
+                            'id' =>$project->id,
+                            'name' => $project->name,
+                        ];
+                    }
+                    $subMoneySourcePositions[] = [
+                        'type' => $column->linked_type,
+                        'value' => $column->value,
+                        'subPositionName' => $subPosition->name,
+                        'mainPositionName' => $mainPosition->name,
+                        'project' => [
+                            'id' =>$project->id,
+                            'name' => $project->name,
+                        ],
+                        'created_at' => date('d.m.Y', strtotime($column->created_at))
+                    ];
+                    if($column->linked_type === 'EARNING'){
+                        $amount = (int)$amount + (int)$column->value;
+                    } else {
+                        $amount = (int)$amount - (int)$column->value;
+                    }
+                }
+            }
+        }else{
+            foreach ($columns as $column) {
+                $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
+                $subPosition = SubPosition::find($subPositionRow->sub_position_id);
+                $mainPosition = MainPosition::find($subPosition->main_position_id);
+                $table = Table::find($mainPosition->table_id);
+                $project = Project::find($table->project_id);
+                if(!isset($linked_projects[$table->project_id])){
+                    $linked_projects[$project->project_id] = [
+                        'id' =>$project->id,
+                        'name' => $project->name,
+                    ];
+                }
+                $positions[] = [
+                    'type' => $column->linked_type,
+                    'value' => $column->value,
+                    'subPositionName' => $subPosition->name,
+                    'mainPositionName' => $mainPosition->name,
+                    'project' => [
+                        'id' =>$project->id,
+                        'name' => $project->name,
+                    ],
+                    'created_at' => date('d.m.Y', strtotime($column->created_at))
+                ];
+                if($column->linked_type === 'EARNING'){
+                    $amount = (int)$amount + (int)$column->value;
+                } else {
+                    $amount = (int)$amount - (int)$column->value;
+                }
             }
         }
+
+
 
         return inertia('MoneySources/Show', [
             'moneySource' => [
@@ -177,7 +226,10 @@ class MoneySourceController extends Controller
                 'users' => json_decode($moneySource->users),
                 'group_id' => $moneySource->group_id,
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
-                'subMoneySources' => MoneySource::where('group_id', $moneySource->id)->get(),
+                'subMoneySources' => $subMoneySources->map(fn ($source) => [
+                    'id' => $source->id,
+                    'name' => $source->name,
+                ]),
                 'description' => $moneySource->description,
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
@@ -192,7 +244,9 @@ class MoneySourceController extends Controller
                     'money_source_task_users' => $task->money_source_task_users,
                     'pivot' => $task->pivot
                     ]),
-                'positions' => $positions
+                'positions' => $positions,
+                'subMoneySourcePositions' => $subMoneySourcePositions,
+                'linked_projects' => $linked_projects
 
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),

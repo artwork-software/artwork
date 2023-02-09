@@ -936,7 +936,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
+                <div v-if="isBudgetTab" class="flex mt-14 p-5 bg-lightBackgroundGray w-full">
                     <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
                                      :money-sources="moneySources" :budget-access="access_budget" :project-manager="projectManagerIds"></BudgetComponent>
                 </div>

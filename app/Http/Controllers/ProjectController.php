@@ -1775,11 +1775,12 @@ class ProjectController extends Controller
     }
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
     {
-        $cells = $row->cells()->get();
         $row->update(['commented' => $request->commented]);
-        foreach ( $cells as $cell){
-            $cell->update(['commented' => $request->commented]);
-        }
+
+        $cellIds = $row->cells->skip(3)->pluck('id');
+
+        $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
+
         return back()->with('success');
     }
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse

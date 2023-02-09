@@ -1128,7 +1128,7 @@ export default {
             this.$inertia.patch(this.route('project.budget.reset.table', this.project.id))
             this.resetWanted= false;
             this.showDeleteModal = false;
-        }
+        },
         deleteBudgetTemplate(){
           this.$inertia.delete(this.route('project.budget.table.delete', this.table.id))
         },

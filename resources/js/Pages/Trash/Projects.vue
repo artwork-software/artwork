@@ -7,6 +7,7 @@
                 <div class="w-full mr-6">
                     <div class="flex my-auto">
                         <p class="text-2xl subpixel-antialiased text-gray-900">{{ project.name }}</p>
+                        {{project.access_budget}}
                     </div>
                 </div>
             </div>
@@ -144,7 +145,7 @@
                     <span class="subpixel-antialiased">
                     zuletzt geändert:
                     </span>
-            <div class="flex items-center" v-if="project.project_history.length !== 0">
+            <div class="flex items-center" v-if="project.project_history?.length !== 0">
                 <img :data-tooltip-target="project.project_history[0].user.id"
                     :src="project.project_history[0].user.profile_photo_url"
                     :alt="project.project_history[0].user.name"
@@ -154,7 +155,7 @@
                                     {{ project.project_history[0].created_at }}
                                 </span>
                 <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                        @click="openProjectHistoryModal(project.project_history)">
+                        @click="openProjectHistoryModal(project)">
                     <ChevronRightIcon
                         class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
                         aria-hidden="true"/>
@@ -166,35 +167,16 @@
             </div>
 
         </div>
-        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projektverlauf
-                    </div>
-                    <XIcon @click="closeProjectHistoryModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
-                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
-                    </div>
-                    <div class="flex w-full flex-wrap mt-4">
-                        <div class="flex w-full my-1" v-for="historyItem in projectHistoryToDisplay">
-                            <span class="text-secondary my-auto text-sm subpixel-antialiased">
-                        {{ historyItem.created_at }}:
-                    </span>
-                            <img :data-tooltip-target="historyItem.user.id" :src="historyItem.user.profile_photo_url" :alt="historyItem.user.name"
-                                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                            <UserTooltip :user="historyItem.user" />
-                            <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto">
-                                {{ historyItem.description }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-            </template>
-        </jet-dialog-modal>
+        <!-- Project History Modal -->
+        <!-- TODO: EINFÜGEN WENN PROJECT HISTORY VON GELÖSCHTEN PROJEKTEN ÜBERARBEITET
+        <project-history-component
+            @closed="closeProjectHistoryModal"
+            v-if="showProjectHistory"
+            :project_history="projectHistoryToDisplay"
+            :access_budget="projectBudgetAccess"
+        ></project-history-component>
+        -->
 
     </div>
 
@@ -211,6 +193,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 export default {
     props: ['trashed_projects'],
     name: "Projects",
@@ -218,12 +201,14 @@ export default {
     data() {
       return {
           showProjectHistory: false,
-          projectHistoryToDisplay: []
+          projectHistoryToDisplay: [],
+          projectBudgetAccess: {},
       }
     },
     methods: {
-        openProjectHistoryModal(projectHistory) {
-            this.projectHistoryToDisplay = projectHistory;
+        openProjectHistoryModal(project) {
+            this.projectHistoryToDisplay = project.project_history;
+            this.projectBudgetAccess = project.access_budget;
             this.showProjectHistory = true;
         },
         closeProjectHistoryModal() {
@@ -232,6 +217,7 @@ export default {
         }
     },
     components: {
+        ProjectHistoryComponent,
         TrashIcon,
         TeamIconCollection,
         MenuButton,

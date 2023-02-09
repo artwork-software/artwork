@@ -8,6 +8,8 @@ use App\Http\Controllers\ChecklistTemplateController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
+use App\Http\Controllers\CopyrightController;
+use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -16,6 +18,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceController;
+use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
@@ -346,5 +349,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Templates
     Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
+
+    Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
+
+    Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
+
 });
 

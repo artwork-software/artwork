@@ -16,7 +16,7 @@ return new class extends Migration
         Schema::create('cost_centers', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->string('description');
+            $table->string('description')->nullable();
             $table->unsignedBigInteger('project_id');
             $table->timestamps();
         });

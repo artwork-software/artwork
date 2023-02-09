@@ -12,21 +12,21 @@
                 <div class="text-secondary w-full mt-2">Lege einen Kostenträger und Urheberregelungen für dein Projekt
                     fest.
                 </div>
-                <input :placeholder="[copyright.name ? copyright.name : 'Name des Kostenträgers']"
+                <input :placeholder="[costCenterName ? costCenterName : 'Name des Kostenträgers']"
                        id="title"
-                       v-model="copyright.name"
+                       v-model="costCenterName"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 <div class="flex items-center mb-3 mt-4">
-                    <input type="checkbox" v-model="copyright.own_copyright"
+                    <input type="checkbox" v-model="ownCopyright"
                            class="cursor-pointer h-4 w-4 text-success border-2 border-gray-300 bg-darkGrayBg focus:border-none"/>
-                    <div class="text-md ml-2" :class="[copyright.own_copyright ? 'text-primary' : 'text-secondary']">
+                    <div class="text-md ml-2" :class="[ownCopyright ? 'text-primary' : 'text-secondary']">
                         Urheberrecht
                     </div>
                 </div>
                 <div class="flex items-center my-3">
-                    <input type="checkbox" v-model="copyright.live_music"
+                    <input type="checkbox" v-model="liveMusic"
                            class="cursor-pointer h-4 w-4 text-success border-2 border-gray-300 bg-darkGrayBg focus:border-none"/>
-                    <div class="text-md ml-2" :class="[copyright.live_music ? 'text-primary' : 'text-secondary']">
+                    <div class="text-md ml-2" :class="[liveMusic ? 'text-primary' : 'text-secondary']">
                         Livemusik
                     </div>
                 </div>
@@ -63,7 +63,7 @@
 
                 <textarea placeholder="Kommentar / Notiz"
                           id="description"
-                          v-model="comment"
+                          v-model="description"
                           rows="4"
                           class="mt-4 border-gray-300 border-2 h-40 w-full text-sm focus:outline-none
                            focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -74,7 +74,7 @@
                         mode="modal"
                         class="px-6 py-3"
                         :disabled="copyright.collecting_society === null"
-                        @click="updateCopyrightData"
+                        @click="updateData"
                     />
                 </div>
 
@@ -88,6 +88,7 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import ProjectCollectingSocietiesMenu from "@/Layouts/Components/ProjectCollectingSocietiesMenu.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
     name: "ProjectCopyrightModal",
@@ -116,18 +117,47 @@ export default {
                     name: "Verwertungsgesellschaft 2"
                 }
             ],
+            collectingSociety: this.copyright.collecting_society,
+            costCenterName: this.costCenter.name,
             isBigLaw: this.copyright.law_size === 'big',
             isSmallLaw: this.copyright.law_size === 'small',
-            comment: this.copyright.description
+            ownCopyright: this.copyright.own_copyright,
+            liveMusic: this.copyright.live_music,
+            description: this.copyright.description,
+            costCenterForm: useForm({
+                name: this.costCenter.name,
+                description: this.copyright.description
+            }),
+            copyrightForm: useForm({
+                ownCopyright: this.ownCopyright,
+                liveMusic: this.liveMusic,
+                collectingSociety: this.collectingSociety,
+                lawSize: this.copyright.law_size
+            })
         }
     },
     methods: {
         updateCollectingSociety() {
-            console.log('updated')
+
+        },
+        updateData() {
+            this.costCenterForm.name = this.costCenterName
+            this.costCenterForm.description = this.description
+            this.costCenterForm.patch(this.route('costCenter.update', this.costCenter.id));
+
+            this.updateCopyright()
+
             this.$emit('closeModal')
         },
-        updateCopyrightData() {
-            console.log("update data")
+        updateCopyright() {
+            this.copyrightForm.ownCopyright = this.ownCopyright
+            this.copyrightForm.liveMusic = this.liveMusic
+            this.copyrightForm.collectingSociety = this.collectingSociety
+            this.copyrightForm.lawSize = this.isBigLaw ? 'big' : 'small'
+
+            console.log(this.copyrightForm)
+
+            this.copyrightForm.patch(this.route('copyright.update', this.copyright.id));
         }
     }
 }

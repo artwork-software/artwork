@@ -15,11 +15,15 @@
                     </div>
                 </div>
             </div>
-            <div class="w-full flex items-center mb-4 h-36">
-                <div class="text-secondary text-md font-semibold">
+            <div class="w-full items-center mb-4">
+                <div class="text-secondary text-md font-semibold my-2">
                     Zugriff für
                 </div>
+                <div class="text-secondary text-sm" v-for="linkedProject in money_source.linked_projects">
+                    {{linkedProject.name}}
+                </div>
             </div>
+
             <div class="w-full flex items-center mb-4 h-36">
                 <div class="text-secondary text-md font-semibold">
                     Dokumente

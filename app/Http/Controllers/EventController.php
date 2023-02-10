@@ -397,6 +397,8 @@ class EventController extends Controller
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('user_id',Auth::id())->get();
         }
 
+        Debugbar::info($roomAttributeIds);
+        Debugbar::info($roomCategoryIds);
 
         $events = Event::query()
             // eager loading
@@ -409,7 +411,7 @@ class EventController extends Controller
             //war in alter Version, relevant für dich Paul ?
             ->applyFilter(json_decode($request->input('calendarFilters'), true))
             // user applied filters
-            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds), fn (EventBuilder $builder) => $builder
+            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds), fn (EventBuilder $builder) => $builder
                 ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
                     ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
                     ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))

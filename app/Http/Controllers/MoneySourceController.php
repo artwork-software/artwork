@@ -146,6 +146,7 @@ class MoneySourceController extends Controller
         $linked_projects = [];
         $positions = [];
         $subMoneySourcePositions = [];
+        $usersWithAccess = [];
         if($moneySource->is_group){
             foreach ($subMoneySources as $subMoneySource){
                 $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->get();
@@ -154,13 +155,17 @@ class MoneySourceController extends Controller
                     $subPosition = SubPosition::find($subPositionRow->sub_position_id);
                     $mainPosition = MainPosition::find($subPosition->main_position_id);
                     $table = Table::find($mainPosition->table_id);
-                    $project = Project::find($table->project_id);
-                    if(!isset($linked_projects[$table->project_id])){
-                        $linked_projects[$project->project_id] = [
+                    $project = Project::where('id',$table->project_id)->with(['users'])->first();
+                    foreach ($project->users as $user){
+                        if(!$user->pivot->is_manager){
+                            continue;
+                        }
+                        $usersWithAccess[] = $user->id;
+                    }
+                        $linked_projects[] = [
                             'id' =>$project->id,
                             'name' => $project->name,
                         ];
-                    }
                     $subMoneySourcePositions[] = [
                         'type' => $column->linked_type,
                         'value' => $column->value,
@@ -185,13 +190,18 @@ class MoneySourceController extends Controller
                 $subPosition = SubPosition::find($subPositionRow->sub_position_id);
                 $mainPosition = MainPosition::find($subPosition->main_position_id);
                 $table = Table::find($mainPosition->table_id);
-                $project = Project::find($table->project_id);
-                if(!isset($linked_projects[$table->project_id])){
-                    $linked_projects[$project->project_id] = [
+
+                $project = Project::where('id',$table->project_id)->with(['users'])->first();
+                foreach ($project->users as $user){
+                    if(!$user->pivot->is_manager){
+                        continue;
+                    }
+                    $usersWithAccess[] = $user->id;
+                }
+                $linked_projects[] = [
                         'id' =>$project->id,
                         'name' => $project->name,
                     ];
-                }
                 $positions[] = [
                     'type' => $column->linked_type,
                     'value' => $column->value,
@@ -210,7 +220,6 @@ class MoneySourceController extends Controller
                 }
             }
         }
-
 
 
         return inertia('MoneySources/Show', [
@@ -246,11 +255,16 @@ class MoneySourceController extends Controller
                     ]),
                 'positions' => $positions,
                 'subMoneySourcePositions' => $subMoneySourcePositions,
-                'linked_projects' => $linked_projects
+                'linked_projects' => array_unique($linked_projects,SORT_REGULAR),
+                'usersWithAccess' => array_unique($usersWithAccess,SORT_NUMERIC),
 
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
+            'projects' => Project::all()->map(fn ($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+            ])
         ]);
 
     }

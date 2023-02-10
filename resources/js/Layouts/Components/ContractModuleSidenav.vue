@@ -4,25 +4,24 @@
             <div class="text-secondary text-md font-semibold">
                 Vertragsbausteine
             </div>
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="this.$page.props.can.contract_upload_edit || this.$page.props.is_contract_admin"/>
+            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="openUploadModal" v-if="this.$page.props.can.contract_upload_edit || this.$page.props.is_contract_admin || this.$page.props.is_admin"/>
         </div>
         <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
              v-for="contractModule in contractModules.data"
         >
             <DownloadIcon class="w-4 h-4 mr-2" @click="download(contractModule)"/>
             <div @click="download(contractModule)">{{ contractModule.name }}</div>
-            <XCircleIcon class="w-4 h-4 ml-auto" @click="openDeleteModal" v-if="this.$page.props.can.contract_upload_edit || this.$page.props.is_contract_admin"/>
-
-            <ContractModuleDeleteModal
-                :show="showDeleteModal"
-                :close-modal="closeDeleteModal"
-                :contract-module="contractModule"
-            />
-            <ContractModuleUploadModal
-                :show="showUploadModal"
-                :close-modal="closeUploadModal"
-            />
+            <XCircleIcon class="w-4 h-4 ml-auto" @click="openDeleteModal(contractModule)" v-if="this.$page.props.can.contract_upload_edit || this.$page.props.is_contract_admin"/>
         </div>
+        <ContractModuleDeleteModal
+            :show="showDeleteModal"
+            :close-modal="closeDeleteModal"
+            :contract-module="contractModule"
+        />
+        <ContractModuleUploadModal
+            :show="showUploadModal"
+            :close-modal="closeUploadModal"
+        />
     </div>
 </template>
 
@@ -51,7 +50,8 @@ export default {
     data() {
         return {
             showDeleteModal: false,
-            showUploadModal: false
+            showUploadModal: false,
+            contractModule: null,
         }
     },
     methods: {
@@ -68,7 +68,8 @@ export default {
         closeUploadModal() {
             this.showUploadModal = false
         },
-        openDeleteModal() {
+        openDeleteModal(contractModule) {
+            this.contractModule = contractModule;
             this.showDeleteModal = true
         },
         closeDeleteModal() {

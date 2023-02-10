@@ -28,19 +28,23 @@
                              @click="showProjectFiles = !showProjectFiles"/>
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
-            <ProjectFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal" :project-id="project.id"/>
+            <ProjectFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"
+                                    :project-id="project.id"/>
         </div>
         <div v-if="showProjectFiles">
             <div v-if="projectFiles.length > 0">
                 <div v-for="projectFile in projectFiles">
-                    <div v-if="projectFile.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
-                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                    <div
+                        v-if="projectFile.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
+                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
                         <div @click="openFileEditModal">{{ projectFile.name }}</div>
                         <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
-                        <ProjectFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal" :project-file="projectFile" />
-                        <ProjectFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal" :file="projectFile" />
+                        <ProjectFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal"
+                                                :project-file="projectFile"/>
+                        <ProjectFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
+                                              :file="projectFile"/>
                     </div>
 
                 </div>
@@ -49,60 +53,68 @@
                 <div class="text-secondary text-sm mt-2">Keine Dokumente vorhanden</div>
             </div>
         </div>
+        <div
+            v-if="this.$page.props.can.contract_upload_edit || this.project.access_budget.includes(this.$page.props.user.id)">
+            <hr class="my-10 border-darkGray">
 
-        <hr class="my-10 border-darkGray">
-
-        <div class="w-full flex items-center mb-4">
-            <div class="text-secondary text-md">Verträge</div>
-            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
-                             @click="showContracts = !showContracts"/>
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                        @click="openContractUploadModal"/>
-            <ContractUploadModal
-                :show="showContractUploadModal"
-                :close-modal="closeContractUploadModal"
-                :project-id="project.id"
-            />
-        </div>
-        <div v-if="showContracts">
-            <div v-if="contracts.length > 0">
-                <div v-for="contract in contracts">
-                    <div
-                        v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
-                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
-                    >
-                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
-                        <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
-                        <ContractDeleteModal :show="showContractDeleteModal === contract.id" :close-modal="closeContractDeleteModal" :contract="contract" />
-                        <ContractEditModal :show="showContractEditModal === contract.id" :close-modal="closeContractEditModal" :contract="contract" />
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
+            <div class="w-full flex items-center mb-4">
+                <div class="text-secondary text-md">Verträge</div>
+                <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showContracts ? 'rotate-180' : '']"
+                                 @click="showContracts = !showContracts"/>
+                <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                            @click="openContractUploadModal"/>
+                <ContractUploadModal
+                    :show="showContractUploadModal"
+                    :close-modal="closeContractUploadModal"
+                    :project-id="project.id"
+                />
+            </div>
+            <div v-if="showContracts">
+                <div v-if="contracts.length > 0">
+                    <div v-for="contract in contracts">
+                        <div
+                            v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
+                            class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                        >
+                            <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
+                            <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
+                            <ContractDeleteModal :show="showContractDeleteModal === contract.id"
+                                                 :close-modal="closeContractDeleteModal" :contract="contract"/>
+                            <ContractEditModal :show="showContractEditModal === contract.id"
+                                               :close-modal="closeContractEditModal" :contract="contract"/>
+                            <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div v-else>
-                <div class="text-secondary text-sm mt-2">Keine Verträge vorhanden</div>
-            </div>
-
-        </div>
-
-
-        <hr class="my-10 border-darkGray">
-
-        <div class="w-full flex items-center mb-4">
-            <div class="text-secondary text-md">Verlinkte Finanzierungsquellen</div>
-            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
-                             @click="showMoneySources = !showMoneySources"/>
-        </div>
-        <div v-if="showMoneySources">
-            <div v-if="moneySources.length > 0">
-                <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
-                     v-for="moneySource in moneySources"
-                >
-                    <div>{{ moneySource.name }}</div>
+                <div v-else>
+                    <div class="text-secondary text-sm mt-2">Keine Verträge vorhanden</div>
                 </div>
+
             </div>
-            <div v-else>
-                <div class="text-secondary text-sm mt-2">Keine Finanzierungsquellen vorhanden</div>
+
+
+            <hr class="my-10 border-darkGray">
+            <div
+                v-if="this.$page.props.can.money_source_edit_add || this.project.access_budget.includes(this.$page.props.user.id)">
+                <hr class="my-10 border-darkGray">
+
+                <div class="w-full flex items-center mb-4">
+                    <div class="text-secondary text-md">Verlinkte Finanzierungsquellen</div>
+                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySources ? 'rotate-180' : '']"
+                                     @click="showMoneySources = !showMoneySources"/>
+                </div>
+                <div v-if="showMoneySources">
+                    <div v-if="moneySources.length > 0">
+                        <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
+                             v-for="moneySource in moneySources"
+                        >
+                            <div>{{ moneySource.name }}</div>
+                        </div>
+                    </div>
+                    <div v-else>
+                        <div class="text-secondary text-sm mt-2">Keine Finanzierungsquellen vorhanden</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

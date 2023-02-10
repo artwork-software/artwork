@@ -266,7 +266,7 @@
                     </div>
                 </div>
             </div>
-            <div class="">
+            <div class="bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="p-5 mt-14 max-w-screen-2xl bg-lightBackgroundGray">
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
@@ -813,7 +813,7 @@
                             </div>
                         </div>
                         <div>
-                            <div class="my-6" v-for="comment in sortedComments"
+                            <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
                                  @mouseover="commentHovered = comment.id"
                                  @mouseout="commentHovered = null">
                                 <div class="flex justify-between">
@@ -836,6 +836,9 @@
                                 <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
                                     {{ comment.text }}
                                 </div>
+                            </div>
+                            <div v-else class="xsDark">
+                                Noch keine Kommentare vorhanden
                             </div>
                         </div>
                     </div>
@@ -934,11 +937,16 @@
 
 
                         </div>
+                        <div v-else class="xsDark">
+                            Keine Dateien vorhanden
+                        </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="mt-14 p-5 bg-lightBackgroundGray">
-                    <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell" :selectedRow="budget.selectedRow" :templates="budget.templates"
-                                     :money-sources="moneySources" :budget-access="access_budget" :project-manager="projectManagerIds"></BudgetComponent>
+                <div v-if="isBudgetTab" class="flex mt-14 p-5 bg-lightBackgroundGray w-full">
+                    <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
+                                     :selectedRow="budget.selectedRow" :templates="budget.templates"
+                                     :money-sources="moneySources" :budget-access="access_budget"
+                                     :project-manager="projectManagerIds"></BudgetComponent>
                 </div>
             </div>
         </div>
@@ -1350,7 +1358,8 @@
                         </transition>
                     </div>
                     <div class="mt-4">
-                        <span v-for="user in assignedUsers" class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                        <span v-for="user in assignedUsers"
+                              class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full"
@@ -1378,7 +1387,8 @@
                                     <Dropdown align="right" width="60" class="text-right">
                                         <template #trigger>
                                             <span class="inline-flex">
-                                                <button type="button" class="text-sm ml-14 my-auto text-sm text-secondary focus:outline-none transition">
+                                                <button type="button"
+                                                        class="text-sm ml-14 my-auto text-sm text-secondary focus:outline-none transition">
                                                     Weitere Rechte
                                                 </button>
                                             </span>
@@ -1391,14 +1401,14 @@
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
-                                                   class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
+                                                    class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
                                                 </div>
                                                 <div class="flex mt-4" v-if="user.project_management">
                                                     <input v-model="user.is_manager"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                                 <p
-                                                   class="ml-4 my-auto text-sm text-secondary">Projektleitung</p>
+                                                    class="ml-4 my-auto text-sm text-secondary">Projektleitung</p>
                                                 </div>
                                             </div>
                                         </template>
@@ -1606,88 +1616,6 @@
             </template>
 
         </jet-dialog-modal>
-        <!-- Project History Modal-->
-        <jet-dialog-modal :show="showProjectHistory" @close="closeProjectHistoryModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_project_history.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Projektverlauf
-                    </div>
-                    <XIcon @click="closeProjectHistoryModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary subpixel-antialiased">
-                        Hier kannst du nachvollziehen, was von wem wann geändert wurde.
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="hidden sm:block">
-                            <div class="border-gray-200">
-                                <nav class="-mb-px uppercase text-xs tracking-wide pt-4 flex space-x-8"
-                                     aria-label="Tabs">
-                                    <a @click="changeHistoryTabs(tab)" v-for="tab in historyTabs" href="#"
-                                       :key="tab.name"
-                                       :class="[tab.current ? 'border-buttonBlue text-buttonBlue' : 'border-transparent text-secondary hover:text-gray-600 hover:border-gray-300', 'whitespace-nowrap py-4 px-1 border-b-2 font-medium font-semibold']"
-                                       :aria-current="tab.current ? 'page' : undefined">
-                                        {{ tab.name }}
-                                    </a>
-                                </nav>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showProjectHistoryTab">
-                        <div v-for="historyItem in project.project_history">
-                            <div class="flex w-full my-1"  v-if="historyItem.changes[0].type === 'project'">
-                                <div  class="flex w-full ">
-                                    <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                        {{ historyItem.created_at }}:
-                                    </span>
-                                    <img v-if="historyItem.changes[0].changed_by"
-                                         :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                         :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                         :alt="historyItem.changes[0].changed_by?.first_name"
-                                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                    <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                                 :user="historyItem.changes[0].changed_by"/>
-                                    <div v-else class="xsLight ml-3">
-                                        gelöschte Nutzer:in
-                                    </div>
-                                    <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                        {{ historyItem.changes[0].message }}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                    </div>
-
-                    <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
-                        <div class="flex w-full my-1" v-for="historyItem in project.project_history">
-                            <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
-                            <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
-                                {{ historyItem.created_at }}:
-                            </span>
-                                <img v-if="historyItem.changes[0].changed_by"
-                                     :data-tooltip-target="historyItem.changes[0].changed_by?.id"
-                                     :src="historyItem.changes[0].changed_by?.profile_photo_url"
-                                     :alt="historyItem.changes[0].changed_by?.first_name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="historyItem.changes[0].changed_by"
-                                             :user="historyItem.changes[0].changed_by"/>
-                                <div v-else class="xsLight ml-3">
-                                    gelöschte Nutzer:in
-                                </div>
-                                <div class="text-secondary subpixel-antialiased ml-2 text-sm my-auto w-96">
-                                    {{ historyItem.changes[0].message }}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
         <!-- Checkliste Bearbeiten-->
         <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
             <template #content>
@@ -1746,6 +1674,14 @@
             </template>
 
         </jet-dialog-modal>
+
+        <!-- Project History Modal -->
+        <project-history-component
+            @closed="closeProjectHistoryModal"
+            v-if="showProjectHistory"
+            :project_history="project.project_history"
+            :access_budget="project.access_budget"
+        ></project-history-component>
 
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
@@ -1815,6 +1751,8 @@ import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav";
 import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1829,6 +1767,8 @@ export default {
     name: "ProjectShow",
     props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
+        ProjectHistoryComponent,
+        NewUserToolTip,
         Dropdown,
         BudgetComponent,
         ProjectSidenav,
@@ -1879,14 +1819,14 @@ export default {
     },
     computed: {
         tabs() {
-            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
+            if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return [
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},
                     {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
                     {name: 'Budget', href: '#', current: this.isBudgetTab}
                 ]
-            }else{
+            } else {
                 return [
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},
@@ -1895,7 +1835,7 @@ export default {
             }
         },
         historyTabs() {
-            if(this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
+            if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id)) {
                 return [
                     {name: 'Projekt', href: '#', current: this.showProjectHistoryTab},
                     {name: 'Budget', href: '#', current: this.showBudgetHistoryTab},
@@ -2109,7 +2049,11 @@ export default {
         deleteCategoryFromProject(category) {
             this.form.projectCategoryIds.splice(this.form.projectCategoryIds.indexOf(category.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
+                this.form.assigned_user_ids[user.id] = {
+                    access_budget: user.access_budget,
+                    is_manager: user.is_manager,
+                    can_write: user.can_write
+                };
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2119,7 +2063,11 @@ export default {
         deleteGenreFromProject(genre) {
             this.form.projectGenreIds.splice(this.form.projectGenreIds.indexOf(genre.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
+                this.form.assigned_user_ids[user.id] = {
+                    access_budget: user.access_budget,
+                    is_manager: user.is_manager,
+                    can_write: user.can_write
+                };
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2129,7 +2077,11 @@ export default {
         deleteSectorFromProject(sector) {
             this.form.projectSectorIds.splice(this.form.projectSectorIds.indexOf(sector.id), 1)
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
+                this.form.assigned_user_ids[user.id] = {
+                    access_budget: user.access_budget,
+                    is_manager: user.is_manager,
+                    can_write: user.can_write
+                };
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2297,7 +2249,11 @@ export default {
 
             this.form.number_of_participants = this.selectedParticipantNumber;
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
+                this.form.assigned_user_ids[user.id] = {
+                    access_budget: user.access_budget,
+                    is_manager: user.is_manager,
+                    can_write: user.can_write
+                };
             })
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
@@ -2362,7 +2318,11 @@ export default {
         editProjectTeam() {
             this.form.assigned_user_ids = {};
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {access_budget: user.access_budget, is_manager: user.is_manager, can_write: user.can_write};
+                this.form.assigned_user_ids[user.id] = {
+                    access_budget: user.access_budget,
+                    is_manager: user.is_manager,
+                    can_write: user.can_write
+                };
             })
             this.form.assigned_departments = [];
             this.assignedDepartments.forEach(department => {
@@ -2548,14 +2508,14 @@ export default {
                 preserveScroll: true,
             });
         },
-        checkUserAuth(user){
-            if(this.projectManagerIds.includes(this.$page.props.user.id)){
+        checkUserAuth(user) {
+            if (this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return true;
             }
-            if(this.$page.props.user.id === user.id && user.project_management) {
+            if (this.$page.props.user.id === user.id && user.project_management) {
                 return true;
             }
-            if (this.$page.props.is_admin){
+            if (this.$page.props.is_admin) {
                 return true;
             }
 

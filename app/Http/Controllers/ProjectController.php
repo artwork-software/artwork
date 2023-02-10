@@ -43,6 +43,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
@@ -301,7 +302,16 @@ class ProjectController extends Controller
            $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
            $user = User::find($request->user);
             // Notification
-
+            $this->notificationData->title = 'Du hast Budgetzugriff in '. $project->name .' erhalten';
+            $this->notificationData->project->id = $project->id;
+            $this->notificationData->project->title = $project->name;
+            $this->notificationData->created_by = Auth::user();
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
         }
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
@@ -358,6 +368,7 @@ class ProjectController extends Controller
             $project = $table->project()->first();
             $this->deleteOldNotification($subPosition->id, $verifiedRequest->requested);
 
+            $this->sendVerifiedNotification($mainPosition, $subPosition->id, $verifiedRequest->requested);
             // create Notification
             $this->createNotificationBody($project, $subPosition->id, $verifiedRequest->requested);
             $broadcastMessage = [
@@ -406,16 +417,8 @@ class ProjectController extends Controller
             $mainPosition = MainPosition::find($request->position['id']);
             $verifiedRequest = $mainPosition->verified()->first();
             $this->removeMainPositionCellVerifiedValue($mainPosition);
-
             $project = $mainPosition->table()->first()->project()->first();
-            // Notification
-            $this->createNotificationBody($project, $mainPosition->id, $verifiedRequest->requested);
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $this->notificationData->title
-            ];
-            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $this->sendVerifiedNotification($mainPosition, $mainPosition->id, $verifiedRequest->requested);
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
             $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierung aufgehoben', 'budget');
@@ -426,17 +429,8 @@ class ProjectController extends Controller
             $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest = $subPosition->verified()->first();
             $this->removeSubPositionCellVerifiedValue($subPosition);
-            $project = $mainPosition->table()->first()->project()->first();
-            // Notification
-            $this->createNotificationBody($project, $subPosition->id, $verifiedRequest->requested);
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $this->notificationData->title
-            ];
-            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $this->sendVerifiedNotification($mainPosition, $subPosition->id, $verifiedRequest->requested);
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
-            $mainPosition = $subPosition->mainPosition()->first();
             $verifiedRequest->delete();
             $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierung aufgehoben', 'budget');
         }
@@ -444,13 +438,41 @@ class ProjectController extends Controller
         return back()->with(['success']);
     }
 
+    private function sendVerifiedNotification(MainPosition $mainPosition, $positionId, $requested){
+        $project = $mainPosition->table()->first()->project()->first();
+        // Notification
+        $this->createNotificationBody($project, $positionId, $requested);
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationController->create(User::find($requested), $this->notificationData, $broadcastMessage);
+
+    }
+
 
     public function verifiedRequestSubPosition(Request $request): RedirectResponse
     {
         $subPosition = SubPosition::find($request->id);
-        $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $mainPosition = $subPosition->mainPosition()->first();
         $project = $mainPosition->table()->first()->project()->first();
+        if($request->giveBudgetAccess){
+            $project->users()->updateExistingPivot($request->user, ['access_budget' => true]);
+            $user = User::find($request->user);
+            // Notification
+            $this->notificationData->title = 'Du hast Budgetzugriff in '. $project->name .' erhalten';
+            $this->notificationData->project->id = $project->id;
+            $this->notificationData->project->title = $project->name;
+            $this->notificationData->created_by = Auth::user();
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $this->notificationData->title
+            ];
+            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+        }
+        $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
         $this->notificationData->requested_position = $request->position;
         $this->notificationData->project = $project;
@@ -497,6 +519,7 @@ class ProjectController extends Controller
         $subPosition = SubPosition::find($request->subPositionId);
         $this->setSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => true]);
+        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ verifiziert', 'budget');
         return back()->with('success');
     }
 
@@ -505,6 +528,7 @@ class ProjectController extends Controller
         $subPosition = SubPosition::find($request->subPositionId);
         $this->removeSubPositionCellVerifiedValue($subPosition);
         $subPosition->update(['is_fixed' => false]);
+        $this->history->createHistory($request->project_id, 'Unterposition „' . $subPosition->name . '“ verifiziert', 'budget');
         return back()->with('success');
     }
 
@@ -660,22 +684,29 @@ class ProjectController extends Controller
         $table = Table::find($table_id);
         $columns = $table->columns()->get();
 
-        $letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'];
-        $count = 0;
+        $count = 1;
 
         foreach ($columns as $column) {
-            // GUARD: When the alphabet ends. Set the count to 0 again and start from the beginning.
-            if ($count > 25) {
-                $count = 0;
-            }
             // Skip columns without subname
             if ($column->subName === null || empty($column->subName)) {
                 continue;
             }
             $column->update([
-                'subName' => $letters[$count]
+                'subName' => $this->getNameFromNumber($count)
             ]);
             $count++;
+        }
+    }
+
+    public function getNameFromNumber($num): string
+    {
+        $numeric = ($num - 1) % 26;
+        $letter = chr(65 + $numeric);
+        $num2 = intval(($num - 1) / 26);
+        if ($num2 > 0) {
+            return $this->getNameFromNumber($num2) . $letter;
+        } else {
+            return $letter;
         }
     }
 
@@ -836,24 +867,7 @@ class ProjectController extends Controller
             'position' => $mainPosition->subPositions()->max('position') + 1
         ]);
 
-        $subPositionRow = $subPosition->subPositionRows()->create([
-            'commented' => false,
-            'position' => 1,
-        ]);
-
-        $firstThreeColumns = $columns->shift(3);
-
-        $subPositionRow->columns()->attach($firstThreeColumns->pluck('id'), [
-            'value' => '',
-            'linked_money_source_id' => null,
-            'verified_value' => ''
-        ]);
-
-        $subPositionRow->columns()->attach($columns->pluck('id'), [
-            'value' => 0,
-            'verified_value' => null,
-            'linked_money_source_id' => null,
-        ]);
+        $this->addSubPositionRowsWithColumns($subPosition, $columns);
     }
 
     public function addSubPosition(Request $request): void
@@ -873,6 +887,10 @@ class ProjectController extends Controller
             'position' => $request->positionBefore + 1
         ]);
 
+        $this->addSubPositionRowsWithColumns($subPosition, $columns);
+    }
+
+    private function addSubPositionRowsWithColumns(SubPosition $subPosition, Collection $columns){
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
             'position' => 1,
@@ -1006,21 +1024,6 @@ class ProjectController extends Controller
             'sectors',
             'users.departments',
         ]);
-
-        /*dd($project->table()
-            ->with([
-                'columns',
-                'mainPositions',
-                'mainPositions.verified',
-                'mainPositions.subPositions' => function ($query) {
-                    return $query->orderBy('position');
-                },
-                'mainPositions.subPositions.verified',
-                'mainPositions.subPositions.subPositionRows' => function ($query) {
-                    return $query->orderBy('position');
-                }, 'mainPositions.subPositions.subPositionRows.cells.column'
-            ])
-            ->first());*/
 
         $columns = $project->table()->first()->columns()->get();
 
@@ -1186,9 +1189,8 @@ class ProjectController extends Controller
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
-
-        $projectAdminsBefore = $project->access_budget()->get();
         $projectManagerBefore = $project->managerUsers()->get();
+        $projectBudgetAccessBefore = $project->access_budget()->get();
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
 
@@ -1215,9 +1217,9 @@ class ProjectController extends Controller
         $newProjectCategories = $project->categories()->get();
 
         $newProjectDepartments = $project->departments()->get();
-        $projectAdminsAfter = $project->access_budget()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
+        $projectBudgetAccessAfter = $project->access_budget()->get();
         $newProjectGenres = $project->genres()->get();
         $newProjectSectors = $project->sectors()->get();
         $newProjectCostCenter = $project->cost_center;
@@ -1232,7 +1234,7 @@ class ProjectController extends Controller
         $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
 
         // Get and check project admins, managers and users after update
-        $this->createNotificationProjectMemberChanges($project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter);
+        $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
 
         $scheduling = new SchedulingController();
         $projectId = $project->id;
@@ -1414,59 +1416,45 @@ class ProjectController extends Controller
      * @param $projectManagerAfter
      * @return void
      */
-    private function createNotificationProjectMemberChanges(Project $project, $projectAdminsBefore, $projectManagerBefore, $projectUsers, $projectAdminsAfter, $projectUsersAfter, $projectManagerAfter): void
+    private function createNotificationProjectMemberChanges(Project $project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter): void
     {
+
+        $this->notificationData->project->id = $project->id;
+        $this->notificationData->project->title = $project->name;
+        $this->notificationData->created_by = Auth::user();
+
         $userIdsBefore = [];
-        $adminIdsBefore = [];
         $managerIdsBefore = [];
+        $budgetIdsBefore = [];
         $userIdsAfter = [];
         $managerIdsAfter = [];
-        $adminIdsAfter = [];
+        $budgetIdsAfter = [];
+
         foreach ($projectUsers as $projectUser) {
             $userIdsBefore[$projectUser->id] = $projectUser->id;
         }
-        foreach ($projectAdminsBefore as $adminBefore) {
-            $adminIdsBefore[$adminBefore->id] = $adminBefore->id;
-            if (in_array($adminBefore->id, $userIdsBefore)) {
-                unset($userIdsBefore[$adminBefore->id]);
-            }
-        }
+
         foreach ($projectManagerBefore as $managerBefore) {
             $managerIdsBefore[$managerBefore->id] = $managerBefore->id;
             if (in_array($managerBefore->id, $userIdsBefore)) {
                 unset($userIdsBefore[$managerBefore->id]);
             }
         }
+        foreach ($projectBudgetAccessBefore as $budgetBefore) {
+            $budgetIdsBefore[$budgetBefore->id] = $budgetBefore->id;
+            if (in_array($budgetBefore->id, $userIdsBefore)) {
+                unset($userIdsBefore[$budgetBefore->id]);
+            }
+        }
         foreach ($projectUsersAfter as $projectUserAfter) {
             $userIdsAfter[$projectUserAfter->id] = $projectUserAfter->id;
         }
-        foreach ($projectAdminsAfter as $adminAfter) {
-            $adminIdsAfter[$adminAfter->id] = $adminAfter->id;
-            // if added a new project admin, send notification to this user
-            if (!in_array($adminAfter->id, $adminIdsBefore)) {
-                $this->notificationData->title = 'Du wurdest zum Projektadmin von ' . $project->name . ' ernannt';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $broadcastMessage = [
-                    'id' => rand(1, 1000000),
-                    'type' => 'success',
-                    'message' => $this->notificationData->title
-                ];
-                $this->notificationController->create($adminAfter, $this->notificationData, $broadcastMessage);
-            }
-            if (in_array($adminAfter->id, $userIdsAfter)) {
-                unset($userIdsAfter[$adminAfter->id]);
-            }
-        }
+
         foreach ($projectManagerAfter as $managerAfter) {
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($managerAfter->id, $managerIdsBefore)) {
                 $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -1478,14 +1466,28 @@ class ProjectController extends Controller
                 unset($userIdsAfter[$managerAfter->id]);
             }
         }
-        // check if user remove as project admin
-        foreach ($adminIdsBefore as $adminBefore) {
-            if (!in_array($adminBefore, $adminIdsAfter)) {
-                $user = User::find($adminBefore);
-                $this->notificationData->title = 'Du wurdest als Projektadmin von ' . $project->name . ' gelöscht';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+
+        foreach ($projectBudgetAccessAfter as $budgetAfter) {
+            $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
+            // if added a new project manager, send notification to this user
+            if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
+                $this->notificationData->title = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create($budgetAfter, $this->notificationData, $broadcastMessage);
+            }
+            if (in_array($budgetAfter->id, $userIdsAfter)) {
+                unset($userIdsAfter[$budgetAfter->id]);
+            }
+        }
+
+        foreach ($managerIdsBefore as $managerBefore) {
+            if (!in_array($managerBefore, $managerIdsAfter)) {
+                $user = User::find($managerBefore);
+                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
@@ -1494,14 +1496,10 @@ class ProjectController extends Controller
                 $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
             }
         }
-        // check if user remove as project manager
-        foreach ($managerIdsBefore as $managerBefore) {
-            if (!in_array($managerBefore, $managerIdsAfter)) {
-                $user = User::find($managerBefore);
-                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        foreach ($budgetIdsBefore as $budgetBefore) {
+            if (!in_array($budgetBefore, $budgetIdsAfter)) {
+                $user = User::find($budgetBefore);
+                $this->notificationData->title = 'Dein Budgetzugriff in ' . $project->name . ' wurde gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
@@ -1514,9 +1512,6 @@ class ProjectController extends Controller
             if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
                 $this->notificationData->title = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -1529,9 +1524,6 @@ class ProjectController extends Controller
             if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
                 $this->notificationData->title = 'Du wurdest aus ' . $project->name . ' gelöscht';
-                $this->notificationData->project->id = $project->id;
-                $this->notificationData->project->title = $project->name;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
@@ -1706,11 +1698,12 @@ class ProjectController extends Controller
     }
     public function updateCommentedStatusOfRow(Request $request, SubPositionRow $row): RedirectResponse
     {
-        $cells = $row->cells()->get();
         $row->update(['commented' => $request->commented]);
-        foreach ( $cells as $cell){
-            $cell->update(['commented' => $request->commented]);
-        }
+
+        $cellIds = $row->cells->skip(3)->pluck('id');
+
+        $row->cells()->whereIntegerInRaw('id', $cellIds)->update(['commented' => $request->commented]);
+
         return back()->with('success');
     }
     public function updateCommentedStatusOfCell(Request $request, ColumnCell $columnCell): RedirectResponse

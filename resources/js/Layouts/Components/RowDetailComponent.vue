@@ -11,7 +11,6 @@
                         <div class="flex-grow headline1">
                             Details
                         </div>
-                        {{ row }}
                     </h1>
                     <div class="mb-4">
                         <div class="hidden sm:block">

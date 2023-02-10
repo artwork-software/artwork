@@ -45,9 +45,12 @@ class SubPosition extends Model
 
     public function getColumnSumsAttribute()
     {
-        $subPositionRowIds = $this->subPositionRows()->pluck('id');
+        $subPositionRowIds = $this->subPositionRows()
+            ->where('commented', false)
+            ->pluck('id');
 
         return ColumnCell::query()
+                ->where('commented', false)
                 ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
                 ->get()
                 ->groupBy('column_id')

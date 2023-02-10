@@ -72,7 +72,7 @@
                          v-if="moneySource.users">
                         <div class="flex items-center">
                             <div class="mr-2">
-                            zuständig:
+                                zuständig:
                             </div>
                             <div class="-ml-3" v-for="user in moneySource.users">
                                 <img v-if="user"
@@ -107,17 +107,18 @@
                     <img src="/Svgs/IconSvgs/icon_group_red.svg"
                          class=" h-4 w-4" alt="groupIcon"/>
                     <div class="ml-2">
-                    Gehört zu
+                        Gehört zu
                     </div>
-                    <Link v-if="moneySource.group_id" :href="getEditHref(moneySource.group_id)" class="linkText ml-1 mt-0.5">
-                        {{moneySource.moneySourceGroup.name}}
+                    <Link v-if="moneySource.group_id" :href="getEditHref(moneySource.group_id)"
+                          class="linkText ml-1 mt-0.5">
+                        {{ moneySource.moneySourceGroup.name }}
                     </Link>
                 </div>
                 <div class="mt-3 xsDark" v-if="moneySource.start_date && moneySource.end_date">
-                    Laufzeit: {{formatDate(moneySource.start_date)}} - {{formatDate(moneySource.end_date)}}
+                    Laufzeit: {{ formatDate(moneySource.start_date) }} - {{ formatDate(moneySource.end_date) }}
                 </div>
                 <div class="mt-2 xsDark" v-if="moneySource.source_name">
-                    Quelle: {{ moneySource.source_name}}
+                    Quelle: {{ moneySource.source_name }}
                 </div>
                 <div class="mr-14 my-3 subpixel-antialiased text-secondary">
                     {{ moneySource.description }}
@@ -138,28 +139,94 @@
                 </div>
             </div>
         </div>
-        <!-- Div with Bg-Color -->
-        <div class="w-full h-full mb-48" v-if="moneySource.is_group">
+        <!-- Positions Div with Bg-Color -->
+        <div class="w-full h-full mb-48">
             <div class="max-w-screen-2xl bg-lightBackgroundGray">
-                <div class="headline4 py-12 ml-20">
-                Untergeordnete Finanzierungsquellen
-                </div>
-            </div>
-        </div>
-        <div class="w-full h-full mb-48" v-else>
-            <div class="max-w-screen-2xl bg-lightBackgroundGray">
-                <div class="headline4 py-12 ml-20">
-                    Verlinkte Positionen
-                </div>
+                <div class="flex pt-12 justify-between items-center">
+                    <div class="headline4  ml-20">
+                        Verlinkte Positionen
+                    </div>
+                    <div>
+                        <Listbox as="div" class="flex h-12 mr-4 w-64" v-model="wantedProject"
+                                 id="wantedProject">
+                            <ListboxButton
+                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
+                                <div class="flex items-center my-auto">
+                                        <span class="block truncate items-center ml-3 flex" v-if="wantedProject">
+                                            <span class="truncate mr-6">{{ wantedProject?.name }}</span>
+                                        </span>
+                                    <span class="block truncate items-center ml-3 flex" v-else>
+                                            <span> Alle Projekte</span>
+                                        </span>
+                                    <span
+                                        class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                </span>
+                                </div>
+                            </ListboxButton>
 
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute w-64 z-10 mt-12 bg-primary shadow-lg max-h-48 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   :value="null"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <div class="flex">
+                                                    <span
+                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                        Alle Projekte
+                                                    </span>
+                                            </div>
+                                            <span
+                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   v-for="project in this.projects"
+                                                   :key="project.id"
+                                                   :value="project"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                            <div class="flex">
+                                                    <span
+                                                        :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                        {{ project.name }}
+                                                    </span>
+                                            </div>
+                                            <span
+                                                :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </Listbox>
+                    </div>
+                </div>
                 <div class="w-full ml-20 py-12">
-                    <div class="flex border-b border-gray-300 pb-5 pt-5" v-for="position in moneySource.positions">
-                        <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
-                            <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span> {{ currencyFormat(position.value) }}
-                        </div>
-                        <div class="project">
-                            <div class="text-gray-400"><a :href="'/projects/' + position.project.id + '?openTab=budget'" class="text-buttonBlue ">{{ position.project.name }}</a> |<span class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
-                            <div class="text-gray-400 text-sm mt-2">{{ position.mainPositionName }} | {{ position.subPositionName }} | Position</div>
+                    <div>
+                        <div class="flex border-b border-gray-300 pb-5 pt-5"
+                             v-for="position in filteredPositions">
+                            <div class="sum w-72 text-2xl" :class="position.type === 'COST' ? 'text-red-500' : ''">
+                                <span v-if="position.type === 'EARNING'">+</span><span v-else>-</span>
+                                {{ currencyFormat(position.value) }}
+                            </div>
+                            <div class="project">
+                                <div class="text-gray-400"><a
+                                    :href="'/projects/' + position.project.id + '?openTab=budget'"
+                                    class="text-buttonBlue ">{{ position.project.name }}</a> |<span
+                                    class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
+                                <div class="text-gray-400 text-sm mt-2">{{ position.mainPositionName }} |
+                                    {{ position.subPositionName }}
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -173,7 +240,8 @@
             :moneySourceGroups="this.moneySourceGroups"
         />
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
-            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks" :money_source="moneySource"></MoneySourceSidenav>
+            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks"
+                                :money_source="moneySource"></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
     <confirmation-component
@@ -191,6 +259,7 @@
 
 import AppLayout from '@/Layouts/AppLayout.vue';
 import {
+    Listbox, ListboxButton, ListboxOption, ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
@@ -203,7 +272,7 @@ import {
 } from "@heroicons/vue/outline";
 import {
     DotsVerticalIcon,
-    ChevronRightIcon
+    ChevronRightIcon, ChevronDownIcon, CheckIcon
 } from "@heroicons/vue/solid";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -214,10 +283,9 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 
 
-
 export default {
     name: "MoneySourceShow",
-    props: ['moneySource','moneySourceGroups','moneySources'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects'],
     components: {
         MoneySourceSidenav,
         BaseSidenav,
@@ -236,18 +304,46 @@ export default {
         Link,
         EditMoneySourceComponent,
         ConfirmationComponent,
+        Listbox,
+        ListboxOption,
+        ListboxOptions,
+        ListboxButton,
+        ChevronDownIcon,
+        CheckIcon
     },
-    computed: {},
+    computed: {
+        filteredPositions() {
+            if (this.wantedProject !== null) {
+                if (this.moneySource.is_group) {
+                    return this.moneySource.subMoneySourcePositions.filter(position => {
+                        return position.project.id === this.wantedProject?.id;
+                    })
+                } else {
+                    return this.moneySource.positions.filter(position => {
+                        return position.project.id === this.wantedProject?.id;
+                    })
+                }
+            } else {
+                if (this.moneySource.is_group) {
+                    return this.moneySource.subMoneySourcePositions;
+                } else {
+                    return this.moneySource.positions;
+                }
+            }
+
+        }
+    },
     data() {
         return {
             showEditMoneySourceModal: false,
             showDeleteSourceModal: false,
             sourceToDelete: null,
             show: false,
+            wantedProject: null,
         }
     },
     methods: {
-        currencyFormat(number){
+        currencyFormat(number) {
             const formatter = new Intl.NumberFormat('de-DE', {
                 style: 'currency',
                 currency: 'EUR',
@@ -260,20 +356,20 @@ export default {
         formatDate(isoDate) {
             return isoDate.substring(8, 10) + '.' + isoDate.substring(5, 7) + '.' + isoDate.substring(0, 4)
         },
-        openEditMoneySourceModal(){
+        openEditMoneySourceModal() {
             this.showEditMoneySourceModal = true;
         },
-        onEditMoneySourceModalClose(){
+        onEditMoneySourceModalClose() {
             this.showEditMoneySourceModal = false;
         },
-        duplicateMoneySource(moneySource){
+        duplicateMoneySource(moneySource) {
             this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
         },
-        deleteMoneySource(moneySource){
+        deleteMoneySource(moneySource) {
             this.$inertia.delete(`/money_sources/${moneySource.id}`);
             this.showDeleteSourceModal = false;
         },
-        openDeleteSourceModal(moneySourceToDelete){
+        openDeleteSourceModal(moneySourceToDelete) {
             this.sourceToDelete = moneySourceToDelete;
             this.showDeleteSourceModal = true;
         },

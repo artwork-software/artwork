@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Project;
 use App\Models\Task;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -13,6 +14,21 @@ class ContractResource extends JsonResource
      * @param  \Illuminate\Http\Request  $request
      * @return array|\Illuminate\Contracts\Support\Arrayable|\JsonSerializable
      */
+
+    public function getAccessibleUsers(): array|\JsonSerializable|\Illuminate\Contracts\Support\Arrayable
+    {
+        $usersWithAccess = [];
+        $project = Project::where('id', $this->project_id)->with(['users'])->first();
+        foreach($project->users as $user) {
+            if($user->pivot->is_manager) {
+                if(!in_array($user, $usersWithAccess)) {
+                    $usersWithAccess[] = $user;
+                }
+            }
+        }
+        return $usersWithAccess;
+    }
+
     public function toArray($request)
     {
         return [
@@ -30,7 +46,7 @@ class ContractResource extends JsonResource
             'currency' => $this->currency,
             'is_freed' => $this->is_freed,
             'description' => $this->description,
-            'accessibleUsers' => UserIndexResource::collection($this->accessing_users)->resolve(),
+            'accessibleUsers' => UserIndexResource::collection($this->getAccessibleUsers())->resolve(),
             'tasks' => Task::where('contract_id', $this->id)->get()
         ];
     }

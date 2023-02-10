@@ -32,14 +32,16 @@
         </div>
         <div v-if="showProjectFiles">
             <div v-if="projectFiles.length > 0">
-                <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
-                     v-for="projectFile in projectFiles"
-                >
-                    <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
-                    <div @click="openFileEditModal">{{ projectFile.name }}</div>
-                    <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
-                    <ProjectFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal" :project-file="projectFile" />
-                    <ProjectFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal" :file="projectFile" />
+                <div v-for="projectFile in projectFiles">
+                    <div v-if="projectFile.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
+                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                    >
+                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
+                        <div @click="openFileEditModal">{{ projectFile.name }}</div>
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
+                        <ProjectFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal" :project-file="projectFile" />
+                        <ProjectFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal" :file="projectFile" />
+                    </div>
 
                 </div>
             </div>
@@ -66,7 +68,7 @@
             <div v-if="contracts.length > 0">
                 <div v-for="contract in contracts">
                     <div
-                        v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0"
+                        v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0 || $page.props.is_admin"
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>

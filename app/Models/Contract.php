@@ -13,12 +13,16 @@ class Contract extends Model
         'name',
         'basename',
         'contract_partner',
+        'description',
+        'is_freed',
+        'has_power_of_attorney',
         'amount',
         'project_id',
+        'contract_type_id',
+        'company_type_id',
         'ksk_liable',
         'resident_abroad',
-        'legal_form',
-        'type'
+        'currency'
     ];
 
     protected $guarded = [
@@ -27,17 +31,34 @@ class Contract extends Model
 
     protected $casts = [
         'ksk_liable' => 'boolean',
-        'resident_abroad' => 'boolean'
+        'resident_abroad' => 'boolean',
+        'is_freed' => 'boolean',
+        'has_power_of_attorney' => 'boolean',
     ];
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function company_type()
+    {
+        return $this->belongsTo(CompanyType::class, 'company_type_id');
+    }
+
+    public function contract_type()
+    {
+        return $this->belongsTo(ContractType::class, 'contract_type_id');
     }
 
     public function accessing_users()
     {
         return $this->belongsToMany(User::class);
+    }
+
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class);
     }
 
     public function comments()

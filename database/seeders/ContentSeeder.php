@@ -5,8 +5,11 @@ namespace Database\Seeders;
 use App\Enums\BudgetTypesEnum;
 use App\Http\Controllers\ProjectController;
 use App\Models\Checklist;
+use App\Models\CollectingSociety;
+use App\Models\CompanyType;
 use App\Models\Contract;
 use App\Models\ContractModule;
+use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
 use App\Models\Department;
@@ -26,6 +29,9 @@ class ContentSeeder extends Seeder
      */
     public function run()
     {
+        $this->seedCollectingSocieties();
+        $this->seedContractTypes();
+        $this->seedCompanyTypes();
         $this->seedGenreAndCategoriesAndAreas();
         $this->seedDepartments();
         $this->seedRooms();
@@ -37,6 +43,47 @@ class ContentSeeder extends Seeder
         $this->seedContractModules();
         $this->seedCostCenters();
         $this->seedCopyrights();
+    }
+
+    private function seedCollectingSocieties()
+    {
+        CollectingSociety::create([
+            'name' => 'GEMA'
+        ]);
+
+        CollectingSociety::create([
+            'name' => 'PETA'
+        ]);
+
+        CollectingSociety::create([
+            'name' => 'KENA'
+        ]);
+    }
+
+    private function seedContractTypes()
+    {
+        ContractType::create([
+            'name' => 'Werkvertrag'
+        ]);
+
+        ContractType::create([
+            'name' => 'Dienstvertrag'
+        ]);
+    }
+
+    private function seedCompanyTypes()
+    {
+        CompanyType::create([
+            'name' => 'GmbH'
+        ]);
+
+        CompanyType::create([
+            'name' => 'GbR'
+        ]);
+
+        CompanyType::create([
+            'name' => 'AG'
+        ]);
     }
 
     private function seedContracts()
@@ -52,8 +99,8 @@ class ContentSeeder extends Seeder
                                 Er steht hier als Platzhalter.',
             'ksk_liable' => false,
             'resident_abroad' => true,
-            'legal_form' => 'Werkvertrag',
-            'type' => 'Sponsoring'
+            'company_type_id' => 1,
+            'contract_type_id' => 1
         ]);
 
         Contract::create([
@@ -66,11 +113,9 @@ class ContentSeeder extends Seeder
                                 Er steht hier als Platzhalter.',
             'ksk_liable' => true,
             'resident_abroad' => false,
-            'legal_form' => 'Werkvertrag',
-            'type' => 'Collaboration'
+            'company_type_id' => 2,
+            'contract_type_id' => 2
         ]);
-
-
     }
 
     private function seedContractModules()
@@ -406,7 +451,7 @@ class ContentSeeder extends Seeder
         Copyright::create([
             'own_copyright' => true,
             'live_music' => true,
-            'collecting_society' => 'GEMA',
+            'collecting_society_id' => 1,
             'law_size' => 'small',
             'project_id' => 1
         ]);

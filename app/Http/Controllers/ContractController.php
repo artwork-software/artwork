@@ -9,6 +9,8 @@ use App\Models\Comment;
 use App\Models\Contract;
 use App\Models\ContractModule;
 use App\Models\Project;
+use App\Models\Task;
+use App\Models\User;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,9 +20,11 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use function Pest\Laravel\json;
 
 class ContractController extends Controller
 {
@@ -40,7 +44,7 @@ class ContractController extends Controller
         return inertia('Contracts/ContractManagement', [
             'contracts' => ContractResource::collection($contracts),
             'contract_modules' => ContractModuleResource::collection(ContractModule::all())
-            ]);
+        ]);
 
     }
 
@@ -49,28 +53,28 @@ class ContractController extends Controller
 
         $contracts = Contract::all();
         $costsFilter = json_decode($request->input('costsFilter'));
-        $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
+        $companyTypesFilter = json_decode($request->input('companyTypesFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
 
-        if(count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
-            $legal_forms = collect($legalFormsFilter->array);
-            $contract_types = collect($contractTypesFilter->array);
+        if (count($costsFilter->array) != 0 || count($companyTypesFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
+            $company_type_ids = collect($companyTypesFilter->array);
+            $contract_type_ids = collect($contractTypesFilter->array);
             $cost_filters = collect($costsFilter->array);
 
-            Debugbar::info($legal_forms);
+            Debugbar::info($company_type_ids);
             Debugbar::info($cost_filters);
 
-            if($cost_filters->contains('KSK-pflichtig')) {
+            if ($cost_filters->contains('KSK-pflichtig')) {
                 $contracts = $contracts->where('ksk_liable', true);
             }
-            if($cost_filters->contains( 'Im Ausland ansässig')) {
+            if ($cost_filters->contains('Im Ausland ansässig')) {
                 $contracts = $contracts->where('resident_abroad', true);
             }
-            if(count($legal_forms) > 0) {
-                $contracts = $contracts->whereIn('legal_form', $legal_forms);
+            if (count($company_type_ids) > 0) {
+                $contracts = $contracts->whereIn('company_type_id', $company_type_ids);
             }
-            if(count($contract_types) > 0) {
-                $contracts = $contracts->whereIn('type', $contract_types);
+            if (count($contract_type_ids) > 0) {
+                $contracts = $contracts->whereIn('contract_type_id', $contract_type_ids);
             }
         }
         return [
@@ -100,14 +104,13 @@ class ContractController extends Controller
      */
     public function store(Request $request, Project $project)
     {
-
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
         }
 
-        $file = $request->file('contract');
+        $file = $request->file;
         $original_name = $file->getClientOriginalName();
-        $basename = Str::random(20).$original_name;
+        $basename = Str::random(20) . $original_name;
 
         Storage::putFileAs('contracts', $file, $basename);
 
@@ -117,20 +120,21 @@ class ContractController extends Controller
             'contract_partner' => $request->contract_partner,
             'amount' => $request->amount,
             'project_id' => $project->id,
+            'currency' => $request->currency,
             'description' => $request->description,
             'ksk_liable' => $request->ksk_liable,
             'resident_abroad' => $request->resident_abroad,
-            'legal_form' => $request->legal_form,
-            'type' => $request->type
+            'is_freed' => @$request->is_freed,
+            'has_power_of_attorney' => @$request->has_power_of_attorney,
+            'contract_type_id' => $request->contract_type_id,
+            'company_type_id' => $request->company_type_id
         ]);
 
-        $comment = Comment::create([
-            'text' => $request->comment,
-            'user_id' => Auth::id(),
-            'project_file_id' => $contract->id
-        ]);
-        $contract->comments()->save($comment);
-        $contract->accessing_users()->attach($request->accessibleUsers);
+        $this->store_contract_tasks_and_comment($request, $contract);
+
+        $contract->accessing_users()->sync(collect($request->accessibleUsers));
+
+        $contract->accessing_users()->save(Auth::user());
 
         $contract->save();
 
@@ -148,47 +152,51 @@ class ContractController extends Controller
     {
         //$this->authorize('view contracts');
 
-        return Storage::download('contracts/'. $contract->basename, $contract->name);
+        return Storage::download('contracts/' . $contract->basename, $contract->name);
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param ContractUpdateRequest $request
      * @param Contract $contract
      * @return RedirectResponse
      */
-    public function update(ContractUpdateRequest $request, Contract $contract)
+    public function update(Contract $contract, ContractUpdateRequest $request)
     {
+
+
         $contract->fill($request->data());
 
-        $comment = Comment::create([
-            'text' => $request->comment,
-            'user_id' => Auth::id(),
-            'project_file_id' => $contract->id
-        ]);
-        $contract->comments()->save($comment);
+        $this->store_contract_tasks_and_comment($request, $contract);
 
         if ($request->get('accessibleUsers')) {
-            $contract->accessing_users()->delete();
-            $contract->accessing_users()->createMany($request->accessibleUsers);
+            $contract->accessing_users()->sync(collect($request->accessibleUsers));
         }
 
-        if($request->file('contract')) {
-            Storage::delete('contracts/'. $contract->basename);
-            $file = $request->file('contract');
-            $original_name = $file->getClientOriginalName();
-            $basename = Str::random(20).$original_name;
-
-            $contract->basename = $basename;
-            $contract->name = $original_name;
-            $contract->save();
-
-            Storage::putFileAs('contracts', $file, $basename);
-        }
+        $contract->save();
 
         return Redirect::back();
 
+
+    }
+
+    public function storeFile(Request $request)
+    {
+
+        if (!Storage::exists("contracts")) {
+            Storage::makeDirectory("contracts");
+        }
+
+        $file = $request->file;
+        $original_name = $file->getClientOriginalName();
+        $basename = Str::random(20) . $original_name;
+
+        Storage::putFileAs('contracts', $file, $basename);
+
+        $contract = Contract::find($request->contract);
+        $contract->basename = $basename;
+        $contract->name = $original_name;
+        $contract->save();
 
     }
 
@@ -202,5 +210,50 @@ class ContractController extends Controller
     {
         $contract->delete();
         Redirect::back();
+    }
+
+    /**
+     * @param Request $request
+     * @param \Illuminate\Database\Eloquent\Model $contract
+     * @return void
+     */
+    public function store_contract_tasks_and_comment(Request $request, \Illuminate\Database\Eloquent\Model $contract): void
+    {
+        if (isset($request->tasks)) {
+            foreach ($request->tasks as $task_from_req) {
+                $task_obj = (object)$task_from_req;
+                if (isset($task_obj->new)) {
+                    $task = Task::create([
+                        'name' => $task_obj->name,
+                        'description' => $task_obj->description,
+                        'deadline' => $task_obj->deadline,
+                        'done' => false,
+                        'contract_id' => $contract->id,
+                        'order' => 1
+                    ]);
+                } else {
+                    //dd($task_obj);
+                    $task = Task::where('id', $task_obj->id)->update(['done' => $task_obj->done]);
+                }
+            }
+        }
+
+        if (isset($task_obj->assigned_users)) {
+            foreach ($task_obj->assigned_users as $assigned_user) {
+                $user_obj = (object)$assigned_user;
+                $user = User::where('id', $user_obj->id)->first();
+                $task->task_users()->save($user);
+                $user->tasks()->save($task);
+            }
+        }
+
+        if ($request->comment) {
+            $comment = Comment::create([
+                'text' => $request->comment,
+                'user_id' => Auth::id(),
+                'project_file_id' => $contract->id
+            ]);
+            $contract->comments()->save($comment);
+        }
     }
 }

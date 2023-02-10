@@ -7,193 +7,112 @@
                     Definiere globale Einstellungen für Projekte.
                 </div>
             </div>
-            <div class="flex flex-wrap">
-                <!-- Genres -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="headline2 my-2">Genres</h2>
-                    <div class="xsLight">
-                        Lege Genres fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="genre" v-model="genreInput" type="text" @keyup.enter="addGenre"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="genre"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Genre
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[genreInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addGenre" :disabled="!genreInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="(genre) in genres"
-                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ genre.name }}
-                                            <button type="button" @click="openDeleteGenreModal(genre)">
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                        </span>
-                    </div>
-                </div>
-                <!-- Kategorien -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="headline2 my-2">Kategorien</h2>
-                    <div class="xsLight">
-                        Lege Kategorien fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="category" v-model="categoryInput" type="text" @keyup.enter="addCategory"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="category"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Kategorie
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[categoryInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addCategory" :disabled="!categoryInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="category in categories"
-                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ category.name }}
-                                            <button type="button" @click="openDeleteCategoryModal(category)">
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                        </span>
-                    </div>
-                </div>
-                <!-- Bereiche -->
-                <div class="mt-16 max-w-2xl">
-                    <h2 class="headline2 my-2">Bereiche</h2>
-                    <div class="xsLight">
-                        Lege Bereiche fest, denen Projekte später zugeordnet werden können.
-                    </div>
-                </div>
-                <div class="mt-8 flex w-full flex-wrap">
-                    <div class="relative flex max-w-lg w-full">
-                        <input id="sector" v-model="sectorInput" type="text" @keyup.enter="addSector"
-                               class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                               placeholder="placeholder"/>
-                        <label for="sector"
-                               class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Bereich
-                            eingeben</label>
-                        <div class="m-2 -ml-8 -mt-1">
-                            <button
-                                :class="[sectorInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                @click="addSector" :disabled="!sectorInput">
-                                <CheckIcon class="h-5 w-5"></CheckIcon>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap w-full max-w-xl">
-                        <span v-for="sector in sectors"
-                              class="rounded-full items-center font-medium text-tagText
-                                            border bg-tagBg border-tag px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex">
-                                            {{ sector.name }}
-                                            <button type="button" @click="openDeleteSectorModal(sector)">
-                                                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                            </button>
-                        </span>
+            <div class="flex flex-wrap pb-8">
 
-                    </div>
-                </div>
+                <ProjectSettingsItem
+                    title="Genres"
+                    description="Lege Genres fest, denen Projekte später zugeordnet werden können."
+                    input-label="Genre eingeben"
+                    :items="genres"
+                    @add="addGenre"
+                    @openDeleteModal="openDeleteGenreModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Kategorien"
+                    description="Lege Kategorien fest, denen Projekte später zugeordnet werden können."
+                    input-label="Kategorie eingeben"
+                    :items="categories"
+                    @add="addCategory"
+                    @openDeleteModal="openDeleteCategoryModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Bereiche"
+                    description="Lege Bereiche fest, denen Projekte später zugeordnet werden können."
+                    input-label="Bereich eingeben"
+                    :items="sectors"
+                    @add="addSector"
+                    @openDeleteModal="openDeleteSectorModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Vertragsarten"
+                    description="Lege Vertragsarten fest, denen Vertragsdokumente später zugeordnet werden können."
+                    input-label="Vertragsart eingeben"
+                    :items="contractTypes"
+                    @add="addContractType"
+                    @openDeleteModal="openDeleteContractTypeModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Unternehmensformen"
+                    description="Lege Unternehmensformen fest, denen Vertragspartner später zugeordnet werden können."
+                    input-label="Unternehmensform eingeben"
+                    :items="companyTypes"
+                    @add="addCompanyType"
+                    @openDeleteModal="openDeleteCompanyTypeModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Verwertungsgesellschaften"
+                    description="Lege Verwertungsgesellschaften fest, denen Verträge später zugeordnet werden können."
+                    input-label="Verwertungsgesellschaft eingeben"
+                    :items="collectingSocieties"
+                    @add="addCollectingSociety"
+                    @openDeleteModal="openDeleteCollectingSocietyModal"
+                />
+
             </div>
         </div>
-        <!-- Bereich löschen Modal -->
-        <jet-dialog-modal :show="deletingSector" @close="closeDeleteSectorModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Bereich löschen
-                    </div>
-                    <XIcon @click="closeDeleteSectorModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du den Bereich {{ sectorToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteSector">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteSectorModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
-        <!-- Genre löschen Modal -->
-        <jet-dialog-modal :show="deletingGenre" @close="closeDeleteGenreModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Genre löschen
-                    </div>
-                    <XIcon @click="closeDeleteGenreModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du das Genre {{ genreToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteGenre">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteGenreModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
-        <!-- Kategorie löschen Modal -->
-        <jet-dialog-modal :show="deletingCategory" @close="closeDeleteCategoryModal">
-            <template #content>
-                <div class="mx-4">
-                    <div class="font-bold text-primary text-2xl my-2">
-                        Kategorie löschen
-                    </div>
-                    <XIcon @click="closeDeleteCategoryModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du die Kategorie {{ categoryToDelete.name }} aus dem System löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteCategory">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteCategoryModal"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </jet-dialog-modal>
+
+        <ProjectSettingsDeleteModal
+            :show="deletingGenre"
+            title="Genre löschen"
+            :description="`Bist du sicher, dass du das Genre ${genreToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteGenre"
+            @closeModal="closeDeleteGenreModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCategory"
+            title="Kategorie löschen"
+            :description="`Bist du sicher, dass du die Kategorie ${categoryToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteCategory"
+            @closeModal="closeDeleteCategoryModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingSector"
+            title="Bereich löschen"
+            :description="`Bist du sicher, dass du den Bereich ${sectorToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteSector"
+            @closeModal="closeDeleteSectorModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingContractType"
+            title="Vertragsart löschen"
+            :description="`Bist du sicher, dass du die Vertragsart ${contractTypeToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteContractType"
+            @closeModal="closeDeleteContractTypeModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCompanyType"
+            title="Unternehmensform löschen"
+            :description="`Bist du sicher, dass du die Unternehmensform ${companyTypeToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteCompanyType"
+            @closeModal="closeDeleteCompanyTypeModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingCollectingSociety"
+            title="Verwertungsgesellschaft löschen"
+            :description="`Bist du sicher, dass du die Verwertungsgesellschaft ${collectingSocietyToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteCollectingSociety"
+            @closeModal="closeDeleteCollectingSocietyModal"
+        />
     </app-layout>
 </template>
 
@@ -205,9 +124,13 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
+import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 
 export default {
     components: {
+        ProjectSettingsDeleteModal,
+        ProjectSettingsItem,
         AppLayout,
         XCircleIcon,
         PlusSmIcon,
@@ -225,28 +148,32 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors'],
+    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties'],
     data() {
         return {
-            genreInput: '',
-            sectorInput: '',
-            categoryInput: '',
-            addingCategory: false,
-            editingCategory: false,
-            deletingSector: false,
-            deletingCategory: false,
+            genreToDelete: null,
             deletingGenre: false,
             categoryToDelete: null,
-            genreToDelete: null,
+            deletingCategory: false,
             sectorToDelete: null,
+            deletingSector: false,
+            deletingContractType: false,
+            contractTypeToDelete: null,
+            deletingCompanyType: false,
+            companyTypeToDelete: null,
+            deletingCollectingSociety: false,
+            collectingSocietyToDelete: null
         }
     },
     methods: {
-        addCategory() {
-            if (this.categoryInput !== '') {
-                this.$inertia.post(route('categories.store'), {name: this.categoryInput});
-                this.categoryInput = "";
+        addGenre(genreInput) {
+            if (genreInput !== '') {
+                this.$inertia.post(route('genres.store'), {name: genreInput});
             }
+        },
+        deleteGenre() {
+            this.$inertia.delete(`/genres/${this.genreToDelete.id}`);
+            this.closeDeleteGenreModal();
         },
         openDeleteGenreModal(genre) {
             this.genreToDelete = genre;
@@ -256,33 +183,15 @@ export default {
             this.deletingGenre = false;
             this.genreToDelete = null;
         },
-        deleteGenre() {
-            this.$inertia.delete(`/genres/${this.genreToDelete.id}`);
-            this.closeDeleteGenreModal();
-        },
-        addGenre() {
-            if (this.genreInput !== '') {
-                this.$inertia.post(route('genres.store'), {name: this.genreInput});
-                this.genreInput = '';
+
+        addCategory(categoryInput) {
+            if (categoryInput !== '') {
+                this.$inertia.post(route('categories.store'), {name: categoryInput});
             }
         },
-        openDeleteSectorModal(sector) {
-            this.sectorToDelete = sector;
-            this.deletingSector = true;
-        },
-        closeDeleteSectorModal() {
-            this.deletingSector = false;
-            this.sectorToDelete = null;
-        },
-        deleteSector() {
-            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`);
-            this.closeDeleteSectorModal();
-        },
-        addSector() {
-            if (this.sectorInput !== '') {
-                this.$inertia.post(route('sectors.store'), {name: this.sectorInput});
-                this.sectorInput = '';
-            }
+        deleteCategory() {
+            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`);
+            this.closeDeleteCategoryModal();
         },
         openDeleteCategoryModal(category) {
             this.categoryToDelete = category;
@@ -292,10 +201,78 @@ export default {
             this.deletingCategory = false;
             this.categoryToDelete = null;
         },
-        deleteCategory() {
-            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`);
-            this.closeDeleteCategoryModal();
-        }
+
+        addSector(sectorInput) {
+            if (sectorInput !== '') {
+                this.$inertia.post(route('sectors.store'), {name: sectorInput});
+            }
+        },
+        deleteSector() {
+            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`);
+            this.closeDeleteSectorModal();
+        },
+        openDeleteSectorModal(sector) {
+            this.sectorToDelete = sector;
+            this.deletingSector = true;
+        },
+        closeDeleteSectorModal() {
+            this.deletingSector = false;
+            this.sectorToDelete = null;
+        },
+
+        addContractType(contractTypeInput) {
+            if (contractTypeInput !== '') {
+                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput});
+            }
+        },
+        deleteContractType() {
+            this.$inertia.delete(`/contract_types/${this.contractTypeToDelete.id}`);
+            this.closeDeleteContractTypeModal();
+        },
+        openDeleteContractTypeModal(contractType) {
+            this.contractTypeToDelete = contractType;
+            this.deletingContractType = true
+        },
+        closeDeleteContractTypeModal() {
+            this.deletingContractType = false
+            this.contractTypeToDelete = null
+        },
+
+        addCompanyType(companyTypeInput) {
+            if (companyTypeInput !== '') {
+                this.$inertia.post(route('company_types.store'), {name: companyTypeInput});
+            }
+        },
+        deleteCompanyType() {
+            this.$inertia.delete(`/company_types/${this.companyTypeToDelete.id}`);
+            this.closeDeleteCompanyTypeModal();
+        },
+        openDeleteCompanyTypeModal(companyType) {
+            this.companyTypeToDelete = companyType;
+            this.deletingCompanyType = true
+        },
+        closeDeleteCompanyTypeModal() {
+            this.deletingCompanyType = false
+            this.companyTypeToDelete = null
+        },
+
+        addCollectingSociety(collectingSocietyInput) {
+            if (collectingSocietyInput !== '') {
+                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput});
+            }
+        },
+        deleteCollectingSociety() {
+            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`);
+            this.closeDeleteCollectingSocietyModal();
+        },
+        openDeleteCollectingSocietyModal(collectingSociety) {
+            this.collectingSocietyToDelete = collectingSociety;
+            this.deletingCollectingSociety = true
+        },
+        closeDeleteCollectingSocietyModal() {
+            this.deletingCollectingSociety = false
+            this.collectingSocietyToDelete = null
+        },
     },
     setup() {
         return {}

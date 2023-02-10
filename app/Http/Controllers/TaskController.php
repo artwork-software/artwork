@@ -57,7 +57,9 @@ class TaskController extends Controller
                 ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
                     ->where('users.id', Auth::id()))
             )
-            ->get();
+            ->orWhereHas('task_users', function ($q) {
+               $q->where('user_id',  Auth::id());
+        })->get();
 
         return inertia('Tasks/OwnTasksManagement', [
             'tasks' => TaskShowResource::collection($tasks),

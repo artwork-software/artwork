@@ -27,8 +27,12 @@ class ContractUpdateRequest extends FormRequest
             'description',
             'ksk_liable',
             'resident_abroad',
-            'legal_form',
-            'type',
+            'company_type_id',
+            'contract_type_id',
+            'has_power_of_attorney',
+            'is_freed',
+            'currency',
+            'tasks'
         ]);
     }
 }

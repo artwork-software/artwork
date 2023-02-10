@@ -37,6 +37,54 @@
                           rows="4"
                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                 </div>
+                <div class="my-1">
+                    <div class="relative w-full">
+                        <div class="w-full">
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                   placeholder="Dokumentzugriff für*"
+                                   class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                        </div>
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100"
+                                    leave-to-class="opacity-0">
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                        text-base ring-1 ring-black ring-opacity-5
+                                                        overflow-auto focus:outline-none sm:text-sm">
+                                <div class="border-gray-200">
+                                    <div v-for="(user, index) in user_search_results" :key="index"
+                                         class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4">
+                                            <p @click="addUserToFileUserArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+                    <div v-if="usersWithAccess.length > 0" class="mt-2 mb-4 flex items-center">
+                                        <span v-for="(user,index) in usersWithAccess"
+                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                        <div class="flex items-center">
+                                            <img class="flex h-11 w-11 rounded-full object-cover"
+                                                 :src="user.profile_photo_url"
+                                                 alt=""/>
+                                            <span class="flex ml-4 sDark">
+                                            {{ user.first_name }} {{ user.last_name }}
+                                            </span>
+                                            <button type="button" @click="deleteUserFromFileUserArray(index)">
+                                                <span class="sr-only">User aus Vertrag entfernen</span>
+                                                <XIcon
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                            </button>
+                                        </div>
+
+                                        </span>
+                    </div>
+                </div>
                 <div class="mb-6">
                     <div v-for="file of files">{{ file.name }}</div>
                 </div>
@@ -56,6 +104,7 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/DialogModal.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
     name: "ProjectFileUploadModal",
@@ -74,10 +123,41 @@ export default {
         return {
             uploadDocumentFeedback: "",
             files: [],
-            comment: ""
+            comment: "",
+            user_query: '',
+            user_search_results: [],
+            usersWithAccess: [],
+            projectFileForm: useForm({
+                file: null,
+                comment: this.comment,
+                accessibleUsers: this.usersWithAccess
+            })
         }
     },
+    watch: {
+        user_query: {
+            handler() {
+                if (this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
+                    }).then(response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        },
+    },
     methods: {
+        addUserToFileUserArray(user) {
+            if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
+                this.usersWithAccess.push(user);
+            }
+            this.user_query = '';
+        },
+        deleteUserFromFileUserArray(index) {
+            this.usersWithAccess.splice(index, 1);
+        },
         selectNewFiles() {
             this.$refs.module_files.click();
         },
@@ -88,14 +168,14 @@ export default {
             this.validateType([...event.target.files])
         },
         storeFile(file) {
-            this.$inertia.post(`/projects/${this.projectId}/files`, {file: file, comment: this.comment}, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => {
-                    this.$emit('upload')
-                }
-
+            this.projectFileForm.file = file
+            this.projectFileForm.comment = this.comment
+            const userIds = [];
+            this.usersWithAccess.forEach((user) => {
+                userIds.push(user.id);
             })
+            this.projectFileForm.accessibleUsers = userIds;
+            this.projectFileForm.post(this.route('project_files.store', this.projectId))
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";

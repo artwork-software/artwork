@@ -68,7 +68,8 @@
                                 </div>
                             </div>
 
-                            <Link :href="route('projects.show',{project: task.projectId, openTab: 'checklist'})"
+
+                            <Link v-if="task.projectId" :href="route('projects.show',{project: task.projectId, openTab: 'checklist'})"
                                 class="my-1 flex ml-10 xsDark">
                                 {{ task.projectName }}
                                 <ChevronRightIcon class="h-5 w-5 my-auto mx-3" aria-hidden="true"/>

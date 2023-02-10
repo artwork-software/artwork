@@ -14,14 +14,24 @@ class Copyright extends Model
         'own_copyright',
         'live_music',
         // Verwertungsgesellschaft
-        'collecting_society',
+        'collecting_society_id',
         // Großes oder kleines Recht
         'law_size',
         'project_id'
     ];
 
+    protected $casts = [
+        'own_copyright' => 'boolean',
+        'live_music' => 'boolean'
+    ];
+
     public function project()
     {
         return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function collecting_society()
+    {
+        return $this->belongsTo(CollectingSociety::class, 'collecting_society_id');
     }
 }

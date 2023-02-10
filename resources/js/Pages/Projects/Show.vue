@@ -1691,6 +1691,7 @@
                 :project-files="project.project_files"
                 :contracts="project.contracts"
                 :money-sources="project.moneySources"
+                :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
             />
         </BaseSidenav>
 

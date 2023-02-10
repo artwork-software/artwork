@@ -5,9 +5,14 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
+use App\Http\Controllers\CollectingSocietyController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CompanyTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
+use App\Http\Controllers\ContractTypeController;
+use App\Http\Controllers\CopyrightController;
+use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -16,6 +21,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceController;
+use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
@@ -116,7 +122,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
 
     //ProjectFiles
-    Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
+    Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
+    Route::patch('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');;
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
@@ -288,6 +295,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
     Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
+    Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
 
     //ContractModules
     Route::get('/contract_modules', [ContractModuleController::class, 'index'])->name('contracts.module.management');
@@ -355,5 +363,25 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Templates
     Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
+
+    Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
+
+    Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
+
+    // ContractTypes
+    Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');
+    Route::post('/contract_types', [ContractTypeController::class, 'store'])->name('contract_types.store');
+    Route::delete('/contract_types/{contract_type}', [ContractTypeController::class, 'destroy'])->name('contract_types.delete');
+
+    // CompanyTypes
+    Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
+    Route::post('/company_types', [CompanyTypeController::class, 'store'])->name('company_types.store');
+    Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])->name('company_types.delete');
+
+    // Collecting Societies
+    Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])->name('collecting_societies.index');
+    Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])->name('collecting_societies.store');
+    Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])->name('collecting_societies.delete');
+
 });
 

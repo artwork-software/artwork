@@ -63,7 +63,7 @@ class AuthUserSeeder extends Seeder
         $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
         $user->assignRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value);
 
-        $user = User::create([
+        User::create([
             'first_name' => 'Lisa',
             'last_name' => 'Müller',
             'email' => 'lisa.musterfrau@deichtorhallen.de',
@@ -77,6 +77,25 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+
+        $user = User::create([
+            'first_name' => 'Anna',
+            'last_name' => 'Admin',
+            'email' => 'anna.musterfrau@deichtorhallen.de',
+            'phone_number' => null,
+            'password' => Hash::make('TestPass1234!$'),
+            'position' => 'Chefin',
+            'business' => 'Kampnagel',
+            'description' => null,
+            'toggle_hints' => true,
+            'opened_checklists' => [],
+            'opened_areas' => [],
+            'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
+        ]);
+
+        $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
+        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
+        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
 

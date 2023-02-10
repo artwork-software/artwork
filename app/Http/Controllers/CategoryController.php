@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Models\CollectingSociety;
+use App\Models\CompanyType;
+use App\Models\ContractType;
 use App\Models\Genre;
 use App\Models\Sector;
 use Illuminate\Http\Request;
@@ -39,6 +42,18 @@ class CategoryController extends Controller
                 'id' => $sector->id,
                 'name' => $sector->name,
                 'projects' => $sector->projects
+            ]),
+            'contractTypes' => ContractType::all()->map(fn($contractType) => [
+                'id' => $contractType->id,
+                'name' => $contractType->name,
+            ]),
+            'companyTypes' => CompanyType::all()->map(fn($companyType) => [
+                'id' => $companyType->id,
+                'name' => $companyType->name,
+            ]),
+            'collectingSocieties' => CollectingSociety::all()->map(fn($collectingSociety) => [
+                'id' => $collectingSociety->id,
+                'name' => $collectingSociety->name,
             ])
         ]);
     }

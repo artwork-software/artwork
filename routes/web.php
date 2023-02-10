@@ -123,7 +123,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
-    Route::patch('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
+    Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');;
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
@@ -293,7 +293,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/projects/{project}/contracts', [ContractController::class, 'store'])->name('contracts.store');
     Route::get('/contracts/{contract}', [ContractController::class, 'show'])->name('contracts.show');
     Route::get('/contracts/{contract}/download', [ContractController::class, 'download'])->name('contracts.download');
-    Route::patch('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
+    Route::post('/contracts/{contract}', [ContractController::class, 'update'])->name('contracts.update');
     Route::delete('/contracts/{contract}', [ContractController::class, 'destroy']);
     Route::post('/contract', [ContractController::class, 'storeFile'])->name('contracts.store.file');
 

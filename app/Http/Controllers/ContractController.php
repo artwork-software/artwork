@@ -164,14 +164,25 @@ class ContractController extends Controller
     public function update(Contract $contract, ContractUpdateRequest $request)
     {
 
+        if ($request->get('accessibleUsers')) {
+            $contract->accessing_users()->sync(collect($request->accessibleUsers));
+        }
+
+        if($request->file('file')) {
+            Storage::delete('contracts/'. $contract->basename);
+            $file = $request->file('file');
+            $original_name = $file->getClientOriginalName();
+            $basename = Str::random(20).$original_name;
+
+            $contract->basename = $basename;
+            $contract->name = $original_name;
+
+            Storage::putFileAs('contracts', $file, $basename);
+        }
 
         $contract->fill($request->data());
 
         $this->store_contract_tasks_and_comment($request, $contract);
-
-        if ($request->get('accessibleUsers')) {
-            $contract->accessing_users()->sync(collect($request->accessibleUsers));
-        }
 
         $contract->save();
 

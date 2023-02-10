@@ -238,8 +238,8 @@
                         </div>
                     </div>
                     <textarea placeholder="Kommentar / Notiz"
-                              id="description"
-                              v-model="description"
+                              id="comment"
+                              v-model="comment"
                               rows="5"
                               class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
@@ -322,6 +322,19 @@
                                 <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
                                 <p class="text-sm">Neue Aufgabe</p>
                             </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="w-full mb-4 mt-8 -px-12">
+                    <div v-for="comment in comments">
+                        <div class="flex items-center">
+                            <img :src="comment.user.profile_photo_url" alt="profile_photo"
+                                 class="h-5 w-5 mr-2 rounded-2xl"/>
+                            <div class="text-secondary text-sm">{{comment.created_at}}</div>
+                        </div>
+                        <div class="mt-2">
+                            {{comment.text}}
                         </div>
                     </div>
                 </div>
@@ -460,6 +473,7 @@ export default {
             console.log(this.tasks)
         },
         updateContract() {
+            this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
             this.contractForm.company_type_id = this.selectedLegalForm.id;
             this.contractForm.contract_type_id = this.selectedContractType.id;
@@ -468,7 +482,7 @@ export default {
             this.contractForm.resident_abroad = this.isAbroad;
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
             this.contractForm.is_freed = this.isFreed;
-            this.contractForm.description = this.description;
+            this.contractForm.comment = this.comment;
             this.contractForm.currency = this.selectedCurrency;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
@@ -476,8 +490,7 @@ export default {
             })
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
-            this.storeFile()
-            this.contractForm.patch(this.route('contracts.update', this.contract.id));
+            this.contractForm.post(this.route('contracts.update', this.contract.id));
 
             this.closeModal()
         },
@@ -490,6 +503,8 @@ export default {
             creatingNewTask: false,
             uploadDocumentFeedback: "",
             file: this.contract?.basename,
+            comment: null,
+            comments: this.contract?.comments,
             description: this.contract?.description,
             contractPartner: this.contract?.partner,
             selectedLegalForm: this.contract?.company_type,
@@ -517,7 +532,8 @@ export default {
                 is_freed: this.contract?.is_freed,
                 description: this.contract?.description,
                 accessibleUsers: this.contract?.accessibleUsers,
-                tasks: this.contract?.tasks
+                tasks: this.contract?.tasks,
+                comment: this.comment
             }),
         }
     }

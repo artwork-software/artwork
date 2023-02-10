@@ -92,8 +92,6 @@
 
             </div>
 
-
-            <hr class="my-10 border-darkGray">
             <div
                 v-if="this.$page.props.can.money_source_edit_add || this.project.access_budget.includes(this.$page.props.user.id)">
                 <hr class="my-10 border-darkGray">

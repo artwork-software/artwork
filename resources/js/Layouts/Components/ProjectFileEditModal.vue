@@ -25,7 +25,7 @@
                         type="file"
                         multiple
                     />
-                    <div @click="selectNewFiles" @dragover.prevent
+                    <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-secondary border-dotted border-2 h-32 bg-stone-100 p-2 cursor-pointer">
                         <p class="text-secondary text-center">Ziehe das Dokument hier her
@@ -90,10 +90,10 @@
                     </div>
                 </div>
                 <div class="mb-6">
-                    <div v-for="file of files">Neues Dokument: {{ file.name }}</div>
+                    <div v-for="file in files">Neues Dokument: {{ file?.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                    <AddButton text="Speichern" mode="modal" class="px-6 py-3"
                                @click="updateFile"/>
                 </div>
                 <div class="w-full my-4">
@@ -141,7 +141,7 @@ export default {
         return {
             uploadDocumentFeedback: "",
             files: [],
-            comment: "",
+            comment: null,
             user_query: '',
             user_search_results: [],
             usersWithAccess: this.file?.accessibleUsers ? this.file.accessibleUsers : [],
@@ -182,7 +182,7 @@ export default {
             link.target = '_blank';
             link.click();
         },
-        selectNewFiles() {
+        selectNewFile() {
             this.$refs.module_files.click();
         },
         uploadDraggedDocuments(event) {
@@ -198,8 +198,9 @@ export default {
             this.usersWithAccess.forEach((user) => {
                 userIds.push(user.id);
             })
+            console.log(this.projectFileForm.comment)
             this.projectFileForm.accessibleUsers = userIds;
-            this.projectFileForm.post(this.route('project_files.update', this.projectId))
+            this.projectFileForm.post(this.route('project_files.update', this.file.id))
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -216,9 +217,9 @@ export default {
             }
         },
         updateFile() {
-            for (let file of this.files) {
-                this.updateRequest(file)
-            }
+            this.updateRequest(this.files[0])
+            this.files = []
+            this.comment = null
             this.closeModal()
         }
     }

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\ProjectFile;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -88,7 +89,6 @@ class ProjectFileController extends Controller
      */
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
     {
-        $projectFile->fill($request->data());
 
         if ($request->get('accessibleUsers')) {
             $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
@@ -103,16 +103,19 @@ class ProjectFileController extends Controller
             $projectFile->basename = $basename;
             $projectFile->name = $original_name;
 
+            Storage::putFileAs('project_files', $file, $basename);
+        }
+
+        if($request->get('comment')) {
             $comment = Comment::create([
                 'text' => $request->comment,
                 'user_id' => Auth::id(),
                 'project_file_id' => $projectFile->id
             ]);
             $projectFile->comments()->save($comment);
-            $projectFile->save();
-
-            Storage::putFileAs('project_files', $file, $basename);
         }
+
+        $projectFile->save();
 
         return Redirect::back();
 

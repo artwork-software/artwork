@@ -2,6 +2,8 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
 use App\Models\Area;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -18,7 +20,7 @@ class AreaPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->can('manage areas');
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -30,7 +32,7 @@ class AreaPolicy
      */
     public function view(User $user, Area $area)
     {
-        return $user->can('manage areas');
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -41,7 +43,7 @@ class AreaPolicy
      */
     public function create(User $user)
     {
-        return $user->can('manage areas');
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -53,7 +55,7 @@ class AreaPolicy
      */
     public function update(User $user, Area $area)
     {
-        return $user->can('manage areas');
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**
@@ -65,7 +67,7 @@ class AreaPolicy
      */
     public function delete(User $user, Area $area)
     {
-        return $user->can('manage areas');
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
     }
 
     /**

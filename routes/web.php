@@ -5,9 +5,12 @@ use App\Http\Controllers\AreaController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
+use App\Http\Controllers\CollectingSocietyController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CompanyTypeController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\ContractModuleController;
+use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CopyrightController;
 use App\Http\Controllers\CostCenterController;
 use App\Http\Controllers\DepartmentController;
@@ -56,14 +59,21 @@ Route::post('/users/invitations/accept', [InvitationController::class, 'createUs
 
 Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
+
+    // TOOL SETTING ROUTE
+    Route::group(['prefix' => 'tool'], function(){
+        Route::get('/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
+        Route::put('/settings',             [AppController::class, 'updateTool'])->name('tool.update');
+        Route::put('/settings/email',       [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
+    });
+
+
+
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
 
     Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');
-    Route::get('/tool/settings', function () { return Inertia::render('Settings/ToolSettings'); })->name('tool.settings');
-    Route::put('/tool/settings', [AppController::class, 'updateTool'])->name('tool.update');
-    Route::put('/tool/settings/email', [AppController::class, 'updateEmailSettings'])->name('tool.updateMail');
 
     //Invitations
     Route::get('/users/invitations', [InvitationController::class, 'index'])->name('user.invitations');
@@ -112,7 +122,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
 
     //ProjectFiles
-    Route::post('/projects/{project}/files', [ProjectFileController::class, 'store']);
+    Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
+    Route::patch('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
     Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');;
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
@@ -303,6 +314,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project/budget/column/add', [ProjectController::class, 'addColumn'])->name('project.budget.column.add');
     Route::post('/project/budget/cell-calculation/{cell}/add', [ProjectController::class, 'addCalculation'])->name('project.budget.cell-calculation.add');
     Route::patch('/project/budget/column/update-name', [ProjectController::class, 'updateColumnName'])->name('project.budget.column.update-name');
+    Route::patch('/project/budget/table/update-name', [ProjectController::class, 'updateTableName'])->name('project.budget.table.update-name');
     Route::patch('/project/budget/main-position/update-name', [ProjectController::class, 'updateMainPositionName'])->name('project.budget.main-position.update-name');
     Route::patch('/project/budget/sub-position/update-name', [ProjectController::class, 'updateSubPositionName'])->name('project.budget.sub-position.update-name');
     Route::patch('/project/budget/cell-source/update', [ProjectController::class, 'updateCellSource'])->name('project.budget.cell-source.update');
@@ -313,6 +325,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/sub-position-row/{row}', [ProjectController::class, 'deleteRow'])->name('project.budget.sub-position-row.delete');
     Route::post('/project/budget/cell/{columnCell}/comment/add', [\App\Http\Controllers\CellCommentsController::class, 'store'])->name('project.budget.cell.comment.store');
     Route::delete('/project/budget/cell/comment/{cellComment}', [\App\Http\Controllers\CellCommentsController::class, 'destroy'])->name('project.budget.cell.comment.delete');
+    Route::delete('/project/budget/cell/calculation/{cellCalculation}', [\App\Http\Controllers\CellCalculationsController::class, 'destroy'])->name('project.budget.cell.calculation.delete');
     Route::post('/project/budget/row/{row}/comment/add', [\App\Http\Controllers\RowCommentController::class, 'store'])->name('project.budget.row.comment.store');
     Route::patch('/project/budget/row/{row}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfRow'])->name('project.budget.row.commented');
     Route::patch('/project/budget/cell/{columnCell}/commentedStatus', [ProjectController::class, 'updateCommentedStatusOfCell'])->name('project.budget.cell.commented');
@@ -321,6 +334,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/project/budget/column/{column}/delete', [ProjectController::class, 'columnDelete'])->name('project.budget.column.delete');
     Route::delete('/project/budget/main-position/{mainPosition}', [ProjectController::class, 'deleteMainPosition'])->name('project.budget.main-position.delete');
     Route::delete('/project/budget/sub-position/{subPosition}', [ProjectController::class, 'deleteSubPosition'])->name('project.budget.sub-position.delete');
+    Route::delete('/project/budget/table/{table}', [ProjectController::class, 'deleteTable'])->name('project.budget.table.delete');
     Route::patch('/project/budget/column-color/change', [ProjectController::class, 'changeColumnColor'])->name('project.budget.column-color.change');
 
     Route::post('/project/budget/verified/main-position/request', [ProjectController::class, 'verifiedRequestMainPosition'])->name('project.budget.verified.main-position.request');
@@ -353,6 +367,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
     Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
+
+    // ContractTypes
+    Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');
+    Route::post('/contract_types', [ContractTypeController::class, 'store'])->name('contract_types.store');
+    Route::delete('/contract_types/{contract_type}', [ContractTypeController::class, 'destroy'])->name('contract_types.delete');
+
+    // CompanyTypes
+    Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
+    Route::post('/company_types', [CompanyTypeController::class, 'store'])->name('company_types.store');
+    Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])->name('company_types.delete');
+
+    // Collecting Societies
+    Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])->name('collecting_societies.index');
+    Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])->name('collecting_societies.store');
+    Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])->name('collecting_societies.delete');
 
 });
 

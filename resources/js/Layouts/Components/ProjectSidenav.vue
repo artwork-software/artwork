@@ -14,7 +14,7 @@
         </div>
         <div class="text-secondary text-md">Urheberrecht: {{ copyright?.own_copyright ? 'Ja' : 'Nein' }}</div>
         <div class="text-secondary text-sm mt-2">
-            {{ copyright?.collecting_society }},
+            {{ copyright?.collecting_society.name }},
             {{ copyright?.law_size === "small" ? 'kleines Recht' : 'großes Recht' }},
             {{ copyright?.live_music ? 'mit Livemusik' : 'ohne Livemusik' }}
         </div>
@@ -56,18 +56,25 @@
                              @click="showContracts = !showContracts"/>
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openContractUploadModal"/>
-            <ContractUploadModal :show="showContractUploadModal" :close-modal="closeContractUploadModal" :project-id="project.id" />
+            <ContractUploadModal
+                :show="showContractUploadModal"
+                :close-modal="closeContractUploadModal"
+                :project-id="project.id"
+            />
         </div>
         <div v-if="showContracts">
             <div v-if="contracts.length > 0">
-                <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
-                     v-for="contract in contracts"
-                >
-                    <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
-                    <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
-                    <ContractDeleteModal :show="showContractDeleteModal === contract.id" :close-modal="closeContractDeleteModal" :contract="contract" />
-                    <ContractEditModal :show="showContractEditModal === contract.id" :close-modal="closeContractEditModal" :contract="contract" />
-                    <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
+                <div v-for="contract in contracts">
+                    <div
+                        v-if="contract.accessibleUsers.filter(user => user.id === $page.props.user.id).length > 0"
+                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                    >
+                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadContract(contract)"/>
+                        <div @click="openContractEditModal(contract)">{{ contract.name }}</div>
+                        <ContractDeleteModal :show="showContractDeleteModal === contract.id" :close-modal="closeContractDeleteModal" :contract="contract" />
+                        <ContractEditModal :show="showContractEditModal === contract.id" :close-modal="closeContractEditModal" :contract="contract" />
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openContractDeleteModal(contract)"/>
+                    </div>
                 </div>
             </div>
             <div v-else>
@@ -143,7 +150,7 @@ export default {
         projectFiles: Array,
         contracts: Array,
         moneySources: Array,
-        traits: Object
+        traits: Object,
     },
     data() {
         return {

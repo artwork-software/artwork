@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\RoleNameEnum;
 use App\Models\Comment;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -48,7 +49,7 @@ class CommentPolicy
      */
     public function delete(User $user, Comment $comment)
     {
-        return $comment->user->id == $user->id || $user->hasRole('admin') || $user->projects()->find($comment->project->id)->pivot->is_admin == 1;
+        return $comment->user->id == $user->id;
     }
 
     /**

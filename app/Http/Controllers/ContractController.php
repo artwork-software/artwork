@@ -53,15 +53,15 @@ class ContractController extends Controller
 
         $contracts = Contract::all();
         $costsFilter = json_decode($request->input('costsFilter'));
-        $legalFormsFilter = json_decode($request->input('legalFormsFilter'));
+        $companyTypesFilter = json_decode($request->input('companyTypesFilter'));
         $contractTypesFilter = json_decode($request->input('contractTypesFilter'));
 
-        if (count($costsFilter->array) != 0 || count($legalFormsFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
-            $legal_forms = collect($legalFormsFilter->array);
-            $contract_types = collect($contractTypesFilter->array);
+        if (count($costsFilter->array) != 0 || count($companyTypesFilter->array) != 0 || count($contractTypesFilter->array) != 0) {
+            $company_type_ids = collect($companyTypesFilter->array);
+            $contract_type_ids = collect($contractTypesFilter->array);
             $cost_filters = collect($costsFilter->array);
 
-            Debugbar::info($legal_forms);
+            Debugbar::info($company_type_ids);
             Debugbar::info($cost_filters);
 
             if ($cost_filters->contains('KSK-pflichtig')) {
@@ -70,11 +70,11 @@ class ContractController extends Controller
             if ($cost_filters->contains('Im Ausland ansässig')) {
                 $contracts = $contracts->where('resident_abroad', true);
             }
-            if (count($legal_forms) > 0) {
-                $contracts = $contracts->whereIn('legal_form', $legal_forms);
+            if (count($company_type_ids) > 0) {
+                $contracts = $contracts->whereIn('company_type_id', $company_type_ids);
             }
-            if (count($contract_types) > 0) {
-                $contracts = $contracts->whereIn('type', $contract_types);
+            if (count($contract_type_ids) > 0) {
+                $contracts = $contracts->whereIn('contract_type_id', $contract_type_ids);
             }
         }
         return [
@@ -126,13 +126,15 @@ class ContractController extends Controller
             'resident_abroad' => $request->resident_abroad,
             'is_freed' => @$request->is_freed,
             'has_power_of_attorney' => @$request->has_power_of_attorney,
-            'legal_form' => $request->legal_form,
-            'type' => $request->type
+            'contract_type_id' => $request->contract_type_id,
+            'company_type_id' => $request->company_type_id
         ]);
 
         $this->store_contract_tasks_and_comment($request, $contract);
 
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
+
+        $contract->accessing_users()->save(Auth::user());
 
         $contract->save();
 
@@ -156,7 +158,6 @@ class ContractController extends Controller
     /**
      * Update the specified resource in storage.
      *
-
      * @param Contract $contract
      * @return RedirectResponse
      */
@@ -179,7 +180,8 @@ class ContractController extends Controller
 
     }
 
-    public function storeFile(Request $request){
+    public function storeFile(Request $request)
+    {
 
         if (!Storage::exists("contracts")) {
             Storage::makeDirectory("contracts");
@@ -217,30 +219,31 @@ class ContractController extends Controller
      */
     public function store_contract_tasks_and_comment(Request $request, \Illuminate\Database\Eloquent\Model $contract): void
     {
-        foreach ($request->tasks as $task_from_req) {
-            $task_obj = (object)$task_from_req;
-            if(isset($task_obj->new)) {
-                $task = Task::create([
-                    'name' => $task_obj->name,
-                    'description' => $task_obj->description,
-                    'deadline' => $task_obj->deadline,
-                    'done' => false,
-                    'contract_id' => $contract->id,
-                    'order' => 1
-                ]);
-            }
-            else {
-                //dd($task_obj);
-                $task = Task::where('id', $task_obj->id)->update(['done' => $task_obj->done]);
-            }
-
-            if(isset($task_obj->assigned_users)) {
-                foreach ($task_obj->assigned_users as $assigned_user) {
-                    $user_obj = (object)$assigned_user;
-                    $user = User::where('id', $user_obj->id)->first();
-                    $task->task_users()->save($user);
-                    $user->tasks()->save($task);
+        if (isset($request->tasks)) {
+            foreach ($request->tasks as $task_from_req) {
+                $task_obj = (object)$task_from_req;
+                if (isset($task_obj->new)) {
+                    $task = Task::create([
+                        'name' => $task_obj->name,
+                        'description' => $task_obj->description,
+                        'deadline' => $task_obj->deadline,
+                        'done' => false,
+                        'contract_id' => $contract->id,
+                        'order' => 1
+                    ]);
+                } else {
+                    //dd($task_obj);
+                    $task = Task::where('id', $task_obj->id)->update(['done' => $task_obj->done]);
                 }
+            }
+        }
+
+        if (isset($task_obj->assigned_users)) {
+            foreach ($task_obj->assigned_users as $assigned_user) {
+                $user_obj = (object)$assigned_user;
+                $user = User::where('id', $user_obj->id)->first();
+                $task->task_users()->save($user);
+                $user->tasks()->save($task);
             }
         }
 

@@ -10,21 +10,23 @@
                                     <h2 class="headline1">Verträge</h2>
                                     <ContractFilter class="ml-auto" @filter="filterContracts" />
                                 </div>
-                                <div class="flex w-full mb-4">
-                                    <div v-for="filter in filters.costsFilter">
+                                <div class="flex w-full mb-4" >
+                                    <div v-for="filter in costNames">
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
-                                    <div v-for="filter in filters.legalFormsFilter">
+                                    <div v-for="filter in companyTypeNames">
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
-                                    <div v-for="filter in filters.contractTypesFilter">
+                                    <div v-for="filter in contractTypeNames">
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full">
-                                    {{contract}}
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
+                                </div>
+                                <div v-else>
+                                    <p>Bisher wurden für dich noch keine Verträge freigegeben.</p>
                                 </div>
                             </div>
                         </div>
@@ -32,7 +34,7 @@
                 </div>
             </div>
         </div>
-        <BaseSidenav :show="show" @change="this.show =! this.show">
+        <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ContractModuleSidenav :contractModules="contract_modules" @upload="this.show = true" />
         </BaseSidenav>
     </app-layout>
@@ -44,9 +46,7 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav";
 import ContractListItem from "@/Layouts/Components/ContractListItem";
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
 import ContractFilter from "@/Layouts/Components/ContractFilter";
-import {Inertia} from "@inertiajs/inertia";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
-import {usePage} from "@inertiajs/inertia-vue3";
 
 export default {
     name: "ContractManagement",
@@ -66,33 +66,46 @@ export default {
         return {
             show: false,
             contractsCopy: this.contracts,
-            filters: {}
+            filters: {},
+            costNames: [],
+            companyTypeNames: [],
+            contractTypeNames: []
         }
     },
     methods: {
-        usePage,
         async filterContracts(filters) {
             if(filters.costsFilter ||
-                filters.legalFormsFilter ||
+                filters.companyTypesFilter ||
                 filters.contractTypesFilter) {
                 this.filters = filters
+                this.costNames = filters.costsFilter.map(cost => cost.name)
+                this.companyTypeNames = filters.companyTypesFilter.map(companyType => companyType.name)
+                this.contractTypeNames = filters.contractTypesFilter.map(contractType => contractType.name)
             }
             await axios.get('/contracts/', { params: {
                 costsFilter: { array: this.filters.costsFilter },
-                legalFormsFilter: { array: this.filters.legalFormsFilter },
-                contractTypesFilter: { array: this.filters.contractTypesFilter },
+                companyTypesFilter: { array: this.getArrayOfIds(this.filters.companyTypesFilter) },
+                contractTypesFilter: { array: this.getArrayOfIds(this.filters.contractTypesFilter) },
             }})
             .then(res => {
                 this.contractsCopy.data = res.data.contracts
             })
+        },
+        getArrayOfIds(array) {
+            console.log(array)
+            let ids = []
+            array.forEach(item => {
+                ids.push(item.id)
+            })
+            return ids
         },
         removeFilter(filter) {
             if(this.filters.costsFilter.includes(filter)) {
                 this.filters.costsFilter = this.filters.costsFilter
                     .filter(filterItem => filterItem !== filter)
             }
-            if(this.filters.legalFormsFilter.includes(filter)) {
-                this.filters.legalFormsFilter = this.filters.legalFormsFilter
+            if(this.filters.companyTypesFilter.includes(filter)) {
+                this.filters.companyTypesFilter = this.filters.companyTypesFilter
                     .filter(filterItem => filterItem !== filter)
             }
             if(this.filters.contractTypesFilter.includes(filter)) {

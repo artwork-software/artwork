@@ -11,7 +11,7 @@ class TaskTemplateController extends Controller
 
     public function __construct()
     {
-        $this->authorizeResource(TaskTemplate::class);
+        //$this->authorizeResource(TaskTemplate::class);
     }
 
     /**

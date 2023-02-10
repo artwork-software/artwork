@@ -287,7 +287,7 @@
 
                         <div class="flex m-2">
                             <button
-                                :class="[emailInput === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                :class="[emailInput === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none', 'rounded-full mt-2 ml-1 items-center text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
                                 @click="addEmailToInvitationArray" :disabled="!emailInput">
                                 <CheckIcon class="h-5 w-5"></CheckIcon>
                             </button>

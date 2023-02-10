@@ -46,11 +46,11 @@
                                         <div class="flex w-full xsDark whitespace-nowrap ml-4">
                                             {{eventRequest.name}}
                                         </div>
-                                        <button @click="openApproveRequestModal(eventRequest)" type="button"
+                                        <button v-if="usePage().props.is_room_admin || usePage().props.is_admin" @click="openApproveRequestModal(eventRequest)" type="button"
                                                 class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-success">
                                             <CheckIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
-                                        <button @click="openDeclineRequestModal(eventRequest)" type="button"
+                                        <button v-if="usePage().props.is_room_admin || usePage().props.is_admin" @click="openDeclineRequestModal(eventRequest)" type="button"
                                                 class="flex my-auto ml-6 p-0.5 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:bg-primaryHover focus:outline-none hover:bg-error">
                                             <XIcon class="h-4 w-4 flex flex-shrink" aria-hidden="true"/>
                                         </button>
@@ -336,7 +336,7 @@ import JetInput from "@/Jetstream/Input";
 import JetInputError from "@/Jetstream/InputError";
 import JetSecondaryButton from "@/Jetstream/SecondaryButton";
 import Checkbox from "@/Layouts/Components/Checkbox";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
@@ -378,6 +378,7 @@ export default defineComponent({
     },
     props: ['event_requests'],
     methods: {
+        usePage,
         getGermanWeekdayAbbreviation(englishWeekday) {
             switch (englishWeekday) {
                 case 'Monday':

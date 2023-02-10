@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RoleNameEnum;
 use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Project;
@@ -40,15 +41,14 @@ class CommentController extends Controller
         $project = Project::where('id', $request->project_id)->first();
         $user = User::where('id', Auth::id())->first();
 
-        if ($project->users->contains(Auth::id()) || Auth::user()->hasRole('admin')) {
+        if ($project->users->contains(Auth::id()) || Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)) {
             Comment::create([
                 'text' => $request->text,
                 'user_id' => $request->user_id,
                 'project_id' => $request->project_id,
             ]);
         } else if ($user->projects()->find($request->project_id) != null) {
-            if ($user->projects()->find($request->project_id)->pivot->is_admin == 1
-                || $user->projects()->find($request->project_id)->pivot->is_manager == 1) {
+            if ($user->projects()->find($request->project_id)->pivot->is_manager == 1) {
                 Comment::create([
                     'text' => $request->text,
                     'user_id' => $request->user_id,

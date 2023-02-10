@@ -1,9 +1,9 @@
 <template>
-    <Listbox as="div" v-model="copyright.collecting_society" @change="$emit('updateCollectingSociety')" id="collecting_society">
+    <Listbox as="div" v-model="selectedCollectingSociety" @change="console.log(selectedCollectingSociety)" id="collecting_society">
         <ListboxButton
             class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4">
-            <div v-if="copyright.collecting_society" class="flex-grow text-left">
-                {{copyright.collecting_society}}
+            <div v-if="selectedCollectingSociety" class="flex-grow text-left">
+                {{selectedCollectingSociety}}
             </div>
             <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
                 Verwertungsgesellschaft wählen*
@@ -14,7 +14,7 @@
             <ListboxOption v-for="society in collectingSocieties"
                            class="hover:bg-indigo-800 text-secondary cursor-pointer p-3 flex justify-between "
                            :key="society.name"
-                           :value="society.id"
+                           :value="society.name"
                            v-slot="{ active, selected }">
                 <div :class="[selected ? 'text-white' : '']">
                     {{ society.name }}
@@ -48,13 +48,19 @@ export default {
         CheckIcon
     },
     props: {
-        collectingSocieties: Array,
         copyright: Object
     },
     data() {
         return {
+            selectedCollectingSociety: this.copyright.collecting_society,
             societiesOpened: false,
+            collectingSocieties: []
         }
+    },
+    mounted() {
+        axios.get(route('collecting_societies.index')).then(res => {
+            this.collectingSocieties = res.data
+        })
     }
 }
 </script>

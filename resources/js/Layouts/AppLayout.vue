@@ -9,23 +9,15 @@
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                 <div class="flex-1 w-full space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
-                       :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center']">
+                       :class="[isCurrent(item.route) ? ' text-secondaryHover xsWhiteBold' : 'xxsLight  hover:bg-primaryHover hover:text-secondaryHover', 'group w-full py-3 rounded-md flex flex-col items-center', checkPermission(item) ? 'block': 'hidden']">
                         <img :src="isCurrent(item.route) ? item.svgSrc_active : item.svgSrc"
                              alt="menu-item"
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                              aria-hidden="true"/>
                     </a>
-                    <Menu as="div" class="my-auto">
+                    <Menu as="div" class="my-auto" v-if="checkPermissionAdmin">
                         <div class="flex">
-                            <MenuButton v-if="$page.props.can.change_tool_settings
-                                                   || $page.props.can.usermanagement
-                                                   || $page.props.can.teammanagement
-                                                   || $page.props.can.admin_projectSettings
-                                                   || $page.props.can.admin_eventTypeSettings
-                                                   || $page.props.can.admin_checklistTemplates
-                                                   || $page.props.can.admin_rooms
-                                                   || $page.props.can.admin_globalNotification
-                                                   || this.$page.props.is_admin"
+                            <MenuButton
                             >
                                 <div
                                      class="w-full cursor-pointer p-1 -mt-2">
@@ -41,12 +33,10 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems
-                                class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
-                                <div class="py-1 z-50">
-                                    <MenuItem v-for="item in managementNavigation" :key="item.name" v-slot="{ active }">
-                                        <Link v-if="item.has_permission"
-                                              :href="item.href"
+                            <MenuItems class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                <div class="z-50" v-for="item in managementNavigation" :key="item.name">
+                                    <MenuItem v-if="item.has_permission"  v-slot="{ active }">
+                                        <Link :href="item.href"
                                               :class="[isCurrent(item.route) ? 'text-secondaryHover xsWhiteBold' : 'xxsLight hover:bg-primaryHover hover:text-secondaryHover', 'group w-full p-3 rounded-md flex flex-col items-center ']">
                                             {{ item.name }}
                                         </Link>
@@ -79,7 +69,7 @@
                 <div class="ml-4 flex items-center md:ml-6">
                     <div class="flex items-center mr-6">
 
-                        <Link v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms"
+                        <Link v-if="this.$page.props.is_admin || this.$page.props.is_room_admin"
                               class="inset-y-0 mr-5"
                               :href="getTrashRoute()">
                             <TrashIcon class="h-5 w-5" aria-hidden="true"/>
@@ -166,6 +156,17 @@
 
         <!--     Main       -->
         <main class="main">
+
+            <p class="text-xs ml-2 cursor-pointer uppercase" @click="showPermissions = !showPermissions">Open Permissions</p>
+            <div v-if="showPermissions">
+                <pre class="ml-2">
+    {{ $page.props.can }}
+    Admin: {{ $page.props.is_admin }}
+    Budget: {{ $page.props.is_budget_admin }}
+    Contracts: {{ $page.props.is_contract_admin }}
+    MoneySource: {{ $page.props.is_money_source_admin }}
+                </pre>
+            </div>
             <slot></slot>
         </main>
     </div>
@@ -178,7 +179,7 @@ import {ref} from 'vue'
 import {Dialog, DialogOverlay, Menu, MenuButton, MenuItem, MenuItems, Switch,} from '@headlessui/vue'
 import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon} from '@heroicons/vue/outline'
 import {SearchIcon} from '@heroicons/vue/solid'
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 
 const navigation = [
@@ -187,36 +188,41 @@ const navigation = [
         href: route('dashboard'),
         route: ['/dashboard'],
         svgSrc: '/Svgs/Sidebar/icon_dashboard.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_dashboard_active.svg',
+        has_permission: 'all'
     },
     {
         name: 'Projekte',
         href: route('projects'),
         route: ['/projects'],
         svgSrc: '/Svgs/Sidebar/icon_projects.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_projects_active.svg',
+        has_permission: 'all'
     },
     {
         name: 'Raumbelegung',
         href: route('events.view.index'),
         route: ['/events/view'],
         svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',
+        has_permission: 'all'
     },
     {
         name: 'Aufgaben',
         href: route('tasks.own'),
         route: ['/tasks/own'],
         svgSrc: '/Svgs/Sidebar/icon_tasks.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_tasks_active.svg',
+        has_permission: 'all'
     },
-    /*
+
     {
         name: 'Finanzierungsquellen',
         href: route('money_sources.index'),
         route: ['/money_sources'],
         svgSrc: '/Svgs/Sidebar/icon_money_sources.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_money_sources_active.svg',
+        has_permission: 'is_money_source_admin'
     },
 
     {
@@ -224,9 +230,9 @@ const navigation = [
         href: route('contracts.view.index'),
         route: ['/contracts/view'],
         svgSrc: '/Svgs/Sidebar/icon_contract.svg',
-        svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg'
+        svgSrc_active: '/Svgs/Sidebar/icon_contract_active.svg',
+        has_permission: 'all'
     }
-    */
 ]
 
 const userNavigation = [
@@ -257,50 +263,50 @@ export default {
         managementNavigation() {
             return [
                 {
-                    has_permission: this.$page.props.is_admin || this.$page.props.can.change_tool_settings || this.$page.props.can.admin_globalNotification,
+                    has_permission: this.checkPermissionGlobalMessageAndToolSettings(),
                     name: 'Tool',
                     href: route('tool.settings'),
                     route: ['/tool/settings']
                 },
                 {
-                    has_permission: this.$page.props.can.usermanagement || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.add_user,
                     name: 'Nutzer*innen',
                     href: route('users'),
                     route: ['/users']
                 },
                 {
                     name: 'Teams',
-                    has_permission: this.$page.props.can.teammanagement || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_teams,
                     href: route('departments'),
                     route: ['/departments']
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$page.props.can.admin_rooms || this.$page.props.is_admin,
+                    has_permission: this.$page.props.is_room_admin,
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$page.props.can.admin_rooms || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.request_room,
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
                 {
                     name: 'Projekte',
-                    has_permission: this.$page.props.can.admin_projectSettings || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_project_settings,
                     href: route('project.settings'),
                     route: ['/settings/projects']
                 },
                 {
                     name: 'Termine',
-                    has_permission: this.$page.props.can.admin_eventTypeSettings || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_event_settings,
                     href: route('event_types.management'),
                     route: ['/event_types']
                 },
                 {
                     name: 'Checklisten',
-                    has_permission: this.$page.props.can.admin_checklistTemplates || this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_checklist_settings,
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
@@ -320,6 +326,38 @@ export default {
         }
     },
     methods: {
+        checkPermissionGlobalMessageAndToolSettings(){
+            if(this.$page.props.can.edit_settings || this.$page.props.can.global_notifiaction){
+                return true;
+            }
+            return false
+        },
+        checkPermissionAdmin(){
+            if(
+                this.$page.props.can.edit_settings ||
+                this.$page.props.can.add_user ||
+                this.$page.props.can.edit_teams ||
+                this.$page.props.can.edit_project_settings ||
+                this.$page.props.can.edit_event_settings ||
+                this.$page.props.can.edit_checklist_settings ||
+                this.$page.props.can.global_notifiaction ||
+                this.$page.props.can.request_room ||
+                this.$page.props.can.read_room_request_details ||
+                this.$page.props.room_admin
+            ) {
+                return true
+            }
+            return false;
+        },
+        checkPermission(item){
+            if(item.has_permission === 'is_money_source_admin'){
+                if(this.$page.props.is_money_source_admin){
+                    return true;
+                }
+            }
+            return item.has_permission === 'all';
+
+        },
         getTrashRoute() {
 
             if (this.$page.url === '/areas') {
@@ -372,16 +410,10 @@ export default {
     },
     data() {
         return {
-            showSystemSettings: this.$page.props.is_admin
-                || this.$page.props.can.change_tool_settings
-                || this.$page.props.can.usermanagement
-                || this.$page.props.can.teammanagement
-                || this.$page.props.can.admin_rooms
-                || this.$page.props.can.admin_projectSettings
-                || this.$page.props.can.admin_eventTypeSettings
-                || this.$page.props.can.admin_checklistTemplates,
+            showSystemSettings: this.$page.props.is_admin,
             showUserMenu: false,
-            pushNotifications: []
+            pushNotifications: [],
+            showPermissions: false
         }
     },
     setup() {

@@ -35,6 +35,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $profile_photo_path
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property boolean $project_management
  *
  * @property Collection<\App\Models\Department> departments
  * @property Collection<\App\Models\Project> projects
@@ -87,7 +88,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'opened_checklists' => 'array',
-        'opened_areas' => 'array'
+        'opened_areas' => 'array',
+        'toggle_hints' => 'boolean'
     ];
 
     /**
@@ -132,7 +134,7 @@ class User extends Authenticatable
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->withPivot('is_admin', 'is_manager');;
+        return $this->belongsToMany(Project::class)->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
     public function comments()

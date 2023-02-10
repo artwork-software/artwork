@@ -38,7 +38,7 @@ class DepartmentController extends Controller
 
     public function search(SearchRequest $request)
     {
-        if(!Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE)){
+        if(!Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE->value)){
             return false;
         }
 

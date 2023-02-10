@@ -62,7 +62,7 @@ class EventController extends Controller
 
     public function showDashboardPage(Request $request): Response
     {
-        $projects = Project::query()->with(['adminUsers', 'managerUsers'])->get();
+        $projects = Project::query()->with( ['managerUsers'])->get();
 
         $tasks = Task::query()
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
@@ -179,6 +179,8 @@ class EventController extends Controller
     }
 
     private function createConflictNotification($collision) {
+        // TODO:: FIX NOTIFICATION -> [2023-02-08 09:43:28] staging.ERROR: Call to a member function notificationSettings() on null {"userId":1,"exception":"[object] (Error(code: 0): Call to a member function notificationSettings() on null at /home/ploi/artwork.caldero-systems.de/app/Notifications/ConflictNotification.php:37)
+        //[stacktrace]
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
         $this->notificationData->title = 'Terminkonflikt';
         $this->notificationData->conflict = $collision;
@@ -188,12 +190,14 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($collision['created_by'], $this->notificationData, $broadcastMessage);
+        if(!empty($collision['created_by'])){
+            $this->notificationController->create($collision['created_by'], $this->notificationData, $broadcastMessage);
+        }
     }
 
     private function associateProject($request, $event) {
         $project = Project::create(['name' => $request->get('projectName')]);
-        $project->users()->save(Auth::user(), ['is_admin' => true]);
+        $project->users()->save(Auth::user(), ['access_budget' => true]);
         $event->project()->associate($project);
         $event->save();
     }
@@ -268,7 +272,7 @@ class EventController extends Controller
 
         if ($request->get('projectName')) {
             $project = Project::create(['name' => $request->get('projectName')]);
-            $project->users()->save(Auth::user(), ['is_admin' => true]);
+            $project->users()->save(Auth::user(), ['access_budget' => true]);
             $event->project()->associate($project);
             $event->save();
         }

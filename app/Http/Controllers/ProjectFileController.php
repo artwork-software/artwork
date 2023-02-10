@@ -46,7 +46,9 @@ class ProjectFileController extends Controller
             'basename' => $basename,
         ]);
 
-        $projectFile->accessing_users()->attach($request->accessibleUsers);
+        $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
+
+        $projectFile->accessing_users()->save(Auth::user());
 
         if($request->comment){
             $comment = Comment::create([
@@ -89,8 +91,7 @@ class ProjectFileController extends Controller
         $projectFile->fill($request->data());
 
         if ($request->get('accessibleUsers')) {
-            $projectFile->accessing_users()->delete();
-            $projectFile->accessing_users()->createMany($request->accessibleUsers);
+            $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
         }
 
         if($request->file('file')) {

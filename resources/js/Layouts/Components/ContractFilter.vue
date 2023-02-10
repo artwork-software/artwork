@@ -19,8 +19,8 @@
             <hr class="border-gray-500 rounded-full mt-2 mb-2">
             <BaseFilterDisclosure title="Rechtsform">
                 <BaseFilterCheckboxList
-                    :list="legalForms"
-                    filterName="legalFormsFilter"
+                    :list="companyTypes"
+                    filterName="companyTypesFilter"
                     text-if-empty="Noch keine Rechtsformen angelegt"
                     @changeFilterItems="updateFilter" />
             </BaseFilterDisclosure>
@@ -51,25 +51,34 @@ export default {
     methods: {
         resetContractFilter() {
             this.filter.costsFilter = []
-            this.filter.legalFormsFilter = []
+            this.filter.companyTypesFilter = []
             this.filter.contractTypesFilter = []
             this.updateFilter()
         },
         updateFilter(params) {
+            console.log(params)
             if(params.item.checked) {
-                this.filter[params.filterName].push(params.item.name)
+                this.filter[params.filterName].push(params.item)
             }
             else {
-                this.filter[params.filterName] = this.filter[params.filterName].filter(item => params.item.name !== item)
+                this.filter[params.filterName] = this.filter[params.filterName].filter(item => params.item.id !== item.id)
             }
             this.$emit('filter', this.filter)
         }
+    },
+    mounted() {
+        axios.get(route('contract_types.index')).then(res => {
+            this.contractTypes = res.data
+        })
+        axios.get(route('company_types.index')).then(res => {
+            this.companyTypes = res.data
+        })
     },
     data() {
         return {
             filter: {
                 costsFilter: [],
-                legalFormsFilter: [],
+                companyTypesFilter: [],
                 contractTypesFilter: []
             },
             additionalCosts: [
@@ -82,26 +91,8 @@ export default {
                     "name": "Im Ausland ansässig"
                 }
             ],
-            legalForms: [
-                {
-                    "checked": false,
-                    "name": "Werkvertrag"
-                },
-                {
-                    "checked": false,
-                    "name": "Lizenzvertrag"
-                }
-            ],
-            contractTypes: [
-                {
-                    "checked": false,
-                    "name": "Sponsoring"
-                },
-                {
-                    "checked": false,
-                    "name": "Collaboration"
-                }
-            ],
+            companyTypes: [],
+            contractTypes: []
         }
     }
 }

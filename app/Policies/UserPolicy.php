@@ -2,6 +2,9 @@
 
 namespace App\Policies;
 
+use App\Enums\PermissionNameEnum;
+use App\Enums\RoleNameEnum;
+use App\Models\Project;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 use Illuminate\Auth\Access\Response;
@@ -18,7 +21,7 @@ class UserPolicy
      */
     public function viewAny(User $user): Response|bool
     {
-        return $user->can('view users');
+        return $user->canAny([PermissionNameEnum::USER_UPDATE->value, PermissionNameEnum::PROJECT_MANAGEMENT->value]) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
     }
 
     /**
@@ -30,7 +33,7 @@ class UserPolicy
      */
     public function view(User $user, User $model)
     {
-        return $user->can('view users');
+        return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->can(PermissionNameEnum::PROJECT_MANAGEMENT->value);
     }
 
     /**
@@ -42,7 +45,7 @@ class UserPolicy
      */
     public function update(User $user, User $model)
     {
-        return $user->can('update users');
+        return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value);
     }
 
     /**
@@ -54,7 +57,7 @@ class UserPolicy
      */
     public function delete(User $user, User $model)
     {
-        return $user->can('delete users') || $user->id == $model->id;
+        return $user->can(PermissionNameEnum::USER_UPDATE->value) || $user->hasRole(RoleNameEnum::ARTWORK_ADMIN->value) || $user->id == $model->id;
     }
 
     /**

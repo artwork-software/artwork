@@ -18,10 +18,10 @@ class Contract extends Model
         'has_power_of_attorney',
         'amount',
         'project_id',
+        'contract_type_id',
+        'company_type_id',
         'ksk_liable',
         'resident_abroad',
-        'legal_form',
-        'type',
         'currency'
     ];
 
@@ -38,7 +38,17 @@ class Contract extends Model
 
     public function project()
     {
-        return $this->belongsTo(Project::class);
+        return $this->belongsTo(Project::class, 'project_id');
+    }
+
+    public function company_type()
+    {
+        return $this->belongsTo(CompanyType::class, 'company_type_id');
+    }
+
+    public function contract_type()
+    {
+        return $this->belongsTo(ContractType::class, 'contract_type_id');
     }
 
     public function accessing_users()

@@ -2,14 +2,14 @@
     <app-layout>
 
         <div class="max-w-screen-xl my-8 ml-14 mr-40">
-            <div>
+            <div v-if="$page.props.is_admin || $page.props.can.edit_settings">
                 <h2 class="headline1 mb-2">Tooleinstellungen</h2>
                 <div class="headline3Light">
                     Definiere globale Einstellungen für dein artwork.
                 </div>
             </div>
 
-            <form v-if="$page.props.is_admin || $page.props.can.change_tool_settings" @submit.prevent="changeLogos">
+            <form v-if="$page.props.is_admin || $page.props.can.edit_settings" @submit.prevent="changeLogos">
                 <div class="mt-12 max-w-2xl">
                     <h2 class="headline2 my-2">Branding</h2>
                     <div class="xsLight">
@@ -131,7 +131,7 @@
                 </div>
             </form>
 
-            <div v-if="$page.props.is_admin || $page.props.can.change_tool_settings">
+            <div v-if="$page.props.is_admin || $page.props.can.edit_settings">
                 <div class="mt-20">
                     <h2 class="headline2 mb-2">Kommunikation & Rechtliches</h2>
                     <div class="xsLight">
@@ -169,7 +169,7 @@
                 </div>
 
             </div>
-            <div v-if="$page.props.can.admin_globalNotification || $page.props.is_admin">
+            <div v-if="$page.props.can.global_nofitication || $page.props.is_admin">
 
                 <div class="headline2 mt-12 mb-6">
                     Benachrichtigung an alle

@@ -54,7 +54,7 @@
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
                                 <span class="block truncate items-center flex">
-                                            <span>{{ selectedLegalForm }}</span>
+                                            <span>{{ selectedLegalForm.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -77,7 +77,7 @@
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="legalForm in legalFormArray"
+                                                   v-for="legalForm in companyTypes"
                                                    :key="legalForm"
                                                    :value="legalForm"
                                                    v-slot="{ active, selected }">
@@ -85,7 +85,7 @@
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ legalForm }}
+                                                        {{ legalForm.name }}
                                                     </span>
                                             </div>
                                             <span
@@ -106,7 +106,7 @@
                                            class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
                                 <span class="block truncate items-center flex">
-                                            <span>{{ selectedContractType }}</span>
+                                            <span>{{ selectedContractType.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -129,7 +129,7 @@
                                 <ListboxOptions
                                     class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="contractType in this.contractTypeArray"
+                                                   v-for="contractType in contractTypes"
                                                    :key="contractType"
                                                    :value="contractType"
                                                    v-slot="{ active, selected }">
@@ -137,7 +137,7 @@
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
-                                                        {{ contractType }}
+                                                        {{ contractType.name }}
                                                     </span>
                                             </div>
                                             <span
@@ -395,6 +395,8 @@ export default {
     },
     data() {
         return {
+            contractTypes: [],
+            companyTypes: [],
             legalFormArray,
             currencyArray,
             contractTypeArray,
@@ -419,8 +421,8 @@ export default {
             contractForm: useForm({
                 file: null,
                 contract_partner: this.contractPartner,
-                legal_form: this.selectedLegalForm,
-                type: this.selectedContractType,
+                company_type_id: this.selectedLegalForm?.id,
+                contract_type_id: this.selectedContractType?.id,
                 amount: this.contractAmount,
                 currency: this.selectedCurrency,
                 ksk_liable: this.kskLiable,
@@ -432,6 +434,14 @@ export default {
                 tasks: this.tasks
             }),
         }
+    },
+    mounted() {
+        axios.get(route('contract_types.index')).then(res => {
+            this.contractTypes = res.data
+        })
+        axios.get(route('company_types.index')).then(res => {
+            this.companyTypes = res.data
+        })
     },
     methods: {
         addTask(task) {
@@ -472,8 +482,8 @@ export default {
         storeContract() {
             this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
-            this.contractForm.legal_form = this.selectedLegalForm;
-            this.contractForm.type = this.selectedContractType;
+            this.contractForm.company_type_id = this.selectedLegalForm?.id;
+            this.contractForm.contract_type_id = this.selectedContractType?.id;
             this.contractForm.amount = this.contractAmount;
             this.contractForm.ksk_liable = this.kskLiable;
             this.contractForm.resident_abroad = this.isAbroad;

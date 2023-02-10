@@ -1,86 +1,106 @@
 <template>
 
     <div class="mx-4">
-        <div class="flex mb-10 justify-between">
-        <div class="flex justify-start headline2">
-            {{budget.table.name}}
-            <Menu as="div" class="ml-4">
-                <div class="flex">
-                    <MenuButton
-                        class="flex ">
-                        <DotsVerticalIcon
-                            class="flex-shrink-0 h-6 w-6 text-gray-600"
-                            aria-hidden="true"/>
-                    </MenuButton>
-                </div>
-                <transition
-                    enter-active-class="transition ease-out duration-100"
-                    enter-from-class="transform opacity-0 scale-95"
-                    enter-to-class="transform opacity-100 scale-100"
-                    leave-active-class="transition ease-in duration-75"
-                    leave-from-class="transform opacity-100 scale-100"
-                    leave-to-class="transform opacity-0 scale-95">
-                    <MenuItems
-                        class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                        <div class="py-1">
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openUseTemplateModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Vorlage einlesen
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openUseTemplateFromProjectModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Aus Projekt einlesen
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="openAddBudgetTemplateModal()"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Als Vorlage speichern
-                                </a>
-                            </MenuItem>
-                            <MenuItem v-slot="{ active }">
-                                <a @click="resetBudgetTable"
-                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                    <TrashIcon
-                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Zurücksetzen
-                                </a>
-                            </MenuItem>
-                        </div>
-                    </MenuItems>
-                </transition>
-            </Menu>
-        </div>
-        <div class="flex justify-end mb-10">
-            <AddButton @click="openAddColumnModal()" text="Neue Spalte" mode="page"></AddButton>
-        </div>
+        <div class="flex justify-between">
+            <div class="flex justify-start headline2">
+                {{ table.name }}
+                <Menu as="div" class="ml-4">
+                    <div class="flex">
+                        <MenuButton
+                            class="flex ">
+                            <DotsVerticalIcon
+                                class="flex-shrink-0 h-6 w-6 text-gray-600"
+                                aria-hidden="true"/>
+                        </MenuButton>
+                    </div>
+                    <transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="transform opacity-0 scale-95"
+                        enter-to-class="transform opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="transform opacity-100 scale-100"
+                        leave-to-class="transform opacity-0 scale-95">
+                        <MenuItems
+                            class="absolute w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <div class="py-1">
+                                <MenuItem v-slot="{ active }">
+                                    <a @click="openRenameTableModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Umbenennen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Vorlage einlesen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="tableIsEmpty && !table.is_template" @click="openUseTemplateFromProjectModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Aus Projekt einlesen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="!tableIsEmpty && !table.is_template" @click="openAddBudgetTemplateModal()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Als Vorlage speichern
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="!tableIsEmpty && !table.is_template" @click="resetBudgetTable"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Zurücksetzen
+                                    </a>
+                                </MenuItem>
+                                <MenuItem v-slot="{ active }">
+                                    <a v-show="table.is_template" @click="deleteBudgetTemplate()"
+                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <TrashIcon
+                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                            aria-hidden="true"/>
+                                        Löschen
+                                    </a>
+                                </MenuItem>
+                            </div>
+                        </MenuItems>
+                    </transition>
+                </Menu>
+            </div>
+            <div class=" mb-5">
+                <button @click="openAddColumnModal()" class="text-white font-bold text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                    <PlusIcon class="h-5 w-5"></PlusIcon>
+                </button>
+            </div>
         </div>
         <div class="w-full flex">
             <table class="w-full flex ml-16">
                 <thead>
                 <tr>
-                    <th v-for="(column,index) in budget.columns"
+                    <th v-for="(column,index) in table.columns"
                         :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-44'" class="text-right">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
                                 <div class="flex items-center justify-end pr-2">
-                                    <p class="columnSubName xsLight">
+                                    <p v-if="column.subName" class="columnSubName -mt-4 xsLight">
                                         {{ column.subName }}
-                                        <span v-if="column.calculateName" class="ml-1">
+                                        <span v-if="column.calculateName" class="ml-1 truncate">
                                             ({{ column.calculateName }})
                                         </span>
                                     </p>
@@ -184,7 +204,7 @@
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }" v-if="column.is_locked">
                                                 <a @click="unlockColumn(column.id)"
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <PencilAltIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                         aria-hidden="true"/>
@@ -192,7 +212,7 @@
                                                 </a>
                                             </MenuItem>
                                             <MenuItem v-slot="{ active }">
-                                                <a @click="deleteColumn(column.id)"
+                                                <a v-show="index > 2" @click="deleteColumn(column.id)"
                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <TrashIcon
                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -212,142 +232,170 @@
                 </tr>
                 </thead>
             </table>
-
         </div>
+        <div class="w-full flex my-8">
+            <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
+                <div class="w-full flex">
+                    <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
+                        <div class="headline4 my-10 flex">Ausgaben
+                            <button class="w-6"
+                                    @click="costsOpened = !costsOpened">
+                                <ChevronUpIcon v-if="costsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                        <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
+                             class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                            <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
+                                Hauptposition
+                                <PlusCircleIcon
+                                    class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                            </div>
+                        </div>
+                        <table class="w-11/12 mb-6">
+                            <tbody class="">
+                            <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
+                                <MainPositionComponent @openRowDetailModal="openRowDetailModal"
+                                                       @openVerifiedModal="openVerifiedModal"
+                                                       @openCellDetailModal="openCellDetailModal"
+                                                       @openDeleteModal="openDeleteModal" :table="table"
+                                                       :project="project"
+                                                       :main-position="mainPosition"></MainPositionComponent>
+                            </tr>
+                            <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM</td>
+                                <td class="flex items-center w-48"
+                                    v-for="column in table.columns?.slice(3)">
+                                    <div class="w-48 my-2 p-1"
+                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                        {{ this.getSumOfTable(0, column.id) }}
+                                    </div>
+                                </td>
 
-        <div class="flex my-8 ">
-            <div class="flex w-full bg-secondaryHover border border-2 border-gray-300">
-                <button class="bg-buttonBlue w-6"
-                        @click="costsOpened = !costsOpened">
-                    <ChevronUpIcon v-if="costsOpened"
-                                   class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                </button>
+                            </tr>
+                            <!-- TODO: Hier noch einfügen if(commented === true) -->
+                            <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
+                                <td class="w-28"></td>
+                                <td class="w-28"></td>
+                                <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
+                                <td class="w-48 my-2 p-1">3000</td>
+                            </tr>
+                            </tbody>
+                        </table>
 
-                <div class="bg-secondaryHover ml-8 w-full" v-if="costsOpened">
-                    <div class="headline4 my-10">Ausgaben</div>
-                    <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                         class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
-                        <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
-                            Hauptposition
-                            <PlusCircleIcon
-                                class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                    </div>
+                    <!-- View if not opened Event -->
+                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                        <div class="headline4 my-10 flex">Ausgaben
+                            <button class="w-6"
+                                    @click="costsOpened = !costsOpened">
+                                <ChevronUpIcon v-if="costsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
                         </div>
                     </div>
-                    <table class="w-11/12 mb-6">
-                        <tbody class="">
-                        <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
-                            <MainPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @openDeleteModal="openDeleteModal" :budget="budget" :project="project" :main-position="mainPosition"></MainPositionComponent>
-                        </tr>
-                        <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
-                            <td class="w-28"></td>
-                            <td class="w-28"></td>
-                            <td class="w-72 my-2">SUM</td>
-                            <td class="flex items-center w-48"
-                                v-for="column in budget.columns.slice(3)">
-                                <div class="w-48 my-2 p-1"
-                                     :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                    {{ this.getSumOfTable(0, column.id) }}
-                                </div>
-                            </td>
-
-                        </tr>
-                        <!-- TODO: Hier noch einfügen if(commented === true) -->
-                        <tr v-if="true" class="bg-secondaryHover xsLight flex h-10 w-full text-right">
-                            <td class="w-28"></td>
-                            <td class="w-28"></td>
-                            <td class="w-72 my-2">SUM ausgeklammerte Posten</td>
-                            <td class="w-48 my-2 p-1">3000</td>
-                        </tr>
-                        </tbody>
-                    </table>
-
                 </div>
-                <!-- View if not opened Event -->
-                <div class="ml-2 w-full bg-secondaryHover" v-else>
-                    <div class="headline4 my-10">Ausgaben</div>
+                <!-- Divider -->
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
+                    <div class="w-full flex">
+                    <div class="ml-2" v-if="earningsOpened">
+                        <div class="headline4 my-10 flex">Einnahmen
+                            <button class="w-6"
+                                    @click="earningsOpened = !earningsOpened">
+                                <ChevronUpIcon v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                        <table class="w-full">
+                            <tbody>
+                            <tr v-for="mainPosition in tablesToShow[1]">
+                                <th class="bg-primary text-white">
+                                    <div class="pl-2 flex items-center h-10">
+                                        {{ mainPosition.name }}
+                                        <button class="my-auto w-6 ml-3"
+                                                @click="mainPosition.closed = !mainPosition.closed">
+                                            <ChevronUpIcon v-if="!mainPosition.closed"
+                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+                                            <ChevronDownIcon v-else
+                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+                                        </button>
+                                    </div>
+                                    <table v-if="!mainPosition.closed" class="w-full">
+                                        <thead>
+                                        <tr v-for="subPosition in mainPosition.sub_positions">
+                                            <th class="bg-lightBackgroundGray xsDark">
+                                                <div class="pl-2 flex items-center h-10">
+                                                    {{ subPosition.name }}
+                                                    <button class="my-auto w-6 ml-3"
+                                                            @click="subPosition.closed = !subPosition.closed">
+                                                        <ChevronUpIcon v-if="!subPosition.closed"
+                                                                       class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                                        <ChevronDownIcon v-else
+                                                                         class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                                                    </button>
+                                                </div>
+                                                <table class="w-full" v-if="!subPosition.closed">
+                                                    <tbody>
+                                                    <tr v-for="row in subPosition.sub_position_rows">
+                                                        <td v-for="cell in row.cells" class="w-40">
+                                                            <div @click="cell.clicked = !cell.clicked"
+                                                                 v-if="!cell.clicked">{{ cell.value }}
+                                                            </div>
+                                                            <div v-else>
+                                                                <input type="text" v-model="cell.value"
+                                                                       @focusout="cell.clicked = !cell.clicked">
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="bg-lightBackgroundGray xsDark h-10"
+                                                        style="background-color: #ccc !important">
+                                                        <td></td>
+                                                        <td></td>
+                                                        <td>SUM</td>
+                                                        <td>3000</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </th>
+                                        </tr>
+                                        </thead>
+                                    </table>
+                                </th>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- View if not opened Event -->
+                    <div class="ml-5 w-full bg-secondaryHover" v-else>
+                        <div class="headline4 my-10 flex">Einnahmen
+                            <button class="w-6"
+                                    @click="earningsOpened = !earningsOpened">
+                                <ChevronUpIcon v-if="earningsOpened"
+                                               class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
+                                <ChevronDownIcon v-else
+                                                 class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="flex my-8 ">
-            <div class="flex w-full border border-2 border-gray-300">
-                <button class="bg-buttonBlue w-6"
-                        @click="earningsOpened = !earningsOpened">
-                    <ChevronUpIcon v-if="earningsOpened"
-                                   class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                    <ChevronDownIcon v-else
-                                     class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                </button>
-
-                <div class="ml-2 w-11/12" v-if="earningsOpened">
-                    <h2>Einahmen</h2>
-                    <table class="w-full">
-                        <tbody>
-                        <tr v-for="mainPosition in tablesToShow[1]">
-                            <th class="bg-primary text-white">
-                                <div class="pl-2 flex items-center h-10">
-                                    {{ mainPosition.name }}
-                                    <button class="my-auto w-6 ml-3"
-                                            @click="mainPosition.closed = !mainPosition.closed">
-                                        <ChevronUpIcon v-if="!mainPosition.closed"
-                                                       class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                        <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                    </button>
-                                </div>
-                                <table v-if="!mainPosition.closed" class="w-full">
-                                    <thead>
-                                    <tr v-for="subPosition in mainPosition.sub_positions">
-                                        <th class="bg-lightBackgroundGray xsDark">
-                                            <div class="pl-2 flex items-center h-10">
-                                                {{ subPosition.name }}
-                                                <button class="my-auto w-6 ml-3"
-                                                        @click="subPosition.closed = !subPosition.closed">
-                                                    <ChevronUpIcon v-if="!subPosition.closed"
-                                                                   class="h-6 w-6 text-primary my-auto"></ChevronUpIcon>
-                                                    <ChevronDownIcon v-else
-                                                                     class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
-                                                </button>
-                                            </div>
-                                            <table class="w-full" v-if="!subPosition.closed">
-                                                <tbody>
-                                                <tr v-for="row in subPosition.sub_position_rows">
-                                                    <td v-for="cell in row.cells" class="w-40">
-                                                        <div @click="cell.clicked = !cell.clicked"
-                                                             v-if="!cell.clicked">{{ cell.value }}
-                                                        </div>
-                                                        <div v-else>
-                                                            <input type="text" v-model="cell.value"
-                                                                   @focusout="cell.clicked = !cell.clicked">
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                                <tr class="bg-lightBackgroundGray xsDark h-10"
-                                                    style="background-color: #ccc !important">
-                                                    <td></td>
-                                                    <td></td>
-                                                    <td>SUM</td>
-                                                    <td>3000</td>
-                                                </tr>
-                                                </tbody>
-                                            </table>
-                                        </th>
-                                    </tr>
-                                    </thead>
-                                </table>
-                            </th>
-                        </tr>
-                        </tbody>
-                    </table>
-
-                </div>
-                <!-- View if not opened Event -->
-                <div class="ml-2 w-11/12" v-else>
-                    <h2>Einahmen</h2>
+                <!-- Divider -->
+                <div class="border-t-2 border-b-2 h-1.5 w-full ml-5 mr-28" />
+                <div class="ml-5 my-6 xsDark uppercase">
+                    Einnahmen - Ausgaben
                 </div>
             </div>
+
         </div>
+
+
     </div>
 
 
@@ -388,23 +436,9 @@
                 <XIcon @click="closeVerifiedModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
-                <div class="mb-2 xsLight">
-                    {{ verifiedTexts.description }}
+                <div class="mb-3 xsLight" v-html="verifiedTexts.description">
+
                 </div>
-                <p class="xsLight flex mb-2">
-                    <!-- TODO: SVG ersetzen mit IMG TAG -->
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" class="mr-2">
-                        <g id="warning" transform="translate(-453 -292)">
-                            <rect id="Rechteck_468" data-name="Rechteck 468" width="20" height="20"
-                                  transform="translate(453 292)" fill="#e0e000"/>
-                            <path id="Icon_metro-warning" data-name="Icon metro-warning"
-                                  d="M8.4,2.984l4.884,9.734H3.514L8.4,2.984Zm0-1.056a.842.842,0,0,0-.693.508L2.731,12.351c-.381.678-.057,1.232.72,1.232h9.894c.777,0,1.1-.554.72-1.232h0L9.091,2.436A.842.842,0,0,0,8.4,1.928ZM9.126,11.4a.728.728,0,1,1-.728-.728A.728.728,0,0,1,9.126,11.4ZM8.4,9.941a.728.728,0,0,1-.728-.728V7.027a.728.728,0,1,1,1.457,0V9.212A.728.728,0,0,1,8.4,9.941Z"
-                                  transform="translate(454.602 294.245)" fill="#fcfcfb" stroke="#fcfcfb"
-                                  stroke-width="0.2"/>
-                        </g>
-                    </svg>
-                    Achtung: Du gibst der/dem Nutzer*in dadurch Budgetzugriff!
-                </p>
                 <div class="mb-2">
                     <div class="relative w-full">
                         <div class="w-full" v-if="showUserAdd">
@@ -420,9 +454,14 @@
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
+                                    <div v-for="(user, index) in user_search_results" :key="index" class="flex items-center cursor-pointer">
+                                        <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
+                                            <p @click="addUserToVerifiedUserArray(user)"
+                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            </p>
+                                        </div>
+                                        <div class="flex-1 text-sm py-4" v-if="projectManager.includes(this.$page.props.user.id) && !budgetAccess.includes(user.id)">
                                             <p @click="addUserToVerifiedUserArray(user)"
                                                class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                 {{ user.first_name }} {{ user.last_name }}
@@ -451,11 +490,37 @@
                         </span>
                     </div>
                 </div>
-                <div class="mt-6">
-                    <button class="bg-success focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover rounded-full"
+                <div class="mt-6 flex justify-center">
+                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
                             @click="submitVerifiedModal">
-                        <CheckIcon class="h-6 w-6 text-secondaryHover"/>
+                        Zur Verifizierung auffordern
+                    </button>
+                </div>
+            </div>
+
+        </template>
+    </jet-dialog-modal>
+
+    <jet-dialog-modal :show="showBudgetAccessModal" @close="closeBudgetAccessModal">
+        <template #content>
+            <img alt="Neue Spalte" src="/Svgs/Overlays/illu_budget_access.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="headline1 my-2">
+                    Budgetzugriff erteilen
+                </div>
+                <p>
+                    Die/der von dir zur Verifizierung angefragte Nutzer*in hat bisher keinen Budgetzugriff auf dein Projekt. Mit der Verifizierungsanfrage erteilst du ihr/ihm dieses Recht. Bist du sicher, dass du ihr/ihm dieses Recht geben möchtest?
+                </p>
+                <XIcon @click="closeBudgetAccessModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+
+                <div class="mt-6">
+                    <button class="focus:outline-none my-auto inline-flex items-center px-10 py-3 border border-transparent
+                            text-xs font-bold uppercase shadow-sm text-secondaryHover rounded-full bg-buttonBlue"
+                            @click="submitVerifiedModalWithBudgetAccess">
+                        Anfragen & Budgetzugriff erteilen
                     </button>
                 </div>
             </div>
@@ -466,39 +531,45 @@
     <add-column-component
         v-if="showAddColumnModal"
         :project="project"
-        :table="budget.table"
+        :table="table"
         @closed="closeAddColumnModal()"
     />
     <!-- Cell Detail Modal-->
     <cell-detail-component
         v-if="showCellDetailModal"
-        :cell="budget.selectedCell"
+        :cell="selectedCell"
         :moneySources="moneySources"
         @closed="closeCellDetailModal()"
     />
     <!-- Vorlage einlesen Modal-->
     <use-template-component
         v-if="showUseTemplateModal"
-        :projectId="project.id"
-        :templates="budget.templates"
+        :projectId="project?.id"
+        :templates="templates"
         @closed="closeUseTemplateModal()"
     />
     <!-- Aus Projekt einlesen Modal-->
     <use-template-from-project-budget-component
         v-if="showUseTemplateFromProjectModal"
-        :projectId="project.id"
+        :projectId="project?.id"
         @closed="closeUseTemplateFromProjectModal()"
     />
     <!-- Als Vorlage speichern Modal-->
     <add-budget-template-component
         v-if="showAddBudgetTemplateModal"
-        :table-id="budget.table.id"
+        :table-id="table.id"
         @closed="closeAddBudgetTemplateModal()"
+    />
+    <!-- Tabelle umbenennen Modal-->
+    <rename-table-component
+        v-if="showRenameTableModal"
+        :table="table"
+        @closed="closeRenameBudgetTemplateModal()"
     />
     <!-- Row Detail Modal-->
     <row-detail-component
         v-if="showRowDetailModal"
-        :row="budget.selectedRow"
+        :row="selectedRow"
         :moneySources="moneySources"
         @closed="closeRowDetailModal()"
     />
@@ -510,14 +581,13 @@
         :description="this.confirmationDescription"
         @closed="afterConfirm"/>
 
-
 </template>
 
 <script>
 
 
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
+import {ChevronUpIcon, ChevronDownIcon,PlusIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import AddColumnComponent from "@/Layouts/Components/AddColumnComponent.vue";
 import CellDetailComponent from "@/Layouts/Components/CellDetailComponent.vue";
@@ -533,18 +603,21 @@ import {
 } from "@headlessui/vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {useForm} from "@inertiajs/inertia-vue3";
+import {useForm, usePage} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
 import MainPositionComponent from "@/Layouts/Components/MainPositionComponent.vue";
 import RowDetailComponent from "@/Layouts/Components/RowDetailComponent.vue";
 import UseTemplateComponent from "@/Layouts/Components/UseTemplateComponent.vue";
 import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTemplateFromProjectBudgetComponent.vue";
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
+import Button from "@/Jetstream/Button.vue";
+import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 
 export default {
     name: 'BudgetComponent',
 
     components: {
+        Button,
         UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
         ConfirmationComponent,
@@ -572,10 +645,13 @@ export default {
         RowDetailComponent,
         UseTemplateComponent,
         AddBudgetTemplateComponent,
+        PlusIcon,
+        RenameTableComponent
     },
 
     data() {
         return {
+            showBudgetAccessModal: false,
             costsOpened: true,
             earningsOpened: true,
             hoveredBorder: null,
@@ -583,15 +659,17 @@ export default {
             showCellDetailModal: false,
             showRowDetailModal: false,
             showUseTemplateModal: false,
+            showRenameTableModal: false,
             showUseTemplateFromProjectModal: false,
             showAddBudgetTemplateModal: false,
+            resetWanted:false,
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
             mainPositionToDelete: null,
             subPositionToDelete: null,
             rowToDelete: null,
-            confirmationTitle:'',
+            confirmationTitle: '',
             confirmationDescription: '',
             showSuccessModal: false,
             successHeading: '',
@@ -609,7 +687,7 @@ export default {
             verifiedTexts: {
                 title: 'Verifizierung',
                 positionTitle: '',
-                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
+                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? <br> Lasse deine Hauptposition durch eine Nutzer*in verifizieren.'
             },
             showVerifiedModal: false,
             user_search_results: [],
@@ -622,19 +700,20 @@ export default {
                 id: null,
                 user: '',
                 position: [],
-                project_title: this.project.name,
-                table_id: this.budget.table.id
+                giveBudgetAccess: false,
+                project_title: this.project?.name,
+                table_id: this.table?.id
             }),
         }
     },
 
-    props: ['budget', 'project', 'moneySources'],
+    props: ['table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
 
     computed: {
         tablesToShow: function () {
             let costTableArray = [];
             let earningTableArray = [];
-            this.budget.table.main_positions.forEach((mainPosition) => {
+            this.table.main_positions.forEach((mainPosition) => {
                 if (mainPosition.type === 'BUDGET_TYPE_COST') {
                     costTableArray.push(mainPosition);
                 } else {
@@ -643,6 +722,13 @@ export default {
             })
             return [costTableArray, earningTableArray]
         },
+        tableIsEmpty: function () {
+            if(this.table.main_positions.length === 2 && this.table.main_positions[0].sub_positions.length === 1 && this.table.main_positions[0].sub_positions[0].sub_position_rows.length === 1 && this.table.columns?.length === 4){
+                return true;
+            }else{
+                return false;
+            }
+        }
     },
     watch: {
         user_query: {
@@ -670,7 +756,7 @@ export default {
                 }
             } else {
                 cssString += ' xsWhiteBold ';
-                if(cell.value !== cell.verified_value){
+                if (cell.value !== cell.verified_value) {
                     cssString += ' bg-red-300 '
                 } else {
                     cssString += cell.column.color;
@@ -720,7 +806,7 @@ export default {
         addRowToSubPosition(subPosition, row) {
 
             this.$inertia.post(route('project.budget.sub-position-row.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 sub_position_id: subPosition.id,
                 positionBefore: row ? row.position : -1
             }, {
@@ -741,7 +827,7 @@ export default {
         closeAddColumnModal() {
             this.showAddColumnModal = false;
         },
-        openUseTemplateModal(){
+        openUseTemplateModal() {
 
             Inertia.reload({
                 data: {
@@ -752,20 +838,26 @@ export default {
                 }
             })
         },
-        closeUseTemplateModal(){
+        openRenameTableModal(){
+          this.showRenameTableModal = true;
+        },
+        closeUseTemplateModal() {
             this.showUseTemplateModal = false;
         },
-        openUseTemplateFromProjectModal(){
-          this.showUseTemplateFromProjectModal = true;
+        openUseTemplateFromProjectModal() {
+            this.showUseTemplateFromProjectModal = true;
         },
-        closeUseTemplateFromProjectModal(){
+        closeUseTemplateFromProjectModal() {
             this.showUseTemplateFromProjectModal = false;
         },
-        openAddBudgetTemplateModal(){
+        openAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = true;
         },
-        closeAddBudgetTemplateModal(){
+        closeAddBudgetTemplateModal() {
             this.showAddBudgetTemplateModal = false;
+        },
+        closeRenameBudgetTemplateModal(){
+          this.showRenameTableModal = false;
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
             cell.clicked = !cell.clicked;
@@ -794,7 +886,7 @@ export default {
             }
 
             this.$inertia.post(route('project.budget.sub-position.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 main_position_id: mainPositionId,
                 positionBefore: subPositionBefore.position
             }, {
@@ -804,7 +896,7 @@ export default {
         },
         addMainPosition(type, mainPosition) {
             this.$inertia.post(route('project.budget.main-position.add'), {
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
                 type: type,
                 positionBefore: mainPosition.position
             }, {
@@ -865,20 +957,20 @@ export default {
         closeRowDetailModal() {
             this.showRowDetailModal = false;
         },
-        openDeleteRowModal(row){
-          this.confirmationTitle = 'Zeile löschen';
-          this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
-          this.rowToDelete = row;
-          this.showDeleteModal = true;
+        openDeleteRowModal(row) {
+            this.confirmationTitle = 'Zeile löschen';
+            this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+            this.rowToDelete = row;
+            this.showDeleteModal = true;
         },
         openDeleteModal(title, description, position, type) {
             this.confirmationTitle = title;
             this.confirmationDescription = description
-            if(type === 'main'){
+            if (type === 'main') {
                 this.mainPositionToDelete = position;
-            }else if(type === 'sub'){
+            } else if (type === 'sub') {
                 this.subPositionToDelete = position;
-            }else{
+            } else {
                 this.rowToDelete = position;
             }
             this.showDeleteModal = true;
@@ -890,9 +982,17 @@ export default {
             this.showDeleteModal = true;
         },
         afterConfirm(bool) {
-            if (!bool) return this.showDeleteModal = false;
+            if (!bool){
+                this.resetWanted = false;
+                return this.showDeleteModal = false;
+            }
+            if(this.resetWanted === true)
+            {
+                this.resetBudgetTable();
+            }else{
+                this.deletePosition();
+            }
 
-            this.deletePosition();
 
         },
         deletePosition() {
@@ -904,7 +1004,7 @@ export default {
                 this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
                 this.successHeading = "Unterposition gelöscht"
                 this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
-            }else{
+            } else {
                 this.$inertia.delete(`/project/budget/sub-position-row/${this.rowToDelete.id}`, {
                     preserveScroll: true,
                     preserveState: true
@@ -924,8 +1024,20 @@ export default {
             this.successHeading = "";
             this.successDescription = "";
         },
-        closeVerifiedModal() {
+        closeVerifiedModal(deleteAll = false) {
             this.showVerifiedModal = false;
+            if(deleteAll){
+                this.user_query = '';
+                this.showUserAdd = true;
+                this.submitVerifiedModalData.user = '';
+                this.submitVerifiedModalData.id = null;
+                this.submitVerifiedModalData.is_main = false;
+                this.submitVerifiedModalData.is_sub = false;
+                this.submitVerifiedModalData.position = [];
+            }
+        },
+        closeBudgetAccessModal(){
+            this.showBudgetAccessModal = false;
             this.user_query = '';
             this.showUserAdd = true;
             this.submitVerifiedModalData.user = '';
@@ -934,16 +1046,30 @@ export default {
             this.submitVerifiedModalData.is_sub = false;
             this.submitVerifiedModalData.position = [];
         },
+        submitVerifiedModalWithBudgetAccess(){
+            this.submitVerifiedModalData.giveBudgetAccess = true;
+            this.submitVerifiedModal();
+        },
         submitVerifiedModal() {
-            if (this.submitVerifiedModalData.is_main) {
-                this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+            if(this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess){
+                if (this.submitVerifiedModalData.is_main) {
+                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+                } else {
+                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
+                }
+                this.closeVerifiedModal(true);
             } else {
-                this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
+                this.showBudgetAccessModal = true;
+                this.closeVerifiedModal(false);
             }
 
-            this.closeVerifiedModal();
+            if(this.submitVerifiedModalData.giveBudgetAccess){
+                this.closeBudgetAccessModal()
+            }
+
+
         },
-        openVerifiedModal(is_main,is_sub,id,position) {
+        openVerifiedModal(is_main, is_sub, id, position) {
             this.verifiedTexts.positionTitle = position.name
             this.submitVerifiedModalData.is_main = is_main
             this.submitVerifiedModalData.is_sub = is_sub
@@ -961,40 +1087,51 @@ export default {
         verifiedMainPosition(mainPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.main-position'), {
                 mainPositionId: mainPositionId,
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
             })
         },
         verifiedSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.verified.sub-position'), {
                 subPositionId: subPositionId,
-                table_id: this.budget.table.id,
+                table_id: this.table.id,
             })
         },
-        requestRemove(position, type){
+        requestRemove(position, type) {
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
             })
         },
-        removeVerification(position, type){
+        removeVerification(position, type) {
             this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
             })
         },
-        lockColumn(columnId){
+        lockColumn(columnId) {
             this.$inertia.patch(this.route('project.budget.lock.column'), {
                 columnId: columnId
             });
         },
-        unlockColumn(columnId){
+        unlockColumn(columnId) {
             this.$inertia.patch(this.route('project.budget.unlock.column'), {
                 columnId: columnId
             });
         },
+        openResetConfirmation(){
+            this.confirmationTitle = 'Budgettabellen zurücksetzen';
+            this.confirmationDescription = 'Bist du sicher, dass du diese Tabellen zurücksetzen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+            this.resetWanted = true;
+            this.showDeleteModal = true;
+        },
         resetBudgetTable(){
             this.$inertia.patch(this.route('project.budget.reset.table', this.project.id))
-        }
+            this.resetWanted= false;
+            this.showDeleteModal = false;
+        },
+        deleteBudgetTemplate(){
+          this.$inertia.delete(this.route('project.budget.table.delete', this.table.id))
+        },
     },
 }
 </script>

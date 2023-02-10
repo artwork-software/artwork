@@ -20,7 +20,7 @@ class ChecklistPolicy
      */
     public function view(User $user, Checklist $checklist)
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_VIEW) && $checklist->departments->users->contains($user->id);
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value) ||$checklist->departments->users->contains($user->id);
     }
 
     /**
@@ -43,7 +43,7 @@ class ChecklistPolicy
      */
     public function update(User $user, Checklist $checklist)
     {
-        return $user->can(PermissionNameEnum::CHECKLIST_UPDATE)
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value)
             && $user->departments->intersect($checklist->departments)->isNotEmpty();
     }
 
@@ -56,8 +56,8 @@ class ChecklistPolicy
      */
     public function delete(User $user, Checklist $checklist)
     {
-        return $user->projects()->find($checklist->project_id)->pivot->is_admin == 1 ||  ($user->can(PermissionNameEnum::CHECKLIST_DELETE)
-            && $user->departments->intersect($checklist->departments)->isNotEmpty());
+        return $user->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value)
+            && $user->departments->intersect($checklist->departments)->isNotEmpty();
     }
 
     /**

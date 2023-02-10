@@ -31,11 +31,30 @@
                     </div>
                 </div>
 
-                <ProjectCollectingSocietiesMenu
-                    :copyright="copyright"
-                    :collecting-societies="collectingSocieties"
-                    @update-collecting-society="updateCollectingSociety"
-                />
+                <Listbox as="div" v-model="collectingSociety" id="collecting_society">
+                    <ListboxButton
+                        class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4">
+                        <div v-if="collectingSociety" class="flex-grow text-left">
+                            {{collectingSociety.name}}
+                        </div>
+                        <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
+                            Verwertungsgesellschaft wählen*
+                        </div>
+                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                    </ListboxButton>
+                    <ListboxOptions class="w-[85%] bg-primary overflow-y-auto text-sm absolute">
+                        <ListboxOption v-for="society in collectingSocieties"
+                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-3 flex justify-between "
+                                       :key="society.name"
+                                       :value="society"
+                                       v-slot="{ active, selected }">
+                            <div :class="[selected ? 'text-white' : '']">
+                                {{ society.name }}
+                            </div>
+                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                        </ListboxOption>
+                    </ListboxOptions>
+                </Listbox>
 
                 <div class="flex items-center w-full my-3">
                     <div class="flex items-center w-1/2">
@@ -85,10 +104,16 @@
 
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
-import {XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
+import {XIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/outline";
 import ProjectCollectingSocietiesMenu from "@/Layouts/Components/ProjectCollectingSocietiesMenu.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import {
+    Listbox,
+    ListboxOption,
+    ListboxOptions,
+    ListboxButton
+} from "@headlessui/vue";
 
 export default {
     name: "ProjectCopyrightModal",
@@ -102,21 +127,17 @@ export default {
         JetDialogModal,
         XIcon,
         ProjectCollectingSocietiesMenu,
-        AddButton
+        AddButton,
+        ChevronDownIcon,
+        CheckIcon,
+        Listbox,
+        ListboxOption,
+        ListboxOptions,
+        ListboxButton
     },
     data() {
         return {
-            // fake data, needs to be replaced by a prop later
-            collectingSocieties: [
-                {
-                    id: 1,
-                    name: "Verwertungsgesellschaft 1"
-                },
-                {
-                    id: 2,
-                    name: "Verwertungsgesellschaft 2"
-                }
-            ],
+            collectingSocieties: [],
             collectingSociety: this.copyright.collecting_society,
             costCenterName: this.costCenter.name,
             isBigLaw: this.copyright.law_size === 'big',
@@ -136,9 +157,16 @@ export default {
             })
         }
     },
+    mounted() {
+        axios.get(route('collecting_societies.index')).then(res => {
+            this.collectingSocieties = res.data
+        })
+    },
     methods: {
-        updateCollectingSociety() {
-
+        updateCollectingSociety(society) {
+            console.log("collectingSociety")
+            console.log(society)
+            //this.collectingSociety = collectingSociety
         },
         updateData() {
             this.costCenterForm.name = this.costCenterName

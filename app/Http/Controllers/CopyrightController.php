@@ -68,10 +68,13 @@ class CopyrightController extends Controller
      */
     public function update(Request $request, Copyright $copyright)
     {
+
+        $collecting_society = (object) $request->collectingSociety;
+
         Copyright::where('id', $copyright->id)->update([
             'own_copyright' => $request->ownCopyright,
             'live_music' => $request->liveMusic,
-            'collecting_society' => $request->collectingSociety,
+            'collecting_society_id' => $collecting_society->id,
             'law_size' => $request->lawSize,
         ]);
     }

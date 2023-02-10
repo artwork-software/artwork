@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->boolean('own_copyright');
             $table->boolean('live_music');
-            $table->string('collecting_society');
+            $table->string('collecting_society_id');
             $table->enum('law_size', ['small', 'big']);
             $table->unsignedBigInteger('project_id');
             $table->timestamps();

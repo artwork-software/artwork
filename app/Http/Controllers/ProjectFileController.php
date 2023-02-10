@@ -88,7 +88,6 @@ class ProjectFileController extends Controller
      */
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
     {
-        $projectFile->fill($request->data());
 
         if ($request->get('accessibleUsers')) {
             $projectFile->accessing_users()->sync(collect($request->accessibleUsers));

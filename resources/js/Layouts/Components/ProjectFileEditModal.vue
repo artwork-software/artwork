@@ -23,7 +23,6 @@
                         ref="module_files"
                         id="file"
                         type="file"
-                        multiple
                     />
                     <div @click="selectNewFiles" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
@@ -93,7 +92,7 @@
                     <div v-for="file of files">Neues Dokument: {{ file.name }}</div>
                 </div>
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="files.length < 1"
+                    <AddButton text="Speichern" mode="modal" class="px-6 py-3"
                                @click="updateFile"/>
                 </div>
                 <div class="w-full my-4">
@@ -143,6 +142,7 @@ export default {
             files: [],
             comment: "",
             user_query: '',
+            file:this.file,
             user_search_results: [],
             usersWithAccess: this.file?.accessibleUsers ? this.file.accessibleUsers : [],
             projectFileForm: useForm({
@@ -199,7 +199,7 @@ export default {
                 userIds.push(user.id);
             })
             this.projectFileForm.accessibleUsers = userIds;
-            this.projectFileForm.post(this.route('project_files.update', this.projectId))
+            this.projectFileForm.patch(this.route('project_files.update', this.file))
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -208,17 +208,17 @@ export default {
                 "application/x-apple-diskimage",
             ]
             for (let file of files) {
+                console.log(this.file);
+                console.log(file);
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.files.push(file)
+                    this.file = file
                 }
             }
         },
         updateFile() {
-            for (let file of this.files) {
-                this.updateRequest(file)
-            }
+            this.updateRequest(this.file)
             this.closeModal()
         }
     }

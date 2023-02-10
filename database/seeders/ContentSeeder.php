@@ -39,8 +39,6 @@ class ContentSeeder extends Seeder
         $this->seedProjects();
         $this->seedRoomCategories();
         $this->seedRoomAttributes();
-        $this->seedContracts();
-        $this->seedContractModules();
         $this->seedCostCenters();
         $this->seedCopyrights();
     }
@@ -83,51 +81,6 @@ class ContentSeeder extends Seeder
 
         CompanyType::create([
             'name' => 'AG'
-        ]);
-    }
-
-    private function seedContracts()
-    {
-
-        Contract::create([
-            'name' => 'Basic Vertrag',
-            'basename' => 'basic_contract',
-            'contract_partner' => 'Deutscher Staat',
-            'amount' => 12000,
-            'project_id' => 1,
-            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
-                                Er steht hier als Platzhalter.',
-            'ksk_liable' => false,
-            'resident_abroad' => true,
-            'company_type_id' => 1,
-            'contract_type_id' => 1
-        ]);
-
-        Contract::create([
-            'name' => 'Advanced Vertrag',
-            'basename' => 'advanced_contract',
-            'contract_partner' => 'HAU',
-            'amount' => 8000,
-            'project_id' => 1,
-            'description' => 'Das ist ein Vertrag und das hier ist der Kommentar dazu der irgendwann mal geschrieben wurde.
-                                Er steht hier als Platzhalter.',
-            'ksk_liable' => true,
-            'resident_abroad' => false,
-            'company_type_id' => 2,
-            'contract_type_id' => 2
-        ]);
-    }
-
-    private function seedContractModules()
-    {
-        ContractModule::create([
-            'name' => 'Baustein',
-            'basename' => 'baustein',
-        ]);
-
-        ContractModule::create([
-            'name' => 'Mittelteil',
-            'basename' => 'mittelteil',
         ]);
     }
 

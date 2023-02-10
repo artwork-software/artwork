@@ -913,7 +913,7 @@ class ProjectController extends Controller
 
     public function updateCellCalculation(Request $request)
     {
-
+        if($request->calculations){
         foreach ($request->calculations as $calculation) {
             $cellCalculation = CellCalculations::find($calculation['id']);
             $cellCalculation->update([
@@ -925,6 +925,7 @@ class ProjectController extends Controller
 
         $cell = ColumnCell::find($request->calculations[0]['cell_id']);
         $cell->update(['value' => $cell->calculations()->sum('value')]);
+        }
 
         return back()->with('success');
     }

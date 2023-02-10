@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->bigInteger('cell_id');
             $table->string('name')->nullable();
-            $table->integer('value')->nullable();
+            $table->bigInteger('value')->nullable();
             $table->string('description')->nullable();
             $table->timestamps();
         });

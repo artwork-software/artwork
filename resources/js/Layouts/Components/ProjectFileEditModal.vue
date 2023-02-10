@@ -102,7 +102,7 @@
                                  class="h-5 w-5 mr-2 rounded-2xl"/>
                             <div class="text-secondary text-sm">{{comment.created_at}}</div>
                         </div>
-                        <div class="mt-2">
+                        <div class="mt-2 mb-4">
                             {{comment.text}}
                         </div>
                     </div>

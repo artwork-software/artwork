@@ -251,7 +251,11 @@
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
         @closed="afterConfirm"/>
 
-
+    <MoneySourceHistoryComponent
+        @closed="closeProjectHistoryModal"
+        v-if="showProjectHistory"
+        :history="moneySource.history"
+    ></MoneySourceHistoryComponent>
 </template>
 
 <script>
@@ -281,7 +285,7 @@ import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceCompon
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
-
+import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 
 export default {
     name: "MoneySourceShow",
@@ -309,7 +313,8 @@ export default {
         ListboxOptions,
         ListboxButton,
         ChevronDownIcon,
-        CheckIcon
+        CheckIcon,
+        MoneySourceHistoryComponent
     },
     computed: {
         filteredPositions() {
@@ -340,6 +345,7 @@ export default {
             sourceToDelete: null,
             show: false,
             wantedProject: null,
+            showProjectHistory: false
         }
     },
     methods: {
@@ -378,6 +384,12 @@ export default {
 
             this.deleteMoneySource(this.sourceToDelete)
         },
+        closeProjectHistoryModal(){
+            this.showProjectHistory = false;
+        },
+        openMoneySourceHistoryModal(){
+            this.showProjectHistory = true;
+        }
     },
     setup() {
         return {}

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Date;
@@ -24,6 +25,8 @@ class MoneySource extends Model
 {
     use HasFactory;
     use Searchable;
+    use HasChangesHistory;
+
 
     protected $fillable = [
         'name',

@@ -9,6 +9,7 @@ use App\Http\Resources\TaskIndexResource;
 use App\Http\Resources\TaskShowResource;
 use App\Models\Checklist;
 use App\Models\Department;
+use App\Models\MoneySourceTask;
 use App\Models\Task;
 use App\Models\Scheduling;
 use App\Models\User;
@@ -63,6 +64,9 @@ class TaskController extends Controller
 
         return inertia('Tasks/OwnTasksManagement', [
             'tasks' => TaskShowResource::collection($tasks),
+            'money_source_task' => MoneySourceTask::with(['money_source_task_users' => function($query){
+                return $query->where('user_id', Auth::id());
+            }])->where('done', false)->get()
         ]);
     }
 

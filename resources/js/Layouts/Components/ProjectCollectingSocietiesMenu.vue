@@ -52,7 +52,7 @@ export default {
     },
     data() {
         return {
-            selectedCollectingSociety: this.copyright.collecting_society,
+            selectedCollectingSociety: this.copyright?.collecting_society,
             societiesOpened: false,
             collectingSocieties: []
         }

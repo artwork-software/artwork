@@ -138,22 +138,22 @@ export default {
     data() {
         return {
             collectingSocieties: [],
-            collectingSociety: this.copyright.collecting_society,
-            costCenterName: this.costCenter.name,
-            isBigLaw: this.copyright.law_size === 'big',
-            isSmallLaw: this.copyright.law_size === 'small',
-            ownCopyright: this.copyright.own_copyright,
-            liveMusic: this.copyright.live_music,
-            description: this.copyright.description,
+            collectingSociety: this.copyright?.collecting_society,
+            costCenterName: this.costCenter?.name,
+            isBigLaw: this.copyright?.law_size === 'big',
+            isSmallLaw: this.copyright?.law_size === 'small',
+            ownCopyright: this.copyright?.own_copyright,
+            liveMusic: this.copyright?.live_music,
+            description: this.copyright?.description,
             costCenterForm: useForm({
-                name: this.costCenter.name,
-                description: this.copyright.description
+                name: this.costCenter?.name,
+                description: this.copyright?.description
             }),
             copyrightForm: useForm({
                 ownCopyright: this.ownCopyright,
                 liveMusic: this.liveMusic,
                 collectingSociety: this.collectingSociety,
-                lawSize: this.copyright.law_size
+                lawSize: this.copyright?.law_size
             })
         }
     },

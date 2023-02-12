@@ -19,6 +19,10 @@ class MoneySourceTask extends Model
         'done'
     ];
 
+    protected $casts = [
+        'deadline' => 'datetime: d. F Y H:i:s'
+    ];
+
 
     public function money_source(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {

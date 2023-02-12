@@ -156,7 +156,7 @@
 
         <!--     Main       -->
         <main class="main">
-
+<!--
             <p class="text-xs ml-2 cursor-pointer uppercase" @click="showPermissions = !showPermissions">Open Permissions</p>
             <div v-if="showPermissions">
                 <pre class="ml-2">
@@ -167,6 +167,7 @@
     MoneySource: {{ $page.props.is_money_source_admin }}
                 </pre>
             </div>
+            -->
             <slot></slot>
         </main>
     </div>

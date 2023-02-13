@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('text');
             $table->unsignedBigInteger('project_id')->nullable();
             $table->unsignedBigInteger('project_file_id')->nullable();
+            $table->unsignedBigInteger('money_source_file_id')->nullable();
             $table->unsignedBigInteger('contract_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->timestamps();

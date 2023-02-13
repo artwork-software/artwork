@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div v-else>
-                    <div class="text-secondary text-sm mt-2">Keine Dokumente vorhanden</div>
+                    <div class="text-secondary text-sm my-2">Keine Dokumente vorhanden</div>
                 </div>
             </div>
             <div class="w-full flex-grow items-center mb-4">

@@ -6,7 +6,6 @@
                 <div class="headline1 my-2">
                     Dokument bearbeiten
                 </div>
-                {{file}}
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>

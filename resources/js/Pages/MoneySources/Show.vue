@@ -5,9 +5,6 @@
                 <div class="flex ">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ moneySource.name }}</h2>
-                    <pre>
-                        {{moneySource}}
-                    </pre>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.is_admin">
                         <div class="flex items-center -mt-1">

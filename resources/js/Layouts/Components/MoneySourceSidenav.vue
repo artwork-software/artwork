@@ -24,9 +24,29 @@
                 </div>
             </div>
 
-            <div class="w-full flex items-center mb-4 h-36">
+            <div class="w-full flex items-center mb-4">
                 <div class="text-secondary text-md font-semibold">
                     Dokumente
+                </div>
+                <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
+                                 @click="showMoneySourceFiles = !showMoneySourceFiles"/>
+                <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                            @click="openFileUploadModal"/>
+            </div>
+            <div v-if="showMoneySourceFiles">
+                <div v-if="moneySourceFiles?.data.length > 0">
+                    <div v-for="moneySourceFile in moneySourceFiles.data">
+                        <div
+                            class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                        >
+                            <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
+                            <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
+                            <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(moneySourceFile)"/>
+                        </div>
+                    </div>
+                </div>
+                <div v-else>
+                    <div class="text-secondary text-sm mt-2">Keine Dokumente vorhanden</div>
                 </div>
             </div>
             <div class="w-full flex-grow items-center mb-4">
@@ -69,6 +89,15 @@
         :money_source_id="money_source.id"
     />
 
+    <MoneySourceFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"
+                                :money-source-id="money_source.id"/>
+    <MoneySourceFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
+                              :file="moneySourceFileToEdit"/>
+
+    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal"
+                                :file="moneySourceFileToDelete"/>
+
+
 </template>
 
 <script>
@@ -83,28 +112,70 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import CreateMoneySourceTask from "@/Layouts/Components/CreateMoneySourceTask.vue";
 import {Inertia} from "@inertiajs/inertia";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import MoneySourceFileUploadModal from "@/Layouts/Components/MoneySourceFileUploadModal.vue";
+import MoneySourceFileEditModal from "@/Layouts/Components/MoneySourceFileEditModal.vue";
+import MoneySourceFileDeleteModal from "@/Layouts/Components/MoneySourceFileDeleteModal.vue";
+import {ChevronDownIcon} from "@heroicons/vue/solid";
 
 
 export default {
     name: "MoneySourceSidenav",
-    props: ['users', 'tasks', 'money_source'],
+    props: ['users', 'tasks', 'money_source','moneySourceFiles'],
     components: {
+        MoneySourceFileDeleteModal,
+        MoneySourceFileEditModal,
+        MoneySourceFileUploadModal,
         NewUserToolTip,
         ContractModuleDeleteModal,
         DownloadIcon,
         UploadIcon,
         XCircleIcon,
         UserTooltip,
-        CreateMoneySourceTask
+        CreateMoneySourceTask,
+        ChevronDownIcon
     },
     data() {
         return {
-            showMoneySourceTaskModal: false
+            showMoneySourceTaskModal: false,
+            showFileUploadModal: false,
+            showFileEditModal: false,
+            showFileDeleteModal: false,
+            showMoneySourceFiles: false,
+            moneySourceFileToEdit:null,
+            moneySourceFileToDelete:null,
         }
     },
     methods: {
-        updateTask(task){
+        openFileUploadModal() {
+            this.showFileUploadModal = true
+        },
+        openFileEditModal(file) {
+            this.moneySourceFileToEdit = file;
+            this.showFileEditModal = true
+        },
+        openFileDeleteModal(file){
+            this.moneySourceFileToDelete = file
+            this.showFileDeleteModal = true;
+        },
+        closeFileUploadModal(){
+            this.showFileUploadModal = false;
+        },
+        closeFileEditModal() {
+            this.showFileEditModal = false;
+            this.moneySourceFileToEdit = null;
+            },
+        closeFileDeleteModal(){
+          this.showFileDeleteModal = false;
+          this.moneySourceFileToDelete = null;
+        },
+        downloadMoneySourceFile(file) {
+            let link = document.createElement('a');
+            link.href = route('money_sources_download_file', {money_source_file: file});
+            link.target = '_blank';
+            link.click();
+        },
 
+        updateTask(task){
             if(!task.done) {
                 Inertia.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true} );
             } else {

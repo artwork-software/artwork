@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
+use App\Http\Resources\MoneySourceFileResource;
 use App\Models\ColumnCell;
 use App\Models\MainPosition;
 use App\Models\MoneySource;
@@ -145,6 +146,9 @@ class MoneySourceController extends Controller
      */
     public function show(MoneySource $moneySource)
     {
+        $moneySource->load([
+            'money_source_files'
+            ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
@@ -250,6 +254,7 @@ class MoneySourceController extends Controller
                 'end_date' => $moneySource->end_date,
                 'users' => json_decode($moneySource->users),
                 'group_id' => $moneySource->group_id,
+                'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
                 'subMoneySources' => $subMoneySources->map(fn ($source) => [
                     'id' => $source->id,

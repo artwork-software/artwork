@@ -13,6 +13,7 @@ class Comment extends Model
         'text',
         'project_id',
         'project_file_id',
+        'money_source_file_id',
         'contract_id',
         'user_id',
     ];
@@ -35,6 +36,11 @@ class Comment extends Model
     public function project_file()
     {
         return $this->belongsTo(ProjectFile::class, 'project_file_id');
+    }
+
+    public function money_source_file()
+    {
+        return $this->belongsTo(MoneySourceFile::class, 'money_source_file_id');
     }
 
 

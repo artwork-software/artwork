@@ -21,6 +21,7 @@ use App\Http\Controllers\GenreController;
 use App\Http\Controllers\GlobalNotificationController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\MoneySourceController;
+use App\Http\Controllers\MoneySourceFileController;
 use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
@@ -123,10 +124,16 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
-    Route::patch('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
-    Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');;
+    Route::post('/project_files/{project_file}', [ProjectFileController::class, 'update'])->name('project_files.update');
+    Route::get('/project_files/{project_file}', [ProjectFileController::class, 'download'])->name('download_file');
     Route::delete('/project_files/{project_file}', [ProjectFileController::class, 'destroy']);
     Route::delete('/project_files/{id}/force_delete', [ProjectFileController::class, 'force_delete']);
+
+    //MoneySourceFiles
+    Route::post('/money_sources/{money_source}/files', [MoneySourceFileController::class, 'store'])->name('money_sources_files.store');
+    Route::post('/money_sources/{money_source_file}/files/update', [MoneySourceFileController::class, 'update'])->name('money_sources_files.update');
+    Route::get('/money_sources/{money_source_file}/files', [MoneySourceFileController::class, 'download'])->name('money_sources_download_file');
+    Route::delete('/money_sources/{money_source_file}/files', [MoneySourceFileController::class, 'destroy']);
 
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');

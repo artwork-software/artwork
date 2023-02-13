@@ -66,6 +66,10 @@ class MoneySource extends Model
             'is_group' => $this->is_group
         ];
     }
+    public function money_source_files()
+    {
+        return $this->hasMany(MoneySourceFile::class);
+    }
 
 
 }

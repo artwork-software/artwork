@@ -65,7 +65,7 @@
                         </div>
                     </div>
                     <div v-if="isExcludeTab">
-                        <h2 class="xsLight mb-2 mt-8">
+                        <h2 class="xsLight mb-2 mt-4">
                             Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
                             Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
                             das Projektbudget haben.

@@ -215,7 +215,7 @@
                         <td v-for="(cell,index) in row.cells"
                             :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
                             <div
-                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
+                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300' : '']"
                                 class="my-4 h-6 flex items-center justify-end"
                                 @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
@@ -232,18 +232,18 @@
                                     {{ cell.value }}
                                 </div>
                             </div>
-                            <div class="flex items-center justify-end"
-                                 :class="index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48'"
+                            <div class=" flex items-center"
+                                 :class="index <= 1 ? 'w-24 ml-5' : index === 2 ? 'w-72 ml-12' : 'w-48 ml-5'"
                                  v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                 <input
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44'"
-                                    class="my-2 xsDark text-right"
+                                    class="my-2 xsDark text-right appearance-none z-10"
                                     :type="index > 2 ? 'number' : 'text'"
                                     v-model="cell.value"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
                             <div
                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
@@ -586,6 +586,16 @@ export default {
 
 .lightGreenColumn {
     background-color: #35A965;
+}
+@layer base {
+    input[type=number].appearance-none::-webkit-inner-spin-button,
+    input[type=number].appearance-none::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type=number].appearance-none {
+        -moz-appearance:textfield;
+    }
 }
 
 </style>

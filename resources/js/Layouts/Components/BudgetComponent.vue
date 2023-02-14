@@ -1089,11 +1089,11 @@ export default {
         },
         deletePosition() {
             if (this.mainPositionToDelete !== null) {
-                this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id))
+                this.$inertia.delete(route('project.budget.main-position.delete', this.mainPositionToDelete.id),{preserveState: true, preserveScroll: true})
                 this.successHeading = "Hauptposition gelöscht"
                 this.successDescription = "Hauptposition " + this.mainPositionToDelete.name + " erfolgreich gelöscht"
             } else if (this.subPositionToDelete !== null) {
-                this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id))
+                this.$inertia.delete(route('project.budget.sub-position.delete', this.subPositionToDelete.id),{preserveState: true, preserveScroll: true})
                 this.successHeading = "Unterposition gelöscht"
                 this.successDescription = "Unterposition " + this.subPositionToDelete.name + " erfolgreich gelöscht"
             } else {
@@ -1145,9 +1145,9 @@ export default {
         submitVerifiedModal() {
             if(this.budgetAccess.includes(this.submitVerifiedModalData.user) || this.submitVerifiedModalData.giveBudgetAccess){
                 if (this.submitVerifiedModalData.is_main) {
-                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'));
+                    this.submitVerifiedModalData.post(route('project.budget.verified.main-position.request'),{preserveState: true, preserveScroll: true});
                 } else {
-                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'));
+                    this.submitVerifiedModalData.post(route('project.budget.verified.sub-position.request'),{preserveState: true, preserveScroll: true});
                 }
                 this.closeVerifiedModal(true);
             } else {
@@ -1217,7 +1217,7 @@ export default {
             this.showDeleteModal = true;
         },
         resetBudgetTable(){
-            this.$inertia.patch(this.route('project.budget.reset.table', this.project.id), {preserveState: true, preserveScroll: true})
+            this.$inertia.patch(this.route('project.budget.reset.table', this.project.id),{}, {preserveState: true, preserveScroll: true})
             this.resetWanted= false;
             this.showDeleteModal = false;
         },

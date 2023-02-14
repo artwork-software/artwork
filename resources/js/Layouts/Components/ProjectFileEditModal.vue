@@ -26,9 +26,9 @@
                     />
                     <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-secondary border-dotted border-2 h-32 bg-stone-100 p-2 cursor-pointer">
-                        <p class="text-secondary text-center">Ziehe das Dokument hier her
-                            <br>oder klicke ins Feld
+                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
+                            <br>oder ins Feld klicken
                         </p>
                     </div>
                     <jet-input-error :message="uploadDocumentFeedback"/>

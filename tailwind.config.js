@@ -35,7 +35,8 @@ module.exports = {
                 lightBackgroundGray: '#F4F4F3',
                 checkBoxBg: '#474459',
                 silverGray:'#CECDD8',
-                userBg: '#EDEDEC'
+                userBg: '#EDEDEC',
+                colorOfAction: '#E8E4f5',
             },
             fontSize: {
                 header: '30px'

@@ -3,13 +3,16 @@
         <div class="py-4">
             <div class="max-w-screen-2xl mb-40 my-12 flex flex-row ml-14 mr-40">
                 <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
+                    <div class="w-full flex my-auto">
                         <div class="flex flex-wrap w-full">
                             <div class="flex flex-wrap w-full">
-                                <div class="justify-center flex w-full mb-6">
+                                <div class="flex w-full mb-6">
                                     <h2 class="headline1">Verträge</h2>
-                                    <ContractFilter class="ml-auto" @filter="filterContracts" />
+                                    <div class="flex ml-60">
+                                        <ContractFilter class="ml-auto" @filter="filterContracts" />
+                                    </div>
                                 </div>
+
                                 <div class="flex w-full mb-4" >
                                     <div v-for="filter in costNames">
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
@@ -21,11 +24,11 @@
                                         <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin && contractsCopy.data.length !== 0">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
                                 </div>
-                                <div v-else>
+                                <div v-else class="text-secondary">
                                     <p>Bisher wurden für dich noch keine Verträge freigegeben.</p>
                                 </div>
                             </div>
@@ -64,7 +67,7 @@ export default {
     ],
     data() {
         return {
-            show: false,
+            show: true,
             contractsCopy: this.contracts,
             filters: {},
             costNames: [],

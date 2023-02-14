@@ -42,7 +42,7 @@ class BudgetTemplateController extends Controller
 
         $templates = null;
 
-        if(request('useTemplates')){
+        if (request('useTemplates')) {
             $templates = Table::where('is_template', true)->get();
         }
 
@@ -86,7 +86,7 @@ class BudgetTemplateController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param \Illuminate\Http\Request $request
      * @return \Illuminate\Http\Response
      */
     public function store(Table $table, Request $request)
@@ -95,7 +95,8 @@ class BudgetTemplateController extends Controller
         $this->createTemplate($request->template_name, $oldTable);
     }
 
-    private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null){
+    private function createTemplate($name, $oldTable, $isTemplate = true, $projectId = null)
+    {
 
         $newTable = Table::create([
             'name' => $name,
@@ -113,7 +114,7 @@ class BudgetTemplateController extends Controller
             ]);
         });
 
-        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ( $newTable){
+        $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable) {
             $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_mainPosition->save();
             $mainPosition->subPositions->map(function (SubPosition $subPosition) use ($replicated_mainPosition) {
@@ -149,7 +150,8 @@ class BudgetTemplateController extends Controller
         });
     }
 
-    public function useTemplate(Table $table, Request $request){
+    public function useTemplate(Table $table, Request $request)
+    {
         $project = Project::find($request->project_id);
 
         $this->deleteOldTable($project);
@@ -159,28 +161,32 @@ class BudgetTemplateController extends Controller
         return back()->with('success');
     }
 
-    public function useTemplateFromProject(Request $request){
+    public function useTemplateFromProject(Request $request)
+    {
+        if ($request->template_project_id !== $request->project_id) {
         $templateProject = Project::find($request->template_project_id);
         $project = Project::find($request->project_id);
 
-        $this->deleteOldTable($project);
+            $this->deleteOldTable($project);
 
-        $this->createTemplate($templateProject->name . ' Budgettabelle', $templateProject->table()->first(), false, $project->id);
+            $this->createTemplate($templateProject->name . ' Budgettabelle', $templateProject->table()->first(), false, $project->id);
+        }
     }
 
-    public function deleteOldTable(Project $project){
+    public function deleteOldTable(Project $project)
+    {
         $tableToDelete = $project->table()->first();
 
         // delete old budget table
         $tableToDelete->columns()->delete();
         $mainPositions = $tableToDelete->mainPositions()->get();
-        foreach ($mainPositions as $mainPosition){
+        foreach ($mainPositions as $mainPosition) {
             $subPositions = $mainPosition->subPositions()->get();
-            foreach ($subPositions as $subPosition){
+            foreach ($subPositions as $subPosition) {
                 $subPositionRows = $subPosition->subPositionRows()->get();
-                foreach ($subPositionRows as $subPositionRow){
+                foreach ($subPositionRows as $subPositionRow) {
                     $cells = $subPositionRow->cells()->get();
-                    foreach ($cells as $cell){
+                    foreach ($cells as $cell) {
                         $cell->comments()->delete();
                         $cell->calculations()->delete();
                         $cell->delete();
@@ -199,7 +205,7 @@ class BudgetTemplateController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
@@ -210,7 +216,7 @@ class BudgetTemplateController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function edit($id)
@@ -221,8 +227,8 @@ class BudgetTemplateController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param \Illuminate\Http\Request $request
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
@@ -233,7 +239,7 @@ class BudgetTemplateController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param int $id
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

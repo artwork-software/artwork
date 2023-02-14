@@ -91,7 +91,7 @@
     }
 
     .xsLight{
-        font: normal normal 14px/20px Inter;
+        font: normal normal bold 14px/20px Inter;
         letter-spacing: -0.07px;
         color: #A7A6B1;
         opacity: 1;

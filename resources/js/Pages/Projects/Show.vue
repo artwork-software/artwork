@@ -857,10 +857,10 @@
                                 multiple
                             />
                             <div @click="selectNewFiles" @dragover.prevent
-                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-8 w-full flex justify-center items-center
-                        border-secondary border-dotted border-2 h-40 bg-stone-100 p-2 cursor-pointer">
-                                <p class="text-secondary text-center">Ziehe Dokumente hier her
-                                    <br>oder klicke ins Feld
+                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
+                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                                <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
+                                    <br>oder ins Feld klicken
                                 </p>
                             </div>
                             <jet-input-error :message="uploadDocumentFeedback"/>
@@ -942,7 +942,7 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="flex mt-14 p-5 bg-lightBackgroundGray w-full">
+                <div v-if="isBudgetTab" class="flex mt-6 p-5 bg-lightBackgroundGray w-full">
                     <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
                                      :selectedRow="budget.selectedRow" :templates="budget.templates"
                                      :money-sources="moneySources" :budget-access="access_budget"
@@ -1299,7 +1299,7 @@
                     <XIcon @click="closeEditProjectTeamModal"
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
+                    <div class="xsLight">
                         Tippe den Namen der Nutzer*innen, die du zum Team hinzufügen möchtest.
                         Die Nutzer*innen erhalten Lesezugriff auf dieses Projekt.
                         Weiterreichende Rechte kann nur die Projektleitung vergeben.

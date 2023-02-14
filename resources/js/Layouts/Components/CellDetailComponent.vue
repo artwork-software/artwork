@@ -121,7 +121,7 @@
                     </div>
                     <!-- Link Tab -->
                     <div v-if="isLinkTab">
-                        <h2 class="xsLight mb-2 mt-8">
+                        <h2 class="xsLight mb-2 mt-4">
                             Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert entweder zur
                             Quelle/-gruppe addieren oder subtrahieren.
                         </h2>
@@ -184,7 +184,7 @@
                         </div>
                     </div>
                     <div v-if="isExcludeTab">
-                        <h2 class="xsLight mb-2 mt-8">
+                        <h2 class="xsLight mb-2 mt-4">
                             Ausgeklammerte Posten werden nicht in das Projektbudget gerechnet. So kannst du zB. internes
                             Personal, virtuelle Kosten wie Eigenleistungen oä. aufführen, ohne dass diese Einfluss auf
                             das Projektbudget haben.
@@ -251,8 +251,8 @@ export default {
             linkedType: this.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
             selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
             linkTypes,
-            isCalculateTab: this.cell.column.type === 'empty',
-            isCommentTab: this.cell.column.type !== 'empty',
+            isCalculateTab: this.cell.column.type === 'empty' && !this.cell.column.is_locked,
+            isCommentTab: this.cell.column.type !== 'empty' || this.cell.column.is_locked,
             isExcludeTab: false,
             isLinkTab: false,
             hoveredBorder: false,
@@ -276,12 +276,21 @@ export default {
     computed: {
         tabs() {
             if (this.cell.column.type === 'empty') {
-                return [
-                    {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
-                    {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                    {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
-                    {name: 'Verlinkung', href: '#', current: this.isLinkTab},
-                ]
+                if(this.cell.column.is_locked){
+                    return [
+                        {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                        {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                        {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+                    ]
+                }else{
+                    return [
+                        {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
+                        {name: 'Kommentar', href: '#', current: this.isCommentTab},
+                        {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
+                        {name: 'Verlinkung', href: '#', current: this.isLinkTab},
+                    ]
+                }
+
             } else {
                 return [
                     {name: 'Kommentar', href: '#', current: this.isCommentTab},

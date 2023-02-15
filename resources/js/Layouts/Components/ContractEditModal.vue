@@ -314,14 +314,20 @@
                                 </div>
                             </div>
 
-                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form" @add-task="addTask"/>
+                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form" @add-task="addTask" @showError="showError"/>
 
-                            <button type="button"
-                                    @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"
-                                    class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
-                                <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
-                                <p class="text-sm">Neue Aufgabe</p>
-                            </button>
+                            <div class="flex justify-between">
+                                <button v-if="!creatingNewTask" type="button"
+                                        @click="[creatingNewTask = !creatingNewTask]"
+                                        class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                    <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                    <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
+                                </button>
+
+                                <button class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none" v-if="creatingNewTask" @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
+                                    Aufgabe im Vertrag speichern
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -340,8 +346,8 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="this.file === null"
-                               @click="updateContract"/>
+                    <button class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none" :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'" :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
+                            @click="updateContract">Speichern</button>
                 </div>
             </div>
 
@@ -415,6 +421,9 @@ export default {
         })
     },
     methods: {
+        showError(){
+            this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+        },
         addUserToContractUserArray(user) {
             if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
                 this.usersWithAccess.push(user);
@@ -462,8 +471,6 @@ export default {
             this.closeModal()
         },
         addTask(task) {
-            console.log(task)
-            console.log(this.tasks)
             if(this.tasks) {
                 this.tasks.push(task)
             }
@@ -471,7 +478,6 @@ export default {
                 this.tasks = []
                 this.tasks.push(task)
             }
-            console.log(this.tasks)
         },
         updateContract() {
             this.contractForm.file = this.file;
@@ -519,13 +525,14 @@ export default {
             hasPowerOfAttorney: this.contract?.has_power_of_attorney,
             isFreed: this.contract?.is_freed,
             tasks: [],
+            errorText:null,
             showExtraSettings: false,
             contractAmount: this.contract?.amount,
             contractForm: useForm({
                 file: this.contract?.basename,
                 contract_partner: this.contract?.partner,
-                company_type_id: this.contract?.company_type.id,
-                contract_type_id: this.contract?.contract_type.id,
+                company_type_id: this.contract?.company_type?.id,
+                contract_type_id: this.contract?.contract_type?.id,
                 amount: this.contract?.amount,
                 ksk_liable: this.contract?.ksk_liable,
                 resident_abroad: this.contract?.resident_abroad,

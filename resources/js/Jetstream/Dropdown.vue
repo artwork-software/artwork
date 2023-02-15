@@ -1,7 +1,7 @@
 <template>
     <div class="relative">
-        <div @click="open = ! open">
-            <slot name="trigger"></slot>
+        <div class="flex" @click="open = ! open">
+            <slot name="trigger"></slot><ChevronDownIcon v-if="!open" class="h-5 w-5 text-primary" aria-hidden="true"/> <ChevronUpIcon v-else class="h-5 w-5 text-primary" aria-hidden="true"/>
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
@@ -30,6 +30,7 @@
 
 <script>
 import { defineComponent, onMounted, onUnmounted, ref } from "vue";
+import {ChevronDownIcon, ChevronUpIcon} from "@heroicons/vue/solid";
 
 export default defineComponent({
     props: {
@@ -59,6 +60,10 @@ export default defineComponent({
         return {
             open,
         }
+    },
+    components: {
+      ChevronUpIcon,
+      ChevronDownIcon
     },
 
     computed: {

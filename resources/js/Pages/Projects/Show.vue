@@ -942,11 +942,13 @@
                         </div>
                     </div>
                 </div>
-                <div v-if="isBudgetTab" class="flex mt-6 p-5 bg-lightBackgroundGray w-full">
-                    <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
-                                     :selectedRow="budget.selectedRow" :templates="budget.templates"
-                                     :money-sources="moneySources" :budget-access="access_budget"
-                                     :project-manager="projectManagerIds"></BudgetComponent>
+                <div class="mt-6">
+                    <div v-if="isBudgetTab" class="flex bg-lightBackgroundGray w-[95%]">
+                        <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
+                                         :selectedRow="budget.selectedRow" :templates="budget.templates"
+                                         :money-sources="moneySources" :budget-access="access_budget"
+                                         :project-manager="projectManagerIds"></BudgetComponent>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1371,7 +1373,7 @@
                                 </div>
                                 <button type="button" @click="deleteUserFromProjectTeam(user)">
                                     <span class="sr-only">User aus Team entfernen</span>
-                                    <XCircleIcon class="ml-3 h-5 w-5 hover:text-error "/>
+                                    <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
                             <div class="flex justify-between items-center my-1.5 h-5 w-80">
@@ -1384,11 +1386,11 @@
                                     <p :class="[user.can_write ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">Schreibrecht</p>
                                    </div>
-                                    <Dropdown align="right" width="60" class="text-right">
+                                    <Dropdown :open="user.openedMenu" align="right" width="60" class="text-right">
                                         <template #trigger>
                                             <span class="inline-flex">
-                                                <button type="button"
-                                                        class="text-sm ml-14 my-auto text-sm text-secondary focus:outline-none transition">
+                                                <button @click="user.openedMenu = !user.openedMenu" type="button"
+                                                        class="text-sm flex items-center ml-14 my-auto text-primary font-semibold focus:outline-none transition">
                                                     Weitere Rechte
                                                 </button>
                                             </span>
@@ -1433,7 +1435,7 @@
                     </div>
                     <div class="w-full items-center text-center">
                         <AddButton @click="editProjectTeam" text="Speichern" mode="modal"
-                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg  uppercase shadow-sm text-secondaryHover"
+                                   class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
                         />
                     </div>
                 </div>

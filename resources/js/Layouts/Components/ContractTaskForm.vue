@@ -10,7 +10,6 @@
             <div class="w-full flex">
                 <input v-model="deadlineDate"
                        id="startDate"
-                       @change="updateTimes"
                        type="text"
                        placeholder="Zu erledigen bis?"
                        required
@@ -18,7 +17,6 @@
                        class="border-gray-300 h-12 inputMain bg-transparent xsDark placeholder-secondary disabled:border-none flex-grow"/>
                 <input v-model="deadlineTime"
                        id="changeStartTime"
-                       @change="updateTimes"
                        type="time"
                        required
                        class="border-gray-300 h-12 inputMain xsDark placeholder-secondary bg-transparent disabled:border-none"/>
@@ -50,7 +48,9 @@
                 </div>
             </transition>
         </div>
-
+        <div class="flex mt-1 -mb-2 justify-center text-sm text-error">
+            {{this.errorText}}
+        </div>
         <div v-if="taskUsers.length > 0" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in taskUsers"
                                               class="flex mr-5 rounded-full items-center font-bold text-primary">
@@ -101,7 +101,8 @@ export default {
             task_user_search_results: [],
             task_user_query: '',
             newTaskName: '',
-            taskUsers: []
+            taskUsers: [],
+            errorText:''
         }
     },
     watch: {
@@ -111,12 +112,9 @@ export default {
                     axios.get('/users/search', {
                         params: {query: this.task_user_query}
                     }).then(response => {
-                        console.log(response.data)
-                        console.log(this.users)
                         this.task_user_search_results = response.data.filter(user => this.users.some(docUser => {
                             return docUser.id === user.id
                         }))
-                        console.log(this.task_user_search_results)
                     })
                 }
             },
@@ -127,6 +125,7 @@ export default {
         addUserToTaskUserArray(user) {
             if (!this.taskUsers.find(userToAdd => userToAdd.id === user.id)) {
                 this.taskUsers.push(user);
+                this.errorText = '';
             }
             this.task_user_query = '';
         },
@@ -140,24 +139,33 @@ export default {
                 }
                 this.deadline = this.formatDate(this.deadlineDate, this.deadlineTime);
             }
-            let task = {
-                "name": this.newTaskName,
-                "description": this.taskDescription,
-                "deadline": this.deadline,
-                "assigned_users": this.taskUsers,
-                "done": false,
-                "new": true
+            if(this.taskUsers.length > 0){
+                let task = {
+                    "name": this.newTaskName,
+                    "description": this.taskDescription,
+                    "deadline": this.deadline,
+                    "assigned_users": this.taskUsers,
+                    "done": false,
+                    "new": true
+                }
+                this.$emit('addTask', task)
+                this.clearForm();
+            }else{
+                this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+                this.$emit('showError');
             }
-            this.$emit('addTask', task)
-            this.newTaskName = ''
-            this.taskDescription = ''
-            this.deadlineDate = null
-            this.deadlineTime = null
-            this.taskUsers = []
         },
         formatDate(date, time) {
             if (date === null || time === null) return null;
             return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
+        },
+        clearForm(){
+            this.newTaskName = ''
+            this.taskDescription = ''
+            this.task_user_query = ''
+            this.deadlineDate = null
+            this.deadlineTime = null
+            this.taskUsers = []
         },
     }
 }

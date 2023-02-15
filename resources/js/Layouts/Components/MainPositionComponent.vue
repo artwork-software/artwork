@@ -215,7 +215,7 @@
                     <td class="w-48 my-4 p-1"
                         :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
-                            mainPosition.columnSums[column.id]
+                            mainPosition.columnSums[column.id]?.toLocaleString()
                         }}
                     </td>
                 </div>

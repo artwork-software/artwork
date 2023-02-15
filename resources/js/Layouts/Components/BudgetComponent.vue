@@ -248,7 +248,7 @@
             <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
-                        <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-11/12'" class="flex justify-between my-10">
+                        <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
                         <div class="headline4  flex">Ausgaben
                             <button class="w-6"
                                     @click="costsOpened = !costsOpened">
@@ -328,14 +328,14 @@
                         </Menu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                             class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Hauptposition
                                 <PlusCircleIcon
                                     class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
                         </div>
-                        <table class="w-11/12 mb-6">
+                        <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
@@ -353,7 +353,7 @@
                                     v-for="column in table.columns?.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(0, column.id)}}
+                                        {{ this.getSumOfTable(0, column.id)?.toLocaleString()}}
                                     </div>
                                 </td>
 
@@ -365,7 +365,7 @@
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedCostSums[column.id] }}
+                                        {{ table.commentedCostSums[column.id]?.toLocaleString() }}
                                     </div>
                                 </td>
                             </tr>
@@ -399,7 +399,7 @@
                                                  class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                             </button>
                         </div>
-                        <table class="w-11/12 mb-6">
+                        <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[1]">
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
@@ -417,7 +417,7 @@
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(1, column.id) }}
+                                        {{ this.getSumOfTable(1, column.id)?.toLocaleString() }}
                                     </div>
                                 </td>
 
@@ -429,7 +429,7 @@
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedEarningSums[column.id] }}
+                                        {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
                                     </div>
                                 </td>
                             </tr>
@@ -461,7 +461,7 @@
                         v-for="column in table.columns.slice(3)">
                         <div class="w-48 my-2 p-1"
                              :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
-                            {{ this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) }}
+                            {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
                         </div>
                     </td>
 

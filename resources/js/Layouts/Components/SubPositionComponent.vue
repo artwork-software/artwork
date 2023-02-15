@@ -229,7 +229,7 @@
                                     <img v-else-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                          class="h-6 w-6 mr-1"/>
-                                    {{ cell.value }}
+                                    {{ index < 3 ? cell.value : cell.value?.toLocaleString() }}
                                 </div>
                             </div>
                             <div class=" flex items-center"
@@ -259,7 +259,7 @@
                                 <img v-else-if="cell.linked_money_source_id !== null"
                                      src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                      class="h-6 w-6 mr-1"/>
-                                {{ cell.value }}
+                                {{ index < 3 ? cell.value : cell.value?.toLocaleString() }}
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked"
                                                 @click="openCellDetailModal(cell)"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -302,7 +302,7 @@
                     <div class="my-4 w-48 p-1"
                          :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
-                            subPosition.columnSums[column.id]
+                            subPosition.columnSums[column.id]?.toLocaleString()
                         }}
                     </div>
                 </td>

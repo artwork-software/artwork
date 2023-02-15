@@ -27,7 +27,7 @@
                                 <input id="password" v-model="form.password" type="password" class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent" placeholder="placeholder" />
                                 <label for="password" class="absolute left-0 text-sm -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Passwort*</label>
                             </div>
-
+                            <jet-input-error :message="errors.email" class="mt-2"/>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center">
                                     <Checkbox class="justify-between text-sm" :item=rememberCheckbox />
@@ -39,6 +39,7 @@
                                     </Link>
                                 </div>
                             </div>
+
 
                             <div>
                                 <button :disabled="this.form.email === '' || this.form.password === ''" :class="[this.form.email === '' || this.form.password === '' ? 'bg-secondary hover:bg-secondary' : '']" type="submit"
@@ -95,6 +96,7 @@ import {Head, Link} from '@inertiajs/inertia-vue3';
 import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AddButton from "@/Layouts/Components/AddButton";
+import JetInputError from "@/Jetstream/InputError.vue";
 
 
 const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
@@ -107,6 +109,7 @@ export default defineComponent({
         JetAuthenticationCardLogo,
         JetButton,
         JetInput,
+        JetInputError,
         JetCheckbox,
         JetLabel,
         JetValidationErrors,
@@ -118,13 +121,18 @@ export default defineComponent({
         canResetPassword: Boolean,
         status: String
     },
-
+    computed: {
+        errors() {
+            return this.$page.props.errors;
+        }
+    },
     data() {
         return {
             form: this.$inertia.form({
                 email: '',
                 password: '',
-                remember: false
+                remember: false,
+                error:'',
             })
         }
     },

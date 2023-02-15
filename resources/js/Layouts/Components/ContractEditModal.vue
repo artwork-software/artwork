@@ -340,7 +340,7 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Vertrag bearbeiten" mode="modal" class="px-6 py-3" :disabled="this.file === null"
+                    <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="this.file === null"
                                @click="updateContract"/>
                 </div>
             </div>

@@ -498,6 +498,19 @@ export default {
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
             this.contractForm.post(this.route('contracts.store', this.projectId));
+            this.contractForm.file = null;
+            this.contractForm.contract_partner = null;
+            this.contractForm.company_type_id = null;
+            this.contractForm.contract_type_id = null;
+            this.contractForm.amount = '';
+            this.contractForm.ksk_liable = false;
+            this.contractForm.resident_abroad = false;
+            this.contractForm.has_power_of_attorney = false;
+            this.contractForm.is_freed = false;
+            this.contractForm.description = '';
+            this.contractForm.currency = '€';
+            this.contractForm.accessibleUsers = [];
+            this.contractForm.tasks = [];
             this.closeModal()
         }
     }

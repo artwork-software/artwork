@@ -313,23 +313,29 @@
                                 </div>
                             </div>
 
-                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form" @add-task="addTask"/>
+                            <ContractTaskForm :show="creatingNewTask" :users="usersWithAccess" ref="task_form"
+                                              @add-task="addTask" @showError="showError"/>
+                            <div class="flex justify-between">
+                                <button v-if="!creatingNewTask" type="button"
+                                        @click="[creatingNewTask = !creatingNewTask]"
+                                        class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
+                                    <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
+                                    <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
+                                </button>
 
-                            <button type="button"
-                                    @click="[creatingNewTask ? $refs.task_form.saveTask() : creatingNewTask = !creatingNewTask]"
-                                    class="flex py-3 px-8 mt-1 items-center border border-2 mt-6 border-buttonBlue bg-backgroundGray hover:bg-gray-200 rounded-full shadow-sm text-buttonBlue hover:shadow-blueButton focus:outline-none">
-                                <PlusCircleIcon class="h-6 w-6 mr-2" aria-hidden="true"/>
-                                <p class="text-sm">Neue Aufgabe</p>
-                            </button>
+                                <button class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none" v-if="creatingNewTask" @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
+                                    Aufgabe im Vertrag speichern
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <AddButton text="Vertrag hochladen" mode="modal" class="px-6 py-3" :disabled="this.file === null"
-                               @click="storeContract"/>
+                    <button class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none" :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'" :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
+                               @click="storeContract">Vertrag hochladen</button>
                 </div>
-            </div>
+                </div>
 
         </template>
 
@@ -345,6 +351,7 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
+import Button from "@/Jetstream/Button.vue";
 
 const contractTypeArray = [
     'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
@@ -364,6 +371,7 @@ export default {
         extraSettings: Array,
     },
     components: {
+        Button,
         ContractTaskForm,
         JetDialogModal,
         JetInputError,
@@ -400,12 +408,13 @@ export default {
             legalFormArray,
             currencyArray,
             contractTypeArray,
+            errorText: null,
             creatingNewTask: false,
             tasks: [],
             uploadDocumentFeedback: "",
             file: null,
             description: "",
-            contractPartner: null,
+            contractPartner: '',
             selectedLegalForm: null,
             selectedContractType: null,
             selectedCurrency: '€',
@@ -444,8 +453,12 @@ export default {
         })
     },
     methods: {
+        showError(){
+          this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+        },
         addTask(task) {
             this.tasks.push(task)
+            this.errorText = null;
         },
         addUserToContractUserArray(user) {
             if (!this.usersWithAccess.find(userToAdd => userToAdd.id === user.id)) {
@@ -479,6 +492,39 @@ export default {
                 }
             }
         },
+        clearTaskForm() {
+            this.$refs.task_form.clearForm();
+        },
+        resetValues() {
+            this.contractForm.file = null;
+            this.contractForm.contract_partner = null;
+            this.contractForm.company_type_id = null;
+            this.contractForm.contract_type_id = null;
+            this.contractForm.amount = '';
+            this.contractForm.ksk_liable = false;
+            this.contractForm.resident_abroad = false;
+            this.contractForm.has_power_of_attorney = false;
+            this.contractForm.is_freed = false;
+            this.contractForm.description = '';
+            this.contractForm.currency = '€';
+            this.contractForm.accessibleUsers = [];
+            this.contractForm.tasks = [];
+            this.file = null;
+            this.description = "";
+            this.contractPartner = '';
+            this.selectedLegalForm = null;
+            this.selectedContractType = null;
+            this.selectedCurrency = '€';
+            this.user_search_results = [];
+            this.user_query = '';
+            this.usersWithAccess = [];
+            this.kskLiable = false;
+            this.isAbroad = false;
+            this.hasPowerOfAttorney = false;
+            this.isFreed = false;
+            this.tasks = [];
+            this.contractAmount = '';
+        },
         storeContract() {
             this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
@@ -498,6 +544,7 @@ export default {
             this.contractForm.accessibleUsers = userIds;
             this.contractForm.tasks = this.tasks
             this.contractForm.post(this.route('contracts.store', this.projectId));
+            this.resetValues();
             this.closeModal()
         }
     }

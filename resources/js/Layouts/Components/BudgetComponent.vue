@@ -1,7 +1,7 @@
 <template>
 
-    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 ">
-        <div class="flex justify-between">
+    <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6">
+        <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start headline2">
                 {{ table.name }}
                 <Menu as="div" class="ml-4">
@@ -86,17 +86,15 @@
 
             </div>
             <div class=" mb-5">
-                <button @click="openAddColumnModal()" class="text-white font-bold text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
-                    <PlusIcon class="h-5 w-5"></PlusIcon>
-                </button>
+
             </div>
         </div>
         <div class="w-full flex">
-            <table class="w-full flex ml-16">
+            <table class="w-full flex ml-6">
                 <thead>
                 <tr>
                     <th v-for="(column,index) in table.columns"
-                        :class="index <= 1 ? 'w-16' : index === 2 ? 'w-64' : 'w-52'" class="text-right">
+                        :class="index <= 1 ? 'pl-2 w-28 text-left' : index === 2 ? 'w-64 text-left pl-2' : index === 3 ? 'w-52 text-right' : 'w-48 px-1 text-right'">
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
@@ -156,7 +154,7 @@
                                     </span>
                                 </div>
                                 <div @click="column.clicked = !column.clicked"
-                                     :class="index <= 1 ? 'w-16' : index === 2 ? 'w-64' : 'w-40'" class="h-5 pr-1 mr-1 xsDark flex justify-end"
+                                     :class="index <= 1 ? 'w-16 justify-start' : index === 2 ? 'w-64 justify-start' : index === 3 ? 'w-48 justify-end' : 'w-40 px-3 justify-end'" class="h-5 pr-1 mr-1 xsDark flex "
                                      v-if="!column.clicked">
                                     <svg v-if="column.is_locked" xmlns="http://www.w3.org/2000/svg" width="11.975"
                                          height="13.686" class="mr-2 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
@@ -164,14 +162,13 @@
                                               d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
                                               fill="#27233C"/>
                                     </svg>
-
                                     {{ column.name }}
 
                                 </div>
                                 <div v-else>
                                     <input
-                                        :class="index <= 1 ? 'w-20' : index === 2 ? 'w-64' : 'w-40'"
-                                        class="my-2 xsDark pr-2 text-right" type="text"
+                                        :class="index <= 1 ? 'w-16 text-left' : index === 2 ? 'w-64 text-left' : index === 3 ? 'w-48 text-right' : 'w-40 text-right'"
+                                        class="xsDark h-5  pr-1 mr-1 flex " type="text"
                                         v-model="column.name"
                                         @focusout="updateColumnName(column); column.clicked = !column.clicked">
                                 </div>
@@ -181,7 +178,7 @@
                                     <MenuButton
                                         class="flex ">
                                         <DotsVerticalIcon
-                                            class="flex-shrink-0 h-6 w-6 text-gray-600"
+                                            class="flex-shrink-0 h-5 w-5 text-gray-600"
                                             aria-hidden="true"/>
                                     </MenuButton>
                                 </div>
@@ -235,11 +232,14 @@
                                     </MenuItems>
                                 </transition>
                             </Menu>
-                            <div v-if="showMenu !== column.id" class="w-6">
+                            <div v-if="showMenu !== column.id" class="w-5">
 
                             </div>
                         </div>
                     </th>
+                    <button @click="openAddColumnModal()" class="text-white font-bold ml-4 text-xl bg-buttonBlue p-1 hover:bg-buttonHover rounded-full items-center uppercase shadow-sm text-secondaryHover">
+                        <PlusIcon class="h-4 w-4"></PlusIcon>
+                    </button>
                 </tr>
                 </thead>
             </table>
@@ -248,7 +248,7 @@
             <div class="flex flex-wrap w-full bg-secondaryHover border border-2 border-gray-300">
                 <div class="w-full flex">
                     <div class="bg-secondaryHover ml-5 w-full" v-if="costsOpened">
-                        <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-11/12'" class="flex justify-between my-10">
+                        <div :class="table.columns?.length > 5 ? 'mr-5' : 'w-[97%]'" class="flex justify-between my-10">
                         <div class="headline4  flex">Ausgaben
                             <button class="w-6"
                                     @click="costsOpened = !costsOpened">
@@ -328,14 +328,14 @@
                         </Menu>
                         </div>
                         <div @click="addMainPosition('BUDGET_TYPE_COST', positionDefault)"
-                             class="group w-11/12 bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
+                             class="group w-[97%] bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Hauptposition
                                 <PlusCircleIcon
                                     class="h-6 w-6 ml-12 text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
                         </div>
-                        <table class="w-11/12 mb-6">
+                        <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[0]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[0]">
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
@@ -353,7 +353,7 @@
                                     v-for="column in table.columns?.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(0, column.id)}}
+                                        {{ this.getSumOfTable(0, column.id)?.toLocaleString()}}
                                     </div>
                                 </td>
 
@@ -365,7 +365,7 @@
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedCostSums[column.id] }}
+                                        {{ table.commentedCostSums[column.id]?.toLocaleString() }}
                                     </div>
                                 </td>
                             </tr>
@@ -399,7 +399,7 @@
                                                  class="h-6 w-6 text-primary my-auto"></ChevronDownIcon>
                             </button>
                         </div>
-                        <table class="w-11/12 mb-6">
+                        <table class="w-[97%] mb-6">
                             <tbody class="">
                             <tr v-if="tablesToShow[1]?.length > 0" v-for="(mainPosition,mainIndex) in tablesToShow[1]">
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
@@ -417,7 +417,7 @@
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(1, column.id) }}
+                                        {{ this.getSumOfTable(1, column.id)?.toLocaleString() }}
                                     </div>
                                 </td>
 
@@ -429,7 +429,7 @@
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1">
-                                        {{ table.commentedEarningSums[column.id] }}
+                                        {{ table.commentedEarningSums[column.id]?.toLocaleString() }}
                                     </div>
                                 </td>
                             </tr>
@@ -461,7 +461,7 @@
                         v-for="column in table.columns.slice(3)">
                         <div class="w-48 my-2 p-1"
                              :class="this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) < 0 ? 'text-red-500' : ''">
-                            {{ this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id) }}
+                            {{ (this.getSumOfTable(1, column.id) - this.getSumOfTable(0, column.id)).toLocaleString() }}
                         </div>
                     </td>
 

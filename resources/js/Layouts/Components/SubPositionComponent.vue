@@ -211,15 +211,15 @@
                     <div class="flex items-center">
                         <PlusCircleIcon @click="openRowDetailModal(row)"
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
-                                        class="h-6 w-6 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                        class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72' : 'w-48', checkCellColor(cell,mainPosition,subPosition)]">
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', checkCellColor(cell,mainPosition,subPosition)]">
                             <div
-                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300' : '']"
-                                class="my-4 h-6 flex items-center justify-end"
+                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300' : '']"
+                                class="my-4 h-6 flex items-center"
                                 @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
-                                <div class="pr-2 flex items-center">
+                                <div class=" flex items-center">
                                     <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
                                     src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
                                     class="h-6 w-6 mr-1"/>
@@ -229,15 +229,15 @@
                                     <img v-else-if="cell.linked_money_source_id !== null"
                                          src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                          class="h-6 w-6 mr-1"/>
-                                    {{ cell.value }}
+                                    {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                 </div>
                             </div>
                             <div class=" flex items-center"
-                                 :class="index <= 1 ? 'w-24 ml-5' : index === 2 ? 'w-72 ml-12' : 'w-48 ml-5'"
+                                 :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
                                  v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                 <input
-                                    :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44'"
-                                    class="my-2 xsDark text-right appearance-none z-10"
+                                    :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
+                                    class="my-2 xsDark  appearance-none z-10"
                                     :type="index > 2 ? 'number' : 'text'"
                                     v-model="cell.value"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
@@ -246,8 +246,8 @@
                                                 class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                             </div>
                             <div
-                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48', cell.value < 0 ? 'text-red-500' : '']"
-                                class="my-4 h-6 flex items-center justify-end text-right"
+                                :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
+                                class="my-4 h-6 flex items-center justify-end"
                                 @click="cell.clicked = !cell.clicked && cell.column.is_locked"
                                 v-else>
                                 <img v-if="cell.linked_money_source_id !== null && (cell.comments_count > 0 || cell.calculations_count > 0)"
@@ -259,7 +259,7 @@
                                 <img v-else-if="cell.linked_money_source_id !== null"
                                      src="/Svgs/IconSvgs/icon_linked_money_source.svg"
                                      class="h-6 w-6 mr-1"/>
-                                {{ cell.value }}
+                                {{ index < 3 ? cell.value : Number(cell.value)?.toLocaleString() }}
                                 <PlusCircleIcon v-if="index > 2 && cell.clicked"
                                                 @click="openCellDetailModal(cell)"
                                                 class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
@@ -302,7 +302,7 @@
                     <div class="my-4 w-48 p-1"
                          :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
                         {{
-                            subPosition.columnSums[column.id]
+                            subPosition.columnSums[column.id]?.toLocaleString()
                         }}
                     </div>
                 </td>

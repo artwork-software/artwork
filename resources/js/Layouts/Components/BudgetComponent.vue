@@ -765,7 +765,7 @@ export default {
             verifiedTexts: {
                 title: 'Verifizierung',
                 positionTitle: '',
-                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? <br> Lasse deine Hauptposition durch eine Nutzer*in verifizieren.'
+                description: 'Sind alle Zahlen richtig kalkuliert? Ist die Kalkulation plausibel? <br> Lasse deine Hauptposition durch eine Nutzer*in verifizieren. '
             },
             showVerifiedModal: false,
             user_search_results: [],

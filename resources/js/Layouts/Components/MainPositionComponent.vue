@@ -202,7 +202,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table"></SubPositionComponent>
+                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -275,7 +275,7 @@ export default {
         ConfirmationComponent
     },
     props: ['mainPosition','table','project'],
-    emits:['openDeleteModal'],
+    emits:['openDeleteModal','openErrorModal'],
     data(){
       return{
           showMenu: null,
@@ -316,7 +316,7 @@ export default {
 
       }
     },
-    emit:['openDeleteModal','openVerifiedModal','openRowDetailModal'],
+    emit:['openDeleteModal','openVerifiedModal','openRowDetailModal','openErrorModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -419,7 +419,12 @@ export default {
             this.$inertia.patch(this.route('project.budget.unfix.main-position'), {
                 mainPositionId: mainPositionId
             })
-        }
+        },
+        openErrorModal(title, description) {
+            this.confirmationTitle = title;
+            this.confirmationDescription = description
+            this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
+        },
     },
 
 }

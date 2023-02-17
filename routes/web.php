@@ -372,8 +372,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // Templates
     Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
 
+    //CopyRight
+    Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
     Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
+    //Cost Center
+    Route::post('/cost_center', [CostCenterController::class, 'store'])->name('costCenter.store');
     Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
 
     // ContractTypes

@@ -341,7 +341,9 @@
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
                                                        @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
-                                                       @openDeleteModal="openDeleteModal" :table="table"
+                                                       @openDeleteModal="openDeleteModal"
+                                                       @open-error-modal="openErrorModal"
+                                                       :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"></MainPositionComponent>
                             </tr>
@@ -405,7 +407,8 @@
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
                                                        @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
-                                                       @openDeleteModal="openDeleteModal" :table="table"
+                                                       @openDeleteModal="openDeleteModal"
+                                                       @open-error-modal="openErrorModal" :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"></MainPositionComponent>
                             </tr>
@@ -657,6 +660,13 @@
         :titel="this.confirmationTitle"
         :description="this.confirmationDescription"
         @closed="afterConfirm"/>
+    <!-- Modal für Error-Info -->
+    <error-component
+        v-if="showErrorModal"
+        confirm="Ok"
+        :titel="this.errorTitle"
+        :description="this.errorDescription"
+        @closed="afterErrorConfirm"/>
 
 </template>
 
@@ -689,6 +699,7 @@ import UseTemplateFromProjectBudgetComponent from "@/Layouts/Components/UseTempl
 import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateComponent.vue";
 import Button from "@/Jetstream/Button.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
+import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 
 export default {
     name: 'BudgetComponent',
@@ -723,12 +734,12 @@ export default {
         UseTemplateComponent,
         AddBudgetTemplateComponent,
         PlusIcon,
-        RenameTableComponent
+        RenameTableComponent,
+        ErrorComponent
     },
 
     data() {
         return {
-
             showBudgetAccessModal: false,
             costsOpened: true,
             earningsOpened: true,
@@ -744,11 +755,14 @@ export default {
             hoveredRow: null,
             showMenu: null,
             showDeleteModal: false,
+            showErrorModal: false,
             mainPositionToDelete: null,
             subPositionToDelete: null,
             rowToDelete: null,
             confirmationTitle: '',
             confirmationDescription: '',
+            errorTitle:'',
+            errorDescription:'',
             showSuccessModal: false,
             successHeading: '',
             successDescription: '',
@@ -1084,8 +1098,9 @@ export default {
             }else{
                 this.deletePosition();
             }
-
-
+        },
+        afterErrorConfirm(bool){
+          this.showErrorModal = false;
         },
         deletePosition() {
             if (this.mainPositionToDelete !== null) {
@@ -1223,6 +1238,11 @@ export default {
         },
         deleteBudgetTemplate(){
           this.$inertia.delete(this.route('project.budget.table.delete', this.table.id), {preserveState: true, preserveScroll: true})
+        },
+        openErrorModal(title, description) {
+            this.errorTitle = title;
+            this.errorDescription = description
+            this.showErrorModal = true;
         },
     },
 }

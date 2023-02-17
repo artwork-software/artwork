@@ -358,7 +358,7 @@ export default {
         Link
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project', 'table'],
-    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
+    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal','openErrorModal'],
     data() {
         return {
             showMenu: null,
@@ -441,6 +441,9 @@ export default {
                 type: type
             })
         },
+        checkColumnsLocked(){
+            return this.columns.some(column => column.is_locked === true);
+        },
         openDeleteSubPositionModal(subPosition) {
             this.confirmationTitle = 'Unterposition löschen';
             this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
@@ -484,11 +487,18 @@ export default {
             this.showCellDetailModal = false;
         },
         openDeleteRowModal(row) {
-            this.confirmationTitle = 'Zeile löschen';
-            this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
             this.rowToDelete = row;
             this.showDeleteModal = true;
-            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
+            if(!this.checkColumnsLocked()){
+                this.confirmationTitle = 'Zeile löschen';
+                this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+                this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
+            }else{
+                this.confirmationTitle = 'Zeile löschen nicht möglich'
+                this.confirmationDescription = 'Solange eine Spalte gesperrt ist, kannst du keine Zeile löschen.'
+                this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
+            }
+
         },
         handleCellClick(cell){
             if(cell.calculations_count > 0){

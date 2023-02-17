@@ -6,6 +6,7 @@
                 <div  class="text-2xl font-bold text-secondaryHover">
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>
                 </div>
+
                 <!-- <img alt="small-logo" v-else :src="$page.props.small_logo" class="rounded-full h-16 w-16"/> -->
                 <div class="flex-1 w-full space-y-1">
                     <a v-for="item in navigation" :key="item.name" :href="item.href"
@@ -15,7 +16,15 @@
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                              aria-hidden="true"/>
                     </a>
-                    <Menu as="div" class="my-auto" v-if="checkPermissionAdmin">
+                    <Menu as="div" class="my-auto" v-if="this.$page.props.can.edit_settings ||
+                this.$page.props.can.add_user ||
+                this.$page.props.can.edit_teams ||
+                this.$page.props.can.edit_project_settings ||
+                this.$page.props.can.edit_event_settings ||
+                this.$page.props.can.edit_checklist_settings ||
+                this.$page.props.can.global_notifiaction ||
+                this.$page.props.can.read_room_request_details ||
+                this.$page.props.is_admin">
                         <div class="flex">
                             <MenuButton
                             >
@@ -33,7 +42,7 @@
                                     leave-active-class="transition ease-in duration-75"
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
-                            <MenuItems class="z-[999999999999999] opacity-100 relative origin-top-left ml-14 -mt-12 w-32 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                            <MenuItems class="z-[999999999999999] h-60 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
                                 <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                     <MenuItem v-if="item.has_permission"  v-slot="{ active }">
                                         <Link :href="item.href"
@@ -156,7 +165,6 @@
 
         <!--     Main       -->
         <main class="main">
-<!--
             <p class="text-xs ml-2 cursor-pointer uppercase" @click="showPermissions = !showPermissions">Open Permissions</p>
             <div v-if="showPermissions">
                 <pre class="ml-2">
@@ -167,7 +175,7 @@
     MoneySource: {{ $page.props.is_money_source_admin }}
                 </pre>
             </div>
-            -->
+
             <slot></slot>
         </main>
     </div>
@@ -283,13 +291,13 @@ export default {
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$page.props.is_room_admin,
+                    has_permission: this.$page.props.is_admin,
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$page.props.can.request_room,
+                    has_permission: this.$page.props.can.read_room_request_details,
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
@@ -332,23 +340,6 @@ export default {
                 return true;
             }
             return false
-        },
-        checkPermissionAdmin(){
-            if(
-                this.$page.props.can.edit_settings ||
-                this.$page.props.can.add_user ||
-                this.$page.props.can.edit_teams ||
-                this.$page.props.can.edit_project_settings ||
-                this.$page.props.can.edit_event_settings ||
-                this.$page.props.can.edit_checklist_settings ||
-                this.$page.props.can.global_notifiaction ||
-                this.$page.props.can.request_room ||
-                this.$page.props.can.read_room_request_details ||
-                this.$page.props.room_admin
-            ) {
-                return true
-            }
-            return false;
         },
         checkPermission(item){
             if(item.has_permission === 'is_money_source_admin'){

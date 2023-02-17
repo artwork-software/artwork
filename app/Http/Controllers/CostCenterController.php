@@ -37,7 +37,11 @@ class CostCenterController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        CostCenter::create([
+            'project_id' => $request->project_id,
+            'name' => $request->name,
+            'description' => $request->description
+        ]);
     }
 
     /**

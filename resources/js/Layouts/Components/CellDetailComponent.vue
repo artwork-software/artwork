@@ -9,8 +9,14 @@
                 <!--   Heading   -->
                 <div>
                     <h1 class="my-1 flex">
-                        <div class="flex-grow headline1">
+                        <div class="flex-grow flex items-center headline1">
                             Details
+                            <svg v-if="cell.column.is_locked" xmlns="http://www.w3.org/2000/svg" width="16"
+                                         height="20" class="mr-2 ml-4 flex items-center mt-0.5" viewBox="0 0 11.975 13.686">
+                            <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
+                                  d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
+                                  fill="#27233C"/>
+                        </svg>
                         </div>
                     </h1>
                     <div class="mb-4">
@@ -31,7 +37,7 @@
                     <div v-if="isCalculateTab">
                         <div v-if="this.cell.calculations?.length > 0"
                              v-for="(calculation,index) in this.cell.calculations">
-                            <div @mouseover="calculationHovered = calculation.id"
+                            <div @mouseover="!cell.column.is_locked ? calculationHovered = calculation.id : null"
                                  @mouseout="calculationHovered = null">
                                 <div class="h-1.5 my-2 bg-silverGray"
                                 />
@@ -40,15 +46,18 @@
                                         <input type="text"
                                                v-model="calculation.name"
                                                placeholder="Name"
+                                               :disabled="cell.column.is_locked"
                                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <div class="w-1/2">
                                         <input type="text" @focusout="this.refreshSumKey++"
                                                v-model="calculation.value"
+                                               :disabled="cell.column.is_locked"
                                                placeholder="Wert"
                                                class="h-12 sDark text-right inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <button v-show="calculationHovered === calculation.id" type="button"
+                                            :disabled="cell.column.is_locked"
                                             @click="deleteCalculationFromCell(calculation)">
                                         <span class="sr-only">Rechnung von Zelle entfernen</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
@@ -56,11 +65,12 @@
                                 </div>
                                 <textarea placeholder="Kommentar"
                                           v-model="calculation.description"
+                                          :disabled="cell.column.is_locked"
                                           rows="4"
                                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                         </div>
-                        <div @click="addCalculation(cell.id)"
+                        <div @click="addCalculation(cell.id)" v-if="!cell.column.is_locked"
                              class="group bg-secondaryHover cursor-pointer h-1 flex justify-center border-dashed hover:border-t-2 hover:border-buttonBlue">
                             <div class="group-hover:block hidden uppercase text-buttonBlue text-sm -mt-8">
                                 Position
@@ -77,7 +87,7 @@
                             </div>
                         </div>
                         <div class="flex justify-center mt-6">
-                            <AddButton @click="saveCalculation()" text="Speichern"
+                            <AddButton @click="saveCalculation()" text="Speichern" :disabled="cell.column.is_locked"
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
@@ -101,7 +111,7 @@
                                             {{ formatDate(comment.created_at) }}
                                         </div>
                                     </div>
-                                    <button v-show="commentHovered === comment.id" type="button"
+                                    <button v-show="commentHovered === comment.id && comment.user_id === $page.props.user.id" type="button"
                                             @click="deleteCommentFromCell(comment)">
                                         <span class="sr-only">Kommentar von Projekt entfernen</span>
                                         <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
@@ -126,60 +136,76 @@
                             Quelle/-gruppe addieren oder subtrahieren.
                         </h2>
                         <div class="flex items-center justify-start my-6">
-                            <input v-model="isLinked" type="checkbox"
+                            <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isLinked ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle/-gruppe verlinken</p>
                         </div>
                         <div v-if="isLinked" class="flex w-full">
-                            <Listbox as="div" v-model="linkedType" id="linked_type">
-                                <ListboxButton class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
-                                    <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                        {{ linkedType.name }}
-                                    </div>
-                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </ListboxButton>
-                                <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                    <ListboxOption v-for="type in linkTypes"
-                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                   :key="type.name"
-                                                   :value="type"
-                                                   v-slot="{ active, selected }">
-                                        <div :class="[selected ? 'text-white' : '']">
-                                            {{ type.name }}
+                            <div class="flex w-full" v-if="!cell.column.is_locked">
+                                <Listbox as="div" v-model="linkedType" id="linked_type" >
+                                    <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
+                                        <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                            {{ linkedType.name }}
                                         </div>
-                                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </Listbox>
-                            <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
-                                <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
-                                    <div class="w-full xsLight text-left subpixel-antialiased"
-                                         v-if="selectedMoneySource === null">
-                                        Quelle wählen*
-                                    </div>
-                                    <div class="w-full xsDark text-left subpixel-antialiased" v-else>
-                                        {{ selectedMoneySource.name }}
-                                    </div>
-                                    <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                </ListboxButton>
-                                <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                    <ListboxOption v-for="moneySource in moneySources"
-                                                   class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                   :key="moneySource.name"
-                                                   :value="moneySource"
-                                                   v-slot="{ active, selected }">
-                                        <div :class="[selected ? 'text-white' : '']">
-                                            {{ moneySource.name }}
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </ListboxButton>
+                                    <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-for="type in linkTypes"
+                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                       :key="type.name"
+                                                       :value="type"
+                                                       v-slot="{ active, selected }">
+                                            <div :class="[selected ? 'text-white' : '']">
+                                                {{ type.name }}
+                                            </div>
+                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </Listbox>
+                                <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
+                                    <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
+                                        <div class="w-full xsLight text-left subpixel-antialiased"
+                                             v-if="selectedMoneySource === null">
+                                            Quelle wählen*
                                         </div>
-                                        <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                    </ListboxOption>
-                                </ListboxOptions>
-                            </Listbox>
+                                        <div class="w-full xsDark text-left subpixel-antialiased" v-else>
+                                            {{ selectedMoneySource.name }}
+                                        </div>
+                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                    </ListboxButton>
+                                    <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                        <ListboxOption v-for="moneySource in moneySources"
+                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                       :key="moneySource.name"
+                                                       :value="moneySource"
+                                                       v-slot="{ active, selected }">
+                                            <div :class="[selected ? 'text-white' : '']">
+                                                {{ moneySource.name }}
+                                            </div>
+                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </Listbox>
+                            </div>
+                            <div class="flex xsDark" v-else>
+                                Verlinkt mit:
+                                <div class="xsDark mx-2">
+                                    {{selectedMoneySource.name}}
+                                </div>
+                                als
+                                <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
+                                    Einnahme
+                                </div>
+                                <div v-else>
+                                    Ausgabe
+                                </div>
+                            </div>
+
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateMoneySourceLink()"
-                                       class="mt-8 py-3 px-24 flex" text="Speichern"
+                            <AddButton @click="updateMoneySourceLink()" :disabled="cell.column.is_locked"
+                                       class="mt-8 py-5 px-24 flex" text="Speichern"
                                        mode="modal"></AddButton>
                         </div>
                     </div>
@@ -190,13 +216,13 @@
                             das Projektbudget haben.
                         </h2>
                         <div class="flex items-center justify-start my-6">
-                            <input v-model="isExcluded" type="checkbox"
+                            <input v-model="isExcluded" type="checkbox" :disabled="cell.column.is_locked"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isExcluded ? 'xsDark' : 'xsLight']"
                                class="ml-4 my-auto text-sm"> Ausklammern</p>
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateCommentedStatus()" text="Speichern"
+                            <AddButton @click="updateCommentedStatus()" :disabled="cell.column.is_locked"  text="Speichern"
                                        class="text-sm ml-0 px-24 py-5 xsWhiteBold"></AddButton>
                         </div>
                     </div>
@@ -248,11 +274,11 @@ export default {
     data() {
         return {
             isLinked: this.cell.linked_money_source_id !== null,
-            linkedType: this.cell.linked_type === 'COST' ? linkTypes[1] : linkTypes[0],
+            linkedType: this.cell.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
             selectedMoneySource: this.cell.linked_money_source_id !== null ? this.moneySources.find(moneySource => moneySource.id === this.cell.linked_money_source_id) : null,
             linkTypes,
-            isCalculateTab: this.cell.column.type === 'empty' && !this.cell.column.is_locked,
-            isCommentTab: this.cell.column.type !== 'empty' || this.cell.column.is_locked,
+            isCalculateTab: this.cell.column.type === 'empty',
+            isCommentTab: this.cell.column.type !== 'empty',
             isExcludeTab: false,
             isLinkTab: false,
             hoveredBorder: false,
@@ -276,21 +302,12 @@ export default {
     computed: {
         tabs() {
             if (this.cell.column.type === 'empty') {
-                if(this.cell.column.is_locked){
-                    return [
-                        {name: 'Kommentar', href: '#', current: this.isCommentTab},
-                        {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
-                        {name: 'Verlinkung', href: '#', current: this.isLinkTab},
-                    ]
-                }else{
                     return [
                         {name: 'Kalkulation', href: '#', current: this.isCalculateTab},
                         {name: 'Kommentar', href: '#', current: this.isCommentTab},
                         {name: 'Ausklammern', href: '#', current: this.isExcludeTab},
                         {name: 'Verlinkung', href: '#', current: this.isLinkTab},
                     ]
-                }
-
             } else {
                 return [
                     {name: 'Kommentar', href: '#', current: this.isCommentTab},
@@ -372,6 +389,11 @@ export default {
             this.closeModal(true);
         },
         addCalculation(cellId) {
+            if(this.cell.calculations?.length > 0){
+                this.$inertia.patch(route('project.budget.cell-calculation.update'), {
+                    calculations: this.cell.calculations,
+                }, {preserveState: true, preserveScroll: true});
+            }
             this.$inertia.post(route('project.budget.cell-calculation.add', cellId), {}, {
                 preserveScroll: true
             })

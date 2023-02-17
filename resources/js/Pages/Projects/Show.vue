@@ -124,15 +124,15 @@
                 <div class="flex mt-5">
                     <div>
                         <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
-                                      :displayed-text="category.name" :property="category"></TagComponent>
+                                      :displayed-text="category.name" :property="category" :hide-x="true"></TagComponent>
                     </div>
                     <div>
                         <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
-                                      :displayed-text="genre.name" :property="genre"></TagComponent>
+                                      :displayed-text="genre.name" :property="genre" :hide-x="true"></TagComponent>
                     </div>
                     <div>
                         <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
-                                      :displayed-text="sector.name" :property="sector"></TagComponent>
+                                      :displayed-text="sector.name" :property="sector" :hide-x="true"></TagComponent>
                     </div>
                 </div>
             </div>
@@ -1692,7 +1692,7 @@
                 :copyright="project.copyright"
                 :project-files="project.project_files"
                 :contracts="project.contracts"
-                :money-sources="project.moneySources"
+                :money-sources="moneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
             />
         </BaseSidenav>

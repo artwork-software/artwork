@@ -2,7 +2,7 @@
 
     <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6">
         <div class="flex justify-between ">
-            <div v-if="table.is_template" class="flex justify-start headline2">
+            <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
                 {{ table.name }}
                 <Menu as="div" class="ml-4">
                     <div class="flex">
@@ -105,7 +105,7 @@
                                             ({{ column.calculateName }})
                                         </span>
                                     </p>
-                                    <span class="ml-1"
+                                    <span class="ml-1 -mt-4"
                                           v-if="index > 2 && column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex mr-2" v-model="column.color">
                                                 <ListboxButton>
@@ -124,8 +124,8 @@
                                                 <transition leave-active-class="transition ease-in duration-100"
                                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                                     <ListboxOptions
-                                                        class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
-                                                        <ListboxOption as="template" class="max-h-32"
+                                                        class="absolute w-24 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                                        <ListboxOption as="template" class=""
                                                                        v-for="color in colors"
                                                                        :key="color"
                                                                        :value="color" v-slot="{ active, selected }">

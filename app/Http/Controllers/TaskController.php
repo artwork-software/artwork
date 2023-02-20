@@ -185,11 +185,15 @@ class TaskController extends Controller
 
         $task->save();
 
-        $checklist = $task->checklist()->first();
-        $this->history = new HistoryController('App\Models\Project');
-        $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
-        $this->createNotificationUpdateTask($task);
+        $checklist = $task->checklist()->first();
+        if($checklist !== null){
+            $this->history = new HistoryController('App\Models\Project');
+            $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
+
+            $this->createNotificationUpdateTask($task);
+        }
+
 
         return Redirect::back()->with('success', 'Task updated');
     }

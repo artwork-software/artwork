@@ -95,7 +95,6 @@ export default {
             })
         },
         getArrayOfIds(array) {
-            console.log(array)
             let ids = []
             array.forEach(item => {
                 ids.push(item.id)
@@ -103,19 +102,19 @@ export default {
             return ids
         },
         removeFilter(filter) {
-            if(this.filters.costsFilter.includes(filter)) {
+            if(this.filters.costsFilter.some((costFilter) => costFilter.name === filter) !== null) {
                 this.filters.costsFilter = this.filters.costsFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
             }
-            if(this.filters.companyTypesFilter.includes(filter)) {
+            if(this.filters.companyTypesFilter.some((companyTypesFilter) => companyTypesFilter.name === filter) !== null) {
                 this.filters.companyTypesFilter = this.filters.companyTypesFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
             }
-            if(this.filters.contractTypesFilter.includes(filter)) {
+            if(this.filters.contractTypesFilter.some((contractTypesFilter) => contractTypesFilter.name === filter) !== null) {
                 this.filters.contractTypesFilter = this.filters.contractTypesFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
             }
-            this.filterContracts({})
+            this.filterContracts(this.filters)
         }
     }
 }

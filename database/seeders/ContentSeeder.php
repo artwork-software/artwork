@@ -12,6 +12,7 @@ use App\Models\ContractModule;
 use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
+use App\Models\Currency;
 use App\Models\Department;
 use App\Models\MoneySource;
 use App\Models\Project;
@@ -41,6 +42,7 @@ class ContentSeeder extends Seeder
         $this->seedRoomAttributes();
         $this->seedCostCenters();
         $this->seedCopyrights();
+        $this->seedCurrencies();
     }
 
     private function seedCollectingSocieties()
@@ -55,6 +57,22 @@ class ContentSeeder extends Seeder
 
         CollectingSociety::create([
             'name' => 'KENA'
+        ]);
+    }
+
+    private function seedCurrencies()
+    {
+        Currency::create([
+            'name' => '€'
+        ]);
+        Currency::create([
+            'name' => '$'
+        ]);
+        Currency::create([
+            'name' => 'CHF'
+        ]);
+        Currency::create([
+            'name' => '£'
         ]);
     }
 

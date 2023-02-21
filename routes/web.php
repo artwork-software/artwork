@@ -13,6 +13,7 @@ use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CopyrightController;
 use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -394,6 +395,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])->name('collecting_societies.index');
     Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])->name('collecting_societies.store');
     Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])->name('collecting_societies.delete');
+
+    // Currencies
+    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+    Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
 
 });
 

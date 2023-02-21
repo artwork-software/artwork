@@ -62,6 +62,14 @@
                     @add="addCollectingSociety"
                     @openDeleteModal="openDeleteCollectingSocietyModal"
                 />
+                <ProjectSettingsItem
+                    title="Währungen"
+                    description="Lege Währungen fest, denen Verträge später zugeordnet werden können."
+                    input-label="Währung eingeben"
+                    :items="currencies"
+                    @add="addCurrency"
+                    @openDeleteModal="openDeleteCurrencyModal"
+                />
 
             </div>
         </div>
@@ -113,6 +121,13 @@
             @delete="deleteCollectingSociety"
             @closeModal="closeDeleteCollectingSocietyModal"
         />
+        <ProjectSettingsDeleteModal
+            :show="deletingCurrency"
+            title="Währung löschen"
+            :description="`Bist du sicher, dass du die Währung ${currencyToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteCurrency"
+            @closeModal="closeDeleteCurrencyModal"
+        />
     </app-layout>
 </template>
 
@@ -148,7 +163,7 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties'],
+    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies'],
     data() {
         return {
             genreToDelete: null,
@@ -162,7 +177,9 @@ export default {
             deletingCompanyType: false,
             companyTypeToDelete: null,
             deletingCollectingSociety: false,
-            collectingSocietyToDelete: null
+            collectingSocietyToDelete: null,
+            deletingCurrency: false,
+            currencyToDelete: null,
         }
     },
     methods: {
@@ -272,6 +289,23 @@ export default {
         closeDeleteCollectingSocietyModal() {
             this.deletingCollectingSociety = false
             this.collectingSocietyToDelete = null
+        },
+        addCurrency(currencyInput){
+          if(currencyInput !== ''){
+              this.$inertia.post(route('currencies.store'), {name: currencyInput});
+          }
+        },
+        openDeleteCurrencyModal(currency){
+            this.currencyToDelete = currency;
+            this.deletingCurrency = true;
+        },
+        closeDeleteCurrencyModal(){
+          this.deletingCurrency = false;
+          this.currencyToDelete = null;
+        },
+        deleteCurrency() {
+            this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`);
+            this.closeDeleteCurrencyModal();
         },
     },
     setup() {

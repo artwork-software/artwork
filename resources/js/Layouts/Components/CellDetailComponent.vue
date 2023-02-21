@@ -143,50 +143,66 @@
                         </div>
                         <div v-if="isLinked" class="flex w-full">
                             <div class="flex w-full" v-if="!cell.column.is_locked">
-                                <Listbox as="div" v-model="linkedType" id="linked_type" >
-                                    <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
-                                        <div class="flex-grow xsLight text-left subpixel-antialiased">
-                                            {{ linkedType.name }}
-                                        </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                        <ListboxOption v-for="type in linkTypes"
-                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                       :key="type.name"
-                                                       :value="type"
-                                                       v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'text-white' : '']">
-                                                {{ type.name }}
+                                <div class="relative w-full">
+                                    <div class="w-full flex">
+                                    <Listbox as="div" v-model="linkedType" id="linked_type" >
+                                        <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
+                                            <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                                {{ linkedType.name }}
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </Listbox>
-                                <Listbox as="div" v-model="selectedMoneySource" id="room" class="w-full">
-                                    <ListboxButton class="inputMain h-10 cursor-pointer w-11/12 truncate flex p-2">
-                                        <div class="w-full xsLight text-left subpixel-antialiased"
-                                             v-if="selectedMoneySource === null">
-                                            Quelle wählen*
-                                        </div>
-                                        <div class="w-full xsDark text-left subpixel-antialiased" v-else>
-                                            {{ selectedMoneySource.name }}
-                                        </div>
-                                        <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
-                                    </ListboxButton>
-                                    <ListboxOptions class="w-[74%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
-                                        <ListboxOption v-for="moneySource in moneySources"
-                                                       class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
-                                                       :key="moneySource.name"
-                                                       :value="moneySource"
-                                                       v-slot="{ active, selected }">
-                                            <div :class="[selected ? 'text-white' : '']">
-                                                {{ moneySource.name }}
+                                            <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </ListboxButton>
+                                        <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                            <ListboxOption v-for="type in linkTypes"
+                                                           class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                           :key="type.name"
+                                                           :value="type"
+                                                           v-slot="{ active, selected }">
+                                                <div :class="[selected ? 'text-white' : '']">
+                                                    {{ type.name }}
+                                                </div>
+                                                <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </Listbox>
+                                        <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
+                                               placeholder="Mit welcher Finanzierungsquelle willst du den Wert verlinken?"
+                                               class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100"
+                                                leave-to-class="opacity-0">
+                                        <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
+                                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                        text-base ring-1 ring-black ring-opacity-5
+                                                        overflow-auto focus:outline-none sm:text-sm">
+                                            <div class="border-gray-200">
+                                                <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
+                                                     class="flex items-center cursor-pointer">
+                                                    <div class="flex-1 text-sm py-4">
+                                                        <p @click="selectMoneySource(moneySource)"
+                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                            {{ moneySource.name }}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </Listbox>
+                                        </div>
+                                    </transition>
+                                    <div class="flex xsDark mt-2">
+                                        Verlinkt mit:
+                                        <div class="xsDark mx-2">
+                                            {{selectedMoneySource.name}}
+                                        </div>
+                                        als
+                                        <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
+                                            Einnahme
+                                        </div>
+                                        <div v-else class="xsDark mx-2">
+                                            Ausgabe
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="flex xsDark" v-else>
                                 Verlinkt mit:
@@ -197,7 +213,7 @@
                                 <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
                                     Einnahme
                                 </div>
-                                <div v-else>
+                                <div v-else class="xsDark mx-2">
                                     Ausgabe
                                 </div>
                             </div>
@@ -290,7 +306,9 @@ export default {
             commentForm: useForm({
                 description: '',
                 cellId: this.cell.id
-            })
+            }),
+            moneySource_query: '',
+            moneySource_search_results: [],
         }
     },
 
@@ -298,7 +316,20 @@ export default {
 
     emits: ['closed'],
 
-    watch: {},
+    watch: {
+        moneySource_query: {
+            handler() {
+                if (this.moneySource_query.length > 0) {
+                    axios.get('/money_sources/search', {
+                        params: {query: this.moneySource_query}
+                    }).then(response => {
+                        this.moneySource_search_results = response.data
+                    })
+                }
+            },
+            deep: true
+        },
+    },
     computed: {
         tabs() {
             if (this.cell.column.type === 'empty') {
@@ -348,6 +379,10 @@ export default {
             });
         },
         openModal() {
+        },
+        selectMoneySource(moneySource){
+          this.selectedMoneySource = moneySource;
+          this.moneySource_query = '';
         },
         changeTab(selectedTab) {
             this.isCalculateTab = false;

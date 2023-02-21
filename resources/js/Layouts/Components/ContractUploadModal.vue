@@ -152,17 +152,17 @@
                         </Listbox>
                     </div>
                     <div class="py-1 w-full flex">
-                        <input type="text"
+                        <input type="number"
                                v-model="this.contractAmount"
                                placeholder="Betrag* (Gage, Co-Produktionsbeitrag, etc.)"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
                                  id="eventType">
                             <ListboxButton
-                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
+                                class="pl-1 truncate h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency }}</span>
+                                <span class="block w-12 truncate items-center ml-3 flex">
+                                            <span>{{ selectedCurrency.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -175,15 +175,15 @@
                                 <ListboxOptions
                                     class="absolute w-[12%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="currency in currencyArray"
+                                                   v-for="currency in currencies"
                                                    :key="currency"
                                                    :value="currency"
                                                    v-slot="{ active, selected }">
-                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                        <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-2 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
                                             <span
-                                                :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-4 block truncate']">
-                                                        {{ currency }}
+                                                :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-1 block truncate']">
+                                                        {{ currency.name }}
                                                     </span>
                                             </div>
                                             <span
@@ -353,15 +353,6 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
 
-const contractTypeArray = [
-    'Aufführungsvertrag', 'Koproduktionsvertrag', 'Koproduktion- inkl. Aufführungsvertrag', 'Honorarvertrag', 'Kooperationsvereinbarung', 'Mietvertrag', 'Werkvertrag', 'Nutzungsrechteübertragung'
-]
-const currencyArray = [
-    '€', '$', 'CHF', '£'
-]
-const legalFormArray = [
-    'Einzelunternehmen', 'GbR', 'GmbH', 'UG', 'AG', 'Sonstige'
-]
 export default {
     name: "ContractUploadModal",
     props: {
@@ -405,9 +396,7 @@ export default {
         return {
             contractTypes: [],
             companyTypes: [],
-            legalFormArray,
-            currencyArray,
-            contractTypeArray,
+            currencies: [],
             errorText: null,
             creatingNewTask: false,
             tasks: [],
@@ -417,7 +406,7 @@ export default {
             contractPartner: '',
             selectedLegalForm: null,
             selectedContractType: null,
-            selectedCurrency: '€',
+            selectedCurrency: {id:1, name: '€'},
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
@@ -433,7 +422,7 @@ export default {
                 company_type_id: this.selectedLegalForm?.id,
                 contract_type_id: this.selectedContractType?.id,
                 amount: this.contractAmount,
-                currency: this.selectedCurrency,
+                currency_id: this.selectedCurrency?.id,
                 ksk_liable: this.kskLiable,
                 resident_abroad: this.isAbroad,
                 has_power_of_attorney: this.hasPowerOfAttorney,
@@ -450,6 +439,9 @@ export default {
         })
         axios.get(route('company_types.index')).then(res => {
             this.companyTypes = res.data
+        })
+        axios.get(route('currencies.index')).then(res => {
+            this.currencies = res.data
         })
     },
     methods: {
@@ -506,7 +498,7 @@ export default {
             this.contractForm.has_power_of_attorney = false;
             this.contractForm.is_freed = false;
             this.contractForm.description = '';
-            this.contractForm.currency = '€';
+            this.contractForm.currency_id = 1;
             this.contractForm.accessibleUsers = [];
             this.contractForm.tasks = [];
             this.file = null;
@@ -514,7 +506,7 @@ export default {
             this.contractPartner = '';
             this.selectedLegalForm = null;
             this.selectedContractType = null;
-            this.selectedCurrency = '€';
+            this.selectedCurrency = {id:1, name: '€'};
             this.user_search_results = [];
             this.user_query = '';
             this.usersWithAccess = [];
@@ -536,7 +528,7 @@ export default {
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
             this.contractForm.is_freed = this.isFreed;
             this.contractForm.description = this.description;
-            this.contractForm.currency = this.selectedCurrency;
+            this.contractForm.currency_id = this.selectedCurrency.id;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
                 userIds.push(user.id);

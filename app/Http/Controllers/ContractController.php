@@ -120,7 +120,7 @@ class ContractController extends Controller
             'contract_partner' => $request->contract_partner,
             'amount' => $request->amount,
             'project_id' => $project->id,
-            'currency' => $request->currency,
+            'currency_id' => $request->currency_id,
             'description' => $request->description,
             'ksk_liable' => $request->ksk_liable,
             'resident_abroad' => $request->resident_abroad,

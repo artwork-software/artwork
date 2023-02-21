@@ -737,7 +737,6 @@ class ProjectController extends Controller
                 'linked_money_source_id' => null
             ]);
         }
-
         if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
             $column = $table->columns()->create([
@@ -755,6 +754,7 @@ class ProjectController extends Controller
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
+                    'verified_value' => null,
                     'linked_money_source_id' => null
                 ]);
             }
@@ -777,6 +777,7 @@ class ProjectController extends Controller
                     'column_id' => $column->id,
                     'sub_position_row_id' => $firstColumn->sub_position_row_id,
                     'value' => $sum,
+                    'verified_value' => null,
                     'linked_money_source_id' => null,
                 ]);
             }

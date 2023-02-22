@@ -176,6 +176,7 @@ export default {
             if(this.costCenter === null || this.costCenter.id === null){
                 this.costCenterForm.post(route('costCenter.store'));
             }else{
+                console.log('wahaha');
                 this.costCenterForm.patch(this.route('costCenter.update', this.costCenter?.id));
             }
 

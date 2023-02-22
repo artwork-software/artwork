@@ -19,7 +19,7 @@ return new class extends Migration
             $table->boolean('live_music');
             $table->string('collecting_society_id');
             $table->enum('law_size', ['small', 'big']);
-            $table->unsignedBigInteger('project_id');
+            $table->foreignId('project_id');
             $table->timestamps();
         });
     }

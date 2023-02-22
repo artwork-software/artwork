@@ -289,6 +289,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
+    Route::patch('/money_sources/{moneySource}/users', [MoneySourceController::class, 'updateUsers'])->name('money_sources.update_users');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);

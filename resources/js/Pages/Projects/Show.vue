@@ -2261,7 +2261,6 @@ export default {
                 this.form.assigned_departments.push(department);
             })
             this.form.selectedGroup = this.selectedGroup;
-            console.log(this.form);
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectModal();
         },

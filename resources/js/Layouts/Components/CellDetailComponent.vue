@@ -132,14 +132,14 @@
                     <!-- Link Tab -->
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
-                            Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert entweder zur
-                            Quelle/-gruppe addieren oder subtrahieren.
+                            Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
+                            Quelle entweder addieren oder subtrahieren.
                         </h2>
                         <div class="flex items-center justify-start my-6">
                             <input v-model="isLinked" type="checkbox" :disabled="cell.column.is_locked"
                                    class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                             <p :class="[isLinked ? 'xsDark' : 'xsLight']"
-                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle/-gruppe verlinken</p>
+                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle verlinken</p>
                         </div>
                         <div v-if="isLinked" class="flex w-full">
                             <div class="flex w-full" v-if="!cell.column.is_locked">
@@ -192,7 +192,7 @@
                                     <div class="flex xsDark mt-2">
                                         Verlinkt mit:
                                         <div class="xsDark mx-2">
-                                            {{selectedMoneySource.name}}
+                                            {{selectedMoneySource?.name}}
                                         </div>
                                         als
                                         <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
@@ -220,7 +220,7 @@
 
                         </div>
                         <div class="flex justify-center">
-                            <AddButton @click="updateMoneySourceLink()" :disabled="cell.column.is_locked"
+                            <AddButton @click="updateMoneySourceLink()" :disabled="cell.column.is_locked || selectedMoneySource === null"
                                        class="mt-8 py-5 px-24 flex" text="Speichern"
                                        mode="modal"></AddButton>
                         </div>
@@ -323,7 +323,7 @@ export default {
                     axios.get('/money_sources/search', {
                         params: {query: this.moneySource_query}
                     }).then(response => {
-                        this.moneySource_search_results = response.data
+                        this.moneySource_search_results = response.data.filter((moneySource) => moneySource.is_group === 0 || moneySource.is_group === false)
                     })
                 }
             },

@@ -252,8 +252,8 @@
         @closed="afterConfirm"/>
 
     <MoneySourceHistoryComponent
-        @closed="closeProjectHistoryModal"
-        v-if="showProjectHistory"
+        @closed="closeMoneySourceHistoryModal"
+        v-if="showMoneySourceHistory"
         :history="moneySource.history"
     ></MoneySourceHistoryComponent>
 </template>
@@ -345,7 +345,7 @@ export default {
             sourceToDelete: null,
             show: false,
             wantedProject: null,
-            showProjectHistory: false
+            showMoneySourceHistory: false
         }
     },
     methods: {
@@ -384,11 +384,11 @@ export default {
 
             this.deleteMoneySource(this.sourceToDelete)
         },
-        closeProjectHistoryModal(){
-            this.showProjectHistory = false;
+        closeMoneySourceHistoryModal(){
+            this.showMoneySourceHistory = false;
         },
         openMoneySourceHistoryModal(){
-            this.showProjectHistory = true;
+            this.showMoneySourceHistory = true;
         }
     },
     setup() {

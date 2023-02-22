@@ -19,7 +19,6 @@ use function Clue\StreamFilter\fun;
 class BudgetTemplateController extends Controller
 {
     protected ?array $columns = null;
-    protected int $columnPosition = 0;
 
     public function __construct()
     {
@@ -103,7 +102,6 @@ class BudgetTemplateController extends Controller
             'is_template' => $isTemplate,
             'project_id' => $projectId
         ]);
-
         $oldTable->columns->map(function (Column $column) use ($newTable) {
             $replicated_column = $column->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_column->save();
@@ -113,7 +111,6 @@ class BudgetTemplateController extends Controller
                 'linked_second_column' => $column->linked_second_column !== null ? $this->columns[$column->linked_second_column] : null
             ]);
         });
-
         $oldTable->mainPositions->map(function (MainPosition $mainPosition) use ($newTable) {
             $replicated_mainPosition = $mainPosition->replicate()->fill(['table_id' => $newTable->id]);
             $replicated_mainPosition->save();
@@ -121,17 +118,14 @@ class BudgetTemplateController extends Controller
                 $replicated_subPosition = $subPosition->replicate()->fill(['main_position_id' => $replicated_mainPosition->id]);
                 $replicated_subPosition->save();
                 $subPosition->subPositionRows->map(function (SubPositionRow $subPositionRow) use ($replicated_subPosition) {
-                    $this->columnPosition = 0;
                     $replicated_subPositionRow = $subPositionRow->replicate()->fill(['sub_position_id' => $replicated_subPosition->id]);
                     $replicated_subPositionRow->save();
                     $subPositionRow->cells->map(function (ColumnCell $columnCell) use ($replicated_subPositionRow) {
                         $replicated_columnCell = $columnCell->replicate()->fill(['sub_position_row_id' => $replicated_subPositionRow->id]);
-                        $replicated_columnCell->value = $columnCell->value;
                         $replicated_columnCell->linked_money_source_id = null;
                         $replicated_columnCell->linked_type = null;
                         $replicated_columnCell->column_id = $this->columns[$columnCell->column_id];
                         $replicated_columnCell->save();
-                        $this->columnPosition++;
                         $columnCell->comments->map(function (CellComment $cellComment) use ($replicated_columnCell) {
                             $replicated_comment = $cellComment->replicate()->fill(['column_cell_id' => $replicated_columnCell->id]);
                             $replicated_comment->save();

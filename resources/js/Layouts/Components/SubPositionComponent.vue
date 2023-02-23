@@ -236,10 +236,12 @@
                                  :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
                                  v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                 <input
+                                    :ref="`cell-${cell.id}`"
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
                                     class="my-2 xsDark  appearance-none z-10"
-                                    :type="index > 2 ? 'number' : 'text'"
+                                    type="text"
                                     v-model="cell.value"
+                                    @keypress="isNumber($event, index)"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2"
                                                 @click="openCellDetailModal(cell)"
@@ -333,10 +335,9 @@
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-
+import {nextTick} from "vue";
 
 export default {
     name: "SubPositionComponent",
@@ -396,9 +397,20 @@ export default {
                 redColumn: 'redColumn',
                 lightGreenColumn: 'lightGreenColumn'
             },
+            updateCellForm: useForm({
+                column_id: null,
+                value: null,
+                sub_position_row_id: null,
+                is_verified: false
+            })
         }
     },
     methods: {
+        isNumber(event, index) {
+            if (index > 2 && !(new RegExp('^([0-9])$')).test(event.key)) {
+                event.preventDefault();
+            }
+        },
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
 
@@ -467,15 +479,18 @@ export default {
                 cell.value = 0;
             }
 
-            this.$inertia.patch(route('project.budget.cell.update'), {
-                column_id: cell.column.id,
-                value: cell.value,
-                sub_position_row_id: cell.sub_position_row_id,
-                is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
-            }, {
+            this.updateCellForm.column_id = cell.column.id;
+            this.updateCellForm.value = cell.value;
+            this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
+            this.updateCellForm.is_verified =  mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
+
+            this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
-                preserveScroll: true
-            });
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log("updated", cell.value)
+                }
+            })
         },
         openRowDetailModal(row) {
             this.$emit('openRowDetailModal', row)
@@ -500,11 +515,18 @@ export default {
             }
 
         },
-        handleCellClick(cell){
+        async handleCellClick(cell) {
+
             if(cell.calculations_count > 0){
                 this.$emit('openCellDetailModal', cell)
-            }else{
+            } else {
                 cell.clicked = !cell.clicked
+
+                if(cell.clicked) {
+                    await nextTick()
+
+                    this.$refs[`cell-${cell.id}`][0].select();
+                }
             }
 
         },

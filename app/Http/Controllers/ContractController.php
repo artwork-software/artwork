@@ -50,7 +50,6 @@ class ContractController extends Controller
 
     public function index(Request $request)
     {
-
         $contracts = Contract::all();
         $costsFilter = json_decode($request->input('costsFilter'));
         $companyTypesFilter = json_decode($request->input('companyTypesFilter'));

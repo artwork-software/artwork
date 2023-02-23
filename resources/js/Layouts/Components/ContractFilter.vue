@@ -53,6 +53,15 @@ export default {
             this.filter.costsFilter = []
             this.filter.companyTypesFilter = []
             this.filter.contractTypesFilter = []
+            this.contractTypes.forEach((type) => {
+                type.checked = false;
+            })
+            this.companyTypes.forEach((type) => {
+                type.checked = false;
+            })
+            this.additionalCosts.forEach((cost) => {
+                cost.checked = false;
+            })
             this.updateFilter()
         },
         updateFilter(params) {

@@ -238,14 +238,15 @@
                                 <input
                                     :ref="`cell-${cell.id}`"
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                    class="my-2 xsDark  appearance-none z-10"
+                                    class="my-2 xsDark appearance-none z-10"
                                     type="text"
                                     v-model="cell.value"
                                     @keypress="isNumber($event, index)"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full">
+                                </PlusCircleIcon>
                             </div>
                             <div
                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
@@ -474,7 +475,6 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
-            cell.clicked = !cell.clicked;
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }
@@ -483,7 +483,7 @@ export default {
             this.updateCellForm.value = cell.value;
             this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
             this.updateCellForm.is_verified =  mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
-
+            //
             this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
                 preserveScroll: true,

@@ -98,15 +98,15 @@
                         <div class="flex items-center " @mouseover="showMenu = column.id" :key="column.id"
                              @mouseout="showMenu = null">
                             <div>
-                                <div class="flex items-center justify-end pr-2">
+                                <div :class="index <= 2 ? '' : 'justify-end'" class="flex items-center  pr-2">
                                     <p v-if="column.subName" class="columnSubName -mt-4 xsLight">
                                         {{ column.subName }}
                                         <span v-if="column.calculateName" class="ml-1 truncate">
                                             ({{ column.calculateName }})
                                         </span>
                                     </p>
-                                    <span class="ml-1 -mt-4"
-                                          v-if="index > 2 && column.showColorMenu === true || column.color !== 'whiteColumn'">
+                                    <span  class="-mt-4"
+                                          v-if="column.showColorMenu === true || column.color !== 'whiteColumn'">
                                         <Listbox as="div" class="flex mr-2" v-model="column.color">
                                                 <ListboxButton>
                                                    <button class="w-4 h-4 flex justify-center items-center rounded-full"

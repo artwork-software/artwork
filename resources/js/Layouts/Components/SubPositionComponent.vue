@@ -213,9 +213,9 @@
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', checkCellColor(cell,mainPosition,subPosition)]">
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition)]">
                             <div
-                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300' : '']"
+                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
                                 @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
@@ -545,6 +545,7 @@ export default {
             } else {
                 if (cell.column.color !== 'whiteColumn') {
                     cssString += ' xsWhiteBold '
+                    cssString += cell.column.color;
                 } else {
                     cssString += ' xsDark '
                 }

@@ -30,39 +30,9 @@
                 </button>
             </div>
             <div class="flex items-center justify-end">
-                <div class="text-white w-28 flex items-center"
+                <div class="text-white items-center"
                      v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested !== this.$page.props.user.id">
-                    <p class="xxsLight">wird verifiziert </p>
-                    <!-- TODO: SVG ersetzen mit IMG TAG -->
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         xmlns:xlink="http://www.w3.org/1999/xlink" class="ml-1" width="19"
-                         height="14.292" viewBox="0 0 19 14.292">
-                        <defs>
-                            <clipPath id="clip-path">
-                                <rect id="Rechteck_458" data-name="Rechteck 458" width="5.138"
-                                      height="3.634" fill="#fcfcfb"/>
-                            </clipPath>
-                        </defs>
-                        <path id="Icon_awesome-lock" data-name="Icon awesome-lock"
-                              d="M10.692,5.987H10.05V4.063a4.063,4.063,0,1,0-8.126,0V5.987H1.283A1.283,1.283,0,0,0,0,7.27V12.4a1.283,1.283,0,0,0,1.283,1.283h9.409A1.283,1.283,0,0,0,11.975,12.4V7.27A1.283,1.283,0,0,0,10.692,5.987Zm-2.78,0H4.063V4.063a1.925,1.925,0,0,1,3.849,0Z"
-                              transform="translate(0 0.607)" fill="#fcfcfb"/>
-                        <g id="Gruppe_962" data-name="Gruppe 962"
-                           transform="translate(-412 -311)">
-                            <g id="Ellipse_147" data-name="Ellipse 147"
-                               transform="translate(418 311)" fill="#27233c" stroke="#fcfcfb"
-                               stroke-width="1">
-                                <circle cx="6.5" cy="6.5" r="6.5" stroke="none"/>
-                                <circle cx="6.5" cy="6.5" r="6" fill="none"/>
-                            </g>
-                            <g id="Gruppe_962-2" data-name="Gruppe 962"
-                               transform="translate(423 314.945)" clip-path="url(#clip-path)">
-                                <path id="Pfad_1344" data-name="Pfad 1344"
-                                      d="M5.1,1.418a.534.534,0,0,0-.7-.286L1.775,2.23,1.029.337a.533.533,0,1,0-.992.39L1.183,3.633,4.811,2.115a.533.533,0,0,0,.286-.7"
-                                      transform="translate(0 0)" fill="#fcfcfb"/>
-                            </g>
-                        </g>
-                    </svg>
-
+                    <div class="xsWhiteBold flex w-44"><img alt="Gesperrt" src="/Svgs/IconSvgs/verify.svg" class="-ml-20"/> <p class="ml-2">wird verifiziert</p> </div>
                 </div>
                 <div class="text-white w-44 flex items-center text-center cursor-pointer"
                      @click="verifiedMainPosition(mainPosition.verified?.main_position_id)"
@@ -88,7 +58,7 @@
                 </div>
                 <div class="text-white w-44 flex items-center text-center justify-end mr-2"
                      v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED'">
-                    <p class="xxsLight">verifiziert</p>
+                    <p class="xsWhiteBold mr-1">verifiziert</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="11.975" height="13.686"
                          class="ml-1" viewBox="0 0 11.975 13.686">
                         <path id="Icon_awesome-lock" data-name="Icon awesome-lock"

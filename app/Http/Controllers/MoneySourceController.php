@@ -68,7 +68,13 @@ class MoneySourceController extends Controller
             }
             return $filteredObjects;
         } else {
-            return MoneySource::search($request->input('query'))->get();
+            $moneySources = MoneySource::search($request->input('query'))->get();
+            foreach ($moneySources as $moneySource){
+                if($moneySource->projects->contains($request->projectId)){
+                    $filteredObjects[] = $moneySource;
+                }
+            }
+            return $filteredObjects;
         }
     }
 

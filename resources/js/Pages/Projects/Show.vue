@@ -1692,7 +1692,7 @@
                 :copyright="project.copyright"
                 :project-files="project.project_files"
                 :contracts="project.contracts"
-                :money-sources="moneySources"
+                :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
             />
         </BaseSidenav>

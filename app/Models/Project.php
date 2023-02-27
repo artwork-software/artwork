@@ -157,6 +157,9 @@ class Project extends Model
         return $this->hasOne(Table::class);
     }
 
+    public function moneySources(){
+        return $this->belongsToMany(MoneySource::class, 'money_source_project');
+    }
 
     public function toSearchableArray(): array
     {

@@ -238,14 +238,14 @@
                                 <input
                                     :ref="`cell-${cell.id}`"
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
-                                    class="my-2 xsDark appearance-none z-10"
+                                    class="my-2 xsDark  appearance-none z-10"
                                     type="text"
                                     v-model="cell.value"
                                     @keypress="isNumber($event, index)"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full">
+                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full">
                                 </PlusCircleIcon>
                             </div>
                             <div
@@ -475,7 +475,6 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
-            //removed this Line
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }

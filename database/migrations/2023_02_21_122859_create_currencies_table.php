@@ -13,10 +13,9 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('copyright_project', function (Blueprint $table) {
+        Schema::create('currencies', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('copyright_id');
-            $table->unsignedBigInteger('project_id');
+            $table->string("name");
             $table->timestamps();
         });
     }
@@ -28,6 +27,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('copyright_project');
+        Schema::dropIfExists('currencies');
     }
 };

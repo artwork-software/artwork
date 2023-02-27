@@ -18,12 +18,12 @@ return new class extends Migration
             $table->string("name");
             $table->string('basename');
             $table->string("contract_partner");
-            $table->string('currency')->default('€');
             $table->integer('amount');
             $table->unsignedBigInteger('project_id');
             $table->string('description')->nullable();
             $table->string('contract_type_id')->nullable();
             $table->string('company_type_id')->nullable();
+            $table->string('currency_id')->nullable();
             $table->boolean('ksk_liable')->default(false)->nullable();
             $table->boolean('resident_abroad')->default(false)->nullable();
             $table->boolean('is_freed')->default(false)->nullable();

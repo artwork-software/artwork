@@ -53,16 +53,31 @@ export default {
             this.filter.costsFilter = []
             this.filter.companyTypesFilter = []
             this.filter.contractTypesFilter = []
+            this.contractTypes.forEach((type) => {
+                type.checked = false;
+            })
+            this.companyTypes.forEach((type) => {
+                type.checked = false;
+            })
+            this.additionalCosts.forEach((cost) => {
+                cost.checked = false;
+            })
             this.updateFilter()
         },
         updateFilter(params) {
-            console.log(params)
-            if(params.item.checked) {
-                this.filter[params.filterName].push(params.item)
+            if(params){
+                if(params?.item.checked) {
+                    this.filter[params.filterName].push(params.item)
+                }
+                else {
+                    this.filter[params?.filterName] = this.filter[params?.filterName].filter(item => params?.item?.id !== item.id)
+                }
+            }else{
+                this.filter.costsFilter = []
+                this.filter.companyTypesFilter = []
+                this.filter.contractTypesFilter = []
             }
-            else {
-                this.filter[params.filterName] = this.filter[params.filterName].filter(item => params.item.id !== item.id)
-            }
+
             this.$emit('filter', this.filter)
         }
     },

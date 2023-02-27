@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use App\Models\ContractType;
+use App\Models\Currency;
 use App\Models\Genre;
 use App\Models\Sector;
 use Illuminate\Http\Request;
@@ -54,6 +55,10 @@ class CategoryController extends Controller
             'collectingSocieties' => CollectingSociety::all()->map(fn($collectingSociety) => [
                 'id' => $collectingSociety->id,
                 'name' => $collectingSociety->name,
+            ]),
+            'currencies' => Currency::all()->map(fn($currency) => [
+                'id' => $currency->id,
+                'name' => $currency->name,
             ])
         ]);
     }

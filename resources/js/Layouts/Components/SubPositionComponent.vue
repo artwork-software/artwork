@@ -213,9 +213,9 @@
                                         :class="hoveredRow === row.id ? '' : 'hidden'"
                                         class="h-6 w-6 z-20 absolute -ml-3 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
                         <td v-for="(cell,index) in row.cells"
-                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', checkCellColor(cell,mainPosition,subPosition)]">
+                            :class="[index <= 1 ? 'w-28' : index === 2 ? 'w-72 ' : 'w-48 ', '', checkCellColor(cell,mainPosition,subPosition)]">
                             <div
-                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300' : '']"
+                                :class="[row.commented || cell.commented ? 'xsLight' : '', index <= 1 ? 'w-24 justify-start pl-3' : index === 2 ? 'w-72 justify-start pl-3' : 'w-48 pr-2 justify-end', cell.value < 0 ? 'text-red-500' : '', cell.value === '' || cell.value === null ? 'border-2 border-gray-300 ' : '']"
                                 class="my-4 h-6 flex items-center"
                                 @click="handleCellClick(cell)"
                                 v-if="!cell.clicked">
@@ -236,14 +236,17 @@
                                  :class="index <= 1 ? 'w-24 mr-5' : index === 2 ? 'w-72 mr-12' : 'w-48 ml-5'"
                                  v-else-if="cell.clicked && cell.column.type === 'empty' && !cell.column.is_locked">
                                 <input
+                                    :ref="`cell-${cell.id}`"
                                     :class="index <= 1 ? 'w-20 mr-2' : index === 2 ? 'w-60 mr-2' : 'w-44 text-right'"
                                     class="my-2 xsDark  appearance-none z-10"
-                                    :type="index > 2 ? 'number' : 'text'"
+                                    type="text"
                                     v-model="cell.value"
+                                    @keypress="isNumber($event, index)"
                                     @focusout="updateCellValue(cell, mainPosition.is_verified, subPosition.is_verified)">
                                 <PlusCircleIcon v-if="index > 2"
                                                 @click="openCellDetailModal(cell)"
-                                                class="h-6 w-6 z-10 flex-shrink-0 -ml-3 relative cursor-pointer text-secondaryHover bg-buttonBlue rounded-full"></PlusCircleIcon>
+                                                class="h-6 w-6 flex-shrink-0 -ml-3 relative z-50 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full">
+                                </PlusCircleIcon>
                             </div>
                             <div
                                 :class="[row.commented ? 'xsLight' : 'xsDark', index <= 1 ? 'w-24' : index === 2 ? 'w-72' : 'w-48 text-right', cell.value < 0 ? 'text-red-500' : '']"
@@ -333,10 +336,9 @@
 import {PencilAltIcon, PlusCircleIcon, TrashIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import {ChevronUpIcon, ChevronDownIcon, DotsVerticalIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
-import {Inertia} from "@inertiajs/inertia";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
-
+import {nextTick} from "vue";
 
 export default {
     name: "SubPositionComponent",
@@ -358,7 +360,7 @@ export default {
         Link
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project', 'table'],
-    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal'],
+    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal','openErrorModal'],
     data() {
         return {
             showMenu: null,
@@ -396,9 +398,20 @@ export default {
                 redColumn: 'redColumn',
                 lightGreenColumn: 'lightGreenColumn'
             },
+            updateCellForm: useForm({
+                column_id: null,
+                value: null,
+                sub_position_row_id: null,
+                is_verified: false
+            })
         }
     },
     methods: {
+        isNumber(event, index) {
+            if (index > 2 && !(new RegExp('^([0-9])$')).test(event.key)) {
+                event.preventDefault();
+            }
+        },
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
 
@@ -441,6 +454,9 @@ export default {
                 type: type
             })
         },
+        checkColumnsLocked(){
+            return this.columns.some(column => column.is_locked === true);
+        },
         openDeleteSubPositionModal(subPosition) {
             this.confirmationTitle = 'Unterposition löschen';
             this.confirmationDescription = 'Bist du sicher, dass du die Unterposition ' + subPosition.name + ' löschen möchtest?'
@@ -459,20 +475,22 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
-            cell.clicked = !cell.clicked;
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }
 
-            this.$inertia.patch(route('project.budget.cell.update'), {
-                column_id: cell.column.id,
-                value: cell.value,
-                sub_position_row_id: cell.sub_position_row_id,
-                is_verified: mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED'
-            }, {
+            this.updateCellForm.column_id = cell.column.id;
+            this.updateCellForm.value = cell.value;
+            this.updateCellForm.sub_position_row_id = cell.sub_position_row_id;
+            this.updateCellForm.is_verified =  mainPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED' || subPositionVerified === 'BUDGET_VERIFIED_TYPE_CLOSED';
+            //
+            this.updateCellForm.patch(route('project.budget.cell.update'), {
                 preserveState: true,
-                preserveScroll: true
-            });
+                preserveScroll: true,
+                onSuccess: () => {
+                    console.log("updated", cell.value)
+                }
+            })
         },
         openRowDetailModal(row) {
             this.$emit('openRowDetailModal', row)
@@ -484,17 +502,31 @@ export default {
             this.showCellDetailModal = false;
         },
         openDeleteRowModal(row) {
-            this.confirmationTitle = 'Zeile löschen';
-            this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
             this.rowToDelete = row;
             this.showDeleteModal = true;
-            this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
+            if(!this.checkColumnsLocked()){
+                this.confirmationTitle = 'Zeile löschen';
+                this.confirmationDescription = 'Bist du sicher, dass du diese Zeile löschen möchtest? Sämtliche Verlinkungen etc. werden ebenfalls gelöscht.';
+                this.$emit('openDeleteModal', this.confirmationTitle, this.confirmationDescription, this.rowToDelete, 'row')
+            }else{
+                this.confirmationTitle = 'Zeile löschen nicht möglich'
+                this.confirmationDescription = 'Solange eine Spalte gesperrt ist, kannst du keine Zeile löschen.'
+                this.$emit('openErrorModal', this.confirmationTitle, this.confirmationDescription)
+            }
+
         },
-        handleCellClick(cell){
+        async handleCellClick(cell) {
+
             if(cell.calculations_count > 0){
                 this.$emit('openCellDetailModal', cell)
-            }else{
+            } else {
                 cell.clicked = !cell.clicked
+
+                if(cell.clicked) {
+                    await nextTick()
+
+                    this.$refs[`cell-${cell.id}`][0].select();
+                }
             }
 
         },
@@ -535,6 +567,7 @@ export default {
             } else {
                 if (cell.column.color !== 'whiteColumn') {
                     cssString += ' xsWhiteBold '
+                    cssString += cell.column.color;
                 } else {
                     cssString += ' xsDark '
                 }

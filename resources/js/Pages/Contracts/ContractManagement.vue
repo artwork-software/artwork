@@ -86,7 +86,7 @@ export default {
                 this.contractTypeNames = filters.contractTypesFilter.map(contractType => contractType.name)
             }
             await axios.get('/contracts/', { params: {
-                costsFilter: { array: this.filters.costsFilter },
+                costsFilter: { array: this.costNames },
                 companyTypesFilter: { array: this.getArrayOfIds(this.filters.companyTypesFilter) },
                 contractTypesFilter: { array: this.getArrayOfIds(this.filters.contractTypesFilter) },
             }})
@@ -95,7 +95,6 @@ export default {
             })
         },
         getArrayOfIds(array) {
-            console.log(array)
             let ids = []
             array.forEach(item => {
                 ids.push(item.id)
@@ -103,19 +102,26 @@ export default {
             return ids
         },
         removeFilter(filter) {
-            if(this.filters.costsFilter.includes(filter)) {
+            let costFilter = this.filters.costsFilter.filter((costFilter) => costFilter.name === filter);
+            if(costFilter !== null && costFilter.length > 0) {
                 this.filters.costsFilter = this.filters.costsFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
+                costFilter[0].checked = false;
             }
-            if(this.filters.companyTypesFilter.includes(filter)) {
+            let companyTypeFilter = this.filters.companyTypesFilter.filter((companyTypesFilter) => companyTypesFilter.name === filter)
+
+            if(companyTypeFilter !== null && companyTypeFilter.length > 0) {
                 this.filters.companyTypesFilter = this.filters.companyTypesFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
+                companyTypeFilter[0].checked = false;
             }
-            if(this.filters.contractTypesFilter.includes(filter)) {
+            let contractTypeFilter = this.filters.contractTypesFilter.filter((contractTypesFilter) => contractTypesFilter.name === filter)
+            if(contractTypeFilter  !== null && contractTypeFilter.length > 0) {
                 this.filters.contractTypesFilter = this.filters.contractTypesFilter
-                    .filter(filterItem => filterItem !== filter)
+                    .filter(filterItem => filterItem.name !== filter)
+                contractTypeFilter[0].checked = false;
             }
-            this.filterContracts({})
+            this.filterContracts(this.filters)
         }
     }
 }

@@ -56,7 +56,7 @@ class MoneySource extends Model
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class);
+        return $this->belongsToMany(Project::class, 'money_source_projects');
     }
 
     public function toSearchableArray(): array
@@ -70,6 +70,8 @@ class MoneySource extends Model
     {
         return $this->hasMany(MoneySourceFile::class);
     }
+
+
 
 
 }

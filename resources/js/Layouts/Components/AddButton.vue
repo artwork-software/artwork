@@ -1,6 +1,6 @@
 <template>
-    <button v-if="text !== 'Zu Teams zuweisen' && text !== 'Areal hinzufügen' && text !== 'Raum hinzufügen' && mode !== 'modal' && type !== 'secondary'" type="button" :disabled="disabled"
-            class="flex py-2 px-4 mt-1 ml-6 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
+    <button v-if="text !== 'Zu Teams zuweisen' && text !== 'Areal hinzufügen' && text !== 'Raum hinzufügen' && mode !== 'modal' && type !== 'secondary'" type="button" :disabled="disabled" :class="disabled ? 'bg-secondary' : 'bg-buttonBlue hover:bg-buttonHover hover:shadow-blueButton'"
+            class="flex py-2 px-4 mt-1 ml-6 items-center border border-transparent rounded-full shadow-sm text-white  focus:outline-none">
         <PlusCircleIcon v-if="mode !== 'modal' && text !== 'Speichern'" class="h-4 w-4 mr-2" aria-hidden="true"/>
         <p class="text-sm">{{ text }}</p>
     </button>
@@ -8,8 +8,8 @@
             class="flex py-2 px-8 mt-1 ml-6 items-center border-2 border-buttonBlue rounded-full shadow-sm text-buttonBlue bg-secondaryHover hover:bg-buttonHover hover:text-white focus:outline-none">
         <p class="text-sm">{{ text }}</p>
     </button>
-    <button v-else type="button" :disabled="disabled"
-            class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover focus:outline-none">
+    <button v-else type="button" :disabled="disabled" :class="disabled ? 'bg-secondary' : 'bg-buttonBlue hover:bg-buttonHover'"
+            class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
         <PlusCircleIcon v-if="mode !== 'modal'" class="h-4 w-4 mr-2" aria-hidden="true"/>
         <p class="text-sm">{{ text }}</p>
     </button>

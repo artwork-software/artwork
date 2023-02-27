@@ -13,6 +13,7 @@ use App\Http\Controllers\ContractModuleController;
 use App\Http\Controllers\ContractTypeController;
 use App\Http\Controllers\CopyrightController;
 use App\Http\Controllers\CostCenterController;
+use App\Http\Controllers\CurrencyController;
 use App\Http\Controllers\DepartmentController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\EventTypeController;
@@ -288,6 +289,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/money_sources/search', [MoneySourceController::class, 'search'])->name('money_sources.search');
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
+    Route::patch('/money_sources/{moneySource}/users', [MoneySourceController::class, 'updateUsers'])->name('money_sources.update_users');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
@@ -372,8 +374,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     // Templates
     Route::get('/templates/index', [\App\Http\Controllers\BudgetTemplateController::class, 'index'])->name('templates.view.index');
 
+    //CopyRight
+    Route::post('/copyright', [CopyrightController::class, 'store'])->name('copyright.store');
     Route::patch('/copyright/{copyright}', [CopyrightController::class, 'update'])->name('copyright.update');
 
+    //Cost Center
+    Route::post('/cost_center', [CostCenterController::class, 'store'])->name('costCenter.store');
     Route::patch('/cost_center/{costCenter}', [CostCenterController::class, 'update'])->name('costCenter.update');
 
     // ContractTypes
@@ -390,6 +396,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])->name('collecting_societies.index');
     Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])->name('collecting_societies.store');
     Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])->name('collecting_societies.delete');
+
+    // Currencies
+    Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
+    Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
+    Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
 
 });
 

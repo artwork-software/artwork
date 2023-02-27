@@ -20,9 +20,9 @@ class Contract extends Model
         'project_id',
         'contract_type_id',
         'company_type_id',
+        'currency_id',
         'ksk_liable',
         'resident_abroad',
-        'currency'
     ];
 
     protected $guarded = [
@@ -49,6 +49,10 @@ class Contract extends Model
     public function contract_type()
     {
         return $this->belongsTo(ContractType::class, 'contract_type_id');
+    }
+    public function currency()
+    {
+        return $this->belongsTo(Currency::class, 'currency_id');
     }
 
     public function accessing_users()

@@ -18,8 +18,6 @@ return new class extends Migration
             $table->string('name');
             $table->longText('description')->nullable();
             $table->string('number_of_participants')->nullable();
-            $table->unsignedBigInteger('cost_center_id')->nullable();
-            $table->unsignedBigInteger('copyright_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

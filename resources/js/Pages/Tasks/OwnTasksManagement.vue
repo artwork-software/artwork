@@ -35,7 +35,6 @@
                     <!--     Task Index   -->
                     <div class="w-full">
                         <div v-for="task in tasksToDisplay" :key="task.id">
-
                             <div class="flex w-full flex-wrap md:flex-nowrap align-baseline">
                                 <div class="flex w-full flex-grow">
                                     <input @change="updateTaskStatus(task)"

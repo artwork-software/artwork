@@ -12,6 +12,7 @@ use App\Models\ContractModule;
 use App\Models\ContractType;
 use App\Models\Copyright;
 use App\Models\CostCenter;
+use App\Models\Currency;
 use App\Models\Department;
 use App\Models\MoneySource;
 use App\Models\Project;
@@ -41,6 +42,7 @@ class ContentSeeder extends Seeder
         $this->seedRoomAttributes();
         $this->seedCostCenters();
         $this->seedCopyrights();
+        $this->seedCurrencies();
     }
 
     private function seedCollectingSocieties()
@@ -55,6 +57,22 @@ class ContentSeeder extends Seeder
 
         CollectingSociety::create([
             'name' => 'KENA'
+        ]);
+    }
+
+    private function seedCurrencies()
+    {
+        Currency::create([
+            'name' => '€'
+        ]);
+        Currency::create([
+            'name' => '$'
+        ]);
+        Currency::create([
+            'name' => 'CHF'
+        ]);
+        Currency::create([
+            'name' => '£'
         ]);
     }
 
@@ -322,8 +340,6 @@ class ContentSeeder extends Seeder
             Nominiert für die National Dance Awards 2021 sowie den Achievement in Dance Award der UK Theatre Awards gibt THE DAN DAW SHOW
             in der Regie von Mark Maughan einen Einblick in die glänzende und schweißtreibende Zerrissenheit, mit Scham zu leben und gleichzeitig vor Stolz zu strotzen.',
             'number_of_participants' => null,
-            'cost_center_id' => 1,
-            'copyright_id' => 1
         ]);
 
         $projectController = new ProjectController();
@@ -347,8 +363,6 @@ class ContentSeeder extends Seeder
             Auf ihren Migrationsrouten durchquerten die Künstler*innen Süd- und Westasien, Afrika und die Karibik.
             Die meisten von ihnen leben heute über die ganze Welt verstreut und weit von den Orten entfernt, zu denen sie sich ursprünglich zugehörig fühlten.',
             'number_of_participants' => null,
-            'cost_center_id' => 1,
-            'copyright_id' => 1
         ]);
 
         $second_project->project_histories()->create([
@@ -364,8 +378,6 @@ class ContentSeeder extends Seeder
             die es Künstler*innen ermöglichen sollen, eigene partizipative digitale Musikprojekte zu gestalten und zu verbreiten, ohne dass sie selbst über Programmierkenntnisse verfügen müssen.
             Die Initiative wurde vergangenes Jahr im Rahmen des Projekts “Prototyping Sonic Institutions” ins Leben gerufen, das von Black Swan und CTM Festival zur Festivalausgabe 2022 organisiert wurde.',
             'number_of_participants' => null,
-            'cost_center_id' => 1,
-            'copyright_id' => 1
         ]);
 
         $nextProject->project_histories()->create([
@@ -384,8 +396,6 @@ class ContentSeeder extends Seeder
             lay peacefully between its four familiar walls. A collection of textile samples lay spread out on the table - Samsa was a travelling salesman -
             and above it there hung a picture that he had recently cut out of an illustrated magazine and housed in a nice, gilded frame.',
             'number_of_participants' => null,
-            'cost_center_id' => 1,
-            'copyright_id' => 1
         ]);
 
         $nextProject->project_histories()->create([

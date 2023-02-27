@@ -153,17 +153,17 @@
                         </Listbox>
                     </div>
                     <div class="py-1 w-full flex">
-                        <input type="text"
+                        <input type="number"
                                v-model="this.contractAmount"
                                placeholder="Betrag* (Gage, Co-Produktionsbeitrag, etc.)"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         <Listbox as="div" class="flex h-12 w-24" v-model="selectedCurrency"
                                  id="eventType">
                             <ListboxButton
-                                class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
+                                class="pl-1 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm flex items-center">
                                 <div class="flex items-center my-auto">
-                                <span class="block truncate items-center ml-3 flex">
-                                            <span>{{ selectedCurrency }}</span>
+                                <span class="block w-12 truncate items-center ml-3 flex">
+                                            <span>{{ selectedCurrency.name }}</span>
                                 </span>
                                     <span
                                         class="ml-2 right-0 absolute inset-y-0 flex items-center pr-2 pointer-events-none">
@@ -176,7 +176,7 @@
                                 <ListboxOptions
                                     class="absolute w-[12%] z-10 mt-12 bg-primary shadow-lg max-h-32 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="currency in currencyArray"
+                                                   v-for="currency in currencies"
                                                    :key="currency"
                                                    :value="currency"
                                                    v-slot="{ active, selected }">
@@ -184,7 +184,7 @@
                                             <div class="flex">
                                             <span
                                                 :class="[selected ? 'xsWhiteBold' :  'font-normal', 'ml-4 block truncate']">
-                                                        {{ currency }}
+                                                        {{ currency.name }}
                                                     </span>
                                             </div>
                                             <span
@@ -365,10 +365,6 @@ import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui
 import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
-
-const currencyArray = [
-    '€', '$', 'CHF', '£'
-]
 export default {
     name: "ContractEditModal",
     props: {
@@ -377,7 +373,6 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
-        currencies: Array,
     },
     components: {
         ContractTaskForm,
@@ -415,6 +410,9 @@ export default {
         })
         axios.get(route('company_types.index')).then(res => {
             this.companyTypes = res.data
+        })
+        axios.get(route('currencies.index')).then(res => {
+            this.currencies = res.data
         })
         this.contract?.tasks.forEach(task => {
             this.tasks.push(task)
@@ -482,15 +480,15 @@ export default {
         updateContract() {
             this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;
-            this.contractForm.company_type_id = this.selectedLegalForm.id;
-            this.contractForm.contract_type_id = this.selectedContractType.id;
+            this.contractForm.company_type_id = this.selectedLegalForm?.id;
+            this.contractForm.contract_type_id = this.selectedContractType?.id;
             this.contractForm.amount = this.contractAmount;
             this.contractForm.ksk_liable = this.kskLiable;
             this.contractForm.resident_abroad = this.isAbroad;
             this.contractForm.has_power_of_attorney = this.hasPowerOfAttorney;
             this.contractForm.is_freed = this.isFreed;
             this.contractForm.comment = this.comment;
-            this.contractForm.currency = this.selectedCurrency;
+            this.contractForm.currency_id = this.selectedCurrency.id;
             const userIds = [];
             this.usersWithAccess.forEach((user) => {
                  userIds.push(user.id);
@@ -505,7 +503,6 @@ export default {
     data() {
         return {
             companyTypes: [],
-            currencyArray,
             contractTypes: [],
             creatingNewTask: false,
             uploadDocumentFeedback: "",
@@ -527,12 +524,14 @@ export default {
             tasks: [],
             errorText:null,
             showExtraSettings: false,
+            currencies: [],
             contractAmount: this.contract?.amount,
             contractForm: useForm({
                 file: this.contract?.basename,
                 contract_partner: this.contract?.partner,
                 company_type_id: this.contract?.company_type?.id,
                 contract_type_id: this.contract?.contract_type?.id,
+                currency_id: this.contract?.currency?.id,
                 amount: this.contract?.amount,
                 ksk_liable: this.contract?.ksk_liable,
                 resident_abroad: this.contract?.resident_abroad,

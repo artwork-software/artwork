@@ -35,6 +35,16 @@ class CopyrightController extends Controller
      */
     public function store(Request $request)
     {
+
+        $collecting_society = (object) $request->collectingSociety;
+
+        Copyright::create([
+            'own_copyright' => $request->ownCopyright,
+            'live_music' => $request->liveMusic,
+            'collecting_society_id' => $collecting_society->id,
+            'law_size' => $request->lawSize,
+            'project_id' => $request->project_id,
+        ]);
     }
 
     /**

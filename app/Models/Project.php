@@ -54,12 +54,12 @@ class Project extends Model
 
     public function cost_center()
     {
-        return $this->belongsTo(CostCenter::class, 'cost_center_id');
+        return $this->hasOne(CostCenter::class);
     }
 
     public function copyright()
     {
-        return $this->belongsTo(Copyright::class, 'copyright_id');
+        return $this->hasOne(Copyright::class);
     }
 
     public function users()

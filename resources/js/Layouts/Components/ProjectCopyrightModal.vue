@@ -35,7 +35,7 @@
                     <ListboxButton
                         class="border-2 border-gray-300 w-full cursor-pointer truncate flex p-4">
                         <div v-if="collectingSociety" class="flex-grow text-left">
-                            {{collectingSociety.name}}
+                            {{collectingSociety?.name}}
                         </div>
                         <div v-else class="flex-grow xsLight text-left subpixel-antialiased">
                             Verwertungsgesellschaft wählen*
@@ -92,7 +92,7 @@
                         text="Speichern"
                         mode="modal"
                         class="px-6 py-3"
-                        :disabled="copyright.collecting_society === null"
+                        :disabled="copyright?.collecting_society === null || this.collectingSociety === null || costCenterForm.name === null || costCenterName === '' ||costCenterForm.description === null"
                         @click="updateData"
                     />
                 </div>
@@ -138,22 +138,24 @@ export default {
     data() {
         return {
             collectingSocieties: [],
-            collectingSociety: this.copyright?.collecting_society,
-            costCenterName: this.costCenter?.name,
+            collectingSociety: this.copyright !== null ? this.copyright?.collecting_society : null,
+            costCenterName: this.costCenter !== null ? this.costCenter?.name : '',
             isBigLaw: this.copyright?.law_size === 'big',
             isSmallLaw: this.copyright?.law_size === 'small',
-            ownCopyright: this.copyright?.own_copyright,
-            liveMusic: this.copyright?.live_music,
-            description: this.copyright?.description,
+            ownCopyright: this.copyright !== null ? this.copyright.own_copyright : false,
+            liveMusic: this.copyright !== null ? this.copyright.live_music : false,
+            description: this.costCenter?.description,
             costCenterForm: useForm({
-                name: this.costCenter?.name,
-                description: this.copyright?.description
+                name: this.costCenter !== null ? this.costCenter?.name : '',
+                description: this.copyright !== null ? this.copyright?.description : '',
+                project_id: this.project.id
             }),
             copyrightForm: useForm({
                 ownCopyright: this.ownCopyright,
                 liveMusic: this.liveMusic,
                 collectingSociety: this.collectingSociety,
-                lawSize: this.copyright?.law_size
+                lawSize: this.copyright?.law_size,
+                project_id: this.project.id
             })
         }
     },
@@ -171,7 +173,13 @@ export default {
         updateData() {
             this.costCenterForm.name = this.costCenterName
             this.costCenterForm.description = this.description
-            this.costCenterForm.patch(this.route('costCenter.update', this.costCenter.id));
+            if(this.costCenter === null || this.costCenter.id === null){
+                this.costCenterForm.post(route('costCenter.store'));
+            }else{
+                console.log('wahaha');
+                this.costCenterForm.patch(this.route('costCenter.update', this.costCenter?.id));
+            }
+
 
             this.updateCopyright()
 
@@ -183,9 +191,12 @@ export default {
             this.copyrightForm.collectingSociety = this.collectingSociety
             this.copyrightForm.lawSize = this.isBigLaw ? 'big' : 'small'
 
-            console.log(this.copyrightForm)
+            if(this.copyright === null || this.copyright.id === null){
+                this.copyrightForm.post(route('copyright.store'));
+            }else{
+                this.copyrightForm.patch(this.route('copyright.update', this.copyright?.id));
+            }
 
-            this.copyrightForm.patch(this.route('copyright.update', this.copyright.id));
         }
     }
 }

@@ -374,6 +374,10 @@ class MoneySourceController extends Controller
         $this->checkUserChanges($moneySource, $oldMoneySourceUsers, $newMoneySourceUsers);
     }
 
+    public function updateUsers(Request $request, MoneySource $moneySource){
+
+    }
+
     /**
      * Remove the specified resource from storage.
      *

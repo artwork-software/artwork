@@ -475,6 +475,7 @@ export default {
             });
         },
         updateCellValue(cell, mainPositionVerified, subPositionVerified) {
+            //removed this Line
             if (cell.value === null || cell.value === '') {
                 cell.value = 0;
             }

@@ -27,7 +27,7 @@
                         </svg>
                     </div>
                 </div>
-                <div class="text-secondary text-sm" v-for="linkedProject in money_source.linked_projects">
+                <div class="text-secondary text-sm" v-for="linkedProject in linkedProjects">
                     {{linkedProject.name}}
                 </div>
             </div>
@@ -134,7 +134,7 @@ import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjec
 
 export default {
     name: "MoneySourceSidenav",
-    props: ['users', 'tasks', 'money_source','moneySourceFiles'],
+    props: ['users', 'tasks', 'money_source','moneySourceFiles', 'linkedProjects'],
     components: {
         LinkProjectsToMoneySourcesComponent,
         MoneySourceFileDeleteModal,

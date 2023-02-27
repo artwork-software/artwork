@@ -285,7 +285,8 @@ class MoneySourceController extends Controller
             'projects' => Project::all()->map(fn ($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
-            ])
+            ]),
+            'linkedProjects' => $moneySource->projects()->get()
         ]);
 
     }
@@ -466,7 +467,7 @@ class MoneySourceController extends Controller
     }
     public function updateProjects(MoneySource $moneySource,Request $request)
     {
-        dd($request->linkedProjectIds);
+        $moneySource->projects()->sync($request->linkedProjectIds);
     }
 
 }

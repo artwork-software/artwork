@@ -240,8 +240,13 @@
             :moneySourceGroups="this.moneySourceGroups"
         />
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
-            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks"
-                                :money_source="moneySource" :money-source-files="moneySource.money_source_files"></MoneySourceSidenav>
+            <MoneySourceSidenav
+                :users="moneySource.users"
+                :tasks="moneySource.tasks"
+                :money_source="moneySource"
+                :money-source-files="moneySource.money_source_files"
+                :linked-projects="linkedProjects"
+            ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
     <confirmation-component
@@ -289,7 +294,7 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 
 export default {
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {
         MoneySourceSidenav,
         BaseSidenav,

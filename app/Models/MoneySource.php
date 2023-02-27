@@ -56,7 +56,7 @@ class MoneySource extends Model
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'money_source_projects');
+        return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
     public function toSearchableArray(): array

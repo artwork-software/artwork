@@ -464,4 +464,9 @@ class MoneySourceController extends Controller
 
         }
     }
+    public function updateProjects(MoneySource $moneySource,Request $request)
+    {
+        dd($request->linkedProjectIds);
+    }
+
 }

@@ -290,6 +290,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/money_sources/{moneySource}', [MoneySourceController::class, 'show'])->name('money_sources.show');
     Route::patch('/money_sources/{moneySource}', [MoneySourceController::class, 'update'])->name('money_sources.update');
     Route::patch('/money_sources/{moneySource}/users', [MoneySourceController::class, 'updateUsers'])->name('money_sources.update_users');
+    Route::patch('/money_sources/{moneySource}/projects',[MoneySourceController::class, 'updateProjects'])->name('money_sources.update_projects');
     Route::post('/money_sources', [MoneySourceController::class, 'store'])->name('money_sources.store');
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
@@ -313,10 +314,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_modules/{module}/download', [ContractModuleController::class, 'download'])->name('contracts.module.download');
     Route::delete('/contract_modules/{module}', [ContractModuleController::class, 'destroy']);
 
+    //MoneySourceTasks
     Route::patch('money_source/task/{moneySourceTask}/done', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsDone'])->name('money_source.task.done');
     Route::patch('money_source/task/{moneySourceTask}/undone', [\App\Http\Controllers\MoneySourceTaskController::class, 'markAsUnDone'])->name('money_source.task.undone');
-
-
     Route::post('/money_source/task', [\App\Http\Controllers\MoneySourceTaskController::class, 'store'])->name('money_source.task.add');
 
     //Budget

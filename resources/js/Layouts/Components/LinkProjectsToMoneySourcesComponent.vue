@@ -128,6 +128,7 @@ export default {
         },
     },
     computed: {
+
     },
 
     methods: {
@@ -162,7 +163,10 @@ export default {
                 linkedProjectIds: linkedProjectIds
             }, {
                 preserveScroll: true,
-                preserveState: true
+                preserveState: true,
+                onSuccess: () => {
+                    this.closeModal(true);
+                }
             });
         },
         closeModal(bool) {

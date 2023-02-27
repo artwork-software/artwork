@@ -605,16 +605,16 @@ export default {
 }
 
 .greenColumn {
-    background-color: #50908E;
+    background-color: #D6E7E4;
     border: 2px solid #1FC687;
 }
 
 .yellowColumn {
-    background-color: #F0B54C;
+    background-color: #FCECD3;
 }
 
 .redColumn {
-    background-color: #D84387;
+    background-color: #FBD4E4;
 }
 
 .lightGreenColumn {

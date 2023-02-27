@@ -19,9 +19,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class MoneySourceFileController extends Controller
 {
 
+    protected ?HistoryController $history = null;
     public function __construct()
     {
-
+        $this->history = new HistoryController('App\Models\MoneySource');
     }
 
     /**
@@ -53,7 +54,7 @@ class MoneySourceFileController extends Controller
             ]);
             $moneySourceFile->comments()->save($comment);
         }
-
+        $this->history->createHistory($moneySource->id, 'Dokument '. $original_name .' hochgeladen');
         return Redirect::back();
     }
 
@@ -76,7 +77,7 @@ class MoneySourceFileController extends Controller
      * @param MoneySourceFile $moneySourceFile
      * @return RedirectResponse
      */
-    public function update(Request $request, MoneySourceFile $moneySourceFile): RedirectResponse
+    public function update(Request $request, MoneySource $moneySource, MoneySourceFile $moneySourceFile): RedirectResponse
     {
         if($request->file('file')) {
             Storage::delete('money_source_files/'. $moneySourceFile->basename);
@@ -113,9 +114,11 @@ class MoneySourceFileController extends Controller
      * @return RedirectResponse
      * @throws AuthorizationException
      */
-    public function destroy(MoneySourceFile $moneySourceFile)
+    public function destroy(MoneySource $moneySource, MoneySourceFile $moneySourceFile)
     {
+        $this->history->createHistory($moneySource->id, 'Dokument '. $moneySourceFile->name .' gelöscht');
         $moneySourceFile->delete();
+
         return Redirect::back();
     }
 }

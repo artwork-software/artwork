@@ -132,9 +132,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //MoneySourceFiles
     Route::post('/money_sources/{money_source}/files', [MoneySourceFileController::class, 'store'])->name('money_sources_files.store');
-    Route::post('/money_sources/{money_source_file}/files/update', [MoneySourceFileController::class, 'update'])->name('money_sources_files.update');
+    Route::post('/money_sources/{money_source}/{money_source_file}/files/update', [MoneySourceFileController::class, 'update'])->name('money_sources_files.update');
     Route::get('/money_sources/{money_source_file}/files', [MoneySourceFileController::class, 'download'])->name('money_sources_download_file');
-    Route::delete('/money_sources/{money_source_file}/files', [MoneySourceFileController::class, 'destroy']);
+    Route::delete('/money_sources/{money_source}/{money_source_file}/files', [MoneySourceFileController::class, 'destroy'])->name('money_sources_delete_file');
 
     //Checklists
     Route::get('/checklists/create', [ChecklistController::class, 'create'])->name('checklists.create');

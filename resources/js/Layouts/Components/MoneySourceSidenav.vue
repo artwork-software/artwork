@@ -107,7 +107,7 @@
     <MoneySourceFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
                               :file="moneySourceFileToEdit"/>
 
-    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal"
+    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :money-source-id="money_source.id" :close-modal="closeFileDeleteModal"
                                 :file="moneySourceFileToDelete"/>
 
 

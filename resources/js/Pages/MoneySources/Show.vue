@@ -232,6 +232,10 @@
                 </div>
             </div>
         </div>
+
+        <pre>
+        {{ moneySource.users }}
+    </pre>
         <edit-money-source-component
             v-if="showEditMoneySourceModal"
             @closed="onEditMoneySourceModalClose()"

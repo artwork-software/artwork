@@ -45,10 +45,10 @@
                                     </transition>
                             </div>
                         </div>
-                        <div class="sDark mt-4" v-if="this.linkedProjects.length > 0">
+                        <div class="sDark mt-4" v-if="this.linkedProjectsArray.length > 0">
                             Verlinkte Projekte:
                         </div>
-                        <span v-for="project in linkedProjects"
+                        <span v-for="project in linkedProjectsArray"
                               class="flex justify-between mt-4 mr-1 items-center xsDark border-1 border-b pb-3">
                             <div class="flex items-center">
                                 <div class="flex items-center">
@@ -105,11 +105,11 @@ export default {
         return {
             project_query: '',
             project_search_results: [],
-            linkedProjects:[],
+            linkedProjectsArray: this.linkedProjects ? this.linkedProjects : [],
         }
     },
 
-    props: ['moneySource'],
+    props: ['moneySource','linkedProjects'],
 
     emits: ['closed'],
 
@@ -135,27 +135,27 @@ export default {
         openModal() {
         },
         addProjectToArray(projectToAdd){
-            if(this.linkedProjects !== [])
-            for (let linkedProject of this.linkedProjects) {
+            if(this.linkedProjectsArray !== [])
+            for (let linkedProject of this.linkedProjectsArray) {
                 if (projectToAdd.id === linkedProject.id) {
                     this.project_query = ""
                     return;
                 }
             }else{
-                this.linkedProjects = [projectToAdd]
+                this.linkedProjectsArray = [projectToAdd]
             }
             this.project_query = "";
-            this.linkedProjects.push(projectToAdd);
+            this.linkedProjectsArray.push(projectToAdd);
         },
         deleteProjectFromArray(project) {
-            if (this.linkedProjects.includes(project)) {
-                this.linkedProjects.splice(this.linkedProjects.indexOf(project), 1);
+            if (this.linkedProjectsArray.includes(project)) {
+                this.linkedProjectsArray.splice(this.linkedProjectsArray.indexOf(project), 1);
             }
         },
         updateLinkedProjects(){
             let linkedProjectIds = [];
-            if(this.linkedProjects?.length > 0){
-                this.linkedProjects.forEach((linkedProject) => {
+            if(this.linkedProjectsArray?.length > 0){
+                this.linkedProjectsArray.forEach((linkedProject) => {
                     linkedProjectIds.push(linkedProject.id);
                 })
             }

@@ -320,6 +320,7 @@
         :closeModal="closeAddUserModal"
         :all_permissions="all_permissions"
         :departments="departments"
+        :roles="roles"
     />
 </template>
 
@@ -414,7 +415,7 @@ export default defineComponent({
         InputComponent,
         InviteUsersModal
     },
-    props: ['users', 'departments', 'all_permissions'],
+    props: ['users', 'departments', 'all_permissions', 'roles'],
     data() {
         return {
             showUserPermissions: true,

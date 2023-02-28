@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('token');
             $table->json('permissions');
-            $table->string('role')->nullable();
+            $table->json('roles')->nullable();
             $table->timestamps();
         });
     }

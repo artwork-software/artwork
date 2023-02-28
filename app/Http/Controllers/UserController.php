@@ -67,6 +67,7 @@ class UserController extends Controller
             'users' => UserIndexResource::collection(User::all())->resolve(),
             "all_permissions" => Permission::all()->groupBy('group'),
             "departments" => Department::all(),
+            "roles" => Role::all()
         ]);
     }
 

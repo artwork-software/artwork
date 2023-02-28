@@ -1663,6 +1663,7 @@
                         </div>
 
                         <div class="w-full items-center text-center">
+
                             <AddButton :class="[editChecklistForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                        class="mt-4 inline-flex items-center px-20 py-3 border border-transparent

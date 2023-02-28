@@ -100,6 +100,7 @@
         v-if="showLinkProjectsModal"
         @closed="onCloseLinkProjectsModal()"
         :moneySource="money_source"
+        :linkedProjects="linkedProjects"
     />
 
     <MoneySourceFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"

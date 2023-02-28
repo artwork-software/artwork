@@ -374,7 +374,7 @@ class MoneySourceController extends Controller
     }
 
     public function updateUsers(Request $request, MoneySource $moneySource){
-
+        $moneySource->users()->sync(collect($request->users));
     }
 
     /**

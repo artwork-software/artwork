@@ -161,7 +161,6 @@ const roleCheckboxes = [
         showIcon: true,
         checked: false
     },
-
 ]
 
 import JetDialogModal from '@/Jetstream/DialogModal.vue'

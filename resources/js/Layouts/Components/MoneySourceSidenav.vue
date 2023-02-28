@@ -1,8 +1,16 @@
 <template>
         <div class="w-full mt-36">
             <div class="w-full flex-grow items-center mb-4 h-36">
-                <div class="text-secondary text-md font-semibold">
+                <div class="text-secondary flex justify-between text-md font-semibold">
                     Freigegeben für
+                    <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all" @click="openEditUsersModal">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
+                            <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
+                                <path id="Pfad_1013" data-name="Pfad 1013" d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45" transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                                <path id="Pfad_1014" data-name="Pfad 1014" d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z" transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                            </g>
+                        </svg>
+                    </div>
                 </div>
                 <div class="flex">
                     <div class="-ml-3 first:ml-0" v-for="user in users">
@@ -96,6 +104,11 @@
         @closed="onCreateMoneySourceTask()"
         :money_source_id="money_source.id"
     />
+    <EditMoneySourceUsersModal
+        v-if="showEditUsersModal"
+        @closed="onCloseEditUsersModal()"
+        :moneySource="money_source"
+    />
     <link-projects-to-money-sources-component
         v-if="showLinkProjectsModal"
         @closed="onCloseLinkProjectsModal()"
@@ -131,6 +144,7 @@ import MoneySourceFileEditModal from "@/Layouts/Components/MoneySourceFileEditMo
 import MoneySourceFileDeleteModal from "@/Layouts/Components/MoneySourceFileDeleteModal.vue";
 import {ChevronDownIcon} from "@heroicons/vue/solid";
 import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjectsToMoneySourcesComponent.vue";
+import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
 
 
 export default {
@@ -148,7 +162,8 @@ export default {
         XCircleIcon,
         UserTooltip,
         CreateMoneySourceTask,
-        ChevronDownIcon
+        ChevronDownIcon,
+        EditMoneySourceUsersModal
     },
     data() {
         return {
@@ -160,11 +175,18 @@ export default {
             moneySourceFileToEdit:null,
             moneySourceFileToDelete:null,
             showLinkProjectsModal:false,
+            showEditUsersModal: false,
         }
     },
     methods: {
         openFileUploadModal() {
             this.showFileUploadModal = true
+        },
+        openEditUsersModal(){
+            this.showEditUsersModal = true;
+        },
+        onCloseEditUsersModal(){
+          this.showEditUsersModal = false;
         },
         openLinkProjectsModal(){
           this.showLinkProjectsModal = true;

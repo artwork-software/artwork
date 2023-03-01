@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\UpdateUserRequest;
@@ -39,6 +40,23 @@ class UserController extends Controller
         $this->authorize('viewAny',User::class);
 
         return UserIndexResource::collection(User::search($request->input('query'))->get())->resolve();
+    }
+
+    public function money_source_search(SearchRequest $request) {
+
+        $this->authorize('viewAny',User::class);
+        $wantedUserArray = [];
+
+        $wantedUsers = User::search($request->input('query'))->get();
+        foreach ($wantedUsers as $user){
+            if($user->getPermissionNames()){
+                $permissionArray = $user->getPermissionNames()->toArray();
+                if(in_array(PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value,$permissionArray)){
+                    $wantedUserArray[] = $user;
+                }
+            }
+        }
+        return $wantedUserArray;
     }
 
     public function reset_user_password(Request $request) {

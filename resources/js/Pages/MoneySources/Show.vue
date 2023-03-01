@@ -74,7 +74,8 @@
                             <div class="mr-2">
                                 zuständig:
                             </div>
-                            <div class="-ml-3" v-for="user in moneySource.users">
+                            <div class="-ml-3" v-for="user in moneySource.users" >
+                                <div v-if="user?.pivot?.competent">
                                 <img v-if="user"
                                      :data-tooltip-target="user?.id"
                                      :src="user?.profile_photo_url"
@@ -82,6 +83,7 @@
                                      class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                 <UserTooltip v-if="user"
                                              :user="user"/>
+                            </div>
                             </div>
                         </div>
                     </div>

@@ -446,7 +446,7 @@ export default {
             }
 
             this.createSingleSourceForm.post(route('money_sources.store'));
-            //this.closeModal(true);
+            this.closeModal(true);
         },
         createMoneySourceGroup(){
             this.usersToAdd.forEach((userToAdd) => {
@@ -460,7 +460,7 @@ export default {
                 this.createSourceGroupForm.sub_money_source_ids.push(subMoneySource.id);
             })
             this.createSourceGroupForm.post(route('money_sources.store'));
-            //this.closeModal(true);
+            this.closeModal(true);
         },
         changeTab(selectedTab) {
             this.usersToAdd = [];

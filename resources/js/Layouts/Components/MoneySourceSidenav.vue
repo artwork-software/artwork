@@ -1,102 +1,160 @@
 <template>
-        <div class="w-full mt-36">
-            <div class="w-full flex-grow items-center mb-4 h-36">
-                <div class="text-secondary flex justify-between text-md font-semibold">
-                    Freigegeben für
-                    <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all" @click="openEditUsersModal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                            <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                                <path id="Pfad_1013" data-name="Pfad 1013" d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45" transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                                <path id="Pfad_1014" data-name="Pfad 1014" d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z" transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                            </g>
-                        </svg>
-                    </div>
+    <div class="w-full mt-36">
+        <div class="w-full flex-grow items-center mb-4">
+            <div class="text-secondary flex justify-between text-md font-semibold">
+                Freigegeben für
+                <div
+                    class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
+                    @click="openEditUsersModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
+                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
+                            <path id="Pfad_1013" data-name="Pfad 1013"
+                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
+                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="1"/>
+                            <path id="Pfad_1014" data-name="Pfad 1014"
+                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
+                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
+                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                        </g>
+                    </svg>
                 </div>
-                <div class="flex">
-                    <div class="-ml-3 first:ml-0" v-for="user in users">
-                        <img v-if="user"
+            </div>
+            <div class="flex flex-wrap">
+                <div class="flex w-full xsLight mt-1">
+                    Zuständig
+                </div>
+                <div class="ml-3 flex">
+                    <div class="-ml-3" v-for="user in users">
+                        <div v-if="user.pivot?.competent">
+                        <img
                              :data-tooltip-target="user?.id"
                              :src="user?.profile_photo_url"
                              :alt="user?.name"
                              class="mt-3 rounded-full h-10 w-10 object-cover"/>
-                        <UserTooltip v-if="user" :user="user" />
+                        <UserTooltip v-if="user" :user="user"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex w-full xsLight mt-1">
+                    Zugriff
+                </div>
+                <div class="ml-3 flex">
+                    <div  class="-ml-3" v-for="user in users">
+                        <div v-if="user.pivot?.write_access && !user.pivot?.competent">
+                        <img :data-tooltip-target="user?.id"
+                             :src="user?.profile_photo_url"
+                             :alt="user?.name"
+                             class="mt-3 rounded-full h-10 w-10 object-cover"/>
+                        <UserTooltip v-if="user" :user="user"/>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="w-full items-center mb-4">
-                <div class="text-secondary flex justify-between text-md font-semibold my-2">
-                    Zugriff für
-                    <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all" @click="openLinkProjectsModal">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                            <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                                <path id="Pfad_1013" data-name="Pfad 1013" d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45" transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                                <path id="Pfad_1014" data-name="Pfad 1014" d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z" transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                            </g>
-                        </svg>
-                    </div>
+        </div>
+        <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
+        <div class="w-full items-center mb-4">
+            <div class="text-secondary flex items-center justify-between text-md font-semibold my-2">
+                <div class="flex items-center">
+                Zugriff für
+                    <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showLinkedProjects ? 'rotate-180' : '']"
+                                     @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
-                <div class="text-secondary text-sm" v-for="linkedProject in linkedProjects">
-                    {{linkedProject.name}}
-                </div>
-            </div>
 
-            <div class="w-full flex items-center mb-4">
-                <div class="text-secondary text-md font-semibold">
-                    Dokumente
-                </div>
-                <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
-                                 @click="showMoneySourceFiles = !showMoneySourceFiles"/>
-                <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                            @click="openFileUploadModal"/>
-            </div>
-            <div v-if="showMoneySourceFiles">
-                <div v-if="moneySourceFiles?.data.length > 0">
-                    <div v-for="moneySourceFile in moneySourceFiles.data">
-                        <div
-                            class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
-                        >
-                            <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
-                            <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
-                            <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(moneySourceFile)"/>
-                        </div>
-                    </div>
-                </div>
-                <div v-else>
-                    <div class="text-secondary text-sm my-2">Keine Dokumente vorhanden</div>
+                <div
+                    class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
+                    @click="openLinkProjectsModal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
+                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
+                            <path id="Pfad_1013" data-name="Pfad 1013"
+                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
+                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="1"/>
+                            <path id="Pfad_1014" data-name="Pfad 1014"
+                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
+                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
+                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                        </g>
+                    </svg>
                 </div>
             </div>
-            <div class="w-full flex-grow items-center mb-4">
-                <div class="text-secondary text-md font-semibold mb-3 flex justify-between">
-                    Aufgaben
-                    <div class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all" @click="openAddMoneySourceTask">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
-                            <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
-                                <path id="Pfad_1013" data-name="Pfad 1013" d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45" transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                                <path id="Pfad_1014" data-name="Pfad 1014" d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z" transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb" stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
-                            </g>
-                        </svg>
+            <div v-if="showLinkedProjects" class="text-secondary text-sm" v-for="linkedProject in linkedProjects">
+                {{ linkedProject.name }}
+            </div>
+        </div>
+        <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
+        <div class="w-full flex items-center mb-4">
+            <div class="text-secondary text-md font-semibold">
+                Dokumente
+            </div>
+            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
+                             @click="showMoneySourceFiles = !showMoneySourceFiles"/>
+            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                        @click="openFileUploadModal"/>
+        </div>
+        <div v-if="showMoneySourceFiles">
+            <div v-if="moneySourceFiles?.data.length > 0">
+                <div v-for="moneySourceFile in moneySourceFiles.data">
+                    <div
+                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
+                    >
+                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
+                        <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(moneySourceFile)"/>
                     </div>
                 </div>
-                <ul>
-                    <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
-                        <div class="mr-2">
-                            <input @click="updateTask(task)"
-                                   type="checkbox"
-                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                        </div>
-                        <div :class="task.done ? 'line-through' : ''">
-                            <div class="xsWhiteBold flex items-center gap-2">{{ task.name }} <span class="text-red-500 xxsLight" :class="Date.parse(task.deadline) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{ formatDate(task.deadline) }}</span><div class="flex">
+            </div>
+            <div v-else>
+                <div class="text-secondary text-sm my-2">Keine Dokumente vorhanden</div>
+            </div>
+        </div>
+        <div class="border-t-2 my-5 w-full border-secondary border-opacity-30" />
+        <div class="w-full flex-grow items-center mb-4">
+            <div class="text-secondary text-md font-semibold mb-3 flex justify-between">
+                Aufgaben
+                <div
+                    class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
+                    @click="openAddMoneySourceTask">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
+                        <g id="Icon_feather-edit" data-name="Icon feather-edit" transform="translate(0.5 0.5)">
+                            <path id="Pfad_1013" data-name="Pfad 1013"
+                                  d="M7.436,6H3.986A.986.986,0,0,0,3,6.986v6.9a.986.986,0,0,0,.986.986h6.9a.986.986,0,0,0,.986-.986v-3.45"
+                                  transform="translate(-3 -4.954)" fill="none" stroke="#fcfcfb" stroke-linecap="round"
+                                  stroke-linejoin="round" stroke-width="1"/>
+                            <path id="Pfad_1014" data-name="Pfad 1014"
+                                  d="M17.176,3.124A1.046,1.046,0,0,1,18.654,4.6L13.972,9.286,12,9.779l.493-1.972Z"
+                                  transform="translate(-9.043 -2.818)" fill="none" stroke="#fcfcfb"
+                                  stroke-linecap="round" stroke-linejoin="round" stroke-width="1"/>
+                        </g>
+                    </svg>
+                </div>
+            </div>
+            <ul>
+                <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
+                    <div class="mr-2">
+                        <input @click="updateTask(task)"
+                               type="checkbox"
+                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                    </div>
+                    <div :class="task.done ? 'line-through' : ''">
+                        <div class="xsWhiteBold flex items-center gap-2">{{ task.name }} <span
+                            class="text-red-500 xxsLight"
+                            :class="Date.parse(task.deadline) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
+                                formatDate(task.deadline)
+                            }}</span>
+                            <div class="flex">
                                 <span class="-ml-1" v-for="(user,index) in task.money_source_task_users">
                                     <NewUserToolTip :height="7" :width="7" v-if="user"
                                                     :user="user" :id="index"/>
                                 </span>
-                            </div></div>
-                            <p>{{ task.description }}</p>
+                            </div>
                         </div>
-                    </li>
-                </ul>
-            </div>
+                        <p>{{ task.description }}</p>
+                    </div>
+                </li>
+            </ul>
         </div>
+    </div>
 
 
     <create-money-source-task
@@ -121,7 +179,8 @@
     <MoneySourceFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
                               :file="moneySourceFileToEdit"/>
 
-    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :money-source-id="money_source.id" :close-modal="closeFileDeleteModal"
+    <MoneySourceFileDeleteModal :show="showFileDeleteModal" :money-source-id="money_source.id"
+                                :close-modal="closeFileDeleteModal"
                                 :file="moneySourceFileToDelete"/>
 
 
@@ -149,7 +208,7 @@ import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsers
 
 export default {
     name: "MoneySourceSidenav",
-    props: ['users', 'tasks', 'money_source','moneySourceFiles', 'linkedProjects'],
+    props: ['users', 'tasks', 'money_source', 'moneySourceFiles', 'linkedProjects'],
     components: {
         LinkProjectsToMoneySourcesComponent,
         MoneySourceFileDeleteModal,
@@ -172,46 +231,47 @@ export default {
             showFileEditModal: false,
             showFileDeleteModal: false,
             showMoneySourceFiles: false,
-            moneySourceFileToEdit:null,
-            moneySourceFileToDelete:null,
-            showLinkProjectsModal:false,
+            moneySourceFileToEdit: null,
+            moneySourceFileToDelete: null,
+            showLinkProjectsModal: false,
             showEditUsersModal: false,
+            showLinkedProjects: false,
         }
     },
     methods: {
         openFileUploadModal() {
             this.showFileUploadModal = true
         },
-        openEditUsersModal(){
+        openEditUsersModal() {
             this.showEditUsersModal = true;
         },
-        onCloseEditUsersModal(){
-          this.showEditUsersModal = false;
+        onCloseEditUsersModal() {
+            this.showEditUsersModal = false;
         },
-        openLinkProjectsModal(){
-          this.showLinkProjectsModal = true;
+        openLinkProjectsModal() {
+            this.showLinkProjectsModal = true;
         },
-        onCloseLinkProjectsModal(){
+        onCloseLinkProjectsModal() {
             this.showLinkProjectsModal = false;
         },
         openFileEditModal(file) {
             this.moneySourceFileToEdit = file;
             this.showFileEditModal = true
         },
-        openFileDeleteModal(file){
+        openFileDeleteModal(file) {
             this.moneySourceFileToDelete = file
             this.showFileDeleteModal = true;
         },
-        closeFileUploadModal(){
+        closeFileUploadModal() {
             this.showFileUploadModal = false;
         },
         closeFileEditModal() {
             this.showFileEditModal = false;
             this.moneySourceFileToEdit = null;
-            },
-        closeFileDeleteModal(){
-          this.showFileDeleteModal = false;
-          this.moneySourceFileToDelete = null;
+        },
+        closeFileDeleteModal() {
+            this.showFileDeleteModal = false;
+            this.moneySourceFileToDelete = null;
         },
         downloadMoneySourceFile(file) {
             let link = document.createElement('a');
@@ -220,23 +280,29 @@ export default {
             link.click();
         },
 
-        updateTask(task){
-            if(!task.done) {
-                Inertia.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true} );
+        updateTask(task) {
+            if (!task.done) {
+                Inertia.patch(route('money_source.task.done', {moneySourceTask: task.id}), {}, {preserveState: true});
             } else {
-                Inertia.patch(route('money_source.task.undone', {moneySourceTask: task.id}), {}, {preserveState: true} );
+                Inertia.patch(route('money_source.task.undone', {moneySourceTask: task.id}), {}, {preserveState: true});
             }
 
         },
-        openAddMoneySourceTask(){
+        openAddMoneySourceTask() {
             this.showMoneySourceTaskModal = true
         },
-        onCreateMoneySourceTask(){
+        onCreateMoneySourceTask() {
             this.showMoneySourceTaskModal = false;
         },
         formatDate(date) {
             const dateFormate = new Date(date);
-            return dateFormate.toLocaleString('de-de',{year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'});
+            return dateFormate.toLocaleString('de-de', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         }
     }
 }

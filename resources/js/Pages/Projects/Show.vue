@@ -744,6 +744,9 @@
                     <div class="mt-4">
                         <span v-for="user in assignedUsers"
                               class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                            <pre>
+                                {{user}}
+                            </pre>
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full"

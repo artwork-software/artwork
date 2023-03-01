@@ -11,7 +11,7 @@
                        aria-hidden="true"/>
                 <div class="xsLight">
                     Tippe den Namen der Nutzer*innen, denen du Zugriff zur Quelle erteilen möchtest. Du kannst nur Nutzer*innen auswählen, welche die Berechtigung haben, eine Finanzierungsquelle bearbeiten zu können.
-                    Zuständige Nutzer*innen sind automatisch für die Quelle freigegeben.
+                    Zuständige Nutzer*innen haben automatisch Zugriff auf die Quelle.
                 </div>
                 <div class="mb-2 mt-6">
                     <div class="relative w-full">
@@ -59,6 +59,41 @@
                                     <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
+
+                            <div class="flex justify-between items-center my-1.5 h-5 w-80">
+                                <div class="flex items-center justify-between" v-if="user.pivot">
+                                   <div class="flex">
+                                        <input v-model="user.pivot.competent"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                   </div>
+                                    <div class="flex ml-8">
+                                        <input v-model="user.pivot.write_access"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zugriff</p>
+                                   </div>
+                                </div>
+                                <div class="flex items-center justify-between" v-else>
+                                   <div class="flex">
+                                        <input v-model="user.competent"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                   </div>
+                                    <div class="flex ml-8">
+                                        <input v-model="user.write_access"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zugriff</p>
+                                   </div>
+                                </div>
+                            </div>
                         </span>
                 </div>
                 <div class="w-full items-center text-center">
@@ -104,8 +139,7 @@ export default {
         return {
             user_search_results: [],
             user_query: '',
-            competentUsers: this.moneySource.users,
-            assignedUsers: this.moneySource.users ? this.moneySource.users.filter(user => user.pivot.competent !== false && user.pivot.write_access !== true) : [],
+            assignedUsers: this.moneySource.users ? this.moneySource.users : [],
         }
     },
     watch: {
@@ -135,15 +169,23 @@ export default {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
-        //TODO: HIER PROBLEM MIT ZUSTÄNDIGEN USERN UND USERN MIT NUR SCHREIBRECHT
         editMoneySourceUsers() {
             let users = {};
             this.assignedUsers.forEach(user => {
-                users[user.id] = {
-                    user_id: user.id,
-                    competent: user.pivot?.competent,
-                    write_access: true
-                };
+                if(user.pivot){
+                    users[user.id] = {
+                        user_id: user.id,
+                        competent: user.pivot.competent,
+                        write_access: user.pivot.write_access
+                    };
+                }else{
+                    users[user.id] = {
+                        user_id: user.id,
+                        competent: user.competent,
+                        write_access: user.write_access
+                    };
+                }
+
             })
             this.$inertia.patch(route('money_sources.update_users',{moneySource: this.moneySource.id}),{
                 users: users,

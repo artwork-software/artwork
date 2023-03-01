@@ -509,6 +509,330 @@
             </div>
         </div>
     </div>
+
+    <!-- Change Checklist Teams Modal -->
+    <ChecklistTeamComponent
+        :checklistId="checklistToEdit?.id"
+        :departments="checklistToEdit?.departments"
+        :editingChecklistTeams="editingChecklistTeams"
+        @closed="closeEditChecklistTeamsModal"
+    />
+
+    <!-- Add Task Modal-->
+    <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
+                    Neue Aufgabe
+                </div>
+                <XIcon @click="closeAddTaskModal"
+                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-secondary tracking-tight leading-6 sub">
+                    Lege eine neue Aufgabe an. Du kannst sie zudem mit einer Deadline
+                    und einem Kommentar versehen.
+                </div>
+                <div class="mt-6">
+                    <div class="flex">
+                        <div class="mt-1 w-full mr-4">
+                            <input type="text" v-model="taskForm.name" placeholder="Aufgabe*"
+                                   class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                        </div>
+                    </div>
+                    <div class="sm:w-1/2 my-2">
+                        <label for="deadlineDate" class="xxsLight">Zu erledigen bis?</label>
+                        <div class="w-full flex">
+                            <input v-model="taskForm.deadlineDate"
+                                   id="deadlineDate"
+                                   type="date"
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+                            <input v-model="taskForm.deadlineTime"
+                                   id="deadlineTime"
+                                   type="time"
+                                   class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
+                        </div>
+                        <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
+                    </div>
+                    <div class="mt-4 mr-4">
+                                            <textarea
+                                                placeholder="Kommentar"
+                                                v-model="taskForm.description" rows="3"
+                                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                    </div>
+                    <div class="w-full items-center text-center">
+                        <AddButton
+                            :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover
+                            focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm
+                            text-secondaryHover"
+                            @click="addTask"
+                            :disabled="this.taskForm.name === ''" text="Hinzufügen" mode="modal"/>
+                    </div>
+                </div>
+
+            </div>
+
+        </template>
+    </jet-dialog-modal>
+    <!-- Edit Task Modal-->
+    <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
+                    Aufgabe bearbeiten
+                </div>
+                <XIcon @click="closeEditTaskModal"
+                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="mt-12">
+                    <div class="flex">
+                        <div class="relative flex w-full mr-4">
+                            <input id="edit_task_name" v-model="taskToEditForm.name" type="text"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="edit_task_name"
+                                   class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                        </div>
+                    </div>
+                    <div class="mt-4 mr-4">
+                        <div class="mb-1">
+                            <label for="datePickerEdit" class="text-secondary subpixel-antialiased">Zu erledigen
+                                bis?</label>
+                        </div>
+                        <input
+                            v-model="taskToEditForm.deadline" id="datePickerEdit"
+                            placeholder="Zu erledigen bis?" type="datetime-local"
+                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full"/>
+                    </div>
+                    <div class="mt-4 mr-4">
+                                            <textarea
+                                                placeholder="Kommentar"
+                                                v-model="taskToEditForm.description" rows="3"
+                                                class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
+                    </div>
+                    <button
+                        :class="[taskToEditForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                        class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                        @click="editTask"
+                        :disabled="taskToEditForm.name === ''">
+                        Hinzufügen
+                    </button>
+                </div>
+
+            </div>
+
+        </template>
+    </jet-dialog-modal>
+    <!-- Delete Checklist Modal -->
+    <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-4">
+                <div class="font-black font-lexend text-primary text-3xl my-2">
+                    Checkliste löschen
+                </div>
+                <XIcon @click="closeDeleteChecklistModal"
+                       class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-error subpixel-antialiased">
+                    Bist du sicher, dass du die Checkliste {{ checklistToDelete.name }} löschen willst?
+                </div>
+                <div class="flex justify-between mt-6">
+                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                            @click="deleteChecklistFromProject()">
+                        Löschen
+                    </button>
+                    <div class="flex my-auto">
+                            <span @click="closeDeleteChecklistModal()"
+                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                    </div>
+                </div>
+            </div>
+
+        </template>
+
+    </jet-dialog-modal>
+
+    <!-- Checkliste Bearbeiten-->
+    <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-3">
+                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                    Checkliste bearbeiten
+                </div>
+                <XIcon @click="closeEditChecklistModal"
+                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-secondary tracking-tight leading-6 sub">
+                    Bearbeite deine Checkliste.
+                </div>
+                <div class="mt-4">
+                    <div class="flex mt-8">
+                        <div class="relative w-full mr-4">
+                            <input id="editChecklistName" v-model="editChecklistForm.name" type="text"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="editChecklistName"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                                der Checkliste</label>
+                        </div>
+                        <jet-input-error :message="form.error" class="mt-2"/>
+                    </div>
+                    <div class="flex items-center my-6">
+                        <Switch @click="editChecklistForm.private = !editChecklistForm.private"
+                                :class="[editChecklistForm.private ?
+                                        'bg-success' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                <span aria-hidden="true"
+                                      :class="[editChecklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                        </Switch>
+                        <span class="ml-2 text-sm"
+                              :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
+                        <div class="flex ml-2">
+                            <ExclamationIcon class="my-auto h-5 w-5 text-error"></ExclamationIcon>
+                            <span
+                                class="text-error subpixel-antialiased text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full items-center text-center">
+
+                        <AddButton :class="[editChecklistForm.name.length === 0 ?
+                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                   class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="editChecklist" :disabled="editChecklistForm.name.length === 0"
+                                   text="Speichern" mode="modal"
+                        />
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </jet-dialog-modal>
+    <!-- Checkliste Hinzufügen-->
+    <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
+        <template #content>
+            <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
+            <div class="mx-3">
+                <div class="font-bold font-lexend text-primary text-3xl my-2">
+                    Neue Checkliste
+                </div>
+                <XIcon @click="closeAddChecklistModal"
+                       class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
+                       aria-hidden="true"/>
+                <div class="text-secondary tracking-tight leading-6 sub">
+                    Lege eine neue Checkliste an. Um Zeit zu sparen kannst du eine Vorlage wählen und diese
+                    anschließend anpassen.
+                </div>
+                <div class="flex my-6">
+                    <Listbox class="sm:col-span-3" v-model="selectedTemplate">
+                        <div class="relative">
+                            <ListboxButton
+                                class="bg-white relative  border-0 w-full border border-gray-300 font-semibold mr-40 py-2 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
+                                        <span class="block truncate items-center">
+                                            <span>{{ selectedTemplate.name }}</span>
+                                        </span>
+                                <span v-if="selectedTemplate.name === ''"
+                                      class="block truncate">Keine Vorlage</span>
+                                <span
+                                    class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
+                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
+                                    </span>
+                            </ListboxButton>
+
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                <ListboxOptions
+                                    class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   :key="'keineVorlage'"
+                                                   :value="{name:'',id:null}"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        Keine Vorlage
+                                                    </span>
+                                            <span
+                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                    <ListboxOption as="template" class="max-h-8"
+                                                   v-for="template in checklist_templates"
+                                                   :key="template.id"
+                                                   :value="template"
+                                                   v-slot="{ active, selected }">
+                                        <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
+                                                    <span
+                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
+                                                        {{ template.name }}
+                                                    </span>
+                                            <span
+                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
+                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
+                                                                 aria-hidden="true"/>
+                                                </span>
+                                        </li>
+                                    </ListboxOption>
+                                </ListboxOptions>
+                            </transition>
+                        </div>
+                    </Listbox>
+                </div>
+                <div class="mt-4">
+                    <div class="flex mt-8">
+                        <div class="relative w-full mr-4" v-if="selectedTemplate.name === ''">
+                            <input id="checklistName" v-model="checklistForm.name" type="text"
+                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
+                                   placeholder="placeholder"/>
+                            <label for="checklistName"
+                                   class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
+                                der Checkliste*</label>
+                        </div>
+                        <jet-input-error :message="form.error" class="mt-2"/>
+                    </div>
+                    <div class="flex items-center my-6" v-if="selectedTemplate.name === ''">
+                        <Switch @click="checklistForm.private = !checklistForm.private"
+                                :class="[checklistForm.private ?
+                                        'bg-success' :
+                                        'bg-gray-300',
+                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
+                                <span aria-hidden="true"
+                                      :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
+                        </Switch>
+                        <span class="ml-2 text-sm"
+                              :class="checklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
+                        <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                            <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
+                            <span
+                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
+                        </div>
+                    </div>
+
+                    <div class="w-full items-center text-center">
+                        <AddButton :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
+                                       'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                   class="mt-4 items-center px-20 py-3 border border-transparent
+                            text-base font-bold shadow-sm text-secondaryHover"
+                                   @click="addChecklist"
+                                   :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
+                                   text="Anlegen" mode="modal"/>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </jet-dialog-modal>
+
 </template>
 
 <script>
@@ -554,12 +878,13 @@ import JetInput from "@/Jetstream/Input.vue";
 import JetInputError from "@/Jetstream/InputError.vue";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {Link} from "@inertiajs/inertia-vue3";
+import {Link, useForm} from "@inertiajs/inertia-vue3";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
 
 export default {
     name: "ChecklistComponent",
+    props: ['project', 'opened_checklists', 'projectCanWriteIds', 'projectManagerIds', 'checklist_templates'],
     components: {
         TagComponent,
         AddButton,
@@ -604,6 +929,314 @@ export default {
         Disclosure,
         DisclosurePanel,
         DisclosureButton
+    },
+    data(){
+        return {
+            error: [],
+            allDoneTasks: [],
+            checklist_assigned_departments: [],
+            selectedTemplate: {name: '', id: null},
+            checklistToEdit: null,
+            editingChecklist: false,
+            editingChecklistTeams: false,
+            addingTask: false,
+            addingChecklist: false,
+            dragging: false,
+            deletingChecklist: false,
+            checklistToDelete: {},
+            editingTask: false,
+            showMenu: null,
+            checklistForm: useForm({
+                name: "",
+                project_id: this.project.id,
+                tasks: [],
+                assigned_department_ids: [],
+                private: false,
+                template_id: null,
+                user_id: null
+            }),
+            editChecklistForm: useForm({
+                id: null,
+                name: "",
+                private: false,
+                user_id: null,
+                assigned_department_ids: [],
+            }),
+            taskForm: useForm({
+                name: "",
+                description: "",
+                deadline: null,
+                deadlineDate: null,
+                deadlineTime: null,
+                checklist_id: null,
+            }),
+            taskToEditForm: useForm({
+                id: '',
+                name: "",
+                description: "",
+                deadline: null,
+            }),
+            duplicateForm: useForm({
+                name: "",
+                project_id: this.project.id,
+                tasks: [],
+                assigned_department_ids: [],
+                user_id: null
+            }),
+            templateForm: useForm({
+                checklist_id: null,
+                user_id: this.$page.props.user.id,
+            }),
+            doneTaskForm: useForm({
+                done: false,
+                user_id: this.$page.props.user.id
+            }),
+        }
+    },
+    methods: {
+        closeDeleteChecklistModal() {
+            this.deletingChecklist = false;
+            this.checklistToDelete = {};
+        },
+        formatDate(date, time) {
+            if (date === null || time === null) return null;
+            return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
+        },
+        deleteChecklistFromProject() {
+            if (this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
+                this.project.public_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+                this.closeDeleteChecklistModal();
+                return;
+            }
+            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
+                this.project.private_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
+                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+                this.closeDeleteChecklistModal();
+            }
+        },
+        checkAllTasks(checklist) {
+            checklist.tasks.forEach((task) => {
+                task.done = true;
+                this.updateTaskStatus(task)
+            })
+        },
+        uncheckAllTasks(checklist) {
+            checklist.tasks.forEach((task) => {
+                task.done = false;
+                this.updateTaskStatus(task)
+            })
+        },
+        allTasksChecked(checklist) {
+            let checked = true;
+            checklist.tasks.forEach((task) => {
+                if (task.done === false) {
+                    checked = false
+                }
+            })
+            return checked
+        },
+        deleteTask(task) {
+            this.$inertia.delete(`/tasks/${task.id}`, {preserveState: true, preserveScroll: true});
+        },
+        duplicateChecklist(checklist) {
+            let departmentIds = [];
+            this.duplicateForm.name = checklist.name + " (Kopie)";
+            this.duplicateForm.tasks = checklist.tasks;
+            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
+                this.duplicateForm.user_id = this.$page.props.user.id;
+            } else {
+                checklist.departments.forEach((department) => {
+                    departmentIds.push(department.id);
+                })
+                this.duplicateForm.assigned_department_ids = departmentIds
+            }
+            this.duplicateForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true})
+            this.duplicateForm.name = "";
+            this.duplicateForm.tasks = [];
+            this.duplicateForm.departments = [];
+            this.duplicateForm.user_id = null;
+        },
+        openDeleteChecklistModal(checklistToDelete) {
+            this.checklistToDelete = checklistToDelete;
+            this.deletingChecklist = true;
+        },
+        openEditChecklistModal(checklist) {
+            this.editChecklistForm.id = checklist.id;
+            this.editChecklistForm.name = checklist.name;
+            this.editChecklistForm.private = !checklist.departments;
+            if (checklist.departments) {
+                this.editChecklistForm.assigned_department_ids = [];
+                checklist.departments.forEach((department) => {
+                    this.editChecklistForm.assigned_department_ids.push(department.id);
+                })
+            }
+            this.editingChecklist = true;
+        },
+        createTemplateFromChecklist(checklist) {
+            console.log('HEHE');
+            this.templateForm.checklist_id = checklist.id;
+            this.templateForm.post(route('checklist_templates.store'));
+        },
+        openEditTaskModal(task) {
+            this.taskToEditForm.id = task.id;
+            this.taskToEditForm.name = task.name;
+            this.taskToEditForm.deadline = task.deadline_dt_local;
+            this.taskToEditForm.description = task.description;
+            this.editingTask = true;
+        },
+        closeEditTaskModal() {
+            this.editingTask = false;
+            this.taskToEditForm.id = null;
+            this.taskToEditForm.name = "";
+            this.taskToEditForm.deadline = null;
+            this.taskToEditForm.description = "";
+
+        },
+
+        openAddTaskModal(checklist) {
+            this.taskForm.checklist_id = checklist.id;
+            this.addingTask = true;
+        },
+        closeAddTaskModal() {
+            this.taskForm.checklist_id = null;
+            this.taskForm.name = "";
+            this.taskForm.description = "";
+            this.taskForm.deadline = null;
+            this.taskForm.deadlineDate = null;
+            this.taskForm.deadlineTime = null;
+            this.addingTask = false;
+        },
+        addTask() {
+            if (this.taskForm.deadlineDate) {
+                if (this.taskForm.deadlineTime === null) {
+                    this.taskForm.deadlineTime = '00:00';
+                }
+                this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
+            }
+            this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
+            this.closeAddTaskModal();
+        },
+        editTask() {
+            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},), {
+                preserveState: true,
+                preserveScroll: true
+            });
+            this.closeEditTaskModal();
+        },
+        closeEditChecklistModal() {
+            this.editingChecklist = false;
+            this.editChecklistForm.id = null;
+            this.editChecklistForm.name = "";
+            this.editChecklistForm.private = false;
+            this.editChecklistForm.assigned_department_ids = null;
+            this.editChecklistForm.user_id = null;
+        },
+        editChecklist() {
+            if (this.editChecklistForm.private) {
+                this.editChecklistForm.user_id = this.$page.props.user.id;
+                this.editChecklistForm.assigned_department_ids = [];
+            } else {
+                this.editChecklistForm.user_id = null;
+
+            }
+            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}, {
+                preserveState: true,
+                preserveScroll: true
+            }));
+            this.closeEditChecklistModal();
+        },
+
+        updateTaskStatus(task) {
+            this.doneTaskForm.done = task.done;
+            if (this.doneTaskForm.done === false) {
+                task.done_by_user = null;
+                task.done_at = null;
+                task.done_at_dt_local = null;
+            }
+            this.doneTaskForm.patch(route('tasks.update', {task: task.id}), {
+                preserveScroll: true,
+            });
+        },
+        openEditChecklistTeamsModal(checklist) {
+            this.checklistToEdit = checklist;
+            this.checklist_assigned_departments = checklist.departments;
+            this.editingChecklistTeams = true;
+        },
+        closeEditChecklistTeamsModal() {
+            this.editingChecklistTeams = false;
+        },
+        openAddChecklistModal() {
+            this.addingChecklist = true;
+        },
+        closeAddChecklistModal() {
+            this.addingChecklist = false;
+            this.checklistForm.name = '';
+            this.checklistForm.tasks = [];
+            this.checklistForm.private = false;
+            this.checklistForm.template_id = null;
+            this.checklistForm.user_id = null;
+            this.selectedTemplate = {name: '', id: null};
+            this.checklist_assigned_departments = [];
+            this.checklistForm.assigned_department_ids = [];
+        },
+        addChecklist() {
+
+            if (this.selectedTemplate.id !== null) {
+                this.checklistForm.template_id = this.selectedTemplate.id;
+                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
+                this.checklistForm.template_id = null;
+                this.closeAddChecklistModal();
+            } else {
+                if (this.checklistForm.private === true) {
+                    this.checklistForm.user_id = this.$page.props.user.id;
+                }
+                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
+                this.closeAddChecklistModal();
+            }
+
+        },
+        changeChecklistStatus(checklist) {
+
+            if (!this.opened_checklists.includes(checklist.id)) {
+                const openedChecklists = this.opened_checklists;
+
+                openedChecklists.push(checklist.id)
+
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists}, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+            } else {
+                const filteredList = this.opened_checklists.filter(function (value) {
+                    return value !== checklist.id;
+                })
+                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList}, {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+            }
+        },
+        updateTaskOrder(tasks) {
+
+            tasks.map((task, index) => {
+                task.order = index + 1
+            })
+
+            this.$inertia.put('/tasks/order', {
+                tasks
+            }, {
+                preserveState: true,
+                preserveScroll: true
+            })
+
+        },
     }
 }
 </script>

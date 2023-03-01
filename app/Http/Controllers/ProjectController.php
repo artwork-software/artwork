@@ -141,6 +141,7 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
         $projects = Project::search($request->input('query'))->get();
 
+
         return ProjectIndexResource::collection($projects)->resolve();
     }
 

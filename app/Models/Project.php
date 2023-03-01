@@ -48,6 +48,17 @@ class Project extends Model
         'number_of_participants',
         'cost_center_id',
         'copyright_id',
+        'num_of_guests',
+        'entry_fee',
+        'registration_required',
+        'register_by',
+        'registration_deadline',
+        'is_closed_society'
+    ];
+
+    protected $casts = [
+        'registration_required' => 'boolean',
+        'is_closed_society' => 'boolean'
     ];
 
     protected $with = ['historyChangesMorph'];

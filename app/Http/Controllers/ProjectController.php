@@ -217,6 +217,19 @@ class ProjectController extends Controller
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
+    public function updateEntranceData(Project $project, Request $request) {
+        $project->update([
+            'num_of_guests' => $request->num_of_guests,
+            'entry_fee' => $request->entry_fee,
+            'registration_required' => $request->registration_required,
+            'register_by' => $request->register_by,
+            'registration_deadline' => $request->registration_deadline,
+            'is_closed_society' => $request->is_closed_society,
+        ]);
+
+        return Redirect::back();
+    }
+
     public function generateBasicBudgetValues(Project $project)
     {
         $table = $project->table()->create([

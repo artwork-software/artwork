@@ -46,6 +46,12 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
             'write_auth' => $this->writeUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
+            'num_of_guests' => $this->num_of_guests,
+            'entry_fee' => $this->entry_fee,
+            'registration_required' => $this->registration_required,
+            'register_by' => $this->register_by,
+            'registration_deadline' => $this->registration_deadline,
+            'is_closed_society' => $this->is_closed_society,
 
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),

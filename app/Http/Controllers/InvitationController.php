@@ -75,6 +75,7 @@ class InvitationController extends Controller
     {
         $admin_user = Auth::user();
         $permissions = $request->permissions;
+        $roles = $request->roles;
 
         foreach ($request->user_emails as $email) {
             $token = createToken();
@@ -83,7 +84,7 @@ class InvitationController extends Controller
                 'email' => $email,
                 'token' => $token['hash'],
                 'permissions' => json_encode($permissions),
-                'role' => $request->role
+                'roles' => json_encode($roles)
             ]);
 
             $invitation->departments()->sync(
@@ -186,15 +187,14 @@ class InvitationController extends Controller
 
         $user->departments()->sync($invitation->departments->pluck('id'));
 
-        if ($invitation->role) {
-            $user->assignRole($invitation->role);
-        }
+
+        $user->assignRole(json_decode($invitation->roles));
+        $user->givePermissionTo(json_decode($invitation->permissions));
 
         $invitation->delete();
 
         $guard->login($user);
-        $user->assignRole($invitation->role);
-        $user->givePermissionTo(json_decode($invitation->permissions));
+
 
         broadcast(new UserUpdated())->toOthers();
 

@@ -74,7 +74,8 @@
                             <div class="mr-2">
                                 zuständig:
                             </div>
-                            <div class="-ml-3" v-for="user in moneySource.users">
+                            <div class="-ml-3" v-for="user in moneySource.users" >
+                                <div v-if="user?.pivot?.competent">
                                 <img v-if="user"
                                      :data-tooltip-target="user?.id"
                                      :src="user?.profile_photo_url"
@@ -82,6 +83,7 @@
                                      class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                                 <UserTooltip v-if="user"
                                              :user="user"/>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -232,6 +234,10 @@
                 </div>
             </div>
         </div>
+
+        <pre>
+        {{ moneySource.users }}
+    </pre>
         <edit-money-source-component
             v-if="showEditMoneySourceModal"
             @closed="onEditMoneySourceModalClose()"
@@ -240,8 +246,13 @@
             :moneySourceGroups="this.moneySourceGroups"
         />
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
-            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks"
-                                :money_source="moneySource" :money-source-files="moneySource.money_source_files"></MoneySourceSidenav>
+            <MoneySourceSidenav
+                :users="moneySource.users"
+                :tasks="moneySource.tasks"
+                :money_source="moneySource"
+                :money-source-files="moneySource.money_source_files"
+                :linked-projects="linkedProjects"
+            ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
     <confirmation-component
@@ -289,7 +300,7 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 
 export default {
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {
         MoneySourceSidenav,
         BaseSidenav,

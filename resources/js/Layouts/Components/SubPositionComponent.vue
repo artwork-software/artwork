@@ -558,7 +558,7 @@ export default {
                     cssString += ' xsWhiteBold '
                 } else {
                     if (cell.column.color !== 'whiteColumn') {
-                        cssString += ' xsWhiteBold '
+                        cssString += ' xsDark '
                         cssString += cell.column.color;
                     } else {
                         cssString += ' xsDark '
@@ -566,7 +566,7 @@ export default {
                 }
             } else {
                 if (cell.column.color !== 'whiteColumn') {
-                    cssString += ' xsWhiteBold '
+                    cssString += ' xsDark '
                     cssString += cell.column.color;
                 } else {
                     cssString += ' xsDark '
@@ -605,20 +605,20 @@ export default {
 }
 
 .greenColumn {
-    background-color: #50908E;
+    background-color: #D9E6E4;
     border: 2px solid #1FC687;
 }
 
 .yellowColumn {
-    background-color: #F0B54C;
+    background-color: #F9EDD4;
 }
 
 .redColumn {
-    background-color: #D84387;
+    background-color: #F6D5E3;
 }
 
 .lightGreenColumn {
-    background-color: #35A965;
+    background-color: #EAEAEB;
 }
 @layer base {
     input[type=number].appearance-none::-webkit-inner-spin-button,

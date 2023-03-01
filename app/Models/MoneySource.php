@@ -41,12 +41,17 @@ class MoneySource extends Model
         'sub_money_source_ids'
     ];
 
+    protected $casts = [
+        'is_group' => 'boolean',
+    ];
 
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+
+    public function users()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsToMany(User::class, 'money_source_users')->withPivot(
+            'competent', 'write_access'
+        )->using(MoneySourceUserPivot::class);
     }
-
 
     public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
@@ -56,7 +61,7 @@ class MoneySource extends Model
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class, 'money_source_projects');
+        return $this->belongsToMany(Project::class, 'money_source_project');
     }
 
     public function toSearchableArray(): array

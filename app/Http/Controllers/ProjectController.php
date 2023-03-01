@@ -141,6 +141,7 @@ class ProjectController extends Controller
         $this->authorize('viewAny', Project::class);
         $projects = Project::search($request->input('query'))->get();
 
+
         return ProjectIndexResource::collection($projects)->resolve();
     }
 
@@ -1007,6 +1008,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
+
         $project->load([
             'access_budget',
             'categories',
@@ -1082,9 +1084,6 @@ class ProjectController extends Controller
 
             'moneySources' => MoneySource::all(),
 
-            // Needs to be adjusted, not correct yet.
-            'projectMoneySources' => MoneySource::where('projects', 'like', "%\"{$project->id}\"%"),
-
             'budget' => [
                 'columns' => $outputColumns,
                 'table' => $project->table()
@@ -1143,6 +1142,7 @@ class ProjectController extends Controller
             'openTab' => $request->openTab ?: 'checklist',
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
+            'projectMoneySources' => $project->moneySources()->get(),
         ]);
     }
 

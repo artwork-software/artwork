@@ -43,11 +43,13 @@ export default {
     props: {
         file: Object,
         show: Boolean,
-        closeModal: Function
+        closeModal: Function,
+        moneySourceId: Number,
     },
     methods: {
         destroy() {
-            this.$inertia.delete(`/money_sources/${this.file.id}/files`);
+            this.$inertia.delete(route('money_sources_delete_file', [this.moneySourceId, this.file.id] ));
+            //this.$inertia.delete(`/money_sources/${this.file.id}/files`);
             this.closeModal()
         },
     }

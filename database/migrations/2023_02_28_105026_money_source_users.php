@@ -13,10 +13,12 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('money_source_projects', function (Blueprint $table) {
+        Schema::create('money_source_users', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger("money_source_id");
-            $table->bigInteger("project_id");
+            $table->unsignedBigInteger('money_source_id');
+            $table->unsignedBigInteger('user_id');
+            $table->boolean('competent')->default(false);
+            $table->boolean('write_access')->default(false);
             $table->timestamps();
         });
     }
@@ -28,6 +30,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('money_source_projects');
+        //
     }
 };

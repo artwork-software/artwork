@@ -218,7 +218,7 @@ class ProjectController extends Controller
     }
 
     public function updateEntranceData(Project $project, Request $request) {
-        $project->update(array_filter($request->all()));
+        $project->update(array_filter($request->all(), function($field) { return !is_null($field);}));
 
         return Redirect::back();
     }

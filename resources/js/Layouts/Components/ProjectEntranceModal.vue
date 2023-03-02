@@ -13,11 +13,12 @@
                 <div class="text-secondary">Lege Modalitäten für den Eintritt, Anmeldung und mehr fest.
                     Diese kannst du auf alle öffentlichen Termine, die diesem Projekt zugeordnet sind zuweisen.</div>
 
-                <input placeholder="Wie viele Personen dürfen teilnehmen/werden erwartet?"
+                <input :placeholder="numOfGuests !== undefined && numOfGuests !== null && numOfGuests !== '' ? numOfGuests :
+                'Wie viele Personen dürfen teilnehmen/werden erwartet?'"
                        id="num_of_guests"
                        v-model="numOfGuests"
                        class="mt-10 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                <input placeholder="Wie hoch ist der Eintritt?"
+                <input :placeholder="entryFee !== undefined && entryFee !== null && entryFee !== '' ? entryFee : 'Wie hoch ist der Eintritt?'"
                        id="entry_fee"
                        v-model="entryFee"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -38,13 +39,15 @@
                     <div class="text-sm text-secondary ml-2">Anmeldung erforderlich</div>
                 </div>
                 <div v-if="registrationRequired" class="mt-4">
-                <textarea placeholder="Wie können sich die Personen anmelden?"
+                <textarea :placeholder="registerBy !== '' && registerBy !== null && registerBy !== undefined ? registerBy :
+                'Wie können sich die Personen anmelden?'"
                           id="description"
                           v-model="registerBy"
                           rows="4"
                           class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                <input placeholder="Gibt es eine Anmeldefrist? (Bis wann?)"
+                <input :placeholder="registrationDeadline !== '' && registrationDeadline !== null && registrationDeadline !== undefined ? registrationDeadline :
+                'Gibt es eine Anmeldefrist? (Bis wann?)'"
                        id="entry_fee"
                        v-model="registrationDeadline"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -87,36 +90,39 @@ const props = defineProps({
     project: Object
 })
 
-const numOfGuests = ref(null)
-const entryFee = ref(null)
+const numOfGuests = ref(props.project.num_of_guests)
+const entryFee = ref(props.project.entry_fee)
 const registrationRequired = ref(props.project.registration_required)
 const closedSociety = ref(props.project.closed_society)
-const registerBy = ref(null)
-const registrationDeadline = ref(null)
+const registerBy = ref(props.project.register_by)
+const registrationDeadline = ref(props.project.registration_deadline)
 
 const entranceForm = useForm({
-    num_of_guests: "",
-    entry_fee: "",
+    num_of_guests: null,
+    entry_fee: null,
     registration_required: false,
     closed_society: false,
-    register_by: "",
-    registration_deadline: ""
+    register_by: null,
+    registration_deadline: null
 })
 
 const updateProjectEntranceData = () => {
+    if(!registrationRequired.value) {
+        registerBy.value = "";
+        registrationDeadline.value = "";
+        entranceForm.register_by = "";
+        entranceForm.registration_deadline = "";
+    }
+    else {
+        entranceForm.register_by = registerBy.value;
+        entranceForm.registration_deadline = registrationDeadline.value;
+    }
     entranceForm.num_of_guests = numOfGuests.value;
     entranceForm.entry_fee = entryFee.value;
     entranceForm.registration_required = registrationRequired.value;
     entranceForm.closed_society = closedSociety.value;
-    entranceForm.register_by = registerBy.value;
-    entranceForm.registration_deadline = registrationDeadline.value;
 
     entranceForm.patch(`/projects/${props.project.id}/entrance`)
-
-    numOfGuests.value = null
-    entryFee.value = null
-    registerBy.value = null
-    registrationDeadline.value = null
 
     props.closeModal()
 }

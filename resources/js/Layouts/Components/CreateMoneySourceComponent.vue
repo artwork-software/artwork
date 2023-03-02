@@ -449,6 +449,7 @@ export default {
             this.closeModal(true);
         },
         createMoneySourceGroup(){
+            this.createSourceGroupForm.users = {}
             this.usersToAdd.forEach((userToAdd) => {
                 this.createSourceGroupForm.users[userToAdd.id] = {
                     user_id: userToAdd.id,

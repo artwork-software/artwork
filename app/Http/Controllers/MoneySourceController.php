@@ -40,7 +40,7 @@ class MoneySourceController extends Controller
     public function index()
     {
         return inertia('MoneySources/MoneySourceManagement', [
-            'moneySources' => MoneySource::all(),
+            'moneySources' => MoneySource::with(['users'])->get(),
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
         ]);
     }
@@ -69,8 +69,8 @@ class MoneySourceController extends Controller
             return $filteredObjects;
         } else {
             $moneySources = MoneySource::search($request->input('query'))->get();
-            foreach ($moneySources as $moneySource){
-                if($moneySource->projects->contains($request->projectId)){
+            foreach ($moneySources as $moneySource) {
+                if ($moneySource->projects->contains($request->projectId)) {
                     $filteredObjects[] = $moneySource;
                 }
             }
@@ -96,11 +96,11 @@ class MoneySourceController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        foreach ($request->users as $requestUser){
+        foreach ($request->users as $requestUser) {
             $user = User::find($requestUser['user_id']);
             // create user Notification
             $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
-            $this->notificationData->title = 'Du hast Zugriff auf "'. $request->name . '" erhalten';
+            $this->notificationData->title = 'Du hast Zugriff auf "' . $request->name . '" erhalten';
             $this->notificationData->created_by = Auth::user();
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
@@ -109,7 +109,6 @@ class MoneySourceController extends Controller
             ];
             $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
         }
-
 
 
         if (!empty($request->amount)) {
@@ -153,7 +152,7 @@ class MoneySourceController extends Controller
     {
         $moneySource->load([
             'money_source_files'
-            ]);
+        ]);
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
@@ -161,73 +160,73 @@ class MoneySourceController extends Controller
         $positions = [];
         $subMoneySourcePositions = [];
         $usersWithAccess = [];
-        if($moneySource->is_group){
-            foreach ($subMoneySources as $subMoneySource){
+        if ($moneySource->is_group) {
+            foreach ($subMoneySources as $subMoneySource) {
                 $columns = ColumnCell::where('linked_money_source_id', $subMoneySource->id)->get();
                 foreach ($columns as $column) {
                     $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                     $subPosition = SubPosition::find($subPositionRow->sub_position_id);
                     $mainPosition = MainPosition::find($subPosition->main_position_id);
                     $table = Table::find($mainPosition->table_id);
-                    $project = Project::where('id',$table->project_id)->with(['users'])->first();
-                    foreach ($project->users as $user){
-                        if(!$user->pivot->is_manager){
+                    $project = Project::where('id', $table->project_id)->with(['users'])->first();
+                    foreach ($project->users as $user) {
+                        if (!$user->pivot->is_manager) {
                             continue;
                         }
                         $usersWithAccess[] = $user->id;
                     }
-                        $linked_projects[] = [
-                            'id' =>$project->id,
-                            'name' => $project->name,
-                        ];
+                    $linked_projects[] = [
+                        'id' => $project->id,
+                        'name' => $project->name,
+                    ];
                     $subMoneySourcePositions[] = [
                         'type' => $column->linked_type,
                         'value' => $column->value,
                         'subPositionName' => $subPosition->name,
                         'mainPositionName' => $mainPosition->name,
                         'project' => [
-                            'id' =>$project->id,
+                            'id' => $project->id,
                             'name' => $project->name,
                         ],
                         'created_at' => date('d.m.Y', strtotime($column->created_at))
                     ];
-                    if($column->linked_type === 'EARNING'){
+                    if ($column->linked_type === 'EARNING') {
                         $amount = (int)$amount + (int)$column->value;
                     } else {
                         $amount = (int)$amount - (int)$column->value;
                     }
                 }
             }
-        }else{
+        } else {
             foreach ($columns as $column) {
                 $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                 $subPosition = SubPosition::find($subPositionRow->sub_position_id);
                 $mainPosition = MainPosition::find($subPosition->main_position_id);
                 $table = Table::find($mainPosition->table_id);
 
-                $project = Project::where('id',$table->project_id)->with(['users'])->first();
-                foreach ($project->users as $user){
-                    if(!$user->pivot->is_manager){
+                $project = Project::where('id', $table->project_id)->with(['users'])->first();
+                foreach ($project->users as $user) {
+                    if (!$user->pivot->is_manager) {
                         continue;
                     }
                     $usersWithAccess[] = $user->id;
                 }
                 $linked_projects[] = [
-                        'id' =>$project->id,
-                        'name' => $project->name,
-                    ];
+                    'id' => $project->id,
+                    'name' => $project->name,
+                ];
                 $positions[] = [
                     'type' => $column->linked_type,
                     'value' => $column->value,
                     'subPositionName' => $subPosition->name,
                     'mainPositionName' => $mainPosition->name,
                     'project' => [
-                        'id' =>$project->id,
+                        'id' => $project->id,
                         'name' => $project->name,
                     ],
                     'created_at' => date('d.m.Y', strtotime($column->created_at))
                 ];
-                if($column->linked_type === 'EARNING'){
+                if ($column->linked_type === 'EARNING') {
                     $amount = (int)$amount + (int)$column->value;
                 } else {
                     $amount = (int)$amount - (int)$column->value;
@@ -238,7 +237,7 @@ class MoneySourceController extends Controller
         $historyArray = [];
         $historyComplete = $moneySource->historyChanges()->all();
 
-        foreach ($historyComplete as $history){
+        foreach ($historyComplete as $history) {
             $historyArray[] = [
                 'changes' => json_decode($history->changes),
                 'created_at' => $history->created_at->diffInHours() < 24
@@ -261,7 +260,7 @@ class MoneySourceController extends Controller
                 'group_id' => $moneySource->group_id,
                 'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
-                'subMoneySources' => $subMoneySources->map(fn ($source) => [
+                'subMoneySources' => $subMoneySources->map(fn($source) => [
                     'id' => $source->id,
                     'name' => $source->name,
                 ]),
@@ -269,25 +268,25 @@ class MoneySourceController extends Controller
                 'is_group' => $moneySource->is_group,
                 'created_at' => $moneySource->created_at,
                 'updated_at' => $moneySource->updated_at,
-                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()->map(fn ($task) => [
+                'tasks' => MoneySourceTask::with('money_source_task_users')->where('money_source_id', $moneySource->id)->get()->map(fn($task) => [
                     'id' => $task->id,
                     'money_source_id' => $task->money_source_id,
                     'name' => $task->name,
                     'description' => $task->description,
                     'deadline' => $task->deadline,
-                    'done' => (bool) $task->done,
+                    'done' => (bool)$task->done,
                     'money_source_task_users' => $task->money_source_task_users,
                     'pivot' => $task->pivot
-                    ]),
+                ]),
                 'positions' => $positions,
                 'subMoneySourcePositions' => $subMoneySourcePositions,
-                'linked_projects' => array_unique($linked_projects,SORT_REGULAR),
-                'usersWithAccess' => array_unique($usersWithAccess,SORT_NUMERIC),
+                'linked_projects' => array_unique($linked_projects, SORT_REGULAR),
+                'usersWithAccess' => array_unique($usersWithAccess, SORT_NUMERIC),
                 'history' => $historyArray
             ],
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
             'moneySources' => MoneySource::where('is_group', false)->get(),
-            'projects' => Project::all()->map(fn ($project) => [
+            'projects' => Project::all()->map(fn($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
             ]),
@@ -348,18 +347,18 @@ class MoneySourceController extends Controller
         $newName = $moneySource->name;
         $newDescription = $moneySource->description;
 
-        if($oldName !== $newName){
+        if ($oldName !== $newName) {
             $this->history->createHistory($moneySource->id, 'Finanzierungsquellenname geändert');
         }
 
-        if($oldDescription !== $newDescription && !empty($newDescription) && !empty($oldDescription)){
+        if ($oldDescription !== $newDescription && !empty($newDescription) && !empty($oldDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung geändert');
         }
 
-        if(empty($oldDescription) && !empty($newDescription)){
+        if (empty($oldDescription) && !empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung hinzugefügt');
         }
-        if(!empty($oldDescription) && empty($newDescription)){
+        if (!empty($oldDescription) && empty($newDescription)) {
             $this->history->createHistory($moneySource->id, 'Beschreibung gelöscht');
         }
 
@@ -373,7 +372,8 @@ class MoneySourceController extends Controller
 
     }
 
-    public function updateUsers(Request $request, MoneySource $moneySource){
+    public function updateUsers(Request $request, MoneySource $moneySource)
+    {
         $moneySource->users()->sync(collect($request->users));
     }
 
@@ -390,16 +390,18 @@ class MoneySourceController extends Controller
             $beforeSubMoneySource->update(['group_id' => null]);
         }
         $users = json_decode($moneySource->users);
-        foreach ($users as $user){
-            $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
-            $this->notificationData->title = 'Finanzierungsquelle/gruppe ' .$moneySource->name . ' wurde gelöscht';
-            $this->notificationData->created_by = Auth::user();
-            $broadcastMessage = [
-                'id' => rand(1, 1000000),
-                'type' => 'success',
-                'message' => $this->notificationData->title
-            ];
-            $this->notificationController->create(User::find($user->id), $this->notificationData, $broadcastMessage);
+        if ($users) {
+            foreach ($users as $user) {
+                $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
+                $this->notificationData->title = 'Finanzierungsquelle/gruppe ' . $moneySource->name . ' wurde gelöscht';
+                $this->notificationData->created_by = Auth::user();
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $this->notificationData->title
+                ];
+                $this->notificationController->create(User::find($user->id), $this->notificationData, $broadcastMessage);
+            }
         }
         $moneySource->delete();
         return Redirect::route('money_sources.index')->with('success', 'MoneySource deleted.');
@@ -424,18 +426,19 @@ class MoneySourceController extends Controller
     }
 
 
-    private function checkUserChanges($moneySource, $oldUsers, $newUsers){
+    private function checkUserChanges($moneySource, $oldUsers, $newUsers)
+    {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
         $oldUserIds = [];
         $newUserIds = [];
 
-        foreach ($oldUsers as $oldUser){
+        foreach ($oldUsers as $oldUser) {
             $oldUserIds[] = $oldUser->id;
         }
 
-        foreach ($newUsers as $newUser){
+        foreach ($newUsers as $newUser) {
             $newUserIds[] = $newUser->id;
-            if(!in_array($newUser->id, $oldUserIds)){
+            if (!in_array($newUser->id, $oldUserIds)) {
                 $this->notificationData->title = 'Du hast Zugriff auf ' . $moneySource->name . ' erhalten';
                 $this->notificationData->created_by = Auth::user();
                 $broadcastMessage = [
@@ -448,8 +451,8 @@ class MoneySourceController extends Controller
             }
         }
 
-        foreach ($oldUserIds as $oldUserId){
-            if(!in_array($oldUserId, $newUserIds)){
+        foreach ($oldUserIds as $oldUserId) {
+            if (!in_array($oldUserId, $newUserIds)) {
                 $this->notificationData->title = 'Dein Zugriff auf ' . $moneySource->name . ' wurde gelöscht';
                 $this->notificationData->created_by = Auth::user();
                 $broadcastMessage = [
@@ -463,7 +466,8 @@ class MoneySourceController extends Controller
 
         }
     }
-    public function updateProjects(MoneySource $moneySource,Request $request)
+
+    public function updateProjects(MoneySource $moneySource, Request $request)
     {
         $moneySource->projects()->sync($request->linkedProjectIds);
     }

@@ -196,6 +196,10 @@ class User extends Authenticatable
         return $this->hasMany(Task::class, 'user_id');
     }
 
+    public function accessMoneySources(){
+        return $this->belongsToMany(MoneySource::class, 'money_source_users')->withPivot(['competent', 'write_access'])->using(MoneySourceUserPivot::class);
+    }
+
     public function toSearchableArray(): array
     {
         return [

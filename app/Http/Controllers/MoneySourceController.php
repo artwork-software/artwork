@@ -40,7 +40,7 @@ class MoneySourceController extends Controller
     public function index()
     {
         return inertia('MoneySources/MoneySourceManagement', [
-            'moneySources' => MoneySource::all(),
+            'moneySources' => MoneySource::with(['users'])->get(),
             'moneySourceGroups' => MoneySource::where('is_group', true)->get(),
         ]);
     }

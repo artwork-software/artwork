@@ -218,14 +218,7 @@ class ProjectController extends Controller
     }
 
     public function updateEntranceData(Project $project, Request $request) {
-        $project->update([
-            'num_of_guests' => $request->num_of_guests,
-            'entry_fee' => $request->entry_fee,
-            'registration_required' => $request->registration_required,
-            'register_by' => $request->register_by,
-            'registration_deadline' => $request->registration_deadline,
-            'closed_society' => $request->closed_society,
-        ]);
+        $project->update(array_filter($request->all()));
 
         return Redirect::back();
     }

@@ -104,12 +104,12 @@ const entranceForm = useForm({
 })
 
 const updateProjectEntranceData = () => {
-    entranceForm.num_of_guests = numOfGuests.value !== null ? numOfGuests.value : props.project.num_of_guests;
-    entranceForm.entry_fee = entryFee.value !== null ? entryFee.value : props.project.entry_fee;
+    entranceForm.num_of_guests = numOfGuests.value;
+    entranceForm.entry_fee = entryFee.value;
     entranceForm.registration_required = registrationRequired.value;
     entranceForm.closed_society = closedSociety.value;
-    entranceForm.register_by = registerBy.value !== null ? registerBy.value : props.project.register_by;
-    entranceForm.registration_deadline = registrationDeadline.value !== null ? registrationDeadline.value : props.project.registration_deadline;
+    entranceForm.register_by = registerBy.value;
+    entranceForm.registration_deadline = registrationDeadline.value;
 
     entranceForm.patch(`/projects/${props.project.id}/entrance`)
 

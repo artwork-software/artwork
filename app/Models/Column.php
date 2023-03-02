@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $project_id
@@ -51,4 +52,18 @@ class Column extends Model
         return $this->hasMany(ColumnCell::class, 'column_id');
     }
 
+    function subPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(SubpositionSumDetail::class);
+    }
+
+    function mainPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(MainPositionDetails::class);
+    }
+
+    function budgetSumDetails(): HasMany
+    {
+        return $this->hasMany(BudgetSumDetails::class);
+    }
 }

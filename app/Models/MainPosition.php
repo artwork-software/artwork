@@ -71,4 +71,9 @@ class MainPosition extends Model
     {
         return $this->hasOne(MainPositionVerified::class);
     }
+
+    public function mainPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(MainPositionDetails::class);
+    }
 }

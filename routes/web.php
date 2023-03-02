@@ -32,6 +32,7 @@ use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
 use App\Http\Controllers\RoomFileController;
 use App\Http\Controllers\SectorController;
+use App\Http\Controllers\SumCommentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TaskTemplateController;
 use App\Http\Controllers\UserController;
@@ -192,6 +193,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::patch('/comments/{comment}', [CommentController::class, 'update']);
     Route::delete('/comments/{comment}', [CommentController::class, 'destroy']);
+
+    //SumComments
+    Route::post('/sum/comments', [SumCommentController::class, 'store'])->name('sum.comments.store');
+    Route::delete('/sum/comments/{comment}', [SumCommentController::class, 'destroy'])->name('sum.comments.delete');
+
 
     //Areas
     Route::get('/areas', [AreaController::class, 'index'])->name('areas.management');

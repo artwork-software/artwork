@@ -16,6 +16,7 @@ use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
+use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
 use App\Models\CellComment;
@@ -27,17 +28,18 @@ use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\MainPosition;
+use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
+use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
-use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -50,8 +52,6 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
-use function Clue\StreamFilter\fun;
-use function Pest\Laravel\get;
 
 
 class ProjectController extends Controller
@@ -173,7 +173,6 @@ class ProjectController extends Controller
      */
     public function store(StoreProjectRequest $request)
     {
-
         if (!Auth::user()->canAny([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
             return response()->json(['error' => 'Not authorized to assign users to a project.'], 403);
         }
@@ -282,6 +281,32 @@ class ProjectController extends Controller
             'value' => 0,
             'verified_value' => null,
             'linked_money_source_id' => null,
+        ]);
+
+        $costMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $columns->first()->id
+        ]);
+
+        $earningMainPosition->mainPositionSumDetails()->create([
+            'column_id' => $columns->first()->id
+        ]);
+
+        $costSubPosition->subPositionSumDetails()->create([
+            'column_id' => $columns->first()->id
+        ]);
+
+        $earningSubPosition->subPositionSumDetails()->create([
+            'column_id' => $columns->first()->id
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $columns->first()->id,
+            'type' => 'COST'
+        ]);
+
+        BudgetSumDetails::create([
+            'column_id' => $columns->first()->id,
+            'type' => 'EARNING'
         ]);
 
         $earningSubPositionRow->columns()->attach($columns->pluck('id'), [
@@ -736,6 +761,32 @@ class ProjectController extends Controller
                 'verified_value' => null,
                 'linked_money_source_id' => null
             ]);
+
+            $subPositions = SubPosition::whereHas('mainPosition', function (Builder $query) use ($request) {
+                $query->where('table_id', $request->table_id);
+            })->get();
+
+            $column->subPositionSumDetails()->createMany(
+                $subPositions->map(fn($subPosition) => [
+                    'sub_position_id' => $subPosition->id
+                ])->all()
+            );
+
+            $mainPositions = MainPosition::where('table_id', $request->table_id)->get();
+
+            $column->mainPositionSumDetails()->createMany(
+                $mainPositions->map(fn($mainPosition) => [
+                    'main_position_id' => $mainPosition->id
+                ])->all()
+            );
+
+            $column->budgetSumDetails()->create([
+                'type' => 'COST'
+            ]);
+
+            $column->budgetSumDetails()->create([
+                'type' => 'EARNING'
+            ]);
         }
         if ($request->column_type === 'sum') {
             $firstColumns = ColumnCell::where('column_id', $request->first_column_id)->get();
@@ -816,12 +867,10 @@ class ProjectController extends Controller
         $columns = $table->columns()->get();
         $subPosition = SubPosition::find($request->sub_position_id);
 
-
         SubPositionRow::query()
             ->where('sub_position_id', $request->sub_position_id)
             ->where('position', '>', $request->positionBefore)
             ->increment('position');
-
 
         $subPositionRow = $subPosition->subPositionRows()->create([
             'commented' => false,
@@ -868,6 +917,12 @@ class ProjectController extends Controller
             'position' => $mainPosition->subPositions()->max('position') + 1
         ]);
 
+        $mainPosition->mainPositionSumDetails()->createMany(
+            $columns->map(fn($column) => [
+                'column_id' => $column->id
+            ])->all()
+        );
+
         $this->addSubPositionRowsWithColumns($subPosition, $columns);
     }
 
@@ -904,6 +959,11 @@ class ProjectController extends Controller
             'linked_money_source_id' => null,
             'verified_value' => ''
         ]);
+
+        $subPosition->subPositionSumDetails()->createMany(
+            $columns->map(fn($column) => [
+                'column_id' => $column->id
+            ])->all());
 
         $subPositionRow->columns()->attach($columns->pluck('id'), [
             'value' => 0,
@@ -1075,7 +1135,31 @@ class ProjectController extends Controller
             $templates = Table::where('is_template', true)->get();
         }
 
+        $selectedSumDetail = null;
 
+        if(request('selectedSubPosition') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user'])
+                ->where('sub_position_id', request('selectedSubPosition'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => SubpositionSumDetail::class]);
+        }
+
+        if(request('selectedMainPosition') && request('selectedColumn')) {
+            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user'])
+                ->where('main_position_id', request('selectedMainPosition'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => MainPositionDetails::class]);
+        }
+
+        if(request('selectedBudgetType') && request('selectedColumn')) {
+            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user'])
+                ->where('type', request('selectedBudgetType'))
+                ->where('column_id', request('selectedColumn'))
+                ->first())
+                ->merge(['class' => BudgetSumDetails::class]);
+        }
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -1107,6 +1191,7 @@ class ProjectController extends Controller
                 'selectedCell' => $selectedCell?->load(['calculations', 'comments.user', 'comments', 'column' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),
+                'selectedSumDetail' => $selectedSumDetail,
                 'selectedRow' => $selectedRow?->load(['comments.user', 'comments' => function ($query) {
                     $query->orderBy('created_at', 'desc');
                 }]),

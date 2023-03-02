@@ -946,6 +946,7 @@
                     <div v-if="isBudgetTab" class="flex bg-lightBackgroundGray w-[95%]">
                         <BudgetComponent :table="budget.table" :project="project" :selectedCell="budget.selectedCell"
                                          :selectedRow="budget.selectedRow" :templates="budget.templates"
+                                         :selected-sum-detail="budget.selectedSumDetail"
                                          :money-sources="moneySources" :budget-access="access_budget"
                                          :project-manager="projectManagerIds"></BudgetComponent>
                     </div>

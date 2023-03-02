@@ -64,5 +64,9 @@ class SubPosition extends Model
         return $this->hasOne(SubPositionVerified::class);
     }
 
+    public function subPositionSumDetails(): HasMany
+    {
+        return $this->hasMany(SubpositionSumDetail::class);
+    }
 
 }

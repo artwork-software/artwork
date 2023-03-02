@@ -126,7 +126,7 @@ class HandleInertiaRequests extends Middleware
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             'globalNotification' => $globalNotification,
-            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->with(['users'])->get()
+            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id'])
         ]);
     }
 }

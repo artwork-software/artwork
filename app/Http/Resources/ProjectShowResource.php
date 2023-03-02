@@ -51,7 +51,7 @@ class ProjectShowResource extends JsonResource
             'registration_required' => $this->registration_required,
             'register_by' => $this->register_by,
             'registration_deadline' => $this->registration_deadline,
-            'is_closed_society' => $this->is_closed_society,
+            'closed_society' => $this->closed_society,
 
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),

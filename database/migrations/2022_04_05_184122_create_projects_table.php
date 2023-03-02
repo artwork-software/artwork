@@ -23,7 +23,7 @@ return new class extends Migration
             $table->boolean('registration_required')->nullable()->default(false);
             $table->string('register_by')->nullable()->default(null);
             $table->string('registration_deadline')->nullable()->default(null);
-            $table->boolean('is_closed_society')->nullable()->default(false);
+            $table->boolean('closed_society')->nullable()->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

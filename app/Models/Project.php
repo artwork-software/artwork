@@ -53,12 +53,12 @@ class Project extends Model
         'registration_required',
         'register_by',
         'registration_deadline',
-        'is_closed_society'
+        'closed_society'
     ];
 
     protected $casts = [
         'registration_required' => 'boolean',
-        'is_closed_society' => 'boolean'
+        'closed_society' => 'boolean'
     ];
 
     protected $with = ['historyChangesMorph'];

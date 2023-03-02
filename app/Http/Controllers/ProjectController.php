@@ -224,7 +224,7 @@ class ProjectController extends Controller
             'registration_required' => $request->registration_required,
             'register_by' => $request->register_by,
             'registration_deadline' => $request->registration_deadline,
-            'is_closed_society' => $request->is_closed_society,
+            'closed_society' => $request->closed_society,
         ]);
 
         return Redirect::back();

@@ -79,6 +79,7 @@
                     :items="project_headlines"
                     item-style="list"
                     @add="addProjectHeadline"
+                    @open-edit-modal="openEditProjectHeadlineModal"
                     @openDeleteModal="openDeleteProjectHeadlineModal"
                 />
 
@@ -149,6 +150,15 @@
             @closeModal="closeDeleteProjectHeadlineModal"
         />
 
+        <ProjectSettingsEditModal
+            :show="editingProjectHeadline"
+            title="Überschrift bearbeiten"
+            :editedItem="projectHeadlineToEdit"
+            :description="`Ändere den Titel der ausgewählten Überschrift`"
+            @update="updateProjectHeadline"
+            @closeModal="closeEditProjectHeadlineModal"
+        />
+
     </app-layout>
 </template>
 
@@ -162,9 +172,11 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
+import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
 
 export default {
     components: {
+        ProjectSettingsEditModal,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
         AppLayout,
@@ -202,7 +214,10 @@ export default {
             deletingCurrency: false,
             currencyToDelete: null,
             deletingProjectHeadline: false,
-            projectHeadlineToDelete: null
+            projectHeadlineToDelete: null,
+            projectHeadlineToEdit: null,
+            editingProjectHeadline: false
+
         }
     },
     methods: {
@@ -335,6 +350,12 @@ export default {
                 this.$inertia.post(route('project_headlines.store'), {name: headlineInput});
             }
         },
+        updateProjectHeadline(headlineInput) {
+            if(headlineInput !== ''){
+                this.$inertia.patch(route('project_headlines.update', this.projectHeadlineToEdit.id), {name: headlineInput});
+            }
+            this.closeEditProjectHeadlineModal()
+        },
         openDeleteProjectHeadlineModal(headline) {
             this.projectHeadlineToDelete = headline;
             this.deletingProjectHeadline = true;
@@ -342,6 +363,14 @@ export default {
         closeDeleteProjectHeadlineModal() {
             this.deletingProjectHeadline = false;
             this.projectHeadlineToDelete = null;
+        },
+        openEditProjectHeadlineModal(headline) {
+            this.projectHeadlineToEdit = headline;
+            this.editingProjectHeadline = true;
+        },
+        closeEditProjectHeadlineModal() {
+            this.editingProjectHeadline = false;
+            this.projectHeadlineToEdit = null;
         },
         deleteProjectHeadline() {
             this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`);

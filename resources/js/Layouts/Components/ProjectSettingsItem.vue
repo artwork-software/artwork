@@ -41,8 +41,8 @@
                            @change="updateItemOrder(items)">
                     <template #item="{element}" :key="element.id">
                         <div class="flex"
-                             @mouseover="showDeleteIcon = element.id"
-                             @mouseout="showDeleteIcon = null"
+                             @mouseover="showEditIcons = element.id"
+                             @mouseout="showEditIcons = null"
                              :key="element.id"
                         >
                             <div class="mt-4 w-full"
@@ -56,7 +56,10 @@
                                     </div>
                                     <p class="ml-4 my-auto text-lg font-black">
                                         {{ element.name }}</p>
-                                    <button v-show="showDeleteIcon === element.id" type="button" class="ml-6" @click="emit('openDeleteModal', element)">
+                                    <button v-show="showEditIcons === element.id" type="button" class="ml-6" @click="emit('openEditModal', element)">
+                                        <PencilIcon class="h-4 w-4 hover:text-primary" />
+                                    </button>
+                                    <button v-show="showEditIcons === element.id" type="button" class="ml-3" @click="emit('openDeleteModal', element)">
                                         <XCircleIcon class="h-4 w-4 hover:text-error" />
                                     </button>
                                 </div>
@@ -72,7 +75,7 @@
 </template>
 
 <script setup>
-import {XIcon, XCircleIcon} from "@heroicons/vue/outline"
+import {XIcon, XCircleIcon, PencilIcon} from "@heroicons/vue/outline"
 import {CheckIcon, DotsVerticalIcon} from "@heroicons/vue/solid";
 import {ref} from "vue";
 import draggable from "vuedraggable";
@@ -89,9 +92,9 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['openDeleteModal', 'add'])
+const emit = defineEmits(['openEditModal', 'openDeleteModal', 'add'])
 
-const showDeleteIcon = ref(null)
+const showEditIcons = ref(null)
 const input = ref('')
 const dragging = ref(false)
 

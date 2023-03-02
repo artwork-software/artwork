@@ -30,11 +30,13 @@ class ProjectHeadlineController extends Controller
      *
      * @param  \Illuminate\Http\Request  $request
      * @param  \App\Models\ProjectHeadline  $projectHeadline
-     * @return \Illuminate\Http\Response
+     * @return \Illuminate\Http\RedirectResponse
      */
     public function update(Request $request, ProjectHeadline $projectHeadline)
     {
-        //
+        $projectHeadline->update([ "name" => $request->name]);
+
+        return Redirect::back();
     }
 
     public function updateOrder(Request $request)

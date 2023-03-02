@@ -96,7 +96,7 @@
                             definieren</h3>
 
                         <div class="mb-8">
-                            <div v-for="role in roleCheckboxes">
+                            <div v-for="role in roles">
                                 <Checkbox @click="changeRole(role)" :item="role"></Checkbox>
                             </div>
                         </div>
@@ -142,6 +142,10 @@
                 </div>
             </div>
 
+
+            <pre>
+                {{ form }}
+            </pre>
         </template>
 
     </jet-dialog-modal>
@@ -157,7 +161,6 @@ const roleCheckboxes = [
         showIcon: true,
         checked: false
     },
-
 ]
 
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
@@ -194,6 +197,7 @@ export default {
         closeModal: Function,
         all_permissions: Array,
         departments: Array,
+        roles: Array
     },
     data() {
         return {
@@ -210,8 +214,9 @@ export default {
                 user_emails: [],
                 permissions: [],
                 departments: [],
-                role: '',
+                roles: [],
             }),
+            showGlobalRoles: true
         }
     },
     computed: {
@@ -245,37 +250,12 @@ export default {
         },
         changeRole(role) {
             if (!role.checked) {
-                this.form.role = role.roleName;
-                this.uncheckRolesAndPermissions();
+                this.form.roles.push(role.name);
                 role.checked = true;
-                if (role.roleName === "user") {
-                    this.all_permissions.Projekte.forEach(permission => {
-                        if (permission.name === 'view projects') {
-                            permission.checked = true;
-                        }
-                    })
-                    this.all_permissions.Raumbelegungen.forEach(permission => {
-                        if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
-                            permission.checked = true;
-                        }
-                    })
-                }
             } else {
-                if (this.form.role === role.roleName) {
-                    this.form.role = '';
+                if (this.form.roles.includes(role.name)) {
+                    this.form.roles = this.form.roles.filter(permissionName => permissionName !== role.name);
                     role.checked = false;
-                    if (role.roleName === "user") {
-                        this.all_permissions.Projekte.forEach(permission => {
-                            if (permission.name === 'view projects') {
-                                permission.checked = false;
-                            }
-                        })
-                        this.all_permissions.Raumbelegungen.forEach(permission => {
-                            if (permission.name === 'request room occupancy' || permission.name === 'view occupancy requests') {
-                                permission.checked = false;
-                            }
-                        })
-                    }
                 }
             }
 

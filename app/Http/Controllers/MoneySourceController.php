@@ -68,7 +68,13 @@ class MoneySourceController extends Controller
             }
             return $filteredObjects;
         } else {
-            return MoneySource::search($request->input('query'))->get();
+            $moneySources = MoneySource::search($request->input('query'))->get();
+            foreach ($moneySources as $moneySource){
+                if($moneySource->projects->contains($request->projectId)){
+                    $filteredObjects[] = $moneySource;
+                }
+            }
+            return $filteredObjects;
         }
     }
 
@@ -90,11 +96,8 @@ class MoneySourceController extends Controller
      */
     public function store(Request $request): \Illuminate\Http\RedirectResponse
     {
-        $inputArray = [];
-
         foreach ($request->users as $requestUser){
-            $user = User::find($requestUser);
-            $inputArray[] = $user;
+            $user = User::find($requestUser['user_id']);
             // create user Notification
             $this->notificationData->type = NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED;
             $this->notificationData->title = 'Du hast Zugriff auf "'. $request->name . '" erhalten';
@@ -105,8 +108,9 @@ class MoneySourceController extends Controller
                 'message' => $this->notificationData->title
             ];
             $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
-
         }
+
+
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -122,9 +126,10 @@ class MoneySourceController extends Controller
             'end_date' => $request->end_date,
             'source_name' => $request->source_name,
             'description' => $request->description,
-            'is_group' => $request->is_group,
-            'users' => json_encode($inputArray)
+            'is_group' => $request->is_group
         ]);
+
+        $source->users()->sync(collect($request->users));
 
         if ($request->is_group) {
             foreach ($request->sub_money_source_ids as $sub_money_source_id) {
@@ -252,7 +257,7 @@ class MoneySourceController extends Controller
                 'source_name' => $moneySource->source_name,
                 'start_date' => $moneySource->start_date,
                 'end_date' => $moneySource->end_date,
-                'users' => json_decode($moneySource->users),
+                'users' => $moneySource->users()->get(),
                 'group_id' => $moneySource->group_id,
                 'money_source_files' => MoneySourceFileResource::collection($moneySource->money_source_files),
                 'moneySourceGroup' => MoneySource::find($moneySource->group_id),
@@ -285,7 +290,8 @@ class MoneySourceController extends Controller
             'projects' => Project::all()->map(fn ($project) => [
                 'id' => $project->id,
                 'name' => $project->name,
-            ])
+            ]),
+            'linkedProjects' => $moneySource->projects()->get()
         ]);
 
     }
@@ -310,16 +316,10 @@ class MoneySourceController extends Controller
      */
     public function update(Request $request, MoneySource $moneySource)
     {
-        $oldMoneySourceUsers = json_decode($moneySource->users);
-        $inputArray = [];
 
         $oldName = $moneySource->name;
         $oldDescription = $moneySource->description;
 
-        foreach ($request->users as $requestUser) {
-            $user = User::find($requestUser);
-            $inputArray[] = $user;
-        }
 
         if (!empty($request->amount)) {
             $amount = str_replace(',', '.', $request->amount);
@@ -332,6 +332,8 @@ class MoneySourceController extends Controller
             $beforeSubMoneySource->update(['group_id' => null]);
         }
 
+        $moneySource->users()->sync(collect($request->users));
+
         $moneySource->update([
             'name' => $request->name,
             'amount' => $amount,
@@ -341,7 +343,6 @@ class MoneySourceController extends Controller
             'description' => $request->description,
             'is_group' => $request->is_group,
             'group_id' => $request->group_id,
-            'users' => json_encode($inputArray)
         ]);
 
         $newName = $moneySource->name;
@@ -369,13 +370,11 @@ class MoneySourceController extends Controller
             }
         }
 
-        $newMoneySourceUsers = json_decode($moneySource->users);
 
-        $this->checkUserChanges($moneySource, $oldMoneySourceUsers, $newMoneySourceUsers);
     }
 
     public function updateUsers(Request $request, MoneySource $moneySource){
-
+        $moneySource->users()->sync(collect($request->users));
     }
 
     /**
@@ -464,4 +463,9 @@ class MoneySourceController extends Controller
 
         }
     }
+    public function updateProjects(MoneySource $moneySource,Request $request)
+    {
+        $moneySource->projects()->sync($request->linkedProjectIds);
+    }
+
 }

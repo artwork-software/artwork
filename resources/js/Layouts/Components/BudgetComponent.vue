@@ -633,6 +633,7 @@
         v-if="showCellDetailModal"
         :cell="selectedCell"
         :moneySources="moneySources"
+        :project-id="project.id"
         @closed="closeCellDetailModal()"
     />
 

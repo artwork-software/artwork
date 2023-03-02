@@ -281,6 +281,7 @@
         </template>
     </jet-dialog-modal>
 
+
 </template>
 
 <script>
@@ -379,7 +380,7 @@ export default {
                 description: this.moneySource.description,
                 is_group: false,
                 group_id: this.moneySource.group_id,
-                users: [],
+                users: []
             }),
             editSourceGroupForm: useForm({
                 name: this.moneySource.name,
@@ -444,8 +445,13 @@ export default {
             this.moneySource.subMoneySources.splice(index,1);
         },
         editSingleSource() {
+            this.editSingleSourceForm.users = {};
             this.usersToAdd.forEach((userToAdd) => {
-                this.editSingleSourceForm.users.push(userToAdd.id);
+                this.editSingleSourceForm.users[userToAdd.id] = {
+                    user_id: userToAdd.id,
+                    competent: true,
+                    write_access: true
+                };
             })
             if (this.selectedMoneySourceGroup && this.hasGroup) {
                 this.editSingleSourceForm.group_id = this.selectedMoneySourceGroup.id;
@@ -458,8 +464,13 @@ export default {
             this.closeModal(true);
         },
         editGroupSource(){
+            this.editSourceGroupForm.users = {};
             this.usersToAdd.forEach((userToAdd) => {
-                this.editSourceGroupForm.users.push(userToAdd.id);
+                this.editSourceGroupForm.users[userToAdd.id] = {
+                    user_id: userToAdd.id,
+                    competent: true,
+                    write_access: true
+                };
             })
             this.subMoneySources.forEach((subMoneySource) => {
                 this.editSourceGroupForm.sub_money_source_ids.push(subMoneySource.id);

@@ -103,9 +103,8 @@
                 </div>
                 <div v-if="showMoneySources">
                     <div v-if="moneySources?.length > 0">
-                        <div class="w-full flex items-center mb-2 cursor-pointer text-secondary hover:text-white"
-                             v-for="moneySource in moneySources"
-                        >
+                        <div class="w-full flex items-center mb-2 text-secondary"
+                             v-for="moneySource in moneySources">
                             <div>{{ moneySource.name }}</div>
                         </div>
                     </div>

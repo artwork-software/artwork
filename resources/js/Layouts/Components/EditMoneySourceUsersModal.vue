@@ -1,29 +1,30 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
+    <jet-dialog-modal :show="true" @close="closeModal">
         <template #content>
-            <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4"/>
+            <img alt="Freigabe" src="/Svgs/Overlays/illu_money_source_create.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
-                <div class="font-black font-lexend text-primary text-3xl my-2">
+                <div class="font-black font-lexend text-primary text-3xl my-6">
                     Freigabe verwalten
                 </div>
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="xsLight">
-                    Tippe den Namen der Nutzer*innen, denen du Zugriff zur Quelle erteilen möchtest.
+                    Tippe den Namen der Nutzer*innen, denen du Zugriff zur Quelle erteilen möchtest. Du kannst nur Nutzer*innen auswählen, welche die Berechtigung haben, eine Finanzierungsquelle bearbeiten zu können.
+                    Zuständige Nutzer*innen haben automatisch Zugriff auf die Quelle.
                 </div>
-                <div class="mb-2">
+                <div class="mb-2 mt-6">
                     <div class="relative w-full">
                         <div class="w-full">
                             <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   placeholder="Wer ist zuständig?"
+                                   placeholder="Suche nach Nutzer*innen"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
                             <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                 class="absolute z-20 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
@@ -58,44 +59,39 @@
                                     <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
                                 </button>
                             </div>
+
                             <div class="flex justify-between items-center my-1.5 h-5 w-80">
-                                <div class="flex items-center justify-between" v-if="checkUserAuth(user)">
+                                <div class="flex items-center justify-between" v-if="user.pivot">
                                    <div class="flex">
-                                        <input v-model="user.can_write"
+                                        <input v-model="user.pivot.competent"
                                                type="checkbox"
                                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.can_write ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Schreibrecht</p>
+                                    <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zuständig</p>
                                    </div>
-                                    <Dropdown :open="user.openedMenu" align="right" width="60" class="text-right">
-                                        <template #trigger>
-                                            <span class="inline-flex">
-                                                <button @click="user.openedMenu = !user.openedMenu" type="button"
-                                                        class="text-sm flex items-center ml-14 my-auto text-primary font-semibold focus:outline-none transition">
-                                                    Weitere Rechte
-                                                </button>
-                                            </span>
-                                        </template>
-
-                                        <template #content>
-                                            <div class="w-44 p-4">
-                                                <div class="flex">
-                                                    <input v-model="user.access_budget"
-                                                           type="checkbox"
-                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                <p
-                                                    class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
-                                                </div>
-                                                <div class="flex mt-4" v-if="user.project_management">
-                                                    <input v-model="user.is_manager"
-                                                           type="checkbox"
-                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                <p
-                                                    class="ml-4 my-auto text-sm text-secondary">Projektleitung</p>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </Dropdown>
+                                    <div class="flex ml-8">
+                                        <input v-model="user.pivot.write_access"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zugriff</p>
+                                   </div>
+                                </div>
+                                <div class="flex items-center justify-between" v-else>
+                                   <div class="flex">
+                                        <input v-model="user.competent"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                   </div>
+                                    <div class="flex ml-8">
+                                        <input v-model="user.write_access"
+                                               type="checkbox"
+                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zugriff</p>
+                                   </div>
                                 </div>
                             </div>
                         </span>
@@ -141,21 +137,16 @@ export default {
 
     data() {
         return {
-            templateName: '',
             user_search_results: [],
             user_query: '',
-            usersToAdd: this.moneySource.users,
             assignedUsers: this.moneySource.users ? this.moneySource.users : [],
-            form: useForm({
-                assigned_user_ids: {},
-            }),
         }
     },
     watch: {
         user_query: {
             handler() {
                 if (this.user_query.length > 0) {
-                    axios.get('/users/search', {
+                    axios.get('/users/money_source_search', {
                         params: {query: this.user_query}
                     }).then(response => {
                         this.user_search_results = response.data
@@ -179,15 +170,26 @@ export default {
             this.$emit('closed', bool);
         },
         editMoneySourceUsers() {
-            this.form.assigned_user_ids = {};
+            let users = {};
             this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {
-                    access_budget: user.access_budget,
-                    is_manager: user.is_manager,
-                    can_write: user.can_write
-                };
+                if(user.pivot){
+                    users[user.id] = {
+                        user_id: user.id,
+                        competent: user.pivot.competent,
+                        write_access: user.pivot.write_access
+                    };
+                }else{
+                    users[user.id] = {
+                        user_id: user.id,
+                        competent: user.competent,
+                        write_access: user.write_access
+                    };
+                }
+
             })
-            this.form.patch(route('money_sources.update_users',{moneySource: this.moneySource.id}));
+            this.$inertia.patch(route('money_sources.update_users',{moneySource: this.moneySource.id}),{
+                users: users,
+            });
             this.closeModal(true);
         },
         deleteUserFromMoneySourceUserArray(user) {

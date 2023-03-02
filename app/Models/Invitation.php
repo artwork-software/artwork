@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string email
  * @property string token
  * @property string permissions
- * @property string role
+ * @property string roles
  * @property string created_at
  * @property string updated_at
  *
@@ -24,11 +24,12 @@ class Invitation extends Model
         'email',
         'token',
         'permissions',
-        'role'
+        'roles'
     ];
 
     protected $casts = [
-        'permissions' => 'array'
+        'permissions' => 'array',
+        'roles' => 'array'
     ];
 
     public function departments() {

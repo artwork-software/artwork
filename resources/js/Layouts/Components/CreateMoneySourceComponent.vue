@@ -115,7 +115,6 @@
                                                     class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
                                             </button>
                                         </div>
-
                                         </span>
                                 </div>
                             </div>
@@ -204,6 +203,7 @@
                             <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
                                         <span v-for="(user,index) in usersToAdd"
                                               class="flex mr-5 rounded-full items-center font-bold text-primary">
+
                                         <div class="flex items-center">
                                             <img class="flex h-11 w-11 rounded-full object-cover"
                                                  :src="user.profile_photo_url"
@@ -218,7 +218,9 @@
                                             </button>
                                         </div>
 
+
                                         </span>
+
                             </div>
                         </div>
                         <div class="mb-2">
@@ -431,18 +433,28 @@ export default {
             this.subMoneySources.splice(index,1);
         },
         createSingleSource() {
+            this.createSingleSourceForm.users = {}
             this.usersToAdd.forEach((userToAdd) => {
-                this.createSingleSourceForm.users.push(userToAdd.id);
+                this.createSingleSourceForm.users[userToAdd.id] = {
+                    user_id: userToAdd.id,
+                    competent: true,
+                    write_access: true
+                };
             })
             if (this.selectedMoneySourceGroup) {
                 this.createSingleSourceForm.group_id = this.selectedMoneySourceGroup.id
             }
+
             this.createSingleSourceForm.post(route('money_sources.store'));
             this.closeModal(true);
         },
         createMoneySourceGroup(){
             this.usersToAdd.forEach((userToAdd) => {
-                this.createSourceGroupForm.users.push(userToAdd.id);
+                this.createSourceGroupForm.users[userToAdd.id] = {
+                    user_id: userToAdd.id,
+                    competent: true,
+                    write_access: true
+                };
             })
             this.subMoneySources.forEach((subMoneySource) => {
                 this.createSourceGroupForm.sub_money_source_ids.push(subMoneySource.id);

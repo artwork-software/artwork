@@ -312,7 +312,7 @@ export default {
         }
     },
 
-    props: ['cell', 'moneySources'],
+    props: ['cell', 'moneySources', 'projectId'],
 
     emits: ['closed'],
 
@@ -321,7 +321,7 @@ export default {
             handler() {
                 if (this.moneySource_query.length > 0) {
                     axios.get('/money_sources/search', {
-                        params: {query: this.moneySource_query}
+                        params: {query: this.moneySource_query, projectId: this.projectId}
                     }).then(response => {
                         this.moneySource_search_results = response.data.filter((moneySource) => moneySource.is_group === 0 || moneySource.is_group === false)
                     })

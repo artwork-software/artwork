@@ -8,8 +8,8 @@
 }
 
 @font-face {
-    font-family: 'Nanum Pen Script';
-    src: local('NanumPenScript'), url('../fonts/NanumPenScript-Regular.ttf') format('truetype');
+    font-family: 'artwork Pen';
+    src: local('artworkPen'), url('../fonts/artworkPen.ttf') format('truetype');
 }
 
 @font-face {
@@ -115,7 +115,7 @@
         opacity: 1;
     }
     .hind{
-        font: normal normal normal 18px/18px Nanum Pen Script;
+        font: normal normal normal 18px/18px "artwork Pen";
         letter-spacing: -0.54px;
         color: #A7A6B1;
         opacity: 1;

@@ -274,516 +274,14 @@
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab"
                      class="grid grid-cols-3 ml-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
-                    <div class="col-span-2">
-                        <div class="flex w-full items-center mb-8 ">
-                            <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
-                            <div class="flex items-center"
-                                 v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
-                                <div v-if="$page.props.can.show_hints" class="flex">
-                                    <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                    <span
-                                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="w-full">
-                        <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
-                              class="text-secondary subpixel-antialiased text-xs mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
-                            <div v-else>
-                                <div class="flex w-full flex-wrap">
-                                    <!-- Div einer Checkliste -->
-                                    <div v-for="checklist in project.public_checklists"
-                                         class="flex w-full bg-white my-2 inputMain">
-                                        {{ checklist.user_id }}
-                                        <button class="bg-buttonBlue flex"
-                                                @click="changeChecklistStatus(checklist)">
-                                            <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
-                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                            <ChevronDownIcon v-else
-                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                        </button>
-                                        <div :class="this.opened_checklists.includes(checklist.id) ? 'mt-4' : ''"
-                                             class="flex w-full ml-4 flex-wrap p-4">
-                                            <div class="flex justify-between w-full my-auto items-center">
-                                                <div>
-                                                    <span
-                                                        class="text-xl ml-6 my-auto leading-6 font-bold font-lexend text-primary">
-                                                        {{ checklist.name }}
-                                                    </span>
-                                                </div>
-                                                <div class="flex">
-                                                    <div class="flex -mr-3"
-                                                         v-for="department in checklist.departments.slice(0,9)">
-                                                        <TeamIconCollection :data-tooltip-target="department.name"
-                                                                            :iconName="department.svg_name"
-                                                                            :alt="department.name"
-                                                                            class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                                        <TeamTooltip :team="department"/>
-                                                    </div>
-                                                    <div v-if="checklist.departments.length >= 10" class="my-auto">
-                                                        <Menu as="div" class="relative">
-                                                            <div>
-                                                                <MenuButton
-                                                                    class="flex items-center rounded-full focus:outline-none">
-                                                                    <ChevronDownIcon
-                                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
-                                                                </MenuButton>
-                                                            </div>
-                                                            <transition
-                                                                enter-active-class="transition ease-out duration-100"
-                                                                enter-from-class="transform opacity-0 scale-95"
-                                                                enter-to-class="transform opacity-100 scale-100"
-                                                                leave-active-class="transition ease-in duration-75"
-                                                                leave-from-class="transform opacity-100 scale-100"
-                                                                leave-to-class="transform opacity-0 scale-95">
-                                                                <MenuItems
-                                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                                    <MenuItem
-                                                                        v-for="department in checklist.departments"
-                                                                        v-slot="{ active }">
-                                                                        <div
-                                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <TeamIconCollection
-                                                                                :iconName="department.svg_name"
-                                                                                :alt="department.name"
-                                                                                class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                                                            <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                                                        </div>
-                                                                    </MenuItem>
-                                                                </MenuItems>
-                                                            </transition>
-                                                        </Menu>
-                                                    </div>
-                                                    <Menu
-                                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                                        as="div" class="my-auto relative">
-                                                        <div class="flex">
-                                                            <MenuButton
-                                                                class="flex ml-9">
-                                                                <DotsVerticalIcon
-                                                                    class="z-2 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                    aria-hidden="true"/>
-                                                            </MenuButton>
-                                                        </div>
-                                                        <transition
-                                                            enter-active-class="transition ease-out duration-100"
-                                                            enter-from-class="transform opacity-0 scale-95"
-                                                            enter-to-class="transform opacity-100 scale-100"
-                                                            leave-active-class="transition ease-in duration-75"
-                                                            leave-from-class="transform opacity-100 scale-100"
-                                                            leave-to-class="transform opacity-0 scale-95">
-                                                            <MenuItems
-                                                                class="z-40 origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                <div class="py-1">
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditChecklistTeamsModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Teams zuweisen
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditChecklistModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Bearbeiten
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }"
-                                                                              v-if="allTasksChecked(checklist) === false && checklist.tasks.length > 0">
-                                                                        <a @click="checkAllTasks(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Alle Aufgaben als erledigt markieren
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }"
-                                                                              v-if="allTasksChecked(checklist) === true && checklist.tasks.length > 0">
-                                                                        <a @click="uncheckAllTasks(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Alle Aufgaben als unerledigt markieren
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem
-                                                                        v-if="this.$page.props.is_admin || this.$page.props.admin_checklistTemplates"
-                                                                        v-slot="{ active }">
-                                                                        <a @click="createTemplateFromChecklist(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Als Vorlage speichern
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a href="#"
-                                                                           @click="duplicateChecklist(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <DuplicateIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Duplizieren
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openDeleteChecklistModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <TrashIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Löschen
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                </div>
-                                                            </MenuItems>
-                                                        </transition>
-                                                    </Menu>
-                                                </div>
-                                            </div>
-                                            <div class="flex w-full mt-6"
-                                                 v-if="this.opened_checklists.includes(checklist.id)">
-                                                <div class="flex"
-                                                     v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                                                    <div>
-                                                        <AddButton @click="openAddTaskModal(checklist)"
-                                                                   text="Neue Aufgabe" mode="page"/>
-                                                    </div>
-                                                    <div v-if="$page.props.can.show_hints" class="flex">
-                                                        <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                                        <span
-                                                            class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="mt-6 mb-12"
-                                                 v-if="this.opened_checklists.includes(checklist.id)">
-                                                <draggable ghost-class="opacity-50"
-                                                           key="draggableKey"
-                                                           item-key="draggableID" :list="checklist.tasks"
-                                                           @start="dragging=true" @end="dragging=false"
-                                                           @change="updateTaskOrder(checklist.tasks)">
-                                                    <template #item="{element}" :key="element.id">
-                                                        <div class="flex" @mouseover="showMenu = element.id"
-                                                             :key="element.id"
-                                                             @mouseout="showMenu = null">
-                                                            <div class="flex mt-6 flex-wrap w-full"
-                                                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                                <div class="flex w-full">
-                                                                    <div v-if="showMenu === element.id"
-                                                                         class="flex -mt-1 items-center">
-                                                                        <DotsVerticalIcon
-                                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
-                                                                        <DotsVerticalIcon
-                                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
-                                                                    </div>
-                                                                    <div v-else class="h-5 w-6 flex">
+                    <ChecklistComponent
+                        :project="project"
+                        :opened_checklists="opened_checklists"
+                        :project-can-write-ids="projectCanWriteIds"
+                        :project-manager-ids="projectManagerIds"
+                        :checklist_templates="checklist_templates"
+                    />
 
-                                                                    </div>
-                                                                    <input @change="updateTaskStatus(element)"
-                                                                           v-model="element.done"
-                                                                           type="checkbox"
-                                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                                    <p class="ml-4 my-auto text-lg font-black"
-                                                                       :class="element.done ? 'text-secondary line-through' : 'text-primary'">
-                                                                        {{ element.name }}</p>
-                                                                    <span v-if="!element.done && element.deadline"
-                                                                          class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                                                            element.deadline
-                                                                        }}</span>
-                                                                    <span v-if="element.done && element.done_by_user"
-                                                                          class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img
-                                                                            :data-tooltip-target="element.done_by_user.id"
-                                                                            v-if="element.done_by_user"
-                                                                            :src="element.done_by_user.profile_photo_url"
-                                                                            :alt="element.done_by_user.name"
-                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user"/>
-                                                                        {{ element.done_at }}
-                                                                    </span>
-                                                                    <Menu
-                                                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                                                        as="div" class="my-auto relative"
-                                                                        v-show="showMenu === element.id">
-                                                                        <div class="flex">
-                                                                            <MenuButton
-                                                                                class="flex ml-6">
-                                                                                <DotsVerticalIcon
-                                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                                    aria-hidden="true"/>
-                                                                            </MenuButton>
-                                                                        </div>
-                                                                        <transition
-                                                                            enter-active-class="transition ease-out duration-100"
-                                                                            enter-from-class="transform opacity-0 scale-95"
-                                                                            enter-to-class="transform opacity-100 scale-100"
-                                                                            leave-active-class="transition ease-in duration-75"
-                                                                            leave-from-class="transform opacity-100 scale-100"
-                                                                            leave-to-class="transform opacity-0 scale-95">
-                                                                            <MenuItems
-                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                                <div class="py-1">
-                                                                                    <MenuItem v-slot="{ active }">
-                                                                                        <a @click="openEditTaskModal(element)"
-                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                            <PencilAltIcon
-                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                                aria-hidden="true"/>
-                                                                                            Bearbeiten
-                                                                                        </a>
-                                                                                    </MenuItem>
-                                                                                    <MenuItem v-slot="{ active }">
-                                                                                        <a @click="deleteTask(element)"
-                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                            <TrashIcon
-                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                                aria-hidden="true"/>
-                                                                                            Löschen
-                                                                                        </a>
-                                                                                    </MenuItem>
-                                                                                </div>
-                                                                            </MenuItems>
-                                                                        </transition>
-                                                                    </Menu>
-                                                                </div>
-                                                                <div v-if="!element.done"
-                                                                     class="ml-16 text-sm text-secondary subpixel-antialiased">
-                                                                    {{ element.description }}
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-
-                                                    </template>
-                                                </draggable>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div v-for="checklist in project.private_checklists"
-                                         class="flex w-full bg-white my-2 inputMain">
-                                        <button class="bg-buttonBlue flex"
-                                                @click="changeChecklistStatus(checklist)">
-                                            <ChevronUpIcon v-if="this.opened_checklists.includes(checklist.id)"
-                                                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-                                            <ChevronDownIcon v-else
-                                                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
-                                        </button>
-                                        <div class="flex w-full ml-4 flex-wrap p-4">
-                                            <div class="flex justify-between w-full">
-                                                <div class="my-auto">
-                                        <span class="ml-6 text-xl leading-6 flex font-bold font-lexend text-primary">
-                                        {{ checklist.name }} <EyeIcon class="h-6 w-6 ml-3 text-primary"></EyeIcon> <p
-                                            class="text-primary text-sm my-auto ml-1">Privat</p>
-                                        </span>
-                                                </div>
-                                                <div class="flex items-center -mr-3">
-                                                    <img class="h-9 w-9 rounded-full object-cover"
-                                                         :src="$page.props.user.profile_photo_url"
-                                                         alt=""/>
-                                                    <Menu as="div" class="my-auto relative">
-                                                        <div class="flex">
-                                                            <MenuButton
-                                                                class="flex ml-6">
-                                                                <DotsVerticalIcon
-                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                    aria-hidden="true"/>
-                                                            </MenuButton>
-                                                        </div>
-                                                        <transition
-                                                            enter-active-class="transition ease-out duration-100"
-                                                            enter-from-class="transform opacity-0 scale-95"
-                                                            enter-to-class="transform opacity-100 scale-100"
-                                                            leave-active-class="transition ease-in duration-75"
-                                                            leave-from-class="transform opacity-100 scale-100"
-                                                            leave-to-class="transform opacity-0 scale-95">
-                                                            <MenuItems
-                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                <div class="py-1">
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditChecklistModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Bearbeiten
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="checkAllTasks(checklist.tasks)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 shrink-0 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Alle Aufgaben als erledigt markieren
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="createTemplateFromChecklist(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <PencilAltIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Als Vorlage speichern
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a href="#"
-                                                                           @click="duplicateChecklist(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <DuplicateIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Duplizieren
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                    <MenuItem v-slot="{ active }">
-                                                                        <a @click="openDeleteChecklistModal(checklist)"
-                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                            <TrashIcon
-                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                aria-hidden="true"/>
-                                                                            Löschen
-                                                                        </a>
-                                                                    </MenuItem>
-                                                                </div>
-                                                            </MenuItems>
-                                                        </transition>
-                                                    </Menu>
-                                                </div>
-                                            </div>
-                                            <div class="flex w-full mt-6"
-                                                 v-if="this.opened_checklists.includes(checklist.id)">
-                                                <div class="">
-                                                    <AddButton @click="openAddTaskModal(checklist)" text="Neue Aufgabe"
-                                                               mode="page"/>
-                                                </div>
-                                                <div v-if="$page.props.can.show_hints" class="flex">
-                                                    <SvgCollection svgName="arrowLeft" class="ml-2"/>
-                                                    <span
-                                                        class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
-                                                </div>
-                                            </div>
-                                            <div class="mt-6 mb-12"
-                                                 v-if="this.opened_checklists.includes(checklist.id)">
-                                                <draggable ghost-class="opacity-50"
-                                                           key="draggableKey"
-                                                           item-key="id" :list="checklist.tasks"
-                                                           @start="dragging=true" @end="dragging=false"
-                                                           @change="updateTaskOrder(checklist.tasks)">
-                                                    <template #item="{element}" :key="element.id">
-                                                        <div class="flex items-center"
-                                                             @mouseover="showMenu = element.id"
-                                                             :key="element.id"
-                                                             @mouseout="showMenu = null">
-                                                            <div class="flex mt-6 flex-wrap w-full" :key="element.id"
-                                                                 :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                                <div class="flex w-full" :key="element.id">
-                                                                    <div v-if="showMenu === element.id"
-                                                                         class="flex -mt-1 items-center">
-                                                                        <DotsVerticalIcon
-                                                                            class="h-5 w-5 -mr-3.5 text-secondary"></DotsVerticalIcon>
-                                                                        <DotsVerticalIcon
-                                                                            class="h-5 w-5 text-secondary"></DotsVerticalIcon>
-                                                                    </div>
-                                                                    <div v-else class="h-5 w-6 flex">
-
-                                                                    </div>
-                                                                    <input @change="updateTaskStatus(element)"
-                                                                           v-model="element.done"
-                                                                           type="checkbox"
-                                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                                    <p class="ml-4 my-auto text-lg font-black text-sm"
-                                                                       :class="element.done ? 'text-secondary line-through' : 'text-primary'">
-                                                                        {{ element.name }}</p>
-                                                                    <span v-if="!element.done && element.deadline"
-                                                                          class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                                                            element.deadline
-                                                                        }}</span>
-                                                                    <span v-if="element.done && element.done_by_user"
-                                                                          class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img
-                                                                            :data-tooltip-target="element.done_by_user.id"
-                                                                            v-if="element.done_by_user"
-                                                                            :src="element.done_by_user.profile_photo_url"
-                                                                            :alt="element.done_by_user.name"
-                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user"/>
-                                                                        {{ element.done_at }}
-                                                                    </span>
-                                                                    <Menu as="div" class="my-auto relative"
-                                                                          v-show="showMenu === element.id">
-                                                                        <div class="flex">
-                                                                            <MenuButton
-                                                                                class="flex ml-6">
-                                                                                <DotsVerticalIcon
-                                                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                                                    aria-hidden="true"/>
-                                                                            </MenuButton>
-                                                                        </div>
-                                                                        <transition
-                                                                            enter-active-class="transition ease-out duration-100"
-                                                                            enter-from-class="transform opacity-0 scale-95"
-                                                                            enter-to-class="transform opacity-100 scale-100"
-                                                                            leave-active-class="transition ease-in duration-75"
-                                                                            leave-from-class="transform opacity-100 scale-100"
-                                                                            leave-to-class="transform opacity-0 scale-95">
-                                                                            <MenuItems
-                                                                                class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                                                                <div class="py-1">
-                                                                                    <MenuItem v-slot="{ active }">
-                                                                                <span
-                                                                                    @click="openEditTaskModal(element)"
-                                                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                    <PencilAltIcon
-                                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                        aria-hidden="true"/>
-                                                                                    Bearbeiten
-                                                                                </span>
-                                                                                    </MenuItem>
-                                                                                    <MenuItem v-slot="{ active }">
-                                                                                        <a @click="deleteTask(element)"
-                                                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                                            <TrashIcon
-                                                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                                                aria-hidden="true"/>
-                                                                                            Löschen
-                                                                                        </a>
-                                                                                    </MenuItem>
-                                                                                </div>
-                                                                            </MenuItems>
-                                                                        </transition>
-                                                                    </Menu>
-                                                                </div>
-                                                                <div v-if="!element.done"
-                                                                     class="ml-16 text-sm text-secondary subpixel-antialiased">
-                                                                    {{ element.description }}
-                                                                </div>
-                                                            </div>
-
-                                                        </div>
-                                                    </template>
-                                                </draggable>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
                 <!-- Info Tab -->
                 <div v-if="isInfoTab" class="grid grid-cols-3 mx-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray">
@@ -1174,123 +672,7 @@
 
             </template>
         </jet-dialog-modal>
-        <!-- Checkliste Hinzufügen-->
-        <jet-dialog-modal :show="addingChecklist" @close="closeAddChecklistModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_new.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-3xl my-2">
-                        Neue Checkliste
-                    </div>
-                    <XIcon @click="closeAddChecklistModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Lege eine neue Checkliste an. Um Zeit zu sparen kannst du eine Vorlage wählen und diese
-                        anschließend anpassen.
-                    </div>
-                    <div class="flex my-6">
-                        <Listbox class="sm:col-span-3" v-model="selectedTemplate">
-                            <div class="relative">
-                                <ListboxButton
-                                    class="bg-white relative  border-0 w-full border border-gray-300 font-semibold mr-40 py-2 text-left cursor-default focus:outline-none focus:ring-0 focus:ring-primary focus:border-primary sm:text-sm">
-                                        <span class="block truncate items-center">
-                                            <span>{{ selectedTemplate.name }}</span>
-                                        </span>
-                                    <span v-if="selectedTemplate.name === ''"
-                                          class="block truncate">Keine Vorlage</span>
-                                    <span
-                                        class="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                                     <ChevronDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
-                                    </span>
-                                </ListboxButton>
 
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       :key="'keineVorlage'"
-                                                       :value="{name:'',id:null}"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        Keine Vorlage
-                                                    </span>
-                                                <span
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="template in checklist_templates"
-                                                       :key="template.id"
-                                                       :value="template"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'font-bold text-white' : 'font-normal', 'block truncate']">
-                                                        {{ template.name }}
-                                                    </span>
-                                                <span
-                                                    :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center text-sm subpixel-antialiased']">
-                                                      <CheckIcon v-if="selected" class="h-5 w-5 flex text-success"
-                                                                 aria-hidden="true"/>
-                                                </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </div>
-                        </Listbox>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex mt-8">
-                            <div class="relative w-full mr-4" v-if="selectedTemplate.name === ''">
-                                <input id="checklistName" v-model="checklistForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="checklistName"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                    der Checkliste*</label>
-                            </div>
-                            <jet-input-error :message="form.error" class="mt-2"/>
-                        </div>
-                        <div class="flex items-center my-6" v-if="selectedTemplate.name === ''">
-                            <Switch @click="checklistForm.private = !checklistForm.private"
-                                    :class="[checklistForm.private ?
-                                        'bg-success' :
-                                        'bg-gray-300',
-                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
-                                <span aria-hidden="true"
-                                      :class="[checklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                            </Switch>
-                            <span class="ml-2 text-sm"
-                                  :class="checklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
-                                <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
-                            </div>
-                        </div>
-
-                        <div class="w-full items-center text-center">
-                            <AddButton :class="[checklistForm.name.length === 0 && !selectedTemplate.id ?
-                                       'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                       class="mt-4 items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                       @click="addChecklist"
-                                       :disabled="checklistForm.name.length === 0 && !selectedTemplate.id"
-                                       text="Anlegen" mode="modal"/>
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-        </jet-dialog-modal>
         <!-- Change Project Team Modal -->
         <jet-dialog-modal :show="editingTeam" @close="closeEditProjectTeamModal">
             <template #content>
@@ -1363,6 +745,9 @@
                     <div class="mt-4">
                         <span v-for="user in assignedUsers"
                               class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
+                            <pre>
+                                {{user}}
+                            </pre>
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
                                     <img class="flex h-11 w-11 rounded-full"
@@ -1444,151 +829,13 @@
 
         </jet-dialog-modal>
 
-        <!-- Change Checklist Teams Modal -->
-        <ChecklistTeamComponent
-            :checklistId="checklistToEdit?.id"
-            :departments="checklistToEdit?.departments"
-            :editingChecklistTeams="editingChecklistTeams"
-            @closed="closeEditChecklistTeamsModal"
-        />
-
-        <!-- Add Task Modal-->
-        <jet-dialog-modal :show="addingTask" @close="closeAddTaskModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_task_new.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black font-lexend text-primary tracking-wide text-3xl my-2">
-                        Neue Aufgabe
-                    </div>
-                    <XIcon @click="closeAddTaskModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Lege eine neue Aufgabe an. Du kannst sie zudem mit einer Deadline
-                        und einem Kommentar versehen.
-                    </div>
-                    <div class="mt-6">
-                        <div class="flex">
-                            <div class="mt-1 w-full mr-4">
-                                <input type="text" v-model="taskForm.name" placeholder="Aufgabe*"
-                                       class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
-                            </div>
-                        </div>
-                        <div class="sm:w-1/2 my-2">
-                            <label for="deadlineDate" class="xxsLight">Zu erledigen bis?</label>
-                            <div class="w-full flex">
-                                <input v-model="taskForm.deadlineDate"
-                                       id="deadlineDate"
-                                       type="date"
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-                                <input v-model="taskForm.deadlineTime"
-                                       id="deadlineTime"
-                                       type="time"
-                                       class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none"/>
-                            </div>
-                            <p class="text-xs text-red-800">{{ error?.start?.join('. ') }}</p>
-                        </div>
-                        <div class="mt-4 mr-4">
-                                            <textarea
-                                                placeholder="Kommentar"
-                                                v-model="taskForm.description" rows="3"
-                                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
-                        </div>
-                        <div class="w-full items-center text-center">
-                            <AddButton
-                                :class="[this.taskForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover
-                            focus:outline-none border-transparent text-base font-bold text-lg tracking-wider shadow-sm
-                            text-secondaryHover"
-                                @click="addTask"
-                                :disabled="this.taskForm.name === ''" text="Hinzufügen" mode="modal"/>
-                        </div>
-                    </div>
-
-                </div>
-
-            </template>
-        </jet-dialog-modal>
-        <!-- Edit Task Modal-->
-        <jet-dialog-modal :show="editingTask" @close="closeEditTaskModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_task_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
-                        Aufgabe bearbeiten
-                    </div>
-                    <XIcon @click="closeEditTaskModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="mt-12">
-                        <div class="flex">
-                            <div class="relative flex w-full mr-4">
-                                <input id="edit_task_name" v-model="taskToEditForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="edit_task_name"
-                                       class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
-                            </div>
-                        </div>
-                        <div class="mt-4 mr-4">
-                            <div class="mb-1">
-                                <label for="datePickerEdit" class="text-secondary subpixel-antialiased">Zu erledigen
-                                    bis?</label>
-                            </div>
-                            <input
-                                v-model="taskToEditForm.deadline" id="datePickerEdit"
-                                placeholder="Zu erledigen bis?" type="datetime-local"
-                                class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full"/>
-                        </div>
-                        <div class="mt-4 mr-4">
-                                            <textarea
-                                                placeholder="Kommentar"
-                                                v-model="taskToEditForm.description" rows="3"
-                                                class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
-                        </div>
-                        <button
-                            :class="[taskToEditForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                            class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                            @click="editTask"
-                            :disabled="taskToEditForm.name === ''">
-                            Hinzufügen
-                        </button>
-                    </div>
-
-                </div>
-
-            </template>
-        </jet-dialog-modal>
-        <!-- Delete Checklist Modal -->
-        <jet-dialog-modal :show="deletingChecklist" @close="closeDeleteChecklistModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-4">
-                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                        Checkliste löschen
-                    </div>
-                    <XIcon @click="closeDeleteChecklistModal"
-                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-error subpixel-antialiased">
-                        Bist du sicher, dass du die Checkliste {{ checklistToDelete.name }} löschen willst?
-                    </div>
-                    <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                @click="deleteChecklistFromProject()">
-                            Löschen
-                        </button>
-                        <div class="flex my-auto">
-                            <span @click="closeDeleteChecklistModal()"
-                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                        </div>
-                    </div>
-                </div>
-
-            </template>
-
-        </jet-dialog-modal>
+        <!-- Project History Modal -->
+        <project-history-component
+            @closed="closeProjectHistoryModal"
+            v-if="showProjectHistory"
+            :project_history="project.project_history"
+            :access_budget="project.access_budget"
+        ></project-history-component>
         <!-- Delete Project Modal -->
         <jet-dialog-modal :show="deletingProject" @close="closeDeleteProjectModal">
             <template #content>
@@ -1619,73 +866,6 @@
             </template>
 
         </jet-dialog-modal>
-        <!-- Checkliste Bearbeiten-->
-        <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_checklist_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-3">
-                    <div class="font-bold font-lexend text-primary text-3xl my-2">
-                        Checkliste bearbeiten
-                    </div>
-                    <XIcon @click="closeEditChecklistModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="text-secondary tracking-tight leading-6 sub">
-                        Bearbeite deine Checkliste.
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex mt-8">
-                            <div class="relative w-full mr-4">
-                                <input id="editChecklistName" v-model="editChecklistForm.name" type="text"
-                                       class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                       placeholder="placeholder"/>
-                                <label for="editChecklistName"
-                                       class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
-                                    der Checkliste</label>
-                            </div>
-                            <jet-input-error :message="form.error" class="mt-2"/>
-                        </div>
-                        <div class="flex items-center my-6">
-                            <Switch @click="editChecklistForm.private = !editChecklistForm.private"
-                                    :class="[editChecklistForm.private ?
-                                        'bg-success' :
-                                        'bg-gray-300',
-                                        'relative inline-flex flex-shrink-0 h-3 w-6 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none']">
-                                <span aria-hidden="true"
-                                      :class="[editChecklistForm.private ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200']"/>
-                            </Switch>
-                            <span class="ml-2 text-sm"
-                                  :class="editChecklistForm.private ? 'text-primary' : 'text-secondary'">Privat</span>
-                            <div class="flex ml-2">
-                                <ExclamationIcon class="my-auto h-5 w-5 text-error"></ExclamationIcon>
-                                <span
-                                    class="text-error subpixel-antialiased text-sm my-auto ml-1">Dies ändert die Sichtbarkeit der Checkliste</span>
-                            </div>
-                        </div>
-
-                        <div class="w-full items-center text-center">
-                            <AddButton :class="[editChecklistForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                                       class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold shadow-sm text-secondaryHover"
-                                       @click="editChecklist" :disabled="editChecklistForm.name.length === 0"
-                                       text="Speichern" mode="modal"
-                            />
-                        </div>
-                    </div>
-                </div>
-            </template>
-
-        </jet-dialog-modal>
-
-        <!-- Project History Modal -->
-        <project-history-component
-            @closed="closeProjectHistoryModal"
-            v-if="showProjectHistory"
-            :project_history="project.project_history"
-            :access_budget="project.access_budget"
-        ></project-history-component>
-
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
                 :project="project"
@@ -1693,7 +873,7 @@
                 :copyright="project.copyright"
                 :project-files="project.project_files"
                 :contracts="project.contracts"
-                :money-sources="moneySources"
+                :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
             />
         </BaseSidenav>
@@ -1756,6 +936,7 @@ import ProjectSidenav from "@/Layouts/Components/ProjectSidenav";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1770,6 +951,7 @@ export default {
     name: "ProjectShow",
     props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
     components: {
+        ChecklistComponent,
         ProjectHistoryComponent,
         NewUserToolTip,
         Dropdown,
@@ -1920,32 +1102,20 @@ export default {
             project_file: null,
             uploadDocumentFeedback: "",
             editingProject: false,
-            addingTask: false,
-            dragging: false,
             selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
-            addingChecklist: false,
             isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
             editingTeam: false,
-            editingChecklistTeams: false,
             department_and_user_query: "",
             department_search_results: [],
             department_and_user_search_results: [],
-            checklist_assigned_departments: [],
-            selectedTemplate: {name: '', id: null},
-            checklistToEdit: null,
-            editingChecklist: false,
             assignedUsers: this.project.users ? this.project.users : [],
             assignedDepartments: this.project.departments ? this.project.departments : [],
-            deletingChecklist: false,
-            checklistToDelete: {},
-            editingTask: false,
             showMenu: null,
             showProjectHistory: false,
             commentHovered: null,
-            allDoneTasks: [],
             projectToDelete: {},
             deletingProject: false,
             selectedGroup: null,
@@ -1960,36 +1130,6 @@ export default {
                 projectSectorIds: this.projectSectorIds,
                 selectedGroup: null
             }),
-            checklistForm: useForm({
-                name: "",
-                project_id: this.project.id,
-                tasks: [],
-                assigned_department_ids: [],
-                private: false,
-                template_id: null,
-                user_id: null
-            }),
-            editChecklistForm: useForm({
-                id: null,
-                name: "",
-                private: false,
-                user_id: null,
-                assigned_department_ids: [],
-            }),
-            taskForm: useForm({
-                name: "",
-                description: "",
-                deadline: null,
-                deadlineDate: null,
-                deadlineTime: null,
-                checklist_id: null,
-            }),
-            taskToEditForm: useForm({
-                id: '',
-                name: "",
-                description: "",
-                deadline: null,
-            }),
             commentForm: useForm({
                 text: "",
                 user_id: this.$page.props.user.id,
@@ -1997,21 +1137,6 @@ export default {
             }),
             documentForm: useForm({
                 file: null
-            }),
-            duplicateForm: useForm({
-                name: "",
-                project_id: this.project.id,
-                tasks: [],
-                assigned_department_ids: [],
-                user_id: null
-            }),
-            templateForm: useForm({
-                checklist_id: null,
-                user_id: this.$page.props.user.id,
-            }),
-            doneTaskForm: useForm({
-                done: false,
-                user_id: this.$page.props.user.id
             }),
             attributeForm: useForm({}),
         }
@@ -2091,44 +1216,11 @@ export default {
             })
             this.form.patch(route('projects.update', {project: this.project.id}));
         },
-        changeChecklistStatus(checklist) {
 
-            if (!this.opened_checklists.includes(checklist.id)) {
-                const openedChecklists = this.opened_checklists;
-
-                openedChecklists.push(checklist.id)
-
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": openedChecklists}, {
-                    preserveState: true,
-                    preserveScroll: true
-                });
-            } else {
-                const filteredList = this.opened_checklists.filter(function (value) {
-                    return value !== checklist.id;
-                })
-                this.$inertia.patch(`/users/${this.$page.props.user.id}/checklists`, {"opened_checklists": filteredList}, {
-                    preserveState: true,
-                    preserveScroll: true
-                });
-            }
-        },
         selectNewFiles() {
             this.$refs.project_files.click();
         },
-        updateTaskOrder(tasks) {
 
-            tasks.map((task, index) => {
-                task.order = index + 1
-            })
-
-            this.$inertia.put('/tasks/order', {
-                tasks
-            }, {
-                preserveState: true,
-                preserveScroll: true
-            })
-
-        },
         openConfirmDeleteModal(project_file) {
             this.deletingFile = true;
             this.project_file = project_file
@@ -2186,44 +1278,7 @@ export default {
         closeEditProjectTeamModal() {
             this.editingTeam = false;
         },
-        openEditChecklistTeamsModal(checklist) {
-            this.checklistToEdit = checklist;
-            this.checklist_assigned_departments = checklist.departments;
-            this.editingChecklistTeams = true;
-        },
-        closeEditChecklistTeamsModal() {
-            this.editingChecklistTeams = false;
-        },
-        openAddChecklistModal() {
-            this.addingChecklist = true;
-        },
-        closeAddChecklistModal() {
-            this.addingChecklist = false;
-            this.checklistForm.name = '';
-            this.checklistForm.tasks = [];
-            this.checklistForm.private = false;
-            this.checklistForm.template_id = null;
-            this.checklistForm.user_id = null;
-            this.selectedTemplate = {name: '', id: null};
-            this.checklist_assigned_departments = [];
-            this.checklistForm.assigned_department_ids = [];
-        },
-        addChecklist() {
 
-            if (this.selectedTemplate.id !== null) {
-                this.checklistForm.template_id = this.selectedTemplate.id;
-                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
-                this.checklistForm.template_id = null;
-                this.closeAddChecklistModal();
-            } else {
-                if (this.checklistForm.private === true) {
-                    this.checklistForm.user_id = this.$page.props.user.id;
-                }
-                this.checklistForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true});
-                this.closeAddChecklistModal();
-            }
-
-        },
         openDeleteProjectModal(project) {
             this.projectToDelete = project;
             this.deletingProject = true;
@@ -2333,183 +1388,25 @@ export default {
             this.form.patch(route('projects.update', {project: this.project.id}));
             this.closeEditProjectTeamModal();
         },
-        openAddTaskModal(checklist) {
-            this.taskForm.checklist_id = checklist.id;
-            this.addingTask = true;
-        },
-        closeAddTaskModal() {
-            this.taskForm.checklist_id = null;
-            this.taskForm.name = "";
-            this.taskForm.description = "";
-            this.taskForm.deadline = null;
-            this.taskForm.deadlineDate = null;
-            this.taskForm.deadlineTime = null;
-            this.addingTask = false;
-        },
-        addTask() {
-            if (this.taskForm.deadlineDate) {
-                if (this.taskForm.deadlineTime === null) {
-                    this.taskForm.deadlineTime = '00:00';
-                }
-                this.taskForm.deadline = this.formatDate(this.taskForm.deadlineDate, this.taskForm.deadlineTime);
-            }
-            this.taskForm.post(route('tasks.store'), {preserveState: true, preserveScroll: true});
-            this.closeAddTaskModal();
-        },
-        editTask() {
-            this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},), {
-                preserveState: true,
-                preserveScroll: true
-            });
-            this.closeEditTaskModal();
-        },
-        openEditTaskModal(task) {
-            this.taskToEditForm.id = task.id;
-            this.taskToEditForm.name = task.name;
-            this.taskToEditForm.deadline = task.deadline_dt_local;
-            this.taskToEditForm.description = task.description;
-            this.editingTask = true;
-        },
-        closeEditTaskModal() {
-            this.editingTask = false;
-            this.taskToEditForm.id = null;
-            this.taskToEditForm.name = "";
-            this.taskToEditForm.deadline = null;
-            this.taskToEditForm.description = "";
 
-        },
+
         addCommentToProject() {
             this.commentForm.post(route('comments.store'), {preserveState: true, preserveScroll: true});
             this.commentForm.text = "";
         },
-        checkAllTasks(checklist) {
-            checklist.tasks.forEach((task) => {
-                task.done = true;
-                this.updateTaskStatus(task)
-            })
-        },
-        uncheckAllTasks(checklist) {
-            checklist.tasks.forEach((task) => {
-                task.done = false;
-                this.updateTaskStatus(task)
-            })
-        },
-        allTasksChecked(checklist) {
-            let checked = true;
-            checklist.tasks.forEach((task) => {
-                if (task.done === false) {
-                    checked = false
-                }
-            })
-            return checked
-        },
-        deleteTask(task) {
-            this.$inertia.delete(`/tasks/${task.id}`, {preserveState: true, preserveScroll: true});
-        },
+
         deleteCommentFromProject(comment) {
             this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
         },
-        duplicateChecklist(checklist) {
-            let departmentIds = [];
-            this.duplicateForm.name = checklist.name + " (Kopie)";
-            this.duplicateForm.tasks = checklist.tasks;
-            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
-                this.duplicateForm.user_id = this.$page.props.user.id;
-            } else {
-                checklist.departments.forEach((department) => {
-                    departmentIds.push(department.id);
-                })
-                this.duplicateForm.assigned_department_ids = departmentIds
-            }
-            this.duplicateForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true})
-            this.duplicateForm.name = "";
-            this.duplicateForm.tasks = [];
-            this.duplicateForm.departments = [];
-            this.duplicateForm.user_id = null;
-        },
-        openDeleteChecklistModal(checklistToDelete) {
-            this.checklistToDelete = checklistToDelete;
-            this.deletingChecklist = true;
-        },
-        closeDeleteChecklistModal() {
-            this.deletingChecklist = false;
-            this.checklistToDelete = {};
-        },
-        deleteChecklistFromProject() {
-            if (this.project.public_checklists.findIndex((publicChecklist) => publicChecklist.id === this.checklistToDelete.id) !== -1) {
-                this.project.public_checklists.splice(this.project.public_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
-                    preserveState: true,
-                    preserveScroll: true
-                });
-                this.closeDeleteChecklistModal();
-                return;
-            }
-            if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === this.checklistToDelete.id) !== -1) {
-                this.project.private_checklists.splice(this.project.private_checklists.indexOf(this.checklistToDelete), 1);
-                this.$inertia.delete(`/checklists/${this.checklistToDelete.id}`, {
-                    preserveState: true,
-                    preserveScroll: true
-                });
-                this.closeDeleteChecklistModal();
-            }
-        },
+
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
         },
-        openEditChecklistModal(checklist) {
-            this.editChecklistForm.id = checklist.id;
-            this.editChecklistForm.name = checklist.name;
-            this.editChecklistForm.private = !checklist.departments;
-            if (checklist.departments) {
-                this.editChecklistForm.assigned_department_ids = [];
-                checklist.departments.forEach((department) => {
-                    this.editChecklistForm.assigned_department_ids.push(department.id);
-                })
-            }
-            this.editingChecklist = true;
-        },
-        closeEditChecklistModal() {
-            this.editingChecklist = false;
-            this.editChecklistForm.id = null;
-            this.editChecklistForm.name = "";
-            this.editChecklistForm.private = false;
-            this.editChecklistForm.assigned_department_ids = null;
-            this.editChecklistForm.user_id = null;
-        },
-        editChecklist() {
-            if (this.editChecklistForm.private) {
-                this.editChecklistForm.user_id = this.$page.props.user.id;
-                this.editChecklistForm.assigned_department_ids = [];
-            } else {
-                this.editChecklistForm.user_id = null;
 
-            }
-            this.editChecklistForm.patch(route('checklists.update', {checklist: this.editChecklistForm.id}, {
-                preserveState: true,
-                preserveScroll: true
-            }));
-            this.closeEditChecklistModal();
-        },
-        createTemplateFromChecklist(checklist) {
-            console.log('HEHE');
-            this.templateForm.checklist_id = checklist.id;
-            this.templateForm.post(route('checklist_templates.store'));
-        },
-        updateTaskStatus(task) {
-            this.doneTaskForm.done = task.done;
-            if (this.doneTaskForm.done === false) {
-                task.done_by_user = null;
-                task.done_at = null;
-                task.done_at_dt_local = null;
-            }
-            this.doneTaskForm.patch(route('tasks.update', {task: task.id}), {
-                preserveScroll: true,
-            });
-        },
+
         checkUserAuth(user) {
             if (this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return true;

@@ -68,24 +68,7 @@
                     </Menu>
                 </div>
                 <div class="flex items-center w-full justify-between mt-4">
-                    <div class="mt-2 xsDark text-xs flex items-center"
-                         v-if="moneySource.users">
-                        <div class="flex items-center">
-                            <div class="mr-2">
-                                zuständig:
-                            </div>
-                            <div class="-ml-3" v-for="user in moneySource.users">
-                                <img v-if="user"
-                                     :data-tooltip-target="user?.id"
-                                     :src="user?.profile_photo_url"
-                                     :alt="user?.name"
-                                     class="ml-3 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="user"
-                                             :user="user"/>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex mt-2 mx-4 xsDark items-center">
+                    <div class="flex mt-2 xsDark items-center">
                         erstellt von
                         <img v-if="moneySource.creator"
                              :data-tooltip-target="moneySource.creator?.id"
@@ -240,8 +223,13 @@
             :moneySourceGroups="this.moneySourceGroups"
         />
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
-            <MoneySourceSidenav :users="moneySource.users" :tasks="moneySource.tasks"
-                                :money_source="moneySource" :money-source-files="moneySource.money_source_files"></MoneySourceSidenav>
+            <MoneySourceSidenav
+                :users="moneySource.users"
+                :tasks="moneySource.tasks"
+                :money_source="moneySource"
+                :money-source-files="moneySource.money_source_files"
+                :linked-projects="linkedProjects"
+            ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
     <confirmation-component
@@ -289,7 +277,7 @@ import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistory
 
 export default {
     name: "MoneySourceShow",
-    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects'],
+    props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {
         MoneySourceSidenav,
         BaseSidenav,

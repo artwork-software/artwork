@@ -84,7 +84,7 @@ class ProjectController extends Controller
                 'checklists.tasks.checklist.project',
                 'access_budget',
                 'categories',
-                'checklists.departments',
+                'checklists.users',
                 'comments.user',
                 'departments.users.departments',
                 'genres',
@@ -1012,7 +1012,7 @@ class ProjectController extends Controller
         $project->load([
             'access_budget',
             'categories',
-            'checklists.departments',
+            'checklists.users',
             'checklists.tasks.checklist.project',
             'checklists.tasks.user_who_done',
             'comments.user',

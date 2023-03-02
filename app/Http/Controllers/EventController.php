@@ -68,9 +68,8 @@ class EventController extends Controller
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
                 ->where('user_id', Auth::id())
             )
-            ->orWhereHas('checklistDepartments', fn (Builder $departmentBuilder) => $departmentBuilder
-                ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
-                    ->where('users.id', Auth::id()))
+            ->orWhereHas('task_users', fn (Builder $userBuilder) => $userBuilder
+                ->where('user_id', Auth::id())
             )
             ->get();
 

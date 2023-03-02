@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('project_id');
-            $table->unsignedBigInteger('user_id')->nullable(true)->default(null);
+            $table->unsignedBigInteger('user_id')->nullable()->default(null);
             $table->timestamps();
         });
     }

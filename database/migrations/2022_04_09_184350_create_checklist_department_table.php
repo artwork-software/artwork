@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('checklist_department', function (Blueprint $table) {
+        Schema::create('checklist_user', function (Blueprint $table) {
             $table->id();
             $table->integer('checklist_id');
-            $table->integer('department_id');
+            $table->integer('user_id');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('checklist_department');
+        Schema::dropIfExists('checklist_user');
     }
 };

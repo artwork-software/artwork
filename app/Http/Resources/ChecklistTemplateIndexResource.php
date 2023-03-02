@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\Department;
 use App\Models\TaskTemplate;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
@@ -32,10 +33,11 @@ class ChecklistTemplateIndexResource extends JsonResource
                 'description' => $taskTemplate->description,
                 'done' => $taskTemplate->done,
             ]),
-            'departments' => $this->departments->map(fn (Department $department) => [
-                'id' => $department->id,
-                'name' => $department->name,
-                'svg_name' => $department->svg_name,
+            'users' => $this->users->map(fn (User $user) => [
+                'id' => $user->id,
+                'profile_photo_url' => $user->profile_photo_url,
+                'first_name' => $user->first_name,
+                'last_name' => $user->last_name,
             ]),
             'updated_at' => $this->updated_at,
             'created_at' => $this->created_at->format('d.m.Y, H:i')

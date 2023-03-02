@@ -62,6 +62,7 @@
                     @add="addCollectingSociety"
                     @openDeleteModal="openDeleteCollectingSocietyModal"
                 />
+
                 <ProjectSettingsItem
                     title="Währungen"
                     description="Lege Währungen fest, denen Verträge später zugeordnet werden können."
@@ -69,6 +70,16 @@
                     :items="currencies"
                     @add="addCurrency"
                     @openDeleteModal="openDeleteCurrencyModal"
+                />
+
+                <ProjectSettingsItem
+                    title="Projektinformationen auf einen Blick"
+                    description="Lege fest welche Daten für ein Projekt erhoben werden sollten. Die Tabelle kann anschließend in jedem Projekt ausgefüllt werden."
+                    input-label="Überschrift eingeben"
+                    :items="project_headlines"
+                    item-style="list"
+                    @add="addProjectHeadline"
+                    @openDeleteModal="openDeleteProjectHeadlineModal"
                 />
 
             </div>
@@ -121,6 +132,7 @@
             @delete="deleteCollectingSociety"
             @closeModal="closeDeleteCollectingSocietyModal"
         />
+
         <ProjectSettingsDeleteModal
             :show="deletingCurrency"
             title="Währung löschen"
@@ -128,6 +140,15 @@
             @delete="deleteCurrency"
             @closeModal="closeDeleteCurrencyModal"
         />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingProjectHeadline"
+            title="Überschrift löschen"
+            :description="`Bist du sicher, dass du die Überschrift ${projectHeadlineToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteProjectHeadline"
+            @closeModal="closeDeleteProjectHeadlineModal"
+        />
+
     </app-layout>
 </template>
 
@@ -163,7 +184,7 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies'],
+    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies', 'project_headlines'],
     data() {
         return {
             genreToDelete: null,
@@ -180,6 +201,8 @@ export default {
             collectingSocietyToDelete: null,
             deletingCurrency: false,
             currencyToDelete: null,
+            deletingProjectHeadline: false,
+            projectHeadlineToDelete: null
         }
     },
     methods: {
@@ -307,6 +330,23 @@ export default {
             this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`);
             this.closeDeleteCurrencyModal();
         },
+        addProjectHeadline(headlineInput) {
+            if(headlineInput !== ''){
+                this.$inertia.post(route('project_headlines.store'), {name: headlineInput});
+            }
+        },
+        openDeleteProjectHeadlineModal(headline) {
+            this.projectHeadlineToDelete = headline;
+            this.deletingProjectHeadline = true;
+        },
+        closeDeleteProjectHeadlineModal() {
+            this.deletingProjectHeadline = false;
+            this.projectHeadlineToDelete = null;
+        },
+        deleteProjectHeadline() {
+            this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`);
+            this.closeDeleteProjectHeadlineModal();
+        }
     },
     setup() {
         return {}

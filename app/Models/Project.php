@@ -68,6 +68,12 @@ class Project extends Model
             ->withPivot('access_budget', 'is_manager', 'can_write');
     }
 
+    public function headlines()
+    {
+        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headline', 'project_id')
+            ->withPivot('text');
+    }
+
     public function access_budget()
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')

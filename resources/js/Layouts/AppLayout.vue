@@ -24,6 +24,7 @@
                 this.$page.props.can.edit_checklist_settings ||
                 this.$page.props.can.global_notifiaction ||
                 this.$page.props.can.read_room_request_details ||
+                this.$page.props.can.edit_rooms ||
                 this.$page.props.is_admin">
                         <div class="flex">
                             <MenuButton
@@ -179,6 +180,7 @@
     Budget: {{ $page.props.is_budget_admin }}
     Contracts: {{ $page.props.is_contract_admin }}
     MoneySource: {{ $page.props.is_money_source_admin }}
+                    {{$page.props}}
                 </pre>
                 </div>
 
@@ -297,7 +299,7 @@ export default {
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.$page.props.can.edit_rooms,
                     href: route('areas.management'),
                     route: ['/areas']
                 },

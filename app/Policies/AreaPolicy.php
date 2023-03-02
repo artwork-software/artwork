@@ -20,7 +20,7 @@ class AreaPolicy
      */
     public function viewAny(User $user)
     {
-        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value) || $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
     /**
@@ -32,7 +32,7 @@ class AreaPolicy
      */
     public function view(User $user, Area $area)
     {
-        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value) || $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
     /**
@@ -43,7 +43,7 @@ class AreaPolicy
      */
     public function create(User $user)
     {
-        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value) || $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
     /**
@@ -55,7 +55,7 @@ class AreaPolicy
      */
     public function update(User $user, Area $area)
     {
-        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value) || $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
     /**
@@ -67,7 +67,7 @@ class AreaPolicy
      */
     public function delete(User $user, Area $area)
     {
-        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value);
+        return $user->hasRole(RoleNameEnum::ROOM_ADMIN->value) || $user->can(PermissionNameEnum::ROOM_UPDATE->value);
     }
 
     /**

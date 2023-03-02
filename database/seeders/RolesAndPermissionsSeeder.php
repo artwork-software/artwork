@@ -122,6 +122,13 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
         Permission::create([
+            'name' => PermissionNameEnum::ROOM_UPDATE->value,
+            'name_de' => "Raumverwaltung",
+            'group' => 'Systemeinstellungen',
+            'tooltipText' => 'Nutzer*in darf Räume erstellen, löschen und bearbeiten.',
+            'checked' => false
+        ]);
+        Permission::create([
             'name' => PermissionNameEnum::PROJECT_SETTINGS_UPDATE->value,
             'name_de' => "Systemeinstellungen für Projekte definieren",
             'group' => 'Systemeinstellungen',

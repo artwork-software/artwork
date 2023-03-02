@@ -96,6 +96,7 @@ class HandleInertiaRequests extends Middleware
                 // ROOM
                 'request_room' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::EVENT_REQUEST->value),
                 'read_room_request_details' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value),
+                'edit_rooms'=> Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_UPDATE->value),
 
                 // Docs & Budget
                 'contract_upload_edit' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),

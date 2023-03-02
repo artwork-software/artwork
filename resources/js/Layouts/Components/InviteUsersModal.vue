@@ -141,11 +141,6 @@
                                text="Einladen" mode="modal"/>
                 </div>
             </div>
-
-
-            <pre>
-                {{ form }}
-            </pre>
         </template>
 
     </jet-dialog-modal>

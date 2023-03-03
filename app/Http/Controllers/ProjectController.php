@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
@@ -10,7 +9,6 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\BudgetResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
@@ -18,7 +16,6 @@ use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use App\Models\CellComment;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Column;
@@ -218,7 +215,7 @@ class ProjectController extends Controller
     }
 
     public function updateEntranceData(Project $project, Request $request) {
-        $project->update(array_filter($request->all(), function($field) { return !is_null($field);}));
+        $project->update(array_filter($request->all(), function($field) { return !is_null($field) || empty($field);}));
 
         return Redirect::back();
     }

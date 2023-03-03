@@ -122,6 +122,8 @@ const updateProjectEntranceData = () => {
     entranceForm.registration_required = registrationRequired.value;
     entranceForm.closed_society = closedSociety.value;
 
+    console.log(entranceForm)
+
     entranceForm.patch(`/projects/${props.project.id}/entrance`)
 
     props.closeModal()

@@ -8,6 +8,12 @@
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
                         {{ project?.name }}
+
+
+                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex" :class="[selectedColor?.color, selectedColor?.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
+                            {{ selectedColor?.name }}
+                        </span>
+
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
@@ -124,7 +130,8 @@
                 <div class="flex mt-5">
                     <div>
                         <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
-                                      :displayed-text="category.name" :property="category" :hide-x="true"></TagComponent>
+                                      :displayed-text="category.name" :property="category"
+                                      :hide-x="true"></TagComponent>
                     </div>
                     <div>
                         <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
@@ -345,6 +352,31 @@
                             </div>
                             <div v-else class="xsDark">
                                 Noch keine Kommentare vorhanden
+                            </div>
+                        </div>
+                    </div>
+                    <!-- TODO: HIER MUSS DOCH NOCH DIE PREVIEW-LOGIK VORGELAGERT WERDEN -->
+                    <div class="col-span-1">
+                        <label class="block mt-12 mb-4 xsDark">
+                            Key Visual </label>
+                        <div class="grid grid-cols-6 gap-x-12 items-center">
+                            <div
+                                class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                                @click="selectNewKeyVisual"
+                                @dragover.prevent
+                                @drop.stop.prevent="uploadDraggedKeyVisual($event)">
+                                <div class="space-y-1 text-center">
+                                    <div class="xsLight flex my-auto h-40 items-center"
+                                         v-if="this.project.key_visual_path === null">
+                                        Ziehe hier dein <br/> Key Visual hin
+                                        <input id="keyVisual-upload" ref="keyVisual"
+                                               name="file-upload" type="file" class="sr-only" @change="updateKeyVisual"/>
+                                    </div>
+                                    <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
+                                        <img :src="this.project.key_visual_path" alt="Aktuelles Banner"
+                                             class="rounded-md h-40 w-40">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -616,20 +648,52 @@
                                               :displayed-text="sector.name" :property="sector"></TagComponent>
                             </div>
                         </div>
+                        <div class="flex mt-2 w-full">
+                            <Listbox as="div" class="flex mr-2 w-full" v-model="selectedColor">
+                                <ListboxButton class="w-full text-left">
+                                    <button class="w-full h-12 border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                            :class="selectedColor=== 'whiteColumn' ? 'whiteColumn border border-1' : selectedColor"
+                                            @click="openColor = !openColor">
+                                        <span class="w-full" v-if="!selectedColor">
+                                            Wähle Projekt Status
+                                        </span>
+                                        <span v-else>
+                                            {{ selectedColor?.name}}
+                                        </span>
+                                    </button>
+                                </ListboxButton>
+
+                                <transition leave-active-class="transition ease-in duration-100"
+                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                    <ListboxOptions
+                                        class="absolute w-46 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        <ListboxOption as="template" class=""
+                                                       v-for="state in states"
+                                                       :key="state"
+                                                       :value="state" v-slot="{ active, selected }">
+                                            <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
+                                                @click="updateProjectState(state)">
+                                                <div class="flex">
+                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="[state.color, state.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
+                                                        {{ state.name }}
+                                                    </span>
+                                                </div>
+                                                <span
+                                                    :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                                    <CheckIcon v-if="selected"
+                                                                               class="h-5 w-5 flex text-success"
+                                                                               aria-hidden="true"/>
+                                                                </span>
+                                            </li>
+                                        </ListboxOption>
+                                    </ListboxOptions>
+                                </transition>
+                            </Listbox>
+                        </div>
                         <div class="mt-2">
                             <textarea placeholder="Kurzbeschreibung" v-model="form.description" rows="8"
                                       class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <!-- TODO: Add cost center to sidebar -->
-                        <!--<div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
-                            <div class="sm:col-span-3">
-                                <div>
-                                    <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
-                                </div>
-                            </div>
-
-                        </div>-->
                         <div>
                             <div class="flex items-center mb-2" v-if="!project.is_group">
                                 <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
@@ -753,7 +817,7 @@
                         <span v-for="user in assignedUsers"
                               class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
                             <pre>
-                                {{user}}
+                                {{ user }}
                             </pre>
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
@@ -875,6 +939,7 @@
         </jet-dialog-modal>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
+                v-if="isBudgetTab"
                 :project="project"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
@@ -882,6 +947,10 @@
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
+            />
+            <ProjectSecondSidenav
+                v-else
+                :project="project"
             />
         </BaseSidenav>
 
@@ -944,6 +1013,7 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
+import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -956,8 +1026,9 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects'],
+    props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
     components: {
+        ProjectSecondSidenav,
         ChecklistComponent,
         ProjectHistoryComponent,
         NewUserToolTip,
@@ -1137,6 +1208,9 @@ export default {
                 projectSectorIds: this.projectSectorIds,
                 selectedGroup: null
             }),
+            keyVisualForm: useForm({
+                keyVisual: null,
+            }),
             commentForm: useForm({
                 text: "",
                 user_id: this.$page.props.user.id,
@@ -1146,12 +1220,19 @@ export default {
                 file: null
             }),
             attributeForm: useForm({}),
+            selectedColor: this.project.state ? this.project.state : null,
+            openColor: false
         }
     },
     mounted() {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
     },
     methods: {
+        updateProjectState(state){
+            this.$inertia.patch(route('update.project.state', this.project.id), {
+                state: state.id
+            })
+        },
         changeHeadlineText(headline) {
             this.$inertia.patch(route('project_headlines.update.text', { project_headline: headline.id, project: this.project.id}), { text: headline.text})
         },
@@ -1162,6 +1243,33 @@ export default {
                 this.showProjectHistoryTab = true;
             } else {
                 this.showBudgetHistoryTab = true;
+            }
+        },
+        selectNewKeyVisual() {
+            this.$refs.keyVisual.click();
+        },
+        updateKeyVisual() {
+            this.validateTypeAndUploadKeyVisual(this.$refs.keyVisual.files[0], 'keyVisual');
+        },
+        uploadDraggedKeyVisual(event) {
+            console.log(event)
+            this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0], 'keyVisual');
+        },
+        validateTypeAndUploadKeyVisual(file, type) {
+            this.uploadDocumentFeedback = "";
+            console.log(file)
+            const allowedTypes = [
+                "image/jpeg",
+                "image/svg+xml",
+                "image/png",
+                "image/gif"
+            ]
+
+            if (allowedTypes.includes(file.type)) {
+                this.keyVisualForm.keyVisual = file
+                this.keyVisualForm.post(route('projects_key_visual.update',{project: this.project.id}));
+            } else {
+                this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
         },
         deleteProjectFromGroup(projectGroupId) {
@@ -1456,4 +1564,24 @@ export default {
 </script>
 
 <style scoped>
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
 </style>

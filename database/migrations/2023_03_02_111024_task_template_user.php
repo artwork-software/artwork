@@ -13,10 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('checklist_department', function (Blueprint $table) {
+        Schema::create('task_template_user', function (Blueprint $table) {
             $table->id();
-            $table->integer('checklist_id');
-            $table->integer('department_id');
+            $table->unsignedBigInteger('task_template_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('checklist_department');
+        Schema::dropIfExists('task_template_user');
     }
 };

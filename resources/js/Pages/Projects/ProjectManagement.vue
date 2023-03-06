@@ -64,7 +64,7 @@
                          class="mt-5 border-b-2 border-gray-200 w-full">
                         <div
                             class="py-4 flex">
-                            <div class="flex w-full">
+                            <div class="flex w-1/2">
                                 <div class="mr-6">
                                     <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
                                           class="flex w-full my-auto">
@@ -84,8 +84,12 @@
                                         </p>
                                     </div>
                                 </div>
+
                             </div>
-                            <div class="flex w-full justify-end">
+                            <div class="rounded-full items-center font-medium w-44 px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex" :class="[project.state?.color, project.state?.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
+                                {{ project.state?.name }}
+                            </div>
+                            <div class="flex w-2/4 justify-end">
                                 <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
                                     <TeamIconCollection :data-tooltip-target="department.name"
                                                         class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
@@ -126,7 +130,7 @@
                                     </Menu>
                                 </div>
                             </div>
-                            <div class="flex w-full justify-end">
+                            <div class="flex w-12 justify-end">
                                 <div class="flex mr-6">
                                     <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
                                         <img :data-tooltip-target="user.id"
@@ -1116,3 +1120,26 @@ export default defineComponent({
     }
 })
 </script>
+
+<style scoped>
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
+</style>

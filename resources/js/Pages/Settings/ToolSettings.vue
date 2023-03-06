@@ -430,7 +430,6 @@ export default defineComponent({
             this.mailForm.post(route('tool.updateMail'))
         },
         createGlobalNotification(){
-            console.log(this.globalNotificationForm);
             this.globalNotificationForm.post(route('global_notification.store'));
             this.showSuccessModal = true;
         },

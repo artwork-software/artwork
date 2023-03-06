@@ -83,7 +83,6 @@ class TestContentSeeder extends Seeder
         foreach ($departments as $department) {
             $department->users()->sync($users->shuffle()->take(random_int(1, 3))->pluck('id'));
             $department->projects()->sync($projects->shuffle()->take(random_int(0, 2))->pluck('id'));
-            $department->checklists()->sync($checklists->shuffle()->take(random_int(1, 3))->pluck('id'));
         }
     }
 

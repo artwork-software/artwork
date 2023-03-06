@@ -20,4 +20,8 @@ class TaskTemplate extends Model
     {
         return $this->belongsTo(ChecklistTemplate::class, 'checklist_template_id');
     }
+
+    public function task_users(){
+        return $this->belongsToMany(User::class, 'task_template_user');
+    }
 }

@@ -116,6 +116,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
@@ -124,6 +125,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+
+    //Project Entrance & registration
+    Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])->name('projects.entrance.update');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
@@ -297,8 +301,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
-
-
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
 
@@ -411,5 +413,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/project_headlines/{project_headline}/{project}/text', [ProjectHeadlineController::class, 'updateText'])->name('project_headlines.update.text');
     Route::delete('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'destroy'])->name('project_headlines.delete');
 
+    // Project States
+    Route::post('/state', [\App\Http\Controllers\ProjectStatesController::class, 'store'])->name('state.store');
+    Route::delete('/state/{projectStates}', [\App\Http\Controllers\ProjectStatesController::class, 'destroy'])->name('state.delete');
+    Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])->name('update.project.state');
 });
 

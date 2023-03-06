@@ -36,6 +36,15 @@
                     @openDeleteModal="openDeleteSectorModal"
                 />
 
+                <ProjectSettingState
+                    title="Projektstatus"
+                    description="Lege Projektstatus fest um zu kennzeichnen wie weit fortgeschritten ein Projekt ist. Die Nutzer*innen können anschließend ihre Notifications anhand der Status einstellen."
+                    input-label="Status eingeben"
+                    :items="states"
+                    @add="addState"
+                    @openDeleteModal="openDeleteStateModal"
+                />
+
                 <ProjectSettingsItem
                     title="Vertragsarten"
                     description="Lege Vertragsarten fest, denen Vertragsdokumente später zugeordnet werden können."
@@ -92,6 +101,14 @@
             :description="`Bist du sicher, dass du das Genre ${genreToDelete?.name} aus dem System löschen willst?`"
             @delete="deleteGenre"
             @closeModal="closeDeleteGenreModal"
+        />
+
+        <ProjectSettingsDeleteModal
+            :show="deletingState"
+            title="Status löschen"
+            :description="`Bist du sicher, dass du den Status ${stateToDelete?.name} aus dem System löschen willst?`"
+            @delete="deleteState"
+            @closeModal="closeDeleteStateModal"
         />
 
         <ProjectSettingsDeleteModal
@@ -173,10 +190,12 @@ import CategoryIconCollection from "@/Layouts/Components/EventTypeIconCollection
 import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
+import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
 
 export default {
     components: {
         ProjectSettingsEditModal,
+        ProjectSettingState,
         ProjectSettingsDeleteModal,
         ProjectSettingsItem,
         AppLayout,
@@ -196,7 +215,7 @@ export default {
         PencilAltIcon,
         XIcon
     },
-    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies', 'project_headlines'],
+    props: ['genres', 'categories', 'sectors', 'contractTypes', 'companyTypes', 'collectingSocieties','currencies', 'project_headlines', 'states'],
     data() {
         return {
             genreToDelete: null,
@@ -216,8 +235,9 @@ export default {
             deletingProjectHeadline: false,
             projectHeadlineToDelete: null,
             projectHeadlineToEdit: null,
-            editingProjectHeadline: false
-
+            editingProjectHeadline: false,
+            deletingState: false,
+            stateToDelete: null
         }
     },
     methods: {
@@ -375,6 +395,24 @@ export default {
         deleteProjectHeadline() {
             this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`);
             this.closeDeleteProjectHeadlineModal();
+        },
+        addState(stateInput, stateColor){
+            this.$inertia.post(route('state.store'), {
+                name: stateInput,
+                color: stateColor
+            })
+        },
+        openDeleteStateModal(state){
+            this.stateToDelete = state;
+            this.deletingState = true
+        },
+        deleteState(){
+            this.$inertia.delete(route('state.delete', this.stateToDelete.id))
+            this.closeDeleteStateModal()
+        },
+        closeDeleteStateModal(){
+            this.stateToDelete = null;
+            this.deletingState = false
         }
     },
     setup() {

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
@@ -10,15 +9,14 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\BudgetResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
+use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use App\Models\CellComment;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
 use App\Models\Column;
@@ -30,6 +28,7 @@ use App\Models\MainPosition;
 use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
@@ -84,7 +83,6 @@ class ProjectController extends Controller
                 'checklists.tasks.checklist.project',
                 'access_budget',
                 'categories',
-                'checklists.departments',
                 'comments.user',
                 'departments.users.departments',
                 'genres',
@@ -93,12 +91,13 @@ class ProjectController extends Controller
                 'project_histories.user',
                 'sectors',
                 'users.departments',
-                'writeUsers'
+                'writeUsers',
+                'state'
             ])
             ->get();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectShowResource::collection($projects)->resolve(),
+            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
 
             'projectGroups' => Project::where('is_group', 1)->get(),
 
@@ -215,6 +214,12 @@ class ProjectController extends Controller
         $this->generateBasicBudgetValues($project);
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
+    }
+
+    public function updateEntranceData(Project $project, Request $request) {
+        $project->update(array_filter($request->all(), function($field) { return !is_null($field) || empty($field);}));
+
+        return Redirect::back();
     }
 
     public function generateBasicBudgetValues(Project $project)
@@ -1000,6 +1005,11 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+
+    public function updateProjectState(Request $request, Project $project){
+        $project->update(['state' => $request->state]);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -1012,7 +1022,7 @@ class ProjectController extends Controller
         $project->load([
             'access_budget',
             'categories',
-            'checklists.departments',
+            'checklists.users',
             'checklists.tasks.checklist.project',
             'checklists.tasks.user_who_done',
             'comments.user',
@@ -1027,6 +1037,7 @@ class ProjectController extends Controller
             'project_histories.user',
             'sectors',
             'users.departments',
+            'state'
         ]);
 
         $columns = $project->table()->first()->columns()->get();
@@ -1143,6 +1154,7 @@ class ProjectController extends Controller
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
+            'states' => ProjectStates::all()
         ]);
     }
 
@@ -1712,5 +1724,16 @@ class ProjectController extends Controller
     {
         $columnCell->update(['commented' => $request->commented]);
         return back()->with('success');
+    }
+
+    public function updateKeyVisual(Request $request, Project $project)
+    {
+        $keyVisual = $request->file('keyVisual');
+        if ($keyVisual) {
+            $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
+        }
+        $project->save();
+
+        return Redirect::back()->with('success', 'Key Visual hinzugefügt');
     }
 }

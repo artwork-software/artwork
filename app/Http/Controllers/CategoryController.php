@@ -9,6 +9,7 @@ use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Genre;
 use App\Models\ProjectHeadline;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,7 +65,12 @@ class CategoryController extends Controller
             'project_headlines' => ProjectHeadline::orderBy('order')->get()->map(fn($headline) => [
                 'id' => $headline->id,
                 'name' => $headline->name,
-            ])
+            ]),
+            'states' => ProjectStates::all()->map(fn($state) => [
+                'id' => $state->id,
+                'name' => $state->name,
+                'color' => $state->color
+            ]),
         ]);
     }
 

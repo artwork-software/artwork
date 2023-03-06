@@ -303,7 +303,7 @@ export default {
                 //user who created the template
                 user_id: this.$page.props.user.id,
                 task_templates: [],
-                departments: []
+                users: []
             }),
         }
     },
@@ -331,7 +331,7 @@ export default {
         duplicateTemplate(templateToDuplicate){
             this.duplicateForm.name = templateToDuplicate.name + ' (Kopie)';
             this.duplicateForm.task_templates = templateToDuplicate.task_templates;
-            this.duplicateForm.departments = templateToDuplicate.departments
+            this.duplicateForm.users = templateToDuplicate.users
             this.duplicateForm.post(route('checklist_templates.store'));
         },
         openSuccessModal(type){

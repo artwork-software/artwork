@@ -20,12 +20,15 @@
                     </div>
                 </div>
                 <div class="flex items-center mt-6 mr-8">
-                    <div v-if="templateForm.departments.length === 0">
+                    <div v-if="templateForm.users.length === 0">
                         <span
-                            class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Teams hinzugefügt</span>
+                            class="text-secondary subpixel-antialiased cursor-pointer">Noch keine Nutzer*innen hinzugefügt</span>
                     </div>
-                    <div v-else class="-mr-3 my-auto" v-for="team in templateForm.departments">
-                        <TeamIconCollection class="h-9 w-9 rounded-full ring-white ring-2" :iconName="team.svg_name"/>
+                    <div v-else class="-mr-3 my-auto" v-for="(user, index) in templateForm.users">
+                        <img class="h-10 w-10 mr-2 object-cover rounded-full border border-2 border-white"
+                             :class="index !== 0 ? '-ml-2' : ''"
+                             :src="user.profile_photo_url"
+                             alt=""/>
                     </div>
                     <div @click="openChangeTeamsModal"
                          class="text-secondary ml-4 flex items-center px-2 py-2 text-sm subpixel-antialiased cursor-pointer">
@@ -144,11 +147,11 @@
                            class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                            aria-hidden="true"/>
                     <div class="text-secondary tracking-tight leading-6 sub">
-                        Tippe den Namen des Teams dem du die Checklistenvorlage zuweisen möchtest.
+                        Tippe den Namen des Nutzer*innen dem du die Checklistenvorlage zuweisen möchtest.
                     </div>
                     <div class="mt-6 relative">
                         <div class="my-auto w-full">
-                            <input id="userSearch" v-model="team_query" type="text" autocomplete="off"
+                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
                                    class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                                    placeholder="placeholder"/>
                             <label for="userSearch"
@@ -158,17 +161,20 @@
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100"
                                     leave-to-class="opacity-0">
-                            <div v-if="team_search_results.length > 0 && team_query.length > 0"
+                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
                                  class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                          text-base ring-1 ring-black ring-opacity-5
                                          overflow-auto focus:outline-none sm:text-sm">
                                 <div class="border-gray-200">
-                                    <div v-for="(team, index) in team_search_results" :key="index"
+                                    <div v-for="(user, index) in user_search_results" :key="index"
                                          class="flex items-center cursor-pointer">
                                         <div class="flex-1 text-sm py-4">
-                                            <p @click="addTeamToTeamsArray(team)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ team.name }}
+                                            <p @click="addUserToTeamsArray(user)"
+                                               class="flex items-center font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                                                     :src="user.profile_photo_url"
+                                                     alt=""/>
+                                                {{ user.first_name }} {{ user.last_name }}
                                             </p>
                                         </div>
                                     </div>
@@ -179,16 +185,15 @@
                     <div class="mt-4">
                         <div class="flex">
                         </div>
-                        <span v-for="(team,index) in templateForm.departments"
+                        <span v-for="(user,index) in templateForm.users"
                               class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <TeamIconCollection :iconName="team.svg_name"
-                                                    class="rounded-full h-11 w-11 object-cover"/>
-                                <span class="flex ml-4">
-                                {{ team.name }}
-                                    </span>
+                             <div class="flex items-center">
+                                <img class="h-5 w-5 mr-2 object-cover rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                {{ user.first_name }} {{ user.last_name }}
                             </div>
-                            <button type="button" @click="deleteTeamFromTemplate(team)">
+                            <button type="button" @click="deleteUserFromTemplate(user)">
                                 <span class="sr-only">Team aus Checklistenvorlage entfernen</span>
                                 <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
                             </button>
@@ -253,18 +258,18 @@ export default {
             deletingTeam: false,
             showSuccess: false,
             deletingAllMembers: false,
-            team_query: "",
+            user_query: "",
             addingTask: false,
             dragging: false,
             showChangeTeamsModal: false,
-            team_search_results: [],
+            user_search_results: [],
             templateForm: this.$inertia.form({
                 _method: 'PATCH',
                 name: this.checklist_template.name,
                 //user who created the template
                 user_id: this.$page.props.user.id,
                 task_templates: this.checklist_template.task_templates? this.checklist_template.task_templates : [],
-                departments: this.checklist_template.departments? this.checklist_template.departments : [],
+                users: this.checklist_template.users? this.checklist_template.users : [],
             }),
             newTaskName:"",
             newTaskDescription:"",
@@ -289,8 +294,8 @@ export default {
             this.newTaskName = "";
             this.newTaskDescription = "";
         },
-        deleteTeamFromTemplate(team) {
-            this.templateForm.departments.splice(this.templateForm.departments.indexOf(team), 1);
+        deleteUserFromTemplate(user) {
+            this.templateForm.users.splice(this.templateForm.users.indexOf(user), 1);
         },
         showSuccessButton() {
             this.showSuccess = true;
@@ -302,17 +307,17 @@ export default {
             this.templateForm.patch(route('checklist_templates.update',{checklist_template: this.checklist_template.id}));
             this.showSuccessButton();
         },
-        addTeamToTeamsArray(team) {
-            for (let assignedTeam of this.templateForm.departments) {
+        addUserToTeamsArray(user) {
+            for (let assignedUser of this.templateForm.users) {
                 //if team is already assigned do nothing
-                if (team.id === assignedTeam.id) {
-                    this.team_query = ""
+                if (user.id === assignedUser.id) {
+                    this.user_query = ""
                     return;
                 }
             }
-            this.templateForm.departments.push(team);
-            this.team_query = "";
-            this.team_search_results = []
+            this.templateForm.users.push(user);
+            this.user_query = "";
+            this.user_search_results = []
         },
         addTaskToTemplate(){
             this.templateForm.task_templates.push({name:this.newTaskName,description:this.newTaskDescription});
@@ -324,13 +329,13 @@ export default {
         }
     },
     watch: {
-        team_query: {
+        user_query: {
             handler() {
-                if (this.team_query.length > 0) {
-                    axios.get('/departments/search', {
-                        params: {query: this.team_query}
+                if (this.user_query.length > 0) {
+                    axios.get('/users/search', {
+                        params: {query: this.user_query}
                     }).then(response => {
-                        this.team_search_results = response.data
+                        this.user_search_results = response.data
                     })
                 }
             },

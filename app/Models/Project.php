@@ -13,6 +13,7 @@ use Laravel\Scout\Searchable;
  * @property int $id
  * @property string $name
  * @property string $description
+ * @property string $key_visual_path
  * @property int $number_of_participants
  * @property string $cost_center
  * @property \Illuminate\Support\Carbon $created_at
@@ -48,6 +49,19 @@ class Project extends Model
         'number_of_participants',
         'cost_center_id',
         'copyright_id',
+        'key_visual_path',
+        'state',
+        'num_of_guests',
+        'entry_fee',
+        'registration_required',
+        'register_by',
+        'registration_deadline',
+        'closed_society'
+    ];
+
+    protected $casts = [
+        'registration_required' => 'boolean',
+        'closed_society' => 'boolean'
     ];
 
     protected $with = ['historyChangesMorph'];
@@ -165,6 +179,10 @@ class Project extends Model
 
     public function moneySources(){
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
+    }
+
+    public function state(){
+        return $this->belongsTo(ProjectStates::class, 'state');
     }
 
     public function toSearchableArray(): array

@@ -6,6 +6,7 @@ use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
 use App\Models\GlobalNotification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -125,6 +126,7 @@ class HandleInertiaRequests extends Middleware
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             'globalNotification' => $globalNotification,
+            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id'])
         ]);
     }
 }

@@ -13,8 +13,9 @@
             </div>
         </div>
         <div class="w-full">
-                        <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0"
-                              class="text-secondary subpixel-antialiased text-xs mb-4">Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.</span>
+            <span v-if="project.public_checklists.length === 0 && project.private_checklists.length === 0" class="text-secondary subpixel-antialiased text-xs mb-4">
+                Noch keine Checklisten hinzugefügt. Erstelle Checklisten mit Aufgaben. Die Checklisten kannst du Teams zuordnen. Nutze Vorlagen und spare Zeit.
+            </span>
             <div v-else>
                 <div class="flex w-full flex-wrap">
                     <!-- Div einer Checkliste -->
@@ -38,49 +39,13 @@
                                                     </span>
                                 </div>
                                 <div class="flex">
+                                    <!-- hier User ansicht -->
                                     <div class="flex -mr-3"
-                                         v-for="department in checklist.departments.slice(0,9)">
-                                        <TeamIconCollection :data-tooltip-target="department.name"
-                                                            :iconName="department.svg_name"
-                                                            :alt="department.name"
-                                                            class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                        <TeamTooltip :team="department"/>
-                                    </div>
-                                    <div v-if="checklist.departments.length >= 10" class="my-auto">
-                                        <Menu as="div" class="relative">
-                                            <div>
-                                                <MenuButton
-                                                    class="flex items-center rounded-full focus:outline-none">
-                                                    <ChevronDownIcon
-                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
-                                                </MenuButton>
-                                            </div>
-                                            <transition
-                                                enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem
-                                                        v-for="department in checklist.departments"
-                                                        v-slot="{ active }">
-                                                        <div
-                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <TeamIconCollection
-                                                                :iconName="department.svg_name"
-                                                                :alt="department.name"
-                                                                class="ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
-                                                            <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                                        </div>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
+                                         v-for="(user, index) in checklist.users">
+                                        <img class="h-10 w-10 mr-2 object-cover rounded-full border border-2 border-white"
+                                             :class="index !== 0 ? '-ml-2' : ''"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
                                     </div>
                                     <Menu
                                         v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
@@ -109,7 +74,7 @@
                                                             <PencilAltIcon
                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
                                                                 aria-hidden="true"/>
-                                                            Teams zuweisen
+                                                            Nutzer*innen zuweisen
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }">
@@ -220,25 +185,22 @@
                                                            v-model="element.done"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                    <p class="ml-4 my-auto text-lg font-black"
+                                                    <p class="ml-4 my-auto text-lg font-black xsDark font-semibold"
                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                         {{ element.name }}</p>
-                                                    <span v-if="!element.done && element.deadline"
-                                                          class="ml-2 my-auto text-sm subpixel-antialiased"
-                                                          :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
-                                                            element.deadline
-                                                        }}</span>
-                                                    <span v-if="element.done && element.done_by_user"
-                                                          class="ml-2 flex my-auto items-center text-sm text-secondary">
-                                                                        <img
-                                                                            :data-tooltip-target="element.done_by_user.id"
-                                                                            v-if="element.done_by_user"
-                                                                            :src="element.done_by_user.profile_photo_url"
-                                                                            :alt="element.done_by_user.name"
-                                                                            class="rounded-full mr-2 my-auto h-7 w-7 object-cover"/>
-                                                                        <UserTooltip :user="element.done_by_user"/>
-                                                                        {{ element.done_at }}
-                                                                    </span>
+                                                    <span v-if="!element.done && element.deadline" class="ml-2 my-auto text-sm subpixel-antialiased" :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">
+                                                        bis {{element.deadline }}
+                                                    </span>
+                                                    <span v-if="element.done && element.done_by_user" class="ml-2 flex my-auto items-center text-sm text-secondary">
+                                                        {{ element.done_at }}
+                                                        <img
+                                                            :data-tooltip-target="element.done_by_user.id"
+                                                            v-if="element.done_by_user"
+                                                            :src="element.done_by_user.profile_photo_url"
+                                                            :alt="element.done_by_user.name"
+                                                            class="rounded-full ml-2 my-auto h-7 w-7 object-cover"/>
+                                                        <UserTooltip :user="element.done_by_user"/>
+                                                    </span>
                                                     <Menu
                                                         v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                                         as="div" class="my-auto relative"
@@ -284,8 +246,7 @@
                                                         </transition>
                                                     </Menu>
                                                 </div>
-                                                <div v-if="!element.done"
-                                                     class="ml-16 text-sm text-secondary subpixel-antialiased">
+                                                <div class="ml-16 text-sm text-secondary subpixel-antialiased" :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                     {{ element.description }}
                                                 </div>
                                             </div>
@@ -430,7 +391,7 @@
                                                            v-model="element.done"
                                                            type="checkbox"
                                                            class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                    <p class="ml-4 my-auto text-lg font-black text-sm"
+                                                    <p class="ml-4 my-auto text-lg font-black text-sm xsDark"
                                                        :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                         {{ element.name }}</p>
                                                     <span v-if="!element.done && element.deadline"
@@ -511,9 +472,9 @@
     </div>
 
     <!-- Change Checklist Teams Modal -->
-    <ChecklistTeamComponent
+    <AddChecklistUserModal
         :checklistId="checklistToEdit?.id"
-        :departments="checklistToEdit?.departments"
+        :users="checklistToEdit?.users"
         :editingChecklistTeams="editingChecklistTeams"
         @closed="closeEditChecklistTeamsModal"
     />
@@ -655,7 +616,6 @@
         </template>
 
     </jet-dialog-modal>
-
     <!-- Checkliste Bearbeiten-->
     <jet-dialog-modal :show="editingChecklist" @close="closeEditChecklistModal">
         <template #content>
@@ -746,8 +706,7 @@
                                     </span>
                             </ListboxButton>
 
-                            <transition leave-active-class="transition ease-in duration-100"
-                                        leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
                                 <ListboxOptions
                                     class="absolute z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1 ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                     <ListboxOption as="template" class="max-h-8"
@@ -798,7 +757,6 @@
                                    class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
                                 der Checkliste*</label>
                         </div>
-                        <jet-input-error :message="form.error" class="mt-2"/>
                     </div>
                     <div class="flex items-center my-6" v-if="selectedTemplate.name === ''">
                         <Switch @click="checklistForm.private = !checklistForm.private"
@@ -832,7 +790,6 @@
         </template>
 
     </jet-dialog-modal>
-
 </template>
 
 <script>
@@ -881,11 +838,13 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
+import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 
 export default {
     name: "ChecklistComponent",
     props: ['project', 'opened_checklists', 'projectCanWriteIds', 'projectManagerIds', 'checklist_templates'],
     components: {
+        AddChecklistUserModal,
         TagComponent,
         AddButton,
         TeamTooltip,
@@ -934,7 +893,7 @@ export default {
         return {
             error: [],
             allDoneTasks: [],
-            checklist_assigned_departments: [],
+            checklist_assigned_users: [],
             selectedTemplate: {name: '', id: null},
             checklistToEdit: null,
             editingChecklist: false,
@@ -950,7 +909,7 @@ export default {
                 name: "",
                 project_id: this.project.id,
                 tasks: [],
-                assigned_department_ids: [],
+                assigned_user_ids: [],
                 private: false,
                 template_id: null,
                 user_id: null
@@ -960,7 +919,7 @@ export default {
                 name: "",
                 private: false,
                 user_id: null,
-                assigned_department_ids: [],
+                assigned_user_ids: [],
             }),
             taskForm: useForm({
                 name: "",
@@ -980,7 +939,7 @@ export default {
                 name: "",
                 project_id: this.project.id,
                 tasks: [],
-                assigned_department_ids: [],
+                assigned_user_ids: [],
                 user_id: null
             }),
             templateForm: useForm({
@@ -1046,21 +1005,21 @@ export default {
             this.$inertia.delete(`/tasks/${task.id}`, {preserveState: true, preserveScroll: true});
         },
         duplicateChecklist(checklist) {
-            let departmentIds = [];
+            let userIds = [];
             this.duplicateForm.name = checklist.name + " (Kopie)";
             this.duplicateForm.tasks = checklist.tasks;
             if (this.project.private_checklists.findIndex((privateChecklist) => privateChecklist.id === checklist.id) !== -1) {
                 this.duplicateForm.user_id = this.$page.props.user.id;
             } else {
-                checklist.departments.forEach((department) => {
-                    departmentIds.push(department.id);
+                checklist.users.forEach((user) => {
+                    userIds.push(user.id);
                 })
-                this.duplicateForm.assigned_department_ids = departmentIds
+                this.duplicateForm.assigned_user_ids = userIds
             }
             this.duplicateForm.post(route('checklists.store'), {preserveState: true, preserveScroll: true})
             this.duplicateForm.name = "";
             this.duplicateForm.tasks = [];
-            this.duplicateForm.departments = [];
+            this.duplicateForm.users = [];
             this.duplicateForm.user_id = null;
         },
         openDeleteChecklistModal(checklistToDelete) {
@@ -1070,11 +1029,11 @@ export default {
         openEditChecklistModal(checklist) {
             this.editChecklistForm.id = checklist.id;
             this.editChecklistForm.name = checklist.name;
-            this.editChecklistForm.private = !checklist.departments;
-            if (checklist.departments) {
-                this.editChecklistForm.assigned_department_ids = [];
-                checklist.departments.forEach((department) => {
-                    this.editChecklistForm.assigned_department_ids.push(department.id);
+            this.editChecklistForm.private = !checklist.users;
+            if (checklist.users) {
+                this.editChecklistForm.assigned_user_ids = [];
+                checklist.users.forEach((user) => {
+                    this.editChecklistForm.assigned_user_ids.push(user.id);
                 })
             }
             this.editingChecklist = true;
@@ -1135,13 +1094,13 @@ export default {
             this.editChecklistForm.id = null;
             this.editChecklistForm.name = "";
             this.editChecklistForm.private = false;
-            this.editChecklistForm.assigned_department_ids = null;
+            this.editChecklistForm.assigned_user_ids = null;
             this.editChecklistForm.user_id = null;
         },
         editChecklist() {
             if (this.editChecklistForm.private) {
                 this.editChecklistForm.user_id = this.$page.props.user.id;
-                this.editChecklistForm.assigned_department_ids = [];
+                this.editChecklistForm.assigned_user_ids = [];
             } else {
                 this.editChecklistForm.user_id = null;
 
@@ -1166,7 +1125,7 @@ export default {
         },
         openEditChecklistTeamsModal(checklist) {
             this.checklistToEdit = checklist;
-            this.checklist_assigned_departments = checklist.departments;
+            this.checklist_assigned_users = checklist.users;
             this.editingChecklistTeams = true;
         },
         closeEditChecklistTeamsModal() {
@@ -1183,8 +1142,8 @@ export default {
             this.checklistForm.template_id = null;
             this.checklistForm.user_id = null;
             this.selectedTemplate = {name: '', id: null};
-            this.checklist_assigned_departments = [];
-            this.checklistForm.assigned_department_ids = [];
+            this.checklist_assigned_users = [];
+            this.checklistForm.assigned_user_ids = [];
         },
         addChecklist() {
 

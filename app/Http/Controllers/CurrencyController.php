@@ -93,7 +93,7 @@ class CurrencyController extends Controller
 
         $currency->forceDelete();
 
-        return Redirect::route('project.settings.trashed')->with('success', 'Currency deleted');
+        return Redirect::route('projects.settings.trashed')->with('success', 'Currency deleted');
     }
 
     public function restore(int $id)

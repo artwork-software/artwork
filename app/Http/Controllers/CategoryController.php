@@ -126,7 +126,7 @@ class CategoryController extends Controller
 
         $category->forceDelete();
 
-        return Redirect::route('project.settings.trashed')->with('success', 'Category deleted');
+        return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
     }
 
     public function restore(int $id)

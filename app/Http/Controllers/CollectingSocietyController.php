@@ -93,7 +93,7 @@ class CollectingSocietyController extends Controller
 
         $collectingSociety->forceDelete();
 
-        return Redirect::route('project.settings.trashed')->with('success', 'CollectingSociety deleted');
+        return Redirect::route('projects.settings.trashed')->with('success', 'CollectingSociety deleted');
     }
 
     public function restore(int $id)

@@ -1,11 +1,12 @@
 <template>
-    <div v-if="trashed_genres.length > 0" v-for="(genre,index) in trashed_genres" :key="genre.id"
-         class="mt-5 border-b-2 border-gray-200 w-full">
-        <div
-            class="py-5 flex justify-between">
-            <div>{{genre.name}}</div>
-        </div>
-    </div>
+    <TrashItems :items="props.trashed_genres" type="Projektkategorie - Genre" model="genres" />
+    <TrashItems :items="props.trashed_categories" type="Projektkategorie - Kategorie" model="categories" />
+    <TrashItems :items="props.trashed_sectors" type="Projektkategorie - Bereich" model="sectors" />
+    <TrashItems :items="props.trashed_project_states" type="Projektkategorie - Projektstatus" model="state" />
+    <TrashItems :items="props.trashed_contract_types" type="Projektkategorie - Vertragsart" model="contract_types" />
+    <TrashItems :items="props.trashed_company_types" type="Projektverträge - Unternehmensform" model="company_types" />
+    <TrashItems :items="props.trashed_collecting_societies" type="Projektverträge - Verwertungsgesellschaft" model="collecting_societies" />
+    <TrashItems :items="props.trashed_currencies" type="Projektverträge - Währung" model="currencies" />
 </template>
 
 <script>
@@ -18,6 +19,8 @@ export default {
 </script>
 
 <script setup>
+
+import TrashItems from "@/Layouts/Components/TrashItems.vue";
 
 const props = defineProps({
     trashed_genres: Array,

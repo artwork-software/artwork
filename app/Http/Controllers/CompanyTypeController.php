@@ -95,7 +95,7 @@ class CompanyTypeController extends Controller
 
         $companyType->forceDelete();
 
-        return Redirect::route('project.settings.trashed')->with('success', 'CompanyType deleted');
+        return Redirect::route('projects.settings.trashed')->with('success', 'CompanyType deleted');
     }
 
     public function restore(int $id)

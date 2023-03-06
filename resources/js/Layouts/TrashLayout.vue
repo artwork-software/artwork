@@ -8,7 +8,7 @@
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
-                        <Listbox as="div" class="sm:col-span-3 mb-8" v-model="selectedTrash">
+                        <Listbox as="div" class="sm:col-span-3 mb-4" v-model="selectedTrash">
                             <div class="relative">
                                 <ListboxButton class="flex cursor-pointer bg-white relative pr-14 font-semibold py-2 mt-4 text-left
                                 focus:outline-none focus:ring-0 focus:ring-primary

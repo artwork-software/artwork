@@ -71,7 +71,7 @@ class SectorController extends Controller
 
         $sector->forceDelete();
 
-        return Redirect::route('project.settings.trashed')->with('success', 'Sector deleted');
+        return Redirect::route('projects.settings.trashed')->with('success', 'Sector deleted');
     }
 
     public function restore(int $id)

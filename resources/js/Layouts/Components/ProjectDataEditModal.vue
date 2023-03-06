@@ -27,9 +27,9 @@
                 />
 
                 <div class="mt-2 flex flex-wrap">
-                    <BaseFilterTag v-for="category in projectCategories" :filter="category.name" :remove-filter="updateProjectCategories" class="w-fit" />
-                    <BaseFilterTag v-for="genre in projectGenres" :filter="genre.name" :remove-filter="updateProjectGenres" class="w-fit" />
-                    <BaseFilterTag v-for="sector in projectSectors" :filter="sector.name" :remove-filter="updateProjectSectors" class="w-fit" />
+                    <BaseFilterTag v-for="category in projectCategories" :filter="category.name" @remove-filter="updateProjectCategories(category)" class="w-fit" />
+                    <BaseFilterTag v-for="genre in projectGenres" :filter="genre.name" @remove-filter="updateProjectGenres(genre)" class="w-fit" />
+                    <BaseFilterTag v-for="sector in projectSectors" :filter="sector.name" @remove-filter="updateProjectSectors(sector)" class="w-fit" />
                 </div>
 
                 <textarea placeholder="Kurzbeschreibung"

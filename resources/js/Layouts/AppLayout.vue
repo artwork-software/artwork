@@ -180,7 +180,7 @@
     Budget: {{ $page.props.is_budget_admin }}
     Contracts: {{ $page.props.is_contract_admin }}
     MoneySource: {{ $page.props.is_money_source_admin }}
-                    {{$page.props}}
+                    {{$page.props.myMoneySources}}
                 </pre>
                 </div>
 
@@ -351,7 +351,7 @@ export default {
         },
         checkPermission(item) {
             if (item.has_permission === 'is_money_source_admin') {
-                if (this.$page.props.is_money_source_admin) {
+                if (this.$page.props.is_money_source_admin ||this.$page.props.myMoneySources.length > 0 || this.$page.props.can.money_source_edit_add) {
                     return true;
                 }
             }

@@ -18,6 +18,12 @@ return new class extends Migration
             $table->string('name');
             $table->longText('description')->nullable();
             $table->string('number_of_participants')->nullable();
+            $table->string('num_of_guests')->nullable()->default(null);
+            $table->string('entry_fee')->nullable()->default(null);
+            $table->boolean('registration_required')->nullable()->default(false);
+            $table->string('register_by')->nullable()->default(null);
+            $table->string('registration_deadline')->nullable()->default(null);
+            $table->boolean('closed_society')->nullable()->default(false);
             $table->timestamps();
             $table->softDeletes();
         });

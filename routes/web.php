@@ -404,5 +404,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
 
+    // Project States
+    Route::post('/state', [\App\Http\Controllers\ProjectStatesController::class, 'store'])->name('state.store');
+    Route::delete('/state/{projectStates}', [\App\Http\Controllers\ProjectStatesController::class, 'destroy'])->name('state.delete');
+    Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])->name('update.project.state');
 });
 

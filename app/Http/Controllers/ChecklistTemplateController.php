@@ -82,14 +82,7 @@ class ChecklistTemplateController extends Controller
             ]);
         }
 
-        $checklist_template->departments()->sync(
-            collect($checklist->departments)
-                ->map(function ($department) {
-                    $this->authorize('update', Department::find($department['id']));
-
-                    return $department['id'];
-                })
-        );
+        $checklist_template->users()->sync($checklist->users);
     }
 
     protected function createFromScratch(Request $request)
@@ -99,13 +92,8 @@ class ChecklistTemplateController extends Controller
             'user_id' => $request->user_id
         ]);
 
-        $checklist_template->departments()->sync(
-            collect($request->departments)
-                ->map(function ($department) {
-                    $this->authorize('update', Department::find($department['id']));
-
-                    return $department['id'];
-                })
+        $checklist_template->users()->sync(
+            $request->users
         );
 
         if ($request->task_templates) {
@@ -152,19 +140,15 @@ class ChecklistTemplateController extends Controller
 
         $checklistTemplate->update($request->only('name'));
 
-        $checklistTemplate->departments()->sync(
-            collect($request->departments)
-                ->map(function ($department) {
-                    $this->authorize('update', Department::find($department['id']));
-
-                    return $department['id'];
-                })
+        $checklistTemplate->users()->sync(
+            $request->users
         );
 
         if ($request->task_templates) {
             $checklistTemplate->task_templates()->delete();
             foreach ($request->task_templates as $task_template) {
-                    $checklistTemplate->task_templates()->create($task_template);
+                    $task_template_new = $checklistTemplate->task_templates()->create($task_template);
+                    $task_template_new->task_users()->sync($request->users);
                 }
         }
 

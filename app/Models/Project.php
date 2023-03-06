@@ -48,6 +48,7 @@ class Project extends Model
         'number_of_participants',
         'cost_center_id',
         'copyright_id',
+        'state',
         'num_of_guests',
         'entry_fee',
         'registration_required',
@@ -170,6 +171,10 @@ class Project extends Model
 
     public function moneySources(){
         return $this->belongsToMany(MoneySource::class, 'money_source_project');
+    }
+
+    public function state(){
+        return $this->belongsTo(ProjectStates::class, 'state');
     }
 
     public function toSearchableArray(): array

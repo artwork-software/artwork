@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CompanyType;
+use App\Models\ProjectStates;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Redirect;
@@ -86,5 +87,23 @@ class CompanyTypeController extends Controller
     public function destroy(CompanyType $companyType)
     {
         $companyType->delete();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $companyType = CompanyType::onlyTrashed()->findOrFail($id);
+
+        $companyType->forceDelete();
+
+        return Redirect::route('project.settings.trashed')->with('success', 'CompanyType deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $companyType = CompanyType::onlyTrashed()->findOrFail($id);
+
+        $companyType->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'CompanyType restored');
     }
 }

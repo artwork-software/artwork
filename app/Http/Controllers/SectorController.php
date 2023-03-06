@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,4 +64,24 @@ class SectorController extends Controller
         $sector->delete();
         return Redirect::back()->with('success', 'Sector deleted');
     }
+
+    public function forceDelete(int $id)
+    {
+        $sector = Sector::onlyTrashed()->findOrFail($id);
+
+        $sector->forceDelete();
+
+        return Redirect::route('project.settings.trashed')->with('success', 'Sector deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $sector = Sector::onlyTrashed()->findOrFail($id);
+
+        $sector->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Sector restored');
+    }
+
+
 }

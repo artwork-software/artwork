@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CollectingSociety;
 use App\Models\Currency;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class CurrencyController extends Controller
 {
@@ -83,5 +85,23 @@ class CurrencyController extends Controller
     public function destroy(Currency $currency)
     {
         $currency->delete();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $currency = Currency::onlyTrashed()->findOrFail($id);
+
+        $currency->forceDelete();
+
+        return Redirect::route('project.settings.trashed')->with('success', 'Currency deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $currency = Currency::onlyTrashed()->findOrFail($id);
+
+        $currency->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Currency restored');
     }
 }

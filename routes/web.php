@@ -409,5 +409,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/state', [\App\Http\Controllers\ProjectStatesController::class, 'store'])->name('state.store');
     Route::delete('/state/{projectStates}', [\App\Http\Controllers\ProjectStatesController::class, 'destroy'])->name('state.delete');
     Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])->name('update.project.state');
+
+    // Project Settings
+    Route::get('projects/settings/trashed', [ProjectController::class, 'getTrashedSettings'])->name('projects.settings.trashed');
 });
 

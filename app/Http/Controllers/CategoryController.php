@@ -8,6 +8,7 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Genre;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +60,12 @@ class CategoryController extends Controller
             'currencies' => Currency::all()->map(fn($currency) => [
                 'id' => $currency->id,
                 'name' => $currency->name,
-            ])
+            ]),
+            'states' => ProjectStates::all()->map(fn($state) => [
+                'id' => $state->id,
+                'name' => $state->name,
+                'color' => $state->color
+            ]),
         ]);
     }
 

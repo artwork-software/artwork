@@ -14,6 +14,7 @@ use App\Http\Resources\BudgetResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
+use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\Category;
@@ -30,6 +31,7 @@ use App\Models\MainPosition;
 use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
@@ -84,7 +86,6 @@ class ProjectController extends Controller
                 'checklists.tasks.checklist.project',
                 'access_budget',
                 'categories',
-                'checklists.users',
                 'comments.user',
                 'departments.users.departments',
                 'genres',
@@ -93,12 +94,13 @@ class ProjectController extends Controller
                 'project_histories.user',
                 'sectors',
                 'users.departments',
-                'writeUsers'
+                'writeUsers',
+                'state'
             ])
             ->get();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectShowResource::collection($projects)->resolve(),
+            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
 
             'projectGroups' => Project::where('is_group', 1)->get(),
 
@@ -1000,6 +1002,11 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+
+    public function updateProjectState(Request $request, Project $project){
+        $project->update(['state' => $request->state]);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -1027,6 +1034,7 @@ class ProjectController extends Controller
             'project_histories.user',
             'sectors',
             'users.departments',
+            'state'
         ]);
 
         $columns = $project->table()->first()->columns()->get();
@@ -1143,6 +1151,7 @@ class ProjectController extends Controller
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
+            'states' => ProjectStates::all()
         ]);
     }
 

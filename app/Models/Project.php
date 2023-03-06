@@ -48,7 +48,7 @@ class Project extends Model
         'number_of_participants',
         'cost_center_id',
         'copyright_id',
-        'state'
+        'state',
         'num_of_guests',
         'entry_fee',
         'registration_required',

@@ -16,6 +16,6 @@ class ProjectHeadline extends Model
 
     public function projects()
     {
-        return $this->belongsToMany(Project::class)->withPivot('text');
+        return $this->belongsToMany(Project::class, 'project_project_headlines')->withPivot('text');
     }
 }

@@ -70,7 +70,7 @@ class Project extends Model
 
     public function headlines()
     {
-        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headline', 'project_id')
+        return $this->belongsToMany(ProjectHeadline::class, 'project_project_headlines', 'project_id')
             ->withPivot('text');
     }
 

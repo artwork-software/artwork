@@ -290,6 +290,14 @@
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
                                 Informationen </h3>
                         </div>
+                        <div class="mb-12 w-1/2">
+                            <div v-for="headline in project.project_headlines" class="mt-10">
+                                <div>{{ headline.name }}</div>
+                                <input id="headlineTextInput" v-model="headline.text" type="text" @keyup.enter="changeHeadlineText(headline)"
+                                       class="peer bg-transparent pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary"
+                                       :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                            </div>
+                        </div>
                         <div
                             v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
@@ -1144,6 +1152,9 @@ export default {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
     },
     methods: {
+        changeHeadlineText(headline) {
+            this.$inertia.patch(route('project_headlines.update.text', { project_headline: headline.id, project: this.project.id}), { text: headline.text})
+        },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;
             this.showBudgetHistoryTab = false;

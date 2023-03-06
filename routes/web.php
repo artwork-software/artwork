@@ -408,6 +408,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/project_headlines', [ProjectHeadlineController::class, 'store'])->name('project_headlines.store');
     Route::put('/project_headlines/order', [ProjectHeadlineController::class, 'updateOrder'])->name('project_headlines.order');
     Route::patch('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'update'])->name('project_headlines.update');
+    Route::patch('/project_headlines/{project_headline}/{project}/text', [ProjectHeadlineController::class, 'updateText'])->name('project_headlines.update.text');
     Route::delete('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'destroy'])->name('project_headlines.delete');
 
 });

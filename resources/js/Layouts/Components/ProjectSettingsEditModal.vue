@@ -22,11 +22,7 @@
                 />
 
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="emit('update', newName)">
-                        Speichern
-                    </button>
+                    <AddButton class="px-20 py-4" @click="emit('update', newName)" text="Speichern" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="emit('closeModal')"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>
@@ -41,6 +37,7 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
 import {ref} from "vue";
+import AddButton from "@/Layouts/Components/AddButton.vue";
 
 const props = defineProps({
     show: Boolean,

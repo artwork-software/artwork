@@ -13,11 +13,7 @@
                     {{ description }}
                 </div>
                 <div class="flex justify-between mt-6">
-                    <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                            @click="$emit('delete')">
-                        Löschen
-                    </button>
+                    <AddButton class="px-20 py-4" @click="$emit('delete')" text="Löschen" mode="modal"/>
                     <div class="flex my-auto">
                             <span @click="$emit('closeModal')"
                                   class="xsLight cursor-pointer">Nein, doch nicht</span>
@@ -31,6 +27,7 @@
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
+import AddButton from "@/Layouts/Components/AddButton.vue";
 export default {
     name: "ProjectSettingsDeleteModal",
     props: {
@@ -39,6 +36,7 @@ export default {
         description: String
     },
     components: {
+        AddButton,
         JetDialogModal,
         XIcon
     }

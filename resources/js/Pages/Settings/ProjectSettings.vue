@@ -243,11 +243,11 @@ export default {
     methods: {
         addGenre(genreInput) {
             if (genreInput !== '') {
-                this.$inertia.post(route('genres.store'), {name: genreInput});
+                this.$inertia.post(route('genres.store'), {name: genreInput}, { preserveScroll: true});
             }
         },
         deleteGenre() {
-            this.$inertia.delete(`/genres/${this.genreToDelete.id}`);
+            this.$inertia.delete(`/genres/${this.genreToDelete.id}`, { preserveScroll: true});
             this.closeDeleteGenreModal();
         },
         openDeleteGenreModal(genre) {
@@ -261,11 +261,11 @@ export default {
 
         addCategory(categoryInput) {
             if (categoryInput !== '') {
-                this.$inertia.post(route('categories.store'), {name: categoryInput});
+                this.$inertia.post(route('categories.store'), {name: categoryInput}, { preserveScroll: true});
             }
         },
         deleteCategory() {
-            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`);
+            this.$inertia.delete(`../categories/${this.categoryToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCategoryModal();
         },
         openDeleteCategoryModal(category) {
@@ -279,11 +279,11 @@ export default {
 
         addSector(sectorInput) {
             if (sectorInput !== '') {
-                this.$inertia.post(route('sectors.store'), {name: sectorInput});
+                this.$inertia.post(route('sectors.store'), {name: sectorInput}, { preserveScroll: true});
             }
         },
         deleteSector() {
-            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`);
+            this.$inertia.delete(`/sectors/${this.sectorToDelete.id}`, { preserveScroll: true});
             this.closeDeleteSectorModal();
         },
         openDeleteSectorModal(sector) {
@@ -297,11 +297,11 @@ export default {
 
         addContractType(contractTypeInput) {
             if (contractTypeInput !== '') {
-                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput});
+                this.$inertia.post(route('contract_types.store'), {name: contractTypeInput}, { preserveScroll: true});
             }
         },
         deleteContractType() {
-            this.$inertia.delete(`/contract_types/${this.contractTypeToDelete.id}`);
+            this.$inertia.delete(`/contract_types/${this.contractTypeToDelete.id}`, { preserveScroll: true});
             this.closeDeleteContractTypeModal();
         },
         openDeleteContractTypeModal(contractType) {
@@ -315,11 +315,11 @@ export default {
 
         addCompanyType(companyTypeInput) {
             if (companyTypeInput !== '') {
-                this.$inertia.post(route('company_types.store'), {name: companyTypeInput});
+                this.$inertia.post(route('company_types.store'), {name: companyTypeInput}, { preserveScroll: true});
             }
         },
         deleteCompanyType() {
-            this.$inertia.delete(`/company_types/${this.companyTypeToDelete.id}`);
+            this.$inertia.delete(`/company_types/${this.companyTypeToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCompanyTypeModal();
         },
         openDeleteCompanyTypeModal(companyType) {
@@ -333,11 +333,11 @@ export default {
 
         addCollectingSociety(collectingSocietyInput) {
             if (collectingSocietyInput !== '') {
-                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput});
+                this.$inertia.post(route('collecting_societies.store'), {name: collectingSocietyInput}, { preserveScroll: true});
             }
         },
         deleteCollectingSociety() {
-            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`);
+            this.$inertia.delete(`/collecting_societies/${this.collectingSocietyToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCollectingSocietyModal();
         },
         openDeleteCollectingSocietyModal(collectingSociety) {
@@ -350,7 +350,7 @@ export default {
         },
         addCurrency(currencyInput){
           if(currencyInput !== ''){
-              this.$inertia.post(route('currencies.store'), {name: currencyInput});
+              this.$inertia.post(route('currencies.store'), {name: currencyInput}, { preserveScroll: true});
           }
         },
         openDeleteCurrencyModal(currency){
@@ -362,17 +362,17 @@ export default {
           this.currencyToDelete = null;
         },
         deleteCurrency() {
-            this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`);
+            this.$inertia.delete(`/currencies/${this.currencyToDelete.id}`, { preserveScroll: true});
             this.closeDeleteCurrencyModal();
         },
         addProjectHeadline(headlineInput) {
             if(headlineInput !== ''){
-                this.$inertia.post(route('project_headlines.store'), {name: headlineInput});
+                this.$inertia.post(route('project_headlines.store'), {name: headlineInput}, { preserveScroll: true});
             }
         },
         updateProjectHeadline(headlineInput) {
             if(headlineInput !== ''){
-                this.$inertia.patch(route('project_headlines.update', this.projectHeadlineToEdit.id), {name: headlineInput});
+                this.$inertia.patch(route('project_headlines.update', this.projectHeadlineToEdit.id), {name: headlineInput}, { preserveScroll: true});
             }
             this.closeEditProjectHeadlineModal()
         },
@@ -393,21 +393,21 @@ export default {
             this.projectHeadlineToEdit = null;
         },
         deleteProjectHeadline() {
-            this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`);
+            this.$inertia.delete(`/project_headlines/${this.projectHeadlineToDelete.id}`, { preserveScroll: true});
             this.closeDeleteProjectHeadlineModal();
         },
         addState(stateInput, stateColor){
             this.$inertia.post(route('state.store'), {
                 name: stateInput,
                 color: stateColor
-            })
+            }, { preserveScroll: true})
         },
         openDeleteStateModal(state){
             this.stateToDelete = state;
             this.deletingState = true
         },
         deleteState(){
-            this.$inertia.delete(route('state.delete', this.stateToDelete.id))
+            this.$inertia.delete(route('state.delete', this.stateToDelete.id), { preserveScroll: true})
             this.closeDeleteStateModal()
         },
         closeDeleteStateModal(){

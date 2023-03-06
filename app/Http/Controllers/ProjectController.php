@@ -1716,9 +1716,7 @@ class ProjectController extends Controller
 
     public function updateKeyVisual(Request $request, Project $project)
     {
-        dd($request);
         $keyVisual = $request->file('keyVisual');
-        dd($keyVisual);
         if ($keyVisual) {
             $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
         }

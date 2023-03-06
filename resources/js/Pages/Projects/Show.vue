@@ -358,8 +358,8 @@
                                     <div class="xsLight flex my-auto h-40 items-center"
                                          v-if="this.project.key_visual_path === null">
                                         Ziehe hier dein <br/> Key Visual hin
-                                        <input id="keyVisual-upload" ref="keyVisual" @change="updateKeyVisual"
-                                               name="file-upload" type="file" class="sr-only"/>
+                                        <input id="keyVisual-upload" ref="keyVisual"
+                                               name="file-upload" type="file" class="sr-only" @change="updateKeyVisual"/>
                                     </div>
                                     <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
                                         <img :src="this.project.key_visual_path" alt="Aktuelles Banner"
@@ -1148,8 +1148,7 @@ export default {
                 projectSectorIds: this.projectSectorIds,
                 selectedGroup: null
             }),
-            keyVisualForm: this.$inertia.form({
-                _method: 'POST',
+            keyVisualForm: useForm({
                 keyVisual: null,
             }),
             commentForm: useForm({
@@ -1180,16 +1179,15 @@ export default {
             this.$refs.keyVisual.click();
         },
         updateKeyVisual() {
-            console.log(this.$refs.keyVisual);
             this.validateTypeAndUploadKeyVisual(this.$refs.keyVisual.files[0], 'keyVisual');
-            this.keyVisualForm.post(route('projects_key_visual.update',{project: this.project.id}));
         },
         uploadDraggedKeyVisual(event) {
+            console.log(event)
             this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0], 'keyVisual');
         },
         validateTypeAndUploadKeyVisual(file, type) {
             this.uploadDocumentFeedback = "";
-
+            console.log(file)
             const allowedTypes = [
                 "image/jpeg",
                 "image/svg+xml",
@@ -1198,18 +1196,8 @@ export default {
             ]
 
             if (allowedTypes.includes(file.type)) {
-
-                const reader = new FileReader();
-
-                reader.onload = (e) => {
-                    if (type === 'keyVisual') {
-                        this.keyVisualPreview = e.target.result;
-                        this.form.keyVisual = file
-                    }
-                }
-
-                reader.readAsDataURL(file);
-
+                this.keyVisualForm.keyVisual = file
+                this.keyVisualForm.post(route('projects_key_visual.update',{project: this.project.id}));
             } else {
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }

@@ -14,9 +14,8 @@ return new class extends Migration
     public function up()
     {
         Schema::create('checklist_template_user', function (Blueprint $table) {
-            $table->id();
-            $table->integer('checklist_template_id');
-            $table->integer('user_id');
+            $table->unsignedBigInteger('checklist_template_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
     }

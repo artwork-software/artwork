@@ -5,10 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
 
-/**
- * @mixin \App\Models\Project
- */
-class ProjectShowResource extends JsonResource
+class ProjectIndexShowResource extends JsonResource
 {
     public static $wrap = null;
 
@@ -46,14 +43,6 @@ class ProjectShowResource extends JsonResource
             'project_managers' => $this->managerUsers,
             'write_auth' => $this->writeUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
-            'key_visual_path' => $this->key_visual_path,
-            'state' => $this->state()->first(),
-            'num_of_guests' => $this->num_of_guests,
-            'entry_fee' => $this->entry_fee,
-            'registration_required' => $this->registration_required,
-            'register_by' => $this->register_by,
-            'registration_deadline' => $this->registration_deadline,
-            'closed_society' => $this->closed_society,
 
             'cost_center' => $this->cost_center,
             'copyright' => new CopyrightResource($this->copyright),
@@ -65,11 +54,8 @@ class ProjectShowResource extends JsonResource
 
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
-
+            'state' => $this->state()->first(),
             'isMemberOfADepartment' => $this->departments->contains(fn ($department) => $department->users->contains(Auth::user())),
-
-            'public_checklists' => ChecklistIndexResource::collection($this->checklists->whereNull('user_id'))->resolve(),
-            'private_checklists' => ChecklistIndexResource::collection($this->checklists->where('user_id', Auth::id()))->resolve(),
 
             'comments' => $this->comments->map(fn ($comment) => [
                 'id' => $comment->id,

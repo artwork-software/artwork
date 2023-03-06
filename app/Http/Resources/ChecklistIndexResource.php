@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Department;
+use App\Models\User;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\MissingValue;
 
@@ -29,12 +30,13 @@ class ChecklistIndexResource extends JsonResource
             'showContent' => true,
             'tasks' => TaskIndexResource::collection($this->tasks->sortBy('order'))->resolve(),
             // only show departments on public checklists, not on private
-            'departments' => $this->user_id
+            'users' => $this->user_id
                 ? new MissingValue()
-                : $this->departments->map(fn (Department $department) => [
-                    'id' => $department->id,
-                    'name' => $department->name,
-                    'svg_name' => $department->svg_name,
+                : $this->users->map(fn (User $user) => [
+                    'id' => $user->id,
+                    'profile_photo_url' => $user->profile_photo_url,
+                    'first_name' => $user->first_name,
+                    'last_name' => $user->last_name,
                 ])
         ];
     }

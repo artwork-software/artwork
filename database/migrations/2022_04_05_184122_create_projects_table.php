@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->longText('description')->nullable();
             $table->string('number_of_participants')->nullable();
+            $table->string('key_visual_path')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

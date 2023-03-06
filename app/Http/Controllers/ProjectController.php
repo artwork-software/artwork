@@ -1713,4 +1713,17 @@ class ProjectController extends Controller
         $columnCell->update(['commented' => $request->commented]);
         return back()->with('success');
     }
+
+    public function updateKeyVisual(Request $request, Project $project)
+    {
+        dd($request);
+        $keyVisual = $request->file('keyVisual');
+        dd($keyVisual);
+        if ($keyVisual) {
+            $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
+        }
+        $project->save();
+
+        return Redirect::back()->with('success', 'Key Visual hinzugefügt');
+    }
 }

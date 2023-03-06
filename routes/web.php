@@ -115,6 +115,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);

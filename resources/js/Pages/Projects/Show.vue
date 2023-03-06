@@ -915,6 +915,7 @@
         </jet-dialog-modal>
         <BaseSidenav :show="show" @toggle="this.show =! this.show">
             <ProjectSidenav
+                v-if="isBudgetTab"
                 :project="project"
                 :cost-center="project.cost_center"
                 :copyright="project.copyright"
@@ -922,6 +923,10 @@
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
+            />
+            <ProjectSecondSidenav
+                v-else
+                :project="project"
             />
         </BaseSidenav>
 
@@ -984,6 +989,7 @@ import Dropdown from "@/Jetstream/Dropdown.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
+import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -998,6 +1004,7 @@ export default {
     name: "ProjectShow",
     props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
     components: {
+        ProjectSecondSidenav,
         ChecklistComponent,
         ProjectHistoryComponent,
         NewUserToolTip,

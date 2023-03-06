@@ -15,6 +15,9 @@
                         </span>
 
                     </h2>
+                    <pre>
+                        {{project}}
+                    </pre>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
@@ -130,7 +133,8 @@
                 <div class="flex mt-5">
                     <div>
                         <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
-                                      :displayed-text="category.name" :property="category" :hide-x="true"></TagComponent>
+                                      :displayed-text="category.name" :property="category"
+                                      :hide-x="true"></TagComponent>
                     </div>
                     <div>
                         <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
@@ -343,6 +347,31 @@
                             </div>
                             <div v-else class="xsDark">
                                 Noch keine Kommentare vorhanden
+                            </div>
+                        </div>
+                    </div>
+                    <!-- TODO: HIER MUSS DOCH NOCH DIE PREVIEW-LOGIK VORGELAGERT WERDEN -->
+                    <div class="col-span-1">
+                        <label class="block mt-12 mb-4 xsDark">
+                            Key Visual </label>
+                        <div class="grid grid-cols-6 gap-x-12 items-center">
+                            <div
+                                class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                                @click="selectNewKeyVisual"
+                                @dragover.prevent
+                                @drop.stop.prevent="uploadDraggedKeyVisual($event)">
+                                <div class="space-y-1 text-center">
+                                    <div class="xsLight flex my-auto h-40 items-center"
+                                         v-if="this.project.key_visual_path === null">
+                                        Ziehe hier dein <br/> Key Visual hin
+                                        <input id="keyVisual-upload" ref="keyVisual"
+                                               name="file-upload" type="file" class="sr-only" @change="updateKeyVisual"/>
+                                    </div>
+                                    <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
+                                        <img :src="this.project.key_visual_path" alt="Aktuelles Banner"
+                                             class="rounded-md h-40 w-40">
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -660,16 +689,6 @@
                             <textarea placeholder="Kurzbeschreibung" v-model="form.description" rows="8"
                                       class="focus:border-primary placeholder-secondary border-2 w-full font-semibold border border-gray-300 "/>
                         </div>
-                        <!-- TODO: Add cost center to sidebar -->
-                        <!--<div class="mt-6 grid grid-cols-1 gap-y-2 gap-x-2 sm:grid-cols-6">
-                            <div class="sm:col-span-3">
-                                <div>
-                                    <input type="text" v-model="form.cost_center" placeholder="Kostenträger eintragen"
-                                           class="text-primary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1  border-gray-300 w-full text-sm "/>
-                                </div>
-                            </div>
-
-                        </div>-->
                         <div>
                             <div class="flex items-center mb-2" v-if="!project.is_group">
                                 <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
@@ -793,7 +812,7 @@
                         <span v-for="user in assignedUsers"
                               class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
                             <pre>
-                                {{user}}
+                                {{ user }}
                             </pre>
                             <div class="flex items-center w-64">
                                 <div class="flex items-center">
@@ -1184,6 +1203,9 @@ export default {
                 projectSectorIds: this.projectSectorIds,
                 selectedGroup: null
             }),
+            keyVisualForm: useForm({
+                keyVisual: null,
+            }),
             commentForm: useForm({
                 text: "",
                 user_id: this.$page.props.user.id,
@@ -1213,6 +1235,33 @@ export default {
                 this.showProjectHistoryTab = true;
             } else {
                 this.showBudgetHistoryTab = true;
+            }
+        },
+        selectNewKeyVisual() {
+            this.$refs.keyVisual.click();
+        },
+        updateKeyVisual() {
+            this.validateTypeAndUploadKeyVisual(this.$refs.keyVisual.files[0], 'keyVisual');
+        },
+        uploadDraggedKeyVisual(event) {
+            console.log(event)
+            this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0], 'keyVisual');
+        },
+        validateTypeAndUploadKeyVisual(file, type) {
+            this.uploadDocumentFeedback = "";
+            console.log(file)
+            const allowedTypes = [
+                "image/jpeg",
+                "image/svg+xml",
+                "image/png",
+                "image/gif"
+            ]
+
+            if (allowedTypes.includes(file.type)) {
+                this.keyVisualForm.keyVisual = file
+                this.keyVisualForm.post(route('projects_key_visual.update',{project: this.project.id}));
+            } else {
+                this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
         },
         deleteProjectFromGroup(projectGroupId) {

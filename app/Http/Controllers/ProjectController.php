@@ -19,8 +19,12 @@ use App\Models\Category;
 use App\Models\CellCalculations;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
+use App\Models\CollectingSociety;
 use App\Models\Column;
 use App\Models\ColumnCell;
+use App\Models\CompanyType;
+use App\Models\ContractType;
+use App\Models\Currency;
 use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
@@ -1659,6 +1663,21 @@ class ProjectController extends Controller
         $project->events()->withTrashed()->restore();
 
         return Redirect::route('projects.trashed')->with('success', 'Project restored');
+    }
+
+    public function getTrashedSettings()
+    {
+        return inertia('Trash/ProjectSettings', [
+            'trashed_genres' => Genre::onlyTrashed()->get(),
+            'trashed_categories' => Category::onlyTrashed()->get(),
+            'trashed_sectors' => Sector::onlyTrashed()->get(),
+            'trashed_project_states' => ProjectStates::onlyTrashed()->get(),
+            'trashed_contract_types' => ContractType::onlyTrashed()->get(),
+            'trashed_company_types' => CompanyType::onlyTrashed()->get(),
+            'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),
+            'trashed_currencies' => Currency::onlyTrashed()->get(),
+            //'trashed_project_headlines' => ProjectHeadline::onlyTrashed()->get(),
+        ]);
     }
 
     public function getTrashed()

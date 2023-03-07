@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ContractType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ContractTypeController extends Controller
 {
@@ -83,5 +84,23 @@ class ContractTypeController extends Controller
     public function destroy(ContractType $contractType)
     {
         $contractType->delete();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $contractType = ContractType::onlyTrashed()->findOrFail($id);
+
+        $contractType->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'ContractType deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $contractType = ContractType::onlyTrashed()->findOrFail($id);
+
+        $contractType->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'ContractType restored');
     }
 }

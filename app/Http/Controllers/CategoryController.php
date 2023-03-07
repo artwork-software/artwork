@@ -124,4 +124,22 @@ class CategoryController extends Controller
         $category->delete();
         return Redirect::back()->with('success', 'Category deleted');
     }
+
+    public function forceDelete(int $id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+
+        $category->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+
+        $category->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Category restored');
+    }
 }

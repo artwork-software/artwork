@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProjectStates;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class ProjectStatesController extends Controller
 {
@@ -84,5 +85,23 @@ class ProjectStatesController extends Controller
     public function destroy(ProjectStates $projectStates)
     {
         $projectStates->delete();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
+
+        $projectStates->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $projectStates = ProjectStates::onlyTrashed()->findOrFail($id);
+
+        $projectStates->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'ProjectStates restored');
     }
 }

@@ -104,7 +104,7 @@ class ProjectController extends Controller
 
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
-
+            'states' => ProjectStates::all(),
             'projectGroups' => Project::where('is_group', 1)->get(),
 
             'users' => User::all(),

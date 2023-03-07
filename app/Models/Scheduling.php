@@ -13,10 +13,8 @@ class Scheduling extends Model
         'count',
         'user_id',
         'type',
-        'project_id',
-        'task_id',
-        'event_id',
-        'room_id'
+        'model',
+        'model_id',
     ];
 }
 

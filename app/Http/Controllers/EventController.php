@@ -315,10 +315,10 @@ class EventController extends Controller
         $schedule = new SchedulingController();
         if(!empty($event->project)){
             foreach ($event->project->users->all() as $eventUser){
-                $schedule->create($eventUser->id, 'EVENT', null, null, $event->id);
+                $schedule->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $schedule->create($event->creator->id, 'EVENT', null, null, $event->id);
+            $schedule->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 

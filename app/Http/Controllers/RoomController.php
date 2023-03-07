@@ -202,12 +202,11 @@ class RoomController extends Controller
         $this->roomService->checkCategoryChanges($room->id, $oldRoomCategories, $newRoomCategories);
         $this->roomService->checkTemporaryChanges($room->id, $oldTemporary, $newRoomTemporary, $oldStartDate, $newStartDate, $oldEndDate, $newEndDate);
 
-        // TODO Sammel Notification
 
         $scheduling = new SchedulingController();
         $roomId = $room->id;
         foreach ($room->room_admins()->get() as $user) {
-            $scheduling->create($user->id, 'ROOM_CHANGES', null, null, null, $roomId);
+            $scheduling->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 
         return Redirect::back()->with('success', 'Room updated');

@@ -32,7 +32,10 @@ enum NotificationConstEnum: string
     case NOTIFICATION_TASK_CHANGED = 'TASK_CHANGED';
 
     case NOTIFICATION_PROJECT = 'NOTIFICATION_PROJECT';
+    case NOTIFICATION_PUBLIC_RELEVANT = 'NOTIFICATION_PUBLIC_RELEVANT';
     case NOTIFICATION_TEAM = 'NOTIFICATION_TEAM';
+
+
 
     public function groupType(): string
     {
@@ -56,6 +59,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_CHANGED => "TASKS",
 
             self::NOTIFICATION_PROJECT,
+            self::NOTIFICATION_PUBLIC_RELEVANT,
             self::NOTIFICATION_TEAM => "PROJECTS",
         };
     }
@@ -104,7 +108,8 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_REMINDER => "Erinnerung an Aufgaben",
             self::NOTIFICATION_TASK_CHANGED => "Änderungen an Aufgaben",
 
-            self::NOTIFICATION_PROJECT => "Änderungen an Projekten",
+            self::NOTIFICATION_PROJECT => "Änderungen in Projekten & Projektgruppen",
+            self::NOTIFICATION_PUBLIC_RELEVANT => 'Öffentlichkeitsarbeitsrelevante Änderungen',
             self::NOTIFICATION_TEAM => "Teamzugehörigkeit",
         };
     }
@@ -130,7 +135,8 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_TASK_REMINDER => "Lass dich erinnern, wenn Aufgaben dringend werden oder bereits ihre Deadline überschritten haben.",
             self::NOTIFICATION_TASK_CHANGED => "Erfahre ob es Änderungen an deinen Aufgaben gibt",
 
-            self::NOTIFICATION_PROJECT => "Erfahre ob es Änderungen an deinen Projekten gibt und welche Rolle du im Projektteam hast.",
+            self::NOTIFICATION_PROJECT => "Erfahre ob es Änderungen in deinen Projekten oder -gruppen gibt und welche Rolle du im Projektteam hast.",
+            self::NOTIFICATION_PUBLIC_RELEVANT => 'Werde benachrichtigt, sobald es Änderungen an deinen Projekten gibt, die sich auf die Öffentlichkeitsarbeit auswirken können.',
             self::NOTIFICATION_TEAM => "Werde benachrichtigt, sobald sich deine Teamzugehörigkeit ändert.",
         };
     }

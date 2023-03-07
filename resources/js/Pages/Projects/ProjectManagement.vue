@@ -974,7 +974,7 @@ export default defineComponent({
             this.openSuccessModal2();
         },
         getEditHref(project) {
-            return route('projects.show', {project: project.id, openTab: 'calendar'});
+            return route('projects.show', {project: project.id, openTab: 'info'});
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);

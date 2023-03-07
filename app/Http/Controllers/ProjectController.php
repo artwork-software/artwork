@@ -1169,7 +1169,7 @@ class ProjectController extends Controller
             ]),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
 
-            'openTab' => $request->openTab ?: 'checklist',
+            'openTab' => $request->openTab ?: 'info',
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
@@ -1274,6 +1274,17 @@ class ProjectController extends Controller
         foreach ($project->users->all() as $user) {
             $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
+        return Redirect::back();
+    }
+
+    public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+        $update_properties = $request->only('description');
+
+        $project->fill($update_properties);
+
+        $project->save();
+
         return Redirect::back();
     }
 

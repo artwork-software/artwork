@@ -120,10 +120,6 @@
                         Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
                     </div>
                 </div>
-
-                <div class="mt-2 mr-14 subpixel-antialiased text-secondary">
-                    {{ project.description }}
-                </div>
                 <div class="mt-4 text-xs text-secondary" style="display: none">
                     <span class="subpixel-antialiased">
                         Kostenträger:
@@ -283,12 +279,12 @@
             </div>
             <div class="bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
-                <div v-if="isScheduleTab" class="p-5 mt-14 max-w-screen-2xl bg-lightBackgroundGray">
+                <div v-if="isScheduleTab" class="p-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab"
-                     class="grid grid-cols-3 ml-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
+                     class="grid grid-cols-3 ml-10 mt-6 p-5 max-w-screen-2xl bg-lightBackgroundGray ">
                     <ChecklistComponent
                         :project="project"
                         :opened_checklists="opened_checklists"
@@ -300,7 +296,7 @@
                 </div>
                 <!-- Comment Tab -->
                 <div v-if="isCommentTab"
-                     class="grid grid-cols-3 mx-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray">
+                     class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
                     <div
                         v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                         class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
@@ -346,28 +342,47 @@
                                 {{ comment.text }}
                             </div>
                         </div>
-                        <div v-else class="xsDark">
+                        <div v-else class="xsDark mt-6">
                             Noch keine Kommentare vorhanden
                         </div>
                     </div>
                 </div>
                 <!-- Info Tab -->
-                <div v-if="isInfoTab" class="mx-5 mt-6 p-5 max-w-screen-2xl bg-lightBackgroundGray">
-                    <div class="grid grid-cols-5 mr-8">
-                        <div class="col-span-3">
-                            <div v-for="headline in project.project_headlines" class="mt-6">
+                <div v-if="isInfoTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
+                    <div class="grid grid-cols-6 mr-8">
+                        <div class="col-span-4">
+                            <!-- Description -->
+                            <div class="mt-4">
+                                <div> Kurzbeschreibung</div>
+                                <div v-if="descriptionClicked === false"
+                                     class="mt-2 subpixel-antialiased text-secondary"
+                                     @click="handleDescriptionClick()">
+                                    {{ project.description ? project.description : 'Hier klicken um Text hinzuzufügen' }}
+                                </div>
+                                <textarea v-else v-model="project.description" type="text"
+                                          @focusout="updateDescription()"
+                                          :ref="`description-${this.project.id}`"
+                                          class="w-full border-gray-300 text-primary h-40"
+                                          :placeholder="project.description || 'Hier klicken um Text hinzuzufügen'"/>
+                            </div>
+                            <!-- Individual Projectinformation -->
+                            <div v-for="headline in project.project_headlines" class="mt-4">
                                 <div>{{ headline.name }}</div>
-                                <input id="headlineTextInput" v-model="headline.text" type="text"
-                                       @keyup.enter="changeHeadlineText(headline)"
-                                       class="peer bg-transparent pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary"
-                                       :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                                <div v-if="!headline.clicked" class="mt-2 subpixel-antialiased text-secondary"
+                                     @click="handleTextClick(headline)">
+                                    {{ headline.text ? headline.text : 'Hier klicken um Text hinzuzufügen' }}
+                                </div>
+                                <textarea v-else v-model="headline.text" type="text" :ref="`text-${headline.id}`"
+                                          @focusout="changeHeadlineText(headline)"
+                                          class="w-full border-gray-300 text-primary h-40"
+                                          :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
                             </div>
                         </div>
                         <div
                             v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="col-span-2">
                             <div class="ml-10">
-                                <label class="block mt-6 mb-4 sDark">
+                                <label class="block my-4 sDark">
                                     Key Visual </label>
                                 <div
                                     class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
@@ -391,7 +406,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="flex w-full items-center mb-8">
+                                <div class="flex w-full items-center my-4">
                                     <h3 class="sDark"> Dokumente </h3>
                                 </div>
                                 <div
@@ -406,7 +421,7 @@
                                     />
                                     <div @click="selectNewFiles" @dragover.prevent
                                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
+                        border-buttonBlue border-dotted border-2 h-40 bg-colorOfAction p-2 cursor-pointer">
                                         <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher
                                             ziehen
                                             <br>oder ins Feld klicken
@@ -414,42 +429,36 @@
                                     </div>
                                     <jet-input-error :message="uploadDocumentFeedback"/>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+                                <div>
+                                    <div class="space-y-1"
+                                         v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                        <div v-for="project_file in project.project_files"
+                                             class="cursor-pointer group flex items-center">
+                                            <div :data-tooltip-target="project_file.name" class="flex truncate">
+                                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
+                                                <p @click="downloadFile(project_file)" class="ml-2 truncate">
+                                                    {{ project_file.name }}</p>
 
-                    <div class="col-span-1">
-                        <!-- Confirm File Delete Modal -->
-
-
-                        <div class="space-y-1"
-                             v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                            <div v-for="project_file in project.project_files"
-                                 class="cursor-pointer group flex items-center">
-                                <div :data-tooltip-target="project_file.name" class="flex truncate">
-                                    <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                    <p @click="downloadFile(project_file)" class="ml-2 truncate">
-                                        {{ project_file.name }}</p>
-
-                                    <XCircleIcon
-                                        v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
-                                        @click="openConfirmDeleteModal(project_file)"
-                                        class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
-                                        aria-hidden="true"/>
-                                </div>
-                                <div :id="project_file.name" role="tooltip"
-                                     class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                    <div class="flex flex-wrap">
-                                        Um die Datei herunterzuladen, klicke auf den Dateinamen
+                                                <XCircleIcon
+                                                    v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                    @click="openConfirmDeleteModal(project_file)"
+                                                    class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
+                                                    aria-hidden="true"/>
+                                            </div>
+                                            <div :id="project_file.name" role="tooltip"
+                                                 class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
+                                                <div class="flex flex-wrap">
+                                                    Um die Datei herunterzuladen, klicke auf den Dateinamen
+                                                </div>
+                                                <div class="tooltip-arrow" data-popper-arrow></div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                    <div v-else class="xsDark">
+                                        Keine Dateien vorhanden
+                                    </div>
                                 </div>
                             </div>
-
-
-                        </div>
-                        <div v-else class="xsDark">
-                            Keine Dateien vorhanden
                         </div>
                     </div>
                 </div>
@@ -1034,6 +1043,7 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import ChecklistComponent from "@/Pages/Projects/Components/ChecklistComponent.vue";
 import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue";
+import {nextTick} from "vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -1220,6 +1230,7 @@ export default {
             projectToDelete: {},
             deletingProject: false,
             selectedGroup: null,
+            descriptionClicked: false,
             form: useForm({
                 name: this.project.name,
                 description: this.project.description,
@@ -1256,11 +1267,38 @@ export default {
                 state: state.id
             })
         },
+        async handleDescriptionClick() {
+
+            this.descriptionClicked = true;
+
+            await nextTick()
+
+            this.$refs[`description-${this.project.id}`].select();
+        },
+        async handleTextClick(headline) {
+
+            headline.clicked = !headline.clicked
+
+            if (headline.clicked) {
+                await nextTick()
+
+                this.$refs[`text-${headline.id}`][0].select();
+            }
+        },
         changeHeadlineText(headline) {
             this.$inertia.patch(route('project_headlines.update.text', {
                 project_headline: headline.id,
                 project: this.project.id
             }), {text: headline.text})
+        },
+        updateDescription() {
+            this.$inertia.patch(route('projects.update_description', this.project.id), {
+                description:this.project.description
+            }, {
+                preserveScroll: true,
+                preserveState: true
+            });
+            this.descriptionClicked = false;
         },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;

@@ -11,13 +11,13 @@
                 <Listbox as="div" class="flex mr-2" v-model="selectedColor">
                     <ListboxButton>
                         <button class="w-8 h-8 flex justify-center items-center rounded-full"
-                                :class="selectedColor=== 'whiteColumn' ? 'whiteColumn border border-1' : selectedColor"
+                                :class="selectedColor=== 'stateColorDefault' ? 'stateColorDefault border border-1' : selectedColor"
                                 @click="openColor = !openColor">
                             <ChevronUpIcon v-if="openColor" class="h-3 w-3 my-auto"
-                                           :class="selectedColor === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronUpIcon>
+                                           :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></ChevronUpIcon>
                             <ChevronDownIcon v-else
                                              class="h-3 w-3 text-white my-auto"
-                                             :class="selectedColor === 'whiteColumn' ? 'text-black' : 'text-white'"></ChevronDownIcon>
+                                             :class="selectedColor === 'stateColorDefault' ? 'text-black' : 'text-white'"></ChevronDownIcon>
                         </button>
                     </ListboxButton>
 
@@ -71,7 +71,7 @@
         </div>
         <div class="flex flex-wrap w-full max-w-xl">
                         <span v-for="item in items"
-                              class="rounded-full items-center font-medium px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex" :class="[item.color, item.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
+                              class="rounded-full items-center font-medium px-3 mt-2 text-sm mr-1 mb-1 h-8 inline-flex" :class="item.color">
                             {{ item.name }}
                             <button type="button" @click="$emit('openDeleteModal', item)">
                                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
@@ -106,21 +106,27 @@ export default {
         return {
             input: '',
             colors: {
-                whiteColumn: 'whiteColumn',
-                greenColumn: 'greenColumn',
-                yellowColumn: 'yellowColumn',
-                redColumn: 'redColumn',
-                lightGreenColumn: 'lightGreenColumn'
+                stateColorDefault: 'stateColorDefault',
+                stateColorRed: 'stateColorRed',
+                stateColorPink: 'stateColorPink',
+                stateColorOrange: 'stateColorOrange',
+                stateColorYellow: 'stateColorYellow',
+                stateColorGreen: 'stateColorGreen',
+                stateColorDarkGreen: 'stateColorDarkGreen',
+                stateColorDodgeBlue: 'stateColorDodgeBlue',
+                stateColorBlue: 'stateColorBlue',
+                stateColorGreenBlue: 'stateColorGreenBlue',
+                stateColorDarkBlue: 'stateColorDarkBlue'
             },
             openColor: false,
-            selectedColor: 'whiteColumn'
+            selectedColor: 'stateColorDefault'
         }
     },
     methods: {
         add() {
             this.$emit('add', this.input, this.selectedColor)
             this.input = ''
-            this.selectedColor = this.colors.whiteColumn
+            this.selectedColor = this.colors.stateColorDefault
         }
     }
 }

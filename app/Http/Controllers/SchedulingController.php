@@ -44,17 +44,36 @@ class SchedulingController extends Controller
 
     /**
      * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function create($userId, $type, $project = null, $task = null, $event = null, $room = null): \Illuminate\Http\JsonResponse
+    public function create($userId, $type, $model, $modelId): bool
     {
         $scheduling = Scheduling::where('user_id', $userId)
+            ->where('type', $type)
+            ->where('model', $model)
+            ->where('model_id', $modelId)
+            ->first();
+
+        if(!empty($scheduling)){
+            $scheduling->increment('count', 1);
+        } else {
+            Scheduling::create([
+                'user_id' => $userId,
+                'count' => 1,
+                'type' => $type,
+                'model' => $model,
+                'model_id' => $modelId
+            ]);
+        }
+        return true;
+
+
+        /*$scheduling = Scheduling::where('user_id', $userId)
             ->where('type', $type)
             ->where('project_id', $project)
             ->where('task_id', $task)
             ->where('event_id', $event)
             ->where('room_id', $room)
+            ->where('public_changes', $public_changes)
             ->first();
 
         if (!empty($scheduling)) {
@@ -68,10 +87,11 @@ class SchedulingController extends Controller
                 'project_id' => $project,
                 'task_id' => $task,
                 'event_id' => $event,
-                'room_id' => $room
+                'room_id' => $room,
+                'public_changes' => $public_changes
             ]);
             return \response()->json(['message' => 'created', 'project' => $project, 'task' => $task, 'event' => $event, 'room' => $room, 'type' => $type]);
-        }
+        }*/
     }
 
     /**
@@ -190,12 +210,9 @@ class SchedulingController extends Controller
                         'deadline' => $deadline
                     ];
                 }
-                $departments = $checklist->departments()->get();
-                foreach ($departments as $department) {
-                    $user_ids = $department->users()->get(['user_id']);
-                    foreach ($user_ids as $user_id) {
-                        $userForNotify[$task->id][$user_id->user_id] = $user_id->user_id;
-                    }
+                $users = $checklist->users()->get();
+                foreach ($users as $user) {
+                    $userForNotify[$task->id][$user->id] = $user->id;
                 }
             }
         }
@@ -233,10 +250,11 @@ class SchedulingController extends Controller
     public function sendNotification(): void
     {
         $scheduleToNotify = Scheduling::where('updated_at', '<=', Carbon::now()->addMinutes(30)->setTimezone(config('app.timezone')))->get();
+        $broadcastMessage = [];
         foreach ($scheduleToNotify as $schedule) {
             $user = User::find($schedule->user_id);
             switch ($schedule->type) {
-                case 'TASK':
+                case 'TASK_ADDED':
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_NEW_TASK;
                     $this->notificationData->title = $schedule->count . ' neue Aufgaben für dich';
                     $this->notificationData->created_by = null;
@@ -246,8 +264,8 @@ class SchedulingController extends Controller
                         'message' => $this->notificationData->title
                     ];
                     break;
-                case 'PROJECT':
-                    $project = Project::find($schedule->project_id);
+                case 'PROJECT_CHANGES':
+                    $project = Project::find($schedule->model_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
                     $this->notificationData->title = 'Es gab Änderungen an ' . $project->name;
                     $this->notificationData->project->id = $project->id;
@@ -260,7 +278,7 @@ class SchedulingController extends Controller
                     ];
                     break;
                 case 'TASK_CHANGES':
-                    $task = Task::find($schedule->task_id);
+                    $task = Task::find($schedule->model_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
                     $this->notificationData->title = 'Änderungen an ' . @$task->name;
                     $this->notificationData->task->title = @$task->name;
@@ -273,7 +291,7 @@ class SchedulingController extends Controller
                     ];
                     break;
                 case 'ROOM_CHANGES':
-                    $room = Room::find($schedule->room_id);
+                    $room = Room::find($schedule->model_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
                     $this->notificationData->title = 'Änderungen an ' . @$room->name;
                     $this->notificationData->room = $room;
@@ -284,11 +302,24 @@ class SchedulingController extends Controller
                         'message' => $this->notificationData->title
                     ];
                     break;
-                case 'EVENT':
-                    $event = Event::find($schedule->event_id);
+                case 'EVENT_CHANGES':
+                    $event = Event::find($schedule->model_id);
                     $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
                     $this->notificationData->title = 'Termin geändert';
                     $this->notificationData->event = $event;
+                    $this->notificationData->created_by = null;
+                    $broadcastMessage = [
+                        'id' => rand(1, 1000000),
+                        'type' => 'success',
+                        'message' => $this->notificationData->title
+                    ];
+                    break;
+                case 'PUBLIC_CHANGES':
+                    $project = Project::find($schedule->model_id);
+                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT;
+                    $this->notificationData->title = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
+                    $this->notificationData->project->id = $project->id;
+                    $this->notificationData->project->title = $project->name;
                     $this->notificationData->created_by = null;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),

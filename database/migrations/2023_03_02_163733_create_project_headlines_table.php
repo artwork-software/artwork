@@ -13,13 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('schedulings', function (Blueprint $table) {
+        Schema::create('project_headlines', function (Blueprint $table) {
             $table->id();
-            $table->integer('count')->nullable()->default(0);
-            $table->integer('user_id');
-            $table->string('type');
-            $table->integer('model_id')->nullable();
-            $table->string('model')->nullable();
+            $table->string('name')->nullable();
+            $table->integer('order');
             $table->timestamps();
         });
     }
@@ -31,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('schedulings');
+        Schema::dropIfExists('project_headlines');
     }
 };

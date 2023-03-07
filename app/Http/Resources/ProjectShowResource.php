@@ -63,6 +63,8 @@ class ProjectShowResource extends JsonResource
             'project_history' => $historyArray,
             'departments' => DepartmentIndexResource::collection($this->departments)->resolve(),
 
+            'project_headlines' => ProjectHeadlineResource::collection($this->headlines->sortBy('order'))->resolve(),
+
             'project_files' => ProjectFileResource::collection($this->project_files),
             'contracts' => ContractResource::collection($this->contracts),
 

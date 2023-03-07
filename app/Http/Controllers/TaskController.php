@@ -125,10 +125,10 @@ class TaskController extends Controller
                 $uniqueTaskUsers[$checklistUser->id] = $checklistUser->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser){
-                $taskScheduling->create($uniqueTaskUser, 'TASK');
+                $taskScheduling->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
             }
         } else {
-            $taskScheduling->create(Auth::id(), 'TASK');
+            $taskScheduling->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
         }
     }
 
@@ -215,10 +215,10 @@ class TaskController extends Controller
                 $uniqueTaskUsers[$user->id] = $user->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser){
-                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', null, $task->id);
+                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
             }
         } else {
-            $taskScheduling->create($taskUser, 'TASK_CHANGES', null, $task->id);
+            $taskScheduling->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
         }
     }
 

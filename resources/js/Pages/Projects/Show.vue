@@ -10,14 +10,11 @@
                         {{ project?.name }}
 
 
-                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex" :class="[selectedColor?.color, selectedColor?.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
-                            {{ selectedColor?.name }}
+                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex" :class="selectedState?.color">
+                            {{ selectedState?.name }}
                         </span>
 
                     </h2>
-                    <pre>
-                        {{project}}
-                    </pre>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
@@ -299,6 +296,14 @@
                         <div class="flex w-full items-center mb-8">
                             <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
                                 Informationen </h3>
+                        </div>
+                        <div class="mb-12 w-1/2">
+                            <div v-for="headline in project.project_headlines" class="mt-10">
+                                <div>{{ headline.name }}</div>
+                                <input id="headlineTextInput" v-model="headline.text" type="text" @keyup.enter="changeHeadlineText(headline)"
+                                       class="peer bg-transparent pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary"
+                                       :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
+                            </div>
                         </div>
                         <div
                             v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
@@ -644,16 +649,16 @@
                             </div>
                         </div>
                         <div class="flex mt-2 w-full">
-                            <Listbox as="div" class="flex mr-2 w-full" v-model="selectedColor">
+                            <Listbox as="div" class="flex w-full" v-model="selectedState">
                                 <ListboxButton class="w-full text-left">
-                                    <button class="w-full h-12 border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                            :class="selectedColor=== 'whiteColumn' ? 'whiteColumn border border-1' : selectedColor"
+                                    <button class="w-full h-12 text-left border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                            :class="selectedState"
                                             @click="openColor = !openColor">
-                                        <span class="w-full" v-if="!selectedColor">
+                                        <span class="w-full" v-if="!selectedState">
                                             Wähle Projekt Status
                                         </span>
                                         <span v-else>
-                                            {{ selectedColor?.name}}
+                                            {{ selectedState?.name}}
                                         </span>
                                     </button>
                                 </ListboxButton>
@@ -661,7 +666,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-46 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                        class="absolute w-52 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class=""
                                                        v-for="state in states"
                                                        :key="state"
@@ -669,7 +674,7 @@
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
                                                 @click="updateProjectState(state)">
                                                 <div class="flex">
-                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="[state.color, state.color === 'whiteColumn' ? 'text-gray-500 border border-1' : 'text-white']">
+                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="state.color">
                                                         {{ state.name }}
                                                     </span>
                                                 </div>
@@ -1215,7 +1220,7 @@ export default {
                 file: null
             }),
             attributeForm: useForm({}),
-            selectedColor: this.project.state ? this.project.state : null,
+            selectedState: this.project.state ? this.project.state : null,
             openColor: false
         }
     },
@@ -1227,6 +1232,9 @@ export default {
             this.$inertia.patch(route('update.project.state', this.project.id), {
                 state: state.id
             })
+        },
+        changeHeadlineText(headline) {
+            this.$inertia.patch(route('project_headlines.update.text', { project_headline: headline.id, project: this.project.id}), { text: headline.text})
         },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;

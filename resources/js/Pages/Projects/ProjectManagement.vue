@@ -187,7 +187,7 @@
                                     {{ truncate(project.description, 300, '...') }}
                                 </div>
                             </div>
-                            <div class="w-32">
+                            <div class="w-32 mr-3">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
                             <div class="w-2/12 flex items-top">

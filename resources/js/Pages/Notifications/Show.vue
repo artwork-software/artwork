@@ -76,14 +76,14 @@
 
                 </div>
                 <div v-if="openTab === 'mailSettings'">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
                         <NotificationFrequencySettings :group-types="groupTypes"
                                                        :notification-frequencies="notificationFrequencies"
                                                        :notificationSettings="notificationSettings"/>
                     </p>
                 </div>
                 <div v-if="openTab === 'pushSettings'">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">
+                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-20">
                         <NotificationPushSettings :group-types="groupTypes"
                                                   :notificationSettings="notificationSettings"/>
                     </p>

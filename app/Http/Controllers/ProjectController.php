@@ -59,7 +59,7 @@ class ProjectController extends Controller
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
     protected ?HistoryController $history = null;
-
+    protected ?SchedulingController $schedulingController = null;
     public function __construct()
     {
 
@@ -69,6 +69,7 @@ class ProjectController extends Controller
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
         $this->history = new HistoryController('App\Models\Project');
+        $this->schedulingController = new SchedulingController();
     }
 
     /**
@@ -1250,10 +1251,10 @@ class ProjectController extends Controller
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
 
-        $scheduling = new SchedulingController();
+
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
-            $scheduling->create($user->id, 'PROJECT', $projectId);
+            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
         return Redirect::back();
     }
@@ -1285,15 +1286,17 @@ class ProjectController extends Controller
         foreach ($newSectors as $newSector) {
             $newSectorIds[] = $newSector->id;
             if (!in_array($newSector->id, $oldSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldSectorIds as $oldSectorId) {
             if (!in_array($oldSectorId, $newSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht', 'public_changes');
             }
         }
+
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     public function deleteProjectFromGroup(Request $request)
@@ -1322,15 +1325,16 @@ class ProjectController extends Controller
         foreach ($newGenres as $newGenre) {
             $newGenreIds[] = $newGenre->id;
             if (!in_array($newGenre->id, $oldGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldGenreIds as $oldGenreId) {
             if (!in_array($oldGenreId, $newGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht', 'public_changes');
             }
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**
@@ -1353,15 +1357,16 @@ class ProjectController extends Controller
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht', 'public_changes');
             }
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**
@@ -1373,7 +1378,8 @@ class ProjectController extends Controller
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
         if ($oldName !== $newName) {
-            $this->history->createHistory($projectId, 'Projektname geändert');
+            $this->history->createHistory($projectId, 'Projektname geändert', 'public_changes');
+            $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
         }
     }
 
@@ -1410,14 +1416,15 @@ class ProjectController extends Controller
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
     {
         if (strlen($newDescription) === null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht', 'public_changes');
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt', 'public_changes');
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert', 'public_changes');
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**

@@ -61,7 +61,7 @@ class ProjectFileController extends Controller
         }
 
 
-        $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt');
+        $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
 
         return Redirect::back();
     }
@@ -133,7 +133,7 @@ class ProjectFileController extends Controller
     {
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
-        $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht');
+        $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
 
         $projectFile->delete();
         return Redirect::back();

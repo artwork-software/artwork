@@ -18,10 +18,8 @@ return new class extends Migration
             $table->integer('count')->nullable()->default(0);
             $table->integer('user_id');
             $table->string('type');
-            $table->integer('project_id')->nullable();
-            $table->integer('task_id')->nullable();
-            $table->integer('event_id')->nullable();
-            $table->integer('room_id')->nullable();
+            $table->integer('model_id')->nullable();
+            $table->string('model')->nullable();
             $table->timestamps();
         });
     }

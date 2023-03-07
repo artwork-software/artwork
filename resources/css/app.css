@@ -161,7 +161,71 @@
         opacity: 1;
     }
 
+    .stateColorDefault {
+        background-color: #FCFCFBFF;
+        border: 1px solid #afafaf;
+        color: #696868;
+    }
 
+    .stateColorRed {
+        background: rgba(100, 26, 84, 0.15);
+        border: 1px solid #641A54;
+        color: #641A54;
+    }
+
+    .stateColorPink {
+        background: rgba(218, 63, 135, 0.15);
+        border: 1px solid #DA3F87;
+        color: #DA3F87
+    }
+
+    .stateColorOrange {
+        background: rgba(235, 122, 61, 0.15);
+        border: 1px solid #EB7A3D;
+        color: #EB7A3D;
+    }
+
+    .stateColorYellow {
+        background: rgba(241, 182, 64, 0.15);
+        border: 1px solid #F1B640;
+        color: #F1B640;
+    }
+
+    .stateColorGreen {
+        background: rgba(134, 197, 84, 0.15);
+        border: 1px solid #86C554;
+        color: #86C554;
+    }
+
+    .stateColorDarkGreen {
+        background: rgba(46, 170, 99, 0.15);
+        border: 1px solid #2EAA63;
+        color: #2EAA63;
+    }
+
+    .stateColorDodgeBlue {
+        background: rgba(61, 195, 203, 0.15);
+        border: 1px solid #3DC3CB;
+        color: #3DC3CB;
+    }
+
+    .stateColorBlue {
+        background: rgba(22, 143, 195, 0.15);
+        border: 1px solid #168FC3;
+        color: #168FC3;
+    }
+
+    .stateColorGreenBlue {
+        background: rgba(77, 144, 142, 0.15);
+        border: 1px solid #4D908E;
+        color: #4D908E;
+    }
+
+    .stateColorDarkBlue {
+        background: rgba(33, 72, 92, 0.15);
+        border: 1px solid #21485C;
+        color: #21485C;
+    }
 
 
 

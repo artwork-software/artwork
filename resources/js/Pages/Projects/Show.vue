@@ -114,7 +114,7 @@
 
                 <div class="w-full">
                     <div>
-                        Zeitraum/Öffnungszeiten: {{ firstEventInProject.start_time }} Uhr - {{ lastEventInProject.end_time }} Uhr
+                        Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span v-if="firstEventInProject?.start_time">Uhr -</span>  {{ lastEventInProject?.end_time }} <span v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
                     <div>
                         Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>

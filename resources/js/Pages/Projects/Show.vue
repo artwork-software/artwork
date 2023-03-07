@@ -1,8 +1,35 @@
 <template>
     <app-layout>
         <div class="max-w-screen-2xl my-12 pl-10 pr-10 flex flex-row">
-            <div class="flex w-8/12 flex-col">
-                <div class="flex ">
+            <div class="flex flex-col">
+                <div class="w-full flex" v-if="this.project.key_visual_path">
+                    <img :src="this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                         class="rounded-md h-40">
+                </div>
+                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
+                     v-if="project.project_history.length">
+                    <div>
+                        zuletzt geändert:
+                    </div>
+                    <img v-if="project.project_history[0]?.changes[0]?.changed_by"
+                         :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                         :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                         :alt="project.project_history[0].changes[0].changed_by?.first_name"
+                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+                    <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                                 :user="project.project_history[0].changes[0].changed_by"/>
+                    <span class="ml-2 subpixel-antialiased">
+                        {{ project.project_history[0]?.created_at }}
+                    </span>
+                    <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                            @click="openProjectHistoryModal()">
+                        <ChevronRightIcon
+                            class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                            aria-hidden="true"/>
+                        Verlauf ansehen
+                    </button>
+                </div>
+                <div class="flex justify-between items-center">
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl items-center">
                         <span v-if="project.is_group">
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
@@ -10,7 +37,8 @@
                         {{ project?.name }}
 
 
-                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex" :class="selectedState?.color">
+                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex"
+                              :class="selectedState?.color">
                             {{ selectedState?.name }}
                         </span>
 
@@ -23,14 +51,6 @@
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                   aria-hidden="true"/>
                             </MenuButton>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Basisdaten</span>
-                                </div>
-                            </div>
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
@@ -77,29 +97,6 @@
                         </transition>
                     </Menu>
                 </div>
-                <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
-                     v-if="project.project_history.length">
-                    <div>
-                        zuletzt geändert:
-                    </div>
-                    <img v-if="project.project_history[0]?.changes[0]?.changed_by"
-                         :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                         :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                         :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                         class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                    <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
-                                 :user="project.project_history[0].changes[0].changed_by"/>
-                    <span class="ml-2 subpixel-antialiased">
-                        {{ project.project_history[0]?.created_at }}
-                    </span>
-                    <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                            @click="openProjectHistoryModal()">
-                        <ChevronRightIcon
-                            class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
-                            aria-hidden="true"/>
-                        Verlauf ansehen
-                    </button>
-                </div>
                 <div v-if="currentGroup">
                     <div class="flex mt-2 items-center">
                         <span v-if="!project.is_group">
@@ -143,6 +140,8 @@
                     </div>
                 </div>
             </div>
+            <!-- TODO: DAS HIER NOCH IN SIDEBAR -->
+            <!--
             <div class="flex flex-wrap">
                 <div class="flex mr-2 mt-8 flex-1 flex-wrap">
                     <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
@@ -256,8 +255,9 @@
 
                 </div>
 
-            </div>
+            </div>-->
         </div>
+
         <!-- Div with Bg-Color -->
         <div class="w-full h-full mb-48">
             <div class="ml-10">
@@ -290,164 +290,129 @@
                     />
 
                 </div>
-                <!-- Info Tab -->
-                <div v-if="isInfoTab" class="grid grid-cols-3 mx-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray">
-                    <div class="col-span-2 mr-8">
-                        <div class="flex w-full items-center mb-8">
-                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Wichtige
-                                Informationen </h3>
+                <!-- Comment Tab -->
+                <div v-if="isCommentTab"
+                     class="grid grid-cols-3 mx-10 mt-14 p-5 max-w-screen-2xl bg-lightBackgroundGray">
+                    <div
+                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                        class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
+                        <textarea
+                            placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
+                            v-model="commentForm.text" rows="4"
+                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
+                        <div class="absolute bottom-0 right-0 flex bg-white">
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1">
+                                <span
+                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
+                                <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
+                            </div>
+                            <button
+                                :class="[commentForm.text === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mr-1 mb-1 rounded-full mt-2 ml-1 text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
+                                @click="addCommentToProject" :disabled="commentForm.text === ''">
+                                <CheckIcon class="h-4 w-4"></CheckIcon>
+                            </button>
                         </div>
-                        <div class="mb-12 w-1/2">
-                            <div v-for="headline in project.project_headlines" class="mt-10">
+                    </div>
+                    <div>
+                        <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
+                             @mouseover="commentHovered = comment.id"
+                             @mouseout="commentHovered = null">
+                            <div class="flex justify-between">
+                                <div class="flex items-center">
+                                    <img v-if="comment.user" :data-tooltip-target="comment.user"
+                                         :src="comment.user.profile_photo_url" :alt="comment.user.name"
+                                         class="rounded-full h-7 w-7 object-cover"/>
+                                    <UserTooltip v-if="comment.user" :user="comment.user"/>
+                                    <div class="ml-2 text-secondary"
+                                         :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
+                                        {{ comment.created_at }}
+                                    </div>
+                                </div>
+                                <button v-show="commentHovered === comment.id" type="button"
+                                        @click="deleteCommentFromProject(comment)">
+                                    <span class="sr-only">Kommentar von Projekt entfernen</span>
+                                    <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
+                                </button>
+                            </div>
+                            <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
+                                {{ comment.text }}
+                            </div>
+                        </div>
+                        <div v-else class="xsDark">
+                            Noch keine Kommentare vorhanden
+                        </div>
+                    </div>
+                </div>
+                <!-- Info Tab -->
+                <div v-if="isInfoTab" class="mx-5 mt-6 p-5 max-w-screen-2xl bg-lightBackgroundGray">
+                    <div class="grid grid-cols-5 mr-8">
+                        <div class="col-span-3">
+                            <div v-for="headline in project.project_headlines" class="mt-6">
                                 <div>{{ headline.name }}</div>
-                                <input id="headlineTextInput" v-model="headline.text" type="text" @keyup.enter="changeHeadlineText(headline)"
+                                <input id="headlineTextInput" v-model="headline.text" type="text"
+                                       @keyup.enter="changeHeadlineText(headline)"
                                        class="peer bg-transparent pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary"
                                        :placeholder="headline.text || 'Hier klicken um Text hinzuzufügen'"/>
                             </div>
                         </div>
                         <div
                             v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
-                            class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
-                        <textarea
-                            placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
-                            v-model="commentForm.text" rows="4"
-                            class="resize-none focus:outline-none focus:ring-0  pt-3 mb-8 placeholder-secondary border-0  w-full"/>
-                            <div class="absolute bottom-0 right-0 flex bg-white">
-                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
-                                    <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
-                                </div>
-                                <button
-                                    :class="[commentForm.text === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none', ' mr-1 mb-1 rounded-full mt-2 ml-1 text-sm p-1 border border-transparent uppercase shadow-sm text-secondaryHover']"
-                                    @click="addCommentToProject" :disabled="commentForm.text === ''">
-                                    <CheckIcon class="h-4 w-4"></CheckIcon>
-                                </button>
-                            </div>
-                        </div>
-                        <div>
-                            <div v-if="sortedComments?.length > 0" class="my-6" v-for="comment in sortedComments"
-                                 @mouseover="commentHovered = comment.id"
-                                 @mouseout="commentHovered = null">
-                                <div class="flex justify-between">
-                                    <div class="flex items-center">
-                                        <img v-if="comment.user" :data-tooltip-target="comment.user"
-                                             :src="comment.user.profile_photo_url" :alt="comment.user.name"
-                                             class="rounded-full h-7 w-7 object-cover"/>
-                                        <UserTooltip v-if="comment.user" :user="comment.user"/>
-                                        <div class="ml-2 text-secondary"
-                                             :class="commentHovered === comment.id ? 'text-primary':'text-secondary'">
-                                            {{ comment.created_at }}
+                            class="col-span-2">
+                            <div class="ml-10">
+                                <label class="block mt-6 mb-4 sDark">
+                                    Key Visual </label>
+                                <div
+                                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                                    @click="selectNewKeyVisual"
+                                    @dragover.prevent
+                                    @drop.stop.prevent="uploadDraggedKeyVisual($event)">
+                                    <div class="space-y-1 text-center">
+                                        <div class="xsLight flex my-auto h-40 items-center"
+                                             v-if="this.project.key_visual_path === null">
+                                            Ziehe hier dein <br/> Key Visual hin
+                                            <input id="keyVisual-upload" ref="keyVisual"
+                                                   name="file-upload" type="file" class="sr-only"
+                                                   @change="updateKeyVisual"/>
+                                        </div>
+                                        <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
+                                            <img :src="this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                                                 class="rounded-md h-40 w-80">
+                                            <input id="keyVisual-upload" ref="keyVisual"
+                                                   name="file-upload" type="file" class="sr-only"
+                                                   @change="updateKeyVisual"/>
                                         </div>
                                     </div>
-                                    <button v-show="commentHovered === comment.id" type="button"
-                                            @click="deleteCommentFromProject(comment)">
-                                        <span class="sr-only">Kommentar von Projekt entfernen</span>
-                                        <XCircleIcon class="ml-2 h-7 w-7 hover:text-error"/>
-                                    </button>
                                 </div>
-                                <div class="mt-2 mr-14 subpixel-antialiased text-primary font-semibold">
-                                    {{ comment.text }}
+                                <div class="flex w-full items-center mb-8">
+                                    <h3 class="sDark"> Dokumente </h3>
                                 </div>
-                            </div>
-                            <div v-else class="xsDark">
-                                Noch keine Kommentare vorhanden
-                            </div>
-                        </div>
-                    </div>
-                    <!-- TODO: HIER MUSS DOCH NOCH DIE PREVIEW-LOGIK VORGELAGERT WERDEN -->
-                    <div class="col-span-1">
-                        <label class="block mt-12 mb-4 xsDark">
-                            Key Visual </label>
-                        <div class="grid grid-cols-6 gap-x-12 items-center">
-                            <div
-                                class="flex col-span-2 w-full justify-center border-2 bg-stone-50 w-80 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                                @click="selectNewKeyVisual"
-                                @dragover.prevent
-                                @drop.stop.prevent="uploadDraggedKeyVisual($event)">
-                                <div class="space-y-1 text-center">
-                                    <div class="xsLight flex my-auto h-40 items-center"
-                                         v-if="this.project.key_visual_path === null">
-                                        Ziehe hier dein <br/> Key Visual hin
-                                        <input id="keyVisual-upload" ref="keyVisual"
-                                               name="file-upload" type="file" class="sr-only" @change="updateKeyVisual"/>
-                                    </div>
-                                    <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
-                                        <img :src="this.project.key_visual_path" alt="Aktuelles Banner"
-                                             class="rounded-md h-40 w-40">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-span-1">
-                        <div class="flex w-full items-center mb-8">
-                            <h3 class="text-2xl leading-6 font-bold font-lexend text-gray-900"> Dokumente </h3>
-                        </div>
-                        <div
-                            v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id)">
-                            <input
-                                @change="uploadChosenDocuments"
-                                class="hidden"
-                                ref="project_files"
-                                id="file"
-                                type="file"
-                                multiple
-                            />
-                            <div @click="selectNewFiles" @dragover.prevent
-                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
+                                <div
+                                    v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id)">
+                                    <input
+                                        @change="uploadChosenDocuments"
+                                        class="hidden"
+                                        ref="project_files"
+                                        id="file"
+                                        type="file"
+                                        multiple
+                                    />
+                                    <div @click="selectNewFiles" @dragover.prevent
+                                         @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                                <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                                    <br>oder ins Feld klicken
-                                </p>
-                            </div>
-                            <jet-input-error :message="uploadDocumentFeedback"/>
-                        </div>
-
-                        <!-- Confirm File Delete Modal -->
-                        <jet-dialog-modal :show="deletingFile" @close="closeConfirmDeleteModal">
-                            <template #content>
-                                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-                                <div class="mx-4">
-                                    <div class="font-black font-lexend text-primary text-3xl my-2">
-                                        Datei löschen
+                                        <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher
+                                            ziehen
+                                            <br>oder ins Feld klicken
+                                        </p>
                                     </div>
-                                    <XIcon @click="closeConfirmDeleteModal"
-                                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
-                                           aria-hidden="true"/>
-                                    <div class="text-error subpixel-antialiased">
-                                        Bist du sicher, dass du "{{ project_file.name }}" aus dem System löschen
-                                        möchtest?
-                                    </div>
-                                    <div class="flex justify-between mt-6">
-                                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                                @click="removeFile(project_file)">
-                                            Löschen
-                                        </button>
-                                        <div class="flex my-auto">
-                                            <span @click="closeConfirmDeleteModal"
-                                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
-                                        </div>
-                                    </div>
+                                    <jet-input-error :message="uploadDocumentFeedback"/>
                                 </div>
+                            </div>
+                        </div>
+                    </div>
 
-                                <!--
-                                <p class="my-auto text-md">Datei "{{ this.project_file.name }}" wirklich
-                                    löschen?</p>
-                                <button class="mt-4 inline-flex items-center px-12 py-3 border
-                            text-base font-bold uppercase shadow-sm font-black font-lexend"
-                                        @click="closeConfirmDeleteModal">
-                                    Abbrechen
-                                </button>
-                                <button class="ml-4 bg-error focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
-                            text-base font-bold uppercase shadow-sm text-secondaryHover"
-                                        @click="removeFile(project_file)">
-                                    Löschen
-                                </button>
-                                -->
-                            </template>
-                        </jet-dialog-modal>
+                    <div class="col-span-1">
+                        <!-- Confirm File Delete Modal -->
+
 
                         <div class="space-y-1"
                              v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
@@ -490,6 +455,50 @@
                 </div>
             </div>
         </div>
+        <!-- File Delete Modal -->
+        <jet-dialog-modal :show="deletingFile" @close="closeConfirmDeleteModal">
+            <template #content>
+                <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
+                <div class="mx-4">
+                    <div class="font-black font-lexend text-primary text-3xl my-2">
+                        Datei löschen
+                    </div>
+                    <XIcon @click="closeConfirmDeleteModal"
+                           class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
+                           aria-hidden="true"/>
+                    <div class="text-error subpixel-antialiased">
+                        Bist du sicher, dass du "{{ project_file.name }}" aus dem System löschen
+                        möchtest?
+                    </div>
+                    <div class="flex justify-between mt-6">
+                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                                @click="removeFile(project_file)">
+                            Löschen
+                        </button>
+                        <div class="flex my-auto">
+                                            <span @click="closeConfirmDeleteModal"
+                                                  class="xsLight cursor-pointer">Nein, doch nicht</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!--
+                <p class="my-auto text-md">Datei "{{ this.project_file.name }}" wirklich
+                    löschen?</p>
+                <button class="mt-4 inline-flex items-center px-12 py-3 border
+            text-base font-bold uppercase shadow-sm font-black font-lexend"
+                        @click="closeConfirmDeleteModal">
+                    Abbrechen
+                </button>
+                <button class="ml-4 bg-error focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+            text-base font-bold uppercase shadow-sm text-secondaryHover"
+                        @click="removeFile(project_file)">
+                    Löschen
+                </button>
+                -->
+            </template>
+        </jet-dialog-modal>
         <!-- Projekt bearbeiten Modal-->
         <jet-dialog-modal :show="editingProject" @close="closeEditProjectModal">
             <template #content>
@@ -651,14 +660,15 @@
                         <div class="flex mt-2 w-full">
                             <Listbox as="div" class="flex w-full" v-model="selectedState">
                                 <ListboxButton class="w-full text-left">
-                                    <button class="w-full h-12 text-left border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                            :class="selectedState"
-                                            @click="openColor = !openColor">
+                                    <button
+                                        class="w-full h-12 text-left border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                        :class="selectedState"
+                                        @click="openColor = !openColor">
                                         <span class="w-full" v-if="!selectedState">
                                             Wähle Projekt Status
                                         </span>
                                         <span v-else>
-                                            {{ selectedState?.name}}
+                                            {{ selectedState?.name }}
                                         </span>
                                     </button>
                                 </ListboxButton>
@@ -674,7 +684,9 @@
                                             <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
                                                 @click="updateProjectState(state)">
                                                 <div class="flex">
-                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="state.color">
+                                                    <span
+                                                        class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex"
+                                                        :class="state.color">
                                                         {{ state.name }}
                                                     </span>
                                                 </div>
@@ -1084,16 +1096,18 @@ export default {
         tabs() {
             if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return [
+                    {name: 'Projektinformationen', href: '#', current: this.isInfoTab},
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                    {name: 'Kommentare', href: '#', current: this.isCommentTab},
                     {name: 'Budget', href: '#', current: this.isBudgetTab}
                 ]
             } else {
                 return [
+                    {name: 'Projektinformationen', href: '#', current: this.isInfoTab},
                     {name: 'Ablaufplan', href: '#', current: this.isScheduleTab},
                     {name: 'Checklisten', href: '#', current: this.isChecklistTab},
-                    {name: 'Informationen & Dokumente', href: '#', current: this.isInfoTab},
+                    {name: 'Kommentare', href: '#', current: this.isCommentTab},
                 ]
             }
         },
@@ -1185,6 +1199,7 @@ export default {
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
+            isCommentTab: this.openTab ? this.openTab === 'comment' : false,
             editingTeam: false,
             department_and_user_query: "",
             department_search_results: [],
@@ -1228,13 +1243,16 @@ export default {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
     },
     methods: {
-        updateProjectState(state){
+        updateProjectState(state) {
             this.$inertia.patch(route('update.project.state', this.project.id), {
                 state: state.id
             })
         },
         changeHeadlineText(headline) {
-            this.$inertia.patch(route('project_headlines.update.text', { project_headline: headline.id, project: this.project.id}), { text: headline.text})
+            this.$inertia.patch(route('project_headlines.update.text', {
+                project_headline: headline.id,
+                project: this.project.id
+            }), {text: headline.text})
         },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;
@@ -1267,7 +1285,7 @@ export default {
 
             if (allowedTypes.includes(file.type)) {
                 this.keyVisualForm.keyVisual = file
-                this.keyVisualForm.post(route('projects_key_visual.update',{project: this.project.id}));
+                this.keyVisualForm.post(route('projects_key_visual.update', {project: this.project.id}));
             } else {
                 this.uploadDocumentFeedback = "Es werden ausschließlich Logos und Illustrationen vom Typ .jpeg, .svg, .png und .gif akzeptiert."
             }
@@ -1443,12 +1461,15 @@ export default {
             this.isChecklistTab = false;
             this.isInfoTab = false;
             this.isBudgetTab = false;
+            this.isCommentTab = false;
             if (selectedTab.name === 'Ablaufplan') {
                 this.isScheduleTab = true;
             } else if (selectedTab.name === 'Checklisten') {
                 this.isChecklistTab = true;
-            } else if (selectedTab.name === 'Informationen & Dokumente') {
+            } else if (selectedTab.name === 'Projektinformationen') {
                 this.isInfoTab = true;
+            } else if (selectedTab.name === 'Kommentare') {
+                this.isCommentTab = true;
             } else {
                 this.isBudgetTab = true;
             }

@@ -1090,10 +1090,28 @@ class ProjectController extends Controller
         }
 
 
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = [];
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        //dd($firstEventInProject);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
-
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
 
             'budget' => [

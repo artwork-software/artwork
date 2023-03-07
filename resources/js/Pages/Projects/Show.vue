@@ -112,6 +112,14 @@
                                   :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
                 </div>
 
+                <div class="w-full">
+                    <div>
+                        Zeitraum/Öffnungszeiten: {{ firstEventInProject.start_time }} Uhr - {{ lastEventInProject.end_time }} Uhr
+                    </div>
+                    <div>
+                        Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
+                    </div>
+                </div>
 
                 <div class="mt-2 mr-14 subpixel-antialiased text-secondary">
                     {{ project.description }}
@@ -1038,7 +1046,7 @@ const number_of_participants = [
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
+    props: ['projectMoneySources','RoomsWithAudience', 'firstEventInProject','lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,

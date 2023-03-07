@@ -112,21 +112,16 @@
                                   :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
                 </div>
 
-                <div class="w-full">
-                    <div>
+                <div class="w-full mt-6 text-secondary subpixel-antialiased">
+                    <div v-if="firstEventInProject && lastEventInProject">
                         Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span v-if="firstEventInProject?.start_time">Uhr -</span>  {{ lastEventInProject?.end_time }} <span v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
-                    <div>
+                    <div v-if="RoomsWithAudience">
                         Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
                     </div>
-                </div>
-                <div class="mt-4 text-xs text-secondary" style="display: none">
-                    <span class="subpixel-antialiased">
-                        Kostenträger:
-                    </span>
-                    <span class="text-primary font-bold">
-                        {{ project.cost_center ? project.cost_center : 'noch nicht definiert' }}
-                    </span>
+                    <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
+                        Noch keine Termine innerhalb dieses Projektes
+                    </div>
                 </div>
                 <div class="flex mt-5">
                     <div>

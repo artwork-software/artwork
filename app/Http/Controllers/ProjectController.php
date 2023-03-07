@@ -99,6 +99,7 @@ class ProjectController extends Controller
                 'writeUsers',
                 'state'
             ])
+            ->orderBy('id', 'DESC')
             ->get();
 
         return inertia('Projects/ProjectManagement', [

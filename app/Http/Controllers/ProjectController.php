@@ -1095,10 +1095,28 @@ class ProjectController extends Controller
         }
 
 
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = [];
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
+
+        //dd($firstEventInProject);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
-
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
 
             'budget' => [
@@ -1156,7 +1174,7 @@ class ProjectController extends Controller
             ]),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
 
-            'openTab' => $request->openTab ?: 'checklist',
+            'openTab' => $request->openTab ?: 'info',
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
@@ -1264,6 +1282,17 @@ class ProjectController extends Controller
         foreach ($project->users->all() as $user) {
             $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
+        return Redirect::back();
+    }
+
+    public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+        $update_properties = $request->only('description');
+
+        $project->fill($update_properties);
+
+        $project->save();
+
         return Redirect::back();
     }
 

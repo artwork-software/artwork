@@ -123,21 +123,6 @@
                         Noch keine Termine innerhalb dieses Projektes
                     </div>
                 </div>
-                <div class="flex mt-5">
-                    <div>
-                        <TagComponent v-for="category in projectCategories" :method="deleteCategoryFromProject"
-                                      :displayed-text="category.name" :property="category"
-                                      :hide-x="true"></TagComponent>
-                    </div>
-                    <div>
-                        <TagComponent v-for="genre in projectGenres" :method="deleteGenreFromProject"
-                                      :displayed-text="genre.name" :property="genre" :hide-x="true"></TagComponent>
-                    </div>
-                    <div>
-                        <TagComponent v-for="sector in projectSectors" :method="deleteSectorFromProject"
-                                      :displayed-text="sector.name" :property="sector" :hide-x="true"></TagComponent>
-                    </div>
-                </div>
             </div>
             <!-- TODO: DAS HIER NOCH IN SIDEBAR -->
             <!--
@@ -972,6 +957,10 @@
             <ProjectSecondSidenav
                 v-else
                 :project="project"
+                :project-members="projectMembers"
+                :project-categories="projectCategories"
+                :project-genres="projectGenres"
+                :project-sectors="projectSectors"
             />
         </BaseSidenav>
 
@@ -1252,6 +1241,10 @@ export default {
     },
     mounted() {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
+        this.show = true;
+        setTimeout(() => {
+            this.show = false;
+        }, 1000)
     },
     methods: {
         updateProjectState(state) {

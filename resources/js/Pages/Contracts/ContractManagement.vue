@@ -15,13 +15,13 @@
 
                                 <div class="flex w-full mb-4" >
                                     <div v-for="filter in costNames">
-                                        <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
+                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                     <div v-for="filter in companyTypeNames">
-                                        <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
+                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                     <div v-for="filter in contractTypeNames">
-                                        <BaseFilterTag :filter="filter" :remove-filter="removeFilter" />
+                                        <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
                                 <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin && contractsCopy.data.length !== 0">

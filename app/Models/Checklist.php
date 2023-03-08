@@ -43,8 +43,8 @@ class Checklist extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function departments()
+    public function users()
     {
-        return $this->belongsToMany(Department::class);
+        return $this->belongsToMany(User::class);
     }
 }

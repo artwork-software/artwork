@@ -66,73 +66,79 @@
                     <ul role="list" class="mt-5 w-full">
                         <li v-if="moneySource_query.length < 1" v-for="(moneySource,index) in sourcesToShow"
                             :key="moneySource.id"
-                            class="py-5 flex justify-between border-b-2 border-gray-200 my-2">
-                            <div class="flex w-full">
-                                <div class="flex">
-                                    <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"
-                                         class=" h-6 w-6 ml-5" alt="groupIcon"/>
-                                    <Link :href="getEditHref(moneySource)"
-                                          class="sDark ml-5 my-auto w-full justify-start mr-6">
-                                        {{ moneySource.name }}
-                                    </Link>
-                                </div>
-                                <div v-if="moneySource.group_id !== null"
-                                     class="w-full flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
-                                    Gehört zu:
-                                    {{ this.moneySourceGroups.find(sourceGroup => sourceGroup.id === moneySource.group_id).name }}
-                                </div>
-                            </div>
-
-                            <div class="flex">
-                                <Menu as="div" class="my-auto relative">
+                        >
+                            <div class="py-5 flex justify-between border-b-2 border-gray-200 my-2"
+                                 v-if="($page.props.myMoneySources.some(source => source.money_source_id === moneySource.id) || $page.props.is_money_source_admin)">
+                                <div class="flex w-full">
                                     <div class="flex">
-                                        <MenuButton
-                                            class="flex">
-                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                              aria-hidden="true"/>
-                                        </MenuButton>
+                                        <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"
+                                             class=" h-6 w-6 ml-5" alt="groupIcon"/>
+                                        <Link :href="getEditHref(moneySource)"
+                                              class="sDark ml-5 my-auto w-full justify-start mr-6">
+                                            {{ moneySource.name }}
+                                        </Link>
                                     </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
-                                                    <a :href="getEditHref(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Bearbeiten
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click="duplicateMoneySource(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <DuplicateIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Duplizieren
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }">
-                                                    <a @click="openDeleteSourceModal(moneySource)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Löschen
-                                                    </a>
-                                                </MenuItem>
-                                            </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
+                                    <div v-if="moneySource.group_id !== null"
+                                         class="w-full flex items-center xxsLight subpixel-antialiased ml-14 mt-1">
+                                        Gehört zu:
+                                        {{
+                                            this.moneySourceGroups.find(sourceGroup => sourceGroup.id === moneySource.group_id).name
+                                        }}
+                                    </div>
+                                </div>
 
+                                <div class="flex">
+                                    <Menu as="div" class="my-auto relative">
+                                        <div class="flex">
+                                            <MenuButton
+                                                class="flex">
+                                                <DotsVerticalIcon
+                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="origin-top-right z-10 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                <div class="py-1">
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a :href="getEditHref(moneySource)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Bearbeiten
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click="duplicateMoneySource(moneySource)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <DuplicateIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Duplizieren
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }">
+                                                        <a @click="openDeleteSourceModal(moneySource)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TrashIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Löschen
+                                                        </a>
+                                                    </MenuItem>
+                                                </div>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+
+                                </div>
                             </div>
                         </li>
                         <li v-else v-for="(moneySource,index) in moneySource_search_results" :key="moneySource.id"
@@ -294,14 +300,14 @@ export default defineComponent({
         getEditHref(moneySource) {
             return route('money_sources.show', {moneySource: moneySource.id});
         },
-        duplicateMoneySource(moneySource){
+        duplicateMoneySource(moneySource) {
             this.$inertia.post(`/money_sources/${moneySource.id}/duplicate`);
         },
-        deleteMoneySource(moneySource){
+        deleteMoneySource(moneySource) {
             this.$inertia.delete(`/money_sources/${moneySource.id}`);
             this.showDeleteSourceModal = false;
         },
-        openDeleteSourceModal(moneySourceToDelete){
+        openDeleteSourceModal(moneySourceToDelete) {
             this.sourceToDelete = moneySourceToDelete;
             this.showDeleteSourceModal = true;
         },

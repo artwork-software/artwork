@@ -27,6 +27,8 @@ use App\Http\Controllers\MoneySourceTaskController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\ProjectFileController;
+use App\Http\Controllers\ProjectStatesController;
+use App\Http\Controllers\ProjectHeadlineController;
 use App\Http\Controllers\RoomAttributeController;
 use App\Http\Controllers\RoomCategoryController;
 use App\Http\Controllers\RoomController;
@@ -116,14 +118,21 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/users_departments/search', [ProjectController::class, 'search_departments_and_users'])->name('users_departments.search');
     Route::get('/projects/create', [ProjectController::class, 'create'])->name('projects.create');
     Route::post('/projects', [ProjectController::class, 'store'])->name('projects.store');
+    Route::post('/projects/{project}/updateKeyVisual', [ProjectController::class, 'updateKeyVisual'])->name('projects_key_visual.update');
     Route::post('/projects/{project}/duplicate', [ProjectController::class, 'duplicate'])->name('projects.duplicate');
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/attributes', [ProjectController::class, 'updateAttributes'])->name('projects.update_attributes');
+    Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])->name('projects.update_team');
+    Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])->name('projects.update_description');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+
+    //Project Entrance & registration
+    Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])->name('projects.entrance.update');
 
     //ProjectFiles
     Route::post('/projects/{project}/files', [ProjectFileController::class, 'store'])->name('project_files.store');
@@ -178,16 +187,22 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/categories', [CategoryController::class, 'store'])->name('categories.store');
     Route::patch('/categories/{category}', [CategoryController::class, 'update'])->name('categories.update');
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
+    Route::patch('/categories/{category}/restore', [CategoryController::class, 'restore']);
+    Route::delete('/categories/{id}/force', [CategoryController::class, 'forceDelete'])->name('categories.force');
 
     //Genres
     Route::post('/genres', [GenreController::class, 'store'])->name('genres.store');
     Route::patch('/genres/{genre}', [GenreController::class, 'update']);
     Route::delete('/genres/{genre}', [GenreController::class, 'destroy']);
+    Route::patch('/genres/{genre}/restore', [GenreController::class, 'restore']);
+    Route::delete('/genres/{id}/force', [GenreController::class, 'forceDelete'])->name('genres.force');
 
     //Sectors
     Route::post('/sectors', [SectorController::class, 'store'])->name('sectors.store');
     Route::patch('/sectors/{sector}', [SectorController::class, 'update']);
     Route::delete('/sectors/{sector}', [SectorController::class, 'destroy']);
+    Route::patch('/sectors/{sector}/restore', [SectorController::class, 'restore']);
+    Route::delete('/sectors/{id}/force', [SectorController::class, 'forceDelete'])->name('sectors.force');
 
     //Comments
     Route::get('/comments/create', [CommentController::class, 'create'])->name('comments.create');
@@ -302,8 +317,6 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/money_sources/{moneySource}/duplicate', [MoneySourceController::class, 'duplicate'])->name('money_sources.duplicate');
     Route::delete('/money_sources/{moneySource}', [MoneySourceController::class, 'destroy']);
 
-
-
     //Contracts
     Route::get('/contracts/view', [ContractController::class, 'viewIndex'])->name('contracts.view.index');
 
@@ -393,21 +406,45 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/contract_types', [ContractTypeController::class, 'index'])->name('contract_types.index');
     Route::post('/contract_types', [ContractTypeController::class, 'store'])->name('contract_types.store');
     Route::delete('/contract_types/{contract_type}', [ContractTypeController::class, 'destroy'])->name('contract_types.delete');
+    Route::patch('/contract_types/{contract_type}/restore', [ContractTypeController::class, 'restore'])->name('contract_types.restore');
+    Route::delete('/contract_types/{id}/force', [ContractTypeController::class, 'forceDelete'])->name('contract_types.force');
 
     // CompanyTypes
     Route::get('/company_types', [CompanyTypeController::class, 'index'])->name('company_types.index');
     Route::post('/company_types', [CompanyTypeController::class, 'store'])->name('company_types.store');
     Route::delete('/company_types/{company_type}', [CompanyTypeController::class, 'destroy'])->name('company_types.delete');
+    Route::patch('/company_types/{company_type}/restore', [CompanyTypeController::class, 'restore'])->name('company_types.restore');
+    Route::delete('/company_types/{id}/force', [CompanyTypeController::class, 'forceDelete'])->name('company_types.force');
 
     // Collecting Societies
     Route::get('/collecting_societies', [CollectingSocietyController::class, 'index'])->name('collecting_societies.index');
     Route::post('/collecting_societies', [CollectingSocietyController::class, 'store'])->name('collecting_societies.store');
     Route::delete('/collecting_societies/{collecting_society}', [CollectingSocietyController::class, 'destroy'])->name('collecting_societies.delete');
+    Route::patch('/collecting_societies/{collecting_society}/restore', [CollectingSocietyController::class, 'restore'])->name('collecting_societies.restore');
+    Route::delete('/collecting_societies/{id}/force', [CollectingSocietyController::class, 'forceDelete'])->name('collecting_societies.force');
 
     // Currencies
     Route::get('/currencies', [CurrencyController::class, 'index'])->name('currencies.index');
     Route::post('/currencies', [CurrencyController::class, 'store'])->name('currencies.store');
     Route::delete('/currencies/{currency}', [CurrencyController::class, 'destroy'])->name('currencies.delete');
+    Route::patch('/currencies/{currency}/restore', [CurrencyController::class, 'restore'])->name('currencies.restore');
+    Route::delete('/currencies/{id}/force', [CurrencyController::class, 'forceDelete'])->name('currencies.force');
 
+    // Project Headlines
+    Route::post('/project_headlines', [ProjectHeadlineController::class, 'store'])->name('project_headlines.store');
+    Route::put('/project_headlines/order', [ProjectHeadlineController::class, 'updateOrder'])->name('project_headlines.order');
+    Route::patch('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'update'])->name('project_headlines.update');
+    Route::patch('/project_headlines/{project_headline}/{project}/text', [ProjectHeadlineController::class, 'updateText'])->name('project_headlines.update.text');
+    Route::delete('/project_headlines/{project_headline}', [ProjectHeadlineController::class, 'destroy'])->name('project_headlines.delete');
+
+    // Project States
+    Route::post('/state', [ProjectStatesController::class, 'store'])->name('state.store');
+    Route::patch('/project/{project}/state', [ProjectController::class, 'updateProjectState'])->name('update.project.state');
+    Route::delete('/state/{projectStates}', [ProjectStatesController::class, 'destroy'])->name('state.delete');
+    Route::patch('/states/{state}/restore', [ProjectStatesController::class, 'restore'])->name('state.restore');
+    Route::delete('/states/{id}/force', [ProjectStatesController::class, 'forceDelete'])->name('state.force');
+
+    // Project Settings
+    Route::get('projects/settings/trashed', [ProjectController::class, 'getTrashedSettings'])->name('projects.settings.trashed');
 });
 

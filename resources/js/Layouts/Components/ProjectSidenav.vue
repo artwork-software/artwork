@@ -1,5 +1,9 @@
 <template>
     <div class="w-full mt-24">
+
+
+
+
         <div class="w-full flex items-center">
             <div class="text-secondary text-md">Kostenträger: {{ costCenter?.name }}</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"

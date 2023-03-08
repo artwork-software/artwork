@@ -8,6 +8,8 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Genre;
+use App\Models\ProjectHeadline;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -59,7 +61,16 @@ class CategoryController extends Controller
             'currencies' => Currency::all()->map(fn($currency) => [
                 'id' => $currency->id,
                 'name' => $currency->name,
-            ])
+            ]),
+            'project_headlines' => ProjectHeadline::orderBy('order')->get()->map(fn($headline) => [
+                'id' => $headline->id,
+                'name' => $headline->name,
+            ]),
+            'states' => ProjectStates::all()->map(fn($state) => [
+                'id' => $state->id,
+                'name' => $state->name,
+                'color' => $state->color
+            ]),
         ]);
     }
 
@@ -112,5 +123,23 @@ class CategoryController extends Controller
     {
         $category->delete();
         return Redirect::back()->with('success', 'Category deleted');
+    }
+
+    public function forceDelete(int $id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+
+        $category->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Category deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $category = Category::onlyTrashed()->findOrFail($id);
+
+        $category->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Category restored');
     }
 }

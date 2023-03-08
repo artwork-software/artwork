@@ -50,11 +50,11 @@ class TaskController extends Controller
     public function indexOwnTasks()
     {
         $tasks = Task::query()
-            ->with(['checklist.project', 'checklist.departments.users'])
+            ->with(['checklist.project', 'checklist.users'])
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
                 ->where('user_id', Auth::id())
             )
-            ->orWhereHas('checklistDepartments', fn (Builder $departmentBuilder) => $departmentBuilder
+            ->orWhereHas('checklistUsers', fn (Builder $departmentBuilder) => $departmentBuilder
                 ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
                     ->where('users.id', Auth::id()))
             )
@@ -88,8 +88,8 @@ class TaskController extends Controller
             $authorized = true;
             $this->createTask($request);
         } else {
-            foreach ($checklist->departments as $department) {
-                if ($department->users->contains(Auth::id())) {
+            foreach ($checklist->users()->get() as $user) {
+                if ($user->id === Auth::id()) {
                     if ($created == false) {
                         $authorized = true;
                         $this->createTask($request);
@@ -120,22 +120,19 @@ class TaskController extends Controller
         $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
         if($checklist->user_id === null){
-            $checklistDepartments = $checklist->departments()->get();
-            foreach ($checklistDepartments as $checklistDepartment){
-                $departmentUsers = $checklistDepartment->users()->get();
-                foreach ($departmentUsers as $departmentUser){
-                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
-                }
+            $checklistUsers = $checklist->users()->get();
+            foreach ($checklistUsers as $checklistUser){
+                $uniqueTaskUsers[$checklistUser->id] = $checklistUser->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser){
-                $taskScheduling->create($uniqueTaskUser, 'TASK');
+                $taskScheduling->create($uniqueTaskUser, 'TASK_ADDED', 'TASKS', $checklist->id);
             }
         } else {
-            $taskScheduling->create(Auth::id(), 'TASK');
+            $taskScheduling->create(Auth::id(), 'TASK_ADDED', 'TASKS', $checklist->id);
         }
     }
 
-    protected function createTask(Request $request)
+    private function createTask(Request $request)
     {
         $task = Task::create([
             'name' => $request->name,
@@ -145,6 +142,11 @@ class TaskController extends Controller
             'order' => Task::max('order') + 1,
             'checklist_id' => $request->checklist_id
         ]);
+
+        $Checklist = Checklist::find($request->checklist_id);
+        $checklistUsers = $Checklist->users()->get();
+
+        $task->task_users()->syncWithoutDetaching(collect($checklistUsers)->pluck('id'));
 
         (new HistoryService())->taskUpdated($task);
     }
@@ -205,21 +207,18 @@ class TaskController extends Controller
     private function createNotificationUpdateTask(Task $task): void
     {
         $taskUser = $task->checklist()->first()->user_id;
-        $departments = $task->checklistDepartments()->get();
+        $users = $task->task_users()->get();
         $taskScheduling = new SchedulingController();
         $uniqueTaskUsers = [];
         if($taskUser === null){
-            foreach ($departments as $checklistDepartment){
-                $departmentUsers = $checklistDepartment->users()->get();
-                foreach ($departmentUsers as $departmentUser){
-                    $uniqueTaskUsers[$departmentUser->id] = $departmentUser->id;
-                }
+            foreach ($users as $user){
+                $uniqueTaskUsers[$user->id] = $user->id;
             }
             foreach ($uniqueTaskUsers as $uniqueTaskUser){
-                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', null, $task->id);
+                $taskScheduling->create($uniqueTaskUser, 'TASK_CHANGES', 'TASKS', $task->id);
             }
         } else {
-            $taskScheduling->create($taskUser, 'TASK_CHANGES', null, $task->id);
+            $taskScheduling->create($taskUser, 'TASK_CHANGES', 'TASKS', $task->id);
         }
     }
 

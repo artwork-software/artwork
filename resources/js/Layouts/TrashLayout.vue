@@ -8,7 +8,7 @@
                 <div class="flex flex-wrap w-full">
 
                     <div class="w-full mt-5 flex my-auto justify-between">
-                        <Listbox as="div" class="sm:col-span-3 mb-8" v-model="selectedTrash">
+                        <Listbox as="div" class="sm:col-span-3 mb-4" v-model="selectedTrash">
                             <div class="relative">
                                 <ListboxButton class="flex cursor-pointer bg-white relative pr-14 font-semibold py-2 mt-4 text-left
                                 focus:outline-none focus:ring-0 focus:ring-primary
@@ -25,7 +25,7 @@
                                 <transition leave-active-class="transition ease-in duration-100"
                                             leave-from-class="opacity-100" leave-to-class="opacity-0">
                                     <ListboxOptions
-                                        class="absolute w-40 z-10 mt-1 w-full bg-primary shadow-lg max-h-32 rounded-md text-base ring-1
+                                        class="absolute w-40 z-10 mt-1 w-full bg-primary shadow-lg rounded-md text-base ring-1
                                         ring-black ring-opacity-5 overflow-y-auto focus:outline-none sm:text-sm">
                                         <ListboxOption as="template" class="max-h-8"
                                                        v-for="page in trashSites"
@@ -106,6 +106,10 @@ export default {
                 'Trash/Events': {
                     name: 'Termine',
                     href: route('events.trashed')
+                },
+                'Trash/ProjectSettings': {
+                    name: 'Projekteinstellungen',
+                    href: route('projects.settings.trashed')
                 }
             }
         }

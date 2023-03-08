@@ -53,8 +53,8 @@ class Event extends Model
         'is_loud' => 'boolean',
         'audience' => 'boolean',
         'occupancy_option' => 'boolean',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'start_time' => 'datetime:d. M Y H:i',
+        'end_time' => 'datetime:d. M Y H:i',
     ];
 
     public function serializeDate(DateTimeInterface $date)

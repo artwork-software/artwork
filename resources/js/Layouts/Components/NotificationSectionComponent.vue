@@ -86,6 +86,7 @@
                             <NotificationBudgetRequest
                                 v-if="notification.type === 'App\\Notifications\\BudgetVerified'" :budget="notification.data">
                             </NotificationBudgetRequest>
+                            <NotificationPublicChangesInfo v-if="notification.data.type === 'NOTIFICATION_PUBLIC_RELEVANT'" :notification="notification.data" />
                             <div class="flex">
                                 <div class="mt-1.5 flex xxsLight my-auto"
                                      v-if="notification.type === 'App\\Notifications\\DeadlineNotification'">
@@ -318,11 +319,13 @@ import AnswerEventRequestWithRoomChangeComponent from "@/Layouts/Components/Answ
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
+import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 
 export default  {
     name: 'NotificationSectionComponent',
 
     components: {
+        NotificationPublicChangesInfo,
         NotificationBudgetRequest,
         TeamIconCollection,
         EventTypeIconCollection,

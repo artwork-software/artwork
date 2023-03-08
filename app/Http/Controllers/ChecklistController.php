@@ -130,17 +130,6 @@ class ChecklistController extends Controller
                 'order' => Task::max('order') + 1,
             ]);
         }
-
-        if (Auth::user()->can('update departments') && Auth::user()->can(PermissionNameEnum::PROJECT_UPDATE->value)) {
-            $checklist->departments()->sync(
-                collect($request->assigned_department_ids)
-                    ->map(function ($department_id) {
-                        return $department_id;
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
-        }
     }
 
     /**
@@ -186,20 +175,26 @@ class ChecklistController extends Controller
             $checklist->tasks()->createMany($request->tasks);
         }
 
-        if ($request->missing('assigned_department_ids')) {
+        if ($request->missing('assigned_user_ids')) {
             return Redirect::back()->with('success', 'Checklist updated');
         }
 
-        $departmentIds = collect($request->get('assigned_department_ids'));
+        // User Select
+        $checklist->users()->sync($request->assigned_user_ids);
+        $tasksInChecklist = $checklist->tasks()->get();
+        foreach ($tasksInChecklist as $taskInChecklist){
+            $taskInChecklist->task_users()->syncWithoutDetaching($request->assigned_user_ids);
+        }
+        /*$departmentIds = collect($request->get('assigned_department_ids'));
         if ($departmentIds->isNotEmpty()) {
             $syncedDepartmentIds = $checklist->project->departments()->pluck('departments.id');
             $checklist->project->departments()
                 ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
-        }
+        }*/
 
         $this->history = new HistoryController('App\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' geändert');
-        $checklist->departments()->sync($departmentIds);
+        //$checklist->departments()->sync($departmentIds);
 
         return Redirect::back()->with('success', 'Checklist updated');
     }

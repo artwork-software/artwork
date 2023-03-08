@@ -3,7 +3,7 @@
               border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
             {{ filter }}
             <button
-                @click="removeFilter(filter)"
+                @click="$emit('removeFilter')"
                 type="button">
                 <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
@@ -19,7 +19,6 @@ export default {
     name: "BaseFilterTag",
     props: {
         filter: String,
-        removeFilter: Function
     },
     components: {
         XIcon

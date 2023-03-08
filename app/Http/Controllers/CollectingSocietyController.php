@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\CollectingSociety;
 use App\Models\CompanyType;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class CollectingSocietyController extends Controller
 {
@@ -84,5 +85,23 @@ class CollectingSocietyController extends Controller
     public function destroy(CollectingSociety $collectingSociety)
     {
         $collectingSociety->delete();
+    }
+
+    public function forceDelete(int $id)
+    {
+        $collectingSociety = CollectingSociety::onlyTrashed()->findOrFail($id);
+
+        $collectingSociety->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'CollectingSociety deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $collectingSociety = CollectingSociety::onlyTrashed()->findOrFail($id);
+
+        $collectingSociety->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'CollectingSociety restored');
     }
 }

@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Genre;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class GenreController extends Controller
@@ -64,5 +63,23 @@ class GenreController extends Controller
     {
         $genre->delete();
         return Redirect::back()->with('success', 'Genre deleted');
+    }
+
+    public function forceDelete(int $id)
+    {
+        $genre = Genre::onlyTrashed()->findOrFail($id);
+
+        $genre->forceDelete();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Genre deleted');
+    }
+
+    public function restore(int $id)
+    {
+        $genre = Genre::onlyTrashed()->findOrFail($id);
+
+        $genre->restore();
+
+        return Redirect::route('projects.settings.trashed')->with('success', 'Genre restored');
     }
 }

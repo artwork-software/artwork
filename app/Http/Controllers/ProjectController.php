@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\BudgetTypesEnum;
 use App\Enums\NotificationConstEnum;
 use App\Enums\PermissionNameEnum;
@@ -10,20 +9,23 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
-use App\Http\Resources\BudgetResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
+use App\Http\Resources\ProjectIndexShowResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\BudgetSumDetails;
 use App\Models\Category;
 use App\Models\CellCalculations;
-use App\Models\CellComment;
 use App\Models\Checklist;
 use App\Models\ChecklistTemplate;
+use App\Models\CollectingSociety;
 use App\Models\Column;
 use App\Models\ColumnCell;
+use App\Models\CompanyType;
+use App\Models\ContractType;
+use App\Models\Currency;
 use App\Models\Department;
 use App\Models\EventType;
 use App\Models\Genre;
@@ -32,6 +34,7 @@ use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
+use App\Models\ProjectStates;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
@@ -60,7 +63,7 @@ class ProjectController extends Controller
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
     protected ?HistoryController $history = null;
-
+    protected ?SchedulingController $schedulingController = null;
     public function __construct()
     {
 
@@ -70,6 +73,7 @@ class ProjectController extends Controller
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
         $this->history = new HistoryController('App\Models\Project');
+        $this->schedulingController = new SchedulingController();
     }
 
     /**
@@ -84,7 +88,6 @@ class ProjectController extends Controller
                 'checklists.tasks.checklist.project',
                 'access_budget',
                 'categories',
-                'checklists.departments',
                 'comments.user',
                 'departments.users.departments',
                 'genres',
@@ -93,13 +96,15 @@ class ProjectController extends Controller
                 'project_histories.user',
                 'sectors',
                 'users.departments',
-                'writeUsers'
+                'writeUsers',
+                'state'
             ])
+            ->orderBy('id', 'DESC')
             ->get();
 
         return inertia('Projects/ProjectManagement', [
-            'projects' => ProjectShowResource::collection($projects)->resolve(),
-
+            'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
+            'states' => ProjectStates::all(),
             'projectGroups' => Project::where('is_group', 1)->get(),
 
             'users' => User::all(),
@@ -214,6 +219,12 @@ class ProjectController extends Controller
         $this->generateBasicBudgetValues($project);
 
         return Redirect::route('projects', $project)->with('success', 'Project created.');
+    }
+
+    public function updateEntranceData(Project $project, Request $request) {
+        $project->update(array_filter($request->all(), function($field) { return !is_null($field) || empty($field);}));
+
+        return Redirect::back();
     }
 
     public function generateBasicBudgetValues(Project $project)
@@ -1060,6 +1071,11 @@ class ProjectController extends Controller
         return back()->with('success');
     }
 
+
+    public function updateProjectState(Request $request, Project $project){
+        $project->update(['state' => $request->state]);
+    }
+
     /**
      * Display the specified resource.
      *
@@ -1072,7 +1088,7 @@ class ProjectController extends Controller
         $project->load([
             'access_budget',
             'categories',
-            'checklists.departments',
+            'checklists.users',
             'checklists.tasks.checklist.project',
             'checklists.tasks.user_who_done',
             'comments.user',
@@ -1087,6 +1103,7 @@ class ProjectController extends Controller
             'project_histories.user',
             'sectors',
             'users.departments',
+            'state'
         ]);
 
         $columns = $project->table()->first()->columns()->get();
@@ -1162,10 +1179,26 @@ class ProjectController extends Controller
                 ->first())
                 ->merge(['class' => BudgetSumDetails::class]);
         }
+        $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+        $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+        $events = $project->events()->get();
+        $RoomsWithAudience = [];
+        foreach ($events as $event){
+            if(!$event->audience){
+                continue;
+            }
+            $rooms = $event->room()->distinct()->get();
+            foreach ($rooms as $room){
+                $RoomsWithAudience[$room->id] = $room->name;
+            }
+        }
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
-
+            'firstEventInProject' => $firstEventInProject,
+            'lastEventInProject' => $lastEventInProject,
+            'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
 
             'budget' => [
@@ -1224,10 +1257,11 @@ class ProjectController extends Controller
             ]),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
 
-            'openTab' => $request->openTab ?: 'checklist',
+            'openTab' => $request->openTab ?: 'info',
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
+            'states' => ProjectStates::all()
         ]);
     }
 
@@ -1255,7 +1289,34 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants');
+        $update_properties = $request->only('name');
+
+        if ($request->selectedGroup === null) {
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+        } else {
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+            $group = Project::find($request->selectedGroup['id']);
+            $group->groups()->syncWithoutDetaching($project->id);
+        }
+        $oldProjectName = $project->name;
+        $project->fill($update_properties);
+
+        $project->save();
+        $newProjectName = $project->name;
+
+        // history functions
+        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
+
+
+        $projectId = $project->id;
+        foreach ($project->users->all() as $user) {
+            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
+        }
+        return Redirect::back();
+    }
+
+    public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
 
         if(!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)){
             // authorization
@@ -1268,66 +1329,60 @@ class ProjectController extends Controller
             }
         }
 
-        if ($request->selectedGroup === null) {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-        } else {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup['id']);
-            $group->groups()->syncWithoutDetaching($project->id);
-        }
-
         $projectManagerBefore = $project->managerUsers()->get();
         $projectBudgetAccessBefore = $project->access_budget()->get();
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
 
-        $oldProjectDescription = $project->description;
-        $oldProjectName = $project->name;
-        $oldProjectCategories = $project->categories()->get();
-        $oldProjectGenres = $project->genres()->get();
-        $oldProjectSectors = $project->sectors()->get();
-        $oldProjectCostCenter = $project->cost_center;
-
-        $project->fill($update_properties);
-
-        $project->save();
-
         $project->users()->sync(collect($request->assigned_user_ids));
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        $project->categories()->sync($request->projectCategoryIds);
-        $project->genres()->sync($request->projectGenreIds);
-        $project->sectors()->sync($request->projectSectorIds);
-
-        $newProjectDescription = $project->description;
-        $newProjectName = $project->name;
-        $newProjectCategories = $project->categories()->get();
 
         $newProjectDepartments = $project->departments()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
         $projectBudgetAccessAfter = $project->access_budget()->get();
-        $newProjectGenres = $project->genres()->get();
-        $newProjectSectors = $project->sectors()->get();
-        $newProjectCostCenter = $project->cost_center;
 
         // history functions
-        $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
         $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
-        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
-        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
-        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
-        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
-        $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
-
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
 
-        $scheduling = new SchedulingController();
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
-            $scheduling->create($user->id, 'PROJECT', $projectId);
+            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
+        return Redirect::back();
+    }
+    public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+        $oldProjectCategories = $project->categories()->get();
+        $oldProjectGenres = $project->genres()->get();
+        $oldProjectSectors = $project->sectors()->get();
+
+        $project->categories()->sync($request->assignedCategoryIds);
+        $project->genres()->sync($request->assignedGenreIds);
+        $project->sectors()->sync($request->assignedSectorIds);
+
+        $newProjectGenres = $project->genres()->get();
+        $newProjectSectors = $project->sectors()->get();
+        $newProjectCategories = $project->sectors()->get();
+
+        // history functions
+        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
+        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
+        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
+
+        return Redirect::back();
+    }
+
+    public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+        $update_properties = $request->only('description');
+
+        $project->fill($update_properties);
+
+        $project->save();
+
         return Redirect::back();
     }
 
@@ -1358,15 +1413,17 @@ class ProjectController extends Controller
         foreach ($newSectors as $newSector) {
             $newSectorIds[] = $newSector->id;
             if (!in_array($newSector->id, $oldSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Bereich ' . $newSector->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldSectorIds as $oldSectorId) {
             if (!in_array($oldSectorId, $newSectorIds)) {
-                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Bereich ' . $oldSectorNames[$oldSectorId] . ' gelöscht', 'public_changes');
             }
         }
+
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     public function deleteProjectFromGroup(Request $request)
@@ -1395,15 +1452,16 @@ class ProjectController extends Controller
         foreach ($newGenres as $newGenre) {
             $newGenreIds[] = $newGenre->id;
             if (!in_array($newGenre->id, $oldGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Genre ' . $newGenre->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldGenreIds as $oldGenreId) {
             if (!in_array($oldGenreId, $newGenreIds)) {
-                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht', 'public_changes');
             }
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**
@@ -1426,15 +1484,16 @@ class ProjectController extends Controller
         foreach ($newCategories as $newCategory) {
             $newCategoryIds[] = $newCategory->id;
             if (!in_array($newCategory->id, $oldCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt');
+                $this->history->createHistory($projectId, 'Kategorie ' . $newCategory->name . ' hinzugefügt', 'public_changes');
             }
         }
 
         foreach ($oldCategoryIds as $oldCategoryId) {
             if (!in_array($oldCategoryId, $newCategoryIds)) {
-                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht');
+                $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht', 'public_changes');
             }
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**
@@ -1446,7 +1505,8 @@ class ProjectController extends Controller
     private function checkProjectNameChanges($projectId, $oldName, $newName): void
     {
         if ($oldName !== $newName) {
-            $this->history->createHistory($projectId, 'Projektname geändert');
+            $this->history->createHistory($projectId, 'Projektname geändert', 'public_changes');
+            $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
         }
     }
 
@@ -1483,14 +1543,15 @@ class ProjectController extends Controller
     private function checkProjectDescriptionChanges($projectId, $oldDescription, $newDescription)
     {
         if (strlen($newDescription) === null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung gelöscht', 'public_changes');
         }
         if ($oldDescription === null && $newDescription !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung hinzugefügt', 'public_changes');
         }
         if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
-            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert');
+            $this->history->createHistory($projectId, 'Kurzbeschreibung geändert', 'public_changes');
         }
+        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
     }
 
     /**
@@ -1727,6 +1788,21 @@ class ProjectController extends Controller
         return Redirect::route('projects.trashed')->with('success', 'Project restored');
     }
 
+    public function getTrashedSettings()
+    {
+        return inertia('Trash/ProjectSettings', [
+            'trashed_genres' => Genre::onlyTrashed()->get(),
+            'trashed_categories' => Category::onlyTrashed()->get(),
+            'trashed_sectors' => Sector::onlyTrashed()->get(),
+            'trashed_project_states' => ProjectStates::onlyTrashed()->get(),
+            'trashed_contract_types' => ContractType::onlyTrashed()->get(),
+            'trashed_company_types' => CompanyType::onlyTrashed()->get(),
+            'trashed_collecting_societies' => CollectingSociety::onlyTrashed()->get(),
+            'trashed_currencies' => Currency::onlyTrashed()->get(),
+            //'trashed_project_headlines' => ProjectHeadline::onlyTrashed()->get(),
+        ]);
+    }
+
     public function getTrashed()
     {
         return inertia('Trash/Projects', [
@@ -1797,5 +1873,16 @@ class ProjectController extends Controller
     {
         $columnCell->update(['commented' => $request->commented]);
         return back()->with('success');
+    }
+
+    public function updateKeyVisual(Request $request, Project $project)
+    {
+        $keyVisual = $request->file('keyVisual');
+        if ($keyVisual) {
+            $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
+        }
+        $project->save();
+
+        return Redirect::back()->with('success', 'Key Visual hinzugefügt');
     }
 }

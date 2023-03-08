@@ -6,6 +6,7 @@ use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\GeneralSettings;
 use App\Models\GlobalNotification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -96,6 +97,7 @@ class HandleInertiaRequests extends Middleware
                 // ROOM
                 'request_room' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::EVENT_REQUEST->value),
                 'read_room_request_details' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value),
+                'edit_rooms'=> Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::ROOM_UPDATE->value),
 
                 // Docs & Budget
                 'contract_upload_edit' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value),
@@ -124,6 +126,7 @@ class HandleInertiaRequests extends Middleware
             'privacyLink' => app(GeneralSettings::class)->privacy_link,
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             'globalNotification' => $globalNotification,
+            'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id'])
         ]);
     }
 }

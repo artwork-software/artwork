@@ -68,9 +68,8 @@ class EventController extends Controller
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
                 ->where('user_id', Auth::id())
             )
-            ->orWhereHas('checklistDepartments', fn (Builder $departmentBuilder) => $departmentBuilder
-                ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
-                    ->where('users.id', Auth::id()))
+            ->orWhereHas('task_users', fn (Builder $userBuilder) => $userBuilder
+                ->where('user_id', Auth::id())
             )
             ->get();
 
@@ -316,10 +315,10 @@ class EventController extends Controller
         $schedule = new SchedulingController();
         if(!empty($event->project)){
             foreach ($event->project->users->all() as $eventUser){
-                $schedule->create($eventUser->id, 'EVENT', null, null, $event->id);
+                $schedule->create($eventUser->id, 'EVENT_CHANGES', 'EVENT', $event->id);
             }
         } else {
-            $schedule->create($event->creator->id, 'EVENT', null, null, $event->id);
+            $schedule->create($event->creator->id, 'EVENT_CHANGES', 'EVENT', $event->id);
         }
     }
 

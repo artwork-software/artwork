@@ -3,49 +3,110 @@
 
 
         <div class="py-4">
-            <div class="max-w-screen-lg mb-40 my-12 flex flex-row ml-14 mr-40">
+            <div class="max-w-screen mb-40 my-12 flex flex-row ml-14 mr-14">
                 <div class="flex flex-1 flex-wrap">
-                    <div class="w-full flex my-auto justify-between">
-                        <div class="flex">
-                            <Listbox as="div" class="flex" v-model="projectFilter">
-                                <ListboxButton
-                                    class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm">
-                                    <div class="flex items-center my-auto">
-                                        <p class="items-center flex mr-2 headline1">
-                                            {{ projectFilter.name }}</p>
-                                        <span
-                                            class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                            <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
-                                         </span>
-                                    </div>
-                                </ListboxButton>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                    <ListboxOptions
-                                        class="absolute w-56 z-10 mt-12 bg-primary shadow-lg max-h-64 p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-                                        <ListboxOption as="template" class="max-h-8"
-                                                       v-for="filter in projectFilters"
-                                                       :key="filter.name"
-                                                       :value="filter"
-                                                       v-slot="{ active, selected }">
-                                            <li :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group cursor-pointer flex items-center justify-between py-2 px-3 text-sm subpixel-antialiased']">
-                                                    <span
-                                                        :class="[selected ? 'xsWhiteBold' : 'xsLight', 'block truncate']">
-                                                        {{ filter.name }}
-                                                    </span>
-                                            </li>
-                                        </ListboxOption>
-                                    </ListboxOptions>
-                                </transition>
-                            </Listbox>
-                            <div class="flex"
-                                 v-if="this.$page.props.is_admin || this.$page.props.can.own_projects">
-                                <AddButton @click="openAddProjectModal" text="Neues Projekt" mode="page"/>
-                                <div v-if="$page.props.can.show_hints" class="flex mt-1">
-                                    <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                    <span
-                                        class="hind ml-1 my-auto">Lege neue Projekte an</span>
-                                </div>
+                    <div class="w-full flex items-center justify-between">
+                        <div>
+                            <p class="items-center flex mr-2 headline1 mb-3">Projekte</p>
+                            <div class="w-48">
+                                <Listbox as="div" class="flex">
+                                    <ListboxButton @click="openCloseMenu"
+                                        class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm border border-2">
+                                        <div class="flex justify-between items-center my-auto w-44 h-6 ml-3">
+                                            Filter
+                                            <span
+                                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
+                                                <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
+                                             </span>
+                                        </div>
+                                    </ListboxButton>
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions static v-show="openedMenu"
+                                            class="absolute w-80 z-10 mt-12 bg-primary shadow-lg p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+
+                                            <ListboxOption as="div" class="max-h-8 flex justify-end mb-3">
+                                                <span class="xxsLight cursor-pointer" @click="removeFilter">Zurücksetzen</span>
+                                            </ListboxOption>
+                                            <ListboxOption>
+                                                <SwitchGroup as="div" class="flex items-center">
+                                                    <Switch v-model="enabled" :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                                        <span class="sr-only">Use setting</span>
+                                                        <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                                    </Switch>
+                                                    <SwitchLabel as="span" class="ml-3 xxsLight">
+                                                        Nur meine Projekte anzeigen
+                                                    </SwitchLabel>
+                                                </SwitchGroup>
+                                            </ListboxOption>
+                                            <ListboxOption as="div" class="max-h-8 mb-3 mt-3">
+                                                <div class="flex">
+                                                    <input v-model="showProjectGroups"
+                                                           type="checkbox"
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                    <p class=" ml-4 my-auto text-sm text-secondary">Projektgruppen</p>
+                                                </div>
+                                            </ListboxOption>
+                                            <ListboxOption as="div" class="max-h-8 mb-3 mt-3">
+                                                <div class="flex">
+                                                    <input v-model="showProjects"
+                                                           type="checkbox"
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                    <p class=" ml-4 my-auto text-sm text-secondary">Projekte</p>
+                                                </div>
+                                            </ListboxOption>
+                                            <ListboxOption as="div" class="mb-3 mt-3">
+                                                <div class="flex justify-between xsLight mb-3" @click="showProjectStateFilter = !showProjectStateFilter">
+                                                    Projektstatus
+                                                    <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter" aria-hidden="true"/>
+                                                    <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter" aria-hidden="true"/>
+                                                </div>
+                                                <div v-if="showProjectStateFilter">
+                                                    <div class="flex mb-3" v-for="state in states" >
+                                                        <input v-model="state.clicked" @change="addStateToFilter(state)" type="checkbox" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                        <p class=" ml-4 my-auto text-sm text-secondary">{{ state.name }}</p>
+                                                    </div>
+                                                </div>
+
+                                            </ListboxOption>
+
+                                            <ListboxOption as="div" class="mt-6">
+                                                <div class="xxsLight cursor-pointer" @click="openedMenu = !openedMenu">
+                                                    Filter schließen
+                                                </div>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </Listbox>
+                            </div>
+
+                            <div id="selectedFilter" class="mt-3">
+                                <span v-if="enabled" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Meine Projekte
+                                    <button type="button" @click="enabled = !enabled">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                                <span v-if="showProjectGroups" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Projektgruppen
+                                    <button type="button" @click="showProjectGroups = !showProjectGroups">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                                <span v-if="showProjects" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    Projekte
+                                    <button type="button" @click="showProjects = !showProjects">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                                <span v-for="state in states">
+                                    <span v-if="state.clicked" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    {{ state.name }}
+                                    <button type="button" @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
+                                        <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                                    </button>
+                                </span>
+                                </span>
                             </div>
                         </div>
                         <div class="flex items-center">
@@ -58,133 +119,101 @@
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
+                        <div class="flex relative" v-if="this.$page.props.is_admin || this.$page.props.can.own_projects">
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-20">
+                                <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
+                                <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
+                            </div>
+                            <AddButton @click="openAddProjectModal" text="Neu" mode="page"/>
+                        </div>
                     </div>
-                    <div v-for="(project,index) in filteredProjects"
-                         :key="project.id"
-                         class="mt-5 border-b-2 border-gray-200 w-full">
-                        <div
-                            class="py-4 flex">
-                            <div class="flex w-full">
-                                <div class="mr-6">
-                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
-                                          class="flex w-full my-auto">
-                                        <p class="headline2 flex items-center">
-                                            <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
-                                            </span>
-                                            {{ project.name }}
-                                        </p>
-                                    </Link>
-                                    <div v-else class="flex w-full my-auto">
-                                        <p class="headline2 flex items-center">
-                                            <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
-                                            </span>
-                                            {{ project.name }}
-                                        </p>
+                    <div v-for="(project,index) in filteredProjects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+                        <div class="flex mb-3">
+                            <div class="w-1/12 flex items-center justify-center">
+                                <div class="flex justify-center items-center relative">
+                                    <img src="http://via.placeholder.com/640x360" alt="" class="rounded-full h-12 w-12">
+                                    <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
+                                        <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex w-full justify-end">
-                                <div class="my-auto -mr-3" v-for="department in project.departments.slice(0,3)">
-                                    <TeamIconCollection :data-tooltip-target="department.name"
-                                                        class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
-                                                        :iconName="department.svg_name"
-                                                        alt=""/>
-                                    <TeamTooltip :team="department"/>
-                                </div>
-                                <div v-if="project.departments.length >= 4" class="my-auto">
-                                    <Menu as="div" class="relative">
-                                        <div>
-                                            <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                                <ChevronDownIcon
-                                                    class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                            </MenuButton>
+                            <div class="w-full mr-3">
+                                <div class="flex items-center mb-2">
+                                    <div class="mr-6">
+                                        <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
+                                              class="flex w-full my-auto">
+                                            <p class="headline2 flex items-center">
+                                                {{ truncate(project.name, 80, '...') }}
+                                            </p>
+                                        </Link>
+                                        <div v-else class="flex w-full my-auto">
+                                            <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                                {{ truncate(project.name, 80, '...') }}
+                                            </p>
                                         </div>
-                                        <transition enter-active-class="transition ease-out duration-100"
-                                                    enter-from-class="transform opacity-0 scale-95"
-                                                    enter-to-class="transform opacity-100 scale-100"
-                                                    leave-active-class="transition ease-in duration-75"
-                                                    leave-from-class="transform opacity-100 scale-100"
-                                                    leave-to-class="transform opacity-0 scale-95">
-                                            <MenuItems
-                                                class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                <MenuItem v-for="department in project.departments" v-slot="{ active }">
-                                                    <div
-                                                        :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TeamIconCollection
-                                                            class="h-9 w-9 rounded-full"
-                                                            :iconName="department.svg_name"
-                                                            alt=""/>
-                                                        <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                                    </div>
-                                                </MenuItem>
-                                            </MenuItems>
-                                        </transition>
-                                    </Menu>
+                                    </div>
+                                    <div v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects" class="text-secondary flex items-center ">
+                                        <div v-if="project.project_history.length" class="flex items-center">
+                                        <span class=" xxsLight">
+                                              zuletzt geändert:
+                                        </span>
+                                            <img v-if="project.project_history[0].changes[0].changed_by"
+                                                 :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                                                 :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                                                 :alt="project.project_history[0].changes[0].changed_by?.first_name"
+                                                 class="ml-2 ring-white ring-2 rounded-full h-6 w-6 object-cover"/>
+                                            <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
+                                                         :user="project.project_history[0].changes[0].changed_by"/>
+                                            <span class="ml-2 xxsLight subpixel-antialiased">
+                                                {{ project.project_history[0].created_at }}
+                                            </span>
+                                            <button class="ml-4 xxsLight subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                                                    @click="openProjectHistoryModal(project)">
+                                                <ChevronRightIcon
+                                                    class="-mr-0.5 h-4 w-4 group-hover:text-white"
+                                                    aria-hidden="true"/>
+                                                Verlauf ansehen
+                                            </button>
+                                        </div>
+                                        <div v-else class="xxsLight">
+                                            Noch kein Verlauf verfügbar
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    {{ truncate(project.description, 300, '...') }}
                                 </div>
                             </div>
-                            <div class="flex w-full justify-end">
-                                <div class="flex mr-6">
-                                    <div class="my-auto -mr-3" v-for="user in project.users.slice(0,3)">
-                                        <img :data-tooltip-target="user.id"
-                                             class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="user"/>
-                                    </div>
-                                    <div v-if="project.users.length >= 4" class="my-auto">
-                                        <Menu as="div" class="relative">
-                                            <div>
-                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                                    <ChevronDownIcon
-                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
-                                                </MenuButton>
-                                            </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem v-for="user in project.users" v-slot="{ active }">
-                                                        <div
-                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img class="h-9 w-9 rounded-full object-cover"
-                                                                 :src="user.profile_photo_url"
-                                                                 alt=""/>
-                                                            <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
-                                                        </div>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
-                                    </div>
+                            <div class="w-32 mr-3">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
+                            </div>
+                            <div class="w-2/12 flex items-top">
+                                <div class="-mr-3 flex" v-for="user in project.project_managers">
+                                    <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
                                 </div>
+                            </div>
+                            <div class="w-1/12 flex justify-end">
                                 <Menu   v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
-                                    as="div" class="my-auto relative">
+                                        as="div" class="relative">
                                     <div class="flex">
+                                        <div v-if="$page.props.can.show_hints && index === 0"
+                                             class="absolute flex w-40 right-5 bottom-5">
+                                            <div class="flex">
+                                                <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
+                                            </div>
+                                            <div>
+                                                <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
+                                            </div>
+                                        </div>
                                         <MenuButton
                                             class="flex">
                                             <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
                                                               aria-hidden="true"/>
                                         </MenuButton>
-                                        <div v-if="$page.props.can.show_hints && index === 0"
-                                             class="absolute flex w-40 ml-6">
-                                            <div>
-                                                <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
-                                            </div>
-                                            <div class="flex">
-                                                <span
-                                                    class="ml-2 hind mt-1">Bearbeite die Projekte</span>
-                                            </div>
-                                        </div>
+
                                     </div>
                                     <transition enter-active-class="transition ease-out duration-100"
                                                 enter-from-class="transform opacity-0 scale-95"
@@ -228,35 +257,78 @@
                                 </Menu>
                             </div>
                         </div>
-                        <div
-                            v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects"
-                            class="mb-12 -mt-2 text-secondary flex items-center">
-                            <div v-if="project.project_history.length" class="flex items-center">
-                            <span class=" xsLight">
-                                  zuletzt geändert:
-                            </span>
-                                <img v-if="project.project_history[0].changes[0].changed_by"
-                                     :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
-                                     :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
-                                     :alt="project.project_history[0].changes[0].changed_by?.first_name"
-                                     class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                                <UserTooltip v-if="project.project_history[0].changes[0].changed_by"
-                                             :user="project.project_history[0].changes[0].changed_by"/>
-                                <span class="ml-2 subpixel-antialiased">
-                                    {{ project.project_history[0].created_at }}
-                                </span>
-                                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                                        @click="openProjectHistoryModal(project)">
-                                    <ChevronRightIcon
-                                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
-                                        aria-hidden="true"/>
-                                    Verlauf ansehen
-                                </button>
+                        <div class="py-4 flex hidden">
+                            <div class="flex w-1/2">
+                                <div class="mr-6">
+                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
+                                          class="flex w-full my-auto">
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
+                                    </Link>
+                                    <div v-else class="flex w-full my-auto">
+                                        <p class="headline2 flex items-center">
+                                            <span v-if="project.is_group">
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                            </span>
+                                            {{ project.name }}
+                                        </p>
+                                    </div>
+                                </div>
+
                             </div>
-                            <div v-else class="xsLight">
-                                Noch kein Verlauf verfügbar
+                            <div class="w-1/12">
+                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
+                            <div class="flex w-96">
+                                <div class="my-auto -mr-3 flex" v-for="user in project.users.slice(0,3)">
+                                    <img :data-tooltip-target="user.id"
+                                         class="h-9 w-9 rounded-full ring-2 ring-white object-cover"
+                                         :src="user.profile_photo_url"
+                                         alt=""/>
+                                    <UserTooltip :user="user"/>
+                                </div>
+                            </div>
+                            <div class="flex w-12 justify-end">
+                                <div class="flex mr-6">
+                                    <div v-if="project.users.length >= 4" class="my-auto">
+                                        <Menu as="div" class="relative">
+                                            <div>
+                                                <MenuButton class="flex items-center rounded-full focus:outline-none">
+                                                    <ChevronDownIcon
+                                                        class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black"></ChevronDownIcon>
+                                                </MenuButton>
+                                            </div>
+                                            <transition enter-active-class="transition ease-out duration-100"
+                                                        enter-from-class="transform opacity-0 scale-95"
+                                                        enter-to-class="transform opacity-100 scale-100"
+                                                        leave-active-class="transition ease-in duration-75"
+                                                        leave-from-class="transform opacity-100 scale-100"
+                                                        leave-to-class="transform opacity-0 scale-95">
+                                                <MenuItems
+                                                    class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                    <MenuItem v-for="user in project.users" v-slot="{ active }">
+                                                        <div
+                                                            :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <img class="h-9 w-9 rounded-full object-cover"
+                                                                 :src="user.profile_photo_url"
+                                                                 alt=""/>
+                                                            <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                                        </div>
+                                                    </MenuItem>
+                                                </MenuItems>
+                                            </transition>
+                                        </Menu>
+                                    </div>
+                                </div>
+                                </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -804,7 +876,7 @@ import {
     ListboxOptions,
     Menu,
     MenuButton,
-    MenuItem, MenuItems
+    MenuItem, MenuItems, Switch, SwitchGroup, SwitchLabel
 } from '@headlessui/vue'
 import Button from "@/Jetstream/Button";
 import JetButton from "@/Jetstream/Button";
@@ -827,6 +899,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
+import Dropdown from "@/Jetstream/Dropdown.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -838,6 +911,8 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        Dropdown,
+        Switch,
         ProjectHistoryComponent,
         NewUserToolTip,
         TagComponent,
@@ -882,18 +957,12 @@ export default defineComponent({
         InputComponent,
         Disclosure,
         DisclosurePanel,
-        DisclosureButton
+        DisclosureButton,
+        SwitchLabel,
+        SwitchGroup,
     },
-    props: ['projects', 'users', 'categories', 'genres', 'sectors', 'can', 'projectGroups'],
+    props: ['projects', 'states', 'users', 'categories', 'genres', 'sectors', 'can', 'projectGroups'],
     computed: {
-        currentProjects: function () {
-            if (this.projectFilter.name === 'Alle Projekte') {
-                return this.projects
-            } else {
-                const newProjects = this.projects.filter(project => project.curr_user_is_related === true)
-                return newProjects;
-            }
-        },
         tabs() {
             return [
                 {name: 'Projekt', href: '#', current: this.isSingleTab},
@@ -908,13 +977,145 @@ export default defineComponent({
         },
         filteredProjects() {
             return this.projects.filter(project => {
-                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                if (!this.enabled) {
+                    if(this.showProjectGroups){
+                        if(project.is_group){
+                            if(this.projectStateFilter.length > 0){
+                                if(this.projectStateFilter.includes(project?.state?.id)){
+                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                                }
+                            } else {
+                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                            }
+                        }
+                    } else {
+                        if(this.projectStateFilter.length > 0){
+                            if(this.projectStateFilter.includes(project?.state?.id)){
+                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                            }
+                        } else {
+                            return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                        }
+                    }
+                    if(this.showProjects){
+                        if(this.projectStateFilter.length > 0){
+                            if(this.projectStateFilter.includes(project?.state?.id)){
+                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                            }
+                        } else {
+                            return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                        }
+                    }
+                } else {
+                    if(project.curr_user_is_related === true){
+                        if(this.showProjectGroups){
+                            if(project.is_group){
+                                if(this.projectStateFilter.length > 0){
+                                    if(this.projectStateFilter.includes(project?.state?.id)){
+                                        return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                                    }
+                                } else {
+                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                                }
+                            }
+                        } else {
+                            if(this.projectStateFilter.length > 0){
+                                if(this.projectStateFilter.includes(project?.state?.id)){
+                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                                }
+                            } else {
+                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                            }
+                        }
+                        if(this.showProjects){
+                            if(this.projectStateFilter.length > 0){
+                                if(this.projectStateFilter.includes(project?.state?.id)){
+                                    return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                                }
+                            } else {
+                                return project.name.toLowerCase().includes(this.project_search.toLowerCase());
+                            }
+                        }
+                    }
+                }
+
             });
         }
 
 
     },
+    data() {
+        return {
+            project_search: '',
+            showProjectHistoryTab: true,
+            showBudgetHistoryTab: false,
+            projectBudgetAccess: {},
+            projectGroup_search_results: [],
+            projectGroup_query: '',
+            subProjects: [],
+            projectFilters: [{'name': 'Alle Projekte'}, {'name': 'Meine Projekte'}],
+            projectFilter: {'name': 'Alle Projekte'},
+            isSingleTab: true,
+            isGroupTab: false,
+            showSearchbar: false,
+            project_query: '',
+            project_search_results: [],
+            addingProject: false,
+            deletingProject: false,
+            projectToDelete: null,
+            showSuccessModal: false,
+            showSuccessModal2: false,
+            selectedParticipantNumber: "",
+            nameOfDeletedProject: "",
+            showProjectHistory: false,
+            projectHistoryToDisplay: [],
+            hasGroup: false,
+            selectedGroup: null,
+            enabled: false,
+            showProjectGroups: false,
+            showProjects: false,
+            showProjectStateFilter: false,
+            projectStateFilter: [],
+            openedMenu: false,
+            form: useForm({
+                name: "",
+                description: "",
+                cost_center: null,
+                number_of_participants: "",
+                assignedSectorIds: [],
+                assignedCategoryIds: [],
+                assignedGenreIds: [],
+                isGroup: false,
+                projects: [],
+                selectedGroup: null
+            }),
+        }
+    },
     methods: {
+        openCloseMenu(){
+            if(this.openedMenu){
+                this.openedMenu = false
+            } else {
+                this.openedMenu = true
+            }
+        },
+        addStateToFilter(state){
+            if(!state.clicked){
+                this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1);
+            } else {
+                this.projectStateFilter.push(state.id)
+
+            }
+        },
+        removeFilter(){
+            this.enabled = false;
+            this.showProjectGroups = false;
+            this.showProjects = false;
+            this.projectStateFilter = []
+            this.states.forEach((state) => {
+                state.clicked = false
+            })
+        },
         changeHistoryTabs(selectedTab) {
             this.showProjectHistoryTab = false;
             this.showBudgetHistoryTab = false;
@@ -970,7 +1171,7 @@ export default defineComponent({
             this.openSuccessModal2();
         },
         getEditHref(project) {
-            return route('projects.show', {project: project.id, openTab: 'calendar'});
+            return route('projects.show', {project: project.id, openTab: 'info'});
         },
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);
@@ -1052,7 +1253,14 @@ export default defineComponent({
                 return true;
             }
             return false;
-        }
+        },
+        truncate(text, length, clamp) {
+            clamp = clamp || '...';
+            const node = document.createElement('div');
+            node.innerHTML = text;
+            const content = node.textContent;
+            return content.length > length ? content.slice(0, length) + clamp : content;
+        },
     },
     watch: {
         projectGroup_query: {
@@ -1068,47 +1276,7 @@ export default defineComponent({
             deep: true
         },
     },
-    data() {
-        return {
-            project_search: '',
-            showProjectHistoryTab: true,
-            showBudgetHistoryTab: false,
-            projectBudgetAccess: {},
-            projectGroup_search_results: [],
-            projectGroup_query: '',
-            subProjects: [],
-            projectFilters: [{'name': 'Alle Projekte'}, {'name': 'Meine Projekte'}],
-            projectFilter: {'name': 'Alle Projekte'},
-            isSingleTab: true,
-            isGroupTab: false,
-            showSearchbar: false,
-            project_query: '',
-            project_search_results: [],
-            addingProject: false,
-            deletingProject: false,
-            projectToDelete: null,
-            showSuccessModal: false,
-            showSuccessModal2: false,
-            selectedParticipantNumber: "",
-            nameOfDeletedProject: "",
-            showProjectHistory: false,
-            projectHistoryToDisplay: [],
-            hasGroup: false,
-            selectedGroup: null,
-            form: useForm({
-                name: "",
-                description: "",
-                cost_center: null,
-                number_of_participants: "",
-                assignedSectorIds: [],
-                assignedCategoryIds: [],
-                assignedGenreIds: [],
-                isGroup: false,
-                projects: [],
-                selectedGroup: null
-            }),
-        }
-    },
+
     setup() {
         return {
             number_of_participants
@@ -1116,3 +1284,26 @@ export default defineComponent({
     }
 })
 </script>
+
+<style scoped>
+.whiteColumn {
+    background-color: #FCFCFBFF;
+}
+
+.greenColumn {
+    background-color: #50908E;
+    border: 2px solid #1FC687;
+}
+
+.yellowColumn {
+    background-color: #F0B54C;
+}
+
+.redColumn {
+    background-color: #D84387;
+}
+
+.lightGreenColumn {
+    background-color: #35A965;
+}
+</style>

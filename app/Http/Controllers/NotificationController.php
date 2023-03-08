@@ -242,6 +242,32 @@ class NotificationController extends Controller
                     'changeType' => $notificationData->changeType
                 ];
                 Notification::send($user, new BudgetVerified($notificationBody, $broadcastMessage));
+                break;
+            case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
+                $project = $notificationData->project->id;
+                $historyArray = [];
+                $historyComplete = Project::find($project)->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyArray[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+                $notificationBody = [
+                    'groupType' => 'PROJECTS',
+                    'type' => $notificationData->type,
+                    'title' => $notificationData->title,
+                    'project' => [
+                        'id' => $notificationData->project->id,
+                        'title' => $notificationData->project->title
+                    ],
+                    'created_by' => $notificationData->created_by,
+                    'history' => $historyArray,
+                ];
+                Notification::send($user, new ProjectNotification($notificationBody, $broadcastMessage));
+                break;
         }
     }
 

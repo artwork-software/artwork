@@ -19,6 +19,7 @@ enum PermissionNameEnum : string
     case EVENT_REQUEST = 'request room occupancy';
     case ROOM_REQUEST_READING_DETAILS = 'read details room request';
     case ROOM_REQUEST_CONFIRM = 'confirm prioritize edit room requests';
+    case ROOM_UPDATE = 'create, delete and update rooms';
 
     // Docs & Budget
     case CONTRACT_EDIT_UPLOAD = 'view edit upload contracts';

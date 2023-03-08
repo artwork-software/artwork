@@ -1110,8 +1110,6 @@ class ProjectController extends Controller
             }
         }
 
-        //dd($firstEventInProject);
-
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -1208,6 +1206,33 @@ class ProjectController extends Controller
     {
         $update_properties = $request->only('name');
 
+        if ($request->selectedGroup === null) {
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+        } else {
+            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
+            $group = Project::find($request->selectedGroup['id']);
+            $group->groups()->syncWithoutDetaching($project->id);
+        }
+        $oldProjectName = $project->name;
+        $project->fill($update_properties);
+
+        $project->save();
+        $newProjectName = $project->name;
+
+        // history functions
+        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
+
+
+        $projectId = $project->id;
+        foreach ($project->users->all() as $user) {
+            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
+        }
+        return Redirect::back();
+    }
+
+    public function updateTeam(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+
         if(!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)){
             // authorization
             if ((!Auth::user()->canAny([PermissionNameEnum::PROJECT_MANAGEMENT->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::WRITE_PROJECTS->value]))
@@ -1219,51 +1244,23 @@ class ProjectController extends Controller
             }
         }
 
-
-
-        if ($request->selectedGroup === null) {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-        } else {
-            DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-
-            $group = Project::find($request->selectedGroup['id']);
-            $group->groups()->syncWithoutDetaching($project->id);
-        }
-
         $projectManagerBefore = $project->managerUsers()->get();
         $projectBudgetAccessBefore = $project->access_budget()->get();
         $projectUsers = $project->users()->get();
         $oldProjectDepartments = $project->departments()->get();
 
-        $oldProjectDescription = $project->description;
-        $oldProjectName = $project->name;
-        $oldProjectCostCenter = $project->cost_center;
-
-        $project->fill($update_properties);
-
-        $project->save();
-
         $project->users()->sync(collect($request->assigned_user_ids));
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
-
-        $newProjectDescription = $project->description;
-        $newProjectName = $project->name;
 
         $newProjectDepartments = $project->departments()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
         $projectBudgetAccessAfter = $project->access_budget()->get();
-        $newProjectCostCenter = $project->cost_center;
 
         // history functions
-        $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
         $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
-        $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
-        $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
-
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
-
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {

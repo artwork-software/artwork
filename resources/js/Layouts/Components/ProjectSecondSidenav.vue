@@ -3,7 +3,7 @@
         <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projektteam</h2>
-                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click=""/>
+                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click="showTeamModal = true"/>
             </div>
             <span class="flex font-black xxsLightSidebar subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
             <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
@@ -70,8 +70,9 @@
         </div>
     </div>
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project" />
-    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :categories="categories" :sectors="sectors" :genres="genres" />
-
+    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :projectCategories="projectCategories" :projectSectors="projectSectors" :projectGenres="projectGenres" :categories="categories" :sectors="sectors" :genres="genres" />
+    <!-- Change Project Team Modal -->
+    <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="project.users" :project-manager-ids="projectManagerIds" :departments="project.departments" :project-id="project.id"/>
 </template>
 
 <script>
@@ -83,10 +84,12 @@ import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEdit
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
+import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 
 export default {
-    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors','categories','sectors','genres'],
+    props: ['project', 'projectMembers', 'projectManagerIds' ,'projectCategories', 'projectGenres', 'projectSectors','categories','sectors','genres'],
     components: {
+        ProjectEditTeamModal,
         TeamTooltip,
         TeamIconCollection,
         UserTooltip,
@@ -100,6 +103,7 @@ export default {
         return {
             show: false,
             showAttributeEditModal: false,
+            showTeamModal: false,
         }
     },
     methods: {

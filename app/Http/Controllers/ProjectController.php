@@ -99,11 +99,12 @@ class ProjectController extends Controller
                 'writeUsers',
                 'state'
             ])
+            ->orderBy('id', 'DESC')
             ->get();
 
         return inertia('Projects/ProjectManagement', [
             'projects' => ProjectIndexShowResource::collection($projects)->resolve(),
-
+            'states' => ProjectStates::all(),
             'projectGroups' => Project::where('is_group', 1)->get(),
 
             'users' => User::all(),
@@ -1200,11 +1201,14 @@ class ProjectController extends Controller
             }
         }
 
+
+
         if ($request->selectedGroup === null) {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup['id']);
+
+            $group = Project::find($request->selectedGroup);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 

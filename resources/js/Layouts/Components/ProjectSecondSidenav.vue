@@ -1,5 +1,58 @@
 <template>
     <div class="w-full mt-24">
+        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+            <div class="flex items-center justify-between">
+                <h2 class="mb-3 xWhiteBold">Projektteam</h2>
+                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg" @click=""/>
+            </div>
+            <span class="flex font-black xxsLightSidebar subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
+            <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
+                <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
+                     class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                <UserTooltip :user="user"/>
+            </div>
+            <div class="flex w-full mt-2 flex-wrap">
+                <span class="flex font-black xxsLightSidebar w-full subpixel-antialiased tracking-widest uppercase">Projekteam</span>
+                <div class="flex w-full">
+                    <div class="flex" v-if="this.project.departments !== []">
+                        <div class="flex mt-2 -mr-3" v-for="department in this.project.departments">
+                            <TeamIconCollection :data-tooltip-target="department.name"
+                                                :iconName="department.svg_name"
+                                                :alt="department.name"
+                                                class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
+                            <TeamTooltip :team="department"/>
+                        </div>
+                    </div>
+                    <div class="flex -mr-3 mt-2" v-for="user in projectMembers">
+                        <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
+                             class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
+                        <UserTooltip :user="user"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="w-full pb-10 mb-5 border-b-2 border-gray-700">
+            <div class="flex items-center justify-between">
+                <h2 class="mb-3 xWhiteBold">Projekteigenschaften</h2>
+                <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+                               @click=""/>
+            </div>
+            <div class="flex mt-3">
+                <div>
+                    <SidebarTagComponent v-for="category in projectCategories"
+                                  :displayed-text="category.name" :property="category"
+                                  :hide-x="true"></SidebarTagComponent>
+                </div>
+                <div>
+                    <SidebarTagComponent v-for="genre in projectGenres"
+                                  :displayed-text="genre.name" :property="genre" :hide-x="true"></SidebarTagComponent>
+                </div>
+                <div>
+                    <SidebarTagComponent v-for="sector in projectSectors"
+                                  :displayed-text="sector.name" :property="sector" :hide-x="true"></SidebarTagComponent>
+                </div>
+            </div>
+        </div>
         <div class="w-full flex items-center mb-4">
             <div class="text-secondary text-md">Eintritt & Anmeldung</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
@@ -16,27 +69,38 @@
             <div class="text-secondary text-sm">Geschlossene Gesellschaft: {{ project.closed_society ? 'Ja' : 'Nein' }}</div>
         </div>
     </div>
-    <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="props.project" />
+    <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project" />
 </template>
 
-<script setup>
+<script>
 import ProjectEntranceModal from "@/Layouts/Components/ProjectEntranceModal.vue";
 import {PencilAltIcon} from "@heroicons/vue/outline";
-import {ref} from "vue";
+import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
 
-const props = defineProps({
-    project: Object
-})
-
-const show = ref(false)
-
-const openEntranceModal = () => {
-    show.value = true
+export default {
+    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors'],
+    components: {
+        SidebarTagComponent,
+        ProjectEntranceModal,
+        PencilAltIcon,
+        TagComponent
+    },
+    data(){
+        return {
+            show: false
+        }
+    },
+    methods: {
+        openEntranceModal(){
+            this.show = true;
+        },
+        closeEntranceModal(){
+            this.show = false;
+        }
+    }
 }
 
-const closeEntranceModal = () => {
-    show.value = false
-}
 
 </script>
 

@@ -972,6 +972,10 @@
             <ProjectSecondSidenav
                 v-else
                 :project="project"
+                :project-members="projectMembers"
+                :project-categories="projectCategories"
+                :project-genres="projectGenres"
+                :project-sectors="projectSectors"
             />
         </BaseSidenav>
 
@@ -1252,6 +1256,10 @@ export default {
     },
     mounted() {
         this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
+        this.show = true;
+        setTimeout(() => {
+            this.show = false;
+        }, 1000)
     },
     methods: {
         updateProjectState(state) {

@@ -90,12 +90,27 @@
         opacity: 1;
     }
 
+    .xWhiteBold{
+        font: normal normal bold 18px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
     .xsLight{
         font: normal normal bold 14px/20px Inter;
         letter-spacing: -0.07px;
         color: #A7A6B1;
         opacity: 1;
     }
+
+    .xxsLightSidebar{
+        font: normal normal 600 10px/20px Inter;
+        letter-spacing: -0.07px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
+
     .xsDark{
         font: normal normal 600 14px/20px Inter;
         letter-spacing: -0.07px;

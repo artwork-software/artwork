@@ -1201,11 +1201,14 @@ class ProjectController extends Controller
             }
         }
 
+
+
         if ($request->selectedGroup === null) {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup['id']);
+
+            $group = Project::find($request->selectedGroup);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 

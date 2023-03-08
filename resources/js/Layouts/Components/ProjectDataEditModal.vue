@@ -13,6 +13,48 @@
                        id="title"
                        v-model="name"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                <div class="flex mt-2 w-full">
+                    <Listbox as="div" class="flex w-full" v-model="selectedState">
+                        <ListboxButton class="w-full text-left">
+                            <button class="w-full h-12 text-left border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                                    :class="selectedState"
+                                    @click="openColor = !openColor">
+                                        <span class="w-full" v-if="!selectedState">
+                                            Wähle Projekt Status
+                                        </span>
+                                <span v-else>
+                                            {{ selectedState?.name}}
+                                        </span>
+                            </button>
+                        </ListboxButton>
+
+                        <transition leave-active-class="transition ease-in duration-100"
+                                    leave-from-class="opacity-100" leave-to-class="opacity-0">
+                            <ListboxOptions
+                                class="absolute w-52 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                <ListboxOption as="template" class=""
+                                               v-for="state in states"
+                                               :key="state"
+                                               :value="state" v-slot="{ active, selected }">
+                                    <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
+                                        @click="updateProjectState(state)">
+                                        <div class="flex">
+                                                    <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-3 mr-1 mb-1 h-8 inline-flex" :class="state.color">
+                                                        {{ state.name }}
+                                                    </span>
+                                        </div>
+                                        <span
+                                            :class="[active ? ' text-white' : 'text-secondary', ' group flex justify-end items-center text-sm subpixel-antialiased']">
+                                                                    <CheckIcon v-if="selected"
+                                                                               class="h-5 w-5 flex text-success"
+                                                                               aria-hidden="true"/>
+                                                                </span>
+                                    </li>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </transition>
+                    </Listbox>
+                </div>
                 <div class="mt-4">
                     <div class="flex items-center mb-2" v-if="!project.is_group">
                         <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
@@ -74,7 +116,8 @@ export default {
         show: Boolean,
         project: Object,
         groupProjects: Array,
-        currentGroup: Object
+        currentGroup: Object,
+        states: Array
     },
     components: {
         ListboxOption,
@@ -110,6 +153,8 @@ export default {
             description: this.project.description,
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
+            selectedState: this.project.state ? this.project.state : null,
+            openColor: false
         }
     },
     methods: {
@@ -149,7 +194,12 @@ export default {
             let idArray = []
             array.forEach(item => idArray.push(item.id))
             return idArray
-        }
+        },
+        updateProjectState(state) {
+            this.$inertia.patch(route('update.project.state', this.project.id), {
+                state: state.id
+            })
+        },
     }
 }
 </script>

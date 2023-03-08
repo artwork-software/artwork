@@ -503,6 +503,7 @@
             :project="this.project"
             :group-projects="this.groupProjects"
             :current-group="this.currentGroup"
+            :states="states"
         />
 
 
@@ -843,7 +844,6 @@ export default {
             }),
             attributeForm: useForm({}),
             selectedState: this.project.state ? this.project.state : null,
-            openColor: false
         }
     },
     mounted() {
@@ -854,11 +854,7 @@ export default {
         }, 1000)
     },
     methods: {
-        updateProjectState(state) {
-            this.$inertia.patch(route('update.project.state', this.project.id), {
-                state: state.id
-            })
-        },
+
         async handleDescriptionClick() {
 
             this.descriptionClicked = true;

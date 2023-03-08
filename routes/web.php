@@ -123,6 +123,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::patch('/projects/{project}/attributes', [ProjectController::class, 'updateAttributes'])->name('projects.update_attributes');
+    Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])->name('projects.update_team');
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])->name('projects.update_description');
     Route::delete('/projects/{project}', [ProjectController::class, 'destroy']);
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');

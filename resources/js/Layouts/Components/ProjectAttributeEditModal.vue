@@ -50,6 +50,9 @@ export default {
         categories: Array,
         sectors: Array,
         genres: Array,
+        projectCategories: Array,
+        projectGenres: Array,
+        projectSectors: Array,
     },
     components: {
         BaseFilterTag,
@@ -63,9 +66,9 @@ export default {
     },
     data() {
         return {
-            projectCategories: [],
-            projectGenres: [],
-            projectSectors: []
+            projectCategories: this.projectCategories ? this.projectCategories : [],
+            projectGenres: this.projectGenres ? this.projectGenres : [],
+            projectSectors: this.projectSectors ? this.projectSectors : []
         }
     },
     methods: {

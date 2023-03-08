@@ -1,12 +1,12 @@
 <template>
-    <jet-dialog-modal :show="show" @close="show = !show">
+    <jet-dialog-modal :show="show" @close="closeModal(false)">
         <template #content>
             <img src="/Svgs/Overlays/illu_project_team.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-3">
                 <div class="font-black font-lexend text-primary text-3xl my-2">
                     Projektteam zuweisen
                 </div>
-                <XIcon @click="show = !show"
+                <XIcon @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
                        aria-hidden="true"/>
                 <div class="xsLight">
@@ -185,6 +185,9 @@ export default {
         }
     },
     methods: {
+        closeModal(bool) {
+            this.$emit('closed', bool);
+        },
         closeEditProjectTeamModal(){
             this.editingTeam = false;
         },
@@ -235,8 +238,8 @@ export default {
             this.assignedDepartments.forEach(department => {
                 this.form.assigned_departments.push(department);
             })
-            this.form.patch(route('projects.update', {project: this.projectId}));
-            this.show = !this.show;
+            this.form.patch(route('projects.update_team', {project: this.projectId}));
+            this.closeModal(true);
         },
         checkUserAuth(user) {
             if (this.projectManagerIds.includes(this.$page.props.user.id)) {

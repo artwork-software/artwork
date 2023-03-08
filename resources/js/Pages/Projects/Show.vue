@@ -1,10 +1,19 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-2xl my-12 pl-10 pr-10 flex flex-row">
+        <div class="my-12 pl-10 pr-10">
             <div class="flex flex-col">
-                <div class="w-full flex" v-if="this.project.key_visual_path">
+                <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
+                    <div class="flex items-center">
+                        <span v-if="!project.is_group">
+                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
+                        </span>
+                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
+                        {{ currentGroup?.name }}</a>
+                    </div>
+                </div>
+                <div class="flex z-10" v-if="this.project.key_visual_path">
                     <img :src="this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                         class="rounded-md h-40">
+                         class="rounded-md w-full h-40">
                 </div>
                 <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
                      v-if="project.project_history.length">
@@ -59,7 +68,7 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem
                                         v-if="this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || this.$page.props.can.edit_projects"
@@ -97,166 +106,24 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="currentGroup">
-                    <div class="flex mt-2 items-center">
-                        <span v-if="!project.is_group">
-                            <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-4 w-4 mr-2" aria-hidden="true"/>
-                        </span>
-                        Gehört zu <a :href="'/projects/' + currentGroup.id" class="text-buttonBlue ml-1">
-                        {{ currentGroup?.name }}</a>
-                    </div>
-                </div>
-
                 <div class="mt-3" v-if="projectGroups.length > 0">
                     <TagComponent v-for="projectGroup in projectGroups" :method="deleteProjectFromGroup"
                                   :displayed-text="projectGroup.name" :property="projectGroup"></TagComponent>
                 </div>
 
-                <div class="w-full mt-6 text-secondary subpixel-antialiased">
+                <div class="w-full mt-5 text-secondary subpixel-antialiased">
                     <div v-if="firstEventInProject && lastEventInProject">
                         Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span v-if="firstEventInProject?.start_time">Uhr -</span>  {{ lastEventInProject?.end_time }} <span v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
-                    <div v-if="RoomsWithAudience">
+                    <div v-if="RoomsWithAudience?.length > 0">
                         Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
                     </div>
                     <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
                         Noch keine Termine innerhalb dieses Projektes
                     </div>
                 </div>
-                <div class="flex mt-5">
-                    <div>
-                        <TagComponent v-for="category in projectCategories"
-                                      :displayed-text="category.name" :property="category"
-                                      :hide-x="true"></TagComponent>
-                    </div>
-                    <div>
-                        <TagComponent v-for="genre in projectGenres"
-                                      :displayed-text="genre.name" :property="genre" :hide-x="true"></TagComponent>
-                    </div>
-                    <div>
-                        <TagComponent v-for="sector in projectSectors"
-                                      :displayed-text="sector.name" :property="sector" :hide-x="true"></TagComponent>
-                    </div>
-                </div>
             </div>
-            <!-- TODO: DAS HIER NOCH IN SIDEBAR -->
-            <!--
-            <div class="flex flex-wrap">
-                <div class="flex mr-2 mt-8 flex-1 flex-wrap">
-                    <h2 class="text-xl leading-6 font-bold font-lexend text-primary mb-3">Projektteam</h2>
-                    <div class="flex"
-                         v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.project_management || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
-                        <div class="cursor-pointer" @click="openEditProjectTeamModal">
-                            <DotsVerticalIcon class="ml-2 mr-1 flex-shrink-0 h-6 w-6 text-gray-600"
-                                              aria-hidden="true"/>
-                        </div>
-                        <div>
-                            <div v-if="$page.props.can.show_hints" class="absolute flex w-48">
-                                <div>
-                                    <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                </div>
-                                <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Stelle dein Team zusammen</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="flex flex-wrap w-full">
-                    <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">PROJEKTLEITUNG</span>
-                    <div class="flex mt-2 -mr-3" v-for="user in this.project.project_managers">
-                        <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
-                             class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                        <UserTooltip :user="user"/>
-                    </div>
-
-                </div>
-                <div class="flex w-full mt-2 flex-wrap">
-                    <span class="flex font-black text-xs text-secondary w-full subpixel-antialiased tracking-widest">TEAM</span>
-                    <div class="flex w-full">
-                        <div class="flex" v-if="this.project.departments !== []">
-                            <div class="flex mt-2 -mr-3" v-for="department in this.project.departments.slice(0,5)">
-                                <TeamIconCollection :data-tooltip-target="department.name"
-                                                    :iconName="department.svg_name"
-                                                    :alt="department.name"
-                                                    class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
-                                <TeamTooltip :team="department"/>
-                            </div>
-                            <div v-if="this.project.departments.length >= 5" class="my-auto">
-                                <Menu as="div" class="relative">
-                                    <div>
-                                        <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                            <ChevronDownIcon
-                                                class="ml-1 flex-shrink-0 h-11 w-11 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                            <MenuItem v-for="department in this.project.departments"
-                                                      v-slot="{ active }">
-                                                <Link href="#"
-                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                    <TeamIconCollection class="h-10 w-10 rounded-full"
-                                                                        :iconName="department.svg_name"/>
-                                                    <span class="ml-4">
-                                                                {{ department.name }}
-                                                            </span>
-                                                </Link>
-                                            </MenuItem>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-                            </div>
-                        </div>
-                        <div class="flex -mr-3 mt-2" v-for="user in projectMembers.slice(0,5)">
-                            <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
-                                 class="rounded-full ring-white ring-2 h-11 w-11 object-cover"/>
-                            <UserTooltip :user="user"/>
-                        </div>
-                        <div v-if="projectMembers.length >= 5" class="my-auto">
-                            <Menu as="div" class="relative">
-                                <div>
-                                    <MenuButton class="flex items-center rounded-full focus:outline-none">
-                                        <ChevronDownIcon
-                                            class="ml-1 flex-shrink-0 h-9 w-9 flex my-auto items-center ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-primary"></ChevronDownIcon>
-                                    </MenuButton>
-                                </div>
-                                <transition enter-active-class="transition ease-out duration-100"
-                                            enter-from-class="transform opacity-0 scale-95"
-                                            enter-to-class="transform opacity-100 scale-100"
-                                            leave-active-class="transition ease-in duration-75"
-                                            leave-from-class="transform opacity-100 scale-100"
-                                            leave-to-class="transform opacity-0 scale-95">
-                                    <MenuItems
-                                        class="z-40 absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                        <MenuItem v-for="user in projectMembers" v-slot="{ active }">
-                                            <Link href="#"
-                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                <img class="h-9 w-9 rounded-full"
-                                                     :src="user?.profile_photo_url"
-                                                     alt=""/>
-                                                <span class="ml-4">
-                                                                {{ user?.first_name }} {{ user?.last_name }}
-                                                            </span>
-                                            </Link>
-                                        </MenuItem>
-                                    </MenuItems>
-                                </transition>
-                            </Menu>
-                        </div>
-                    </div>
-
-                </div>
-
-            </div>-->
         </div>
-
         <!-- Div with Bg-Color -->
         <div class="w-full h-full mb-48">
             <div class="ml-10">
@@ -633,15 +500,6 @@ import ProjectSecondSidenav from "@/Layouts/Components/ProjectSecondSidenav.vue"
 import {nextTick} from "vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 
-const number_of_participants = [
-    {number: '1-10'},
-    {number: '10-50'},
-    {number: '50-100'},
-    {number: '100-500'},
-    {number: '>500'}
-]
-
-
 export default {
     name: "ProjectShow",
     props: ['projectMoneySources','RoomsWithAudience', 'firstEventInProject','lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
@@ -793,44 +651,21 @@ export default {
     },
     data() {
         return {
-            showProjectHistoryTab: true,
-            showBudgetHistoryTab: false,
             show: false,
-            hasGroup: !!this.currentGroup,
             deletingFile: false,
             project_file: null,
             uploadDocumentFeedback: "",
             editingProject: false,
-            selectedParticipantNumber: this.project.number_of_participants ? this.project.number_of_participants : '',
             isScheduleTab: this.openTab ? this.openTab === 'calendar' : false,
             isChecklistTab: this.openTab ? this.openTab === 'checklist' : false,
             isInfoTab: this.openTab ? this.openTab === 'info' : false,
             isBudgetTab: this.openTab ? this.openTab === 'budget' : false,
             isCommentTab: this.openTab ? this.openTab === 'comment' : false,
-            editingTeam: false,
-            department_and_user_query: "",
-            department_search_results: [],
-            department_and_user_search_results: [],
-            assignedUsers: this.project.users ? this.project.users : [],
-            assignedDepartments: this.project.departments ? this.project.departments : [],
-            showMenu: null,
             showProjectHistory: false,
             commentHovered: null,
             projectToDelete: {},
             deletingProject: false,
-            selectedGroup: null,
             descriptionClicked: false,
-            form: useForm({
-                name: this.project.name,
-                description: this.project.description,
-                number_of_participants: this.project.number_of_participants,
-                assigned_user_ids: {},
-                assigned_departments: [],
-                projectCategoryIds: this.projectCategoryIds,
-                projectGenreIds: this.projectGenreIds,
-                projectSectorIds: this.projectSectorIds,
-                selectedGroup: null
-            }),
             keyVisualForm: useForm({
                 keyVisual: null,
             }),
@@ -842,19 +677,16 @@ export default {
             documentForm: useForm({
                 file: null
             }),
-            attributeForm: useForm({}),
             selectedState: this.project.state ? this.project.state : null,
         }
     },
     mounted() {
-        this.selectedGroup = this.currentGroup.id ? this.currentGroup.id : null
         this.show = true;
         setTimeout(() => {
             this.show = false;
         }, 1000)
     },
     methods: {
-
         async handleDescriptionClick() {
 
             this.descriptionClicked = true;
@@ -888,15 +720,6 @@ export default {
             });
             this.descriptionClicked = false;
         },
-        changeHistoryTabs(selectedTab) {
-            this.showProjectHistoryTab = false;
-            this.showBudgetHistoryTab = false;
-            if (selectedTab.name === 'Projekt') {
-                this.showProjectHistoryTab = true;
-            } else {
-                this.showBudgetHistoryTab = true;
-            }
-        },
         selectNewKeyVisual() {
             this.$refs.keyVisual.click();
         },
@@ -904,12 +727,10 @@ export default {
             this.validateTypeAndUploadKeyVisual(this.$refs.keyVisual.files[0], 'keyVisual');
         },
         uploadDraggedKeyVisual(event) {
-            console.log(event)
             this.validateTypeAndUploadKeyVisual(event.dataTransfer.files[0], 'keyVisual');
         },
         validateTypeAndUploadKeyVisual(file, type) {
             this.uploadDocumentFeedback = "";
-            console.log(file)
             const allowedTypes = [
                 "image/jpeg",
                 "image/svg+xml",
@@ -925,7 +746,6 @@ export default {
             }
         },
         deleteProjectFromGroup(projectGroupId) {
-
             axios.delete(route('projects.group.delete'), {
                 params: {
                     projectIdToDelete: projectGroupId.id,
@@ -935,19 +755,9 @@ export default {
                 this.projectGroups.splice(this.projectGroups.findIndex(index => index.id === projectGroupId.id), 1)
             })
         },
-        removeSelectedGroup() {
-            if (!this.hasGroup) {
-                this.selectedGroup = null;
-            }
-        },
-        formatDate(date, time) {
-            if (date === null || time === null) return null;
-            return new Date((new Date(date + ' ' + time)).getTime() - ((new Date(date + ' ' + time)).getTimezoneOffset() * 60000)).toISOString();
-        },
         selectNewFiles() {
             this.$refs.project_files.click();
         },
-
         openConfirmDeleteModal(project_file) {
             this.deletingFile = true;
             this.project_file = project_file
@@ -999,13 +809,6 @@ export default {
                 }
             })
         },
-        openEditProjectTeamModal() {
-            this.editingTeam = true;
-        },
-        closeEditProjectTeamModal() {
-            this.editingTeam = false;
-        },
-
         openDeleteProjectModal(project) {
             this.projectToDelete = project;
             this.deletingProject = true;
@@ -1046,75 +849,19 @@ export default {
         duplicateProject(project) {
             this.$inertia.post(`/projects/${project.id}/duplicate`);
         },
-        deleteUserFromProjectTeam(user) {
-            if (this.assignedUsers.includes(user)) {
-                this.assignedUsers.splice(this.assignedUsers.indexOf(user), 1);
-            }
-        },
-        deleteDepartmentFromProjectTeam(department) {
-            this.assignedDepartments.splice(this.assignedDepartments.indexOf(department), 1);
-        },
-        addUserToProjectTeamArray(userToAdd) {
-            for (let assignedUser of this.assignedUsers) {
-                if (userToAdd.id === assignedUser.id) {
-                    this.department_and_user_query = ""
-                    return;
-                }
-            }
-
-            this.assignedUsers.push(userToAdd);
-            this.department_and_user_query = ""
-        },
-        addDepartmentToProjectTeamArray(departmentToAdd) {
-            if (this.assignedDepartments !== []) {
-                for (let assignedDepartment of this.assignedDepartments) {
-                    if (departmentToAdd.id === assignedDepartment.id) {
-                        this.department_and_user_query = ""
-                        return;
-                    }
-                }
-            } else {
-                this.assignedDepartments = [departmentToAdd];
-            }
-            this.department_and_user_query = ""
-            this.assignedDepartments.push(departmentToAdd);
-
-        },
-        editProjectTeam() {
-            this.form.assigned_user_ids = {};
-            this.assignedUsers.forEach(user => {
-                this.form.assigned_user_ids[user.id] = {
-                    access_budget: user.access_budget,
-                    is_manager: user.is_manager,
-                    can_write: user.can_write
-                };
-            })
-            this.form.assigned_departments = [];
-            this.assignedDepartments.forEach(department => {
-                this.form.assigned_departments.push(department);
-            })
-            this.form.patch(route('projects.update', {project: this.project.id}));
-            this.closeEditProjectTeamModal();
-        },
-
-
         addCommentToProject() {
             this.commentForm.post(route('comments.store'), {preserveState: true, preserveScroll: true});
             this.commentForm.text = "";
         },
-
         deleteCommentFromProject(comment) {
             this.$inertia.delete(`/comments/${comment.id}`, {preserveState: true, preserveScroll: true});
         },
-
         openProjectHistoryModal() {
             this.showProjectHistory = true;
         },
         closeProjectHistoryModal() {
             this.showProjectHistory = false;
         },
-
-
         checkUserAuth(user) {
             if (this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return true;
@@ -1125,30 +872,9 @@ export default {
             if (this.$page.props.is_admin) {
                 return true;
             }
-
-
             return false;
         }
     },
-    watch: {
-        department_and_user_query: {
-            handler() {
-                if (this.department_and_user_query.length > 0) {
-                    axios.get('/projects/users_departments/search', {
-                        params: {query: this.department_and_user_query}
-                    }).then(response => {
-                        this.department_and_user_search_results = response.data
-                    })
-                }
-            },
-            deep: true
-        },
-    },
-    setup() {
-        return {
-            number_of_participants,
-        }
-    }
 }
 
 </script>

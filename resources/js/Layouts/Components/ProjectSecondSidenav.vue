@@ -70,9 +70,9 @@
         </div>
     </div>
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project" />
-    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :categories="categories" :sectors="sectors" :genres="genres" />
+    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :projectCategories="projectCategories" :projectSectors="projectSectors" :projectGenres="projectGenres" :categories="categories" :sectors="sectors" :genres="genres" />
     <!-- Change Project Team Modal -->
-    <ProjectEditTeamModal :editing-team="showTeamModal" :assigned-users="project.users" :project-manager-ids="projectManagerIds" :departments="project.departments" :project-id="project.id"/>
+    <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="project.users" :project-manager-ids="projectManagerIds" :departments="project.departments" :project-id="project.id"/>
 </template>
 
 <script>

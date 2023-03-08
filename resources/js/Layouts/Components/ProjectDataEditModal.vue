@@ -16,7 +16,7 @@
                 <div class="flex mt-2 w-full">
                     <Listbox as="div" class="flex w-full" v-model="selectedState">
                         <ListboxButton class="w-full text-left">
-                            <button class="w-full h-12 text-left border border-2 border-gray-300bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                            <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                     :class="selectedState"
                                     @click="openColor = !openColor">
                                         <span class="w-full" v-if="!selectedState">
@@ -25,13 +25,14 @@
                                 <span v-else>
                                             {{ selectedState?.name}}
                                         </span>
+                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </button>
                         </ListboxButton>
 
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions
-                                class="absolute w-52 z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class=""
                                                v-for="state in states"
                                                :key="state"
@@ -159,7 +160,7 @@ export default {
     },
     methods: {
         updateProjectData() {
-            this.$inertia.patch(`/projects/${this.project.id}`, {
+            this.$inertia.patch(route('projects.update', {project: this.project.id}), {
                 name: this.name,
                 selectedGroup: this.selectedGroup
             }, {

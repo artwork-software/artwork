@@ -53,7 +53,7 @@
                 </Listbox>
             </div>
             <div class="w-full">
-                <input id="input" v-model="input" type="text" @keyup.enter="add"
+                <input id="inputState" v-model="input" type="text" @keyup.enter="add"
                        class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
                        placeholder="placeholder"/>
                 <label for="input"

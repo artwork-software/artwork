@@ -1,18 +1,18 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
+    <jet-dialog-modal :show="show" @close="closeModal(false)">
         <template #content>
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
                     Projekteigenschaften
                 </div>
-                <XIcon @click="closeModal"
+                <XIcon @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <ProjectAttributesMenu
-                    :categories="traits.categories"
-                    :genres="traits.genres"
-                    :sectors="traits.sectors"
+                    :categories="categories"
+                    :genres="genres"
+                    :sectors="sectors"
                     :projectCategories="projectCategories"
                     :projectGenres="projectGenres"
                     :projectSectors="projectSectors"
@@ -26,8 +26,8 @@
                     <BaseFilterTag v-for="sector in projectSectors" :filter="sector.name" @remove-filter="updateProjectSectors(sector)" class="w-fit" />
                 </div>
             </div>
-            <div class="justify-center flex w-full my-6">
-                <AddButton text="Speichern" mode="modal" class="px-6 py-3" :disabled="name.length < 1"
+            <div class="justify-center flex w-full my-6 mt-32">
+                <AddButton text="Speichern" mode="modal" class="px-6 py-3"
                            @click="updateProjectData"/>
             </div>
         </template>
@@ -46,9 +46,10 @@ export default {
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
-        closeModal: Function,
         project: Object,
-        traits: Object
+        categories: Array,
+        sectors: Array,
+        genres: Array,
     },
     components: {
         BaseFilterTag,
@@ -69,7 +70,7 @@ export default {
     },
     methods: {
         updateProjectData() {
-            this.$inertia.patch(`/projects/${this.project.id}/attributes`, {
+            this.$inertia.patch(route('projects.update_attributes',{project: this.project.id}), {
                 assignedSectorIds: this.createIdArray(this.projectSectors),
                 assignedCategoryIds: this.createIdArray(this.projectCategories),
                 assignedGenreIds: this.createIdArray(this.projectGenres),
@@ -77,6 +78,10 @@ export default {
                 preserveState: true,
                 preserveScroll: true
             })
+            this.closeModal(true);
+        },
+        closeModal(bool) {
+            this.$emit('closed', bool);
         },
         updateProjectCategories(category) {
             this.projectCategories = this.updateTrait(category, this.projectCategories)

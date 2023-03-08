@@ -713,6 +713,9 @@
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
                 :project-sectors="projectSectors"
+                :categories="categories"
+                :sectors="sectors"
+                :genres="genres"
             />
         </BaseSidenav>
 

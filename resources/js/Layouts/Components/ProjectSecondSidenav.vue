@@ -35,7 +35,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projekteigenschaften</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                               @click=""/>
+                               @click="openProjectAttributeEditModal"/>
             </div>
             <div class="flex mt-3">
                 <div>
@@ -70,6 +70,8 @@
         </div>
     </div>
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project" />
+    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :categories="categories" :sectors="sectors" :genres="genres" />
+
 </template>
 
 <script>
@@ -77,23 +79,38 @@ import ProjectEntranceModal from "@/Layouts/Components/ProjectEntranceModal.vue"
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import SidebarTagComponent from "@/Layouts/Components/SidebarTagComponent.vue";
+import ProjectAttributeEditModal from "@/Layouts/Components/ProjectAttributeEditModal.vue";
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
+import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 
 export default {
-    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors'],
+    props: ['project', 'projectMembers', 'projectCategories', 'projectGenres', 'projectSectors','categories','sectors','genres'],
     components: {
+        TeamTooltip,
+        TeamIconCollection,
+        UserTooltip,
         SidebarTagComponent,
         ProjectEntranceModal,
         PencilAltIcon,
-        TagComponent
+        TagComponent,
+        ProjectAttributeEditModal
     },
     data(){
         return {
-            show: false
+            show: false,
+            showAttributeEditModal: false,
         }
     },
     methods: {
         openEntranceModal(){
             this.show = true;
+        },
+        openProjectAttributeEditModal(){
+          this.showAttributeEditModal = true;
+        },
+        closeProjectAttributeEditModal(){
+            this.showAttributeEditModal = false;
         },
         closeEntranceModal(){
             this.show = false;

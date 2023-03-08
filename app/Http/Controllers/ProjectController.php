@@ -1277,9 +1277,9 @@ class ProjectController extends Controller
         $oldProjectGenres = $project->genres()->get();
         $oldProjectSectors = $project->sectors()->get();
 
-        $project->categories()->sync($request->projectCategoryIds);
-        $project->genres()->sync($request->projectGenreIds);
-        $project->sectors()->sync($request->projectSectorIds);
+        $project->categories()->sync($request->assignedCategoryIds);
+        $project->genres()->sync($request->assignedGenreIds);
+        $project->sectors()->sync($request->assignedSectorIds);
 
         $newProjectGenres = $project->genres()->get();
         $newProjectSectors = $project->sectors()->get();

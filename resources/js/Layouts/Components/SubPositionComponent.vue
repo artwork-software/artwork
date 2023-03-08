@@ -300,11 +300,21 @@
                 <td class="w-72 my-2">SUM</td>
                 <td v-if="subPosition.sub_position_rows.length > 0"
                     class="flex items-center w-48" v-for="column in columns.slice(3)">
-                    <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
-
+                    <div class="my-4 w-48 p-1" :class="subPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
                         <div class="flex group relative justify-end items-center">
+
+                            <img v-if="subPosition.columnSums[column.id]?.hasComments && subPosition.columnSums[column.id]?.hasMoneySource"
+                                 src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                 class="h-6 w-6 mr-1"/>
+                            <img v-else-if="subPosition.columnSums[column.id]?.hasComments"
+                                 src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                 class="h-5 w-5 mr-1"/>
+                            <img v-else-if="subPosition.columnSums[column.id]?.hasMoneySource"
+                                 src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                 class="h-6 w-6 mr-1"/>
+
                             <span>
-                                {{subPosition.columnSums[column.id]?.toLocaleString() }}
+                                {{subPosition.columnSums[column.id]?.sum.toLocaleString() }}
                             </span>
                             <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openSubPositionSumDetailModal(subPosition, column)">
                                 <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />

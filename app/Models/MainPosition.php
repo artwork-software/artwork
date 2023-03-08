@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -56,20 +57,35 @@ class MainPosition extends Model
             ->whereIntegerInRaw('sub_position_id', $subPositionIds)
             ->pluck('id');
 
+        $sumDetails = $this->groupedSumDetails();
+
         return ColumnCell::query()
             ->where('commented', false)
             ->whereIntegerInRaw('sub_position_row_id', $subPositionRowIds)
             ->get()
             ->groupBy('column_id')
             ->skip(3)
-            ->mapWithKeys(function ($cells, $column_id) {
-                return [ $column_id => $cells->sum('value')];
-            });
+            ->mapWithKeys(fn ($cells, $column_id) => [
+                    $column_id => [
+                        'sum' => $cells->sum('value'),
+                        'hasComments' => $sumDetails[$column_id]->comments_count > 0,
+                        'hasMoneySource' => $sumDetails[$column_id]->sum_money_source_count > 0,
+                    ]
+                ]
+            );
     }
 
     public function verified(): HasOne
     {
         return $this->hasOne(MainPositionVerified::class);
+    }
+
+    public function groupedSumDetails(): Collection
+    {
+        return $this->mainPositionSumDetails()
+            ->withCount('comments', 'sumMoneySource')
+            ->get()
+            ->keyBy('column_id');
     }
 
     public function mainPositionSumDetails(): HasMany

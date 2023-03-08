@@ -355,8 +355,18 @@
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)">
-                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
-                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+
+                                        <img v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                             class="h-6 w-6 mr-1"/>
+                                        <img v-else-if="table.costSumDetails[column.id]?.hasComments"
+                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                             class="h-5 w-5 mr-1"/>
+                                        <img v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                             class="h-6 w-6 mr-1"/>
+
                                         <span>{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
 
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
@@ -430,6 +440,17 @@
                                     v-for="column in table.columns.slice(3)">
                                     <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
+
+                                        <img v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                             class="h-6 w-6 mr-1"/>
+                                        <img v-else-if="table.earningSumDetails[column.id]?.hasComments"
+                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                             class="h-5 w-5 mr-1"/>
+                                        <img v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                             class="h-6 w-6 mr-1"/>
+
                                         <span>{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
                                         <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
                                              @click="openBudgetSumDetailModal('EARNING', column)">
@@ -640,6 +661,7 @@
     <sum-detail-component
         :selectedSumDetail="selectedSumDetail"
         v-if="showSumDetailModal"
+        :project-id="project.id"
         @closed="showSumDetailModal = false"
     />
 

@@ -1157,7 +1157,7 @@ class ProjectController extends Controller
         $selectedSumDetail = null;
 
         if(request('selectedSubPosition') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user'])
+            $selectedSumDetail = Collection::make(SubpositionSumDetail::with(['comments.user', 'sumMoneySource.moneySource'])
                 ->where('sub_position_id', request('selectedSubPosition'))
                 ->where('column_id', request('selectedColumn'))
                 ->first())
@@ -1165,7 +1165,7 @@ class ProjectController extends Controller
         }
 
         if(request('selectedMainPosition') && request('selectedColumn')) {
-            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user'])
+            $selectedSumDetail =  Collection::make(MainPositionDetails::with(['comments.user', 'sumMoneySource.moneySource'])
                 ->where('main_position_id', request('selectedMainPosition'))
                 ->where('column_id', request('selectedColumn'))
                 ->first())
@@ -1173,7 +1173,7 @@ class ProjectController extends Controller
         }
 
         if(request('selectedBudgetType') && request('selectedColumn')) {
-            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user'])
+            $selectedSumDetail = Collection::make(BudgetSumDetails::with(['comments.user', 'sumMoneySource.moneySource'])
                 ->where('type', request('selectedBudgetType'))
                 ->where('column_id', request('selectedColumn'))
                 ->first())

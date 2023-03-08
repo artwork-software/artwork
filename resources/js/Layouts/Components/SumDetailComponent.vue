@@ -67,12 +67,93 @@
                         </div>
                     </div>
                     <!-- Link Tab -->
+
                     <div v-if="isLinkTab">
                         <h2 class="xsLight mb-2 mt-4">
                             Behalte den Überblick über deine Finanzierungsquellen. Du kannst den Wert zur
                             Quelle entweder addieren oder subtrahieren.
                         </h2>
+
+                        <div class="flex items-center justify-start my-6">
+                            <input v-model="isLinked" type="checkbox"
+                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <p :class="[isLinked ? 'xsDark' : 'xsLight']"
+                               class="ml-4 my-auto text-sm"> Mit Finanzierungsquelle verlinken</p>
+                        </div>
+
+                        <div v-if="isLinked" class="flex w-full">
+                            <div class="flex w-full">
+                                <div class="relative w-full">
+                                    <div class="w-full flex">
+                                        <Listbox as="div" v-model="linkedType" id="linked_type" >
+                                            <ListboxButton  class="inputMain w-12 h-10 cursor-pointer truncate flex p-2">
+                                                <div class="flex-grow xsLight text-left subpixel-antialiased">
+                                                    {{ linkedType.name }}
+                                                </div>
+                                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                            </ListboxButton>
+                                            <ListboxOptions class="w-12 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                                <ListboxOption v-for="type in linkTypes"
+                                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                                               :key="type.name"
+                                                               :value="type"
+                                                               v-slot="{ active, selected }">
+                                                    <div :class="[selected ? 'text-white' : '']">
+                                                        {{ type.name }}
+                                                    </div>
+                                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                                </ListboxOption>
+                                            </ListboxOptions>
+                                        </Listbox>
+                                        <input id="userSearch" v-model="moneySource_query" type="text" autocomplete="off"
+                                               placeholder="Mit welcher Finanzierungsquelle willst du den Wert verlinken?"
+                                               class="h-10 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                    </div>
+                                    <transition leave-active-class="transition ease-in duration-100"
+                                                leave-from-class="opacity-100"
+                                                leave-to-class="opacity-0">
+                                        <div v-if="moneySource_search_results.length > 0 && moneySource_query.length > 0"
+                                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                        text-base ring-1 ring-black ring-opacity-5
+                                                        overflow-auto focus:outline-none sm:text-sm">
+                                            <div class="border-gray-200">
+                                                <div v-for="(moneySource, index) in moneySource_search_results" :key="index"
+                                                     class="flex items-center cursor-pointer">
+                                                    <div class="flex-1 text-sm py-4">
+                                                        <p @click="selectMoneySource(moneySource)"
+                                                           class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                            {{ moneySource.name }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </transition>
+                                    <div class="flex xsDark mt-2">
+                                        Verlinkt mit:
+                                        <div class="xsDark mx-2">
+                                            {{selectedMoneySource?.name}}
+                                        </div>
+                                        als
+                                        <div v-if="linkedType.type === 'EARNING'" class="xsDark mx-2">
+                                            Einnahme
+                                        </div>
+                                        <div v-else class="xsDark mx-2">
+                                            Ausgabe
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="flex justify-center">
+                            <AddButton @click="updateMoneySourceLink()" :disabled="selectedMoneySource === null"
+                                       class="mt-8 py-5 px-24 flex" text="Speichern"
+                                       mode="modal"></AddButton>
+                        </div>
                     </div>
+
+
                 </div>
             </div>
         </template>
@@ -90,7 +171,10 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-
+const linkTypes = [
+    {name: '+', type: 'EARNING'},
+    {name: '-', type: 'COST'}
+]
 export default {
     name: 'SumDetailComponent',
 
@@ -114,6 +198,10 @@ export default {
 
     data() {
         return {
+            isLinked: this.selectedSumDetail.sum_money_source !== null,
+            linkedType: this.selectedSumDetail.sum_money_source?.linked_type === 'EARNING' ? linkTypes[0] : linkTypes[1],
+            selectedMoneySource: this.selectedSumDetail.sum_money_source?.money_source ?? null,
+            linkTypes,
             isCommentTab: true,
             isLinkTab: false,
             cellComment: null,
@@ -124,13 +212,28 @@ export default {
                 commentable_id: this.selectedSumDetail.id,
                 commentable_type: this.selectedSumDetail.class
             }),
+            moneySource_query: '',
+            moneySource_search_results: [],
         }
     },
 
-    props: ['selectedSumDetail'],
+    props: ['selectedSumDetail','projectId'],
 
     emits: ['closed'],
-
+    watch: {
+        moneySource_query: {
+            handler() {
+                if (this.moneySource_query.length > 0) {
+                    axios.get('/money_sources/search', {
+                        params: {query: this.moneySource_query, projectId: this.projectId}
+                    }).then(response => {
+                        this.moneySource_search_results = response.data.filter((moneySource) => moneySource.is_group === 0 || moneySource.is_group === false)
+                    })
+                }
+            },
+            deep: true
+        },
+    },
     computed: {
         tabs() {
             return [
@@ -141,6 +244,38 @@ export default {
     },
 
     methods: {
+        selectMoneySource(moneySource){
+            this.selectedMoneySource = moneySource;
+            this.moneySource_query = '';
+        },
+        updateMoneySourceLink() {
+            if (this.isLinked && this.selectedSumDetail.sum_money_source === null) {
+                this.$inertia.post(route('project.sum.money.source.store'), {
+                    sourceable_id: this.selectedSumDetail.id,
+                    sourceable_type: this.selectedSumDetail.class,
+                    linked_type: this.linkedType.type,
+                    money_source_id: this.selectedMoneySource.id
+                }, {
+                    preserveScroll: true
+                });
+            } else if (this.isLinked && this.selectedSumDetail.sum_money_source) {
+                this.$inertia.patch(route('project.sum.money.source.update', { sumMoneySource: this.selectedSumDetail.sum_money_source.id }), {
+                    linked_type: this.linkedType.type,
+                    money_source_id: this.selectedMoneySource.id
+                }, {
+                    preserveScroll: true
+                });
+            }
+            else {
+                this.$inertia.delete(route('project.sum.money.source.destroy',  { sumMoneySource: this.selectedSumDetail.sum_money_source.id }), {
+                    preserveState: true,
+                    preserveScroll: true
+                });
+            }
+
+            this.closeModal(true);
+
+        },
         formatDate(date) {
             const dateFormate = new Date(date);
             return dateFormate.toLocaleString('de-de', {

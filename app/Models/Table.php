@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,6 +23,8 @@ class Table extends Model
     protected $appends = [
         'commentedCostSums',
         'commentedEarningSums',
+        'costSumDetails',
+        'earningSumDetails'
     ];
 
     public function project(): \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -56,6 +59,28 @@ class Table extends Model
             ->mapWithKeys(function ($cells, $column_id) {
                 return [ $column_id => $cells->sum('value')];
             });
+    }
+
+    protected function sumDetails(string $type): Collection {
+        return BudgetSumDetails::whereIntegerInRaw('column_id', $this->columns()->pluck('id'))
+            ->where('type', $type)
+            ->withCount('comments', 'sumMoneySource')
+            ->get()
+            ->keyBy('column_id')
+            ->mapWithKeys(fn ($sumDetails, $columnId) => [
+                $columnId => [
+                    'hasComments' => $sumDetails->comments_count > 0,
+                    'hasMoneySource' => $sumDetails->sum_money_source_count > 0,
+                ]
+            ]);
+    }
+
+    public function getCostSumDetailsAttribute(): Collection {
+        return $this->sumDetails("COST");
+    }
+
+    public function getEarningSumDetailsAttribute(): Collection {
+        return $this->sumDetails("EARNING");
     }
 
     public function getCommentedCostSumsAttribute()

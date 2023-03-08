@@ -1206,7 +1206,7 @@ class ProjectController extends Controller
      */
     public function update(UpdateProjectRequest $request, Project $project): JsonResponse|RedirectResponse
     {
-        $update_properties = $request->only('name', 'description', 'number_of_participants');
+        $update_properties = $request->only('name');
 
         if(!Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value)){
             // authorization
@@ -1226,7 +1226,7 @@ class ProjectController extends Controller
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
 
-            $group = Project::find($request->selectedGroup);
+            $group = Project::find($request->selectedGroup['id']);
             $group->groups()->syncWithoutDetaching($project->id);
         }
 
@@ -1237,9 +1237,6 @@ class ProjectController extends Controller
 
         $oldProjectDescription = $project->description;
         $oldProjectName = $project->name;
-        $oldProjectCategories = $project->categories()->get();
-        $oldProjectGenres = $project->genres()->get();
-        $oldProjectSectors = $project->sectors()->get();
         $oldProjectCostCenter = $project->cost_center;
 
         $project->fill($update_properties);
@@ -1249,29 +1246,19 @@ class ProjectController extends Controller
         $project->users()->sync(collect($request->assigned_user_ids));
         $project->departments()->sync(collect($request->assigned_departments)->pluck('id'));
 
-        $project->categories()->sync($request->projectCategoryIds);
-        $project->genres()->sync($request->projectGenreIds);
-        $project->sectors()->sync($request->projectSectorIds);
-
         $newProjectDescription = $project->description;
         $newProjectName = $project->name;
-        $newProjectCategories = $project->categories()->get();
 
         $newProjectDepartments = $project->departments()->get();
         $projectUsersAfter = $project->users()->get();
         $projectManagerAfter = $project->managerUsers()->get();
         $projectBudgetAccessAfter = $project->access_budget()->get();
-        $newProjectGenres = $project->genres()->get();
-        $newProjectSectors = $project->sectors()->get();
         $newProjectCostCenter = $project->cost_center;
 
         // history functions
         $this->checkProjectDescriptionChanges($project->id, $oldProjectDescription, $newProjectDescription);
         $this->checkDepartmentChanges($project->id, $oldProjectDepartments, $newProjectDepartments);
         $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
-        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
-        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
-        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
         $this->checkProjectCostCenterChanges($project->id, $oldProjectCostCenter, $newProjectCostCenter);
 
         // Get and check project admins, managers and users after update
@@ -1282,6 +1269,27 @@ class ProjectController extends Controller
         foreach ($project->users->all() as $user) {
             $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
         }
+        return Redirect::back();
+    }
+    public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
+    {
+        $oldProjectCategories = $project->categories()->get();
+        $oldProjectGenres = $project->genres()->get();
+        $oldProjectSectors = $project->sectors()->get();
+
+        $project->categories()->sync($request->assignedCategoryIds);
+        $project->genres()->sync($request->assignedGenreIds);
+        $project->sectors()->sync($request->assignedSectorIds);
+
+        $newProjectGenres = $project->genres()->get();
+        $newProjectSectors = $project->sectors()->get();
+        $newProjectCategories = $project->sectors()->get();
+
+        // history functions
+        $this->checkProjectCategoryChanges($project->id, $oldProjectCategories, $newProjectCategories);
+        $this->checkProjectGenreChanges($project->id, $oldProjectGenres, $newProjectGenres);
+        $this->checkProjectSectorChanges($project->id, $oldProjectSectors, $newProjectSectors);
+
         return Redirect::back();
     }
 

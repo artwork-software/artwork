@@ -1,68 +1,51 @@
 <template>
-    <jet-dialog-modal :show="show" @close="closeModal">
+    <jet-dialog-modal :show="show" @close="closeModal(false)">
         <template #content>
             <img src="/Svgs/Overlays/illu_project_edit.svg" class="-ml-6 -mt-8 mb-4" alt="artwork"/>
             <div class="mx-4">
                 <div class="headline1 my-2">
                     Basisdaten bearbeiten
                 </div>
-                <XIcon @click="closeModal"
+                <XIcon @click="closeModal(false)"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
                 <input :placeholder="name"
                        id="title"
                        v-model="name"
                        class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                <ProjectAttributesMenu
-                    :categories="traits.categories"
-                    :genres="traits.genres"
-                    :sectors="traits.sectors"
-                    :projectCategories="projectCategories"
-                    :projectGenres="projectGenres"
-                    :projectSectors="projectSectors"
-                    @update-project-category="updateProjectCategories"
-                    @update-project-sector="updateProjectSectors"
-                    @update-project-genre="updateProjectGenres"
-                />
-
-                <div class="mt-2 flex flex-wrap">
-                    <BaseFilterTag v-for="category in projectCategories" :filter="category.name" @remove-filter="updateProjectCategories(category)" class="w-fit" />
-                    <BaseFilterTag v-for="genre in projectGenres" :filter="genre.name" @remove-filter="updateProjectGenres(genre)" class="w-fit" />
-                    <BaseFilterTag v-for="sector in projectSectors" :filter="sector.name" @remove-filter="updateProjectSectors(sector)" class="w-fit" />
-                </div>
-
-                <textarea placeholder="Kurzbeschreibung"
-                          id="description"
-                          v-model="description"
-                          rows="4"
-                          class="mt-4 border-gray-300 border-2 h-40 w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                <div class="flex items-center my-3">
-                    <input type="checkbox" v-model="showProjectGroup"
-                           class="cursor-pointer h-4 w-4 text-success border-1 border-gray-400 bg-darkGrayBg focus:border-none"/>
-                    <div class="text-md ml-2 text-primary">Gehört zu Projektgruppe</div>
-                </div>
-                <div v-if="showProjectGroup">
-                    <input type="text"
-                           id="projectGroup"
-                           @focusin="showGroupSearchResults = true"
-                           @change="this.project.group.name = this.groupName"
-                           @focusout="this.groupName = '';"
-                           v-model="this.project.group"
-                           autocomplete="off"
-                           placeholder="Projektgruppe suchen"
-                           class="mt-2 p-4 border-2 text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-
-                    <div
-                        v-if="groupSearchResults.length > 0 && showGroupSearchResults"
-                        class="absolute bg-primary truncate sm:text-sm w-10/12">
-                        <div v-for="(group, index) in groupSearchResults"
-                             :key="index"
-                             @click="project.groupId = group.id; project.group = group; this.groupName = ''; showGroupSearchResults = false; this.groupSearchResults = [];"
-                             class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
-                            {{ group.name }}
-                        </div>
+                <div class="mt-4">
+                    <div class="flex items-center mb-2" v-if="!project.is_group">
+                        <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
+                               @change="removeSelectedGroup"
+                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                        <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                               class="ml-2">
+                            Gehört zu Projektgruppe
+                        </label>
+                    </div>
+                    <div v-if="this.hasGroup" class="mb-2">
+                        <Listbox as="div" v-model="this.selectedGroup" id="room">
+                            <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
+                                <div class="flex-grow flex text-left xsDark">
+                                    {{
+                                        this.selectedGroup?.name ? this.selectedGroup.name : 'Projektgruppe suchen'
+                                    }}
+                                </div>
+                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </ListboxButton>
+                            <ListboxOptions class="w-[88%] bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                <ListboxOption v-for="projectGroup in groupProjects"
+                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                               :key="projectGroup.id"
+                                               :value="projectGroup"
+                                               v-slot="{ active, selected }">
+                                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                        {{ projectGroup.name }}
+                                    </div>
+                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </Listbox>
                     </div>
                 </div>
 
@@ -82,16 +65,22 @@ import AddButton from "@/Layouts/Components/AddButton";
 import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import ProjectAttributesMenu from "@/Layouts/Components/ProjectAttributesMenu";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import {CheckIcon} from "@heroicons/vue/solid";
 
 export default {
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,
-        closeModal: Function,
         project: Object,
-        traits: Object
+        groupProjects: Array,
+        currentGroup: Object
     },
     components: {
+        ListboxOption,
+        ListboxOptions,
+        ListboxButton,
+        Listbox,
         BaseFilterTag,
         ProjectAttributesMenu,
         JetDialogModal,
@@ -99,7 +88,8 @@ export default {
         AddButton,
         XIcon,
         DownloadIcon,
-        ChevronDownIcon
+        ChevronDownIcon,
+        CheckIcon
     },
     watch: {
         groupName: {
@@ -118,38 +108,28 @@ export default {
         return {
             name: this.project.name,
             description: this.project.description,
-            group: this.project.group,
-            showProjectGroup: this.project.group !== null,
-            showGroupSearchResults: false,
-            groupSearchResults: [],
-            groupName: '',
-            projectCategories: [],
-            projectGenres: [],
-            projectSectors: []
+            hasGroup: !!this.currentGroup,
+            selectedGroup: this.currentGroup,
         }
     },
     methods: {
         updateProjectData() {
             this.$inertia.patch(`/projects/${this.project.id}`, {
                 name: this.name,
-                description: this.description,
-                assignedSectorIds: this.createIdArray(this.projectSectors),
-                assignedCategoryIds: this.createIdArray(this.projectCategories),
-                assignedGenreIds: this.createIdArray(this.projectGenres),
-                group: this.group
+                selectedGroup: this.selectedGroup
             }, {
                 preserveState: true,
                 preserveScroll: true
             })
+            this.closeModal(true);
         },
-        updateProjectCategories(category) {
-            this.projectCategories = this.updateTrait(category, this.projectCategories)
+        closeModal(bool) {
+            this.$emit('closed', bool);
         },
-        updateProjectGenres(genre) {
-            this.projectGenres = this.updateTrait(genre, this.projectGenres)
-        },
-        updateProjectSectors(sector) {
-           this.projectSectors = this.updateTrait(sector, this.projectSectors)
+        removeSelectedGroup() {
+            if (!this.hasGroup) {
+                this.selectedGroup = null;
+            }
         },
         updateTrait(trait, array) {
             if (typeof trait == "string") {

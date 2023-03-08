@@ -19,12 +19,12 @@
         >
             <MenuItems
                 class="absolute right-0 mt-2 w-full origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                <div class="rounded-2xl bg-primary border-none mt-2">
+                <div class="rounded-2xl max-h-56 overflow-y-auto bg-primary border-none mt-2">
 
                     <!-- Project Categories Section -->
                     <BaseFilterDisclosure title="Kategorie">
 
-                        <div v-if="categories.length > 0"
+                        <div v-if="categories?.length > 0"
                              v-for="category in categories"
                              :key="category.id"
                              class="flex w-full mb-2">
@@ -47,7 +47,7 @@
                     <!-- Project Genres Section -->
                     <BaseFilterDisclosure title="Genre">
 
-                        <div v-if="genres.length > 0"
+                        <div v-if="genres?.length > 0"
                              v-for="genre in genres"
                              :key="genre.id"
                              class="flex w-full mb-2">
@@ -70,7 +70,7 @@
                     <!-- Project sectors Section -->
                     <BaseFilterDisclosure title="Bereiche">
 
-                        <div v-if="sectors.length > 0"
+                        <div v-if="sectors?.length > 0"
                              v-for="sector in sectors"
                              :key="sector.id"
                              class="flex w-full mb-2">

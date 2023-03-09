@@ -66,7 +66,6 @@ class ProjectController extends Controller
     protected ?SchedulingController $schedulingController = null;
     public function __construct()
     {
-
         // init notification controller
         $this->notificationController = new NotificationController();
         $this->notificationData = new stdClass();
@@ -223,7 +222,91 @@ class ProjectController extends Controller
     }
 
     public function updateEntranceData(Project $project, Request $request) {
+        $oldNumOfGuest = $project->num_of_guests;
+        $oldEntryFee = $project->entry_fee;
+        $oldRegistrationRequired = $project->registration_required;
+        $oldRegisterBy = $project->register_by;
+        $oldRegistrationDeadline = $project->registration_deadline;
+        $oldClosedSociety = $project->closed_society;
+
         $project->update(array_filter($request->all(), function($field) { return !is_null($field) || empty($field);}));
+
+        $newNumOfGuest = $project->num_of_guests;
+        $newEntryFee = $project->entry_fee;
+        $newRegistrationRequired = $project->registration_required;
+        $newRegisterBy = $project->register_by;
+        $newRegistrationDeadline = $project->registration_deadline;
+        $newClosedSociety = $project->closed_society;
+
+
+        // Geändert
+        if($oldNumOfGuest !== $newNumOfGuest && $oldNumOfGuest !== null && $newNumOfGuest !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+        if($oldClosedSociety !== $newClosedSociety && $oldClosedSociety !== null && $oldClosedSociety !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+        if($oldEntryFee !== $newEntryFee && $oldEntryFee !== null && $oldEntryFee !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+        if($oldRegisterBy !== $newRegisterBy && $oldRegisterBy !== null && $oldRegisterBy !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+        if($oldRegistrationRequired !== $newRegistrationRequired && $oldRegistrationRequired !== null && $oldRegistrationRequired !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+        if($oldRegistrationDeadline !== $newRegistrationDeadline && $oldRegistrationDeadline !== null  && $oldRegistrationDeadline !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde geändert', 'public_changes');
+        }
+
+
+        // enfernt
+        if($oldNumOfGuest !== null && $newNumOfGuest === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+        if($oldClosedSociety !== null && $newClosedSociety === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+        if($oldEntryFee !== null && $newEntryFee === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+        if($oldRegisterBy !== null && $newRegisterBy === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+        if($oldRegistrationRequired !== null && $newRegistrationRequired === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+        if($oldRegistrationDeadline !== null && $newRegistrationDeadline === null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde entfernt', 'public_changes');
+        }
+
+
+        // hinzugefügt
+        if($oldNumOfGuest === null && $newNumOfGuest !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+        if($oldClosedSociety === null && $newClosedSociety !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+        if($oldEntryFee === null && $newEntryFee !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+        if($oldRegisterBy === null && $newRegisterBy !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+        if($oldRegistrationRequired === null && $newRegistrationRequired !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+        if($oldRegistrationDeadline === null && $newRegistrationDeadline !== null){
+            $this->history->createHistory($project->id, 'Eintritt und Anmeldung wurde hinzugefügt', 'public_changes');
+        }
+
+        $this->setPublicChangesNotification($project->id);
 
         return Redirect::back();
     }
@@ -1013,7 +1096,21 @@ class ProjectController extends Controller
 
 
     public function updateProjectState(Request $request, Project $project){
+        $oldState = $project->state()->first();
         $project->update(['state' => $request->state]);
+        $newState = $project->state()->first();
+
+        if($oldState->id !== $newState->id && !empty($oldState)){
+            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
+        }
+        if(empty($oldState) && !empty($newState)){
+            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
+        }
+        if(!empty($oldState) && empty($newState)){
+            $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
+        }
+
+        $this->setPublicChangesNotification($project->id);
     }
 
     /**
@@ -1210,7 +1307,7 @@ class ProjectController extends Controller
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
         } else {
             DB::table('project_groups')->where('project_id', '=', $project->id)->delete();
-            $group = Project::find($request->selectedGroup['id']);
+            $group = Project::find($request->selectedGroup);
             $group->groups()->syncWithoutDetaching($project->id);
         }
         $oldProjectName = $project->name;
@@ -1221,7 +1318,6 @@ class ProjectController extends Controller
 
         // history functions
         $this->checkProjectNameChanges($project->id, $oldProjectName, $newProjectName);
-
 
         $projectId = $project->id;
         foreach ($project->users->all() as $user) {
@@ -1262,10 +1358,7 @@ class ProjectController extends Controller
         // Get and check project admins, managers and users after update
         $this->createNotificationProjectMemberChanges($project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter);
 
-        $projectId = $project->id;
-        foreach ($project->users->all() as $user) {
-            $this->schedulingController->create($user->id, 'PROJECT_CHANGES', 'PROJECTS', $projectId);
-        }
+
         return Redirect::back();
     }
     public function updateAttributes(Request $request, Project $project): JsonResponse|RedirectResponse
@@ -1292,27 +1385,17 @@ class ProjectController extends Controller
 
     public function updateDescription(Request $request, Project $project): JsonResponse|RedirectResponse
     {
+        $oldDescription = $project->description;
         $update_properties = $request->only('description');
-
         $project->fill($update_properties);
 
         $project->save();
-
+        $newDescription = $project->description;
+        $this->checkProjectDescriptionChanges($project->id, $oldDescription, $newDescription);
         return Redirect::back();
     }
 
-    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
-    {
-        if ($newCostCenter === null && $oldCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
-        }
-        if ($oldCostCenter === null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
-        }
-        if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
-            $this->history->createHistory($projectId, 'Kostenträger geändert');
-        }
-    }
+
 
     private function checkProjectSectorChanges($projectId, $oldSectors, $newSectors): void
     {
@@ -1338,7 +1421,7 @@ class ProjectController extends Controller
             }
         }
 
-        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
+        $this->setPublicChangesNotification($projectId);
     }
 
     public function deleteProjectFromGroup(Request $request)
@@ -1376,7 +1459,7 @@ class ProjectController extends Controller
                 $this->history->createHistory($projectId, 'Genre ' . $oldGenreNames[$oldGenreId] . ' gelöscht', 'public_changes');
             }
         }
-        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
+        $this->setPublicChangesNotification($projectId);
     }
 
     /**
@@ -1408,7 +1491,7 @@ class ProjectController extends Controller
                 $this->history->createHistory($projectId, 'Kategorie ' . $oldCategoryNames[$oldCategoryId] . ' gelöscht', 'public_changes');
             }
         }
-        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
+        $this->setPublicChangesNotification($projectId);
     }
 
     /**
@@ -1421,8 +1504,18 @@ class ProjectController extends Controller
     {
         if ($oldName !== $newName) {
             $this->history->createHistory($projectId, 'Projektname geändert', 'public_changes');
-            $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
+            $this->setPublicChangesNotification($projectId);
         }
+    }
+
+
+    public function setPublicChangesNotification($projectId){
+        $project = Project::find($projectId);
+        $projectUsers = $project->users()->get();
+        foreach ($projectUsers as $projectUser){
+            $this->schedulingController->create($projectUser->id, 'PUBLIC_CHANGES', 'PROJECTS', $project->id);
+        }
+
     }
 
     /**
@@ -1466,7 +1559,7 @@ class ProjectController extends Controller
         if ($oldDescription !== $newDescription && $oldDescription !== null && strlen($newDescription) !== null) {
             $this->history->createHistory($projectId, 'Kurzbeschreibung geändert', 'public_changes');
         }
-        $this->schedulingController->create(Auth::id(), 'PUBLIC_CHANGES', 'PROJECTS', $projectId);
+        $this->setPublicChangesNotification($projectId);
     }
 
     /**
@@ -1792,11 +1885,24 @@ class ProjectController extends Controller
 
     public function updateKeyVisual(Request $request, Project $project)
     {
+        $oldKeyVisual = $project->key_visual_path;
         $keyVisual = $request->file('keyVisual');
         if ($keyVisual) {
             $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
         }
         $project->save();
+
+        $newKeyVisual = $project->key_visual_path;
+
+        if($oldKeyVisual !== $newKeyVisual){
+            $this->history->createHistory($project->id, 'Key Visual wurde geändert', 'public_changes');
+        }
+
+        if($newKeyVisual === ''){
+            $this->history->createHistory($project->id, 'Key Visual wurde entfernt', 'public_changes');
+        }
+
+        $this->setPublicChangesNotification($project->id);
 
         return Redirect::back()->with('success', 'Key Visual hinzugefügt');
     }

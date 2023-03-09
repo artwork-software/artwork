@@ -10,6 +10,14 @@ use Illuminate\Support\Facades\Redirect;
 class ProjectHeadlineController extends Controller
 {
 
+    protected ?HistoryController $history = null;
+
+
+    public function __construct()
+    {
+        $this->history = new HistoryController('App\Models\Project');
+    }
+
     /**
      * Store a newly created resource in storage.
      *
@@ -48,7 +56,22 @@ class ProjectHeadlineController extends Controller
 
     public function updateText(Request $request, ProjectHeadline $projectHeadline, Project $project)
     {
+        $oldHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
         $projectHeadline->projects()->updateExistingPivot($project, array('text' => $request->text), false);
+        $newHeadLine = $project->headlines()->where('project_headline_id', $projectHeadline->id)->first();
+        //dd($oldHeadLine->pivot->text);
+        if($oldHeadLine->pivot->text === null && $newHeadLine->pivot->text !== null){
+            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde hinzugefügt', 'public_changes');
+        }
+        if($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text === null){
+            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde entfernt', 'public_changes');
+        }
+        if($oldHeadLine->pivot->text !== null && $newHeadLine->pivot->text !== null && $oldHeadLine->pivot->text !== $newHeadLine->pivot->text){
+            $this->history->createHistory($project->id, $projectHeadline->name . ' wurde geändert', 'public_changes');
+        }
+
+        $projectController = new ProjectController();
+        $projectController->setPublicChangesNotification($project->id);
     }
 
     public function updateOrder(Request $request)

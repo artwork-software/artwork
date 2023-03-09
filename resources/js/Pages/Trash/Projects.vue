@@ -1,8 +1,6 @@
 <template>
-    <div v-if="trashed_projects.length > 0" v-for="(project,index) in trashed_projects" :key="project.id"
-         class="mt-5 border-b-2 border-gray-200 w-full">
-        <div
-            class="py-5 flex justify-between">
+    <div v-if="trashed_projects.length > 0" v-for="(project,index) in trashed_projects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+        <div class="py-5 flex justify-between">
             <div class="flex">
                 <div class="w-full mr-6">
                     <div class="flex my-auto">
@@ -141,42 +139,39 @@
             </div>
 
         </div>
-        <div class="mb-2 text-secondary flex items-center">
-                    <span class="subpixel-antialiased">
-                    zuletzt geändert:
+        <div class="mb-4 subpixel-antialiased text-secondary text-xs flex items-center"
+             v-if="project.project_history.length">
+            <div>
+                zuletzt geändert:
+            </div>
+            <img v-if="project.project_history[0]?.changes[0]?.changed_by"
+                 :data-tooltip-target="project.project_history[0].changes[0].changed_by?.id"
+                 :src="project.project_history[0].changes[0].changed_by?.profile_photo_url"
+                 :alt="project.project_history[0].changes[0].changed_by?.first_name"
+                 class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
+            <UserTooltip v-if="project.project_history[0]?.changes[0]?.changed_by"
+                         :user="project.project_history[0].changes[0].changed_by"/>
+            <span class="ml-2 subpixel-antialiased">
+                        {{ project.project_history[0]?.created_at }}
                     </span>
-            <div class="flex items-center" v-if="project.project_history?.length !== 0">
-                <img :data-tooltip-target="project.project_history[0].user.id"
-                    :src="project.project_history[0].user.profile_photo_url"
-                    :alt="project.project_history[0].user.name"
-                    class="ml-2 ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
-                <UserTooltip :user="project.project_history[0].user" />
-                <span class="ml-2 subpixel-antialiased">
-                                    {{ project.project_history[0].created_at }}
-                                </span>
-                <button class="ml-4 subpixel-antialiased flex items-center cursor-pointer"
-                        @click="openProjectHistoryModal(project)">
-                    <ChevronRightIcon
-                        class="-mr-0.5 h-4 w-4 text-primaryText group-hover:text-white"
-                        aria-hidden="true"/>
-                    Verlauf ansehen
-                </button>
-            </div>
-            <div v-else class="ml-2 text-secondary subpixel-antialiased">
-                Noch kein Verlauf verfügbar
-            </div>
-
+            <button class="ml-4 subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                    @click="openProjectHistoryModal(project)">
+                <ChevronRightIcon
+                    class="-mr-0.5 h-4 w-4  group-hover:text-white"
+                    aria-hidden="true"/>
+                Verlauf ansehen
+            </button>
         </div>
 
         <!-- Project History Modal -->
-        <!-- TODO: EINFÜGEN WENN PROJECT HISTORY VON GELÖSCHTEN PROJEKTEN ÜBERARBEITET
+        <!-- TODO: EINFÜGEN WENN PROJECT HISTORY VON GELÖSCHTEN PROJEKTEN ÜBERARBEITET -->
         <project-history-component
             @closed="closeProjectHistoryModal"
             v-if="showProjectHistory"
             :project_history="projectHistoryToDisplay"
             :access_budget="projectBudgetAccess"
         ></project-history-component>
-        -->
+
 
     </div>
 

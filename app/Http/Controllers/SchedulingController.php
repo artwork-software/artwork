@@ -65,33 +65,6 @@ class SchedulingController extends Controller
             ]);
         }
         return true;
-
-
-        /*$scheduling = Scheduling::where('user_id', $userId)
-            ->where('type', $type)
-            ->where('project_id', $project)
-            ->where('task_id', $task)
-            ->where('event_id', $event)
-            ->where('room_id', $room)
-            ->where('public_changes', $public_changes)
-            ->first();
-
-        if (!empty($scheduling)) {
-            $scheduling->increment('count', 1);
-            return \response()->json(['message' => 'increment', 'project' => $project, 'task' => $task, 'event' => $event, 'room' => $room, 'type' => $type]);
-        } else {
-            Scheduling::create([
-                'count' => 1,
-                'user_id' => $userId,
-                'type' => $type,
-                'project_id' => $project,
-                'task_id' => $task,
-                'event_id' => $event,
-                'room_id' => $room,
-                'public_changes' => $public_changes
-            ]);
-            return \response()->json(['message' => 'created', 'project' => $project, 'task' => $task, 'event' => $event, 'room' => $room, 'type' => $type]);
-        }*/
     }
 
     /**

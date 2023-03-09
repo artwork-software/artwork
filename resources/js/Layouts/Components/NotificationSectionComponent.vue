@@ -30,9 +30,11 @@
                 <div class="flex flex-wrap w-full justify-between">
                     <div class="flex">
                         <!-- Notification Icon -->
-                        <TeamIconCollection v-if="notification.data.team" class="h-12 w-12 mr-5"
-                                            :iconName=notification.data.team.svg_name
-                                            alt="TeamIcon"/>
+                        <TeamIconCollection
+                            v-if="notification.data.team" class="h-12 w-12 mr-5"
+                            :iconName=notification.data.team.svg_name
+                            alt="TeamIcon"
+                        />
                         <img alt="Notification" v-else-if="!isErrorType(notification.type,notification)"
                              class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
                         <img alt="Notification" v-else class="h-12 w-12 mr-5"
@@ -57,21 +59,27 @@
                                     {{ this.formatDate(notification.created_at) }}
                                     von
                                     <NotificationUserIcon
-                                        :user="notification.data.created_by"></NotificationUserIcon>
+                                        :user="notification.data.created_by"
+                                    />
                                 </div>
                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
                                      v-if="notification.data.title === 'Terminkonflikt'">
                                     Konflikttermin belegt:
                                     {{ this.formatDate(notification.data.conflict.event.created_at) }} von
-                                    <NotificationUserIcon v-if="notification.data.conflict.created_by"
-                                                          :user="notification.data.conflict.created_by"></NotificationUserIcon>
+                                    <NotificationUserIcon
+                                        v-if="notification.data.conflict.created_by"
+                                        :user="notification.data.conflict.created_by"
+                                    />
+
                                 </div>
                                 <div class="ml-4 mt-1 flex xxsLight my-auto"
                                      v-if="notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'">
-                                    Termin belegt:
-                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
-                                    <NotificationUserIcon v-if="notification.data.created_by"
-                                                          :user="notification.data.created_by"></NotificationUserIcon>
+                                    Termin belegt: {{ this.formatDate(notification.data.conflict.created_at) }} von
+                                    <NotificationUserIcon
+                                        v-if="notification.data.created_by"
+                                        :user="notification.data.created_by"
+                                    />
+
                                 </div>
 
                             </div>
@@ -82,11 +90,19 @@
                                 :projects="projects"
                                 :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
                                 :rooms="this.rooms"
-                                :eventTypes="this.eventTypes"></NotificationEventInfoRow>
+                                :eventTypes="this.eventTypes"
+                            />
+
                             <NotificationBudgetRequest
-                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'" :budget="notification.data">
-                            </NotificationBudgetRequest>
-                            <NotificationPublicChangesInfo v-if="notification.data.type === 'NOTIFICATION_PUBLIC_RELEVANT'" :notification="notification.data" />
+                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'"
+                                :budget="notification.data"
+                            />
+
+                            <NotificationPublicChangesInfo
+                                v-if="notification.data.type === 'NOTIFICATION_PUBLIC_RELEVANT'"
+                                :notification="notification.data"
+                            />
+
                             <div class="flex">
                                 <div class="mt-1.5 flex xxsLight my-auto"
                                      v-if="notification.type === 'App\\Notifications\\DeadlineNotification'">
@@ -381,7 +397,13 @@ export default  {
             }
         },
         isErrorType(type, notification) {
-            if ((type.indexOf('RoomRequestNotification') !== -1 && this.isDateSoon(notification.data.event.start_time)) && notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 || notification.data.title === 'Termin abgesagt' || type.indexOf('DeadlineNotification') !== -1 || notification.data.title.indexOf('gelöscht') !== -1) {
+            if ((type.indexOf('RoomRequestNotification') !== -1 &&
+                    this.isDateSoon(notification.data.event.start_time)) &&
+                    notification.data.accepted === false || type.indexOf('ConflictNotification') !== -1 ||
+                    notification.data.title === 'Termin abgesagt' ||
+                    type.indexOf('DeadlineNotification') !== -1 ||
+                    notification.data.title.indexOf('gelöscht') !== -1
+            ) {
                 return true;
             }
             return false;

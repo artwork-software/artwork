@@ -33,8 +33,8 @@
             </Link>
             <div v-if="event.start_time && event.end_time" class="xxsLight flex items-center">
                 <p class="mx-1">|</p>
-                {{ this.formatDate(this.event.start_time) }} -
-                {{ this.formatDate(this.event.end_time) }}
+                {{ this.event.start_time }} -
+                {{ this.event.end_time }}
             </div>
         </div>
     </div>
@@ -50,13 +50,7 @@ export default {
     components: {Button, XIcon, Link},
     props: ['event', 'rooms', 'eventTypes','projects','declinedRoomId'],
     methods: {
-        formatDate(isoDate) {
-            if(isoDate?.split('T').length > 1){
-                return isoDate.split('T')[0].substring(8, 10) + '.' + isoDate.split('T')[0].substring(5, 7) + '.' + isoDate.split('T')[0].substring(0, 4) + ', ' + isoDate.split('T')[1].substring(0, 5)
-            }else if(isoDate?.split(' ').length > 1){
-                return isoDate.split(' ')[0].substring(8, 10) + '.' + isoDate.split(' ')[0].substring(5, 7) + '.' + isoDate.split(' ')[0].substring(0, 4) + ', ' + isoDate.split(' ')[1].substring(0, 5)
-            }
-        },
+
     },
 }
 </script>

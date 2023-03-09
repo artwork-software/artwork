@@ -62,7 +62,8 @@ class ProjectFileController extends Controller
 
 
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
-
+        $projectController = new ProjectController();
+        $projectController->setPublicChangesNotification($project->id);
         return Redirect::back();
     }
 
@@ -134,7 +135,8 @@ class ProjectFileController extends Controller
         $this->authorize('view', $projectFile->project);
         $project = $projectFile->project()->first();
         $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
-
+        $projectController = new ProjectController();
+        $projectController->setPublicChangesNotification($project->id);
         $projectFile->delete();
         return Redirect::back();
     }

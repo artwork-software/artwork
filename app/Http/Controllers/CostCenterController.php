@@ -10,6 +10,15 @@ use Illuminate\Http\Response;
 
 class CostCenterController extends Controller
 {
+
+    protected ?HistoryController $history = null;
+
+
+    public function __construct()
+    {
+        $this->history = new HistoryController('App\Models\Project');
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -43,7 +52,11 @@ class CostCenterController extends Controller
             'name' => $request->name,
             'description' => $request->description
         ]);
+
+
     }
+
+
 
     /**
      * Display the specified resource.
@@ -76,10 +89,28 @@ class CostCenterController extends Controller
      */
     public function update(Request $request, CostCenter $costCenter)
     {
-        CostCenter::where('id', $costCenter->id)->update([
+        $oldCostCenter = $costCenter->name;
+        $costCenter->update([
             'name' => $request->name,
             'description' => $request->description
         ]);
+        $newCostCenter = $costCenter->name;
+
+        $this->checkProjectCostCenterChanges($costCenter->project_id, $oldCostCenter, $newCostCenter);
+    }
+
+
+    private function checkProjectCostCenterChanges($projectId, $oldCostCenter, $newCostCenter)
+    {
+        if ($newCostCenter === null && $oldCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger gelöscht');
+        }
+        if ($oldCostCenter === null && $newCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger hinzugefügt');
+        }
+        if ($oldCostCenter !== $newCostCenter && $oldCostCenter !== null && $newCostCenter !== null) {
+            $this->history->createHistory($projectId, 'Kostenträger geändert');
+        }
     }
 
     /**

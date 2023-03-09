@@ -42,19 +42,15 @@
                     <SidebarTagComponent v-for="category in projectCategories"
                                   :displayed-text="category.name" :property="category"
                                   :hide-x="true"></SidebarTagComponent>
-                </div>
-                <div>
                     <SidebarTagComponent v-for="genre in projectGenres"
                                   :displayed-text="genre.name" :property="genre" :hide-x="true"></SidebarTagComponent>
-                </div>
-                <div>
                     <SidebarTagComponent v-for="sector in projectSectors"
                                   :displayed-text="sector.name" :property="sector" :hide-x="true"></SidebarTagComponent>
                 </div>
             </div>
         </div>
         <div class="w-full flex items-center mb-4">
-            <div class="text-secondary text-md">Eintritt & Anmeldung</div>
+            <div class="xWhiteBold">Eintritt & Anmeldung</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                             @click="openEntranceModal"/>
         </div>
@@ -70,7 +66,7 @@
         </div>
     </div>
     <ProjectEntranceModal :show="show" :close-modal="closeEntranceModal" :project="project" />
-    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :projectCategories="projectCategories" :projectSectors="projectSectors" :projectGenres="projectGenres" :categories="categories" :sectors="sectors" :genres="genres" />
+    <ProjectAttributeEditModal :show="showAttributeEditModal" @closed="closeProjectAttributeEditModal" :project="project" :projectCategoryIdArray="projectCategoryIds" :projectSectorIdArray="projectSectorIds" :projectGenreIdArray="projectGenreIds" :categories="categories" :sectors="sectors" :genres="genres" />
     <!-- Change Project Team Modal -->
     <ProjectEditTeamModal :show="showTeamModal" @closed="showTeamModal = false" :assigned-users="project.users" :project-manager-ids="projectManagerIds" :departments="project.departments" :project-id="project.id"/>
 </template>
@@ -87,7 +83,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 
 export default {
-    props: ['project', 'projectMembers', 'projectManagerIds' ,'projectCategories', 'projectGenres', 'projectSectors','categories','sectors','genres'],
+    props: ['project', 'projectMembers', 'projectManagerIds' ,'projectCategories', 'projectGenres', 'projectSectors','categories','sectors','genres','projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
     components: {
         ProjectEditTeamModal,
         TeamTooltip,

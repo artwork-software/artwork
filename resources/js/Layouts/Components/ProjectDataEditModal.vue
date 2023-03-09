@@ -106,7 +106,6 @@ import JetDialogModal from "@/Jetstream/DialogModal";
 import JetInputError from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
 import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
-import ProjectAttributesMenu from "@/Layouts/Components/ProjectAttributesMenu";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
@@ -126,7 +125,6 @@ export default {
         ListboxButton,
         Listbox,
         BaseFilterTag,
-        ProjectAttributesMenu,
         JetDialogModal,
         JetInputError,
         AddButton,

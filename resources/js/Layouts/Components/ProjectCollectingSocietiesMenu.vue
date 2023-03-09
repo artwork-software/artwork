@@ -36,7 +36,7 @@ import {
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
 
 export default {
-    name: "ProjectAttributesMenu",
+    name: "ProjectCollectingSocietiesMenu",
     components: {
         BaseFilterDisclosure,
         ChevronDownIcon,

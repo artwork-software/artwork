@@ -927,7 +927,7 @@ export default {
         getSumOfTable(tableType, columnId, isCommented) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += mainPosition.columnSums[columnId];
+                sum += mainPosition.columnSums[columnId].sum;
             })
             if(isNaN(sum)){
                 return 0;

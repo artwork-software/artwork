@@ -5,6 +5,7 @@ namespace App\Models;
 use Antonrom\ModelChangesHistory\Traits\HasChangesHistory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Date;
 use Laravel\Scout\Searchable;
 
@@ -76,7 +77,9 @@ class MoneySource extends Model
         return $this->hasMany(MoneySourceFile::class);
     }
 
-
-
+    public function sumMoneySources(): HasMany
+    {
+        return $this->hasMany(SumMoneySource::class);
+    }
 
 }

@@ -172,7 +172,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table"></SubPositionComponent>
+                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -180,15 +180,26 @@
                 <td class="w-28"></td>
                 <td class="w-28"></td>
                 <td class="w-72 my-2">SUM</td>
-                <div v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
+                <td v-if="mainPosition.sub_positions.length > 0" class="w-48 flex items-center"
                      v-for="column in table.columns.slice(3)">
-                    <td class="w-48 my-4 p-1"
-                        :class="mainPosition.columnSums[column.id] < 0 ? 'text-red-500' : ''">
-                        {{
-                            mainPosition.columnSums[column.id]?.toLocaleString()
-                        }}
-                    </td>
-                </div>
+                    <div class="w-48 my-4 p-1 flex group relative justify-end items-center" :class="mainPosition.columnSums[column.id]?.sum < 0 ? 'text-red-500' : ''">
+
+                        <img v-if="mainPosition.columnSums[column.id]?.hasComments && mainPosition.columnSums[column.id]?.hasMoneySource"
+                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                             class="h-6 w-6 mr-1"/>
+                        <img v-else-if="mainPosition.columnSums[column.id]?.hasComments"
+                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                             class="h-5 w-5 mr-1"/>
+                        <img v-else-if="mainPosition.columnSums[column.id]?.hasMoneySource"
+                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                             class="h-6 w-6 mr-1"/>
+                        <span>{{mainPosition.columnSums[column.id]?.sum.toLocaleString() }}</span>
+
+                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6" @click="openMainPositionSumDetailModal(mainPosition, column)">
+                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                        </div>
+                    </div>
+                </td>
             </tr>
             </thead>
             <div @click="addMainPosition('BUDGET_TYPE_COST', mainPosition)"
@@ -376,6 +387,12 @@ export default {
         },
         openRowDetailModal(row){
             this.$emit('openRowDetailModal',row)
+        },
+        openSubPositionSumDetailModal(subPosition, column) {
+            this.$emit('openSubPositionSumDetailModal', subPosition, column)
+        },
+        openMainPositionSumDetailModal(mainPosition, column) {
+            this.$emit('openMainPositionSumDetailModal', mainPosition, column)
         },
         openCellDetailModal(column) {
             this.$emit('openCellDetailModal',column)

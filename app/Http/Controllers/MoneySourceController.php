@@ -5,19 +5,25 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\MoneySourceFileResource;
+use App\Models\BudgetSumDetails;
 use App\Models\ColumnCell;
 use App\Models\MainPosition;
+use App\Models\MainPositionDetails;
 use App\Models\MoneySource;
 use App\Models\MoneySourceTask;
 use App\Models\Project;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
+use App\Models\SubpositionSumDetail;
+use App\Models\SumMoneySource;
 use App\Models\Table;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use stdClass;
+use function Clue\StreamFilter\fun;
 
 class MoneySourceController extends Controller
 {
@@ -156,6 +162,19 @@ class MoneySourceController extends Controller
         $amount = $moneySource->amount;
         $subMoneySources = MoneySource::where('group_id', $moneySource->id)->get();
         $columns = ColumnCell::where('linked_money_source_id', $moneySource->id)->get();
+
+        $subPositionSumDetails = SubpositionSumDetail::with('subPosition.mainPosition.table.project', 'sumMoneySource')
+            ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
+            ->get();
+
+        $mainPositionSumDetails = MainPositionDetails::with('mainPosition.table.project', 'sumMoneySource')
+            ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
+            ->get();
+
+        $budgetSumDetails = BudgetSumDetails::with('column.table.project', 'sumMoneySource')
+            ->whereRelation('sumMoneySource', 'money_source_id', $moneySource->id)
+            ->get();
+
         $linked_projects = [];
         $positions = [];
         $subMoneySourcePositions = [];
@@ -198,6 +217,83 @@ class MoneySourceController extends Controller
                 }
             }
         } else {
+
+            foreach ($budgetSumDetails as $detail) {
+
+                foreach ($detail->column->table->costSums as $costSum) {
+
+                    $positions[] = [
+                        'type' => $detail->sumMoneySource->linked_type,
+                        'value' => $costSum,
+                        'subPositionName' => "",
+                        'mainPositionName' => "",
+                        'project' => [
+                            'id' => $detail->column->table->project->id,
+                            'name' => $detail->column->table->project->name,
+                        ],
+                        'created_at' => date('d.m.Y', strtotime($detail->created_at))
+                    ];
+
+                }
+
+                foreach ($detail->column->table->earningSums as $costSum) {
+
+                    $positions[] = [
+                        'type' => $detail->sumMoneySource->linked_type,
+                        'value' => $costSum,
+                        'subPositionName' => "",
+                        'mainPositionName' => "",
+                        'project' => [
+                            'id' => $detail->column->table->project->id,
+                            'name' => $detail->column->table->project->name,
+                        ],
+                        'created_at' => date('d.m.Y', strtotime($detail->created_at))
+                    ];
+
+                }
+
+            }
+
+            foreach ($subPositionSumDetails as $detail) {
+
+                foreach ($detail->subPosition->columnSums as $columnSum) {
+
+                    $positions[] = [
+                        'type' => $detail->sumMoneySource->linked_type,
+                        'value' => $columnSum['sum'],
+                        'subPositionName' => $detail->subPosition->name,
+                        'mainPositionName' => $detail->subPosition->mainPosition->name,
+                        'project' => [
+                            'id' => $detail->subPosition->mainPosition->table->project->id,
+                            'name' => $detail->subPosition->mainPosition->table->project->name,
+                        ],
+                        'created_at' => date('d.m.Y', strtotime($detail->created_at))
+                    ];
+
+                }
+
+            }
+
+            foreach ($mainPositionSumDetails as $detail) {
+
+                foreach ($detail->mainPosition->columnSums as $columnSum) {
+
+                    $positions[] = [
+                        'type' => $detail->sumMoneySource->linked_type,
+                        'value' => $columnSum['sum'],
+                        'subPositionName' => "",
+                        'mainPositionName' => $detail->mainPosition->name,
+                        'project' => [
+                            'id' => $detail->mainPosition->table->project->id,
+                            'name' => $detail->mainPosition->table->project->name,
+                        ],
+                        'created_at' => date('d.m.Y', strtotime($detail->created_at))
+                    ];
+
+                }
+
+            }
+
             foreach ($columns as $column) {
                 $subPositionRow = SubPositionRow::find($column->sub_position_row_id);
                 $subPosition = SubPosition::find($subPositionRow->sub_position_id);
@@ -226,12 +322,16 @@ class MoneySourceController extends Controller
                     ],
                     'created_at' => date('d.m.Y', strtotime($column->created_at))
                 ];
+
                 if ($column->linked_type === 'EARNING') {
                     $amount = (int)$amount + (int)$column->value;
                 } else {
                     $amount = (int)$amount - (int)$column->value;
                 }
             }
+
+
+
         }
 
         $historyArray = [];

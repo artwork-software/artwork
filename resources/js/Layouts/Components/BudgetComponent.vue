@@ -341,6 +341,8 @@
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
                                                        @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
+                                                       @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                       @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal"
                                                        :table="table"
@@ -353,10 +355,26 @@
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns?.slice(3)">
-                                    <div class="w-48 my-2 p-1"
-                                         :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(0, column.id)?.toLocaleString()}}
+                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center" :class="this.getSumOfTable(0,column.id) < 0 ? 'text-red-500' : ''">
+
+                                        <img v-if="table.costSumDetails[column.id]?.hasComments && table.costSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                             class="h-6 w-6 mr-1"/>
+                                        <img v-else-if="table.costSumDetails[column.id]?.hasComments"
+                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                             class="h-5 w-5 mr-1"/>
+                                        <img v-else-if="table.costSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                             class="h-6 w-6 mr-1"/>
+
+                                        <span>{{ this.getSumOfTable(0, column.id)?.toLocaleString()}}</span>
+
+                                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
+                                             @click="openBudgetSumDetailModal('COST', column)">
+                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                        </div>
                                     </div>
+
                                 </td>
 
                             </tr>
@@ -407,6 +425,8 @@
                                 <MainPositionComponent @openRowDetailModal="openRowDetailModal"
                                                        @openVerifiedModal="openVerifiedModal"
                                                        @openCellDetailModal="openCellDetailModal"
+                                                       @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                                                       @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
                                                        @open-error-modal="openErrorModal" :table="table"
                                                        :project="project"
@@ -418,9 +438,24 @@
                                 <td class="w-72 my-2">SUM</td>
                                 <td class="flex items-center w-48"
                                     v-for="column in table.columns.slice(3)">
-                                    <div class="w-48 my-2 p-1"
+                                    <div class="w-48 my-2 p-1 flex group relative justify-end items-center"
                                          :class="this.getSumOfTable(1,column.id) < 0 ? 'text-red-500' : ''">
-                                        {{ this.getSumOfTable(1, column.id)?.toLocaleString() }}
+
+                                        <img v-if="table.earningSumDetails[column.id]?.hasComments && table.earningSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_and_adjustments.svg"
+                                             class="h-6 w-6 mr-1"/>
+                                        <img v-else-if="table.earningSumDetails[column.id]?.hasComments"
+                                             src="/Svgs/IconSvgs/icon_linked_adjustments.svg"
+                                             class="h-5 w-5 mr-1"/>
+                                        <img v-else-if="table.earningSumDetails[column.id]?.hasMoneySource"
+                                             src="/Svgs/IconSvgs/icon_linked_money_source.svg"
+                                             class="h-6 w-6 mr-1"/>
+
+                                        <span>{{ this.getSumOfTable(1, column.id)?.toLocaleString() }}</span>
+                                        <div class="hidden group-hover:block absolute right-0 z-50 -mr-6"
+                                             @click="openBudgetSumDetailModal('EARNING', column)">
+                                            <PlusCircleIcon class="h-6 w-6 flex-shrink-0 cursor-pointer text-secondaryHover bg-buttonBlue rounded-full " />
+                                        </div>
                                     </div>
                                 </td>
 
@@ -622,6 +657,14 @@
         :project-id="project.id"
         @closed="closeCellDetailModal()"
     />
+
+    <sum-detail-component
+        :selectedSumDetail="selectedSumDetail"
+        v-if="showSumDetailModal"
+        :project-id="project.id"
+        @closed="showSumDetailModal = false"
+    />
+
     <!-- Vorlage einlesen Modal-->
     <use-template-component
         v-if="showUseTemplateModal"
@@ -701,11 +744,13 @@ import AddBudgetTemplateComponent from "@/Layouts/Components/AddBudgetTemplateCo
 import Button from "@/Jetstream/Button.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
+import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
 
 export default {
     name: 'BudgetComponent',
 
     components: {
+        SumDetailComponent,
         Button,
         UseTemplateFromProjectBudgetComponent,
         MainPositionComponent,
@@ -741,6 +786,7 @@ export default {
 
     data() {
         return {
+            showSumDetailModal: false,
             showBudgetAccessModal: false,
             costsOpened: true,
             earningsOpened: true,
@@ -800,7 +846,7 @@ export default {
         }
     },
 
-    props: ['table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
+    props: ['selectedSumDetail','table', 'project', 'moneySources','selectedCell','selectedRow','templates', 'budgetAccess', 'projectManager'],
 
     computed: {
         tablesToShow: function () {
@@ -881,7 +927,7 @@ export default {
         getSumOfTable(tableType, columnId, isCommented) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += mainPosition.columnSums[columnId];
+                sum += mainPosition.columnSums[columnId].sum;
             })
             if(isNaN(sum)){
                 return 0;
@@ -1038,13 +1084,50 @@ export default {
                 preserveState: true
             });
         },
-        openCellDetailModal(column) {
-            Inertia.reload({
-                data: {
-                    selectedCell: column.id,
-                },
+        openCellDetailModal(cell) {
+            Inertia.get(route('projects.show', {project: this.project.id}), {
+                selectedCell: cell.id,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
                 onSuccess: () => {
                     this.showCellDetailModal = true;
+                }
+            })
+        },
+        openBudgetSumDetailModal(type, column) {
+            Inertia.get(route('projects.show', {project: this.project.id}), {
+                selectedBudgetType: type,
+                selectedColumn: column.id,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showSumDetailModal = true;
+                }
+            })
+        },
+        openSubPositionSumDetailModal(subPosition, column) {
+            Inertia.get(route('projects.show', {project: this.project.id}), {
+                selectedSubPosition: subPosition.id,
+                selectedColumn: column.id,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showSumDetailModal = true;
+                }
+            })
+        },
+        openMainPositionSumDetailModal(mainPosition, column) {
+            Inertia.get(route('projects.show', {project: this.project.id}), {
+                selectedMainPosition: mainPosition.id,
+                selectedColumn: column.id,
+            }, {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    this.showSumDetailModal = true;
                 }
             })
         },

@@ -1801,21 +1801,8 @@ class ProjectController extends Controller
             'cost_center' => $project->cost_center,
         ]);
         $historyService->projectUpdated($newProject);
-
-        $project->checklists->map(function (Checklist $checklist) use ($newProject) {
-            /** @var Checklist $replicated_checklist */
-            $replicated_checklist = $checklist->replicate()->fill(['project_id' => $newProject->id]);
-            $replicated_checklist->save();
-            $replicated_checklist->departments()->sync($checklist->departments->pluck('id'));
-
-            $checklist->tasks->map(function (Task $task) use ($replicated_checklist) {
-                $replicated_task = $task->replicate(['deadline', 'done', 'done_at',])
-                    ->fill(['checklist_id' => $replicated_checklist->id, 'done' => false]);
-
-                $replicated_task->save();
-            });
-        });
-
+        
+        $this->generateBasicBudgetValues($newProject);
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);
         $newProject->categories()->sync($project->categories->pluck('id'));

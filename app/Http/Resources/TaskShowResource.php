@@ -36,7 +36,7 @@ class TaskShowResource extends JsonResource
             'isPrivate' => (bool) $this->checklist?->user_id,
             'projectId' => $this->checklist?->project->id,
             'projectName' => $this->checklist?->project->name,
-            'departments' => $this->checklist ? DepartmentIconResource::collection($this->checklist->departments) : null,
+            'users' => $this->checklist ? UserIconResource::collection($this->checklist->users) : null,
             'checklistName' => $this->checklist?->name,
             'checklistId' => $this->checklist?->id,
         ];

@@ -131,7 +131,7 @@
                         <div class="flex mb-3">
                             <div class="w-1/12 flex items-center justify-center">
                                 <div class="flex justify-center items-center relative">
-                                    <img src="http://via.placeholder.com/640x360" alt="" class="rounded-full h-12 w-12">
+                                    <img :src="'storage/' + project.key_visual" alt="" class="rounded-full h-12 w-12">
                                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
                                         <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
                                     </div>

@@ -1801,7 +1801,7 @@ class ProjectController extends Controller
             'cost_center' => $project->cost_center,
         ]);
         $historyService->projectUpdated($newProject);
-        
+
         $this->generateBasicBudgetValues($newProject);
 
         $newProject->users()->attach([Auth::id() => ['access_budget' => true]]);

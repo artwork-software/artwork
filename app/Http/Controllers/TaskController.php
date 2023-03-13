@@ -54,10 +54,6 @@ class TaskController extends Controller
             ->whereHas('checklist', fn (Builder $checklistBuilder) => $checklistBuilder
                 ->where('user_id', Auth::id())
             )
-            ->orWhereHas('checklistUsers', fn (Builder $departmentBuilder) => $departmentBuilder
-                ->whereHas('users', fn (Builder $userBuilder) => $userBuilder
-                    ->where('users.id', Auth::id()))
-            )
             ->orWhereHas('task_users', function ($q) {
                $q->where('user_id',  Auth::id());
         })->get();

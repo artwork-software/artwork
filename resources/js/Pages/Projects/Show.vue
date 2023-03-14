@@ -44,9 +44,7 @@
                             <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-6 w-6 mr-2" aria-hidden="true"/>
                         </span>
                         {{ project?.name }}
-
-
-                        <span class="rounded-full items-center font-medium px-3 mt-2 text-sm ml-2 mb-1 h-8 inline-flex"
+                        <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
                               :class="selectedState?.color">
                             {{ selectedState?.name }}
                         </span>
@@ -113,10 +111,13 @@
 
                 <div class="w-full mt-5 text-secondary subpixel-antialiased">
                     <div v-if="firstEventInProject && lastEventInProject">
-                        Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span v-if="firstEventInProject?.start_time">Uhr -</span>  {{ lastEventInProject?.end_time }} <span v-if="lastEventInProject?.end_time">Uhr</span>
+                        Zeitraum/Öffnungszeiten: {{ firstEventInProject?.start_time }} <span
+                        v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
+                        v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
                     <div v-if="RoomsWithAudience?.length > 0">
-                        Termine mit Publikum in: <span v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
+                        Termine mit Publikum in: <span
+                        v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
                     </div>
                     <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
                         Noch keine Termine innerhalb dieses Projektes
@@ -219,7 +220,9 @@
                                 <div v-if="descriptionClicked === false"
                                      class="mt-2 subpixel-antialiased text-secondary"
                                      @click="handleDescriptionClick()">
-                                    {{ project.description ? project.description : 'Hier klicken um Text hinzuzufügen' }}
+                                    {{
+                                        project.description ? project.description : 'Hier klicken um Text hinzuzufügen'
+                                    }}
                                 </div>
                                 <textarea v-else v-model="project.description" type="text"
                                           @focusout="updateDescription()"
@@ -506,7 +509,7 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources','RoomsWithAudience', 'firstEventInProject','lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
+    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,
@@ -717,7 +720,7 @@ export default {
         },
         updateDescription() {
             this.$inertia.patch(route('projects.update_description', this.project.id), {
-                description:this.project.description
+                description: this.project.description
             }, {
                 preserveScroll: true,
                 preserveState: true

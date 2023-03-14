@@ -32,7 +32,7 @@
                         <transition leave-active-class="transition ease-in duration-100"
                                     leave-from-class="opacity-100" leave-to-class="opacity-0">
                             <ListboxOptions
-                                class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-64 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
+                                class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class=""
                                                v-for="state in states"
                                                :key="state"

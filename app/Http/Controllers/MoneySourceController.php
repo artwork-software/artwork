@@ -261,12 +261,13 @@ class MoneySourceController extends Controller
                     $positions[] = [
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
-                        'subPositionName' => $detail->subPosition->name,
+                        'subPositionName' => 'Summe von ' . $detail->subPosition->name,
                         'mainPositionName' => $detail->subPosition->mainPosition->name,
                         'project' => [
                             'id' => $detail->subPosition->mainPosition->table->project->id,
                             'name' => $detail->subPosition->mainPosition->table->project->name,
                         ],
+                        'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
 
@@ -282,11 +283,12 @@ class MoneySourceController extends Controller
                         'type' => $detail->sumMoneySource->linked_type,
                         'value' => $columnSum['sum'],
                         'subPositionName' => "",
-                        'mainPositionName' => $detail->mainPosition->name,
+                        'mainPositionName' => "Summe von " .$detail->mainPosition->name,
                         'project' => [
                             'id' => $detail->mainPosition->table->project->id,
                             'name' => $detail->mainPosition->table->project->name,
                         ],
+                        'is_sum' => true,
                         'created_at' => date('d.m.Y', strtotime($detail->created_at))
                     ];
 
@@ -320,6 +322,7 @@ class MoneySourceController extends Controller
                         'id' => $project->id,
                         'name' => $project->name,
                     ],
+                    'column_name' => $column->column->name,
                     'created_at' => date('d.m.Y', strtotime($column->created_at))
                 ];
 

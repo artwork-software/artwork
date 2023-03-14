@@ -150,7 +150,7 @@
             </div>
             <div v-if="pushNotifications.length > 0" class="absolute top-16 right-5">
                 <div v-for="pushNotification in pushNotifications" :id="pushNotification.id"
-                     class="my-2 z-10 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
+                     class="my-2 z-50 flex relative w-full max-w-xs rounded-lg shadow bg-lightBackgroundGray"
                      role="alert">
                     <div class="flex p-4">
                         <div class="inline-flex flex-shrink-0 justify-center items-center rounded-lg">

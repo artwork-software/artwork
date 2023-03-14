@@ -1160,7 +1160,7 @@ class ProjectController extends Controller
         $project->update(['state' => $request->state]);
         $newState = $project->state()->first();
 
-        if($oldState->id !== $newState->id && !empty($oldState)){
+        if(!empty($newState) && $oldState !== $newState ){
             $this->history->createHistory($project->id, 'Projektstatus hat sich geändert', 'public_changes');
         }
         if(empty($oldState) && !empty($newState)){

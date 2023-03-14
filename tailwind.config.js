@@ -37,6 +37,7 @@ module.exports = {
                 silverGray:'#CECDD8',
                 userBg: '#EDEDEC',
                 colorOfAction: '#E8E4f5',
+                menuButtonBlue: '#3017AD'
             },
             fontSize: {
                 header: '30px'

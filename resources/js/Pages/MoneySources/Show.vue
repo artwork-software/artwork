@@ -206,8 +206,11 @@
                                     :href="'/projects/' + position.project.id + '?openTab=budget'"
                                     class="text-buttonBlue ">{{ position.project.name }}</a> |<span
                                     class="ml-2 text-gray-400 text-sm">{{ position.created_at }}</span></div>
-                                <div class="text-gray-400 text-sm mt-2">{{ position.mainPositionName }} |
+                                <div class="text-gray-400 text-sm mt-2 flex">{{ position.mainPositionName }} <div class="flex px-1" v-if="position.subPositionName?.length > 0">|</div>
                                     {{ position.subPositionName }}
+                                </div>
+                                <div class="text-gray-400 text-sm mt-2 flex">
+                                    {{position.column_name}}
                                 </div>
                             </div>
                         </div>

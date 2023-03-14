@@ -1,7 +1,5 @@
 <template>
     <app-layout>
-
-
         <div class="py-4">
             <div class="max-w-screen mb-40 my-12 flex flex-row ml-14 mr-14">
                 <div class="flex flex-1 flex-wrap">
@@ -137,7 +135,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="w-full mr-3">
+                            <div class="w-full ml-1 mr-3">
                                 <div class="flex items-center mb-2">
                                     <div class="mr-6">
                                         <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
@@ -183,7 +181,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div>
+                                <div class="xsLight">
                                     {{ truncate(project.description, 300, '...') }}
                                 </div>
                             </div>
@@ -198,7 +196,7 @@
                             <div class="w-1/12 flex justify-end">
                                 <Menu   v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
                                         as="div" class="relative">
-                                    <div class="flex">
+                                    <div class="flex bg-tagBg p-0.5 rounded-full">
                                         <div v-if="$page.props.can.show_hints && index === 0"
                                              class="absolute flex w-40 right-5 bottom-5">
                                             <div class="flex">
@@ -210,7 +208,7 @@
                                         </div>
                                         <MenuButton
                                             class="flex">
-                                            <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                            <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                               aria-hidden="true"/>
                                         </MenuButton>
 
@@ -280,7 +278,7 @@
                                 </div>
 
                             </div>
-                            <div class="w-1/12">
+                            <div class="w-32">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
                             <div class="flex w-96">

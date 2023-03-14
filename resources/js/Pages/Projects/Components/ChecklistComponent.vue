@@ -170,7 +170,7 @@
                                              @mouseout="showMenu = null">
                                             <div class="flex mt-6 flex-wrap w-full"
                                                  :class="dragging? 'cursor-grabbing' : 'cursor-grab'">
-                                                <div class="flex w-full">
+                                                <div class="flex w-full items-center">
                                                     <div v-if="showMenu === element.id"
                                                          class="flex -mt-1 items-center">
                                                         <DotsVerticalIcon
@@ -191,6 +191,7 @@
                                                     <span v-if="!element.done && element.deadline" class="ml-2 my-auto text-sm subpixel-antialiased" :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">
                                                         bis {{element.deadline }}
                                                     </span>
+
                                                     <span v-if="element.done && element.done_by_user" class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                         {{ element.done_at }}
                                                         <img
@@ -200,6 +201,11 @@
                                                             :alt="element.done_by_user.name"
                                                             class="rounded-full ml-2 my-auto h-7 w-7 object-cover"/>
                                                         <UserTooltip :user="element.done_by_user"/>
+                                                    </span>
+                                                    <span class="ml-3 flex">
+                                                        <span class="flex -mr-3" v-for="user in element.users">
+                                                        <NewUserToolTip :id="user.id" :user="user" height="5" width="5"/>
+                                                    </span>
                                                     </span>
                                                     <Menu
                                                         v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
@@ -245,6 +251,7 @@
                                                             </MenuItems>
                                                         </transition>
                                                     </Menu>
+
                                                 </div>
                                                 <div class="ml-16 text-sm text-secondary subpixel-antialiased" :class="element.done ? 'text-secondary line-through' : 'text-primary'">
                                                     {{ element.description }}
@@ -399,6 +406,7 @@
                                                           :class="Date.parse(element.deadline_dt_local) < new Date().getTime()? 'text-error subpixel-antialiased' : ''">bis {{
                                                             element.deadline
                                                         }}</span>
+
                                                     <span v-if="element.done && element.done_by_user"
                                                           class="ml-2 flex my-auto items-center text-sm text-secondary">
                                                                         <img
@@ -548,38 +556,75 @@
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
                 <div class="mt-12">
-                    <div class="flex">
-                        <div class="relative flex w-full mr-4">
+                    <div class="mb-2">
+                        <div class="relative flex w-full">
                             <input id="edit_task_name" v-model="taskToEditForm.name" type="text"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-xl font-bold text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="edit_task_name"
-                                   class="absolute left-0 text-base -top-4 text-gray-600 -top-6 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Aufgabe</label>
+                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"
+                                   placeholder="Aufgabe"/>
                         </div>
                     </div>
-                    <div class="mt-4 mr-4">
-                        <div class="mb-1">
-                            <label for="datePickerEdit" class="text-secondary subpixel-antialiased">Zu erledigen
-                                bis?</label>
-                        </div>
+                    <div class="mb-2">
                         <input
                             v-model="taskToEditForm.deadline" id="datePickerEdit"
                             placeholder="Zu erledigen bis?" type="datetime-local"
-                            class="placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full"/>
+                            class="p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
-                    <div class="mt-4 mr-4">
+                    <div class="mb-2">
+                        <div class="relative w-full">
+                            <div class="w-full">
+                                <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
+                                       placeholder="Wer ist zuständig für die Aufgabe?"
+                                       class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            </div>
+                            <transition leave-active-class="transition ease-in duration-100"
+                                        leave-from-class="opacity-100"
+                                        leave-to-class="opacity-0">
+                                <div v-if="user_search_results.length > 0 && user_query.length > 0"
+                                     class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                                        text-base ring-1 ring-black ring-opacity-5
+                                                        overflow-auto focus:outline-none sm:text-sm">
+                                    <div class="border-gray-200">
+                                        <div v-for="(user, index) in user_search_results" :key="index"
+                                             class="flex items-center cursor-pointer">
+                                            <div class="flex-1 text-sm py-4">
+                                                <p @click="addUserToTask(user)"
+                                                   class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
+                                                    {{ user.first_name }} {{ user.last_name }}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </transition>
+                        </div>
+                        <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
+                                        <span v-for="(user,index) in usersToAdd"
+                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
+                                        <div class="flex items-center">
+                                            <img class="flex h-11 w-11 rounded-full object-cover"
+                                                 :src="user.profile_photo_url"
+                                                 alt=""/>
+                                            <span class="flex ml-4 sDark">
+                                            {{ user.first_name }} {{ user.last_name }}
+                                            </span>
+                                            <button type="button" @click="deleteUserFromTask(index)">
+                                                <span class="sr-only">User aus der Aufgabe entfernen</span>
+                                                <XIcon
+                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
+                                            </button>
+                                        </div>
+                                        </span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
                                             <textarea
                                                 placeholder="Kommentar"
                                                 v-model="taskToEditForm.description" rows="3"
                                                 class="placeholder-secondary resize-none focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 w-full font-semibold border "/>
                     </div>
-                    <button
-                        :class="[taskToEditForm.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
-                        class="mt-8 inline-flex items-center px-20 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                        @click="editTask"
-                        :disabled="taskToEditForm.name === ''">
-                        Hinzufügen
-                    </button>
+                    <div class="flex justify-center">
+                        <AddButton text="Speichern" @click="editTask" :disabled="taskToEditForm.name === ''"></AddButton>
+                    </div>
                 </div>
 
             </div>
@@ -838,11 +883,13 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: "ChecklistComponent",
     props: ['project', 'opened_checklists', 'projectCanWriteIds', 'projectManagerIds', 'checklist_templates'],
     components: {
+        NewUserToolTip,
         AddChecklistUserModal,
         TagComponent,
         AddButton,
@@ -904,6 +951,9 @@ export default {
             checklistToDelete: {},
             editingTask: false,
             showMenu: null,
+            user_search_results: [],
+            user_query: '',
+            usersToAdd: [],
             checklistForm: useForm({
                 name: "",
                 project_id: this.project.id,
@@ -933,6 +983,7 @@ export default {
                 name: "",
                 description: "",
                 deadline: null,
+                users: []
             }),
             duplicateForm: useForm({
                 name: "",
@@ -952,6 +1003,15 @@ export default {
         }
     },
     methods: {
+        addUserToTask(user) {
+            if(!this.usersToAdd.find(userToAdd => userToAdd.id === user.id)){
+                this.usersToAdd.push(user);
+            }
+            this.user_query = '';
+        },
+        deleteUserFromTask(index) {
+            this.usersToAdd.splice(index, 1);
+        },
         closeDeleteChecklistModal() {
             this.deletingChecklist = false;
             this.checklistToDelete = {};
@@ -1047,6 +1107,7 @@ export default {
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;
             this.taskToEditForm.description = task.description;
+            this.usersToAdd = task.users;
             this.editingTask = true;
         },
         closeEditTaskModal() {
@@ -1082,6 +1143,9 @@ export default {
             this.closeAddTaskModal();
         },
         editTask() {
+            this.usersToAdd.forEach((user) => {
+                this.taskToEditForm.users.push(user.id);
+            })
             this.taskToEditForm.patch(route('tasks.update', {task: this.taskToEditForm.id},), {
                 preserveState: true,
                 preserveScroll: true
@@ -1194,6 +1258,20 @@ export default {
                 preserveScroll: true
             })
 
+        },
+    },
+    watch: {
+        user_query: {
+            handler() {
+                if (this.user_query.length > 0) {
+                    axios.get('/project/user/search', {
+                        params: {query: this.user_query, projectId: this.project.id}
+                    }).then(response => {
+                        this.user_search_results = response.data
+                    })
+                }
+            },
+            deep: true
         },
     }
 }

@@ -131,6 +131,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/projects/{id}/force', [ProjectController::class, 'forceDelete'])->name('projects.force');
     Route::patch('/projects/{id}/restore', [ProjectController::class, 'restore'])->name('projects.restore');
     Route::delete('/project/group', [ProjectController::class, 'deleteProjectFromGroup'])->name('projects.group.delete');
+    Route::get('/project/user/search', [ProjectController::class, 'projectUserSearch'])->name('project.user.search');
 
     //Project Entrance & registration
     Route::patch('/projects/{project}/entrance', [ProjectController::class, 'updateEntranceData'])->name('projects.entrance.update');

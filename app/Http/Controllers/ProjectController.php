@@ -75,6 +75,18 @@ class ProjectController extends Controller
         $this->schedulingController = new SchedulingController();
     }
 
+    public function projectUserSearch(Request $request){
+        $users = User::search($request->input('query'))->get();
+        $project = Project::find($request->input('projectId'));
+
+        $returnUser = [];
+        foreach ($users as $user){
+            $projectUser = $project->users()->where('user_id', $user->id)->first();
+            $returnUser[] = $projectUser;
+        }
+        return $returnUser;
+    }
+
     /**
      * Display a listing of the resource.
      *

@@ -640,7 +640,6 @@
                                    class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
                                 der Checkliste</label>
                         </div>
-                        <jet-input-error :message="form.error" class="mt-2"/>
                     </div>
                     <div class="flex items-center my-6">
                         <Switch @click="editChecklistForm.private = !editChecklistForm.private"

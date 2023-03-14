@@ -167,7 +167,6 @@ class TaskController extends Controller
      */
     public function update(Request $request, Task $task)
     {
-
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
 
         if ($request->done == true) {
@@ -183,6 +182,7 @@ class TaskController extends Controller
 
         $task->save();
 
+        $task->task_users()->sync(collect($request->users));
 
         $checklist = $task->checklist()->first();
         if($checklist !== null){

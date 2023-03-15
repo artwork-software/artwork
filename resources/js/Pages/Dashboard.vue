@@ -13,10 +13,7 @@
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
 
-
-                <pre>
-                    {{ calender }}
-                </pre>
+                <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :days="days" />
 
                 <!-- Calendar Div -->
                 <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
@@ -105,9 +102,10 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
+import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calender', 'rooms'],
+    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days'],
     components: {
         AppLayout,
         CalendarIcon,
@@ -122,7 +120,8 @@ export default defineComponent({
         CalendarComponent,
         TeamIconCollection,
         Link,
-        TeamTooltip
+        TeamTooltip,
+        IndividualCalendarComponent
     },
     created() {
         Echo.private('events')

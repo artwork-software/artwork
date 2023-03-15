@@ -8,10 +8,10 @@ use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
-class CalenderController extends Controller
+class CalendarController extends Controller
 {
 
-    public function createCalenderData(){
+    public function createCalendarData(){
 
         $startDate = Carbon::now()->startOfDay();
         $endDate = Carbon::now()->addWeeks(1)->endOfDay();
@@ -31,18 +31,22 @@ class CalenderController extends Controller
             })->with(['room'])->get();*/
 
 
-        $calenderPeriod = CarbonPeriod::create($startDate, $endDate);
+        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $returnArray = [];
+        $periodArray = [];
         $rooms = Room::all();
 
+        foreach ($calendarPeriod as $period) {
+            $periodArray[] = $period->format('d.m.');
+        }
         foreach ($rooms as $room){
-            foreach ($calenderPeriod as $period){
+            foreach ($calendarPeriod as $period){
                 $returnArray[$room->id][$period->format('d.m.')] = Event::where('room_id', $room->id)->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])->get();
             }
         }
 
 
 
-        return $returnArray;
+        return [$periodArray, $returnArray];
     }
 }

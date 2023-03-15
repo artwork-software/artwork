@@ -62,8 +62,8 @@ class EventController extends Controller
 
     public function showDashboardPage(Request $request): Response
     {
-        $calender = new CalenderController();
-        $showCalender = $calender->createCalenderData();
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
 
 
         $projects = Project::query()->with( ['managerUsers'])->get();
@@ -81,8 +81,9 @@ class EventController extends Controller
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'calender' => $showCalender,
-            'roomes' => Room::all(),
+            'calendar' => $showCalendar[1],
+            'days' => $showCalendar[0],
+            'rooms' => Room::all(),
         ]);
     }
 

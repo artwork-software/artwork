@@ -12,6 +12,12 @@
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
+
+
+                <pre>
+                    {{ calender }}
+                </pre>
+
                 <!-- Calendar Div -->
                 <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
                     <!--<Link :href="route('events.view.index')"
@@ -101,7 +107,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes'],
+    props: ['tasks', 'projects','eventTypes', 'calender'],
     components: {
         AppLayout,
         CalendarIcon,

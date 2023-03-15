@@ -88,23 +88,6 @@ class ChecklistController extends Controller
                 'order' => Task::max('order') + 1,
             ]);
         }
-
-        if (Auth::user()->can('update departments') && Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT->value)) {
-            foreach ($template->departments as $department) {
-                if (! $project->departments->contains($department)) {
-                    $project->departments()->attach($department);
-                }
-            }
-
-            $checklist->departments()->sync(
-                collect($template->departments)
-                    ->map(function ($department) {
-                        return $department['id'];
-                    })
-            );
-        } else {
-            return response()->json(['error' => 'Not authorized to assign departments to a checklist.'], 403);
-        }
     }
 
     /**

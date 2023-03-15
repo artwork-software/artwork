@@ -107,7 +107,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calender'],
+    props: ['tasks', 'projects','eventTypes', 'calender', 'rooms'],
     components: {
         AppLayout,
         CalendarIcon,

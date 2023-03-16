@@ -42,7 +42,13 @@ class CalendarController extends Controller
         }
         foreach ($rooms as $room){
             foreach ($calendarPeriod as $period){
-                $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(Event::where('room_id', $room->id)->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])->get());
+                $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(Event::where('room_id', $room->id)
+                    ->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
+                    ->orWhere(function($query) use ($room, $period) {
+                        $query->whereBetween('end_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
+                        ->where('room_id', $room->id);
+                    })
+                    ->get());
             }
         }
 

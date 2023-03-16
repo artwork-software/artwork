@@ -1,9 +1,10 @@
 <template>
     <div :class="event.class" class="px-1 py-0.5">
-        <div class="eventHeader w-full flex justify-between">
+        <div class="eventHeader  w-full flex justify-between">
             <div>
                 {{ event.title }}
             </div>
+            <!-- Icons -->
             <div v-if="event.audience"
                  class="flex">
                 <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23" viewBox="0 0 19.182 10.124">
@@ -19,8 +20,8 @@
                     </g>
                 </svg>
             </div>
-
         </div>
+        <!-- Time -->
         <div>
             <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                   class="items-center eventTime">{{ new Date(event.start).formatTime("HH:mm") }} - {{
@@ -35,17 +36,92 @@
                 </span>
             </span>
         </div>
+        <div class="uppercase eventText flex items-center" >
+            <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838" viewBox="0 0 8.664 10.838">
+                <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
+                    <path id="Pfad_1366" data-name="Pfad 1366"  d="M25.5,1.5l1.829,1.829L25.5,5.158" transform="translate(-15.465 0)"/>
+                    <path id="Pfad_1367" data-name="Pfad 1367"  d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)"/>
+                    <path id="Pfad_1368" data-name="Pfad 1368"  d="M6.329,26.158,4.5,24.329,6.329,22.5" transform="translate(0 -15.658)"/>
+                    <path id="Pfad_1369" data-name="Pfad 1369"  d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)"/>
+                </g>
+            </svg>
+            Wiederholungstermin
+        </div>
+        <div class="-ml-3">
+            <div v-if="event.projectLeaders && !project"
+                 class="mt-1 flex flex-wrap w-full">
+                <div class="-mr-4 flex flex-wrap flex-row"
+                     v-for="user in event.projectLeaders?.slice(0,3)">
+                    <img :data-tooltip-target="user.id"
+                         :class="'h-5 w-5'"
+                         class="ml-3 rounded-full ring-2 ring-white object-cover"
+                         :src="user.profile_photo_url"
+                         alt=""/>
+                    <UserTooltip :user="user"/>
+                </div>
+                <div v-if="event.projectLeaders.length >= 4" class="my-auto">
+                    <Menu as="div" class="relative">
+                        <div>
+                            <MenuButton class="flex rounded-full focus:outline-none">
+                                <div
+                                    :class="'h-5 w-5'"
+                                    class="ml-3 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                    <p class="">
+                                        +{{ event.projectLeaders.length - 3 }}
+                                    </p>
+                                </div>
+                            </MenuButton>
+                        </div>
+                        <transition enter-active-class="transition ease-out duration-100"
+                                    enter-from-class="transform opacity-0 scale-95"
+                                    enter-to-class="transform opacity-100 scale-100"
+                                    leave-active-class="transition ease-in duration-75"
+                                    leave-from-class="transform opacity-100 scale-100"
+                                    leave-to-class="transform opacity-0 scale-95">
+                            <MenuItems
+                                class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                    <Link href="#"
+                                          :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                        <img :class="'h-5 w-5'"
+                                             class="rounded-full"
+                                             :src="user.profile_photo_url"
+                                             alt=""/>
+                                        <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                        </span>
+                                    </Link>
+                                </MenuItem>
+                            </MenuItems>
+                        </transition>
+                    </Menu>
+                </div>
+            </div>
+            <div v-else-if="event.created_by"
+                 class="mt-1 ml-3 flex flex-wrap w-full">
+                <div class="-mr-3 flex flex-wrap flex-row">
+                    <img :data-tooltip-target="event.created_by.id"
+                         :class="'h-5 w-5'"
+                         class="rounded-full ring-2 ring-white object-cover"
+                         :src="event.created_by.profile_photo_url"
+                         alt=""/>
+                    <UserTooltip :user="event.created_by"/>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script>
 import Button from "@/Jetstream/Button";
 import {PlusCircleIcon} from '@heroicons/vue/outline'
+import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
+import {MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 
 export default {
     name: "AddButton",
-    components: {Button, PlusCircleIcon},
+    components: {MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon},
     props: ['event']
 }
 </script>
@@ -57,56 +133,67 @@ export default {
 }
 
 .eventType0 {
-    background: #e3eceb;
-    stroke: #86c554;
+    background-color: #A7A6B115;
+    stroke: #7F7E88;
+    color: #7F7E88
 }
 
 .eventType1 {
-    background: #641a54;
-    stroke: #86c554;
+    background: #641a5415;
+    stroke: #631D53;
+    color: #631D53
 }
 
 .eventType2 {
-    background: #da3f87;
-    stroke: #86c554;
+    background: #da3f8715;
+    stroke: #D84387;
+    color: #D84387
 }
 
 .eventType3 {
-    background: #eb7a3d;
-    stroke: #86c554;
+    background: #eb7a3d15;
+    stroke: #E97A45;
+    color: #E97A45
 }
 
 .eventType4 {
-    background: #f1b640;
-    stroke: #86c554;
+    background: #f1b64015;
+    stroke: #CB8913;
+    color: #CB8913
 }
 
 .eventType5 {
-    background: #86c554;
-    stroke: #86c554;
+    background: #86c55415;
+    stroke: #648928;
+    color: #648928
 }
 
 .eventType6 {
-    background: #2eaa63;
-    stroke: #86c554;
+    background: #2eaa6315;
+    stroke: #35A965;
+    color: #35A965
 }
 
 .eventType7 {
-    background: #3dc3cb;
-    stroke: #86c554;
+    background: #3dc3cb15;
+    stroke: #35ACB2;
+    color: #35ACB2
 }
 
 .eventType8 {
-    background: #168fc3;
-    stroke: #86c554;
+    background: #168fc315;
+    stroke: #2290C1;
+    color: #2290C1
 }
 
 .eventType9 {
-    background: #4d908e;
-    stroke: #86c554;
+    background: #4d908e15;
+    stroke: #50908E;
+    color: #50908E
 }
 .eventType10 {
-    background: #21485c;
-    stroke: #86c554;
+    background: #21485C15;
+    stroke: #23485B;
+    color: #23485B
 }
 </style>

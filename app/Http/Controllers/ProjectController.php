@@ -9,6 +9,7 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
@@ -27,6 +28,7 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Department;
+use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\MainPosition;
@@ -35,6 +37,7 @@ use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\ProjectStates;
+use App\Models\Room;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
@@ -43,6 +46,8 @@ use App\Models\Table;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -1261,6 +1266,32 @@ class ProjectController extends Controller
 
         if(request('useTemplates')){
             $templates = Table::where('is_template', true)->get();
+        }
+
+        if(\request('atAGlance')){
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks(1)->endOfDay();
+
+            if(\request('startDate')){
+                $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            }
+
+            if(\request('endDate')){
+                $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            }
+
+            $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+            $returnArray = [];
+            $rooms = Room::all();
+
+            foreach ($rooms as $room){
+                foreach ($calendarPeriod as $period){
+                    $returnArray[$room->id] = CalendarEventResource::collection(
+                        Event::where('room_id', $room->id)->where('project_id', $project->id)
+                            ->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
+                            ->get());
+                }
+            }
         }
 
         $selectedSumDetail = null;

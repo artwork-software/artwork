@@ -25,13 +25,6 @@ class CalendarController extends Controller
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         }
 
-        /*$events = Event::query()
-            ->whereBetween('start_time', [$startDate, $endDate])
-            ->orWhere(function($query) use ($endDate, $startDate) {
-                $query->whereBetween('end_time', [$startDate, $endDate]);
-            })->with(['room'])->get();*/
-
-
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $returnArray = [];
         $periodArray = [];
@@ -42,7 +35,13 @@ class CalendarController extends Controller
         }
         foreach ($rooms as $room){
             foreach ($calendarPeriod as $period){
-                $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(Event::where('room_id', $room->id)->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])->get());
+                $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(Event::where('room_id', $room->id)
+                    ->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
+                    ->orWhere(function($query) use ($room, $period) {
+                        $query->whereBetween('end_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
+                        ->where('room_id', $room->id);
+                    })
+                    ->get());
             }
         }
 

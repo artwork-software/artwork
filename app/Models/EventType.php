@@ -24,7 +24,8 @@ class EventType extends Model
         'name',
         'svg_name',
         'project_mandatory',
-        'individual_name'
+        'individual_name',
+        'abbreviation'
     ];
 
     protected $casts = [

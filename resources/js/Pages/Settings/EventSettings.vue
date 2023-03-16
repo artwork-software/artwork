@@ -31,6 +31,7 @@
                         <div class="ml-5 my-auto w-full justify-start mr-6">
                             <div class="flex my-auto">
                                 <p class="mDark">{{ eventType.name }}</p>
+                                <div class="ml-2 mDark">({{eventType.abbreviation}})</div>
                             </div>
                             <div class="flex mt-2">
                                 <div class="xsLight mr-2">
@@ -137,14 +138,12 @@
                                     <MenuItems
                                         class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                            <div v-if="item.taken === false">
+                                            <div>
                                                 <div class="" @click="eventTypeForm.svg_name = item.iconName"
                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <EventTypeIconCollection :height="64" :width="64"
                                                                              :iconName="item.iconName"/>
                                                 </div>
-                                            </div>
-                                            <div v-else class="xsLight">
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -158,6 +157,12 @@
                                        class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name
                                     des Termintyps*</label>
                             </div>
+                        </div>
+                        <div class="mt-4">
+                            <input placeholder="Abkürzung des Eventtyps"
+                                   id="entry_fee"
+                                   v-model="eventTypeForm.abbreviation"
+                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div>
                             <div class="flex items-center mt-8">
@@ -217,14 +222,12 @@
                                     <MenuItems
                                         class="z-40 origin-top-right h-32 overflow-y-auto w-20 absolute right-0 mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none overflow-y-auto">
                                         <MenuItem v-for="item in iconMenuItems" v-slot="{ active }">
-                                            <div v-if="item.taken === false">
+                                            <div>
                                                 <div class="" @click="eventTypeForm.svg_name = item.iconName"
                                                      :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group relative flex  items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                     <EventTypeIconCollection :height="64" :width="64"
                                                                              :iconName="item.iconName"/>
                                                 </div>
-                                            </div>
-                                            <div v-else class="xsLight">
                                             </div>
                                         </MenuItem>
                                     </MenuItems>
@@ -237,6 +240,12 @@
                                 <label for="editCategoryName"
                                        class="absolute left-0 text-base -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
                             </div>
+                        </div>
+                        <div class="mt-4">
+                            <input :placeholder="editEventTypeForm.abbreviation !== '' ? editEventTypeForm.abbreviation : 'Abkürzung des Eventtyps'"
+                                   id="entry_fee"
+                                   v-model="editEventTypeForm.abbreviation"
+                                   class="mt-4 p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div>
                             <div class="flex items-center mt-8">
@@ -330,53 +339,36 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 export default {
     computed: {
         iconMenuItems() {
-            this.event_types.forEach((eventType) => {
-                if (this.takenEventTypeColors.includes(eventType.svg_name)) {
-                    //do nothing
-                } else {
-                    this.takenEventTypeColors.push(eventType.svg_name)
-                }
-            })
             return [
                 {
                     iconName: 'eventType1',
-                    taken: this.takenEventTypeColors.includes('eventType1'),
                 },
                 {
                     iconName: 'eventType2',
-                    taken: this.takenEventTypeColors.includes('eventType2'),
                 },
                 {
                     iconName: 'eventType3',
-                    taken: this.takenEventTypeColors.includes('eventType3'),
                 },
                 {
                     iconName: 'eventType4',
-                    taken: this.takenEventTypeColors.includes('eventType4'),
                 },
                 {
                     iconName: 'eventType5',
-                    taken: this.takenEventTypeColors.includes('eventType5'),
                 },
                 {
                     iconName: 'eventType6',
-                    taken: this.takenEventTypeColors.includes('eventType6'),
                 },
                 {
                     iconName: 'eventType7',
-                    taken: this.takenEventTypeColors.includes('eventType7'),
                 },
                 {
                     iconName: 'eventType8',
-                    taken: this.takenEventTypeColors.includes('eventType8'),
                 },
                 {
                     iconName: 'eventType9',
-                    taken: this.takenEventTypeColors.includes('eventType9'),
                 },
                 {
                     iconName: 'eventType10',
-                    taken: this.takenEventTypeColors.includes('eventType10'),
                 },
             ]
         }
@@ -415,6 +407,7 @@ export default {
                 name: '',
                 project_mandatory: false,
                 individual_name: false,
+                abbreviation: ''
             }),
             editEventTypeForm: this.$inertia.form({
                 _method: 'PATCH',
@@ -422,6 +415,7 @@ export default {
                 name: '',
                 project_mandatory: false,
                 individual_name: false,
+                abbreviation: '',
                 id: null
             })
         }
@@ -436,6 +430,7 @@ export default {
             this.editEventTypeForm.id = eventType.id;
             this.editEventTypeForm.project_mandatory = eventType.project_mandatory;
             this.editEventTypeForm.individual_name = eventType.individual_name;
+            this.editEventTypeForm.abbreviation = eventType.abbreviation;
             this.editingEventType = true;
         },
         closeEditEventTypeModal() {

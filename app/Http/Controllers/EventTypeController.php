@@ -44,6 +44,7 @@ class EventTypeController extends Controller
             'svg_name' => $request->svg_name,
             'project_mandatory' => $request->project_mandatory,
             'individual_name' => $request->individual_name,
+            'abbreviation' => $request->abbreviation
         ]);
 
         return Redirect::back();
@@ -87,6 +88,7 @@ class EventTypeController extends Controller
             'svg_name',
             'project_mandatory',
             'individual_name',
+            'abbreviation'
         ));
 
         return Redirect::route('event_types.management')->with('success', 'EventType updated');

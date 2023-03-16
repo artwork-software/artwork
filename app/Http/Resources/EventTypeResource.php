@@ -26,6 +26,7 @@ class EventTypeResource extends JsonResource
             'svg_name' => $this->svg_name,
             'project_mandatory' => $this->project_mandatory,
             'individual_name' => $this->individual_name,
+            'abbreviation' => $this->abbreviation,
         ];
     }
 }

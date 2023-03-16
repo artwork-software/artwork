@@ -20,7 +20,7 @@
             </thead>
             <tbody class="flex w-full flex-wrap">
             <tr class="w-full h-52  flex" v-for="day in days">
-                <th class="w-24">
+                <th class="w-24 eventTime text-secondary text-right mt-1">
                     {{ day }}
                 </th>
                 <td class="w-64 h-52 overflow-y-auto" v-for="room in calendarData">

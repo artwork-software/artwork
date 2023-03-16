@@ -50,7 +50,7 @@ class CalendarEventResource extends JsonResource
             'created_by' => $this->creator,
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
-            'project' => $this->project,
+            'project' => new ProjectInEventResource($this->project),
 
             'collisionCount'=> $this->collision_count,
 

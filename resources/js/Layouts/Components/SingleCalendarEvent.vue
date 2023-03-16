@@ -1,8 +1,10 @@
 <template>
-    <div :class="event.class" class="px-1 py-0.5">
-        <div class="eventHeader  w-full flex justify-between">
-            <div>
+    <div :class="event.class" class="px-1 py-0.5 w-full rounded-lg">
+        <div class="eventHeader  flex justify-between">
+            <div class="flex items-center">
                 {{ event.title }}
+                <div v-if="event.project?.state?.color" :class="event.project.state.color" class="h-2 w-2 rounded-full border-4">
+                </div>
             </div>
             <!-- Icons -->
             <div v-if="event.audience"
@@ -22,7 +24,7 @@
             </div>
         </div>
         <!-- Time -->
-        <div>
+        <div class="flex">
             <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                   class="items-center eventTime">{{ new Date(event.start).formatTime("HH:mm") }} - {{
                     new Date(event.end).formatTime("HH:mm")
@@ -36,6 +38,7 @@
                 </span>
             </span>
         </div>
+        <!-- repeating Event -->
         <div class="uppercase eventText flex items-center" >
             <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838" viewBox="0 0 8.664 10.838">
                 <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
@@ -47,31 +50,30 @@
             </svg>
             Wiederholungstermin
         </div>
-        <div class="-ml-3">
+        <!-- User-Icons -->
+        <div class="-ml-3 mb-0.5">
             <div v-if="event.projectLeaders && !project"
-                 class="mt-1 flex flex-wrap w-full">
-                <div class="-mr-4 flex flex-wrap flex-row"
+                 class="mt-1 ml-5 flex flex-wrap">
+                <div class="flex flex-wrap flex-row -ml-1.5"
                      v-for="user in event.projectLeaders?.slice(0,3)">
                     <img :data-tooltip-target="user.id"
                          :class="'h-5 w-5'"
-                         class="ml-3 rounded-full ring-2 ring-white object-cover"
+                         class="rounded-full object-cover"
                          :src="user.profile_photo_url"
                          alt=""/>
                     <UserTooltip :user="user"/>
                 </div>
                 <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                     <Menu as="div" class="relative">
-                        <div>
                             <MenuButton class="flex rounded-full focus:outline-none">
                                 <div
                                     :class="'h-5 w-5'"
-                                    class="ml-3 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                    class="-ml-1.5 flex-shrink-0 flex items-center my-auto font-semibold rounded-full shadow-sm text-white bg-black">
                                     <p class="">
                                         +{{ event.projectLeaders.length - 3 }}
                                     </p>
                                 </div>
                             </MenuButton>
-                        </div>
                         <transition enter-active-class="transition ease-out duration-100"
                                     enter-from-class="transform opacity-0 scale-95"
                                     enter-to-class="transform opacity-100 scale-100"
@@ -102,7 +104,7 @@
                 <div class="-mr-3 flex flex-wrap flex-row">
                     <img :data-tooltip-target="event.created_by.id"
                          :class="'h-5 w-5'"
-                         class="rounded-full ring-2 ring-white object-cover"
+                         class="rounded-full object-cover"
                          :src="event.created_by.profile_photo_url"
                          alt=""/>
                     <UserTooltip :user="event.created_by"/>
@@ -116,12 +118,12 @@
 import Button from "@/Jetstream/Button";
 import {PlusCircleIcon} from '@heroicons/vue/outline'
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
+import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 
 export default {
     name: "AddButton",
-    components: {MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon},
+    components: {Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon},
     props: ['event']
 }
 </script>

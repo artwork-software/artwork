@@ -52,6 +52,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
 use stdClass;
@@ -1970,9 +1972,15 @@ class ProjectController extends Controller
     public function updateKeyVisual(Request $request, Project $project)
     {
         $oldKeyVisual = $project->key_visual_path;
-        $keyVisual = $request->file('keyVisual');
-        if ($keyVisual) {
-            $project->key_visual_path = $keyVisual->storePublicly('keyVisual', ['disk' => 'public']);
+        if($request->file('keyVisual')) {
+            Storage::delete('keyVisual/'. $project->key_visual_path);
+            $file = $request->file('keyVisual');
+            $original_name = $file->getClientOriginalName();
+            $basename = Str::random(20).$original_name;
+
+            $project->key_visual_path = $basename;
+
+            Storage::putFileAs('public/keyVisual', $file, $basename);
         }
         $project->save();
 
@@ -1989,5 +1997,14 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
 
         return Redirect::back()->with('success', 'Key Visual hinzugefügt');
+    }
+
+    public function downloadKeyVisual(Project $project){
+        return Storage::download('public/keyVisual/' . $project->key_visual_path, $project->key_visual_path);
+    }
+
+    public function deleteKeyVisual(Project $project){
+        Storage::delete('public/keyVisual/'. $project->key_visual_path);
+        $project->update(['key_visual_path' => null]);
     }
 }

@@ -127,9 +127,10 @@
                     </div>
                     <div v-for="(project,index) in filteredProjects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
                         <div class="flex mb-3">
-                            <div class="w-24 flex">
-                                <div class="flex justify-center items-center relative">
-                                    <img :src="'storage/' + project.key_visual" alt="" class="rounded-full h-12 w-12">
+                            <div class="w-48 flex justify-center">
+                                <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
+                                    <img :src="'/storage/keyVisual/' + project.key_visual" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
+                                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
                                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
                                         <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
                                     </div>

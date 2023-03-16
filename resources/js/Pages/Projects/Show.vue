@@ -11,9 +11,13 @@
                         {{ currentGroup?.name }}</a>
                     </div>
                 </div>
-                <div class="flex z-10" v-if="this.project.key_visual_path">
-                    <img :src="this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                         class="rounded-md w-full h-40">
+                <div class="flex z-10" v-if="this.project.key_visual_path !== null">
+                    <img :src="'/storage/keyVisual/' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                         class="rounded-md w-full h-[200px]">
+                </div>
+                <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
+                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="Aktuelles Key-Visual"
+                         class="rounded-md ">
                 </div>
                 <div class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center"
                      v-if="project.project_history.length">
@@ -115,7 +119,7 @@
                         v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
                         v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
-                    <div v-if="RoomsWithAudience?.length > 0">
+                    <div>
                         Termine mit Publikum in: <span
                         v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
                     </div>
@@ -246,14 +250,14 @@
                         <div
                             v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="col-span-2">
-                            <div class="ml-10">
+                            <div class="ml-10 group">
                                 <label class="block my-4 sDark">
                                     Key Visual </label>
-                                <div
-                                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
-                                    @click="selectNewKeyVisual"
+                                <div class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
                                     @dragover.prevent
-                                    @drop.stop.prevent="uploadDraggedKeyVisual($event)">
+                                    @drop.stop.prevent="uploadDraggedKeyVisual($event)"
+                                    @click="selectNewKeyVisual"
+                                     v-if="this.project.key_visual_path === null">
                                     <div class="space-y-1 text-center">
                                         <div class="xsLight flex my-auto h-40 items-center"
                                              v-if="this.project.key_visual_path === null">
@@ -262,9 +266,27 @@
                                                    name="file-upload" type="file" class="sr-only"
                                                    @change="updateKeyVisual"/>
                                         </div>
-                                        <div class="cursor-pointer" v-else-if="this.project.key_visual_path">
-                                            <img :src="this.project.key_visual_path" alt="Aktuelles Key-Visual"
-                                                 class="rounded-md h-40 w-80">
+                                    </div>
+                                </div>
+                                <div v-else class="flex items-center justify-center relative w-full">
+                                    <div class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
+                                        <button @click="downloadKeyVisual" type="button" class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                            <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true" />
+                                        </button>
+                                        <button @click="selectNewKeyVisual" type="button" class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                            <PencilAltIcon
+                                                class="h-5 w-5 text-primaryText group-hover:text-white"
+                                                aria-hidden="true"/>
+                                        </button>
+                                        <button @click="deleteKeyVisual" type="button" class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                            <XIcon class="h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="cursor-pointer">
+                                            <img src="">
+                                            <img :src="'/storage/keyVisual/' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                                                 class="rounded-md w-full h-48">
                                             <input id="keyVisual-upload" ref="keyVisual"
                                                    name="file-upload" type="file" class="sr-only"
                                                    @change="updateKeyVisual"/>
@@ -478,7 +500,7 @@ import {
     ChevronUpIcon,
     DotsVerticalIcon,
     XCircleIcon,
-    PlusSmIcon, ChevronRightIcon
+    PlusSmIcon, ChevronRightIcon, PlusIcon
 } from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
@@ -562,7 +584,8 @@ export default {
         Disclosure,
         DisclosurePanel,
         DisclosureButton,
-        ProjectDataEditModal
+        ProjectDataEditModal,
+        PlusIcon
     },
     computed: {
         tabs() {
@@ -694,6 +717,15 @@ export default {
         }, 1000)
     },
     methods: {
+        downloadKeyVisual(){
+            let link = document.createElement('a');
+            link.href = route('project.download.keyVisual', this.project.id);
+            link.target = '_blank';
+            link.click();
+        },
+        deleteKeyVisual(){
+            this.$inertia.delete(route('project.delete.keyVisual', this.project.id))
+        },
         async handleDescriptionClick() {
 
             this.descriptionClicked = true;

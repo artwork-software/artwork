@@ -25,13 +25,6 @@ class CalendarController extends Controller
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         }
 
-        /*$events = Event::query()
-            ->whereBetween('start_time', [$startDate, $endDate])
-            ->orWhere(function($query) use ($endDate, $startDate) {
-                $query->whereBetween('end_time', [$startDate, $endDate]);
-            })->with(['room'])->get();*/
-
-
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $returnArray = [];
         $periodArray = [];

@@ -1286,7 +1286,7 @@ class ProjectController extends Controller
 
             foreach ($rooms as $room){
                 foreach ($calendarPeriod as $period){
-                    $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(
+                    $returnArray[$room->id] = CalendarEventResource::collection(
                         Event::where('room_id', $room->id)->where('project_id', $project->id)
                             ->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
                             ->get());

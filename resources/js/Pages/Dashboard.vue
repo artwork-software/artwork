@@ -12,17 +12,23 @@
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
+                <div>
+                    <button class="bg-buttonBlue text-secondaryHover rounded-full p-2 font-semibold" @click="this.showIndividualCalendar = !showIndividualCalendar">
+                        Kalender-Switch
+                    </button>
+                    <div v-if="showIndividualCalendar">
+                    <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :days="days" />
+                    </div>
+                    <div v-else>
+                        <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
+                                            <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
+                        </div>
+                    </div>
+                </div>
 
-                <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :days="days" />
 
                 <!-- Calendar Div -->
-                <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                    <!--<Link :href="route('events.view.index')"
-                        class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
-                        Alle Ansehen
-                    </Link> -->
-<!--                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>-->
-                </div>
+
             </div>
             <!-- Task Div -->
             <div class="px-6 mt-20 overflow-y-auto">
@@ -162,6 +168,7 @@ export default defineComponent({
             doneTaskForm: useForm({
                 done: false
             }),
+            showIndividualCalendar: true,
         }
     },
 

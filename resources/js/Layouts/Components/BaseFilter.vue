@@ -1,7 +1,7 @@
 <template>
     <Menu as="div" class="relative inline-block flex items-center text-left">
         <div class="">
-            <MenuButton
+            <MenuButton v-if="!onlyIcon"
                 class="w-52 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
                 <span class="float-left xsDark">Filter</span>
@@ -9,6 +9,9 @@
                     class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                     aria-hidden="true"
                 />
+            </MenuButton>
+            <MenuButton v-else>
+                <img src="/Svgs/IconSvgs/icon_filter.svg" class="h-6 w-6 mx-2" />
             </MenuButton>
         </div>
         <transition
@@ -44,7 +47,8 @@ export default {
         MenuItems,
         MenuButton,
         ChevronDownIcon
-    }
+    },
+    props:['onlyIcon']
 }
 </script>
 

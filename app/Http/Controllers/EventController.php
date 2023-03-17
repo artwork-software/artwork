@@ -81,8 +81,8 @@ class EventController extends Controller
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
-            'calendar' => $showCalendar[1],
-            'days' => $showCalendar[0],
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
             'rooms' => Room::all(),
         ]);
     }

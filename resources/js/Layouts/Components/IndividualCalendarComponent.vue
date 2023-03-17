@@ -6,7 +6,7 @@
                 <th class="w-16">
 
                 </th>
-                <th v-for="(room,index) in rooms" class="w-52 py-3 border-r-4 border-secondaryHover">
+                <th v-for="room in rooms" class="w-52 py-3 border-r-4 border-secondaryHover">
                     <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                             {{ room.name }}
                     </div>

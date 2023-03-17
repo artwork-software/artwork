@@ -21,7 +21,7 @@
                         class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
                         Alle Ansehen
                     </Link> -->
-                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
+<!--                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>-->
                 </div>
             </div>
             <!-- Task Div -->

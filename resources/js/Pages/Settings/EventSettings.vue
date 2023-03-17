@@ -447,6 +447,7 @@ export default {
             this.eventTypeForm.svg_name = "";
             this.eventTypeForm.project_mandatory = false;
             this.eventTypeForm.individual_name = false;
+            this.eventTypeForm.abbreviation = '';
         },
         addEventType() {
             this.eventTypeForm.post(route('event_types.store', {event_type: this.eventTypeForm}));

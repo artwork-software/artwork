@@ -147,6 +147,24 @@
             <div class="bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="p-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
+                    <SwitchGroup as="div" class="flex items-center">
+                        <Switch v-model="atAGlance" class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
+                            <span class="sr-only">Use setting</span>
+                            <span aria-hidden="true" class="pointer-events-none absolute h-full w-full rounded-md bg-white" />
+                            <span aria-hidden="true" :class="[atAGlance ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']" />
+                            <span aria-hidden="true" :class="[atAGlance ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']" />
+                        </Switch>
+                        <SwitchLabel as="span" class="ml-3 text-sm">
+                            <span class="font-medium text-gray-900">Auf einen Blick</span>
+                        </SwitchLabel>
+                    </SwitchGroup>
+                    <pre>
+                       {{ eventsAtAGlance }}
+                    </pre>
+
+                    <pre>
+                      {{ usePage().props.atAGlance }}
+                    </pre>
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>
                 <!-- Checklist Tab -->
@@ -483,7 +501,7 @@ import {
     MenuButton,
     MenuItem,
     MenuItems,
-    Switch
+    Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import {
     PencilAltIcon,
@@ -531,7 +549,7 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states'],
+    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states', 'eventsAtAGlance'],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,
@@ -585,7 +603,8 @@ export default {
         DisclosurePanel,
         DisclosureButton,
         ProjectDataEditModal,
-        PlusIcon
+        PlusIcon,SwitchGroup, SwitchLabel
+
     },
     computed: {
         tabs() {
@@ -708,6 +727,20 @@ export default {
                 file: null
             }),
             selectedState: this.project.state ? this.project.state : null,
+            atAGlance: false,
+        }
+    },
+    watch: {
+        atAGlance: {
+            handler() {
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                        openTab: 'calendar'
+                    }
+                })
+            },
+            deep: true
         }
     },
     mounted() {

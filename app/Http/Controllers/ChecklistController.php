@@ -89,15 +89,12 @@ class ChecklistController extends Controller
             ]);
         }
 
-
-
             $checklist->users()->sync(
                 collect($template->users)
                     ->map(function ($user) {
                         return $user['id'];
                     })
             );
-
     }
 
     /**

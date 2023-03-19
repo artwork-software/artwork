@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('svg_name');
             $table->boolean('project_mandatory');
             $table->boolean('individual_name');
+            $table->string('abbreviation');
             $table->timestamps();
         });
     }

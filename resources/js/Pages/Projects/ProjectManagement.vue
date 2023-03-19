@@ -127,21 +127,22 @@
                     </div>
                     <div v-for="(project,index) in filteredProjects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
                         <div class="flex mb-3">
-                            <div class="w-1/12 flex items-center justify-center">
-                                <div class="flex justify-center items-center relative">
-                                    <img :src="'storage/' + project.key_visual" alt="" class="rounded-full h-12 w-12">
+                            <div class="w-48 flex justify-center">
+                                <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
+                                    <img :src="'/storage/keyVisual/' + project.key_visual" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
+                                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
                                     <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
                                         <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
                                     </div>
                                 </div>
                             </div>
-                            <div class="w-full ml-1 mr-3">
+                            <div class="w-full mr-3">
                                 <div class="flex items-center mb-2">
                                     <div class="mr-6">
                                         <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
                                               class="flex w-full my-auto">
                                             <p class="headline2 flex items-center">
-                                                {{ truncate(project.name, 80, '...') }}
+                                                {{ truncate(project.name, 30, '...') }}
                                             </p>
                                         </Link>
                                         <div v-else class="flex w-full my-auto">
@@ -153,7 +154,7 @@
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects" class="text-secondary flex items-center ">
+                                    <div v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects" class="text-secondary flex flex-nowrap items-center ">
                                         <div v-if="project.project_history.length" class="flex items-center">
                                         <span class=" xxsLight">
                                               zuletzt geändert:
@@ -181,19 +182,20 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="xsLight">
+                                <div class="xsLight w-11/12">
                                     {{ truncate(project.description, 300, '...') }}
                                 </div>
                             </div>
-                            <div class="w-32 mr-3">
+                            <div class="flex w-4/12 justify-between mr-10">
+                            <div class="mr-3 w-36">
                                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
-                            <div class="w-2/12 flex items-top">
-                                <div class="-mr-3 flex" v-for="user in project.project_managers">
-                                    <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
+                            <div class="flex items-top mx-4">
+                                <div class="-mr-3 shrink-0" v-for="(user,index) in project.project_managers">
+                                    <NewUserToolTip :user="user" :id="project.id + index" height="8" width="8"/>
                                 </div>
                             </div>
-                            <div class="w-1/12 flex justify-end">
+                            <div class="flex w-1/12 ml-4">
                                 <Menu   v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
                                         as="div" class="relative">
                                     <div class="flex bg-tagBg p-0.5 rounded-full">
@@ -220,7 +222,7 @@
                                                 leave-from-class="transform opacity-100 scale-100"
                                                 leave-to-class="transform opacity-0 scale-95">
                                         <MenuItems
-                                            class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                            class="origin-top-right z-50 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                             <div class="py-1">
                                                 <MenuItem v-slot="{ active }" v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
                                                     <a :href="getEditHref(project)"
@@ -253,6 +255,7 @@
                                         </MenuItems>
                                     </transition>
                                 </Menu>
+                            </div>
                             </div>
                         </div>
                         <div class="py-4 flex hidden">

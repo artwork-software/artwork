@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('name');
             $table->longText('description')->nullable();
             $table->string('number_of_participants')->nullable();
-            $table->string('key_visual_path')->nullable()->default('/keyVisual/default_keyVisual.png');
+            $table->string('key_visual_path')->nullable();
             $table->string('num_of_guests')->nullable()->default(null);
             $table->string('entry_fee')->nullable()->default(null);
             $table->boolean('registration_required')->nullable()->default(false);

@@ -240,49 +240,56 @@ class ContentSeeder extends Seeder
             'name' => 'Blocker',
             'svg_name' => 'eventType0',
             'project_mandatory' => false,
-            'individual_name' => true
+            'individual_name' => true,
+            'abbreviation' => 'BL'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Meeting',
             'svg_name' => 'eventType1',
             'project_mandatory' => false,
-            'individual_name' => true
+            'individual_name' => true,
+            'abbreviation' => 'M'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Workshop',
             'svg_name' => 'eventType2',
             'project_mandatory' => false,
-            'individual_name' => true
+            'individual_name' => true,
+            'abbreviation' => 'WS'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Aufführung',
             'svg_name' => 'eventType3',
             'project_mandatory' => true,
-            'individual_name' => true
+            'individual_name' => true,
+            'abbreviation' => 'A'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Probe',
             'svg_name' => 'eventType4',
             'project_mandatory' => true,
-            'individual_name' => false
+            'individual_name' => false,
+            'abbreviation' => 'P'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Führung',
             'svg_name' => 'eventType5',
             'project_mandatory' => true,
-            'individual_name' => false
+            'individual_name' => false,
+            'abbreviation' => 'F'
         ]);
 
         DB::table('event_types')->insert([
             'name' => 'Reinigung',
             'svg_name' => 'eventType6',
             'project_mandatory' => false,
-            'individual_name' => false
+            'individual_name' => false,
+            'abbreviation' => 'R'
         ]);
 
         DB::table('events')->insert([

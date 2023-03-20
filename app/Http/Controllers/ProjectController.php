@@ -1193,7 +1193,7 @@ class ProjectController extends Controller
     }
 
 
-    private function get_events_of_day($date_of_day, $room, $project_id): array
+    private function get_events_of_day_for_project($date_of_day, $room, $project_id): array
     {
 
         $eventsToday = [];
@@ -1312,7 +1312,7 @@ class ProjectController extends Controller
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
-                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, $project->id))
+                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day_for_project($date, $room, $project->id))
                     ]));
         }
 
@@ -1363,7 +1363,7 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
-            
+
             'budget' => [
                 'columns' => $outputColumns,
                 'table' => $project->table()

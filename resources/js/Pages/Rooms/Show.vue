@@ -425,79 +425,6 @@
             <CalendarComponent :eventTypes="this.event_types" :room="room"/>
         </div>
 
-        <!-- Change RoomAdmins Modal -->
-        <jet-dialog-modal :show="showChangeRoomAdminsModal" @close="closeChangeRoomAdminsModal">
-            <template #content>
-                <img src="/Svgs/Overlays/illu_room_admin_edit.svg" class="-ml-6 -mt-8 mb-4"/>
-                <div class="mx-3">
-                    <div class="headline1 my-2">
-                        Raumadmin bearbeiten
-                    </div>
-                    <XIcon @click="closeChangeRoomAdminsModal"
-                           class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute text-secondary cursor-pointer"
-                           aria-hidden="true"/>
-                    <div class="xsLight">
-                        Tippe den Namen der Nutzer*innen ein, welche den Raum bearbeiten und direkt belegen dürfen.
-                    </div>
-                    <div class="mt-6 relative">
-                        <div class="my-auto w-full">
-                            <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                   class="peer pl-0 h-12 w-full focus:border-t-transparent focus:border-primary focus:ring-0 border-l-0 border-t-0 border-r-0 border-b-2 border-gray-300 text-primary placeholder-secondary placeholder-transparent"
-                                   placeholder="placeholder"/>
-                            <label for="userSearch"
-                                   class="absolute left-0 -top-5 text-gray-600 text-sm -top-3.5 transition-all subpixel-antialiased focus:outline-none text-secondary peer-placeholder-shown:text-base peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-2 peer-focus:-top-3.5 peer-focus:text-sm ">Name</label>
-                        </div>
-
-                        <transition leave-active-class="transition ease-in duration-100"
-                                    leave-from-class="opacity-100"
-                                    leave-to-class="opacity-0">
-                            <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                 class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                         text-base ring-1 ring-black ring-opacity-5
-                                         overflow-auto focus:outline-none sm:text-sm">
-                                <div class="border-gray-200">
-                                    <div v-for="(user, index) in user_search_results" :key="index"
-                                         class="flex items-center cursor-pointer">
-                                        <div class="flex-1 text-sm py-4">
-                                            <p @click="addUserToRoomAdminsArray(user)"
-                                               class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                {{ user.first_name }} {{ user.last_name }}
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </transition>
-                    </div>
-                    <div class="mt-4">
-                        <div class="flex">
-                        </div>
-                        <span v-for="(user,index) in roomForm.room_admins"
-                              class="flex mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4">
-                                {{ user.first_name }} {{ user.last_name }}
-                                    </span>
-                            </div>
-                            <button type="button" @click="deleteUserFromRoomAdminArray(user)">
-                                <span class="sr-only">User als Raumadmin entfernen</span>
-                                <XCircleIcon class="ml-2 mt-1 h-5 w-5 hover:text-error "/>
-                            </button>
-                        </span>
-                    </div>
-                    <AddButton @click="editRoomAdmins"
-                               text="Speichern"
-                               mode="modal"
-                               class="mt-8 px-12 py-3" />
-
-                </div>
-
-            </template>
-
-        </jet-dialog-modal>
         <!-- Raum Bearbeiten-->
         <jet-dialog-modal :show="showEditRoomModal" @close="closeEditRoomModal">
             <template #content>
@@ -822,6 +749,19 @@
 
 
     </app-layout>
+
+    <BaseSidenav :show="showSidenav" @toggle="this.showSidenav =! this.showSidenav">
+        <RoomSidenav
+            :room="room"
+            :categories="roomCategories.data"
+            :available-categories="available_categories"
+            :attributes="roomAttributes.data"
+            :available-attributes="available_attributes"
+            :adjoiningRooms="adjoiningRooms.data"
+            :available-adjoining-rooms="available_rooms"
+        />
+    </BaseSidenav>
+
     <!-- Room History Modal-->
     <room-history-component
         v-if="showRoomHistory"
@@ -869,6 +809,8 @@ import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import AddButton from "@/Layouts/Components/AddButton";
 import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
+import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -894,6 +836,8 @@ export default {
         'adjoiningRooms'
     ],
     components: {
+        RoomSidenav,
+        BaseSidenav,
         NewUserToolTip,
         PlusIcon,
         MinusIcon,
@@ -951,8 +895,8 @@ export default {
     },
     data() {
         return {
+            showSidenav: true,
             attributesOpened: false,
-            showChangeRoomAdminsModal: false,
             showSuccess: false,
             user_query: "",
             user_search_results: [],
@@ -1145,9 +1089,6 @@ export default {
         closeChangeRoomAdminsModal() {
             this.showChangeRoomAdminsModal = false;
         },
-        deleteUserFromRoomAdminArray(user) {
-            this.roomForm.room_admins.splice(this.roomForm.room_admins.indexOf(user), 1);
-        },
         closeSuccessModal() {
             this.showSuccessModal = false;
             this.successHeading = "";
@@ -1168,10 +1109,6 @@ export default {
         removeAdjoiningRoomFromRoom(index) {
             this.roomForm.adjoining_rooms.splice(index, 1)
             this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-        },
-        editRoomAdmins() {
-            this.roomForm.patch(route('rooms.update', {room: this.room.id}));
-            this.closeChangeRoomAdminsModal();
         },
         addUserToRoomAdminsArray(user) {
             for (let adminUser of this.roomForm.room_admins) {
@@ -1258,7 +1195,7 @@ export default {
         return {
             attributeFilters,
         }
-    }
+    },
 }
 </script>
 

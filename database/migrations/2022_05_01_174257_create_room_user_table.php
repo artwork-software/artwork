@@ -17,6 +17,8 @@ return new class extends Migration
             $table->id();
             $table->integer('room_id');
             $table->integer('user_id');
+            $table->boolean('is_admin')->default(false);
+            $table->boolean('can_request')->default(false);
             $table->timestamps();
         });
     }

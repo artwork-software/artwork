@@ -62,9 +62,10 @@ class Room extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    public function room_admins()
+    public function users()
     {
-        return $this->belongsToMany(User::class, 'room_user');
+        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+            ->withPivot('is_admin', 'can_request');
     }
 
     public function room_files()

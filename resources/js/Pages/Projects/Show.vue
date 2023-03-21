@@ -159,11 +159,7 @@
                         </SwitchLabel>
                     </SwitchGroup>
                     <pre>
-                       {{ eventsAtAGlance }}
-                    </pre>
-
-                    <pre>
-                      {{ usePage().props.atAGlance }}
+                        {{ eventsAtAGlance }}
                     </pre>
                     <CalendarComponent :eventTypes=this.eventTypes :project="project"/>
                 </div>

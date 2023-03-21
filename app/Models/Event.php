@@ -61,6 +61,7 @@ class Event extends Model
         'days_of_event',
     ];
 
+
     public function getDaysOfEventAttribute(): array
     {
         $days_period = CarbonPeriod::create($this->start_time, $this->end_time);

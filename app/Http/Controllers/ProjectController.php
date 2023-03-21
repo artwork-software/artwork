@@ -1193,23 +1193,6 @@ class ProjectController extends Controller
     }
 
 
-    private function get_events_of_day_for_project($date_of_day, $room, $project_id): array
-    {
-
-        $eventsToday = [];
-        $today = $date_of_day->format('d.m.');
-
-        foreach ($room->events as $event) {
-            if(in_array($today, $event->days_of_event)) {
-                if($event->project_id === $project_id){
-                    $eventsToday[] = $event;
-                }
-            }
-        }
-
-        return $eventsToday;
-    }
-
     /**
      * Display the specified resource.
      *
@@ -1303,17 +1286,11 @@ class ProjectController extends Controller
                 $endDate = Carbon::create(\request('endDate'))->endOfDay();
             }
 
-            $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-            $eventsAtAGlance = Room::with([
-                'events.room',
-                'events.project',
-                'events.creator'
-            ])
-                ->get()
-                ->map(fn($room) => collect($calendarPeriod)
-                    ->mapWithKeys(fn($date) => [
-                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day_for_project($date, $room, $project->id))
-                    ]));
+            $eventsAtAGlance = $project->events()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room'])->get()->groupBy('room.id');
+
         }
 
         $selectedSumDetail = null;

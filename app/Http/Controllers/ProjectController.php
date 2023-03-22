@@ -1193,6 +1193,22 @@ class ProjectController extends Controller
     }
 
 
+    private function get_events_of_day_for_project($date_of_day, $room, $project_id): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.');
+
+        foreach ($room->events as $event) {
+            if(in_array($today, $event->days_of_event)) {
+                if($event->project_id === $project_id){
+                    $eventsToday[] = $event;
+                }
+            }
+        }
+        return $eventsToday;
+    }
+
     /**
      * Display the specified resource.
      *
@@ -1201,6 +1217,9 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
+
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
 
         $project->load([
             'access_budget',
@@ -1286,10 +1305,11 @@ class ProjectController extends Controller
                 $endDate = Carbon::create(\request('endDate'))->endOfDay();
             }
 
-            $eventsAtAGlance = $project->events()
+            $eventsAtAGlance = CalendarEventResource::collection($project->events()
                 ->whereBetween('start_time', [$startDate, $endDate])
                 ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room'])->get()->groupBy('room.id');
+                ->with(['room','project','creator'])->get())->collection->groupBy('room.id');
+
 
         }
 
@@ -1340,6 +1360,9 @@ class ProjectController extends Controller
             'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'rooms' => Room::all(),
 
             'budget' => [
                 'columns' => $outputColumns,

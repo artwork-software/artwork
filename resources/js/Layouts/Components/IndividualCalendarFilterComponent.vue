@@ -1,5 +1,5 @@
 <template>
-    <BaseFilter use-icon="true">
+    <BaseFilter onlyIcon="true">
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetCalendarFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
@@ -313,7 +313,7 @@ import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
 
 export default {
-    name: "IndividualCalendarComponent",
+    name: "IndividualCalendarFilterComponent",
     components: {
         SwitchLabel,
         Switch,

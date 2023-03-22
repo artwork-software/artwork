@@ -2,9 +2,8 @@
     <div :class="event.class" class="px-1 py-0.5 w-full rounded-lg">
         <div class="eventHeader  flex justify-between">
             <div class="flex items-center">
-                {{ event.title }}
-                <div v-if="event.project?.state?.color" :class="event.project.state.color" class="h-2 w-2 rounded-full border-4">
-                </div>
+                <CalendarIcon v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()" class="h-4 w-4 mr-1" :class="event.class"></CalendarIcon>
+                {{ event.eventTypeName }}
             </div>
             <!-- Icons -->
             <div v-if="event.audience"
@@ -26,29 +25,17 @@
         <!-- Time -->
         <div class="flex">
             <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
-                  class="items-center eventTime">{{ new Date(event.start).formatTime("HH:mm") }} - {{
+                  class="items-center eventTime">{{ new Date(event.start).format("DD.MM.YYYY")}}, {{ new Date(event.start).formatTime("HH:mm") }} - {{
                     new Date(event.end).formatTime("HH:mm")
                 }}
             </span>
             <span class="flex w-full" v-else>
                 <span class="items-center eventTime">
-                    {{ new Date(event.start).format("DD.MM. HH:mm") }} - {{
+                    {{ new Date(event.start).format("DD.MM., HH:mm") }} - {{
                         new Date(event.end).format("DD.MM. HH:mm")
                     }}
                 </span>
             </span>
-        </div>
-        <!-- repeating Event -->
-        <div class="uppercase eventText flex items-center" >
-            <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838" viewBox="0 0 8.664 10.838">
-                <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
-                    <path id="Pfad_1366" data-name="Pfad 1366"  d="M25.5,1.5l1.829,1.829L25.5,5.158" transform="translate(-15.465 0)"/>
-                    <path id="Pfad_1367" data-name="Pfad 1367"  d="M4.5,10.243V9.329A1.741,1.741,0,0,1,6.136,7.5h5.727" transform="translate(0 -4.436)"/>
-                    <path id="Pfad_1368" data-name="Pfad 1368"  d="M6.329,26.158,4.5,24.329,6.329,22.5" transform="translate(0 -15.658)"/>
-                    <path id="Pfad_1369" data-name="Pfad 1369"  d="M11.864,19.5v.914a1.741,1.741,0,0,1-1.636,1.829H4.5" transform="translate(0 -13.307)"/>
-                </g>
-            </svg>
-            Wiederholungstermin
         </div>
         <!-- User-Icons -->
         <div class="-ml-3 mb-0.5">
@@ -116,14 +103,14 @@
 
 <script>
 import Button from "@/Jetstream/Button";
-import {PlusCircleIcon} from '@heroicons/vue/outline'
+import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 
 
 export default {
     name: "SingleCalendarEvent",
-    components: {Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon},
+    components: {Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, CalendarIcon},
     props: ['event']
 }
 </script>
@@ -137,7 +124,7 @@ export default {
 .eventType0 {
     background-color: #A7A6B115;
     stroke: #7F7E88;
-    color: #7F7E88
+    color: #7F7E88;
 }
 
 .eventType1 {

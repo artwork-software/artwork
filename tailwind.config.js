@@ -8,7 +8,10 @@ module.exports = {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
-        "./node_modules/flowbite/**/*.js"
+        "./node_modules/flowbite/**/*.js",
+        "./index.html",
+        "./src/**/*.{vue,js,ts,jsx,tsx}",
+        "./node_modules/vue-tailwind-datepicker/**/*.js"
     ],
 
     theme: {
@@ -37,7 +40,7 @@ module.exports = {
                 silverGray:'#CECDD8',
                 userBg: '#EDEDEC',
                 colorOfAction: '#E8E4f5',
-                menuButtonBlue: '#3017AD'
+                menuButtonBlue: '#3017AD',
             },
             fontSize: {
                 header: '30px'

@@ -20,8 +20,8 @@
                 <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
                     {{ day }}
                 </th>
-                <td class="w-52 h-36 overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
-                    <div class="py-0.5 pr-2" v-for="event in room[day].data">
+                <td class="w-52 h-36 cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
+                    <div class="py-0.5" v-for="event in room[day].data">
                         <SingleCalendarEvent :event="event"/>
                     </div>
                 </td>
@@ -63,4 +63,23 @@ export default {
 
 <style scoped>
 
+/* this only works in some browsers but is wanted by the client */
+.cell{
+    overflow: overlay;
+}
+::-webkit-scrollbar {
+    width: 16px;
+}
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
+}
 </style>

@@ -24,7 +24,7 @@
             </div>
         </div>
         <!-- Time -->
-        <div class="flex">
+        <div class="flex w-40">
             <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
                   class="items-center eventTime">{{ new Date(event.start).formatTime("HH:mm") }} - {{
                     new Date(event.end).formatTime("HH:mm")
@@ -51,7 +51,7 @@
             Wiederholungstermin
         </div>
         <!-- User-Icons -->
-        <div class="-ml-3 mb-0.5">
+        <div class="-ml-3 mb-0.5 w-full">
             <div v-if="event.projectLeaders && !project"
                  class="mt-1 ml-5 flex flex-wrap">
                 <div class="flex flex-wrap flex-row -ml-1.5"

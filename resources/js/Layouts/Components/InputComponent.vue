@@ -17,6 +17,11 @@ export default {
     components: {},
     props: ['modelValue', 'placeholder'],
     emits:['update:modelValue'],
+    data (){
+        return{
+           modelValue: this.modelValue
+        }
+    },
     methods: {
         updateContent(){
             this.$emit('update:modelValue', this.modelValue)

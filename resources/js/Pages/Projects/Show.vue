@@ -147,8 +147,8 @@
             <div class="bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="px-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
-                    <IndividualCalendarAtGlanceComponent @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                    <IndividualCalendarComponent @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :calendarData="calendar" :rooms="rooms" :days="days" />
+                    <IndividualCalendarAtGlanceComponent v-if="atAGlance" @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
+                    <IndividualCalendarComponent v-else @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :calendarData="calendar" :rooms="rooms" :days="days" />
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab"

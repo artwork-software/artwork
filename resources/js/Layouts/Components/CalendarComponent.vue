@@ -446,23 +446,37 @@
                 </Link>
             </template>
             <template #event="{ event, view}">
-                <div class="text-left mt-3 cursor-pointer">
-                    <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
-                         class="flex absolute left-0 top-0">
-                        <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                             alt="audienceIcon"/>
-                        <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2"
-                             alt="attributeIcon"/>
-                    </div>
-                    <div v-if="!project" class="xsDark truncate mx-1">
-                        {{ event.title }}
+                <div class="text-left centered mt-3 cursor-pointer">
+                    <div class="flex w-full">
+                        <div v-if="!project" class="eventHeader truncate mx-1">
+                            {{ event.title }}
+                        </div>
+                        <div v-else class="truncate mx-1">
+                            {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
+                        </div>
+                        <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                             class="flex">
+                            <div v-if="event.audience"
+                                 class="flex">
+                                <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23" viewBox="0 0 19.182 10.124">
+                                    <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
+                                        <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
+                                            <path id="Pfad_825" data-name="Pfad 825" d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_826" data-name="Pfad 826" d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z" transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_827" data-name="Pfad 827" d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-48.181 -1)" fill="none"  stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_828" data-name="Pfad 828" d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955" transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_829" data-name="Pfad 829" d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_830" data-name="Pfad 830" d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189" transform="translate(-1 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                        </g>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
-                    <div v-else class="xsDark truncate mx-1">
-                        {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
-                    </div>
+
+
                     <div v-if="currentView !== 'month'" class="mx-1">
-
                         <div v-if="!project">
                         <span class="truncate xxsLight truncate"
                               v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
@@ -470,16 +484,14 @@
                         <div v-else class="truncate xxsLight truncate">
                             {{ event.eventName }}
                         </div>
-                        <span class="flex w-full xxsLight">
-
-
+                        <span class="flex w-full eventTime">
                         <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center xxsLight">{{ event.start.formatTime("HH:mm") }} - {{
+                              class="items-center eventTime">{{ event.start.formatTime("HH:mm") }} - {{
                                 event.end.formatTime("HH:mm")
                             }}
                         </span>
-                        <span class="flex w-full xxsLight" v-else>
-                            <span class="items-center">
+                        <span class="flex w-full eventTime" v-else>
+                            <span class="items-center eventTime">
                                 {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
                                     event.end.format("DD.MM.YYYY HH:mm")
                                 }}
@@ -487,19 +499,14 @@
 
                         </span><br/>
                     </span>
-                        <!-- only show profile pics when event is longer than 90 minutes => has enough space to display -->
-                        <div v-if="event.endTimeMinutes - event.startTimeMinutes >= 90">
-                            <div class="mt-3 -ml-3">
+                        <div class="flex">
+                            <div class="flex -ml-3">
                                 <div v-if="event.projectLeaders && !project"
-                                     class="mt-1 flex flex-wrap w-full">
+                                     class="ml-2.5 flex flex-wrap ">
                                     <div class="-mr-3 flex flex-wrap flex-row"
                                          v-for="user in event.projectLeaders?.slice(0,3)">
-                                        <img :data-tooltip-target="user.id"
-                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                             class="ml-2 rounded-full ring-2 ring-white object-cover"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="user"/>
+                                        <NewUserToolTip :height="6" :width="6" v-if="user"
+                                                        :user="user" :id="user.id"></NewUserToolTip>
                                     </div>
                                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -542,12 +549,8 @@
                                 <div v-else-if="event.created_by"
                                      class="mt-1 ml-3 flex flex-wrap w-full">
                                     <div class="-mr-3 flex flex-wrap flex-row">
-                                        <img :data-tooltip-target="event.created_by.id"
-                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                             class="rounded-full ring-2 ring-white object-cover"
-                                             :src="event.created_by.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="event.created_by"/>
+                                        <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
+                                                        :user="event.created_by" :id="event.created_by.id + event.id"></NewUserToolTip>
                                     </div>
                                 </div>
 
@@ -557,6 +560,10 @@
                 </div>
             </template>
         </vue-cal>
+        <pre>
+            {{dateValue}}
+        </pre>
+        <date-picker-component></date-picker-component>
     </div>
     <!-- Termin erstellen Modal-->
     <event-component
@@ -631,10 +638,15 @@ import Button from "@/Jetstream/Button";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
 import BaseFilter from "@/Layouts/Components/BaseFilter";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import VueTailwindDatepicker from 'vue-tailwind-datepicker'
+import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        DatePickerComponent,
+        NewUserToolTip,
         BaseFilter,
         PlusCircleIcon,
         ExclamationIcon,
@@ -676,7 +688,7 @@ export default {
         Link,
         EventComponent,
         EventsWithoutRoomComponent,
-        UserTooltip
+        UserTooltip,
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
     data() {
@@ -1286,10 +1298,24 @@ export default {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */
     margin-top: 3px;
-    padding-top: 22px;
-    background-color: white;
-    border: 1px solid #D8D7DE;
-    opacity: 1;
+    border-right: 3px solid #ffffff;
+    overflow: overlay;
+}
+
+::-webkit-scrollbar {
+    width: 16px;
+}
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
 }
 
 .vuecal__event-time {
@@ -1382,63 +1408,78 @@ export default {
 
 
 /* Custom Event Type Colors */
-
 .vuecal__event.occupancy_option {
     background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
 }
 
 .vuecal__event.eventType0 {
-    border-left: solid #A7A6B1;
-    border-width: 1px 1px 1px 3px;
+    background-color: #A7A6B115;
+    stroke: #7F7E88;
+    color: #7F7E88
 }
 
 .vuecal__event.eventType1 {
-    border-left: solid #641a54;
-    border-width: 1px 1px 1px 3px;
+    background: #641a5415;
+    stroke: #631D53;
+    color: #631D53
 }
 
 .vuecal__event.eventType2 {
-    border-left: solid #da3f87;
-    border-width: 1px 1px 1px 3px;
+    background: #da3f8715;
+    stroke: #D84387;
+    color: #D84387
 }
 
 .vuecal__event.eventType3 {
-    border-left: solid #eb7a3d;
-    border-width: 1px 1px 1px 3px;
+    background: #eb7a3d15;
+    stroke: #E97A45;
+    color: #E97A45
 }
 
 .vuecal__event.eventType4 {
-    border-left: solid #f1b640;
-    border-width: 1px 1px 1px 3px;
+    background: #f1b64015;
+    stroke: #CB8913;
+    color: #CB8913
 }
 
 .vuecal__event.eventType5 {
-    border-left: solid #86c554;
-    border-width: 1px 1px 1px 3px;
+    background: #86c55415;
+    stroke: #648928;
+    color: #648928
 }
 
 .vuecal__event.eventType6 {
-    border-left: solid #2eaa63;
-    border-width: 1px 1px 1px 3px;
+    background: #2eaa6315;
+    stroke: #35A965;
+    color: #35A965
 }
 
 .vuecal__event.eventType7 {
-    border-left: solid #3dc3cb;
-    border-width: 1px 1px 1px 3px;
+    background: #3dc3cb15;
+    stroke: #35ACB2;
+    color: #35ACB2
 }
 
 .vuecal__event.eventType8 {
-    border-left: solid #168fc3;
-    border-width: 1px 1px 1px 3px;
+    background: #168fc315;
+    stroke: #2290C1;
+    color: #2290C1
 }
 
 .vuecal__event.eventType9 {
-    border-left: solid #4d908e;
-    border-width: 1px 1px 1px 3px;
+    background: #4d908e15;
+    stroke: #50908E;
+    color: #50908E
 }
-
 .vuecal__event.eventType10 {
-    border-left: solid #21485c;
-    border-width: 1px 1px 1px 3px;
+    background: #21485C15;
+    stroke: #23485B;
+    color: #23485B
+}
+.centered{
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
     <div>
-        <vue-tailwind-datepicker :shortcuts="customShortcuts" :placeholder="new Date(dateValue[0])" separator=" bis " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
+        <vue-tailwind-datepicker :shortcuts="customShortcuts" :placeholder="new Date(dateValue[0])" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
     </div>
 </template>
 
@@ -25,7 +25,7 @@ const datePickerOptions = ref({
     }
 })
 const formatter = ref({
-    date: 'DD MMM YYYY',
+    date: 'DD.MM.YY',
     month: 'MMM'
 })
 

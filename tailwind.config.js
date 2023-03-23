@@ -1,4 +1,5 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
+const colors = require("tailwindcss/colors")
 
 module.exports = {
     mode: 'jit',
@@ -41,6 +42,8 @@ module.exports = {
                 userBg: '#EDEDEC',
                 colorOfAction: '#E8E4f5',
                 menuButtonBlue: '#3017AD',
+                "vtd-primary": colors.sky,
+                "vtd-secondary": colors.gray,
             },
             fontSize: {
                 header: '30px'

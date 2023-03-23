@@ -560,10 +560,7 @@
                 </div>
             </template>
         </vue-cal>
-        <pre>
-            {{dateValue}}
-        </pre>
-        <date-picker-component></date-picker-component>
+
     </div>
     <!-- Termin erstellen Modal-->
     <event-component

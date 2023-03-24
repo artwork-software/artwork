@@ -1,6 +1,14 @@
 <template>
     <div>
-        <vue-tailwind-datepicker :shortcuts="customShortcuts" :placeholder="new Date(dateValue[0])" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
+        <input v-model="dateValue[0]"
+               id="startDate"
+               type="date"
+               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+        <input v-model="dateValue[1]"
+               id="endDate"
+               type="date"
+               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+        <vue-tailwind-datepicker :shortcuts="customShortcuts" :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
     </div>
 </template>
 
@@ -10,6 +18,7 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 
 
 import {ref} from "vue";
+import {Inertia} from "@inertiajs/inertia";
 
 const datePickerOptions = ref({
     shortcuts: {
@@ -25,24 +34,24 @@ const datePickerOptions = ref({
     }
 })
 const formatter = ref({
-    date: 'DD.MM.YY',
+    date: 'YYYY-MM-DD',
     month: 'MMM'
 })
 
 const customShortcuts = () => {
     return [
         {
-            label: 'Last 15 Days',
+            label: 'Heute',
             atClick: () => {
                 const date = new Date();
                 return [
-                    new Date(date.setDate(date.getDate() - 15)),
+                    new Date(),
                     new Date()
                 ];
             }
         },
         {
-            label: 'Last Years',
+            label: 'Aktuelle Woche',
             atClick: () => {
                 const date = new Date();
                 return [
@@ -67,6 +76,19 @@ export default {
             customShortcuts: customShortcuts,
         }
 
+    },
+    watch: {
+        dateValue: {
+            handler() {
+                // TODO: HIER WERDEN BEIDE DATES IN EINEM ARRAY [ startdate, enddate ] ANS BACKEND WEITERGEGEGBEN im Format DD.MM.YY BITTE IM BACKEND umsetzen.
+                Inertia.reload({
+                    data: {
+                        dateRangeArray: this.dateValue,
+                    }
+                })
+            },
+            deep: true
+        }
     },
 }
 </script>

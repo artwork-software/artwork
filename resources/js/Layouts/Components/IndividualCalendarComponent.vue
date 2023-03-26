@@ -22,7 +22,7 @@
                 </th>
                 <td class="w-52 h-36 overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
                     <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                        <SingleCalendarEvent :event="event"/>
+                        <SingleCalendarEvent :event="event" :event-types="eventTypes"/>
                     </div>
                 </td>
             </tr>
@@ -51,7 +51,7 @@ export default {
 
       }
     },
-    props: ['calendarData', 'rooms', 'days','atAGlance'],
+    props: ['calendarData', 'rooms', 'days','atAGlance', 'eventTypes'],
     emits:['changeAtAGlance'],
     methods: {
         changeAtAGlance(atAGlance){

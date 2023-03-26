@@ -1,5 +1,6 @@
 <template>
     <app-layout>
+
         <div class="py-4 flex">
             <!-- Greetings Div -->
             <div class="mr-2 w-4/6">
@@ -17,7 +18,7 @@
                         Kalender-Switch
                     </button>
                     <div v-if="showIndividualCalendar">
-                    <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :days="days" />
+                    <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :event-types="eventTypes" :days="days" />
                     </div>
                     <div v-else>
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
@@ -111,7 +112,7 @@ import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days'],
+    props: ['tasks', 'projects', 'eventTypes', 'calendar', 'rooms','days'],
     components: {
         AppLayout,
         CalendarIcon,

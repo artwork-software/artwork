@@ -1,5 +1,5 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal(false)">
+    <jet-dialog-modal v-show="true" @close="closeModal(false)">
         <template #content>
             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <div class="mx-4">

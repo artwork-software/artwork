@@ -453,5 +453,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Project Settings
     Route::get('projects/settings/trashed', [ProjectController::class, 'getTrashedSettings'])->name('projects.settings.trashed');
+
+    // Sub Event
+    Route::post('/sub-event/add', [\App\Http\Controllers\SubEventsController::class, 'store'])->name('subEvent.add');
+    Route::delete('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'destroy'])->name('subEvent.delete');
+    Route::patch('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'update'])->name('subEvent.update');
 });
 

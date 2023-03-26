@@ -120,6 +120,11 @@ class Event extends Model
         );
     }
 
+    public function subEvents()
+    {
+        return $this->hasMany(SubEvents::class);
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Builder
      */

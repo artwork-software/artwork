@@ -53,7 +53,6 @@ class CalendarEventResource extends JsonResource
             'occupancy_option' => $this->occupancy_option,
             'projectLeaders' => $this->project?->managerUsers,
             'project' => new ProjectInEventResource($this->project),
-
             'collisionCount'=> $this->collision_count,
 
             // to display rooms as split
@@ -66,6 +65,7 @@ class CalendarEventResource extends JsonResource
             'canEdit' => Auth::user()->can('update', $this->resource),
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),
+            'subEvents' => SubEventResource::collection($this->subEvents)
         ];
     }
 }

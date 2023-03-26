@@ -1217,7 +1217,6 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
-
         $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData();
 
@@ -1309,8 +1308,6 @@ class ProjectController extends Controller
                 ->whereBetween('start_time', [$startDate, $endDate])
                 ->whereBetween('end_time', [$startDate, $endDate])
                 ->with(['room','project','creator'])->get())->collection->groupBy('room.id');
-
-
         }
 
         $selectedSumDetail = null;

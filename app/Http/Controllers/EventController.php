@@ -468,7 +468,7 @@ class EventController extends Controller
      * @param Event $event
      * @return JsonResponse
      */
-    public function destroy(Event $event): JsonResponse
+    public function destroy(Event $event)
     {
         $this->authorize('delete', $event);
 
@@ -477,6 +477,8 @@ class EventController extends Controller
             $projectHistory = new HistoryController('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
+
+        $event->subEvents()->delete();
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
@@ -491,10 +493,6 @@ class EventController extends Controller
             'message' => $this->notificationData->title
         ];
         $this->notificationController->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
-
-
-
-        return new JsonResponse(['success' => 'Event moved to trash']);
     }
 
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse

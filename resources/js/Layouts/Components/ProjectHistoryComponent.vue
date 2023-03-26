@@ -47,7 +47,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">

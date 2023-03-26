@@ -83,7 +83,8 @@ export default {
                 // TODO: HIER WERDEN BEIDE DATES IN EINEM ARRAY [ startdate, enddate ] ANS BACKEND WEITERGEGEGBEN im Format DD.MM.YY BITTE IM BACKEND umsetzen.
                 Inertia.reload({
                     data: {
-                        dateRangeArray: this.dateValue,
+                        startDate: this.dateValue[0],
+                        endDate: this.dateValue[1],
                     }
                 })
             },

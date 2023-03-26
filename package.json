@@ -33,6 +33,7 @@
         "@vuepic/vue-datepicker": "^3.2.2",
         "flowbite": "^1.4.1",
         "vue-cal": "^4.8.0",
+        "vue-tailwind-datepicker": "^1.4.3",
         "vuedraggable": "^4.1.0",
         "ziggy": "^2.4.0"
     }

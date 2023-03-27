@@ -23,6 +23,12 @@ export default {
         }
     },
 
+    data(){
+        return{
+            modelValue: this.modelValue
+        }
+    }
+
 }
 </script>
 

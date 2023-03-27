@@ -12,6 +12,7 @@
                 <p>
                     Bitte beachte, dass der Termin innerhalb des Termingruppenzeitraums stattfinden muss.
                 </p>
+
                 <XIcon @click="closeModal"
                        class="h-5 w-5 right-0 top-0 mr-5 mt-8 flex text-secondary absolute cursor-pointer"
                        aria-hidden="true"/>
@@ -155,7 +156,12 @@
                             </div>
                         </div>
                     </div>
-                    <span class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</span>
+                   <div>
+                       <div class="text-red-500 text-xs" v-show="helpText.length > 0">{{ helpText }}</div>
+                       <div class="text-red-500 text-xs" v-show="helpTextStart.length > 0">{{ helpTextStart }}</div>
+                       <div class="text-red-500 text-xs" v-show="helpTextEnd.length > 0">{{ helpTextEnd }}</div>
+                       <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
+                   </div>
 
                     <div class="py-2">
                     <textarea placeholder="Was gibt es bei dem Termin zu beachten?"
@@ -221,6 +227,9 @@ export default {
             }),
             edit: !!this.subEventToEdit?.id,
             helpText: '',
+            helpTextStart: '',
+            helpTextEnd: '',
+            helpTextLength: '',
             show: true,
             submit: true
         }
@@ -236,7 +245,7 @@ export default {
             return (new Date(date + ' ' + time)).toISOString()
         },
         checkTimes(){
-            if(this.subEvent.start_time > this.subEvent.end_time){
+            if(this.subEvent.start_time > this.subEvent.end_time && this.subEvent.end_time && this.subEvent.start_time){
                 this.helpText = 'Endzeit kann nicht vor der Startzeit liegen!';
                 this.submit = false;
             } else {
@@ -245,22 +254,39 @@ export default {
             }
             const start = Date.parse(this.event.start);
             const end = Date.parse(this.event.end);
-            const subEventStart = Date.parse(this.subEvent.start_time);
-            const subEventEnd = Date.parse(this.subEvent.end_time);
-            /*if(start > subEventStart || end < subEventStart){
-                this.helpText = 'Start und Endzeit müssen innerhalb Termingruppenzeitraum liegen';
-                this.submit = false;
-            } else {
-                this.helpText = '';
-                this.submit = true;
+            if(this.subEvent.start_time){
+                const subEventStart = Date.parse(this.subEvent.start_time);
+                if(start > subEventStart || end < subEventStart){
+                    this.helpTextStart = 'Startzeit muss innerhalb Termingruppenzeitraum liegen';
+                    this.submit = false;
+                } else {
+                    this.helpTextStart = '';
+                    this.submit = true;
+                }
             }
-            if(end > subEventEnd || start < subEventEnd){
-                this.helpText = 'Start und Endzeit müssen innerhalb Termingruppenzeitraum liegen';
-                this.submit = false;
-            } else {
-                this.helpText = '';
-                this.submit = true;
-            }*/
+            if(this.subEvent.end_time){
+                const subEventEnd = Date.parse(this.subEvent.end_time);
+                if(end < subEventEnd || start > subEventEnd){
+                    this.helpTextEnd = 'Endzeit muss innerhalb Termingruppenzeitraum liegen';
+                    this.submit = false;
+                } else {
+                    this.helpTextEnd = '';
+                    this.submit = true;
+                }
+            }
+
+            // check if event min 30min
+            if(this.subEvent.start_time && this.subEvent.end_time){
+                const minimumEnd = new Date(this.subEvent.start_time).addMinutes(30);
+                if(minimumEnd <= this.subEvent.end_time){
+                    this.helpTextLength = '';
+                    this.submit = true;
+                } else {
+                    this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+                    this.submit = false;
+                }
+            }
+
         },
         updateOrCreateEvent(){
             this.subEvent.event_type_id = this.subEvent?.selectedEventType?.id;

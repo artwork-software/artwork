@@ -1361,6 +1361,7 @@ class ProjectController extends Controller
             'moneySources' => MoneySource::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
             'calendar' => $showCalendar['roomsWithEvents'],
+            'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'rooms' => Room::all(),
 

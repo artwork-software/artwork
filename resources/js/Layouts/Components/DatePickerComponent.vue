@@ -1,14 +1,18 @@
 <template>
     <div>
+        <div class="flex items-center">
+        <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
         <input v-model="dateValue[0]"
                id="startDate"
                type="date"
+               placeholder="Start"
                class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         <input v-model="dateValue[1]"
                id="endDate"
                type="date"
                class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-        <vue-tailwind-datepicker :shortcuts="customShortcuts" :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
+        </div>
+        <vue-tailwind-datepicker class="absolute" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts" :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
     </div>
 </template>
 
@@ -19,6 +23,7 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
+import {CalendarIcon} from "@heroicons/vue/outline";
 
 const datePickerOptions = ref({
     shortcuts: {
@@ -65,22 +70,31 @@ const customShortcuts = () => {
 
 export default {
     name: "DatePickerComponent",
-    components: {VueTailwindDatepicker},
-    props: {
-    },
+    components: {VueTailwindDatepicker, CalendarIcon},
+    props: ['dateValue'],
+    emits:['changeCalendarType'],
     data(){
         return{
-            dateValue:[],
+            dateValue:this.dateValue ? this.dateValue : [],
             datePickerOptions: datePickerOptions,
             formatter:formatter,
+            showDateRangePicker: false,
             customShortcuts: customShortcuts,
         }
 
     },
+    methods:{
+      changeCalendarType(){
+          if(this.dateValue[0] === this.dateValue[1]){
+              this.$emit('changeCalendarType');
+          }
+
+      }
+    },
     watch: {
         dateValue: {
             handler() {
-                // TODO: HIER WERDEN BEIDE DATES IN EINEM ARRAY [ startdate, enddate ] ANS BACKEND WEITERGEGEGBEN im Format DD.MM.YY BITTE IM BACKEND umsetzen.
+                this.changeCalendarType();
                 Inertia.reload({
                     data: {
                         startDate: this.dateValue[0],

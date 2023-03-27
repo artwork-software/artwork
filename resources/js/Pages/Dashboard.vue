@@ -16,14 +16,15 @@
                     <button class="bg-buttonBlue text-secondaryHover rounded-full p-2 font-semibold" @click="this.showIndividualCalendar = !showIndividualCalendar">
                         Kalender-Switch
                     </button>
-                    <div v-if="showIndividualCalendar">
-                    <IndividualCalendarComponent :calendarData="calendar" :rooms="rooms" :days="days" />
-                    </div>
-                    <div v-else>
+                    <div v-if="calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                                            <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
+                            <CalendarComponent @change-calendar-view="showIndividualCalendar = !showIndividualCalendar" :eventTypes=this.eventTypes initial-view="day"/>
                         </div>
                     </div>
+                    <div v-else>
+                    <IndividualCalendarComponent :dateValue="dateValue" :calendarData="calendar" :rooms="rooms" :days="days" />
+                    </div>
+
                 </div>
 
 
@@ -111,7 +112,7 @@ import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days'],
+    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType'],
     components: {
         AppLayout,
         CalendarIcon,

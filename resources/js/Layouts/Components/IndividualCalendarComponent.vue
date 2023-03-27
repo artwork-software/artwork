@@ -1,6 +1,6 @@
 <template>
     <div class="w-full flex flex-wrap">
-        <CalendarFunctionBar @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <CalendarFunctionBar @change-calendar-type="changeCalendarType" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
         <!-- Calendar -->
         <table class="w-full flex flex-wrap">
             <thead class="w-full">
@@ -51,11 +51,14 @@ export default {
 
       }
     },
-    props: ['calendarData', 'rooms', 'days','atAGlance'],
-    emits:['changeAtAGlance'],
+    props: ['calendarData', 'rooms', 'days','atAGlance','dateValue'],
+    emits:['changeAtAGlance','changeCalendarType'],
     methods: {
         changeAtAGlance(atAGlance){
             this.$emit('changeAtAGlance', atAGlance)
+        },
+        changeCalendarType(){
+            this.$emit('changeCalendarType')
         }
     }
 }

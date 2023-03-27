@@ -32,25 +32,11 @@
                                 Heute
                             </label>
                         </button>
-                        <button @click="$refs.vuecal.switchView('week')"
+                        <button @click="this.changeCalendarView()"
                                 class="w-full mt-2 text-left pl-2"
                                 :class="currentView === 'week' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
                             <label class="text-sm">
                                 Woche
-                            </label>
-                        </button>
-                        <button @click="$refs.vuecal.switchView('month')"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'month' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Monat
-                            </label>
-                        </button>
-                        <button @click="$refs.vuecal.switchView('year')"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'year' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Jahr
                             </label>
                         </button>
                     </MenuItems>
@@ -688,6 +674,7 @@ export default {
         UserTooltip,
     },
     props: ['project', 'room', 'initialView', 'eventTypes'],
+    emits:['changeCalendarView'],
     data() {
         return {
             displayDate: '',
@@ -1177,6 +1164,9 @@ export default {
             } else {
                 this.filterIds[field] = true;
             }
+        },
+        changeCalendarView(){
+            this.$emit('changeCalendarView');
         },
         addFilterableVariable(dataArray, boolean) {
             dataArray.forEach(element => element.checked = boolean);

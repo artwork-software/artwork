@@ -552,10 +552,13 @@ export default {
                 return;
             }
 
-            this.startDate = this.event.start.format('YYYY-MM-DD');
-            this.startTime = this.event.start.format('HH:mm');
-            this.endDate = this.event.end.format('YYYY-MM-DD');
-            this.endTime = this.event.end.format('HH:mm');
+            const start = new Date(this.event.start);
+            const end = new Date(this.event.end);
+
+            this.startDate = start.format('YYYY-MM-DD');
+            this.startTime = start.format('HH:mm');
+            this.endDate = end.format('YYYY-MM-DD');
+            this.endTime = end.format('HH:mm');
             this.isLoud = this.event.isLoud
             this.audience = this.event.audience
             this.title = this.event.title

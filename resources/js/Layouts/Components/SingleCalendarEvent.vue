@@ -3,7 +3,7 @@
         <div
             class="absolute w-full h-full bg-indigo-500/50 rounded-lg hidden group-hover:block flex justify-center align-middle items-center">
             <div class="flex justify-center items-center h-full gap-2">
-                <button type="button"
+                <button type="button" @click="openEditEventModal(event)"
                         class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -251,15 +251,11 @@
                     <!-- Time -->
                     <div class="flex">
                         <span v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
-                              class="items-center eventTime">{{
-                                new Date(subEvent.start).formatTime("HH:mm")
-                            }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
+                              class="items-center eventTime">{{ new Date(subEvent.start).formatTime("HH:mm") }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
                         </span>
                         <span class="flex w-full" v-else>
                             <span class="items-center eventTime">
-                                {{
-                                    new Date(subEvent.start).format("DD.MM. HH:mm")
-                                }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
+                                {{ new Date(subEvent.start).format("DD.MM. HH:mm") }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
                             </span>
                         </span>
                     </div>
@@ -306,6 +302,7 @@ export default {
         ConfirmationComponent,
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal},
     props: ['event', 'eventTypes'],
+    emits: ['openEditEventModal'],
     data() {
         return {
             showAddSubEventModal: false,
@@ -323,6 +320,9 @@ export default {
         }
     },
     methods: {
+        openEditEventModal(event){
+            this.$emit('openEditEventModal', event);
+        },
         closeAddSubModal() {
             this.showAddSubEventModal = false;
         },

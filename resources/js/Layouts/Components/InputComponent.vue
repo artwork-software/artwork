@@ -22,6 +22,11 @@ export default {
             this.$emit('update:modelValue', this.modelValue)
         }
     },
+    data(){
+        return {
+            modelValue: this.modelValue
+        }
+    }
 
 }
 </script>

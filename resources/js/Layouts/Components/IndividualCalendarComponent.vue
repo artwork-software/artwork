@@ -22,7 +22,7 @@
                 </th>
                 <td class="w-52 h-36 overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
                     <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                        <SingleCalendarEvent :event="event" :event-types="eventTypes"/>
+                        <SingleCalendarEvent :event="event" :event-types="eventTypes" @open-edit-event-modal="openEditEventModal"/>
                     </div>
                 </td>
             </tr>
@@ -30,12 +30,26 @@
         </table>
     </div>
 
+    <event-component
+        v-if="createEventComponentIsVisible"
+        @closed="onEventComponentClose()"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :event="selectedEvent"
+        :wantedRoomId="wantedRoom"
+        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :roomCollisions="roomCollisions"
+    />
 </template>
 
 <script>
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 
 
@@ -45,17 +59,59 @@ export default {
         CalendarFunctionBar,
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
+        EventComponent
     },
     data() {
-      return {
-
-      }
+        return {
+            project: null,
+            selectedEvent: null,
+            createEventComponentIsVisible: false,
+            wantedRoom: null,
+            roomCollisions: []
+        }
     },
     props: ['calendarData', 'rooms', 'days','atAGlance', 'eventTypes'],
     emits:['changeAtAGlance'],
     methods: {
         changeAtAGlance(atAGlance){
             this.$emit('changeAtAGlance', atAGlance)
+        },
+        openEditEventModal(event){
+            //console.log(event);
+            this.selectedEvent = event;
+            this.wantedRoom = event.roomId;
+
+            if (event === null) {
+                this.selectedEvent = null;
+                this.createEventComponentIsVisible = true;
+                return;
+            }
+
+            if (!event.id) {
+                event = {
+                    start: event?.start,
+                    end: event?.end,
+                    projectId: this.project?.id,
+                    projectName: this.project?.name,
+                    roomId: event.roomId,
+                }
+            }
+
+
+            if (event?.start && event?.end) {
+                axios.post('/collision/room', {
+                    params: {
+                        start: event?.start,
+                        end: event?.end,
+                    }
+                }).then(response => this.roomCollisions = response.data);
+            }
+            this.createEventComponentIsVisible = true;
+
+        },
+        onEventComponentClose(){
+            this.createEventComponentIsVisible = false;
+            Inertia.reload();
         }
     }
 }

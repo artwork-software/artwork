@@ -81,7 +81,7 @@ export default {
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
         EventsWithoutRoomComponent,
-        ExclamationIcon
+        ExclamationIcon,
         EventComponent
     },
     data() {

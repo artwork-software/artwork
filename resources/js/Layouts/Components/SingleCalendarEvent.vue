@@ -294,7 +294,6 @@ import EventComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue"
 
 
 export default {
-
     name: "SingleCalendarEvent",
     components: {
         EventComponent,
@@ -435,7 +434,6 @@ export default {
     stroke: #50908E;
     color: #50908E
 }
-
 .eventType10 {
     background: #21485C15;
     stroke: #23485B;

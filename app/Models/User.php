@@ -115,6 +115,13 @@ class User extends Authenticatable
         'profile_photo_url',
     ];
 
+    protected $with = ['calendar_settings'];
+
+    public function calendar_settings(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCalendarSettings::class);
+    }
+
     public function contracts()
     {
         return $this->hasMany(Contract::class);

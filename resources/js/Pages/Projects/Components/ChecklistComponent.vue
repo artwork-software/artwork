@@ -5,10 +5,10 @@
             <div class="flex items-center"
                  v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
-                <div v-if="$page.props.can.show_hints" class="flex">
+                <div v-if="$page.props.can.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                     <span
-                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
+                        class="hind ml-1">Lege neue Checklisten an</span>
                 </div>
             </div>
         </div>

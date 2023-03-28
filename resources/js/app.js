@@ -3,6 +3,7 @@ require('./bootstrap');
 import { createApp, h } from 'vue';
 import { createInertiaApp } from '@inertiajs/inertia-vue3';
 import { InertiaProgress } from '@inertiajs/progress';
+import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import 'flowbite';
 import '@vuepic/vue-datepicker/dist/main.css'
 
@@ -29,6 +30,7 @@ createInertiaApp({
             .use(plugin)
             .mixin({ methods: { route } })
         app.config.globalProperties.$svgColors = svgColors;
+        app.use(VueTailwindDatepicker);
         app.mount(el);
     },
 });

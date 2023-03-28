@@ -31,6 +31,7 @@ class CalendarController extends Controller
 
         $startDate = Carbon::now()->startOfDay();
         $endDate = Carbon::now()->addWeeks()->endOfDay();
+        $calendarType = '';
 
         if(\request('startDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
@@ -40,25 +41,21 @@ class CalendarController extends Controller
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
         }
 
+        if($endDate && $startDate){
+            if(\request('startDate') !== \request('endDate')){
+                $calendarType = 'individual';
+            }else{
+                $calendarType = 'daily';
+            }
+        }
+
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
-        //$returnArray = [];
         $periodArray = [];
         $rooms = Room::all();
 
         foreach ($calendarPeriod as $period) {
             $periodArray[] = $period->format('d.m.');
         }
-//        foreach ($rooms as $room){
-//            foreach ($calendarPeriod as $period){
-//                $returnArray[$room->id][$period->format('d.m.')] = CalendarEventResource::collection(Event::where('room_id', $room->id)
-//                    ->whereBetween('start_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
-//                    ->orWhere(function($query) use ($room, $period) {
-//                        $query->whereBetween('end_time', [$period->startOfDay()->format('Y-m-d H:i:s'), $period->endOfDay()->format('Y-m-d H:i:s')])
-//                        ->where('room_id', $room->id);
-//                    })
-//                    ->get());
-//            }
-//        }
 
         $better = Room::with(['events.room', 'events.project', 'events.creator'])
             ->get()
@@ -69,6 +66,8 @@ class CalendarController extends Controller
 
         return [
             'days' => $periodArray,
+            'dateValue' => [$startDate->format('Y-m-d'),$endDate->format('Y-m-d')],
+            'calendarType' => $calendarType,
             'roomsWithEvents' => $better
         ];
     }

@@ -13,12 +13,9 @@
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
                 <div>
-                    <button class="bg-buttonBlue text-secondaryHover rounded-full p-2 font-semibold" @click="this.showIndividualCalendar = !showIndividualCalendar">
-                        Kalender-Switch
-                    </button>
-                    <div v-if="calendarType === 'daily'">
+                    <div v-if="calendarType && calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                            <CalendarComponent @change-calendar-view="showIndividualCalendar = !showIndividualCalendar" :eventTypes=this.eventTypes initial-view="day"/>
+                            <CalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
                         </div>
                     </div>
                     <div v-else>

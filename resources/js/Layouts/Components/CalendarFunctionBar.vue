@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
-            <date-picker-component @change-calendar-type="changeCalendarType" :dateValue="dateValue"></date-picker-component>
+            <date-picker-component :dateValueArray="dateValue"></date-picker-component>
             <button class="ml-2 text-black" @click="$refs.vuecal.previous()">
                 <ChevronLeftIcon class="h-5 w-5 text-primary"/>
             </button>
@@ -66,7 +66,7 @@ export default {
         DatePickerComponent
     },
     props: ['atAGlance', 'dateValue'],
-    emits: ['changeAtAGlance','changeCalendarType'],
+    emits: ['changeAtAGlance'],
     data() {
         return {
             atAGlance: this.atAGlance,
@@ -76,9 +76,6 @@ export default {
         changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
         },
-        changeCalendarType(){
-            this.$emit('changeCalendarType');
-        }
     },
 }
 </script>

@@ -1,18 +1,20 @@
 <template>
     <div>
         <div class="flex items-center">
-        <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
-        <input v-model="dateValue[0]"
-               id="startDate"
-               type="date"
-               placeholder="Start"
-               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-        <input v-model="dateValue[1]"
-               id="endDate"
-               type="date"
-               class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+            <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
+            <input v-model="dateValue[0]"
+                   id="startDate"
+                   type="date"
+                   placeholder="Start"
+                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
+            <input v-model="dateValue[1]"
+                   id="endDate"
+                   type="date"
+                   class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         </div>
-        <vue-tailwind-datepicker class="absolute" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts" :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter" :options="this.datePickerOptions" i18n="de" v-model="dateValue" />
+        <vue-tailwind-datepicker class="absolute" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts"
+                                 :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter"
+                                 :options="this.datePickerOptions" i18n="de" v-model="dateValue"/>
     </div>
 </template>
 
@@ -29,7 +31,7 @@ const datePickerOptions = ref({
     shortcuts: {
         today: 'Heute',
         yesterday: 'Gestern',
-        past: period =>'Letzte ' + period + ' Tage',
+        past: period => 'Letzte ' + period + ' Tage',
         currentMonth: 'Aktueller Monat',
         pastMonth: 'Letzter Monat'
     },
@@ -71,36 +73,28 @@ const customShortcuts = () => {
 export default {
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
-    props: ['dateValue'],
-    emits:['changeCalendarType'],
-    data(){
-        return{
-            dateValue:this.dateValue ? this.dateValue : [],
+    props: ['dateValueArray'],
+    data() {
+        return {
+            dateValue: this.dateValueArray ? this.dateValueArray : [],
             datePickerOptions: datePickerOptions,
-            formatter:formatter,
+            formatter: formatter,
             showDateRangePicker: false,
+            refreshKey: 1,
             customShortcuts: customShortcuts,
         }
 
     },
-    methods:{
-      changeCalendarType(){
-          if(this.dateValue[0] === this.dateValue[1]){
-              this.$emit('changeCalendarType');
-          }
-
-      }
-    },
     watch: {
         dateValue: {
             handler() {
-                this.changeCalendarType();
-                Inertia.reload({
-                    data: {
-                        startDate: this.dateValue[0],
-                        endDate: this.dateValue[1],
-                    }
-                })
+                this.showDateRangePicker = false;
+                    Inertia.reload({
+                        data: {
+                            startDate: this.dateValue[0],
+                            endDate: this.dateValue[1],
+                        }
+                    })
             },
             deep: true
         }

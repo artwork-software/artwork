@@ -1,6 +1,14 @@
 <template>
     <div class="w-full flex flex-wrap">
-        <CalendarFunctionBar @change-calendar-type="changeCalendarType" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <CalendarFunctionBar :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
+             v-if="eventsWithoutRoom.length > 0">
+
+            <ExclamationIcon class="h-6  mr-2"/>
+            {{
+                eventsWithoutRoom.length
+            }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+        </div>
         <!-- Calendar -->
         <table class="w-full flex flex-wrap">
             <thead class="w-full">
@@ -30,12 +38,25 @@
         </table>
     </div>
 
+    <!-- Termine ohne Raum Modal -->
+    <events-without-room-component
+        v-if="showEventsWithoutRoomComponent"
+        @closed="onEventsWithoutRoomComponentClose()"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :eventsWithoutRoom="this.eventsWithoutRoom"
+        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+    />
+
 </template>
 
 <script>
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
+import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import {ExclamationIcon} from "@heroicons/vue/outline";
 
 
 
@@ -45,21 +66,25 @@ export default {
         CalendarFunctionBar,
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
+        EventsWithoutRoomComponent,
+        ExclamationIcon
     },
     data() {
       return {
-
+          showEventsWithoutRoomComponent: false,
+          eventsWithoutRoom: [],
       }
     },
     props: ['calendarData', 'rooms', 'days','atAGlance','dateValue'],
-    emits:['changeAtAGlance','changeCalendarType'],
+    emits:['changeAtAGlance'],
     methods: {
         changeAtAGlance(atAGlance){
             this.$emit('changeAtAGlance', atAGlance)
         },
-        changeCalendarType(){
-            this.$emit('changeCalendarType')
-        }
+        onEventsWithoutRoomComponentClose() {
+            this.showEventsWithoutRoomComponent = false;
+            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+        },
     }
 }
 </script>

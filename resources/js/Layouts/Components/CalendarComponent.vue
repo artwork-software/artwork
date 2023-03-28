@@ -1,7 +1,8 @@
 <template>
 
-    <div class="mt-10 ml-12 flex justify-between items-center w-[95%] relative">
-        <div class="inline-flex mb-5">
+    <div class="mt-10 flex justify-between items-center w-[95%] relative">
+        <CalendarFunctionBar :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton id="menuButton"
@@ -32,13 +33,7 @@
                                 Heute
                             </label>
                         </button>
-                        <button @click="this.changeCalendarView()"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'week' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Woche
-                            </label>
-                        </button>
+
                     </MenuItems>
                 </transition>
             </Menu>
@@ -51,17 +46,10 @@
 
 
         </div>
-        <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
-             v-if="eventsWithoutRoom.length > 0">
 
-            <ExclamationIcon class="h-6  mr-2"/>
-            {{
-                eventsWithoutRoom.length
-            }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-        </div>
         <div class=" inline-flex mb-5 justify-end">
 
-            <!-- Calendar Filter -->
+            // Calendar Filter
             <BaseFilter>
                 <div class="inline-flex border-none justify-end w-full">
                     <button class="flex" @click="resetCalendarFilter">
@@ -75,7 +63,7 @@
                 </div>
                 <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
-                    <!-- Save Filter Section -->
+                     // Save Filter Section
                     <Disclosure v-slot="{ open }" default-open>
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -97,8 +85,7 @@
                                         <label @click="saveFilter"
                                                class="cursor-pointer text-white text-xs">Speichern</label>
                                     </button>
-                                    <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                               @click="saveFilter"></AddButton> -->
+
                                 </div>
                                 <hr class="border-gray-500 mt-4 mb-4">
                             </div>
@@ -115,7 +102,7 @@
                         <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                     </Disclosure>
 
-                    <!-- Room Filter Section -->
+                    // Room Filter Section
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -162,36 +149,7 @@
                                     </div>
                                 </SwitchGroup>
 
-                                <!--
-                                <Menu as="div" v-if="calendarFilters.allDayFree">
-                                    <div>
-                                        <MenuButton
-                                            class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
-                                            <label v-if="currentInterval === ''" class="text-sm">Zeitraum
-                                                auswählen</label>
-                                            <label v-else class="text-sm">{{ currentInterval }}</label>
-                                            <ChevronDownIcon
-                                                class="h-4 w-4 shadow-sm text-white mt-0.5 float-right"></ChevronDownIcon>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="z-40 origin-top-left absolute overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none w-2/3">
-                                            <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
-                                                <div @click="currentInterval = interval"
-                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
-                                          'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                    {{ interval }}
-                                                </div>
-                                            </MenuItem>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu> -->
+
                             </div>
 
                             <hr class="border-gray-500 mt-2 mb-2">
@@ -297,7 +255,7 @@
 
                     <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
 
-                    <!-- Event Filter Section -->
+                    // Event Filter Section
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
@@ -362,6 +320,7 @@
             <AddButton class="bg-primary hover:bg-secondary text-white resize-none"
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
+        -->
 
 
     </div>
@@ -375,6 +334,8 @@
             :events-until="eventsUntil"
         />
     </div>
+
+
     <!--  Calendar  -->
     <div class="pl-3 overflow-x-scroll">
         <vue-cal
@@ -624,10 +585,12 @@ import BaseFilter from "@/Layouts/Components/BaseFilter";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        CalendarFunctionBar,
         DatePickerComponent,
         NewUserToolTip,
         BaseFilter,
@@ -673,12 +636,13 @@ export default {
         EventsWithoutRoomComponent,
         UserTooltip,
     },
-    props: ['project', 'room', 'initialView', 'eventTypes'],
-    emits:['changeCalendarView'],
+    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue'],
+    emits:['changeAtAGlance'],
     data() {
         return {
             displayDate: '',
             filters: [],
+            dateValue: this.dateValue ? this.dateValue : [],
             filterIds: {},
             filterName: '',
             wantedSplit: null,
@@ -784,6 +748,9 @@ export default {
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
+        },
+        changeAtAGlance(atAGlance){
+            this.$emit('changeAtAGlance', atAGlance)
         },
         changeChecked(array, filterName) {
             array.forEach(object => {
@@ -1164,9 +1131,6 @@ export default {
             } else {
                 this.filterIds[field] = true;
             }
-        },
-        changeCalendarView(){
-            this.$emit('changeCalendarView');
         },
         addFilterableVariable(dataArray, boolean) {
             dataArray.forEach(element => element.checked = boolean);

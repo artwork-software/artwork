@@ -175,6 +175,7 @@
                     Permissions</p>
                 <div v-if="showPermissions">
                 <pre class="ml-2">
+    {{ $page.props.user.calendar_settings }}
     {{ $page.props.can }}
     Admin: {{ $page.props.is_admin }}
     Budget: {{ $page.props.is_budget_admin }}

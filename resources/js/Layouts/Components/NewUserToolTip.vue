@@ -2,7 +2,7 @@
         <div class="flex flex-col items-start md:pl-0 md:items-center" :id="id">
             <div class="flex-col md:flex-row flex items-center md:justify-center">
                 <!--Code Block for white tooltip starts-->
-                <div class="relative z-20 mt-20 md:mt-0">
+                <div class="z-20 mt-20 md:mt-0">
                     <div class="mr-1 cursor-pointer">
                         <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + this.height, 'w-' + this.width]" @mouseover="showTooltip(id)" @mouseout="hideTooltip(id)">
                     </div>

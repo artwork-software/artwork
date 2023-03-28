@@ -82,7 +82,7 @@ class ChecklistTemplateController extends Controller
             ]);
         }
 
-        $checklist_template->users()->sync($checklist->users);
+        $checklist_template->users()->sync(collect($checklist->users)->pluck('id'));
     }
 
     protected function createFromScratch(Request $request)

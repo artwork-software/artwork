@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24.647" height="24.647" viewBox="0 0 24.647 24.647">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #27243b;
+        stroke-width: 2px;
+      }
+    </style>
+  </defs>
+  <g id="Gruppe_921" data-name="Gruppe 921" transform="translate(-1055.97 -145.524)">
+    <g id="Gruppe_919" data-name="Gruppe 919" transform="translate(1073.693 147.024) rotate(45)">
+      <path id="Pfad_1328" data-name="Pfad 1328" class="cls-1" d="M0,8.747V0" transform="translate(3.831 0.244)"/>
+      <path id="Pfad_1329" data-name="Pfad 1329" class="cls-1" d="M0,3.835,3.835,0,7.671,3.835" transform="translate(0 0)"/>
+    </g>
+    <g id="Gruppe_920" data-name="Gruppe 920" transform="translate(1062.894 168.671) rotate(-135)">
+      <path id="Pfad_1328-2" data-name="Pfad 1328" class="cls-1" d="M0,8.747V0" transform="translate(3.831 0.244)"/>
+      <path id="Pfad_1329-2" data-name="Pfad 1329" class="cls-1" d="M0,3.835,3.835,0,7.671,3.835" transform="translate(0 0)"/>
+    </g>
+  </g>
+</svg>

@@ -9,6 +9,7 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
 use App\Http\Resources\ProjectIndexResource;
@@ -27,6 +28,7 @@ use App\Models\CompanyType;
 use App\Models\ContractType;
 use App\Models\Currency;
 use App\Models\Department;
+use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Genre;
 use App\Models\MainPosition;
@@ -35,6 +37,7 @@ use App\Models\MoneySource;
 use App\Models\Project;
 use App\Models\ProjectGroups;
 use App\Models\ProjectStates;
+use App\Models\Room;
 use App\Models\Sector;
 use App\Models\SubPosition;
 use App\Models\SubPositionRow;
@@ -43,6 +46,8 @@ use App\Models\Table;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use Carbon\Carbon;
+use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -1187,6 +1192,23 @@ class ProjectController extends Controller
         $this->setPublicChangesNotification($project->id);
     }
 
+
+    private function get_events_of_day_for_project($date_of_day, $room, $project_id): array
+    {
+
+        $eventsToday = [];
+        $today = $date_of_day->format('d.m.');
+
+        foreach ($room->events as $event) {
+            if(in_array($today, $event->days_of_event)) {
+                if($event->project_id === $project_id){
+                    $eventsToday[] = $event;
+                }
+            }
+        }
+        return $eventsToday;
+    }
+
     /**
      * Display the specified resource.
      *
@@ -1195,6 +1217,9 @@ class ProjectController extends Controller
      */
     public function show(Project $project, Request $request)
     {
+
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
 
         $project->load([
             'access_budget',
@@ -1265,6 +1290,29 @@ class ProjectController extends Controller
             $templates = Table::where('is_template', true)->get();
         }
 
+
+        $eventsAtAGlance = [];
+
+        if(\request('atAGlance') === 'true'){
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks(1)->endOfDay();
+
+            if(\request('startDate')){
+                $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            }
+
+            if(\request('endDate')){
+                $endDate = Carbon::create(\request('endDate'))->endOfDay();
+            }
+
+            $eventsAtAGlance = CalendarEventResource::collection($project->events()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room','project','creator'])->get())->collection->groupBy('room.id');
+
+
+        }
+
         $selectedSumDetail = null;
 
         if(request('selectedSubPosition') && request('selectedColumn')) {
@@ -1311,6 +1359,11 @@ class ProjectController extends Controller
             'lastEventInProject' => $lastEventInProject,
             'RoomsWithAudience' => $RoomsWithAudience,
             'moneySources' => MoneySource::all(),
+            'eventsAtAGlance' => $eventsAtAGlance,
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'dateValue'=>$showCalendar['dateValue'],
+            'days' => $showCalendar['days'],
+            'rooms' => Room::all(),
 
             'budget' => [
                 'columns' => $outputColumns,

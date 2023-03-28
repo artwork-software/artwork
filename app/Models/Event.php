@@ -57,6 +57,23 @@ class Event extends Model
         'end_time' => 'datetime:d. M Y H:i',
     ];
 
+    protected $appends = [
+        'days_of_event',
+    ];
+
+
+    public function getDaysOfEventAttribute(): array
+    {
+        $days_period = CarbonPeriod::create($this->start_time, $this->end_time);
+        $days = [];
+
+        foreach ($days_period as $day) {
+            $days[] = $day->format('d.m.');
+        }
+
+        return $days;
+    }
+
     public function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');

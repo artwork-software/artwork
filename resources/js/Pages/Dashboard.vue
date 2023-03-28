@@ -12,14 +12,21 @@
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
-                <!-- Calendar Div -->
-                <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                    <!--<Link :href="route('events.view.index')"
-                        class="flex justify-end uppercase text-sm text-secondary left-20 items-end subpixel-antialiased absolute mt-10">
-                        Alle Ansehen
-                    </Link> -->
-                    <CalendarComponent :eventTypes=this.eventTypes initial-view="day"/>
+                <div>
+                    <div v-if="calendarType && calendarType === 'daily'">
+                        <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
+                            <CalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                        </div>
+                    </div>
+                    <div v-else>
+                    <IndividualCalendarComponent :dateValue="dateValue" :calendarData="calendar" :rooms="rooms" :days="days" />
+                    </div>
+
                 </div>
+
+
+                <!-- Calendar Div -->
+
             </div>
             <!-- Task Div -->
             <div class="px-6 mt-20 overflow-y-auto">
@@ -99,9 +106,10 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
+import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes'],
+    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType'],
     components: {
         AppLayout,
         CalendarIcon,
@@ -116,7 +124,8 @@ export default defineComponent({
         CalendarComponent,
         TeamIconCollection,
         Link,
-        TeamTooltip
+        TeamTooltip,
+        IndividualCalendarComponent
     },
     created() {
         Echo.private('events')
@@ -157,6 +166,7 @@ export default defineComponent({
             doneTaskForm: useForm({
                 done: false
             }),
+            showIndividualCalendar: true,
         }
     },
 

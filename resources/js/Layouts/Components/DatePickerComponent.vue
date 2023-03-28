@@ -12,7 +12,7 @@
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         </div>
-        <vue-tailwind-datepicker class="absolute" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts"
+        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts"
                                  :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter"
                                  :options="this.datePickerOptions" i18n="de" v-model="dateValue"/>
     </div>

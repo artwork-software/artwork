@@ -6,6 +6,7 @@
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     Projektverlauf
                 </div>
+
                 <XIcon @click="closeModal()"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
@@ -47,7 +48,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">

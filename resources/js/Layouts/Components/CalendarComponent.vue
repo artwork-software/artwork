@@ -360,16 +360,19 @@
             :drag-to-create-threshold="15"
             events-count-on-year-view
             v-model:active-view="currentView"
-
             @event-drag-create="openEventComponent($event)"
             @event-focus="openEventComponent($event)"
-
+            @event-mouse-enter="addHoverToEvent($event)"
+            @event-mouse-leave="removeHoverToEvent($event)"
             @ready="fetchEvents"
             @view-change="fetchEvents($event)"
         >
-            <template #title="{ title, view }">
+            <template #title="{ title, view }" class="group">
                 <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                     {{ title }}
+                </div>
+                <div class="hidden group-hover:block">
+                    djfdsjgl
                 </div>
             </template>
             <template #today-button>
@@ -726,6 +729,12 @@ export default {
         }
     },
     methods: {
+        addHoverToEvent(event){
+            console.log(event)
+        },
+        removeHoverToEvent(event){
+            console.log(event)
+        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')

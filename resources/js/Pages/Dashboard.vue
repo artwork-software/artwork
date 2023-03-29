@@ -12,6 +12,7 @@
                     </p>
                     <p class="mt-2 xsLight">Viel Spaß beim Loslegen!</p>
                 </div>
+                <!-- Calendar Div -->
                 <div>
                     <div v-if="calendarType && calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
@@ -19,14 +20,9 @@
                         </div>
                     </div>
                     <div v-else>
-                    <IndividualCalendarComponent :dateValue="dateValue" :calendarData="calendar" :rooms="rooms" :days="days" />
+                    <IndividualCalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes :calendarData="calendar" :rooms="rooms" :days="days" />
                     </div>
-
                 </div>
-
-
-                <!-- Calendar Div -->
-
             </div>
             <!-- Task Div -->
             <div class="px-6 mt-20 overflow-y-auto">

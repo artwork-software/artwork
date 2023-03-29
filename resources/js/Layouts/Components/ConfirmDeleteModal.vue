@@ -37,14 +37,13 @@
 </template>
 
 <script>
-import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import { Dialog, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 
 export default {
     name: "ConfirmDeleteModal",
     components: {
         Dialog,
-        DialogPanel,
         DialogTitle,
         TransitionChild,
         TransitionRoot,

@@ -1,5 +1,5 @@
 <template>
-    <div :class="[event.class]" class="w-full rounded-lg relative group">
+    <div :class="[event.class]" class="px-1 py-0.5 w-full rounded-lg relative group">
         <div
             class="absolute w-full h-full bg-indigo-500/50 rounded-lg hidden group-hover:block flex justify-center align-middle items-center">
             <div class="flex justify-center items-center h-full gap-2">
@@ -114,17 +114,13 @@
                 Wiederholungstermin
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5">
+            <div class="-ml-3 mb-0.5 w-full">
                 <div v-if="event.projectLeaders && !project"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
                          v-for="user in event.projectLeaders?.slice(0,3)">
-                        <img :data-tooltip-target="user.id"
-                             :class="'h-5 w-5'"
-                             class="rounded-full object-cover"
-                             :src="user.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="user"/>
+                        <NewUserToolTip :height="5" :width="5" v-if="user"
+                                        :user="user" :id="user.id + event.id"/>
                     </div>
                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">
@@ -160,17 +156,6 @@
                                 </MenuItems>
                             </transition>
                         </Menu>
-                    </div>
-                </div>
-                <div v-else-if="event.created_by"
-                     class="mt-1 ml-3 flex flex-wrap w-full">
-                    <div class="-mr-3 flex flex-wrap flex-row">
-                        <img :data-tooltip-target="event.created_by.id"
-                             :class="'h-5 w-5'"
-                             class="rounded-full object-cover"
-                             :src="event.created_by.profile_photo_url"
-                             alt=""/>
-                        <UserTooltip :user="event.created_by"/>
                     </div>
                 </div>
             </div>
@@ -290,7 +275,8 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import AddSubEventModal from "@/Layouts/Components/AddSubEventModal.vue";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmEventRequestComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
-import EventComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import EventComponent from "@/Layouts/Components/EventComponent.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 
 export default {
@@ -299,7 +285,7 @@ export default {
         EventComponent,
         ConfirmDeleteModal,
         ConfirmationComponent,
-        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal},
+        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip},
     props: ['event', 'eventTypes'],
     emits: ['openEditEventModal'],
     data() {

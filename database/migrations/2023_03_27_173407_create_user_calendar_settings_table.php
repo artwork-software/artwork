@@ -17,9 +17,9 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->boolean('project_status')->default(false);
-            $table->boolean('option_prioritization')->default(false);
+            $table->boolean('options')->default(false);
             $table->boolean('project_management')->default(false);
-            $table->boolean('repeat_date')->default(false);
+            $table->boolean('repeating_events')->default(false);
             $table->boolean('work_shifts')->default(false);
             $table->timestamps();
         });

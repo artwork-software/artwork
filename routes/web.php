@@ -77,6 +77,11 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     //Hints
     Route::post('/toggle/hints', [AppController::class, 'toggle_hints'])->name('toggle.hints');
+    Route::post('/toggle/calendar_settings_project_status', [AppController::class, 'toggle_calendar_settings_project_status'])->name('toggle.calendar_settings_project_status');
+    Route::post('/toggle/calendar_settings_options', [AppController::class, 'toggle_calendar_settings_options'])->name('toggle.calendar_settings_options');
+    Route::post('/toggle/calendar_settings_project_management', [AppController::class, 'toggle_calendar_settings_project_management'])->name('toggle.calendar_settings_project_management');
+    Route::post('/toggle/calendar_settings_repeating_events', [AppController::class, 'toggle_calendar_settings_repeating_events'])->name('toggle.calendar_settings_repeating_events');
+    Route::post('/toggle/calendar_settings_work_shifts', [AppController::class, 'toggle_calendar_settings_work_shifts'])->name('toggle.calendar_settings_work_shifts');
 
     Route::get('/dashboard', [EventController::class, 'showDashboard'])->name('dashboard');
     Route::get('/checklist/templates', function () { return Inertia::render('ChecklistTemplates/Edit'); })->name('checklistTemplates.edit');

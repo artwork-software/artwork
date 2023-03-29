@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property boolean $project_status
- * @property boolean $option_prioritization
+ * @property boolean $options
  * @property boolean $project_management
- * @property boolean $repeat_date
+ * @property boolean $repeating_events
  * @property boolean $work_shifts
  */
 class UserCalendarSettings extends Model
@@ -28,9 +28,9 @@ class UserCalendarSettings extends Model
      */
     protected $fillable = [
         'project_status',
-        'option_prioritization',
+        'options',
         'project_management',
-        'repeat_date',
+        'repeating_events',
         'work_shifts'
     ];
 
@@ -39,9 +39,9 @@ class UserCalendarSettings extends Model
      */
     protected $casts = [
         'project_status' => 'boolean',
-        'option_prioritization' => 'boolean',
+        'options' => 'boolean',
         'project_management' => 'boolean',
-        'repeat_date' => 'boolean',
+        'repeating_events' => 'boolean',
         'work_shifts' => 'boolean'
     ];
 

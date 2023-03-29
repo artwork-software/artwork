@@ -27,7 +27,9 @@
             <div class="flex items-center">
                 <img v-if="!atAGlance" src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2"/>
                 <IndividualCalendarFilterComponent class="mt-1"/>
-                <Dropdown :hide-chevron="true" :open="calendarSettingsOpen" align="right" class="text-right">
+
+                <!-- Calendar Settings Dropdown -->
+                <Dropdown :hide-chevron="true" :open="calendarSettingsOpen" align="right" content-classes="" width="64" class="text-right">
                     <template #trigger>
                                             <span class="inline-flex">
                                                 <button @click="calendarSettingsOpen = !calendarSettingsOpen" type="button"
@@ -38,41 +40,41 @@
                     </template>
 
                     <template #content>
-                        <div class="w-44 p-4">
-                            <div class="flex">
+                        <div class="w-44 p-6">
+                            <div class="flex py-1">
                                 <input @click="toggle_calendarSettingsProjectStatus" v-model="$page.props.user.calendar_settings.project_status"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p
-                                    class=" ml-4 my-auto text-sm text-secondary">Projektstatus</p>
+                                <p :class="$page.props.user.calendar_settings.project_status ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                    class=" ml-4 my-auto text-secondary">Projektstatus</p>
                             </div>
-                            <div class="flex">
+                            <div class="flex py-1">
                                 <input @click="toggle_calendarSettingsOptions" v-model="$page.props.user.calendar_settings.options"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p
-                                    class=" ml-4 my-auto text-sm text-secondary">Optionspriorisierung</p>
+                                <p :class="$page.props.user.calendar_settings.options ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                    class=" ml-4 my-auto text-secondary">Optionspriorisierung</p>
                             </div>
-                            <div class="flex">
+                            <div class="flex py-1">
                                 <input @click="toggle_calendarSettingsProjectManagement" v-model="$page.props.user.calendar_settings.project_management"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p
-                                    class=" ml-4 my-auto text-sm text-secondary">Projektleitungen</p>
+                                <p :class="$page.props.user.calendar_settings.project_management ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                    class=" ml-4 my-auto text-secondary">Projektleitungen</p>
                             </div>
-                            <div class="flex">
+                            <div class="flex py-1">
                                 <input @click="toggle_calendarSettingsRepeatingEvents" v-model="$page.props.user.calendar_settings.repeating_events"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p
-                                    class=" ml-4 my-auto text-sm text-secondary">Wiederholungstermin</p>
+                                <p :class="$page.props.user.calendar_settings.repeating_events ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                    class=" ml-4 my-auto text-secondary">Wiederholungstermin</p>
                             </div>
-                            <div class="flex">
+                            <div class="flex py-1">
                                 <input @click="toggle_calendarSettingsWorkShifts" v-model="$page.props.user.calendar_settings.work_shifts"
                                        type="checkbox"
                                        class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                <p
-                                    class=" ml-4 my-auto text-sm text-secondary">Schichten</p>
+                                <p :class="$page.props.user.calendar_settings.work_shifts ? 'text-secondaryHover subpixel-antialiased' : 'text-secondary'"
+                                    class=" ml-4 my-auto text-secondary">Schichten</p>
                             </div>
                         </div>
                     </template>

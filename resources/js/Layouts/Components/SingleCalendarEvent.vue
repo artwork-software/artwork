@@ -41,11 +41,14 @@
             <div class="eventHeader  flex justify-between">
                 <div class="flex items-center">
                     {{ event.title }}
-                    <div v-if="event.project?.state?.color" :class="event.project.state.color"
-                         class="h-2 w-2 rounded-full border-4">
+                    <div v-if="$page.props.user.calendar_settings.project_status">
+                        <div v-if="event.project?.state?.color" :class="event.project.state.color"
+                             class="h-2 w-2 rounded-full border-4">
+                        </div>
                     </div>
+
                 </div>
-                <!-- Icons -->
+                <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
                     <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23"
@@ -97,7 +100,7 @@
                 </span>
             </div>
             <!-- repeating Event -->
-            <div class="uppercase eventText flex items-center">
+            <div v-if="$page.props.user.calendar_settings.repeating_events" class="uppercase eventText flex items-center">
                 <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838"
                      viewBox="0 0 8.664 10.838">
                     <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
@@ -114,7 +117,7 @@
                 Wiederholungstermin
             </div>
             <!-- User-Icons -->
-            <div class="-ml-3 mb-0.5 w-full">
+            <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
                 <div v-if="event.projectLeaders && !project"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"

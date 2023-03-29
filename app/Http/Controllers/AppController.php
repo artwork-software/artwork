@@ -37,6 +37,7 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
+    //CalendarSettings
     public function toggle_calendar_settings_project_status(): \Illuminate\Http\RedirectResponse
     {
         $user = Auth::user();

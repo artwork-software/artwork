@@ -61,14 +61,43 @@
 
         <hr class="my-10 border-darkGray">
 
-        <div class="flex">
+        <div class="flex items-center">
             <div class="text-secondary text-md">
                 Dokumente
             </div>
+            <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showRoomFiles ? 'rotate-180' : '']"
+                             @click="showRoomFiles = !showRoomFiles"/>
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                        @click="openUploadDocumentModal"/>
+                        @click="openFileUploadModal"/>
+            <RoomFileUploadModal
+                :show="showFileUploadModal"
+                :close-modal="closeFileUploadModal"
+                :room-id="room.id"
+            />
         </div>
+        <div v-if="showRoomFiles">
+            <div v-if="room.room_files.length > 0" class="mt-4">
+                <div v-for="roomFile in room.room_files">
+                    <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" >
+                        <DownloadIcon class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>
+                        <div>{{ roomFile.name }}</div>
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
 
+                        <FileDeleteModal
+                            :show="showFileDeleteModal"
+                            :close-modal="closeFileDeleteModal"
+                            :file="roomFile"
+                            type="room"
+                        />
+
+                    </div>
+
+                </div>
+            </div>
+            <div v-else>
+                <div class="text-secondary text-sm mt-4">Keine Dokumente vorhanden</div>
+            </div>
+        </div>
         <RoomAccessModal
             :show="showRoomAccessModal"
             :room="props.room"
@@ -93,11 +122,16 @@
 import {
     UploadIcon,
     PencilAltIcon,
+    DownloadIcon,
+    XCircleIcon,
+    ChevronDownIcon
 } from '@heroicons/vue/outline';
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {ref} from "vue";
-import RoomAccessModal from "../../../../app/Http/Resources/RoomAccessModal.vue";
+import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";
 import RoomAttributeEditModal from "@/Layouts/Components/RoomAttributeEditModal.vue";
+import FileDeleteModal from "@/Layouts/Components/FileDeleteModal.vue";
+import RoomFileUploadModal from "@/Layouts/Components/RoomFileUploadModal.vue";
 
 
 const props = defineProps({
@@ -112,6 +146,11 @@ const props = defineProps({
 
 const showRoomAccessModal = ref(false);
 const showRoomAttributeEditModal = ref(false);
+const showFileUploadModal = ref(false);
+const showFileEditModal = ref(false);
+const showFileDeleteModal = ref(false);
+const showRoomFiles = ref(false);
+const roomFiles = ref(props.room.room_files)
 
 const openRoomAccessModal = () => {
     showRoomAccessModal.value = true
@@ -129,8 +168,27 @@ const closeEditRoomAttributesModal = () => {
     showRoomAttributeEditModal.value = false
 }
 
-const openUploadDocumentModal = () => {
+const downloadRoomFile = (file) => {
+    let link = document.createElement('a');
+    link.href = route('download_room_file', {room_file: file});
+    link.target = '_blank';
+    link.click();
+}
 
+const openFileUploadModal = () => {
+    showFileUploadModal.value = true
+}
+
+const closeFileUploadModal = () => {
+    showFileUploadModal.value = false
+}
+
+const openFileDeleteModal = () => {
+    showFileDeleteModal.value = true
+}
+
+const closeFileDeleteModal = () => {
+    showFileDeleteModal.value = false
 }
 
 </script>

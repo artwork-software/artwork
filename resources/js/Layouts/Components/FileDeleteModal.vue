@@ -41,13 +41,25 @@ export default {
         XIcon
     },
     props: {
-        projectFile: Object,
+        file: Object,
         show: Boolean,
-        closeModal: Function
+        closeModal: Function,
+        type: {
+            type: String,
+            validator(value) {
+                // The value must match one of these strings
+                return ['project', 'room'].includes(value)
+            }
+        }
     },
     methods: {
         destroy() {
-            this.$inertia.delete(`/project_files/${this.projectFile.id}`);
+            if (this.type === "project") {
+                this.$inertia.delete(`/project_files/${this.file.id}`);
+            }
+            else {
+                this.$inertia.delete(`/room_files/${this.file.id}`);
+            }
             this.closeModal()
         },
     }

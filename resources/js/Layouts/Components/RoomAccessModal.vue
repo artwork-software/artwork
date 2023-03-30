@@ -99,7 +99,7 @@
 
 <script setup>
 import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
-import JetDialogModal from "@/Jetstream/DialogModal";
+import JetDialogModal from "@/Jetstream/DialogModal.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {onMounted, ref, watch} from "vue";
@@ -157,6 +157,8 @@ const deleteUserFromRoom = (user) => {
 }
 
 const updateRoomUsers = () => {
+    console.log("update users form")
+    console.log(updateRoomUsersForm)
     updateRoomUsersForm.patch(route('rooms.update', {room: props.room.id}));
     emit('close')
 }
@@ -185,7 +187,6 @@ const addUserToRoom = (user) => {
 
 const contains = (array, user) => {
     for (let userInArray of array) {
-        //if User is already Room Admin, do nothing
         if (user.id === userInArray.id) {
             user_query.value = ""
             return true;

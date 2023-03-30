@@ -45,10 +45,19 @@
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
                         <div @click="openFileEditModal">{{ projectFile.name }}</div>
                         <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
-                        <ProjectFileDeleteModal :show="showFileDeleteModal" :close-modal="closeFileDeleteModal"
-                                                :project-file="projectFile"/>
-                        <ProjectFileEditModal :show="showFileEditModal" :close-modal="closeFileEditModal"
-                                              :file="projectFile"/>
+
+                        <ProjectFileEditModal
+                            :show="showFileEditModal"
+                            :close-modal="closeFileEditModal"
+                            :file="projectFile"
+                        />
+
+                        <FileDeleteModal
+                            :show="showFileDeleteModal"
+                            :close-modal="closeFileDeleteModal"
+                            :file="projectFile"
+                            type="project"
+                        />
                     </div>
 
                 </div>
@@ -132,10 +141,10 @@ import {
 } from '@heroicons/vue/outline';
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal";
-import ProjectFileUploadModal from "@/Layouts/Components/ProjectFileUploadModal";
+import ProjectFileUploadModal from "@/Layouts/Components/ProjectFileUploadModal.vue";
 import ContractDeleteModal from "@/Layouts/Components/ContractDeleteModal";
-import ProjectFileDeleteModal from "@/Layouts/Components/ProjectFileDeleteModal";
-import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal";
+import FileDeleteModal from "@/Layouts/Components/FileDeleteModal.vue";
+import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal.vue";
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
@@ -146,7 +155,7 @@ export default {
         ContractEditModal,
         ContractUploadModal,
         ProjectFileEditModal,
-        ProjectFileDeleteModal,
+        FileDeleteModal,
         ContractDeleteModal,
         ProjectFileUploadModal,
         ContractModuleDeleteModal,

@@ -1,5 +1,5 @@
 <template>
-    <div :class="[event.class]" class="px-1 py-0.5 w-full rounded-lg relative group">
+    <div :class="[event.class]" :style="{ width: width + 'px', height: height + 'px' }" class="px-1 py-0.5 rounded-lg relative group">
         <div
             class="absolute w-full h-full bg-indigo-500/50 rounded-lg hidden group-hover:block flex justify-center align-middle items-center">
             <div class="flex justify-center items-center h-full gap-2">
@@ -289,8 +289,19 @@ export default {
         ConfirmDeleteModal,
         ConfirmationComponent,
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip},
-    props: ['event', 'eventTypes'],
+    props: ['event', 'eventTypes','height','width'],
     emits: ['openEditEventModal'],
+    computed: {
+        textStyle() {
+            if (this.width <= 200) {
+                return 'text-lg';
+            } else if (this.width <= 400) {
+                return 'text-xl';
+            } else {
+                return 'text-2xl';
+            }
+        },
+    },
     data() {
         return {
             showAddSubEventModal: false,
@@ -427,5 +438,14 @@ export default {
     background: #21485C15;
     stroke: #23485B;
     color: #23485B
+}
+.text-lg {
+    font-size: 1rem;
+}
+.text-xl {
+    font-size: 1.25rem;
+}
+.text-2xl {
+    font-size: 1.5rem;
 }
 </style>

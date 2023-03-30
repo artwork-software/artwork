@@ -1,41 +1,47 @@
 <template>
-    <div class="w-full flex flex-wrap">
-        <CalendarFunctionBar :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
-        <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
-             v-if="eventsWithoutRoom.length > 0">
+    <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
+        <div class="bg-white">
+            <CalendarFunctionBar @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+                                 @change-at-a-glance="changeAtAGlance"
+                                 :at-a-glance="atAGlance"></CalendarFunctionBar>
+            <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
+                 @click="openEventsWithoutRoomComponent()"
+                 v-if="eventsWithoutRoom.length > 0">
 
-            <ExclamationIcon class="h-6  mr-2"/>
-            {{
-                eventsWithoutRoom.length
-            }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-        </div>
-        <!-- Calendar -->
-        <table class="w-full flex flex-wrap">
-            <thead class="w-full">
-            <tr class=" w-full flex bg-userBg">
-                <th class="w-16">
+                <ExclamationIcon class="h-6  mr-2"/>
+                {{
+                    eventsWithoutRoom.length
+                }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+            </div>
+            <!-- Calendar -->
+            <table class="w-full flex flex-wrap">
+                <thead class="w-full">
+                <tr class=" w-full flex bg-userBg">
+                    <th class="w-16">
 
-                </th>
-                <th v-for="room in rooms" class="w-52 py-3 border-r-4 border-secondaryHover">
-                    <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                    </th>
+                    <th v-for="room in rooms" :style="{ width: zoomFactor * 52 + 'px'}"  class="py-3 border-r-4 border-secondaryHover">
+                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                             {{ room.name }}
-                    </div>
-                </th>
-            </tr>
-            </thead>
-            <tbody class="flex w-full pt-3 flex-wrap">
-            <tr class="w-full h-36 flex" v-for="day in days">
-                <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
-                    {{ day }}
-                </th>
-                <td class="w-52 h-36 cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
-                    <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                        <SingleCalendarEvent :event="event" :event-types="eventTypes" @open-edit-event-modal="openEditEventModal"/>
-                    </div>
-                </td>
-            </tr>
-            </tbody>
-        </table>
+                        </div>
+                    </th>
+                </tr>
+                </thead>
+                <tbody class="flex w-full pt-3 flex-wrap">
+                <tr :style="{height: zoomFactor * 36 + 'px'}" class="w-full flex" v-for="day in days">
+                    <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
+                        {{ day }}
+                    </th>
+                    <td :style="{ width: zoomFactor * 52 + 'px', height: zoomFactor * 36 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
+                        <div class="py-0.5 pr-2" v-for="event in room[day].data">
+                            <SingleCalendarEvent :width="zoomFactor * 40" :height="zoomFactor * 40" :event="event" :event-types="eventTypes"
+                                                 @open-edit-event-modal="openEditEventModal"/>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <event-component
@@ -73,7 +79,6 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
 
 
-
 export default {
     name: "IndividualCalendarComponent",
     components: {
@@ -85,27 +90,32 @@ export default {
         EventComponent
     },
     data() {
-      return {
-          showEventsWithoutRoomComponent: false,
-          eventsWithoutRoom: [],
-          project: null,
-          selectedEvent: null,
-          createEventComponentIsVisible: false,
-          wantedRoom: null,
-          roomCollisions: []
+        return {
+            showEventsWithoutRoomComponent: false,
+            eventsWithoutRoom: [],
+            project: null,
+            selectedEvent: null,
+            createEventComponentIsVisible: false,
+            wantedRoom: null,
+            roomCollisions: [],
+            isFullscreen: false,
+            zoomFactor: 3
         }
     },
-    props: ['calendarData', 'rooms', 'days','atAGlance', 'eventTypes','dateValue'],
-    emits:['changeAtAGlance'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue'],
+    emits: ['changeAtAGlance'],
+    mounted(){
+        window.addEventListener('resize', this.listenToFullscreen);
+    },
     methods: {
-        changeAtAGlance(atAGlance){
+        changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
-        openEditEventModal(event){
+        openEditEventModal(event) {
             //console.log(event);
             this.selectedEvent = event;
             this.wantedRoom = event.roomId;
@@ -138,10 +148,42 @@ export default {
             this.createEventComponentIsVisible = true;
 
         },
-        onEventComponentClose(){
+        onEventComponentClose() {
             this.createEventComponentIsVisible = false;
             Inertia.reload();
-        }
+        },
+
+
+        /* View in fullscreen */
+        openFullscreen() {
+            let elem = document.getElementById("myCalendar");
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+                this.isFullscreen = true;
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        },
+        listenToFullscreen() {
+            if (window.innerHeight === screen.height) {
+                this.isFullscreen = true;
+            } else {
+                this.isFullscreen = false;
+                this.zoomFactor = 3;
+            }
+        },
+        incrementZoomFactor() {
+            if (this.zoomFactor < 6) {
+                this.zoomFactor++;
+            }
+        },
+        decrementZoomFactor() {
+            if (this.zoomFactor > 1) {
+                this.zoomFactor--;
+            }
+        },
     }
 }
 </script>
@@ -149,22 +191,35 @@ export default {
 <style scoped>
 
 /* this only works in some browsers but is wanted by the client */
-.cell{
+.cell {
     overflow: overlay;
 }
+
 ::-webkit-scrollbar {
     width: 16px;
 }
+
 ::-webkit-scrollbar-track {
     background-color: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
     background-color: #A7A6B170;
     border-radius: 16px;
     border: 6px solid transparent;
     background-clip: content-box;
 }
+
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
+}
+.text-lg {
+    font-size: 1rem;
+}
+.text-xl {
+    font-size: 1.25rem;
+}
+.text-2xl {
+    font-size: 1.5rem;
 }
 </style>

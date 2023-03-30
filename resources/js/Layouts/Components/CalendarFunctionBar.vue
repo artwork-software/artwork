@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full flex justify-between items-center mt-4 mb-2 ml-4">
+    <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
             <date-picker-component :dateValueArray="dateValue"></date-picker-component>
             <button class="ml-2 text-black" @click="$refs.vuecal.previous()">
@@ -25,7 +25,9 @@
         </SwitchGroup>
         <div class="flex items-center">
             <div class="flex items-center">
-                <img v-if="!atAGlance" src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2"/>
+                <ZoomInIcon @click="incrementZoomFactor" :disabled="zoomFactor <= 1" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomInIcon>
+                <ZoomOutIcon @click="decrementZoomFactor" :disabled="zoomFactor >= 6" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
+                <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode" src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                 <IndividualCalendarFilterComponent class="mt-1"/>
 
                 <!-- Calendar Settings Dropdown -->
@@ -91,7 +93,7 @@
 
 <script>
 import Button from "@/Jetstream/Button";
-import {PlusCircleIcon, CalendarIcon} from '@heroicons/vue/outline'
+import {PlusCircleIcon, CalendarIcon, ZoomInIcon, ZoomOutIcon} from '@heroicons/vue/outline'
 import {Menu, MenuButton, MenuItems, Switch, SwitchGroup, SwitchLabel} from "@headlessui/vue";
 import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue/solid";
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
@@ -116,10 +118,12 @@ export default {
         SwitchGroup,
         SwitchLabel,
         Switch,
-        DatePickerComponent
+        DatePickerComponent,
+        ZoomInIcon,
+        ZoomOutIcon
     },
-    props: ['atAGlance', 'dateValue'],
-    emits: ['changeAtAGlance'],
+    props: ['atAGlance', 'dateValue','isFullscreen','zoomFactor'],
+    emits: ['changeAtAGlance','enterFullscreenMode','incrementZoomFactor','decrementZoomFactor'],
     data() {
         return {
             atAGlance: this.atAGlance,
@@ -129,6 +133,9 @@ export default {
     methods: {
         changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
+        },
+        enterFullscreenMode(){
+            this.$emit('enterFullscreenMode')
         },
         toggle_calendarSettingsProjectStatus() {
             this.$inertia.post(route('toggle.calendar_settings_project_status'))
@@ -145,10 +152,15 @@ export default {
         toggle_calendarSettingsWorkShifts() {
             this.$inertia.post(route('toggle.calendar_settings_work_shifts'))
         },
+        incrementZoomFactor(){
+            this.$emit('incrementZoomFactor')
+        },
+        decrementZoomFactor(){
+            this.$emit('decrementZoomFactor')
+        },
     },
 }
 </script>
 
 <style scoped>
-
 </style>

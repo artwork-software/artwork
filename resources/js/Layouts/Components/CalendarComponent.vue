@@ -1,7 +1,8 @@
 <template>
 
-    <div class="mt-10 ml-12 flex justify-between items-center w-[95%] relative">
-        <div class="inline-flex mb-5">
+    <div class="mt-10 flex justify-between items-center w-[95%] relative">
+        <CalendarFunctionBar :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
                     <MenuButton id="menuButton"
@@ -32,27 +33,7 @@
                                 Heute
                             </label>
                         </button>
-                        <button @click="$refs.vuecal.switchView('week')"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'week' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Woche
-                            </label>
-                        </button>
-                        <button @click="$refs.vuecal.switchView('month')"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'month' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Monat
-                            </label>
-                        </button>
-                        <button @click="$refs.vuecal.switchView('year')"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'year' ? 'text-white font-bold border-l-2 border-l-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Jahr
-                            </label>
-                        </button>
+
                     </MenuItems>
                 </transition>
             </Menu>
@@ -65,17 +46,10 @@
 
 
         </div>
-        <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48" @click="openEventsWithoutRoomComponent()"
-             v-if="eventsWithoutRoom.length > 0">
 
-            <ExclamationIcon class="h-6  mr-2"/>
-            {{
-                eventsWithoutRoom.length
-            }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-        </div>
         <div class=" inline-flex mb-5 justify-end">
 
-            <!-- Calendar Filter -->
+            // Calendar Filter
             <BaseFilter>
                 <div class="inline-flex border-none justify-end w-full">
                     <button class="flex" @click="resetCalendarFilter">
@@ -89,7 +63,7 @@
                 </div>
                 <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
 
-                    <!-- Save Filter Section -->
+                     // Save Filter Section
                     <Disclosure v-slot="{ open }" default-open>
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -111,8 +85,7 @@
                                         <label @click="saveFilter"
                                                class="cursor-pointer text-white text-xs">Speichern</label>
                                     </button>
-                                    <!-- <AddButton text="Speichern" class="text-sm ml-0"
-                                               @click="saveFilter"></AddButton> -->
+
                                 </div>
                                 <hr class="border-gray-500 mt-4 mb-4">
                             </div>
@@ -129,7 +102,7 @@
                         <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                     </Disclosure>
 
-                    <!-- Room Filter Section -->
+                    // Room Filter Section
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -176,36 +149,7 @@
                                     </div>
                                 </SwitchGroup>
 
-                                <!--
-                                <Menu as="div" v-if="calendarFilters.allDayFree">
-                                    <div>
-                                        <MenuButton
-                                            class="p-2 my-4 text-darkInputText bg-darkInputBg border border-secondary flex w-full justify-between">
-                                            <label v-if="currentInterval === ''" class="text-sm">Zeitraum
-                                                auswählen</label>
-                                            <label v-else class="text-sm">{{ currentInterval }}</label>
-                                            <ChevronDownIcon
-                                                class="h-4 w-4 shadow-sm text-white mt-0.5 float-right"></ChevronDownIcon>
-                                        </MenuButton>
-                                    </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="z-40 origin-top-left absolute overflow-y-auto mt-2 shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none w-2/3">
-                                            <MenuItem v-for="interval in freeTimeIntervals" v-slot="{ active }">
-                                                <div @click="currentInterval = interval"
-                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary',
-                                          'group px-3 py-2 text-sm subpixel-antialiased']">
-                                                    {{ interval }}
-                                                </div>
-                                            </MenuItem>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu> -->
+
                             </div>
 
                             <hr class="border-gray-500 mt-2 mb-2">
@@ -311,7 +255,7 @@
 
                     <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
 
-                    <!-- Event Filter Section -->
+                    // Event Filter Section
                     <Disclosure v-slot="{ open }">
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
@@ -376,6 +320,7 @@
             <AddButton class="bg-primary hover:bg-secondary text-white resize-none"
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
+        -->
 
 
     </div>
@@ -389,6 +334,8 @@
             :events-until="eventsUntil"
         />
     </div>
+
+
     <!--  Calendar  -->
     <div class="pl-3 overflow-x-scroll">
         <vue-cal
@@ -413,16 +360,19 @@
             :drag-to-create-threshold="15"
             events-count-on-year-view
             v-model:active-view="currentView"
-
             @event-drag-create="openEventComponent($event)"
             @event-focus="openEventComponent($event)"
-
+            @event-mouse-enter="addHoverToEvent($event)"
+            @event-mouse-leave="removeHoverToEvent($event)"
             @ready="fetchEvents"
             @view-change="fetchEvents($event)"
         >
-            <template #title="{ title, view }">
+            <template #title="{ title, view }" class="group">
                 <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
                     {{ title }}
+                </div>
+                <div class="hidden group-hover:block">
+                    djfdsjgl
                 </div>
             </template>
             <template #today-button>
@@ -446,23 +396,37 @@
                 </Link>
             </template>
             <template #event="{ event, view}">
-                <div class="text-left mt-3 cursor-pointer">
-                    <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
-                         class="flex absolute left-0 top-0">
-                        <img v-if="event.audience" src="/Svgs/IconSvgs/icon_public.svg" class="h-6 w-6 mx-2"
-                             alt="audienceIcon"/>
-                        <img v-if="event.isLoud" src="/Svgs/IconSvgs/icon_adjustments.svg" class="h-5 w-5 mx-2"
-                             alt="attributeIcon"/>
-                    </div>
-                    <div v-if="!project" class="xsDark truncate mx-1">
-                        {{ event.title }}
+                <div class="text-left centered mt-3 cursor-pointer">
+                    <div class="flex w-full">
+                        <div v-if="!project" class="eventHeader truncate mx-1">
+                            {{ event.title }}
+                        </div>
+                        <div v-else class="truncate mx-1">
+                            {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
+                        </div>
+                        <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                             class="flex">
+                            <div v-if="event.audience"
+                                 class="flex">
+                                <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23" viewBox="0 0 19.182 10.124">
+                                    <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
+                                        <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
+                                            <path id="Pfad_825" data-name="Pfad 825" d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_826" data-name="Pfad 826" d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z" transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_827" data-name="Pfad 827" d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-48.181 -1)" fill="none"  stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_828" data-name="Pfad 828" d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955" transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_829" data-name="Pfad 829" d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                            <path id="Pfad_830" data-name="Pfad 830" d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189" transform="translate(-1 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                        </g>
+                                    </g>
+                                </svg>
+                            </div>
+                        </div>
                     </div>
 
-                    <div v-else class="xsDark truncate mx-1">
-                        {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
-                    </div>
+
+
                     <div v-if="currentView !== 'month'" class="mx-1">
-
                         <div v-if="!project">
                         <span class="truncate xxsLight truncate"
                               v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
@@ -470,16 +434,14 @@
                         <div v-else class="truncate xxsLight truncate">
                             {{ event.eventName }}
                         </div>
-                        <span class="flex w-full xxsLight">
-
-
+                        <span class="flex w-full eventTime">
                         <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center xxsLight">{{ event.start.formatTime("HH:mm") }} - {{
+                              class="items-center eventTime">{{ event.start.formatTime("HH:mm") }} - {{
                                 event.end.formatTime("HH:mm")
                             }}
                         </span>
-                        <span class="flex w-full xxsLight" v-else>
-                            <span class="items-center">
+                        <span class="flex w-full eventTime" v-else>
+                            <span class="items-center eventTime">
                                 {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
                                     event.end.format("DD.MM.YYYY HH:mm")
                                 }}
@@ -487,19 +449,14 @@
 
                         </span><br/>
                     </span>
-                        <!-- only show profile pics when event is longer than 90 minutes => has enough space to display -->
-                        <div v-if="event.endTimeMinutes - event.startTimeMinutes >= 90">
-                            <div class="mt-3 -ml-3">
+                        <div class="flex">
+                            <div class="flex -ml-3">
                                 <div v-if="event.projectLeaders && !project"
-                                     class="mt-1 flex flex-wrap w-full">
+                                     class="ml-2.5 flex flex-wrap ">
                                     <div class="-mr-3 flex flex-wrap flex-row"
                                          v-for="user in event.projectLeaders?.slice(0,3)">
-                                        <img :data-tooltip-target="user.id"
-                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                             class="ml-2 rounded-full ring-2 ring-white object-cover"
-                                             :src="user.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="user"/>
+                                        <NewUserToolTip :height="6" :width="6" v-if="user"
+                                                        :user="user" :id="user.id"></NewUserToolTip>
                                     </div>
                                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                         <Menu as="div" class="relative">
@@ -542,12 +499,8 @@
                                 <div v-else-if="event.created_by"
                                      class="mt-1 ml-3 flex flex-wrap w-full">
                                     <div class="-mr-3 flex flex-wrap flex-row">
-                                        <img :data-tooltip-target="event.created_by.id"
-                                             :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                             class="rounded-full ring-2 ring-white object-cover"
-                                             :src="event.created_by.profile_photo_url"
-                                             alt=""/>
-                                        <UserTooltip :user="event.created_by"/>
+                                        <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
+                                                        :user="event.created_by" :id="event.created_by.id + event.id"></NewUserToolTip>
                                     </div>
                                 </div>
 
@@ -557,6 +510,7 @@
                 </div>
             </template>
         </vue-cal>
+
     </div>
     <!-- Termin erstellen Modal-->
     <event-component
@@ -631,10 +585,17 @@ import Button from "@/Jetstream/Button";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
 import BaseFilter from "@/Layouts/Components/BaseFilter";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import VueTailwindDatepicker from 'vue-tailwind-datepicker'
+import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
+import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 
 export default {
     name: 'CalendarComponent',
     components: {
+        CalendarFunctionBar,
+        DatePickerComponent,
+        NewUserToolTip,
         BaseFilter,
         PlusCircleIcon,
         ExclamationIcon,
@@ -676,13 +637,15 @@ export default {
         Link,
         EventComponent,
         EventsWithoutRoomComponent,
-        UserTooltip
+        UserTooltip,
     },
-    props: ['project', 'room', 'initialView', 'eventTypes'],
+    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue'],
+    emits:['changeAtAGlance'],
     data() {
         return {
             displayDate: '',
             filters: [],
+            dateValue: this.dateValue ? this.dateValue : [],
             filterIds: {},
             filterName: '',
             wantedSplit: null,
@@ -766,6 +729,12 @@ export default {
         }
     },
     methods: {
+        addHoverToEvent(event){
+            console.log(event)
+        },
+        removeHoverToEvent(event){
+            console.log(event)
+        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')
@@ -788,6 +757,9 @@ export default {
                 startDate: this.eventsSince,
                 endDate: this.eventsUntil,
             });
+        },
+        changeAtAGlance(atAGlance){
+            this.$emit('changeAtAGlance', atAGlance)
         },
         changeChecked(array, filterName) {
             array.forEach(object => {
@@ -1286,10 +1258,24 @@ export default {
     font-size: 0.75rem; /* 14px */
     line-height: 1.25rem; /* 20px */
     margin-top: 3px;
-    padding-top: 22px;
-    background-color: white;
-    border: 1px solid #D8D7DE;
-    opacity: 1;
+    border-right: 3px solid #ffffff;
+    overflow: overlay;
+}
+
+::-webkit-scrollbar {
+    width: 16px;
+}
+::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background-color: #A7A6B170;
+    border-radius: 16px;
+    border: 6px solid transparent;
+    background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+    background-color: #a8bbbf;
 }
 
 .vuecal__event-time {
@@ -1382,63 +1368,78 @@ export default {
 
 
 /* Custom Event Type Colors */
-
 .vuecal__event.occupancy_option {
     background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
 }
 
 .vuecal__event.eventType0 {
-    border-left: solid #A7A6B1;
-    border-width: 1px 1px 1px 3px;
+    background-color: #A7A6B115;
+    stroke: #7F7E88;
+    color: #7F7E88
 }
 
 .vuecal__event.eventType1 {
-    border-left: solid #641a54;
-    border-width: 1px 1px 1px 3px;
+    background: #641a5415;
+    stroke: #631D53;
+    color: #631D53
 }
 
 .vuecal__event.eventType2 {
-    border-left: solid #da3f87;
-    border-width: 1px 1px 1px 3px;
+    background: #da3f8715;
+    stroke: #D84387;
+    color: #D84387
 }
 
 .vuecal__event.eventType3 {
-    border-left: solid #eb7a3d;
-    border-width: 1px 1px 1px 3px;
+    background: #eb7a3d15;
+    stroke: #E97A45;
+    color: #E97A45
 }
 
 .vuecal__event.eventType4 {
-    border-left: solid #f1b640;
-    border-width: 1px 1px 1px 3px;
+    background: #f1b64015;
+    stroke: #CB8913;
+    color: #CB8913
 }
 
 .vuecal__event.eventType5 {
-    border-left: solid #86c554;
-    border-width: 1px 1px 1px 3px;
+    background: #86c55415;
+    stroke: #648928;
+    color: #648928
 }
 
 .vuecal__event.eventType6 {
-    border-left: solid #2eaa63;
-    border-width: 1px 1px 1px 3px;
+    background: #2eaa6315;
+    stroke: #35A965;
+    color: #35A965
 }
 
 .vuecal__event.eventType7 {
-    border-left: solid #3dc3cb;
-    border-width: 1px 1px 1px 3px;
+    background: #3dc3cb15;
+    stroke: #35ACB2;
+    color: #35ACB2
 }
 
 .vuecal__event.eventType8 {
-    border-left: solid #168fc3;
-    border-width: 1px 1px 1px 3px;
+    background: #168fc315;
+    stroke: #2290C1;
+    color: #2290C1
 }
 
 .vuecal__event.eventType9 {
-    border-left: solid #4d908e;
-    border-width: 1px 1px 1px 3px;
+    background: #4d908e15;
+    stroke: #50908E;
+    color: #50908E
 }
-
 .vuecal__event.eventType10 {
-    border-left: solid #21485c;
-    border-width: 1px 1px 1px 3px;
+    background: #21485C15;
+    stroke: #23485B;
+    color: #23485B
+}
+.centered{
+    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
+    -webkit-transform: translateY(-50%);
 }
 </style>

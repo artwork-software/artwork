@@ -88,6 +88,13 @@ class ChecklistController extends Controller
                 'order' => Task::max('order') + 1,
             ]);
         }
+
+            $checklist->users()->sync(
+                collect($template->users)
+                    ->map(function ($user) {
+                        return $user['id'];
+                    })
+            );
     }
 
     /**

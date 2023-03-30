@@ -469,7 +469,7 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 
 export default {
-    name: 'EventComponent',
+    name: 'EventsWithoutRoomComponent',
 
     components: {
         Input,

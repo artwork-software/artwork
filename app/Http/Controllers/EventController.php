@@ -62,6 +62,10 @@ class EventController extends Controller
 
     public function showDashboardPage(Request $request): Response
     {
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
+
+
         $projects = Project::query()->with( ['managerUsers'])->get();
 
         $tasks = Task::query()
@@ -77,6 +81,11 @@ class EventController extends Controller
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'dateValue'=>$showCalendar['dateValue'],
+            'calendarType' => $showCalendar['calendarType'],
+            'rooms' => Room::all(),
         ]);
     }
 
@@ -461,7 +470,7 @@ class EventController extends Controller
      * @param Event $event
      * @return JsonResponse
      */
-    public function destroy(Event $event): JsonResponse
+    public function destroy(Event $event)
     {
         $this->authorize('delete', $event);
 
@@ -470,6 +479,8 @@ class EventController extends Controller
             $projectHistory = new HistoryController('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
+
+        $event->subEvents()->delete();
 
         broadcast(new OccupancyUpdated())->toOthers();
         $event->delete();
@@ -484,10 +495,6 @@ class EventController extends Controller
             'message' => $this->notificationData->title
         ];
         $this->notificationController->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
-
-
-
-        return new JsonResponse(['success' => 'Event moved to trash']);
     }
 
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse

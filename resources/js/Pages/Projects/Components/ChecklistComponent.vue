@@ -5,10 +5,10 @@
             <div class="flex items-center"
                  v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
-                <div v-if="$page.props.can.show_hints" class="flex">
+                <div v-if="$page.props.can.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                     <span
-                        class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Checklisten an</span>
+                        class="hind ml-1">Lege neue Checklisten an</span>
                 </div>
             </div>
         </div>
@@ -230,7 +230,7 @@
                                                                 class="origin-top-right absolute right-0 w-56 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
-                                                                        <a @click="openEditTaskModal(element)"
+                                                                        <a @click="openEditTaskModal(element, false)"
                                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                             <PencilAltIcon
                                                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -440,7 +440,7 @@
                                                                 <div class="py-1">
                                                                     <MenuItem v-slot="{ active }">
                                                                                 <span
-                                                                                    @click="openEditTaskModal(element)"
+                                                                                    @click="openEditTaskModal(element, true)"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                                                     <PencilAltIcon
                                                                                         class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -569,7 +569,7 @@
                             placeholder="Zu erledigen bis?" type="datetime-local"
                             class="p-4 inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
-                    <div class="mb-2">
+                    <div class="mb-2" v-if="!taskToEditForm.private">
                         <div class="relative w-full">
                             <div class="w-full">
                                 <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
@@ -983,7 +983,8 @@ export default {
                 name: "",
                 description: "",
                 deadline: null,
-                users: []
+                users: [],
+                private: false,
             }),
             duplicateForm: useForm({
                 name: "",
@@ -1102,12 +1103,13 @@ export default {
             this.templateForm.checklist_id = checklist.id;
             this.templateForm.post(route('checklist_templates.store'));
         },
-        openEditTaskModal(task) {
+        openEditTaskModal(task, checklistPrivate) {
             this.taskToEditForm.id = task.id;
             this.taskToEditForm.name = task.name;
             this.taskToEditForm.deadline = task.deadline_dt_local;
             this.taskToEditForm.description = task.description;
             this.usersToAdd = task.users;
+            this.taskToEditForm.private = checklistPrivate
             this.editingTask = true;
         },
         closeEditTaskModal() {
@@ -1116,7 +1118,9 @@ export default {
             this.taskToEditForm.name = "";
             this.taskToEditForm.deadline = null;
             this.taskToEditForm.description = "";
-
+            this.usersToAdd = [];
+            this.taskToEditForm.users = [];
+            this.user_query = '';
         },
 
         openAddTaskModal(checklist) {

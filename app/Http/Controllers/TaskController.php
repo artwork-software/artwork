@@ -169,20 +169,27 @@ class TaskController extends Controller
     {
         $update_properties = $request->only('name', 'description', 'deadline', 'done', 'checklist_id');
 
-        if ($request->done == true) {
-            $task->user_who_done()->associate(Auth::user());
-            $task->done_at = Date::now();
+        if(!empty($request->done)){
+            if ($request->done == true) {
+                $task->user_who_done()->associate(Auth::user());
+                $task->done_at = Date::now();
+            }
+            if ($request->done == false) {
+                $task->user_id = null;
+                $task->done_at = null;
+            }
         }
-        if ($request->done == false) {
-            $task->user_id = null;
-            $task->done_at = null;
-        }
+
 
         $task->fill($update_properties);
 
         $task->save();
 
-        $task->task_users()->sync(collect($request->users));
+        if(!$request->private){
+            if(!empty($request->users)){
+                $task->task_users()->sync(collect($request->users));
+            }
+        }
 
         $checklist = $task->checklist()->first();
         if($checklist !== null){

@@ -37,6 +37,67 @@ class AppController extends Controller
 
         return Redirect::back()->with('success', 'Hilfe umgeschaltet');
     }
+    //CalendarSettings
+    public function toggle_calendar_settings_project_status(): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'project_status' => !$calendarSettings->project_status
+        ]);
+
+        return Redirect::back()->with('success', 'Einstellung gespeichert');
+    }
+    public function toggle_calendar_settings_options(): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'options' => !$calendarSettings->options
+        ]);
+
+        return Redirect::back()->with('success', 'Einstellung gespeichert');
+    }
+    public function toggle_calendar_settings_project_management(): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'project_management' => !$calendarSettings->project_management
+        ]);
+
+        return Redirect::back()->with('success', 'Einstellung gespeichert');
+    }
+    public function toggle_calendar_settings_repeating_events(): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'repeating_events' => !$calendarSettings->repeating_events
+        ]);
+
+        return Redirect::back()->with('success', 'Einstellung gespeichert');
+    }
+    public function toggle_calendar_settings_work_shifts(): \Illuminate\Http\RedirectResponse
+    {
+        $user = Auth::user();
+
+        $calendarSettings = $user->calendar_settings()->first();
+
+        $user->calendar_settings()->update([
+            'work_shifts' => !$calendarSettings->work_shifts
+        ]);
+
+        return Redirect::back()->with('success', 'Einstellung gespeichert');
+    }
 
     public function index(GeneralSettings $settings): \Illuminate\Http\RedirectResponse
     {

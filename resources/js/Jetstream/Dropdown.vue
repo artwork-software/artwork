@@ -1,7 +1,7 @@
 <template>
     <div class="relative">
         <div class="flex" @click="open = ! open">
-            <slot name="trigger"></slot><ChevronDownIcon v-if="!open" class="h-5 w-5 text-primary" aria-hidden="true"/> <ChevronUpIcon v-else class="h-5 w-5 text-primary" aria-hidden="true"/>
+            <slot name="trigger"></slot><div v-if="!hideChevron"><ChevronDownIcon v-if="!open" class="h-5 w-5 text-primary" aria-hidden="true"/> <ChevronUpIcon v-else class="h-5 w-5 text-primary" aria-hidden="true"/></div>
         </div>
 
         <!-- Full Screen Dropdown Overlay -->
@@ -42,6 +42,9 @@ export default defineComponent({
         },
         contentClasses: {
             default: () => ['py-1', 'bg-white']
+        },
+        hideChevron:{
+            default: false
         }
     },
 
@@ -65,11 +68,11 @@ export default defineComponent({
       ChevronUpIcon,
       ChevronDownIcon
     },
-
     computed: {
         widthClass() {
             return {
                 '48': 'w-48',
+                '64':'w-64',
             }[this.width.toString()]
         },
 

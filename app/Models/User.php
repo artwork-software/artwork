@@ -61,6 +61,8 @@ class User extends Authenticatable
     use TwoFactorAuthenticatable;
     use Searchable;
 
+
+
     /**
      * The attributes that are mass assignable.
      *
@@ -112,6 +114,13 @@ class User extends Authenticatable
     protected $appends = [
         'profile_photo_url',
     ];
+
+    protected $with = ['calendar_settings'];
+
+    public function calendar_settings(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(UserCalendarSettings::class);
+    }
 
     public function contracts()
     {

@@ -334,7 +334,9 @@
                     </div>
 
                 </div>
-
+                <div>
+                    <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
+                </div>
 
                 <!--    Room    -->
                 <div class="py-1" v-if="canEdit">
@@ -474,6 +476,7 @@ export default {
 
     data() {
         return {
+            helpTextLength: '',
             startDate: null,
             startTime: null,
             endDate: null,
@@ -552,10 +555,13 @@ export default {
                 return;
             }
 
-            this.startDate = this.event.start.format('YYYY-MM-DD');
-            this.startTime = this.event.start.format('HH:mm');
-            this.endDate = this.event.end.format('YYYY-MM-DD');
-            this.endTime = this.event.end.format('HH:mm');
+            const start = new Date(this.event.start);
+            const end = new Date(this.event.end);
+
+            this.startDate = start.format('YYYY-MM-DD');
+            this.startTime = start.format('HH:mm');
+            this.endDate = end.format('YYYY-MM-DD');
+            this.endTime = end.format('HH:mm');
             this.isLoud = this.event.isLoud
             this.audience = this.event.audience
             this.title = this.event.title
@@ -565,9 +571,6 @@ export default {
             }else{
                 this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
             }
-
-
-
 
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
             if(this.wantedRoomId){
@@ -669,9 +672,13 @@ export default {
                 }
             }
 
+
+
             this.validateStartBeforeEndTime();
 
             this.checkCollisions();
+            this.checkEventTimeLength()
+
         },
         async validateStartBeforeEndTime() {
 
@@ -684,6 +691,17 @@ export default {
                     .catch(error => this.error = error.response.data.errors);
             }
 
+        },
+        checkEventTimeLength(){
+            // check if event min 30min
+            if(this.startFull && this.endFull){
+                const minimumEnd = new Date(this.startFull).addMinutes(30);
+                if(minimumEnd <= this.endFull){
+                    this.helpTextLength = '';
+                } else {
+                    this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
+                }
+            }
         },
         setCombinedTimeString(date, time, target) {
             let combinedDateString = (date.toString() + ' ' + time);

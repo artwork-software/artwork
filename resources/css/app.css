@@ -151,9 +151,28 @@
         border: 2px solid #CECDD8;
         opacity: 1;
     }
+    .eventTime{
+        font: normal normal 12px/18px Inter;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        text-align: left;
+    }
+    .eventHeader{
+        font: normal normal 12px/20px Inter;
+        font-weight: bold;
+        text-align: left;
+    }
     .eventBorder{
         border: 1px solid #D8D7DE;
         opacity: 1;
+    }
+    .calendarRoomHeader{
+        font: normal normal 13px/18px Inter;
+        letter-spacing: -0.2px;
+    }
+    .eventText{
+        font: normal 600 10px/19px Inter;
+        letter-spacing: 0.1em;
     }
     .bigNumber{
         font: normal normal 40px/48px Lexend;

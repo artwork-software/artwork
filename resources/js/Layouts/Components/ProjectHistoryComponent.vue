@@ -6,6 +6,7 @@
                 <div class="font-bold font-lexend text-primary tracking-wide text-2xl my-2">
                     Projektverlauf
                 </div>
+
                 <XIcon @click="closeModal()"
                        class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                        aria-hidden="true"/>
@@ -29,10 +30,10 @@
                     </div>
                 </div>
 
-                <div class="flex w-full flex-wrap mt-4 max-h-96 overflow-y-auto" v-if="showProjectHistoryTab">
+                <div class="flex  w-full flex-wrap mt-4 max-h-96 overflow-y-auto" v-if="showProjectHistoryTab">
                     <div v-for="(historyItem,index) in project_history">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null && historyItem.changes[0]?.type === 'project' || historyItem.changes[0]?.type === 'public_changes'">
-                            <div class="flex w-full ">
+                            <div class="flex w-full">
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
@@ -47,7 +48,6 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
 
                 <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">

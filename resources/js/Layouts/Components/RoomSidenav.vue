@@ -127,7 +127,7 @@ import {
     ChevronDownIcon
 } from '@heroicons/vue/outline';
 import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import RoomAccessModal from "@/Layouts/Components/RoomAccessModal.vue";
 import RoomAttributeEditModal from "@/Layouts/Components/RoomAttributeEditModal.vue";
 import FileDeleteModal from "@/Layouts/Components/FileDeleteModal.vue";

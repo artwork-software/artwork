@@ -185,8 +185,9 @@ class RoomController extends Controller
             $requestable_by_ids[$can_request['id']] = ['can_request' => true];
         }
 
-        $new_users = $room_admins_ids + $requestable_by_ids;
+        $new_users = collect($room_admins_ids + $requestable_by_ids);
 
+        $room->users()->detach();
         $room->users()->sync($new_users);
 
         $room->adjoining_rooms()->sync($request->adjoining_rooms);

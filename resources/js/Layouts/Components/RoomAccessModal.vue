@@ -47,41 +47,41 @@
                     <div class="flex">
                     </div>
                     <div v-for="(user,index) in roomUsers"
-                          class="mt-4 mr-1 rounded-full items-center font-bold text-primary">
-                            <div class="flex items-center">
-                                <img class="flex h-11 w-11 rounded-full"
-                                     :src="user.profile_photo_url"
-                                     alt=""/>
-                                <span class="flex ml-4">
+                         class="mt-4 mr-1 rounded-full items-center font-bold text-primary">
+                        <div class="flex items-center">
+                            <img class="flex h-11 w-11 rounded-full"
+                                 :src="user.profile_photo_url"
+                                 alt=""/>
+                            <span class="flex ml-4">
                                 {{ user.first_name }} {{ user.last_name }}
                                     </span>
-                                <button type="button" @click="deleteUserFromRoom(user)">
-                                    <span class="sr-only">User als Raumadmin entfernen</span>
-                                    <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
-                                </button>
+                            <button type="button" @click="deleteUserFromRoom(user)">
+                                <span class="sr-only">User als Raumadmin entfernen</span>
+                                <XCircleIcon class="ml-2 h-5 w-5 hover:text-error "/>
+                            </button>
 
-                                <input type="checkbox"
-                                        v-model="user.is_room_admin"
-                                        :value="user.id"
-                                       @change="updateUserAccess(user)"
-                                        class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
-                                <p :class="[user.is_room_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
-                                    Raumadmin
-                                </p>
+                            <input type="checkbox"
+                                   v-model="user.is_room_admin"
+                                   :value="user.id"
+                                   @change="updateUserAccess(user)"
+                                   class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                            <p :class="[user.is_room_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
+                               class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
+                                Raumadmin
+                            </p>
 
-                                <input type="checkbox"
-                                       v-model="user.can_request_room"
-                                       :value="user.id"
-                                       @change="updateUserAccess(user)"
-                                       class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
-                                <p :class="[user.can_request_room ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
-                                   class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
-                                    Anfrageberechtigt
-                                </p>
-                            </div>
-                            <hr class="my-4 border-silverGray">
+                            <input type="checkbox"
+                                   v-model="user.can_request_room"
+                                   :value="user.id"
+                                   @change="updateUserAccess(user)"
+                                   class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                            <p :class="[user.can_request_room ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
+                               class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
+                                Anfrageberechtigt
+                            </p>
                         </div>
+                        <hr class="my-4 border-silverGray">
+                    </div>
                 </div>
                 <div class="flex justify-center">
                     <AddButton @click="updateRoomUsers"
@@ -144,11 +144,11 @@ watch(user_query, (new_user_query) => {
 })
 
 const deleteUserFromRoom = (user) => {
-    if(contains(updateRoomUsersForm.room_admins, user)) {
+    if (contains(updateRoomUsersForm.room_admins, user)) {
         updateRoomUsersForm.room_admins.splice(updateRoomUsersForm.room_admins.indexOf(user), 1);
     }
 
-    if(contains(updateRoomUsersForm.requestable_by, user)) {
+    if (contains(updateRoomUsersForm.requestable_by, user)) {
         updateRoomUsersForm.requestable_by.splice(updateRoomUsersForm.requestable_by.indexOf(user), 1);
     }
 
@@ -157,24 +157,27 @@ const deleteUserFromRoom = (user) => {
 }
 
 const updateRoomUsers = () => {
-    console.log("update users form")
-    console.log(updateRoomUsersForm)
     updateRoomUsersForm.patch(route('rooms.update', {room: props.room.id}));
     emit('close')
 }
 
 const updateUserAccess = (user) => {
 
-    if(user.is_room_admin && !contains(updateRoomUsersForm.room_admins, user)) {
+    if (user.is_room_admin && !contains(updateRoomUsersForm.room_admins, user)) {
         updateRoomUsersForm.room_admins.push(user);
-    }
-    else if(!user.is_room_admin && contains(updateRoomUsersForm.room_admins, user)) {
+        updateRoomUsersForm.requestable_by.splice(updateRoomUsersForm.requestable_by.indexOf(user), 1);
+    } else if (!user.is_room_admin && contains(updateRoomUsersForm.room_admins, user)) {
         updateRoomUsersForm.room_admins.splice(updateRoomUsersForm.room_admins.indexOf(user), 1);
-    }
-    else if(user.can_request_room && !contains(updateRoomUsersForm.requestable_by, user)) {
+        if (user.can_request_room && !contains(updateRoomUsersForm.requestable_by, user)) {
+            updateRoomUsersForm.requestable_by.push(user)
+        }
+    } else if (
+        user.can_request_room
+        && !contains(updateRoomUsersForm.requestable_by, user)
+        && !contains(updateRoomUsersForm.room_admins, user)
+    ) {
         updateRoomUsersForm.requestable_by.push(user)
-    }
-    else if(!user.can_request_room && contains(updateRoomUsersForm.requestable_by, user)) {
+    } else if (!user.can_request_room && contains(updateRoomUsersForm.requestable_by, user)) {
         updateRoomUsersForm.requestable_by.splice(updateRoomUsersForm.requestable_by.indexOf(user), 1);
     }
 }

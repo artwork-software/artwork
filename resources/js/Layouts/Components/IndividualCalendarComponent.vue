@@ -20,21 +20,21 @@
                     <th class="w-16">
 
                     </th>
-                    <th v-for="room in rooms" :style="{ width: zoomFactor * 52 + 'px'}"  class="py-3 border-r-4 border-secondaryHover">
-                        <div class="flex calendarRoomHeader font-semibold items-center ml-4">
+                    <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"  class="py-3 border-r-4 border-secondaryHover">
+                        <div :style="textStyle" class="flex font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>
                     </th>
                 </tr>
                 </thead>
                 <tbody class="flex w-full pt-3 flex-wrap">
-                <tr :style="{height: zoomFactor * 36 + 'px'}" class="w-full flex" v-for="day in days">
+                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
                     <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
                         {{ day }}
                     </th>
-                    <td :style="{ width: zoomFactor * 52 + 'px', height: zoomFactor * 36 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
+                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
                         <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                            <SingleCalendarEvent :width="zoomFactor * 40" :height="zoomFactor * 40" :event="event" :event-types="eventTypes"
+                            <SingleCalendarEvent :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
                         </div>
                     </td>
@@ -99,13 +99,23 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: 3
+            zoomFactor: 1
         }
     },
     props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue'],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);
+    },
+    computed: {
+        textStyle() {
+            const fontSize = `calc(${this.zoomFactor} * 0.875rem)`;
+            const lineHeight = `calc(${this.zoomFactor} * 1.25rem)`;
+            return {
+                fontSize,
+                lineHeight,
+            };
+        },
     },
     methods: {
         changeAtAGlance(atAGlance) {
@@ -116,7 +126,6 @@ export default {
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
         openEditEventModal(event) {
-            //console.log(event);
             this.selectedEvent = event;
             this.wantedRoom = event.roomId;
 
@@ -171,17 +180,17 @@ export default {
                 this.isFullscreen = true;
             } else {
                 this.isFullscreen = false;
-                this.zoomFactor = 3;
+                this.zoomFactor = 1;
             }
         },
         incrementZoomFactor() {
-            if (this.zoomFactor < 6) {
-                this.zoomFactor++;
+            if (this.zoomFactor < 1.4) {
+                this.zoomFactor = Math.round((this.zoomFactor + 0.2) * 10) / 10;
             }
         },
         decrementZoomFactor() {
-            if (this.zoomFactor > 1) {
-                this.zoomFactor--;
+            if (this.zoomFactor > 0.2) {
+                this.zoomFactor = Math.round((this.zoomFactor - 0.2) * 10) / 10;
             }
         },
     }
@@ -212,14 +221,5 @@ export default {
 
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
-}
-.text-lg {
-    font-size: 1rem;
-}
-.text-xl {
-    font-size: 1.25rem;
-}
-.text-2xl {
-    font-size: 1.5rem;
 }
 </style>

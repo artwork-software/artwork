@@ -2,12 +2,6 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
             <date-picker-component :dateValueArray="dateValue"></date-picker-component>
-            <button class="ml-2 text-black" @click="$refs.vuecal.previous()">
-                <ChevronLeftIcon class="h-5 w-5 text-primary"/>
-            </button>
-            <button class="ml-2 text-black" @click="$refs.vuecal.next()">
-                <ChevronRightIcon class="h-5 w-5 text-primary"/>
-            </button>
         </div>
         <SwitchGroup as="div" class="flex items-center">
             <Switch v-model="atAGlance" @click="changeAtAGlance(atAGlance)"
@@ -25,8 +19,9 @@
         </SwitchGroup>
         <div class="flex items-center">
             <div class="flex items-center">
-                <ZoomInIcon @click="incrementZoomFactor" :disabled="zoomFactor <= 1" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomInIcon>
-                <ZoomOutIcon @click="decrementZoomFactor" :disabled="zoomFactor >= 6" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
+                {{zoomFactor}}
+                <ZoomInIcon @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomInIcon>
+                <ZoomOutIcon @click="decrementZoomFactor" :disabled="zoomFactor >= 1.4" v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
                 <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode" src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
                 <IndividualCalendarFilterComponent class="mt-1"/>
 

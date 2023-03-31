@@ -295,7 +295,7 @@
                             </Menu>
                             <div>
                                 <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category, index) in roomCategories"
+                                    <span v-for="(category, index) in roomCategories.data"
                                           class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         {{ category.name }}
@@ -303,7 +303,7 @@
                                             <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                         </button>
                                     </span>
-                                    <span v-for="(attribute, index) in roomAttributes"
+                                    <span v-for="(attribute, index) in roomAttributes.data"
                                           class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         {{ attribute.name }}
@@ -312,7 +312,7 @@
                                         </button>
                                     </span>
 
-                                    <span v-for="(room, index) in adjoiningRooms"
+                                    <span v-for="(room, index) in adjoiningRooms.data"
                                           class="flex rounded-full items-center font-medium text-tagText
                                          border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
                                         Nebenraum von {{ room.name }}
@@ -892,6 +892,11 @@ export default {
             }
             return requestsToShow
         }
+    },
+    mounted() {
+        setTimeout(() => {
+            this.showSidenav = false;
+        }, 1000)
     },
     data() {
         return {

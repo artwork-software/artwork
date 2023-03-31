@@ -1,5 +1,6 @@
 <template>
-    <div :class="[event.class]" class="px-1 py-0.5 w-full rounded-lg relative group">
+    <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
+         class="px-1 py-0.5 rounded-lg relative group">
         <div
             class="absolute w-full h-full bg-indigo-500/50 rounded-lg hidden group-hover:block flex justify-center align-middle items-center">
             <div class="flex justify-center items-center h-full gap-2">
@@ -38,12 +39,15 @@
             </div>
         </div>
         <div class="px-1 py-0.5 ">
-            <div class="eventHeader  flex justify-between">
+            <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']" class="flex justify-between">
                 <div class="flex items-center">
+                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                        {{event.eventTypeAbbreviation}}:
+                    </div>
                     {{ event.title }}
                     <div v-if="$page.props.user.calendar_settings.project_status">
-                        <div v-if="event.project?.state?.color" :class="event.project.state.color"
-                             class="h-2 w-2 rounded-full border-4">
+                        <div v-if="event.project?.state?.color" :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
+                             class="rounded-full">
                         </div>
                     </div>
 
@@ -51,7 +55,7 @@
                 <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
-                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23"
+                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" :width="22.37 * zoomFactor" :height="11.23 * zoomFactor"
                          viewBox="0 0 19.182 10.124">
                         <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
                             <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
@@ -85,14 +89,14 @@
                 </div>
             </div>
             <!-- Time -->
-            <div class="flex">
+            <div class="flex" :style="textStyle" :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
                 <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
-                      class="items-center eventTime">{{
+                      class="items-center">{{
                         new Date(event.start).formatTime("HH:mm")
                     }} - {{ new Date(event.end).formatTime("HH:mm") }}
                 </span>
                 <span class="flex w-full" v-else>
-                    <span class="items-center eventTime">
+                    <span class="items-center">
                         {{
                             new Date(event.start).format("DD.MM. HH:mm")
                         }} - {{ new Date(event.end).format("DD.MM. HH:mm") }}
@@ -100,7 +104,8 @@
                 </span>
             </div>
             <!-- repeating Event -->
-            <div v-if="$page.props.user.calendar_settings.repeating_events" class="uppercase eventText flex items-center">
+            <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']" v-if="$page.props.user.calendar_settings.repeating_events"
+                 class="uppercase flex items-center">
                 <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838"
                      viewBox="0 0 8.664 10.838">
                     <g id="Icon_feather-repeat" data-name="Icon feather-repeat" transform="translate(-3.85 -0.581)">
@@ -118,11 +123,11 @@
             </div>
             <!-- User-Icons -->
             <div class="-ml-3 mb-0.5 w-full" v-if="$page.props.user.calendar_settings.project_management">
-                <div v-if="event.projectLeaders && !project"
+                <div v-if="event.projectLeaders && !project && zoomFactor >= 0.8"
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
                          v-for="user in event.projectLeaders?.slice(0,3)">
-                        <NewUserToolTip :height="5" :width="5" v-if="user"
+                        <NewUserToolTip :height="5 * zoomFactor" :width="5 * zoomFactor" v-if="user"
                                         :user="user" :id="user.id + event.id"/>
                     </div>
                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
@@ -195,15 +200,15 @@
                         </button>
                     </div>
                 </div>
-                <div :class="[subEvent.class]" class="px-1 py-0.5 rounded-r-lg">
-                    <div class="eventHeader  flex justify-between">
+                <div  :class="[subEvent.class]" class="px-1 py-0.5 rounded-r-lg">
+                    <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']" class="flex justify-between">
                         <div class="flex items-center">
                             {{ subEvent.title }}
                         </div>
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
                              class="flex">
-                            <svg :class="subEvent.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23"
+                            <svg :class="subEvent.class" xmlns="http://www.w3.org/2000/svg" :width="22.37 * zoomFactor" :height="11.23 * zoomFactor"
                                  viewBox="0 0 19.182 10.124">
                                 <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
                                     <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
@@ -237,13 +242,17 @@
                         </div>
                     </div>
                     <!-- Time -->
-                    <div class="flex">
-                        <span v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
-                              class="items-center eventTime">{{ new Date(subEvent.start).formatTime("HH:mm") }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
+                    <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']" class="flex">
+                        <span :style="textStyle" v-if="new Date(subEvent.start).toDateString() === new Date(subEvent.end).toDateString()"
+                              class="items-center">{{
+                                new Date(subEvent.start).formatTime("HH:mm")
+                            }} - {{ new Date(subEvent.end).formatTime("HH:mm") }}
                         </span>
                         <span class="flex w-full" v-else>
-                            <span class="items-center eventTime">
-                                {{ new Date(subEvent.start).format("DD.MM. HH:mm") }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
+                            <span class="items-center">
+                                {{
+                                    new Date(subEvent.start).format("DD.MM. HH:mm")
+                                }} - {{ new Date(subEvent.end).format("DD.MM. HH:mm") }}
                             </span>
                         </span>
                     </div>
@@ -288,9 +297,31 @@ export default {
         EventComponent,
         ConfirmDeleteModal,
         ConfirmationComponent,
-        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip},
-    props: ['event', 'eventTypes'],
+        Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip
+    },
+    props: ['event', 'eventTypes', 'height', 'width','zoomFactor'],
     emits: ['openEditEventModal'],
+    computed: {
+        textStyle() {
+            const fontSize = `calc(${this.zoomFactor} * 0.75rem)`;
+            const lineHeight = `calc(${this.zoomFactor} * 1rem)`;
+            return {
+                fontSize,
+                lineHeight,
+            };
+        },
+        totalHeight() {
+            let height = 42;
+            // ProjectStatus is in same row as name -> no extra height needed
+            if (this.$page.props.user.calendar_settings.project_status) height += 0;
+            //Options are in same row as time -> no extra height needed
+            if (this.$page.props.user.calendar_settings.options) height += 0;
+            if (this.$page.props.user.calendar_settings.project_management) height += 17;
+            if (this.$page.props.user.calendar_settings.repeating_events) height += 20;
+            if (this.$page.props.user.calendar_settings.work_shifts) height += 18;
+            return height;
+        },
+    },
     data() {
         return {
             showAddSubEventModal: false,
@@ -308,7 +339,7 @@ export default {
         }
     },
     methods: {
-        openEditEventModal(event){
+        openEditEventModal(event) {
             this.$emit('openEditEventModal', event);
         },
         closeAddSubModal() {
@@ -318,11 +349,11 @@ export default {
             this.subEventToEdit = null;
             this.showAddSubEventModal = true;
         },
-        closeConfirmModal(){
+        closeConfirmModal() {
             this.deleteComponentVisible = false;
         },
-        openConfirmModal(eventId, type){
-            if(type === 'main'){
+        openConfirmModal(eventId, type) {
+            if (type === 'main') {
                 this.type = type;
                 this.deleteTitle = 'Termin Löschen?';
                 this.deleteDescription = 'Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht.';
@@ -334,15 +365,15 @@ export default {
             this.eventToDelete = eventId
             this.deleteComponentVisible = true;
         },
-        deleteEvent(){
+        deleteEvent() {
             console.log(this.eventToDelete)
-            if(this.type === 'main'){
+            if (this.type === 'main') {
                 this.$inertia.delete(route('events.delete', this.eventToDelete), {
                     preserveScroll: true,
                     preserveState: true
                 })
             }
-            if(this.type === 'sub'){
+            if (this.type === 'sub') {
                 this.$inertia.delete(route('subEvent.delete', this.eventToDelete), {
                     preserveScroll: true,
                     preserveState: true
@@ -350,7 +381,7 @@ export default {
             }
             this.deleteComponentVisible = false;
         },
-        editSubEvent(subEvent){
+        editSubEvent(subEvent) {
             this.subEventToEdit = subEvent;
             this.showAddSubEventModal = true;
         }
@@ -423,6 +454,7 @@ export default {
     stroke: #50908E;
     color: #50908E
 }
+
 .eventType10 {
     background: #21485C15;
     stroke: #23485B;

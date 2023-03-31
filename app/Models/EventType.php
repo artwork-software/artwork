@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property string $name
  * @property string $svg_name
+ * @property string $abbreviation
  * @property bool $project_mandatory
  * @property bool $individual_name
  * @property string $created_at

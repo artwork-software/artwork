@@ -1,7 +1,8 @@
 <template>
 
-    <div class="mt-10 flex justify-between items-center w-[95%] relative">
-        <CalendarFunctionBar :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+    <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
+        <div class="bg-white">
+        <CalendarFunctionBar @enterFullscreenMode="openFullscreen" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
         <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
@@ -321,6 +322,183 @@
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
         -->
+        <!--  Calendar  -->
+        <div class="pl-3 overflow-x-scroll">
+            <vue-cal
+                ref="vuecal"
+                id="vuecal"
+                style="height: 70rem; max-height: calc(100vh - 280px); min-width: 100%; width: fit-content;"
+                today-button
+                :time-cell-height=120
+                events-on-month-view="short"
+                locale="de"
+                hide-view-selector
+                show-week-numbers
+                :hideTitleBar="currentView !== 'year'"
+
+                sticky-split-labels
+                :disable-views="['years']"
+                :events="displayedEvents"
+                :split-days="displayedRooms"
+                :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
+                :snap-to-time="15"
+                :selected-date="selectedDate"
+                :drag-to-create-threshold="15"
+                events-count-on-year-view
+                v-model:active-view="currentView"
+                @event-drag-create="openEventComponent($event)"
+                @event-focus="openEventComponent($event)"
+                @event-mouse-enter="addHoverToEvent($event)"
+                @event-mouse-leave="removeHoverToEvent($event)"
+                @ready="fetchEvents"
+                @view-change="fetchEvents($event)"
+            >
+                <template #title="{ title, view }" class="group">
+                    <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
+                        {{ title }}
+                    </div>
+                    <div class="hidden group-hover:block">
+                        djfdsjgl
+                    </div>
+                </template>
+                <template #today-button>
+                    <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
+                        aktuelles Jahr
+                    </div>
+                </template>
+                <template #weekday-heading="{ heading, view }">
+                    <div v-if="currentView === 'week'">
+                        {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
+                    </div>
+                </template>
+                <template #week-number-cell=" weekNumber, view">
+                    <div>
+                        KW {{ weekNumber.week }}
+                    </div>
+                </template>
+                <template #split-label="{ split, view }">
+                    <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
+                        {{ split.label }}
+                    </Link>
+                </template>
+                <template #event="{ event, view}">
+                    <div class="text-left centered mt-3 cursor-pointer">
+                        <div class="flex w-full">
+                            <div v-if="!project" class="eventHeader truncate mx-1">
+                                {{ event.title }}
+                            </div>
+                            <div v-else class="truncate mx-1">
+                                {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
+                            </div>
+                            <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
+                                 class="flex">
+                                <div v-if="event.audience"
+                                     class="flex">
+                                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23" viewBox="0 0 19.182 10.124">
+                                        <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
+                                            <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
+                                                <path id="Pfad_825" data-name="Pfad 825" d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                                <path id="Pfad_826" data-name="Pfad 826" d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z" transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                                <path id="Pfad_827" data-name="Pfad 827" d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-48.181 -1)" fill="none"  stroke-miterlimit="10" stroke-width="1"/>
+                                                <path id="Pfad_828" data-name="Pfad 828" d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955" transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                                <path id="Pfad_829" data-name="Pfad 829" d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
+                                                <path id="Pfad_830" data-name="Pfad 830" d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189" transform="translate(-1 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
+                                            </g>
+                                        </g>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+                        <div v-if="currentView !== 'month'" class="mx-1">
+                            <div v-if="!project">
+                        <span class="truncate xxsLight truncate"
+                              v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
+                            </div>
+                            <div v-else class="truncate xxsLight truncate">
+                                {{ event.eventName }}
+                            </div>
+                            <span class="flex w-full eventTime">
+                        <span v-if="event.start.getDay() === event.end.getDay()"
+                              class="items-center eventTime">{{ event.start.formatTime("HH:mm") }} - {{
+                                event.end.formatTime("HH:mm")
+                            }}
+                        </span>
+                        <span class="flex w-full eventTime" v-else>
+                            <span class="items-center eventTime">
+                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
+                                    event.end.format("DD.MM.YYYY HH:mm")
+                                }}
+                            </span>
+
+                        </span><br/>
+                    </span>
+                            <div class="flex">
+                                <div class="flex -ml-3">
+                                    <div v-if="event.projectLeaders && !project"
+                                         class="ml-2.5 flex flex-wrap ">
+                                        <div class="-mr-3 flex flex-wrap flex-row"
+                                             v-for="user in event.projectLeaders?.slice(0,3)">
+                                            <NewUserToolTip :height="6" :width="6" v-if="user"
+                                                            :user="user" :id="user.id"></NewUserToolTip>
+                                        </div>
+                                        <div v-if="event.projectLeaders.length >= 4" class="my-auto">
+                                            <Menu as="div" class="relative">
+                                                <div>
+                                                    <MenuButton class="flex rounded-full focus:outline-none">
+                                                        <div
+                                                            :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                            class="ml-2 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
+                                                            <p class="">
+                                                                +{{ event.projectLeaders.length - 3 }}
+                                                            </p>
+                                                        </div>
+                                                    </MenuButton>
+                                                </div>
+                                                <transition enter-active-class="transition ease-out duration-100"
+                                                            enter-from-class="transform opacity-0 scale-95"
+                                                            enter-to-class="transform opacity-100 scale-100"
+                                                            leave-active-class="transition ease-in duration-75"
+                                                            leave-from-class="transform opacity-100 scale-100"
+                                                            leave-to-class="transform opacity-0 scale-95">
+                                                    <MenuItems
+                                                        class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                                        <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
+                                                            <Link href="#"
+                                                                  :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
+                                                                     class="rounded-full"
+                                                                     :src="user.profile_photo_url"
+                                                                     alt=""/>
+                                                                <span class="ml-4">
+                                                                {{ user.first_name }} {{ user.last_name }}
+                                                            </span>
+                                                            </Link>
+                                                        </MenuItem>
+                                                    </MenuItems>
+                                                </transition>
+                                            </Menu>
+                                        </div>
+                                    </div>
+                                    <div v-else-if="event.created_by"
+                                         class="mt-1 ml-3 flex flex-wrap w-full">
+                                        <div class="-mr-3 flex flex-wrap flex-row">
+                                            <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
+                                                            :user="event.created_by" :id="event.created_by.id + event.id"></NewUserToolTip>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </vue-cal>
+
+        </div>
+        </div>
 
 
     </div>
@@ -336,182 +514,7 @@
     </div>
 
 
-    <!--  Calendar  -->
-    <div class="pl-3 overflow-x-scroll">
-        <vue-cal
-            ref="vuecal"
-            id="vuecal"
-            style="height: 70rem; max-height: calc(100vh - 280px); min-width: 100%; width: fit-content;"
-            today-button
-            :time-cell-height=120
-            events-on-month-view="short"
-            locale="de"
-            hide-view-selector
-            show-week-numbers
-            :hideTitleBar="currentView !== 'year'"
 
-            sticky-split-labels
-            :disable-views="['years']"
-            :events="displayedEvents"
-            :split-days="displayedRooms"
-            :editable-events="{ title: false, drag: true, resize: false, delete: true, create: true }"
-            :snap-to-time="15"
-            :selected-date="selectedDate"
-            :drag-to-create-threshold="15"
-            events-count-on-year-view
-            v-model:active-view="currentView"
-            @event-drag-create="openEventComponent($event)"
-            @event-focus="openEventComponent($event)"
-            @event-mouse-enter="addHoverToEvent($event)"
-            @event-mouse-leave="removeHoverToEvent($event)"
-            @ready="fetchEvents"
-            @view-change="fetchEvents($event)"
-        >
-            <template #title="{ title, view }" class="group">
-                <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
-                    {{ title }}
-                </div>
-                <div class="hidden group-hover:block">
-                    djfdsjgl
-                </div>
-            </template>
-            <template #today-button>
-                <div class="flex w-24 xsDark text-buttonBlue" v-if="currentView === 'year'">
-                    aktuelles Jahr
-                </div>
-            </template>
-            <template #weekday-heading="{ heading, view }">
-                <div v-if="currentView === 'week'">
-                    {{ heading.label }}, {{ heading.date.format("DD.MM.YYYY") }}
-                </div>
-            </template>
-            <template #week-number-cell=" weekNumber, view">
-                <div>
-                    KW {{ weekNumber.week }}
-                </div>
-            </template>
-            <template #split-label="{ split, view }">
-                <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
-                    {{ split.label }}
-                </Link>
-            </template>
-            <template #event="{ event, view}">
-                <div class="text-left centered mt-3 cursor-pointer">
-                    <div class="flex w-full">
-                        <div v-if="!project" class="eventHeader truncate mx-1">
-                            {{ event.title }}
-                        </div>
-                        <div v-else class="truncate mx-1">
-                            {{ this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.name }}
-                        </div>
-                        <div v-if="currentView !== 'month' && (event.audience || event.isLoud)"
-                             class="flex">
-                            <div v-if="event.audience"
-                                 class="flex">
-                                <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" width="22.37" height="11.23" viewBox="0 0 19.182 10.124">
-                                    <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
-                                        <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
-                                            <path id="Pfad_825" data-name="Pfad 825" d="M39.116,8.027c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-28.015 -4.977)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
-                                            <path id="Pfad_826" data-name="Pfad 826" d="M29.852,27.618a3.323,3.323,0,0,1-1.5-.525,2.717,2.717,0,0,0-1.891,2.492v.62a.634.634,0,0,0,.671.593h6.265a.636.636,0,0,0,.673-.593v-.62a2.717,2.717,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523Z" transform="translate(-21.17 -21.674)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
-                                            <path id="Pfad_827" data-name="Pfad 827" d="M64.568,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-48.181 -1)" fill="none"  stroke-miterlimit="10" stroke-width="1"/>
-                                            <path id="Pfad_828" data-name="Pfad 828" d="M56.324,25.779h4.6a.636.636,0,0,0,.673-.593v-.62a2.716,2.716,0,0,0-1.891-2.492,3.336,3.336,0,0,1-1.488.523l-.836,0a3.322,3.322,0,0,1-1.5-.525,3.021,3.021,0,0,0-1.345.955" transform="translate(-43.416 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
-                                            <path id="Pfad_829" data-name="Pfad 829" d="M13.659,3.008c0,.043,0,.085,0,.128a2.009,2.009,0,0,1-4.008.034c-.005-.054-.007-.108-.007-.162a2.009,2.009,0,0,1,4.019,0Z" transform="translate(-7.846 -1)" fill="none" stroke-miterlimit="10" stroke-width="1"/>
-                                            <path id="Pfad_830" data-name="Pfad 830" d="M8.137,23.127a3,3,0,0,0-1.419-1.053,3.337,3.337,0,0,1-1.487.523l-.836,0a3.323,3.323,0,0,1-1.5-.525A2.716,2.716,0,0,0,1,24.566v.62a.634.634,0,0,0,.671.593H6.189" transform="translate(-1 -17.697)" fill="none" stroke-linecap="round" stroke-miterlimit="10" stroke-width="1"/>
-                                        </g>
-                                    </g>
-                                </svg>
-                            </div>
-                        </div>
-                    </div>
-
-
-
-                    <div v-if="currentView !== 'month'" class="mx-1">
-                        <div v-if="!project">
-                        <span class="truncate xxsLight truncate"
-                              v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
-                        </div>
-                        <div v-else class="truncate xxsLight truncate">
-                            {{ event.eventName }}
-                        </div>
-                        <span class="flex w-full eventTime">
-                        <span v-if="event.start.getDay() === event.end.getDay()"
-                              class="items-center eventTime">{{ event.start.formatTime("HH:mm") }} - {{
-                                event.end.formatTime("HH:mm")
-                            }}
-                        </span>
-                        <span class="flex w-full eventTime" v-else>
-                            <span class="items-center eventTime">
-                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
-                                    event.end.format("DD.MM.YYYY HH:mm")
-                                }}
-                            </span>
-
-                        </span><br/>
-                    </span>
-                        <div class="flex">
-                            <div class="flex -ml-3">
-                                <div v-if="event.projectLeaders && !project"
-                                     class="ml-2.5 flex flex-wrap ">
-                                    <div class="-mr-3 flex flex-wrap flex-row"
-                                         v-for="user in event.projectLeaders?.slice(0,3)">
-                                        <NewUserToolTip :height="6" :width="6" v-if="user"
-                                                        :user="user" :id="user.id"></NewUserToolTip>
-                                    </div>
-                                    <div v-if="event.projectLeaders.length >= 4" class="my-auto">
-                                        <Menu as="div" class="relative">
-                                            <div>
-                                                <MenuButton class="flex rounded-full focus:outline-none">
-                                                    <div
-                                                        :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                        class="ml-2 flex-shrink-0 flex my-auto ring-2 ring-white font-semibold rounded-full shadow-sm text-white bg-black">
-                                                        <p class="">
-                                                            +{{ event.projectLeaders.length - 3 }}
-                                                        </p>
-                                                    </div>
-                                                </MenuButton>
-                                            </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="absolute overflow-y-auto max-h-48 mt-2 w-72 mr-12 origin-top-right shadow-lg py-1 bg-primary ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                                    <MenuItem v-for="user in event.projectLeaders" v-slot="{ active }">
-                                                        <Link href="#"
-                                                              :class="[active ? 'bg-primaryHover text-secondaryHover' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                            <img :class="currentView === 'month'? 'h-7 w-7' : 'h-9 w-9'"
-                                                                 class="rounded-full"
-                                                                 :src="user.profile_photo_url"
-                                                                 alt=""/>
-                                                            <span class="ml-4">
-                                                                {{ user.first_name }} {{ user.last_name }}
-                                                            </span>
-                                                        </Link>
-                                                    </MenuItem>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
-                                    </div>
-                                </div>
-                                <div v-else-if="event.created_by"
-                                     class="mt-1 ml-3 flex flex-wrap w-full">
-                                    <div class="-mr-3 flex flex-wrap flex-row">
-                                        <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
-                                                        :user="event.created_by" :id="event.created_by.id + event.id"></NewUserToolTip>
-                                    </div>
-                                </div>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </template>
-        </vue-cal>
-
-    </div>
     <!-- Termin erstellen Modal-->
     <event-component
         v-if="createEventComponentIsVisible"
@@ -1162,6 +1165,16 @@ export default {
                 this.displayDate = "Jahr - " + startDate.toLocaleDateString('de-DE', {year: 'numeric'})
             }
         },
+        openFullscreen() {
+            let elem = document.getElementById("myCalendar");
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.webkitRequestFullscreen) { /* Safari */
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) { /* IE11 */
+                elem.msRequestFullscreen();
+            }
+        }
     }
 }
 </script>

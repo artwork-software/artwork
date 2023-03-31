@@ -64,7 +64,7 @@
                                    v-model="user.is_room_admin"
                                    :value="user.id"
                                    @change="updateUserAccess(user)"
-                                   class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                                   class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
                             <p :class="[user.is_room_admin ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
                                 Raumadmin
@@ -74,7 +74,7 @@
                                    v-model="user.can_request_room"
                                    :value="user.id"
                                    @change="updateUserAccess(user)"
-                                   class="ml-8 cursor-pointer h-4 w-4 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
+                                   class="ml-8 cursor-pointer h-6 w-6 text-success border-2 border-secondary bg-darkGrayBg focus:border-none"/>
                             <p :class="[user.can_request_room ? 'text-primary' : 'text-secondary', 'subpixel-antialiased']"
                                class="ml-1.5 text-sm subpixel-antialiased align-text-middle">
                                 Anfrageberechtigt

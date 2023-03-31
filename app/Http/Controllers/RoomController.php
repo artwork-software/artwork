@@ -175,24 +175,28 @@ class RoomController extends Controller
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
-        $room_admins_ids = [];
-        foreach ($request->room_admins as $room_admin) {
-            $room_admins_ids[$room_admin['id']] = ['is_admin' => true];
+        if(!is_null($request->room_admins) && !is_null($request->requestable_by)) {
+
+            $room_admins_ids = [];
+            foreach ($request->room_admins as $room_admin) {
+                $room_admins_ids[$room_admin['id']] = ['is_admin' => true];
+            }
+
+            $requestable_by_ids = [];
+            foreach ($request->requestable_by as $can_request) {
+                $requestable_by_ids[$can_request['id']] = ['can_request' => true];
+            }
+
+            $new_users = collect($room_admins_ids + $requestable_by_ids);
+            $room->users()->detach();
+            $room->users()->sync($new_users);
         }
 
-        $requestable_by_ids = [];
-        foreach ($request->requestable_by as $can_request) {
-            $requestable_by_ids[$can_request['id']] = ['can_request' => true];
+        if(!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+            $room->adjoining_rooms()->sync($request->adjoining_rooms);
+            $room->attributes()->sync($request->room_attributes);
+            $room->categories()->sync($request->room_categories);
         }
-
-        $new_users = collect($room_admins_ids + $requestable_by_ids);
-
-        $room->users()->detach();
-        $room->users()->sync($new_users);
-
-        $room->adjoining_rooms()->sync($request->adjoining_rooms);
-        $room->attributes()->sync($request->room_attributes);
-        $room->categories()->sync($request->room_categories);
 
         $newRoomDescription = $room->description;
         $newRoomTitle = $room->name;

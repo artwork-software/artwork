@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Antonrom\ModelChangesHistory\Models\Change;
 use App\Enums\NotificationConstEnum;
+use App\Http\Resources\AdjoiningRoomIndexResource;
+use App\Http\Resources\AttributeIndexResource;
+use App\Http\Resources\CategoryIndexResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\RoomCalendarResource;
@@ -131,21 +134,21 @@ class RoomController extends Controller
 
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
-            'is_room_admin' => $room->room_admins->contains(Auth::id()),
+            'is_room_admin' => $room->users()->wherePivot('is_admin', true)->get()->contains(Auth::id()),
             'event_types' => EventTypeResource::collection(EventType::all())->resolve(),
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
 
             'available_categories' => RoomCategory::all(),
             'roomCategoryIds' => $room->categories()->pluck('room_category_id'),
-            'roomCategories' => $room->categories,
+            'roomCategories' => CategoryIndexResource::collection($room->categories),
 
             'available_attributes' => RoomAttribute::all(),
             'roomAttributeIds' => $room->attributes()->pluck('room_attribute_id'),
-            'roomAttributes' => $room->attributes,
+            'roomAttributes' => AttributeIndexResource::collection($room->attributes),
 
             'available_rooms' => Room::where('id', '!=', $room->id)->get(),
             'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
-            'adjoiningRooms' => $room->adjoining_rooms,
+            'adjoiningRooms' => AdjoiningRoomIndexResource::collection($room->adjoining_rooms),
         ]);
     }
 
@@ -162,7 +165,7 @@ class RoomController extends Controller
 
         $oldRoomDescription = $room->description;
         $oldRoomTitle = $room->name;
-        $roomAdminsBefore = $room->room_admins()->get();
+        $roomAdminsBefore = $room->users()->wherePivot('is_admin', true)->get();
         $oldAdjoiningRooms = $room->adjoining_rooms()->get();
         $oldRoomAttributes = $room->attributes()->get();
         $oldRoomCategories = $room->categories()->get();
@@ -172,23 +175,34 @@ class RoomController extends Controller
 
         $room->update($request->only('name', 'description', 'temporary', 'start_date', 'end_date', 'everyone_can_book'));
 
-        $room->room_admins()->sync(
-            collect($request->room_admins)
-                ->map(function ($room_admin) {
-                    $this->authorize('update', User::find($room_admin['id']));
-                    return $room_admin['id'];
-                })
-        );
+        if(!is_null($request->room_admins) && !is_null($request->requestable_by)) {
 
-        $room->adjoining_rooms()->sync($request->adjoining_rooms);
-        $room->attributes()->sync($request->room_attributes);
-        $room->categories()->sync($request->room_categories);
+            $room_admins_ids = [];
+            foreach ($request->room_admins as $room_admin) {
+                $room_admins_ids[$room_admin['id']] = ['is_admin' => true];
+            }
+
+            $requestable_by_ids = [];
+            foreach ($request->requestable_by as $can_request) {
+                $requestable_by_ids[$can_request['id']] = ['can_request' => true];
+            }
+
+            $new_users = collect($room_admins_ids + $requestable_by_ids);
+            $room->users()->detach();
+            $room->users()->sync($new_users);
+        }
+
+        if(!is_null($request->adjoining_rooms) && !is_null($request->room_attributes) && !is_null($request->room_categories)) {
+            $room->adjoining_rooms()->sync($request->adjoining_rooms);
+            $room->attributes()->sync($request->room_attributes);
+            $room->categories()->sync($request->room_categories);
+        }
 
         $newRoomDescription = $room->description;
         $newRoomTitle = $room->name;
         $newAdjoiningRooms = $room->adjoining_rooms()->get();
         $newRoomAttributes = $room->attributes()->get();
-        $roomAdminsAfter = $room->room_admins()->get();
+        $roomAdminsAfter = $room->users()->wherePivot('is_admin', true)->get();
         $newRoomCategories = $room->categories()->get();
         $newRoomTemporary = $room->temporary;
         $newStartDate = $room->start_date;
@@ -205,7 +219,7 @@ class RoomController extends Controller
 
         $scheduling = new SchedulingController();
         $roomId = $room->id;
-        foreach ($room->room_admins()->get() as $user) {
+        foreach ($room->users()->wherePivot('is_admin', true)->get() as $user) {
             $scheduling->create($user->id, 'ROOM_CHANGES', 'ROOMS', $roomId);
         }
 

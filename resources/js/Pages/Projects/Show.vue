@@ -435,7 +435,6 @@
                         </div>
                     </div>
                 </div>
-
             </template>
 
         </jet-dialog-modal>

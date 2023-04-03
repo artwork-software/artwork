@@ -394,6 +394,61 @@
                         {{this.description}}
                     </div>
                 </div>
+
+                <!-- Serien Termin -->
+                <div>
+                    <SwitchGroup as="div" class="flex items-center">
+                        <Switch v-model="series" :class="[series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
+                            <span aria-hidden="true" :class="[series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                        </Switch>
+                        <SwitchLabel as="span" class="ml-3 text-sm">
+                            <span class="font-medium text-gray-900">
+                                Wiederholungstermin
+                            </span>
+                        </SwitchLabel>
+                    </SwitchGroup>
+
+                    <div v-show="series">
+                        <div class="grid grid-cols-2 gap-2">
+                            <Listbox as="div" v-model="selectedFrequency">
+                                <div class="relative mt-2">
+                                    <ListboxButton class="w-full h-10 border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow">
+                                        <span class="block truncate">{{ selectedFrequency.name }}</span>
+                                        <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+                                             <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                                        </span>
+                                    </ListboxButton>
+
+                                    <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                                        <ListboxOptions class="absolute z-50 mt-1 max-h-28 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                                            <ListboxOption as="template" v-for="frequency in frequencies" :key="frequency.id" :value="frequency" v-slot="{ active, selected }">
+                                                <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                                                    <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ frequency.name }}</span>
+
+                                                    <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                                                        <CheckIcon class="h-5 w-5" aria-hidden="true" />
+                                                    </span>
+                                                </li>
+                                            </ListboxOption>
+                                        </ListboxOptions>
+                                    </transition>
+                                </div>
+                            </Listbox>
+                            <div class="mt-2">
+                                <div class="w-full flex">
+                                    <input v-model="seriesEndDate"
+                                           id="endDate"
+                                           :type="seriesEndDate ? 'date' : 'text'"
+                                           placeholder="Enddatum"
+                                           required
+                                           @focus="input => input.target.type = 'date'"
+                                           class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div v-if="canEdit">
                 <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects|| roomAdminIds.includes(this.$page.props.user.id))" >
                     <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
@@ -420,6 +475,12 @@
         :description="'Bist du sicher, dass du den Termin ' + this.event.title + ' in den Papierkorb legen möchtest? Du kannst ihn innerhalb von 30 Tagen wiederherstellen.'"
         @closed="afterConfirm"/>
 
+    <ChangeAllSubmitModal
+        v-if="showSeriesEdit"
+        @closed="closeSeriesEditModal"
+        @all="saveAllSeriesEvents"
+        @single=""
+    />
 </template>
 
 <script>
@@ -429,13 +490,13 @@ import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} fr
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import {
     Listbox,
-    ListboxButton,
+    ListboxButton, ListboxLabel,
     ListboxOption,
     ListboxOptions,
     Menu,
     MenuButton,
     MenuItem,
-    MenuItems
+    MenuItems, Switch, SwitchGroup, SwitchLabel
 } from "@headlessui/vue";
 import {CheckIcon, ChevronUpIcon, TrashIcon} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
@@ -444,11 +505,17 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
+import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 
 export default {
     name: 'EventComponent',
 
     components: {
+        ChangeAllSubmitModal,
+        ListboxLabel,
+        SwitchLabel,
+        Switch,
+        SwitchGroup,
         Input,
         JetDialogModal,
         XIcon,
@@ -471,7 +538,7 @@ export default {
         DotsVerticalIcon,
         ConfirmationComponent,
         TagComponent,
-        InputComponent
+        InputComponent,
     },
 
     data() {
@@ -483,6 +550,32 @@ export default {
             endTime: null,
             isLoud: false,
             audience: false,
+            showSeriesEdit: false,
+            allSeriesEvents: false,
+            frequencies: [
+                {
+                    id: 1,
+                    name: 'Täglich'
+                },
+                {
+                    id: 2,
+                    name: 'Wöchentlich'
+                },
+                {
+                    id: 3,
+                    name: 'Alle 2 Wochen'
+                },
+                {
+                    id: 4,
+                    name: 'Monatlich'
+                }
+            ],
+            series: false,
+            seriesEndDate: null,
+            selectedFrequency: {
+                id: 2,
+                name: 'Wöchentlich'
+            } ,
             projectName: null,
             title: null,
             isOption: null,
@@ -571,7 +664,15 @@ export default {
             }else{
                 this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
             }
-
+            this.series = this.event.is_series
+            if(this.series){
+                this.seriesEndDate = this.event.series.end_date;
+            }
+            this.frequencies.forEach((frequency) => {
+                if(frequency.id === this.event.series?.frequency_id) {
+                    this.selectedFrequency = frequency
+                }
+            })
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
             if(this.wantedRoomId){
                 this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId)
@@ -745,10 +846,21 @@ export default {
                     .then(() => this.closeModal())
                     .catch(error => this.error = error.response.data.errors);
             }
+            if(this.eventData().is_series){
+                this.showSeriesEdit = true;
+                this.$emit('closed', bool);
+            }
+            /**/
+        },
+        async saveAllSeriesEvents(){
+            this.allSeriesEvents = true;
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
                 .then(() => this.closeModal())
                 .catch(error => this.error = error.response.data.errors);
+        },
+        closeSeriesEditModal(){
+            this.showSeriesEdit = false;
         },
 
         async afterConfirm(bool) {
@@ -790,7 +902,11 @@ export default {
                 eventTypeId: this.selectedEventType?.id,
                 projectIdMandatory:this.selectedEventType?.project_mandatory && !this.creatingProject,
                 creatingProject: this.creatingProject,
-                declinedRoomId: this.declinedRoomId
+                declinedRoomId: this.declinedRoomId,
+                is_series: this.series,
+                seriesFrequency: this.selectedFrequency.id,
+                seriesEndDate: this.seriesEndDate,
+                allSeriesEvents: this.allSeriesEvents,
             };
         },
     },

@@ -16,7 +16,7 @@ class CalendarController extends Controller
     {
 
         $eventsToday = [];
-        $today = $date_of_day->format('d.m.');
+        $today = $date_of_day->format('d.m.Y');
 
         foreach ($room->events as $event) {
             if(in_array($today, $event->days_of_event)) {
@@ -51,19 +51,17 @@ class CalendarController extends Controller
 
         $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
         $periodArray = [];
-        $rooms = Room::all();
 
         foreach ($calendarPeriod as $period) {
-            $periodArray[] = $period->format('d.m.');
+            $periodArray[] = $period->format('d.m.Y');
         }
 
-        $better = Room::with(['events.room', 'events.project', 'events.creator'])
+        $better = Room::with(['events.room', 'events.project', 'events.creator', 'events.subEvents', 'events.series'])
             ->get()
             ->map(fn($room) => collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
-                    $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
+                    $date->format('d.m.Y') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
                 ]));
-
         return [
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'),$endDate->format('Y-m-d')],

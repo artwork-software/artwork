@@ -54,10 +54,11 @@ class CalendarEventResource extends JsonResource
             'projectLeaders' => $this->project?->managerUsers,
             'project' => new ProjectInEventResource($this->project),
             'collisionCount'=> $this->collision_count,
-
+            'is_series'=> $this->is_series,
+            'series_id'=> $this->series_id,
+            'series' => $this->series()->first(),
             // to display rooms as split
             'split' => $this->room_id,
-
             // Todo Add Authorization
             'resizable' => true,
             'draggable' => true,
@@ -65,7 +66,8 @@ class CalendarEventResource extends JsonResource
             'canEdit' => Auth::user()->can('update', $this->resource),
             'canAccept' => Auth::user()->can('update', $this->resource),
             'canDelete' => Auth::user()->can('delete', $this->resource),
-            'subEvents' => SubEventResource::collection($this->subEvents)
+            'subEvents' => SubEventResource::collection($this->subEvents),
+
         ];
     }
 }

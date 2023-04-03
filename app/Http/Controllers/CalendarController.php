@@ -27,10 +27,14 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
-    public function createCalendarData(){
+    public function createCalendarData($type=''){
 
         $startDate = Carbon::now()->startOfDay();
-        $endDate = Carbon::now()->addWeeks()->endOfDay();
+        if($type === 'dashboard'){
+            $endDate = Carbon::now()->endOfDay();
+        }else{
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
         $calendarType = '';
 
         if(\request('startDate')){

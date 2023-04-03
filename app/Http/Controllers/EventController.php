@@ -63,7 +63,7 @@ class EventController extends Controller
     public function showDashboardPage(Request $request): Response
     {
         $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData();
+        $showCalendar = $calendar->createCalendarData('dashboard');
 
 
         $projects = Project::query()->with( ['managerUsers'])->get();

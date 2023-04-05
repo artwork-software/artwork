@@ -644,15 +644,6 @@ export default {
     },
     props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue','selectedDate'],
     emits:['changeAtAGlance'],
-    watch: {
-        eventsSince: {
-            handler() {
-                this.eventsSinceDateValue = this.formatDate(this.eventsSince);
-                this.eventsUntilDateValue = this.formatDate(this.eventsUntil);
-            },
-            deep: true
-        }
-    },
     data() {
         return {
             displayDate: '',

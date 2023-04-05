@@ -14,10 +14,10 @@
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         </div>
-        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker" no-input
+        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker && dateValuePicker" no-input
                                  :shortcuts="customShortcuts"
                                  :placeholder="dateValuePicker[0] - dateValuePicker[1]" separator=" - " :formatter="formatter"
-                                 :options="this.datePickerOptions" i18n="de"
+                                 :options="this.datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
                                  v-model="dateValuePicker"/>
     </div>
 </template>
@@ -30,6 +30,7 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
+
 
 const datePickerOptions = ref({
     shortcuts: {
@@ -81,22 +82,22 @@ export default {
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
-            dateValuePicker: this.dateValueArray,
             datePickerOptions: datePickerOptions,
+            dateValuePicker: this.dateValueArray ? this.dateValueArray: [],
             formatter: formatter,
             showDateRangePicker: false,
             refreshPage: false,
             customShortcuts: customShortcuts,
         }
-
     },
     watch: {
         dateValuePicker: {
             handler() {
+                this.showDateRangePicker = false;
                 Inertia.reload({
                     data: {
-                        startDate: this.dateValuePicker[0],
-                        endDate: this.dateValuePicker[1],
+                        startDate: this.dateValueArray[0],
+                        endDate: this.dateValueArray[1],
                     }
                 })
             }

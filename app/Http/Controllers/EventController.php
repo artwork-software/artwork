@@ -85,6 +85,7 @@ class EventController extends Controller
             'days' => $showCalendar['days'],
             'dateValue'=>$showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
+            'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => Room::all(),
         ]);
     }

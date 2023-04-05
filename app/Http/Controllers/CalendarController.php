@@ -29,13 +29,15 @@ class CalendarController extends Controller
 
     public function createCalendarData($type=''){
 
+        $calendarType = '';
+        $selectedDate = null;
         $startDate = Carbon::now()->startOfDay();
+
         if($type === 'dashboard'){
             $endDate = Carbon::now()->endOfDay();
         }else{
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-        $calendarType = '';
 
         if(\request('startDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
@@ -50,6 +52,7 @@ class CalendarController extends Controller
                 $calendarType = 'individual';
             }else{
                 $calendarType = 'daily';
+                $selectedDate = $startDate->format('Y-m-d');
             }
         }
 
@@ -71,7 +74,10 @@ class CalendarController extends Controller
         return [
             'days' => $periodArray,
             'dateValue' => [$startDate->format('Y-m-d'),$endDate->format('Y-m-d')],
+            // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
             'calendarType' => $calendarType,
+            // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which date to load
+            'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better
         ];
     }

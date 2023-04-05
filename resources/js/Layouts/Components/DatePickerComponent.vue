@@ -2,19 +2,23 @@
     <div>
         <div class="flex items-center">
             <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
-            <input v-model="dateValue[0]"
+            <input v-model="dateValueArray[0]"
+                   @change="this.updateTimes"
                    id="startDate"
                    type="date"
                    placeholder="Start"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-            <input v-model="dateValue[1]"
+            <input v-model="dateValueArray[1]"
+                   @change="this.updateTimes"
                    id="endDate"
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         </div>
-        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts"
-                                 :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter"
-                                 :options="this.datePickerOptions" i18n="de" v-model="dateValue"/>
+        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker" no-input
+                                 :shortcuts="customShortcuts"
+                                 :placeholder="dateValuePicker[0] - dateValuePicker[1]" separator=" - " :formatter="formatter"
+                                 :options="this.datePickerOptions" i18n="de"
+                                 v-model="dateValuePicker"/>
     </div>
 </template>
 
@@ -77,28 +81,37 @@ export default {
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
+            dateValuePicker: this.dateValueArray,
             datePickerOptions: datePickerOptions,
             formatter: formatter,
             showDateRangePicker: false,
-            refreshKey: 1,
+            refreshPage: false,
             customShortcuts: customShortcuts,
         }
 
     },
     watch: {
-        dateValue: {
+        dateValuePicker: {
             handler() {
-                this.showDateRangePicker = false;
-                    Inertia.reload({
-                        data: {
-                            startDate: this.dateValue[0],
-                            endDate: this.dateValue[1],
-                        }
-                    })
-            },
-            deep: true
+                Inertia.reload({
+                    data: {
+                        startDate: this.dateValuePicker[0],
+                        endDate: this.dateValuePicker[1],
+                    }
+                })
+            }
         }
     },
+    methods: {
+        updateTimes() {
+            Inertia.reload({
+                data: {
+                    startDate: this.dateValueArray[0],
+                    endDate: this.dateValueArray[1],
+                }
+            })
+        },
+    }
 }
 </script>
 

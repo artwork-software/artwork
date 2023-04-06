@@ -732,6 +732,12 @@ export default {
 
         }
     },
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+            });
+    },
     methods: {
         addHoverToEvent(event){
             console.log(event)
@@ -1032,7 +1038,6 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
-
         /**
          * Fetch the events from server
          * initialise possible rooms, types and projects

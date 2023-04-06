@@ -72,4 +72,8 @@ class Task extends Model
     {
         return $this->belongsToMany(Department::class, 'checklist_department', 'checklist_id', 'department_id', 'checklist_id');
     }
+
+    public function money_source_task(){
+        return $this->belongsToMany(MoneySourceTask::class);
+    }
 }

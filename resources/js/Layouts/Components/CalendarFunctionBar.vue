@@ -96,7 +96,7 @@
                     </template>
                 </Dropdown>
             </div>
-            <button type="button" :class="'bg-buttonBlue hover:bg-buttonHover'"
+            <button @click="openEventComponent()" type="button" :class="'bg-buttonBlue hover:bg-buttonHover'"
                     class="flex p-2 px-4 mt-1 items-center border border-transparent rounded-full shadow-sm text-white hover:shadow-blueButton  focus:outline-none">
                 <PlusCircleIcon class="h-4 w-4 mr-2" aria-hidden="true"/>
                 <p class="text-sm">Neue Belegung</p>
@@ -137,7 +137,7 @@ export default {
         ZoomOutIcon
     },
     props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor'],
-    emits: ['changeAtAGlance', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay'],
+    emits: ['changeAtAGlance', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
     data() {
         return {
             atAGlance: this.atAGlance,
@@ -177,7 +177,11 @@ export default {
         },
         previousDay(){
             this.$emit('previousDay')
+        },
+        openEventComponent(){
+            this.$emit('openEventComponent')
         }
+
     },
 }
 </script>

@@ -2,7 +2,7 @@
 
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
         <div class="bg-white" >
-        <CalendarFunctionBar @nextDay="nextDay" @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="[formatDate(eventsSince),formatDate(eventsUntil)]" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <CalendarFunctionBar @open-event-component="openEventComponent" @nextDay="nextDay" @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="[formatDate(eventsSince),formatDate(eventsUntil)]" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
         <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>

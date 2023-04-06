@@ -217,7 +217,6 @@
                        <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
                    </div>
                 </div>
-
                 <!--    Project    -->
                 <div v-if="canEdit">
                     <div class="xsLight flex" v-if="!this.creatingProject">
@@ -247,7 +246,7 @@
                                   :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
                                 Bestehendes Projekt
                             </span>
-                            <div class="flex" v-if="this.$page.props.can.project_management">
+                            <div class="flex">
                                 <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
                                     <input type="checkbox"
                                            v-model="creatingProject"
@@ -273,7 +272,11 @@
                             </div>
 
                         </div>
-                        <inputComponent id="projectName" :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
+
+                        <input type="text"
+                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                               v-model="projectName"
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">
@@ -450,18 +453,23 @@
                 </div>
 
                 <div v-if="canEdit">
-                <div class="flex justify-center w-full py-4" v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects|| roomAdminIds.includes(this.$page.props.user.id))" >
-                    <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent()">
-                        Belegen
-                    </button>
-                </div>
-                <div class="flex justify-center w-full py-4" v-else>
-                    <button :disabled="this.selectedRoom === null" :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''" class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
-                            @click="updateOrCreateEvent(true)">
-                        Belegung anfragen
-                    </button>
-                </div>
+                    <div class="flex justify-center w-full py-4"
+                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects|| roomAdminIds.includes(this.$page.props.user.id))">
+                        <button :disabled="this.selectedRoom === null"
+                                :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                                class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                @click="updateOrCreateEvent()">
+                            Belegen
+                        </button>
+                    </div>
+                    <div class="flex justify-center w-full py-4" v-else>
+                        <button :disabled="this.selectedRoom === null"
+                                :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                                class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
+                                @click="updateOrCreateEvent(true)">
+                            Belegung anfragen
+                        </button>
+                    </div>
                 </div>
             </div>
         </template>

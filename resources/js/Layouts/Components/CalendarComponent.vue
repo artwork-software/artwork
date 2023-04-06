@@ -1,8 +1,8 @@
 <template>
 
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
-        <div class="bg-white">
-        <CalendarFunctionBar @enterFullscreenMode="openFullscreen" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <div class="bg-white" >
+        <CalendarFunctionBar @open-event-component="openEventComponent" @nextDay="nextDay" @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="[formatDate(eventsSince),formatDate(eventsUntil)]" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
         <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
@@ -589,9 +589,9 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
 import BaseFilter from "@/Layouts/Components/BaseFilter";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'CalendarComponent',
@@ -642,17 +642,18 @@ export default {
         EventsWithoutRoomComponent,
         UserTooltip,
     },
-    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue'],
+    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue','selectedDate'],
     emits:['changeAtAGlance'],
     data() {
         return {
             displayDate: '',
             filters: [],
-            dateValue: this.dateValue ? this.dateValue : [],
+            dateValueArray: this.dateValue ? this.dateValue : [],
             filterIds: {},
             filterName: '',
             wantedSplit: null,
-            selectedDate: null,
+            eventsSinceDateValue: null,
+            eventsUntilDateValue: null,
             calendarFilters: {
                 rooms: [],
                 areas: [],
@@ -1151,7 +1152,8 @@ export default {
 
             if (view === 'day') {
                 const options = {weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'};
-                this.displayDate = startDate.toLocaleDateString('de-DE', options)
+                this.dateValueArray[0] = new Date(startDate).toISOString().slice(0,10);
+                this.dateValueArray[1] =  new Date(startDate).toISOString().slice(0,10);
             } else if (view === 'week') {
                 let beginOfYear = new Date(startDate.getFullYear(), 0, 1);
                 let days = Math.floor((startDate - beginOfYear) /
@@ -1174,7 +1176,16 @@ export default {
             } else if (elem.msRequestFullscreen) { /* IE11 */
                 elem.msRequestFullscreen();
             }
-        }
+        },
+        nextDay(){
+            this.$refs.vuecal.next();
+        },
+        previousDay(){
+            this.$refs.vuecal.previous();
+        },
+        formatDate(date){
+            return new Date((new Date(date)).getTime() - ((new Date(date)).getTimezoneOffset() * 60000)).toISOString().slice(0,10);
+        },
     }
 }
 </script>

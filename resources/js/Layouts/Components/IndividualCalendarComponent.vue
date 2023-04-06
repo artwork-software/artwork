@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
         <div class="bg-white">
-            <CalendarFunctionBar @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+            <CalendarFunctionBar @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
@@ -125,9 +125,9 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
-        openEditEventModal(event) {
-            this.selectedEvent = event;
-            this.wantedRoom = event.roomId;
+        openEditEventModal(event = null) {
+
+            this.wantedRoom = event?.roomId;
 
             if (event === null) {
                 this.selectedEvent = null;
@@ -154,6 +154,7 @@ export default {
                     }
                 }).then(response => this.roomCollisions = response.data);
             }
+            this.selectedEvent = event;
             this.createEventComponentIsVisible = true;
 
         },

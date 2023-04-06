@@ -16,7 +16,7 @@
                 <div>
                     <div v-if="calendarType && calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                            <CalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                            <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
                         </div>
                     </div>
                     <div v-else>
@@ -105,7 +105,7 @@ import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType'],
+    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType','selectedDate'],
     components: {
         AppLayout,
         CalendarIcon,

@@ -359,7 +359,6 @@ export default {
                     axios.get('/checklist_templates/search', {
                         params: {query: this.template_query}
                     }).then(response => {
-                        console.log(response);
                         this.template_search_results = response.data
                     })
                 }

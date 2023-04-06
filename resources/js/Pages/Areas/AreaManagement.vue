@@ -1024,7 +1024,6 @@ export default defineComponent({
 
         },
         deleteRoomAttribute(attribute) {
-            console.log(attribute);
             Inertia.delete(`/rooms/attributes/${attribute.id}`)
         },
         addRoomAttribute() {

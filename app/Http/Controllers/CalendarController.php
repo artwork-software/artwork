@@ -47,15 +47,15 @@ class CalendarController extends Controller
         }
 
         if(!empty($project)){
-            if(!empty($project->events()->get())){
-                $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-                $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
+            $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+            $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+            if(!empty($firstEventInProject) && !empty($lastEventInProject)){
                 $this->startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
                 $this->endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
             } else {
-               $this->setDefaultDates();
+                $this->setDefaultDates();
             }
+
         } else {
             $this->setDefaultDates();
         }

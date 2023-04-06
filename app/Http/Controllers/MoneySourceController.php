@@ -473,11 +473,18 @@ class MoneySourceController extends Controller
         }
 
 
+        // Tasks Add Users
+
+
     }
 
     public function updateUsers(Request $request, MoneySource $moneySource)
     {
         $moneySource->users()->sync(collect($request->users));
+        $tasks = $moneySource->money_source_tasks()->get();
+        foreach ($tasks as $task){
+            $task->money_source_task_users()->sync($moneySource->users()->get());
+        }
     }
 
     /**

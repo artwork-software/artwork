@@ -38,54 +38,6 @@
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                         </div>
-                        <div class="mb-2">
-                            <div class="relative w-full">
-                                <div class="w-full">
-                                    <input id="userSearch" v-model="user_query" type="text" autocomplete="off"
-                                           placeholder="Wer ist zuständig für die Aufgabe?"
-                                           class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
-                                </div>
-                                <transition leave-active-class="transition ease-in duration-100"
-                                            leave-from-class="opacity-100"
-                                            leave-to-class="opacity-0">
-                                    <div v-if="user_search_results.length > 0 && user_query.length > 0"
-                                         class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
-                                                        text-base ring-1 ring-black ring-opacity-5
-                                                        overflow-auto focus:outline-none sm:text-sm">
-                                        <div class="border-gray-200">
-                                            <div v-for="(user, index) in user_search_results" :key="index"
-                                                 class="flex items-center cursor-pointer">
-                                                <div class="flex-1 text-sm py-4">
-                                                    <p @click="addUserToMoneySourceUserArray(user)"
-                                                       class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
-                                                        {{ user.first_name }} {{ user.last_name }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </transition>
-                            </div>
-                            <div v-if="usersToAdd.length > 0" class="mt-2 mb-4 flex items-center">
-                                        <span v-for="(user,index) in usersToAdd"
-                                              class="flex mr-5 rounded-full items-center font-bold text-primary">
-                                        <div class="flex items-center">
-                                            <img class="flex h-11 w-11 rounded-full object-cover"
-                                                 :src="user.profile_photo_url"
-                                                 alt=""/>
-                                            <span class="flex ml-4 sDark">
-                                            {{ user.first_name }} {{ user.last_name }}
-                                            </span>
-                                            <button type="button" @click="deleteUserFromMoneySourceUserArray(index)">
-                                                <span class="sr-only">Nutzer aus der Aufgabe entfernen</span>
-                                                <XIcon
-                                                    class="ml-2 h-4 w-4 p-0.5 hover:text-error rounded-full bg-buttonBlue text-white border-0 "/>
-                                            </button>
-                                        </div>
-
-                                        </span>
-                            </div>
-                        </div>
                         <div class="flex">
                                     <textarea placeholder="Kommentar"
                                               id="description"
@@ -94,8 +46,7 @@
                                               class="border-2 placeholder:xsLight placeholder:subpixel-antialiased focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
-                            <AddButton mode="modal" class="bg-primary text-white resize-none"
-                                       @click="createTask()" text="Speichern"/>
+                            <AddButton mode="modal" class="bg-primary text-white resize-none" @click="createTask()" text="Speichern"/>
                         </div>
                     </div>
                 </div>

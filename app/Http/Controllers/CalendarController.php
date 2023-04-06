@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\CalendarEventResource;
 use App\Models\Event;
+use App\Models\Project;
 use App\Models\Room;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
@@ -11,6 +12,12 @@ use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
+    protected ?Carbon $startDate = null;
+    protected ?Carbon $endDate = null;
+
+    public function __construct()
+    {
+    }
 
     private function get_events_of_day($date_of_day, $room): array
     {
@@ -27,36 +34,43 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
-    public function createCalendarData($type=''){
+    public function createCalendarData($type='', ?Project $project = null){
 
         $calendarType = '';
         $selectedDate = null;
-        $startDate = Carbon::now()->startOfDay();
+        $this->startDate = Carbon::now()->startOfDay();
 
         if($type === 'dashboard'){
-            $endDate = Carbon::now()->endOfDay();
+            $this->endDate = Carbon::now()->endOfDay();
         }else{
-            $endDate = Carbon::now()->addWeeks()->endOfDay();
+            $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        if(\request('startDate')){
-            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+        if(!empty($project)){
+            if(!empty($project->events()->get())){
+                $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
+                $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+                $this->startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
+                $this->endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
+            } else {
+               $this->setDefaultDates();
+            }
+        } else {
+            $this->setDefaultDates();
         }
 
-        if(\request('endDate')){
-            $endDate = Carbon::create(\request('endDate'))->endOfDay();
-        }
 
-        if($endDate && $startDate){
+        if($this->endDate && $this->startDate){
             if(\request('startDate') !== \request('endDate')){
                 $calendarType = 'individual';
             }else{
                 $calendarType = 'daily';
-                $selectedDate = $startDate->format('Y-m-d');
+                $selectedDate = $this->startDate->format('Y-m-d');
             }
         }
 
-        $calendarPeriod = CarbonPeriod::create($startDate, $endDate);
+        $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
         $periodArray = [];
         $rooms = Room::all();
 
@@ -73,12 +87,21 @@ class CalendarController extends Controller
 
         return [
             'days' => $periodArray,
-            'dateValue' => [$startDate->format('Y-m-d'),$endDate->format('Y-m-d')],
+            'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],
             // only used for dashboard -> default Dashboard should show Vuecal-Daily calendar with current day
             'calendarType' => $calendarType,
             // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which date to load
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better
         ];
+    }
+
+    private function setDefaultDates(){
+        if(\request('startDate')){
+            $this->startDate = Carbon::create(\request('startDate'))->startOfDay();
+        }
+        if(\request('endDate')){
+            $this->endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }
     }
 }

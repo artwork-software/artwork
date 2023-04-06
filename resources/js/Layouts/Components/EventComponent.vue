@@ -273,7 +273,10 @@
                             </div>
 
                         </div>
-                        <inputComponent id="projectName" :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'" v-model="projectName"></inputComponent>
+                        <input type="text"
+                               :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                               v-model="projectName"
+                               class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
                         <div v-if="projectSearchResults.length > 0 && !creatingProject"
                              class="absolute bg-primary truncate sm:text-sm w-10/12">

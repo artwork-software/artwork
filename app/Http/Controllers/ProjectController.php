@@ -1218,7 +1218,7 @@ class ProjectController extends Controller
     public function show(Project $project, Request $request)
     {
         $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData();
+        $showCalendar = $calendar->createCalendarData('', $project);
 
         $project->load([
             'access_budget',

@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
-        <div class="bg-white">
-            <CalendarFunctionBar @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+        <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
+            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
@@ -14,7 +14,7 @@
                 }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
             <!-- Calendar -->
-            <table class="w-full flex flex-wrap">
+            <table class="w-full flex flex-wrap bg-white">
                 <thead class="w-full">
                 <tr class=" w-full flex bg-userBg">
                     <th class="w-16">
@@ -93,7 +93,6 @@ export default {
         return {
             showEventsWithoutRoomComponent: false,
             eventsWithoutRoom: [],
-            project: null,
             selectedEvent: null,
             createEventComponentIsVisible: false,
             wantedRoom: null,
@@ -102,7 +101,7 @@ export default {
             zoomFactor: 1
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project'],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);
@@ -118,8 +117,8 @@ export default {
         },
     },
     methods: {
-        changeAtAGlance(atAGlance) {
-            this.$emit('changeAtAGlance', atAGlance)
+        changeAtAGlance() {
+            this.$emit('changeAtAGlance')
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;

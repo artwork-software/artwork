@@ -768,8 +768,8 @@ export default {
                 endDate: this.eventsUntil,
             });
         },
-        changeAtAGlance(atAGlance){
-            this.$emit('changeAtAGlance', atAGlance)
+        changeAtAGlance(){
+            this.$emit('changeAtAGlance')
         },
         changeChecked(array, filterName) {
             array.forEach(object => {

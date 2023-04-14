@@ -147,8 +147,19 @@
             <div class="bg-lightBackgroundGray">
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="px-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
-                    <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance" @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                    <IndividualCalendarComponent :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance" :atAGlance="this.atAGlance" :calendarData="calendar" :rooms="rooms" :days="days" />
+                    <div v-if="calendarType && calendarType === 'daily'">
+                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                    </div>
+                    <div v-else>
+                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
+                                                             @change-at-a-glance="changeAtAGlance"
+                                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                                             :rooms="rooms"
+                                                             :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
+                        <IndividualCalendarComponent :project="project" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
+                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                                     :calendarData="calendar" :rooms="rooms" :days="days"/>
+                    </div>
                 </div>
                 <!-- Checklist Tab -->
                 <div v-if="isChecklistTab"
@@ -254,11 +265,12 @@
                             <div class="ml-10 group">
                                 <label class="block my-4 sDark">
                                     Key Visual </label>
-                                <div class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
+                                <div
+                                    class="flex col-span-2 w-full justify-center border-2 bg-stone-50 border-gray-300 cursor-pointer border-dashed rounded-md p-2"
                                     @dragover.prevent
                                     @drop.stop.prevent="uploadDraggedKeyVisual($event)"
                                     @click="selectNewKeyVisual"
-                                     v-if="this.project.key_visual_path === null">
+                                    v-if="this.project.key_visual_path === null">
                                     <div class="space-y-1 text-center">
                                         <div class="xsLight flex my-auto h-40 items-center"
                                              v-if="this.project.key_visual_path === null">
@@ -270,23 +282,29 @@
                                     </div>
                                 </div>
                                 <div v-else class="flex items-center justify-center relative w-full">
-                                    <div class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
-                                        <button @click="downloadKeyVisual" type="button" class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-                                            <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true" />
+                                    <div
+                                        class="absolute !gap-4 w-full text-center flex items-center justify-center hidden group-hover:block">
+                                        <button @click="downloadKeyVisual" type="button"
+                                                class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                            <SvgCollection svg-name="ArrowDownTray" class="h-5 w-5" aria-hidden="true"/>
                                         </button>
-                                        <button @click="selectNewKeyVisual" type="button" class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                        <button @click="selectNewKeyVisual" type="button"
+                                                class="mr-3 inline-flex rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                                             <PencilAltIcon
                                                 class="h-5 w-5 text-primaryText group-hover:text-white"
                                                 aria-hidden="true"/>
                                         </button>
-                                        <button @click="deleteKeyVisual" type="button" class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
-                                            <XIcon class="h-5 w-5 text-primaryText group-hover:text-white" aria-hidden="true" />
+                                        <button @click="deleteKeyVisual" type="button"
+                                                class="inline-flex rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+                                            <XIcon class="h-5 w-5 text-primaryText group-hover:text-white"
+                                                   aria-hidden="true"/>
                                         </button>
                                     </div>
                                     <div class="text-center">
                                         <div class="cursor-pointer">
                                             <img src="">
-                                            <img :src="'/storage/keyVisual/' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                                            <img :src="'/storage/keyVisual/' + this.project.key_visual_path"
+                                                 alt="Aktuelles Key-Visual"
                                                  class="rounded-md w-full h-48">
                                             <input id="keyVisual-upload" ref="keyVisual"
                                                    name="file-upload" type="file" class="sr-only"
@@ -533,7 +551,7 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states', 'eventsAtAGlance','calendar','days','rooms','dateValue'],
+    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states', 'eventsAtAGlance', 'calendar', 'days', 'rooms', 'dateValue', 'selectedDate', 'calendarType'],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,
@@ -587,7 +605,7 @@ export default {
         DisclosurePanel,
         DisclosureButton,
         ProjectDataEditModal,
-        PlusIcon,SwitchGroup, SwitchLabel,
+        PlusIcon, SwitchGroup, SwitchLabel,
         IndividualCalendarAtGlanceComponent,
         IndividualCalendarComponent
     },
@@ -712,7 +730,7 @@ export default {
                 file: null
             }),
             selectedState: this.project.state ? this.project.state : null,
-            atAGlance: !!this.eventsAtAGlance,
+            atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
     watch: {
@@ -735,13 +753,13 @@ export default {
         }, 1000)
     },
     methods: {
-        downloadKeyVisual(){
+        downloadKeyVisual() {
             let link = document.createElement('a');
             link.href = route('project.download.keyVisual', this.project.id);
             link.target = '_blank';
             link.click();
         },
-        deleteKeyVisual(){
+        deleteKeyVisual() {
             this.$inertia.delete(route('project.delete.keyVisual', this.project.id))
         },
         async handleDescriptionClick() {
@@ -931,8 +949,8 @@ export default {
             }
             return false;
         },
-        changeAtAGlance(atAGlance){
-            this.atAGlance = atAGlance;
+        changeAtAGlance() {
+            this.atAGlance = !this.atAGlance;
         }
     },
 }

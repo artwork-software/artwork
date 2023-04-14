@@ -83,7 +83,7 @@ class EventController extends Controller
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
             'days' => $showCalendar['days'],
-            'dateValue'=>$showCalendar['dateValue'],
+            'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => Room::all(),

@@ -785,8 +785,8 @@ class EventController extends Controller
 
                 $date = Carbon::parse($request->date)->format('Y-m-d');
 
-                $event->start_time = $date . $startTime;
-                $event->end_time = $date . $endTime;
+                $event->start_time = $date . ' '. $startTime;
+                $event->end_time = $date . ' '. $endTime;
             }
 
 

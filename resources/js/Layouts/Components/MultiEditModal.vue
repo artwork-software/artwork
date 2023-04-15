@@ -94,6 +94,7 @@
                             <input type="number"
                                    v-model="editEvents.value"
                                    id="eventTitle"
+                                   min="0" max="999"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="mb-2 col-span-4">
@@ -243,7 +244,7 @@ export default {
         saveMultiEdit(){
             this.editEvents.type = this.selectedTimeType.id;
             this.editEvents.calculationType = this.selectedCalculationType.id;
-            this.editEvents.newRoomId = this.selectedRoom;
+            this.editEvents.newRoomId = this.selectedRoom?.id;
 
             this.editEvents.patch(route('multi-edit.save'), {
                 onSuccess: () => {

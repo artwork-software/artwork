@@ -698,13 +698,18 @@ export default {
         checkEventTimeLength(){
             // check if event min 30min
             if(this.startFull && this.endFull){
-                const minimumEnd = new Date(this.startFull).addMinutes(30);
-                if(minimumEnd <= this.endFull){
+                const date = new Date(this.subEvent.start_time);
+                const minimumEnd = this.addMinutes(date, 30);
+                if(minimumEnd <= new Date(this.endFull)){
                     this.helpTextLength = '';
                 } else {
                     this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
                 }
             }
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
         },
         setCombinedTimeString(date, time, target) {
             let combinedDateString = (date.toString() + ' ' + time);

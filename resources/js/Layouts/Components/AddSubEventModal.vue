@@ -277,8 +277,9 @@ export default {
 
             // check if event min 30min
             if(this.subEvent.start_time && this.subEvent.end_time){
-                const minimumEnd = new Date(this.subEvent.start_time).addMinutes(30);
-                if(minimumEnd <= this.subEvent.end_time){
+                const date = new Date(this.subEvent.start_time);
+                const minimumEnd = this.addMinutes(date, 30);
+                if(minimumEnd <= new Date(this.subEvent.end_time)){
                     this.helpTextLength = '';
                     this.submit = true;
                 } else {
@@ -287,6 +288,10 @@ export default {
                 }
             }
 
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
         },
         updateOrCreateEvent(){
             this.subEvent.event_type_id = this.subEvent?.selectedEventType?.id;

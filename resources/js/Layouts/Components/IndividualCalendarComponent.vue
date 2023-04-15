@@ -1,8 +1,9 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
-        <div class="bg-white">
+        <div class="bg-white relative">
             <CalendarFunctionBar @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
+                                 @change-multi-edit="changeMultiEdit"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
                  @click="openEventsWithoutRoomComponent()"
@@ -28,20 +29,23 @@
                 </tr>
                 </thead>
                 <tbody class="flex w-full pt-3 flex-wrap">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
+                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex relative" v-for="day in days">
                     <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
                         {{ day }}
                     </th>
                     <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
-                        <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                            <SingleCalendarEvent :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
+                        <div class="py-0.5 pr-2 group" v-for="event in room[day].data">
+                            <SingleCalendarEvent :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
+
+
                         </div>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <event-component
@@ -67,6 +71,19 @@
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
+
+
+    <pre>
+        {{ calendarData }}
+    </pre>
+
+    <div v-show="multiEdit" class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben" @click="openMultiEditModal"/>
+        <AddButton mode="modal" class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none" text="Termine löschen"/>
+    </div>
+
+    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms" @closed="closeMultiEditModal" />
+
 </template>
 
 <script>
@@ -77,11 +94,15 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
+import AddButton from "@/Layouts/Components/AddButton.vue";
+import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     components: {
+        MultiEditModal,
+        AddButton,
         CalendarFunctionBar,
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
@@ -99,7 +120,10 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: 1
+            zoomFactor: 1,
+            multiEdit: false,
+            editEvents: [],
+            showMultiEditModal: false,
         }
     },
     props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue'],
@@ -118,6 +142,9 @@ export default {
         },
     },
     methods: {
+        changeMultiEdit(multiEdit){
+            this.multiEdit = multiEdit;
+        },
         changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
         },
@@ -163,7 +190,28 @@ export default {
             Inertia.reload();
         },
 
+        openMultiEditModal(){
+            this.getCheckedEvents();
 
+
+            this.showMultiEditModal = true;
+        },
+        getCheckedEvents(){
+            const eventArray = [];
+            this.days.forEach((day) => {
+                this.calendarData.forEach((room) => {
+                    room[day].data.forEach((event) => {
+                        if(event.clicked){
+                            eventArray.push(event.id)
+                        }
+                    })
+                })
+            })
+            this.editEvents = eventArray
+        },
+        closeMultiEditModal(){
+            this.showMultiEditModal = false;
+        },
         /* View in fullscreen */
         openFullscreen() {
             let elem = document.getElementById("myCalendar");

@@ -34,7 +34,7 @@
                     </th>
                     <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
                         <div class="py-0.5 pr-2" v-for="event in room[day].data">
-                            <SingleCalendarEvent :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
+                            <SingleCalendarEvent :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
                         </div>
                     </td>

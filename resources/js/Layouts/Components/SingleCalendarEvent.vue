@@ -256,6 +256,7 @@
                     </div>
                 </div>
             </div>
+            </div>
         </div>
 
     <AddSubEventModal

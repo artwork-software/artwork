@@ -20,7 +20,7 @@
                         </div>
                     </div>
                     <div v-else>
-                    <IndividualCalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes :calendarData="calendar" :rooms="rooms" :days="days" />
+                        <IndividualCalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes :calendarData="calendar" :rooms="rooms" :days="days" />
                     </div>
                 </div>
             </div>
@@ -124,9 +124,10 @@ export default defineComponent({
         IndividualCalendarComponent
     },
     created() {
+        console.log("Dashboard")
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
-                Inertia.reload({only: ['rooms']})
+                Inertia.reload({only: ['rooms', 'calendar', 'days']})
             });
     },
     computed: {

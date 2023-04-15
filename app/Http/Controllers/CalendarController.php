@@ -62,7 +62,7 @@ class CalendarController extends Controller
 
 
         if($this->endDate && $this->startDate){
-            if(\request('startDate') !== \request('endDate')){
+            if($this->startDate !== $this->endDate){
                 $calendarType = 'individual';
             }else{
                 $calendarType = 'daily';

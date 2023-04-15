@@ -45,7 +45,6 @@ class CalendarController extends Controller
         }else{
             $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-
         if(!empty($project)){
             $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
             $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
@@ -62,7 +61,7 @@ class CalendarController extends Controller
 
 
         if($this->endDate && $this->startDate){
-            if($this->startDate !== $this->endDate){
+            if(\request('startDate') !== \request('endDate')){
                 $calendarType = 'individual';
             }else{
                 $calendarType = 'daily';

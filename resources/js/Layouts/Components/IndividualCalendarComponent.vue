@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
-        <div class="bg-white relative">
-            <CalendarFunctionBar @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+        <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
+            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  @change-multi-edit="changeMultiEdit"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
@@ -15,7 +15,7 @@
                 }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
             <!-- Calendar -->
-            <table class="w-full flex flex-wrap">
+            <table class="w-full flex flex-wrap bg-white">
                 <thead class="w-full">
                 <tr class=" w-full flex bg-userBg">
                     <th class="w-16">
@@ -114,7 +114,6 @@ export default {
         return {
             showEventsWithoutRoomComponent: false,
             eventsWithoutRoom: [],
-            project: null,
             selectedEvent: null,
             createEventComponentIsVisible: false,
             wantedRoom: null,
@@ -126,7 +125,7 @@ export default {
             showMultiEditModal: false,
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project'],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);

@@ -162,8 +162,8 @@ export default {
         }
     },
     methods: {
-        changeAtAGlance(atAGlance) {
-            this.$emit('changeAtAGlance', atAGlance)
+        changeAtAGlance() {
+            this.$emit('changeAtAGlance')
         },
         changeMultiEdit(multiEdit) {
             this.$emit('changeMultiEdit', !multiEdit)

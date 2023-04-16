@@ -12,6 +12,7 @@ use App\Http\Resources\DepartmentShowResource;
 use App\Http\Resources\UserIndexResource;
 use App\Models\Department;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ use Inertia\ResponseFactory;
 
 class DepartmentController extends Controller
 {
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
 
 
@@ -30,7 +31,7 @@ class DepartmentController extends Controller
         $this->authorizeResource(Department::class);
 
         // init notification system
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
         $this->notificationData->team = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
@@ -103,7 +104,7 @@ class DepartmentController extends Controller
             'type' => 'success',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($department->users->all(), $this->notificationData, $broadcastMesssage);
+        $this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         broadcast(new DepartmentUpdated())->toOthers();
 
@@ -180,7 +181,7 @@ class DepartmentController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($memberAfter, $this->notificationData, $broadcastMesssage);
+                $this->notificationService->create($memberAfter, $this->notificationData, $broadcastMesssage);
             }
         }
 
@@ -196,7 +197,7 @@ class DepartmentController extends Controller
                     'type' => 'error',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMesssage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMesssage);
             }
         }
 
@@ -224,7 +225,7 @@ class DepartmentController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($department->users->all(), $this->notificationData, $broadcastMesssage);
+        $this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         $department->delete();
 

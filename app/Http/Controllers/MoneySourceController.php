@@ -18,6 +18,8 @@ use App\Models\SubpositionSumDetail;
 use App\Models\SumMoneySource;
 use App\Models\Table;
 use App\Models\User;
+use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,15 +29,15 @@ use function Clue\StreamFilter\fun;
 
 class MoneySourceController extends Controller
 {
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?stdClass $notificationData = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
-        $this->history = new HistoryController('App\Models\MoneySource');
+        $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     /**
@@ -113,7 +115,7 @@ class MoneySourceController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
 
 
@@ -510,7 +512,7 @@ class MoneySourceController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create(User::find($user->id), $this->notificationData, $broadcastMessage);
+                $this->notificationService->create(User::find($user->id), $this->notificationData, $broadcastMessage);
             }
         }
         $moneySource->delete();
@@ -556,7 +558,7 @@ class MoneySourceController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create(User::where('id', $newUser->id)->first(), $this->notificationData, $broadcastMessage);
+                $this->notificationService->create(User::where('id', $newUser->id)->first(), $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle hinzugefügt');
             }
         }
@@ -570,7 +572,7 @@ class MoneySourceController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create(User::where('id', $oldUserId)->first(), $this->notificationData, $broadcastMessage);
+                $this->notificationService->create(User::where('id', $oldUserId)->first(), $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($moneySource->id, 'Nutzerzugriff zu Finanzierungsquelle entfernt');
             }
 

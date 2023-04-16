@@ -11,6 +11,7 @@ use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Carbon\Carbon;
 use DateTime;
 use Illuminate\Http\Request;
@@ -20,12 +21,12 @@ use stdClass;
 class SchedulingController extends Controller
 {
 
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?stdClass $notificationData = null;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->task = new stdClass();
@@ -148,7 +149,7 @@ class SchedulingController extends Controller
                             'type' => 'error',
                             'message' => $this->notificationData->title
                         ];
-                        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                     }
                     if ($deadline <= now()) {
                         $this->notificationData->title = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
@@ -158,7 +159,7 @@ class SchedulingController extends Controller
                             'type' => 'error',
                             'message' => $this->notificationData->title
                         ];
-                        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                     }
                 }
                 continue;
@@ -204,7 +205,7 @@ class SchedulingController extends Controller
                         'type' => 'error',
                         'message' => $this->notificationData->title
                     ];
-                    $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 }
                 if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
                     $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
@@ -214,7 +215,7 @@ class SchedulingController extends Controller
                         'type' => 'error',
                         'message' => $this->notificationData->title
                     ];
-                    $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 }
             }
         }
@@ -301,7 +302,7 @@ class SchedulingController extends Controller
                     ];
                     break;
             }
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             $schedule->delete();
         }
     }

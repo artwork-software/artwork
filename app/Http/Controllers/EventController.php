@@ -24,6 +24,8 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -38,19 +40,19 @@ use Inertia\Response;
 class EventController extends Controller
 {
 
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
         $this->collisionService = new CollisionService();
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new HistoryController('App\Models\Event');
+        $this->history = new NewHistoryService('App\Models\Event');
     }
 
     public function viewEventIndex(Request $request): Response
@@ -130,7 +132,7 @@ class EventController extends Controller
         if(!empty($event->project()->get())){
             $eventProject = $event->project()->first();
             if($eventProject){
-                $projectHistory = new HistoryController('App\Models\Project');
+                $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
         }
@@ -182,7 +184,7 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
     private function createAdjoiningLoudNotification($conflict, User $user) {
@@ -195,7 +197,7 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
     private function createConflictNotification($collision) {
@@ -211,7 +213,7 @@ class EventController extends Controller
             'message' => $this->notificationData->title
         ];
         if(!empty($collision['created_by'])){
-            $this->notificationController->create($collision['created_by'], $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($collision['created_by'], $this->notificationData, $broadcastMessage);
         }
     }
 
@@ -239,11 +241,11 @@ class EventController extends Controller
         $admins = $room->room_admins()->get();
         if(!empty($admins)){
             foreach ($admins as $admin){
-                $this->notificationController->create($admin, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($admin, $this->notificationData, $broadcastMessage);
             }
         } else {
             $user = User::find($room->user_id);
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
     }
 
@@ -274,7 +276,7 @@ class EventController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
         }
 
         $this->authorize('update', $event);
@@ -303,7 +305,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 
@@ -382,7 +384,7 @@ class EventController extends Controller
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST;
         $this->notificationData->event = $event;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
     }
@@ -488,7 +490,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 
@@ -506,7 +508,7 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
     }
 
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse

@@ -264,9 +264,7 @@
                     </div>
                 </div>
             </div>
-            </div>
         </div>
-
 
     <AddSubEventModal
         v-if="showAddSubEventModal"

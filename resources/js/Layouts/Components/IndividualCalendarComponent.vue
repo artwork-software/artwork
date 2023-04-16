@@ -71,12 +71,6 @@
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
-
-
-    <pre>
-        {{ calendarData }}
-    </pre>
-
     <div v-show="multiEdit" class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
         <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben" @click="openMultiEditModal"/>
         <AddButton mode="modal" class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none" text="Termine löschen"/>

@@ -34,7 +34,7 @@ class CalendarController extends Controller
         return $eventsToday;
     }
 
-    public function createCalendarData($type='', ?Project $project = null){
+    public function createCalendarData($type='', ?Project $project = null, ?Room $room = null){
 
         $calendarType = 'individual';
         $selectedDate = null;
@@ -79,12 +79,20 @@ class CalendarController extends Controller
             $periodArray[] = $period->format('d.m.');
         }
 
-        $better = Room::with(['events.room', 'events.project', 'events.creator'])
-            ->get()
-            ->map(fn($room) => collect($calendarPeriod)
+        if(!empty($room)){
+            $better = collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
-                ]));
+                ]);
+        }else{
+            $better = Room::with(['events.room', 'events.project', 'events.creator'])
+                ->get()
+                ->map(fn($room) => collect($calendarPeriod)
+                    ->mapWithKeys(fn($date) => [
+                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
+                    ]));
+        }
+
 
         return [
             'days' => $periodArray,

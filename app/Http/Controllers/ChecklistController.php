@@ -12,6 +12,7 @@ use App\Models\Project;
 use App\Models\ProjectHistory;
 use App\Models\Task;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Redirect;
 
 class ChecklistController extends Controller
 {
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
@@ -51,7 +52,7 @@ class ChecklistController extends Controller
             $this->createWithoutTemplate($request);
         }
 
-        $this->history = new HistoryController('App\Models\Project');
+        $this->history = new NewHistoryService('App\Models\Project');
         $this->history->createHistory($request->project_id, 'Checkliste ' . $request->name. ' hinzugefügt');
 
 
@@ -182,7 +183,7 @@ class ChecklistController extends Controller
                 ->syncWithoutDetaching($departmentIds->whereNotIn('id', $syncedDepartmentIds));
         }*/
 
-        $this->history = new HistoryController('App\Models\Project');
+        $this->history = new NewHistoryService('App\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' geändert');
         //$checklist->departments()->sync($departmentIds);
 
@@ -197,7 +198,8 @@ class ChecklistController extends Controller
      */
     public function destroy(Checklist $checklist, HistoryService $historyService)
     {
-        $this->history = new HistoryController('App\Models\Project');
+
+        $this->history = new NewHistoryService('App\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Checkliste ' . $checklist->name . ' gelöscht');
         $checklist->delete();
         $historyService->checklistUpdated($checklist);

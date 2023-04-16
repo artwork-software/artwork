@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Comment;
 use App\Models\MoneySource;
 use App\Models\MoneySourceFile;
+use App\Support\Services\NewHistoryService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -19,10 +20,10 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class MoneySourceFileController extends Controller
 {
 
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
     public function __construct()
     {
-        $this->history = new HistoryController('App\Models\MoneySource');
+        $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     /**

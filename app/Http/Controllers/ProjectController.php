@@ -46,6 +46,7 @@ use App\Models\Table;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -69,7 +70,7 @@ class ProjectController extends Controller
     // init empty notification controller
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
     protected ?SchedulingController $schedulingController = null;
     public function __construct()
     {
@@ -78,7 +79,7 @@ class ProjectController extends Controller
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-        $this->history = new HistoryController('App\Models\Project');
+        $this->history = new NewHistoryService('App\Models\Project');
         $this->schedulingController = new SchedulingController();
     }
 

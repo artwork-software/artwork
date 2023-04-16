@@ -7,18 +7,19 @@ use App\Http\Requests\StoreCommentRequest;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 
 class CommentController extends Controller
 {
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
         $this->authorizeResource(Comment::class);
-        $this->history = new HistoryController('APP\Models\Project');
+        $this->history = new NewHistoryService('APP\Models\Project');
     }
 
     /**

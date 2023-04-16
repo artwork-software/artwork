@@ -24,6 +24,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -41,7 +42,7 @@ class EventController extends Controller
     protected ?NotificationController $notificationController = null;
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
@@ -50,7 +51,7 @@ class EventController extends Controller
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new HistoryController('App\Models\Event');
+        $this->history = new NewHistoryService('App\Models\Event');
     }
 
     public function viewEventIndex(Request $request): Response
@@ -130,7 +131,7 @@ class EventController extends Controller
         if(!empty($event->project()->get())){
             $eventProject = $event->project()->first();
             if($eventProject){
-                $projectHistory = new HistoryController('App\Models\Project');
+                $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
         }
@@ -303,7 +304,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 
@@ -488,7 +489,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 

@@ -14,6 +14,7 @@ use App\Models\Task;
 use App\Models\Scheduling;
 use App\Models\User;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +29,7 @@ class TaskController extends Controller
 {
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
@@ -96,7 +97,7 @@ class TaskController extends Controller
         }
 
         if ($authorized == true) {
-            $this->history = new HistoryController('App\Models\Project');
+            $this->history = new NewHistoryService('App\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $request->name . ' zu ' . $checklist->name . ' hinzugefügt');
             $this->createNotificationForAllChecklistUser($checklist);
             return Redirect::back()->with('success', 'Task created.');
@@ -193,7 +194,7 @@ class TaskController extends Controller
 
         $checklist = $task->checklist()->first();
         if($checklist !== null){
-            $this->history = new HistoryController('App\Models\Project');
+            $this->history = new NewHistoryService('App\Models\Project');
             $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' geändert');
 
             $this->createNotificationUpdateTask($task);
@@ -250,7 +251,7 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         $checklist = $task->checklist()->first();
-        $this->history = new HistoryController('App\Models\Project');
+        $this->history = new NewHistoryService('App\Models\Project');
         $this->history->createHistory($checklist->project_id, 'Aufgabe ' . $task->name . ' von ' . $checklist->name . ' gelöscht');
         $task->delete();
         return Redirect::back()->with('success', 'Task deleted');

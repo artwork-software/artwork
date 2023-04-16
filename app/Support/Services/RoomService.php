@@ -3,7 +3,6 @@
 namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\NotificationController;
 use App\Models\Room;
 use App\Models\User;
@@ -13,7 +12,7 @@ class RoomService
 {
     protected ?NotificationController $notificationController = null;
     protected ?\stdClass $notificationData = null;
-    protected HistoryController $history;
+    protected NewHistoryService $history;
 
     public function __construct()
     {
@@ -21,7 +20,7 @@ class RoomService
         $this->notificationData = new \stdClass();
         $this->notificationData->room = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
-        $this->history = new HistoryController('App\Models\Room');
+        $this->history = new NewHistoryService('App\Models\Room');
     }
 
 

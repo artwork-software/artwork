@@ -18,6 +18,7 @@ use App\Models\SubpositionSumDetail;
 use App\Models\SumMoneySource;
 use App\Models\Table;
 use App\Models\User;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,13 +30,13 @@ class MoneySourceController extends Controller
 {
     protected ?NotificationController $notificationController = null;
     protected ?stdClass $notificationData = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
         $this->notificationController = new NotificationController();
         $this->notificationData = new \stdClass();
-        $this->history = new HistoryController('App\Models\MoneySource');
+        $this->history = new NewHistoryService('App\Models\MoneySource');
     }
 
     /**

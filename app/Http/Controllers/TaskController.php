@@ -15,6 +15,7 @@ use App\Models\Scheduling;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,13 +28,13 @@ use stdClass;
 
 class TaskController extends Controller
 {
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?stdClass $notificationData = null;
     protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->event = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;

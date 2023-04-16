@@ -47,6 +47,7 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,14 +69,14 @@ use stdClass;
 class ProjectController extends Controller
 {
     // init empty notification controller
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?stdClass $notificationData = null;
     protected ?NewHistoryService $history = null;
     protected ?SchedulingController $schedulingController = null;
     public function __construct()
     {
         // init notification controller
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new stdClass();
         $this->notificationData->project = new stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
@@ -451,7 +452,7 @@ class ProjectController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
         $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
@@ -467,7 +468,7 @@ class ProjectController extends Controller
             'type' => 'success',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
+        $this->notificationService->create(User::find($request->user), $this->notificationData, $broadcastMessage);
 
         $mainPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -494,7 +495,7 @@ class ProjectController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $this->notificationService->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $verifiedRequest->delete();
             $mainPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $this->history->createHistory($project->id, 'Hauptposition „' . $mainPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
@@ -516,7 +517,7 @@ class ProjectController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
+            $this->notificationService->create(User::find($verifiedRequest->requested), $this->notificationData, $broadcastMessage);
             $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_NOT_VERIFIED]);
             $verifiedRequest->delete();
             $this->history->createHistory($project->id, 'Unterposition „' . $subPosition->name . '“ Verifizierungsanfrage zurückgenommen', 'budget');
@@ -587,7 +588,7 @@ class ProjectController extends Controller
             'type' => 'success',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create(User::find($requested), $this->notificationData, $broadcastMessage);
+        $this->notificationService->create(User::find($requested), $this->notificationData, $broadcastMessage);
 
     }
 
@@ -610,7 +611,7 @@ class ProjectController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
         $subPosition->update(['is_verified' => BudgetTypesEnum::BUDGET_VERIFIED_TYPE_REQUESTED]);
         $this->notificationData->title = 'Neue Verifizierungsanfrage';
@@ -626,7 +627,7 @@ class ProjectController extends Controller
             'type' => 'success',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create(User::find($request->user), $this->notificationData, $broadcastMessage);
+        $this->notificationService->create(User::find($request->user), $this->notificationData, $broadcastMessage);
 
         $subPosition->verified()->create([
             'requested_by' => Auth::id(),
@@ -1767,7 +1768,7 @@ class ProjectController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($managerAfter, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($managerAfter, $this->notificationData, $broadcastMessage);
             }
             if (in_array($managerAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$managerAfter->id]);
@@ -1784,7 +1785,7 @@ class ProjectController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($budgetAfter, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($budgetAfter, $this->notificationData, $broadcastMessage);
             }
             if (in_array($budgetAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$budgetAfter->id]);
@@ -1800,7 +1801,7 @@ class ProjectController extends Controller
                     'type' => 'error',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($budgetIdsBefore as $budgetBefore) {
@@ -1812,7 +1813,7 @@ class ProjectController extends Controller
                     'type' => 'error',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsAfter as $userIdAfter) {
@@ -1824,7 +1825,7 @@ class ProjectController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsBefore as $userIdBefore) {
@@ -1836,7 +1837,7 @@ class ProjectController extends Controller
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
     }
@@ -1903,7 +1904,7 @@ class ProjectController extends Controller
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
 
         // send notification to all users in project
-        $this->notificationController->create($project->users->all(), $this->notificationData);
+        $this->notificationService->create($project->users->all(), $this->notificationData);
 
         $project->checklists()->delete();
 

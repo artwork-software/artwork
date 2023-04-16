@@ -3,20 +3,19 @@
 namespace App\Support\Services;
 
 use App\Enums\NotificationConstEnum;
-use App\Http\Controllers\NotificationController;
 use App\Models\Room;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 
 class RoomService
 {
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
     protected NewHistoryService $history;
 
     public function __construct()
     {
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
         $this->notificationData->room = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
@@ -195,7 +194,7 @@ class RoomService
                     'type' => 'success',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
             }
         }
@@ -212,7 +211,7 @@ class RoomService
                     'type' => 'error',
                     'message' => $this->notificationData->title
                 ];
-                $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }

@@ -36,7 +36,7 @@ class CalendarController extends Controller
 
     public function createCalendarData($type='', ?Project $project = null){
 
-        $calendarType = '';
+        $calendarType = 'individual';
         $selectedDate = null;
         $this->startDate = Carbon::now()->startOfDay();
 
@@ -45,7 +45,6 @@ class CalendarController extends Controller
         }else{
             $this->endDate = Carbon::now()->addWeeks()->endOfDay();
         }
-
         if(!empty($project)){
             $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
             $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
@@ -59,14 +58,16 @@ class CalendarController extends Controller
         } else {
             $this->setDefaultDates();
         }
+        $startDay = $this->startDate->format('Y-m-d');
+        $endDay = $this->endDate->format('Y-m-d');
 
 
-        if($this->endDate && $this->startDate){
-            if($this->startDate !== $this->endDate){
+        if($startDay && $endDay){
+            if($startDay !== $endDay){
                 $calendarType = 'individual';
             }else{
                 $calendarType = 'daily';
-                $selectedDate = $this->startDate->format('Y-m-d');
+                $selectedDate = $startDay;
             }
         }
 

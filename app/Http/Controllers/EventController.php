@@ -59,8 +59,19 @@ class EventController extends Controller
      */
     public function viewEventIndex(Request $request): Response
     {
+
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
+
         return inertia('Events/EventManagement', [
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve()
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'dateValue'=> $showCalendar['dateValue'],
+            'calendarType' => $showCalendar['calendarType'],
+            'selectedDate' => $showCalendar['selectedDate'],
+            'rooms' => Room::all(),
+
         ]);
     }
 

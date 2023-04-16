@@ -2,7 +2,7 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :dateValueArray="dateValue"></date-picker-component>
-            <div v-if="dateValue[0] === dateValue[1]">
+            <div v-if="dateValue && dateValue[0] === dateValue[1]">
                 <button class="ml-2 -mt-2 text-black" @click="previousDay">
                     <ChevronLeftIcon class="h-5 w-5 text-primary"/>
                 </button>

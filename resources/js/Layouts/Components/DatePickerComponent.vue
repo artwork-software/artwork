@@ -1,15 +1,17 @@
 <template>
-    <div>
+    <div v-if="!project">
         <div class="flex items-center">
             <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
             <input v-model="dateValueArray[0]"
                    @change="this.updateTimes"
                    id="startDate"
                    type="date"
+                   :disabled="!!project"
                    placeholder="Start"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
             <input v-model="dateValueArray[1]"
                    @change="this.updateTimes"
+                   :disabled="!!project"
                    id="endDate"
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
@@ -19,6 +21,9 @@
                                  :placeholder="dateValuePicker[0] - dateValuePicker[1]" separator=" - " :formatter="formatter"
                                  :options="this.datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
                                  v-model="dateValuePicker"/>
+    </div>
+    <div class="font-medium text-gray-900" v-else>
+        Projektzeitraum: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
 </template>
 
@@ -78,7 +83,7 @@ const customShortcuts = () => {
 export default {
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
-    props: ['dateValueArray'],
+    props: ['dateValueArray','project'],
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],

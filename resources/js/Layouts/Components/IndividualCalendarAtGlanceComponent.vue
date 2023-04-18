@@ -1,11 +1,11 @@
 <template>
     <div class="w-full flex flex-wrap">
-        <CalendarFunctionBar @open-event-component="openEditEventModal" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance"
+        <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance"
                              :at-a-glance="atAGlance"></CalendarFunctionBar>
 
         <!-- Calendar -->
         <div class="flex">
-            <div v-if="eventsAtAGlance.length > 0" class="first:pl-16" v-for="roomEvents in eventsAtAGlance">
+            <div v-if="eventsAtAGlance" class="first:pl-16" v-for="roomEvents in eventsAtAGlance">
                 <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
                     <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                         {{roomEvents[0].roomName}}
@@ -82,7 +82,7 @@ export default {
           zoomFactor: 1
       }
     },
-    props: ['eventsAtAGlance','atAGlance','dateValue','eventTypes','rooms'],
+    props: ['eventsAtAGlance','atAGlance','dateValue','eventTypes','rooms','project'],
     emits:['changeAtAGlance'],
     methods: {
         changeAtAGlance(){

@@ -150,8 +150,9 @@
                     <div v-if="calendarType && calendarType === 'daily'">
                         <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
                     </div>
+
                     <div v-else>
-                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
+                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance" :project="project"
                                                              @change-at-a-glance="changeAtAGlance"
                                                              :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                                              :rooms="rooms"

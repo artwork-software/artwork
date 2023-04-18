@@ -297,7 +297,7 @@ export default {
         ConfirmationComponent,
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip
     },
-    props: ['event', 'eventTypes', 'height', 'width','zoomFactor'],
+    props: ['event', 'eventTypes', 'height', 'width','zoomFactor','fullHeight'],
     emits: ['openEditEventModal'],
     computed: {
         textStyle() {

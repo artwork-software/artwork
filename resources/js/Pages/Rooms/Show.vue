@@ -422,7 +422,16 @@
             <div class="flex w-full mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> Raumbelegung </h3>
             </div>
-            <CalendarComponent :eventTypes="this.event_types" :room="room"/>
+            <div>
+                <div v-if="calendarType && calendarType === 'daily'">
+                    <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
+                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.event_types initial-view="day"/>
+                    </div>
+                </div>
+                <div v-else>
+                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types :calendarData="calendar" :days="days" />
+                </div>
+            </div>
         </div>
 
         <!-- Raum Bearbeiten-->
@@ -811,6 +820,8 @@ import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
+import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
+import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -833,9 +844,15 @@ export default {
         'roomAttributes',
         'available_rooms',
         'adjoiningRoomIds',
-        'adjoiningRooms'
+        'adjoiningRooms',
+        'calendarType',
+        'selectedDate',
+        'dateValue',
+        'calendar',
+        'days'
     ],
     components: {
+        IndividualCalendarComponent,
         RoomSidenav,
         BaseSidenav,
         NewUserToolTip,
@@ -875,7 +892,8 @@ export default {
         CalendarComponent,
         AddButton,
         ChevronRightIcon,
-        RoomHistoryComponent
+        RoomHistoryComponent,
+        SingleRoomCalendarComponent
     },
     computed: {
         eventTypeFilters: function () {

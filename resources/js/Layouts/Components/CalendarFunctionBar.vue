@@ -1,7 +1,7 @@
 <template>
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
-            <date-picker-component v-if="dateValue" :dateValueArray="dateValue"></date-picker-component>
+            <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue"></date-picker-component>
             <div v-if="dateValue && dateValue[0] === dateValue[1]">
                 <button class="ml-2 -mt-2 text-black" @click="previousDay">
                     <ChevronLeftIcon class="h-5 w-5 text-primary"/>
@@ -10,7 +10,7 @@
                     <ChevronRightIcon class="h-5 w-5 text-primary"/>
                 </button>
             </div>
-            <SwitchGroup v-else as="div" class="flex items-center">
+            <SwitchGroup v-else as="div" class="flex items-center ml-2">
                 <Switch v-model="atAGlance" @click="changeAtAGlance()"
                         class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
                     <span class="sr-only">Use setting</span>

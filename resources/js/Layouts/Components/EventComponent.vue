@@ -698,7 +698,7 @@ export default {
         checkEventTimeLength(){
             // check if event min 30min
             if(this.startFull && this.endFull){
-                const date = new Date(this.subEvent.start_time);
+                const date = new Date(this.startFull);
                 const minimumEnd = this.addMinutes(date, 30);
                 if(minimumEnd <= new Date(this.endFull)){
                     this.helpTextLength = '';

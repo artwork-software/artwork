@@ -9,9 +9,7 @@
                  v-if="eventsWithoutRoom.length > 0">
 
                 <ExclamationIcon class="h-6  mr-2"/>
-                {{
-                    eventsWithoutRoom.length
-                }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                {{ eventsWithoutRoom.length }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
             <!-- Calendar -->
             <table class="w-full flex flex-wrap bg-white">
@@ -30,10 +28,10 @@
                 <tbody class="flex w-full pt-3 flex-wrap">
                 <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
                     <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{ day }}
+                        {{ day.day }}
                     </th>
                     <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
-                        <div class="py-0.5 pr-2" v-for="event in room[day].data">
+                        <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
                             <SingleCalendarEvent :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
                         </div>

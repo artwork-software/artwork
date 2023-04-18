@@ -76,7 +76,11 @@ class CalendarController extends Controller
         $rooms = Room::all();
 
         foreach ($calendarPeriod as $period) {
-            $periodArray[] = $period->format('d.m.');
+            $periodArray[] = [
+                'day' => $period->format('d.m.'),
+                'day_string' => $period->shortDayName,
+                'is_weekend' => $period->isWeekend()
+            ];
         }
 
         $better = Room::with(['events.room', 'events.project', 'events.creator'])
@@ -85,7 +89,6 @@ class CalendarController extends Controller
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
                 ]));
-
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],

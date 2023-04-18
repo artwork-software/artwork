@@ -201,8 +201,6 @@ class EventController extends Controller
     }
 
     private function createConflictNotification($collision) {
-        // TODO:: FIX NOTIFICATION -> [2023-02-08 09:43:28] staging.ERROR: Call to a member function notificationSettings() on null {"userId":1,"exception":"[object] (Error(code: 0): Call to a member function notificationSettings() on null at /home/ploi/artwork.caldero-systems.de/app/Notifications/ConflictNotification.php:37)
-        //[stacktrace]
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
         $this->notificationData->title = 'Terminkonflikt';
         $this->notificationData->conflict = $collision;

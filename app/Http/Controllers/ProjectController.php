@@ -1297,6 +1297,9 @@ class ProjectController extends Controller
         if(\request('atAGlance') === 'true'){
             $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
             $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
+
+
+
             $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
             $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
 

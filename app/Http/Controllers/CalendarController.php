@@ -19,7 +19,7 @@ class CalendarController extends Controller
     {
     }
 
-    private function get_events_of_day($date_of_day, $room): array
+    private function get_events_of_day($date_of_day, $room, $projectId = null): array
     {
 
         $eventsToday = [];
@@ -27,7 +27,13 @@ class CalendarController extends Controller
 
         foreach ($room->events as $event) {
             if(in_array($today, $event->days_of_event)) {
-                $eventsToday[] = $event;
+                if(!empty($projectId)){
+                    if($event->project_id === $projectId ){
+                        $eventsToday[] = $event;
+                    }
+                } else {
+                    $eventsToday[] = $event;
+                }
             }
         }
 
@@ -82,14 +88,14 @@ class CalendarController extends Controller
         if(!empty($room)){
             $better = collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
-                    $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
+                    $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
         }else{
             $better = Room::with(['events.room', 'events.project', 'events.creator'])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
-                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room))
+                        $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
         }
 

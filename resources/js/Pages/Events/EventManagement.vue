@@ -16,7 +16,14 @@
                 </div>
             </div>
             <div v-else>
-                <IndividualCalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes :calendarData="calendar" :rooms="rooms" :days="days" />
+                <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
+                                                     @change-at-a-glance="changeAtAGlance"
+                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                                     :rooms="rooms"
+                                                     :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
+                <IndividualCalendarComponent :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
+                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                             :calendarData="calendar" :rooms="rooms" :days="days"/>
             </div>
         </div>
     </app-layout>
@@ -28,13 +35,39 @@ import AppLayout from '@/Layouts/AppLayout.vue'
 import '@vuepic/vue-datepicker/dist/main.css'
 import CalendarComponent from "@/Layouts/Components/CalendarComponent";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
+import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
+import {Inertia} from "@inertiajs/inertia";
 
 export default defineComponent({
     components: {
+        IndividualCalendarAtGlanceComponent,
         IndividualCalendarComponent,
         CalendarComponent,
         AppLayout
     },
-    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','days'],
+    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','days','eventsAtAGlance'],
+    methods: {
+        changeAtAGlance() {
+            this.atAGlance = !this.atAGlance;
+        }
+    },
+    data() {
+        return {
+            atAGlance: this.eventsAtAGlance.length > 0,
+        }
+    },
+    watch: {
+        atAGlance: {
+            handler() {
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                    }
+                })
+            },
+            deep: true
+        }
+    },
 })
 </script>

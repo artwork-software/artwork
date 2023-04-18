@@ -38,12 +38,17 @@
         </div>
         <div class="px-1 py-0.5 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']" class="flex justify-between">
-                <div class="flex items-center">
-                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                <div class="flex items-center truncate">
+                    <div v-if="event.eventTypeAbbreviation && !project" class="mr-1">
                         {{event.eventTypeAbbreviation}}:
                     </div>
-                    {{ event.title }}
-                    <div v-if="$page.props.user.calendar_settings.project_status">
+                    <div v-if="!project">
+                        {{ event.title }}
+                    </div>
+                    <div v-else>
+                        {{event.eventTypeName}}
+                    </div>
+                    <div v-if="$page.props.user.calendar_settings.project_status && !project">
                         <div v-if="event.project?.state?.color" :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"
                              class="rounded-full">
                         </div>
@@ -88,7 +93,7 @@
             </div>
             <!-- Time -->
             <div class="flex" :style="textStyle" :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
-                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString()"
+                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project"
                       class="items-center">{{
                         new Date(event.start).formatTime("HH:mm")
                     }} - {{ new Date(event.end).formatTime("HH:mm") }}
@@ -297,7 +302,7 @@ export default {
         ConfirmationComponent,
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip
     },
-    props: ['event', 'eventTypes', 'height', 'width','zoomFactor','fullHeight'],
+    props: ['event', 'eventTypes', 'height', 'width','zoomFactor','fullHeight','project'],
     emits: ['openEditEventModal'],
     computed: {
         textStyle() {
@@ -331,7 +336,6 @@ export default {
             createEventComponentIsVisible: false,
             selectedEvent: null,
             rooms: [],
-            project: null,
             wantedSplit: null,
             subEventToEdit: null
         }

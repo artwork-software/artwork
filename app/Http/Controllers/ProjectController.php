@@ -1177,8 +1177,9 @@ class ProjectController extends Controller
 
 
     public function updateProjectState(Request $request, Project $project){
+
         $oldState = $project->state()->first();
-        $project->update(['state' => $request->state]);
+        $project->update(['state' => $request->state_id]);
         $newState = $project->state()->first();
 
         if(!empty($newState) && $oldState !== $newState ){
@@ -1300,8 +1301,13 @@ class ProjectController extends Controller
 
 
 
-            $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-            $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
+            if(!empty($firstEventInProject) && !empty($lastEventInProject)) {
+                $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
+                $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
+            }else{
+                $startDate = Carbon::now()->startOfDay();
+                $endDate = Carbon::now()->addWeeks()->endOfDay();
+            }
 
             if(\request('startDate')){
                 $startDate = Carbon::create(\request('startDate'))->startOfDay();
@@ -1314,7 +1320,8 @@ class ProjectController extends Controller
             $eventsAtAGlance = CalendarEventResource::collection($project->events()
                 ->whereBetween('start_time', [$startDate, $endDate])
                 ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room','project','creator'])->get())->collection->groupBy('room.id');
+                ->with(['room','project','creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
 
         $selectedSumDetail = null;
@@ -1414,6 +1421,7 @@ class ProjectController extends Controller
             'sectors' => Sector::all(),
             'projectSectorIds' => $project->sectors()->pluck('sector_id'),
             'projectSectors' => $project->sectors,
+            'projectState' => $project->state,
 
             'checklist_templates' => ChecklistTemplate::all()->map(fn($checklist_template) => [
                 'id' => $checklist_template->id,

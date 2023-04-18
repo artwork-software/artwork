@@ -61,6 +61,24 @@ class EventController extends Controller
         $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData();
 
+        $eventsAtAGlance = [];
+
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        if(\request('atAGlance') === 'true') {
+            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room', 'project', 'creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        }
+
         return inertia('Events/EventManagement', [
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
@@ -68,6 +86,7 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'eventsAtAGlance' => $eventsAtAGlance,
             'rooms' => Room::all(),
 
         ]);
@@ -90,6 +109,24 @@ class EventController extends Controller
             )
             ->get();
 
+        $eventsAtAGlance = [];
+
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        if(\request('atAGlance') === 'true') {
+            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room', 'project', 'creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        }
+
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
@@ -100,6 +137,7 @@ class EventController extends Controller
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => Room::all(),
+            'eventsAtAGlance' => $eventsAtAGlance,
         ]);
     }
 
@@ -118,7 +156,6 @@ class EventController extends Controller
 
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
-
         // Adjoining Room / Event check
         $this->adjoiningRoomsCheck($request);
 

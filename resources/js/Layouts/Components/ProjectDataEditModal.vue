@@ -17,13 +17,13 @@
                     <Listbox as="div" class="flex w-full" v-model="selectedState">
                         <ListboxButton class="w-full text-left">
                             <button class="w-full h-12 flex justify-between xsDark items-center text-left border border-2 border-gray-300 bg-white px-4 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                                    :class="selectedState"
+                                    :class="this.states.find(state => state.id === selectedState)?.color"
                                     @click="openColor = !openColor">
                                         <span class="w-full" v-if="!selectedState">
                                             Wähle Projekt Status
                                         </span>
                                 <span v-else>
-                                            {{ selectedState?.name}}
+                                            {{ this.states.find(state => state.id === selectedState)?.name}}
                                         </span>
                                 <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
                             </button>
@@ -35,8 +35,8 @@
                                 class="absolute w-[88%] z-10 mt-12 bg-primary shadow-lg max-h-40 pr-2 pt-2 pb-2 text-base ring-1 ring-black ring-opacity-5 overflow-y-scroll focus:outline-none sm:text-sm">
                                 <ListboxOption as="template" class=""
                                                v-for="state in states"
-                                               :key="state"
-                                               :value="state" v-slot="{ active, selected }">
+                                               :key="state.id"
+                                               :value="state.id" v-slot="{ active, selected }">
                                     <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 text-sm subpixel-antialiased']"
                                         @click="updateProjectState(state)">
                                         <div class="flex">
@@ -117,6 +117,7 @@ export default {
         project: Object,
         groupProjects: Array,
         currentGroup: Object,
+        projectState: Number,
         states: Array
     },
     components: {
@@ -152,7 +153,7 @@ export default {
             description: this.project.description,
             hasGroup: !!this.currentGroup,
             selectedGroup: this.currentGroup,
-            selectedState: this.project.state ? this.project.state : null,
+            selectedState: this.projectState,
             openColor: false
         }
     },
@@ -196,7 +197,7 @@ export default {
         },
         updateProjectState(state) {
             this.$inertia.patch(route('update.project.state', this.project.id), {
-                state: state.id
+                state_id: state.id
             })
         },
     }

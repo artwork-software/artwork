@@ -13,12 +13,13 @@
 
                 </div>
                 <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleProjectCalendarEvent :event="event"/>
+                    <SingleCalendarEvent :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
+                                         @open-edit-event-modal="openEditEventModal"></SingleCalendarEvent>
                 </div>
             </div>
             <div v-else>
                 <div class="pl-6 pb-12 mt-10 xsDark">
-                    Keine Termine für dieses Projekt im gewählten Zeitraum
+                    Keine Termine für dieses Projekt
                 </div>
             </div>
 
@@ -57,12 +58,14 @@ import SingleProjectCalendarEvent from "@/Layouts/Components/SingleProjectCalend
 import {Inertia} from "@inertiajs/inertia";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
+import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 
 
 
 export default {
     name: "IndividualCalendarAtGlanceComponent",
     components: {
+        SingleCalendarEvent,
         CalendarFunctionBar,
         SingleProjectCalendarEvent,
         EventComponent,

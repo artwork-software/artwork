@@ -487,7 +487,7 @@
         v-if="showSeriesEdit"
         @closed="closeSeriesEditModal"
         @all="saveAllSeriesEvents"
-        @single=""
+        @single="singleSaveEvent"
     />
 </template>
 
@@ -860,6 +860,12 @@ export default {
             }
             /**/
         },
+        async singleSaveEvent(){
+            return await axios
+                .put('/events/' + this.event?.id, this.eventData())
+                .then(() => this.closeModal())
+                .catch(error => this.error = error.response.data.errors);
+        };
         async saveAllSeriesEvents(){
             this.allSeriesEvents = true;
             return await axios

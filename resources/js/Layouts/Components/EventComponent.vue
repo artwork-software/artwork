@@ -978,10 +978,18 @@ export default {
                     .post('/events', this.eventData())
                     .then(() => this.closeModal())
                     .catch(error => this.error = error.response.data.errors);
+            } else {
+                return await axios
+                    .put('/events/' + this.event?.id, this.eventData())
+                    .then(() => { this.closeModal(); this.closeSeriesEditModal() })
+                    .catch(error => this.error = error.response.data.errors);
             }
+
+
+
             if(this.eventData().is_series){
                 this.showSeriesEdit = true;
-                this.$emit('closed', bool);
+                this.$emit('closed', true);
             }
             /**/
         },
@@ -1053,7 +1061,9 @@ export default {
                 seriesEndDate: this.seriesEndDate,
                 allSeriesEvents: this.allSeriesEvents,
                 adminComment: this.adminComment,
-                optionString: this.optionAccept ? this.optionString : null
+                optionString: this.optionAccept ? this.optionString : null,
+                accept: this.accept,
+                optionAccept: this.optionAccept
             };
         },
     },

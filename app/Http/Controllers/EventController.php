@@ -397,6 +397,28 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        if($request->accept || $request->optionAccept){
+            $event->update(['occupancy_option' => false]);
+
+            if(!empty($request->adminComment)){
+                $event->comments()->create([
+                    'user_id' => Auth::id(),
+                    'comment' => $request->adminComment,
+                    'is_admin_comment' => true
+                ]);
+            }
+
+            if($request->accept){
+                $event->update(['accepted' => true]);
+            }
+
+            if($request->optionAccept){
+                $event->update(['accepted' => true, 'option_string' => $request->optionString]);
+            }
+
+        }
+
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
             ->orWhereJsonContains("data->type", "ROOM_REQUEST")

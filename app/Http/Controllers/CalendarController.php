@@ -94,14 +94,14 @@ class CalendarController extends Controller
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
         }else{
-            $better = Room::with(['events.room', 'events.project', 'events.creator'])
+            $better = Room::with(['events.room', 'events.project', 'events.creator', 'events.comments'])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
                         $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
         }
-       
+
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],

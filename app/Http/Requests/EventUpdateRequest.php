@@ -30,7 +30,9 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'seriesEnd' => $this->get('seriesEndDate'),
             'allSeriesEvents' => $this->get('allSeriesEvents'),
             'adminComment' => $this->get('adminComment'),
-            'optionString' => $this->get('optionString')
+            'optionString' => $this->get('optionString'),
+            'accept' => $this->get('accept'),
+            'optionAccept' => $this->get('optionAccept')
         ];
     }
 }

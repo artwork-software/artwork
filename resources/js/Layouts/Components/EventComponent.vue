@@ -863,14 +863,14 @@ export default {
         async singleSaveEvent(){
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
-                .then(() => this.closeModal())
+                .then(() => { this.closeModal(); this.closeSeriesEditModal() })
                 .catch(error => this.error = error.response.data.errors);
         };
         async saveAllSeriesEvents(){
             this.allSeriesEvents = true;
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
-                .then(() => this.closeModal())
+                .then(() => { this.closeModal(); this.closeSeriesEditModal() })
                 .catch(error => this.error = error.response.data.errors);
         },
         closeSeriesEditModal(){

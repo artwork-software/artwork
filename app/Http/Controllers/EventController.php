@@ -20,6 +20,7 @@ use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\Scheduling;
+use App\Models\SeriesEvents;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
@@ -105,7 +106,6 @@ class EventController extends Controller
         $calendar = new CalendarController();
         $showCalendar = $calendar->createCalendarData('dashboard');
 
-
         $projects = Project::query()->with( ['managerUsers'])->get();
 
         $tasks = Task::query()
@@ -174,16 +174,53 @@ class EventController extends Controller
     {
         // Adjoining Room / Event check
         $this->adjoiningRoomsCheck($request);
-
-        /** @var Event $event */
-        $event = Event::create($request->data());
-
+        $firstEvent = Event::create($request->data());
         if ($request->get('projectName')) {
-            $this->associateProject($request, $event);
+            $this->associateProject($request, $firstEvent);
         }
 
-        if(!empty($event->project()->get())){
-            $eventProject = $event->project()->first();
+        if($request->is_series){
+            $series = SeriesEvents::create([
+                'frequency_id' => $request->seriesFrequency,
+                'end_date' => $request->seriesEndDate
+            ]);
+            $firstEvent->update(['is_series' => true, 'series_id' => $series->id]);
+            $endSeriesDate = Carbon::parse($request->seriesEndDate);
+            $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
+            $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
+            $whileEndDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
+            if($request->seriesFrequency === 1){
+                while ($whileEndDate->addDay() <= $endSeriesDate) {
+                    $startDate = $startDate->addDay();
+                    $endDate = $endDate->addDay();
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                }
+            }
+            if($request->seriesFrequency === 2){
+                while ($whileEndDate->addWeek() <= $endSeriesDate) {
+                    $startDate = $startDate->addWeek();
+                    $endDate = $endDate->addWeek();
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                }
+            }
+            if($request->seriesFrequency === 3){
+                while ($whileEndDate->addWeeks(2) <= $endSeriesDate) {
+                    $startDate = $startDate->addWeeks(2);
+                    $endDate = $endDate->addWeeks(2);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                }
+            }
+            if($request->seriesFrequency === 4){
+                while ($whileEndDate->addMonth() <= $endSeriesDate) {
+                    $startDate = $startDate->addMonth();
+                    $endDate = $endDate->addMonth();
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                }
+            }
+        }
+
+        if(!empty($firstEvent->project()->get())){
+            $eventProject = $firstEvent->project()->first();
             if($eventProject){
                 $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
@@ -191,12 +228,34 @@ class EventController extends Controller
         }
 
         if($request->isOption){
-            $this->createRequestNotification($request, $event);
+            $this->createRequestNotification($request, $firstEvent);
         }
 
         broadcast(new OccupancyUpdated())->toOthers();
 
-        return new CalendarEventResource($event);
+        return new CalendarEventResource($firstEvent);
+    }
+
+    private function createSeriesEvent($startDate,$endDate, $request, $series){
+        $event = Event::create([
+            'name' => $request->title,
+            'eventName' => $request->eventName,
+            'description' => $request->description,
+            'start_time' => $startDate,
+            'end_time' => $endDate,
+            'occupancy_option' => $request->isOption,
+            'audience' => $request->audience,
+            'is_loud' => $request->isLoud,
+            'event_type_id' => $request->eventTypeId,
+            'room_id' => $request->roomId,
+            'user_id' => Auth::id(),
+            'project_id' => $request->projectId,
+            'is_series' => true,
+            'series_id' => $series->id,
+        ]);
+        if ($request->get('projectName')) {
+            $this->associateProject($request, $event);
+        }
     }
 
     /**
@@ -338,7 +397,6 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
-
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
             ->orWhereJsonContains("data->type", "ROOM_REQUEST")
@@ -370,7 +428,6 @@ class EventController extends Controller
         $oldEventEndDate = $event->end_time;
         $oldIsLoud = $event->is_loud;
         $oldAudience = $event->audience;
-
 
         $event->update($request->data());
 
@@ -409,6 +466,51 @@ class EventController extends Controller
         $this->checkEventOptionChanges($event->id, $oldIsLoud, $newIsLoud, $oldAudience, $newAudience);
 
         $this->createEventScheduleNotification($event);
+
+        // get time diff
+        $oldEventStartDateDays = Carbon::create($oldEventStartDate);
+        $oldEventEndDateDays = Carbon::create($oldEventEndDate);
+
+        $newEventStartDateDays = Carbon::parse($newEventStartDate);
+        $newEventEndDateDays = Carbon::parse($newEventEndDate);
+
+        $diffStartDays = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
+        $diffEndDays = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
+
+        $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDateDays, false);
+        $diffEndMinutes = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
+
+        if($request->allSeriesEvents){
+            if($event->is_series){
+                $seriesEvents = Event::where('series_id', $event->series_id)->get();
+                foreach ($seriesEvents as $seriesEvent){
+                    // Guard
+                    if($seriesEvent->id === $event->id){
+                        continue;
+                    }
+
+                    $startDay = Carbon::create($seriesEvent->start_time)->addDays($diffStartDays)->format('Y-m-d');
+                    $endDay = Carbon::create($seriesEvent->end_time)->addDays($diffEndDays)->format('Y-m-d');
+
+                    $startTime = Carbon::create($seriesEvent->start_time)->addMinutes($diffStartMinutes)->format('H:i:s');
+                    $endTime = Carbon::create($seriesEvent->end_time)->addMinutes($diffEndMinutes)->format('H:i:s');
+
+                    $seriesEvent->update([
+                        'name' => $event->name,
+                        'eventName' => $event->eventName,
+                        'description' => $event->description,
+                        'occupancy_option' => $event->occupancy_option,
+                        'audience' => $event->audience,
+                        'is_loud' => $event->is_loud,
+                        'event_type_id' => $event->event_type_id,
+                        'room_id' => $event->room_id,
+                        'project_id' => $event->project_id,
+                        'start_time' => $startDay . ' ' . $startTime,
+                        'end_time' => $endDay . ' ' . $endTime,
+                    ]);
+                }
+            }
+        }
 
         return new CalendarEventResource($event);
     }

@@ -23,7 +23,7 @@ class CalendarController extends Controller
     {
 
         $eventsToday = [];
-        $today = $date_of_day->format('d.m.');
+        $today = $date_of_day->format('d.m.Y');
 
         foreach ($room->events as $event) {
             if(in_array($today, $event->days_of_event)) {
@@ -79,7 +79,6 @@ class CalendarController extends Controller
 
         $calendarPeriod = CarbonPeriod::create($this->startDate, $this->endDate);
         $periodArray = [];
-        $rooms = Room::all();
 
         foreach ($calendarPeriod as $period) {
             $periodArray[] = [
@@ -102,7 +101,7 @@ class CalendarController extends Controller
                         $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
         }
-        
+       
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],

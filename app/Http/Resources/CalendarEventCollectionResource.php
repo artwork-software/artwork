@@ -32,6 +32,7 @@ class CalendarEventCollectionResource extends ResourceCollection
      */
     public function toArray($request)
     {
+        //dd($this->collection);
         return [
             'resource' => class_basename($this),
             'events' => CalendarEventResource::collection($this->collection),

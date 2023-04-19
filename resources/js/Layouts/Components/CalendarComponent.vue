@@ -322,6 +322,7 @@
                        @click="openEventComponent()" text="Neue Belegung"/>
         </div>
         -->
+
         <!--  Calendar  -->
         <div class="pl-3 overflow-x-scroll">
             <vue-cal
@@ -348,8 +349,6 @@
                 v-model:active-view="currentView"
                 @event-drag-create="openEventComponent($event)"
                 @event-focus="openEventComponent($event)"
-                @event-mouse-enter="addHoverToEvent($event)"
-                @event-mouse-leave="removeHoverToEvent($event)"
                 @ready="fetchEvents"
                 @view-change="fetchEvents($event)"
             >
@@ -739,12 +738,6 @@ export default {
             });
     },
     methods: {
-        addHoverToEvent(event){
-            console.log(event)
-        },
-        removeHoverToEvent(event){
-            console.log(event)
-        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')
@@ -1073,7 +1066,7 @@ export default {
                     this.events = response.data.events.events
                     this.projects = response.data.events.projects
                     this.filters = response.data.events.calendarFilters
-
+                    console.log(response.data.events.events);
                     this.eventsWithoutRoom = response.data.eventsWithoutRoom.events;
 
                     if (this.rooms.length === 0) {
@@ -1104,7 +1097,7 @@ export default {
                     // fix timezone to current local
                     this.events.map(event => event.start = new Date(event.start))
                     this.events.map(event => event.end = new Date(event.end))
-
+                    console.log(this.events);
                     this.displayedEvents = this.events;
                 });
         },

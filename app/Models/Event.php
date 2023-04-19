@@ -29,6 +29,8 @@ use Illuminate\Support\Collection;
  * @property ?int $declined_room_id
  * @property int $user_id
  * @property ?int $project_id
+ * @property int $series_id
+ * @property int $is_series
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property Carbon $deleted_at
@@ -45,6 +47,25 @@ class Event extends Model
     use HasChangesHistory;
     use HasFactory, SoftDeletes;
 
+    protected $with = ['series'];
+
+    protected $fillable = [
+        'name',
+        'eventName',
+        'description',
+        'start_time',
+        'end_time',
+        'occupancy_option',
+        'audience',
+        'is_loud',
+        'event_type_id',
+        'room_id',
+        'user_id',
+        'project_id',
+        'series_id',
+        'is_series'
+    ];
+
     protected $guarded = [
         'id',
     ];
@@ -55,6 +76,7 @@ class Event extends Model
         'occupancy_option' => 'boolean',
         'start_time' => 'datetime:d. M Y H:i',
         'end_time' => 'datetime:d. M Y H:i',
+        'is_series' => 'boolean'
     ];
 
     protected $appends = [
@@ -68,7 +90,7 @@ class Event extends Model
         $days = [];
 
         foreach ($days_period as $day) {
-            $days[] = $day->format('d.m.');
+            $days[] = $day->format('d.m.Y');
         }
 
         return $days;
@@ -118,6 +140,11 @@ class Event extends Model
             'room_id',
             'room_id'
         );
+    }
+
+    public function series()
+    {
+        return $this->hasOne(SeriesEvents::class, 'id', 'series_id');
     }
 
     public function subEvents()

@@ -28,6 +28,8 @@ return new class extends Migration
             $table->unsignedBigInteger('declined_room_id')->nullable();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('project_id')->nullable();
+            $table->boolean('is_series')->default(false)->nullable();
+            $table->unsignedBigInteger('series_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

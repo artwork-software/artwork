@@ -25,6 +25,9 @@ class EventStoreRequest extends EventStoreOrUpdateRequest
             'creating_project' => $this->get('creatingProject'),
             'user_id' => Auth::id(),
             'occupancy_option' => $this->get('isOption'),
+            'is_series' => $this->get('is_series'),
+            'frequency' => $this->get('seriesFrequency'),
+            'seriesEnd' => $this->get('seriesEndDate'),
         ];
     }
 }

@@ -302,8 +302,6 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
-
-
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
             ->orWhereJsonContains("data->type", "ROOM_REQUEST")
@@ -335,7 +333,6 @@ class EventController extends Controller
         $oldEventEndDate = $event->end_time;
         $oldIsLoud = $event->is_loud;
         $oldAudience = $event->audience;
-
 
         $event->update($request->data());
 
@@ -377,22 +374,32 @@ class EventController extends Controller
 
         // get time diff
         $oldEventStartDateDays = Carbon::create($oldEventStartDate);
-        $oldEventEndDate = Carbon::create($oldEventEndDate);
+        $oldEventEndDateDays = Carbon::create($oldEventEndDate);
 
         $newEventStartDateDays = Carbon::parse($newEventStartDate);
-        $newEventEndDate = Carbon::parse($newEventEndDate);
+        $newEventEndDateDays = Carbon::parse($newEventEndDate);
 
         $diffStartDays = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
-        $diffEndDays = $oldEventEndDate->diffInDays($newEventEndDate, false);
+        $diffEndDays = $oldEventEndDateDays->diffInDays($newEventEndDateDays, false);
 
-        $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDate, false);
-        $diffEndMinutes = $oldEventStartDateDays->diffInMinutes($newEventStartDate, false);
-
+        $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDateDays, false);
+        $diffEndMinutes = $oldEventEndDateDays->diffInRealMinutes($newEventEndDateDays, false);
 
         if($request->allSeriesEvents){
             if($event->is_series){
                 $seriesEvents = Event::where('series_id', $event->series_id)->get();
                 foreach ($seriesEvents as $seriesEvent){
+                    // Guard
+                    if($seriesEvent->id === $event->id){
+                        continue;
+                    }
+
+                    $startDay = Carbon::create($seriesEvent->start_time)->addDays($diffStartDays)->format('Y-m-d');
+                    $endDay = Carbon::create($seriesEvent->end_time)->addDays($diffEndDays)->format('Y-m-d');
+
+                    $startTime = Carbon::create($seriesEvent->start_time)->addMinutes($diffStartMinutes)->format('H:i:s');
+                    $endTime = Carbon::create($seriesEvent->end_time)->addMinutes($diffEndMinutes)->format('H:i:s');
+
                     $seriesEvent->update([
                         'name' => $event->name,
                         'eventName' => $event->eventName,
@@ -403,8 +410,8 @@ class EventController extends Controller
                         'event_type_id' => $event->event_type_id,
                         'room_id' => $event->room_id,
                         'project_id' => $event->project_id,
-                        'start_time' => Carbon::parse($seriesEvent->start_time)->addDays($diffStartDays)->addMinutes($diffStartMinutes),
-                        'end_time' => Carbon::parse($seriesEvent->end_time)->addDays($diffEndDays)->addMinutes($diffEndMinutes),
+                        'start_time' => $startDay . ' ' . $startTime,
+                        'end_time' => $endDay . ' ' . $endTime,
                     ]);
                 }
             }

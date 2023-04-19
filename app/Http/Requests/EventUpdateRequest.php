@@ -10,8 +10,8 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
     public function data()
     {
         return [
-            'start_time' => Carbon::parse($this->get('start'))->setTimezone(config('app.timezone')),
-            'end_time' => Carbon::parse($this->get('end'))->setTimezone(config('app.timezone')),
+            'start_time' => Carbon::create($this->get('start'))->setTimezone(config('app.timezone')),
+            'end_time' => Carbon::create($this->get('end'))->setTimezone(config('app.timezone')),
             'room_id' => $this->get('roomId'),
             'declined_room_id'=> $this->get('declinedRoomId'),
             'name' => $this->get('title'),

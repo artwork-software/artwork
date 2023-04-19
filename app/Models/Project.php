@@ -182,7 +182,7 @@ class Project extends Model
     }
 
     public function state(){
-        return $this->belongsTo(ProjectStates::class, 'state');
+        return $this->belongsTo(ProjectStates::class, 'state_id');
     }
 
     public function toSearchableArray(): array

@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\Room;
 use App\Models\RoomFile;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,11 +19,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class RoomFileController extends Controller
 {
 
-    protected ?HistoryController $historyController = null;
+    protected ?NewHistoryService $historyController = null;
 
     public function __construct()
     {
-        $this->historyController = new HistoryController('App\Models\Room');
+        $this->historyController = new NewHistoryService('App\Models\Room');
     }
 
     /**

@@ -33,7 +33,8 @@
             <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
             <ProjectFileUploadModal :show="showFileUploadModal" :close-modal="closeFileUploadModal"
-                                    :project-id="project.id"/>
+                                    :project-id="project.id"
+                                    :budget-access="budgetAccess"/>
         </div>
         <div v-if="showProjectFiles">
             <div v-if="projectFiles.length > 0">
@@ -80,6 +81,7 @@
                     :show="showContractUploadModal"
                     :close-modal="closeContractUploadModal"
                     :project-id="project.id"
+                    :budget-access="budgetAccess"
                 />
             </div>
             <div v-if="showContracts">
@@ -175,6 +177,7 @@ export default {
         contracts: Array,
         moneySources: Array,
         traits: Object,
+        budgetAccess: Object,
     },
     data() {
         return {

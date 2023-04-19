@@ -1,5 +1,5 @@
 <template>
-    <div :class="event.class" class="px-1 py-0.5 w-full rounded-lg">
+    <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }" class="px-1 py-0.5 rounded-lg relative group">
         <div class="eventHeader  flex justify-between">
             <div class="flex items-center">
                 <CalendarIcon v-if="new Date(event.start).toDateString() !== new Date(event.end).toDateString()" class="h-4 w-4 mr-1" :class="event.class"></CalendarIcon>

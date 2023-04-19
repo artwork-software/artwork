@@ -4,18 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectHeadline;
+use App\Support\Services\NewHistoryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redirect;
 
 class ProjectHeadlineController extends Controller
 {
 
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
 
     public function __construct()
     {
-        $this->history = new HistoryController('App\Models\Project');
+        $this->history = new NewHistoryService('App\Models\Project');
     }
 
     /**

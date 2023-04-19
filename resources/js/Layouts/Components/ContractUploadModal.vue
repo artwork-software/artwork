@@ -259,7 +259,7 @@
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4">
+                                            <div class="flex-1 text-sm py-4"  v-if="budgetAccess.includes(user.id)">
                                                 <p @click="addUserToContractUserArray(user)"
                                                    class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                     {{ user.first_name }} {{ user.last_name }}
@@ -360,6 +360,7 @@ export default {
         closeModal: Function,
         projectId: Number,
         extraSettings: Array,
+        budgetAccess: Array
     },
     components: {
         Button,

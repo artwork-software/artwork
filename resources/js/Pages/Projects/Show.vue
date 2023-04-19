@@ -49,10 +49,9 @@
                         </span>
                         {{ project?.name }}
                         <span class="rounded-full items-center font-medium px-3 py-1 my-2 text-sm ml-2 mb-1 inline-flex"
-                              :class="selectedState?.color">
-                            {{ selectedState?.name }}
+                              :class="this.states.find(state => state.id === projectState)?.color">
+                            {{ this.states.find(state => state.id === projectState)?.name }}
                         </span>
-
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
                           v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
@@ -150,8 +149,9 @@
                     <div v-if="calendarType && calendarType === 'daily'">
                         <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
                     </div>
+
                     <div v-else>
-                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
+                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance" :project="project"
                                                              @change-at-a-glance="changeAtAGlance"
                                                              :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                                              :rooms="rooms"
@@ -411,6 +411,7 @@
         <!-- Projekt bearbeiten Modal-->
         <project-data-edit-modal
             :show="editingProject"
+            :project-state="projectState"
             @closed="closeEditProjectModal"
             :project="this.project"
             :group-projects="this.groupProjects"
@@ -466,6 +467,7 @@
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
+                :budget-access="access_budget"
             />
             <ProjectSecondSidenav
                 v-else
@@ -551,7 +553,7 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states', 'eventsAtAGlance', 'calendar', 'days', 'rooms', 'dateValue', 'selectedDate', 'calendarType'],
+    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states','projectState', 'eventsAtAGlance', 'calendar', 'days', 'rooms', 'dateValue', 'selectedDate', 'calendarType'],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,
@@ -729,7 +731,7 @@ export default {
             documentForm: useForm({
                 file: null
             }),
-            selectedState: this.project.state ? this.project.state : null,
+            selectedState: this.projectState ? this.states.find(state => state.id === this.projectState) : null,
             atAGlance: this.eventsAtAGlance.length > 0,
         }
     },

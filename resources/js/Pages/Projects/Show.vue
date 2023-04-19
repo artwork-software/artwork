@@ -467,6 +467,7 @@
                 :contracts="project.contracts"
                 :money-sources="projectMoneySources"
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
+                :budget-access="access_budget"
             />
             <ProjectSecondSidenav
                 v-else

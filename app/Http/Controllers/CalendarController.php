@@ -2,12 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Builders\EventBuilder;
 use App\Http\Resources\CalendarEventResource;
+use App\Models\Area;
 use App\Models\Event;
+use App\Models\EventType;
 use App\Models\Project;
 use App\Models\Room;
+use App\Models\RoomAttribute;
+use App\Models\RoomCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class CalendarController extends Controller
@@ -17,6 +24,60 @@ class CalendarController extends Controller
 
     public function __construct()
     {
+    }
+
+    /**
+     * Returns all fields that can be filtered by in the calendar
+     * @return array
+     */
+    public function getFilters(): array
+    {
+        return [
+            'projects' => Project::all()->map(fn(Project $project) => [
+                'id' => $project->id,
+                'label' => $project->name,
+                'access_budget' => $project->access_budget
+            ]),
+
+            'rooms' => Room::with('adjoining_rooms', 'main_rooms')->get()->map(fn(Room $room) => [
+                'id' => $room->id,
+                'name' => $room->name,
+                'area' => $room->area,
+                'room_admins' => $room->room_admins,
+                'everyone_can_book' => $room->everyone_can_book,
+                'label' => $room->name,
+                'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [
+                    'id' => $adjoining_room->id,
+                    'label' => $adjoining_room->name
+                ]),
+                'main_rooms' => $room->main_rooms->map(fn(Room $main_room) => [
+                    'id' => $main_room->id,
+                    'label' => $main_room->name
+                ]),
+                'categories' => $room->categories,
+                'attributes' => $room->attributes
+            ]),
+
+            'roomCategories' => RoomCategory::all()->map(fn(RoomCategory $roomCategory) => [
+                'id' => $roomCategory->id,
+                'name' => $roomCategory->name,
+            ]),
+
+            'roomAttributes' => RoomAttribute::all()->map(fn(RoomAttribute $roomAttribute) => [
+                'id' => $roomAttribute->id,
+                'name' => $roomAttribute->name,
+            ]),
+
+            'eventTypes' => EventType::all()->map(fn(EventType $eventType) => [
+                'id' => $eventType->id,
+                'name' => $eventType->name,
+            ]),
+
+            'areas' => Area::all()->map(fn(Area $area) => [
+                'id' => $area->id,
+                'name' => $area->name,
+            ]),
+        ];
     }
 
     private function get_events_of_day($date_of_day, $room, $projectId = null): array
@@ -94,14 +155,19 @@ class CalendarController extends Controller
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
         }else{
-            $better = Room::with(['events.room', 'events.project', 'events.creator'])
+            $better = Room::query()
+                ->unless(is_null(request('roomIds')),
+                    fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
+                ->with(['events.room', 'events.project', 'events.creator', 'events' => function($query) use($project, $room) {
+                    $this->filterEvents($query, $room, $project);
+            }])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
                         $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
         }
-       
+
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],
@@ -111,6 +177,42 @@ class CalendarController extends Controller
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better
         ];
+    }
+
+    private function filterEvents($query, ?Room $room, ?Project $project) {
+        $isLoud = request('isLoud');
+        $isNotLoud = request('isNotLoud');
+        $hasAudience = request('hasAudience');
+        $hasNoAudience = request('hasNoAudience');
+        $showAdjoiningRooms = request('showAdjoiningRooms');
+        $eventTypeIds = request('eventTypeIds');
+        $roomIds = request('roomIds');
+        $areaIds = request('areaIds');
+        $roomAttributeIds = request('roomAttributeIds');
+        $roomCategoryIds = request('roomCategoryIds');
+
+
+        $query
+            ->when($project, fn (EventBuilder $builder) => $builder->where('project_id', $project->id))
+            ->when($room, fn (EventBuilder $builder) => $builder->where('room_id', $room->id))
+            ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds), fn (EventBuilder $builder) => $builder
+                ->whereHas('room', fn (Builder $roomBuilder) => $roomBuilder
+                    ->when($roomIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('rooms.id', $roomIds))
+                    ->when($areaIds, fn (Builder $roomBuilder) => $roomBuilder->whereIn('area_id', $areaIds))
+                    ->when($showAdjoiningRooms, fn(Builder $roomBuilder) => $roomBuilder->with('adjoining_rooms'))
+                    ->when($roomAttributeIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('attributes', fn (Builder $roomAttributeBuilder) => $roomAttributeBuilder
+                            ->whereIn('room_attributes.id', $roomAttributeIds)))
+                    ->when($roomCategoryIds, fn (Builder $roomBuilder) => $roomBuilder
+                        ->whereHas('categories', fn (Builder $roomCategoryBuilder) => $roomCategoryBuilder
+                            ->whereIn('room_categories.id', $roomCategoryIds)))
+                )
+            )
+            ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
+            ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', true))
+            ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
+            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null));
     }
 
     private function setDefaultDates(){

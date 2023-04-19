@@ -17,7 +17,6 @@
                 <thead class="w-full">
                 <tr class=" w-full flex bg-userBg">
                     <th class="w-16">
-
                     </th>
                     <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"  class="py-3 border-r-4 border-secondaryHover">
                         <div :style="textStyle" class="flex font-semibold items-center ml-4">

@@ -738,6 +738,12 @@ export default {
             });
     },
     methods: {
+        addHoverToEvent(event){
+            console.log(event)
+        },
+        removeHoverToEvent(event){
+            console.log(event)
+        },
         applyFilter(filter) {
             this.calendarFilters = filter;
             this.changeChecked(this.rooms, 'rooms')

@@ -37,12 +37,13 @@
 </template>
 
 <script>
-import { Dialog, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 
 export default {
     name: "ChangeAllSubmitModal",
     components: {
+        DialogPanel,
         Dialog,
         DialogTitle,
         TransitionChild,

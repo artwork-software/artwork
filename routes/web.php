@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AppController;
 use App\Http\Controllers\AreaController;
+use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ChecklistController;
 use App\Http\Controllers\ChecklistTemplateController;
@@ -466,5 +467,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // MultiEdit
     Route::patch('/multi-edit', [\App\Http\Controllers\EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
+
+    // Calendar
+    Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');
 });
 

@@ -135,6 +135,9 @@ class EventController extends Controller
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
 
+        $rooms = Room::query()->unless(is_null(request('roomIds')),
+                fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))->get();
+
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
@@ -144,7 +147,7 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => Room::all(),
+            'rooms' => $rooms,
             'eventsAtAGlance' => $eventsAtAGlance,
         ]);
     }

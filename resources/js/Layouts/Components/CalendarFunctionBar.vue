@@ -10,7 +10,8 @@
                     <ChevronRightIcon class="h-5 w-5 text-primary"/>
                 </button>
             </div>
-            <SwitchGroup v-else as="div" class="flex items-center ml-2">
+            <div v-else class="flex items-center">
+              <SwitchGroup v-else as="div" class="flex items-center ml-2">
                 <Switch v-model="atAGlance" @click="changeAtAGlance()"
                         class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
                     <span class="sr-only">Use setting</span>
@@ -24,6 +25,22 @@
                     <span class="font-medium text-gray-900">Auf einen Blick</span>
                 </SwitchLabel>
             </SwitchGroup>
+                <SwitchGroup as="div" class="flex items-center ml-3">
+                    <Switch v-model="multiEdit" @click="changeMultiEdit(multiEdit)"
+                            class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
+                        <span class="sr-only">Use setting</span>
+                        <span aria-hidden="true" class="pointer-events-none absolute h-full w-full rounded-md bg-white"/>
+                        <span aria-hidden="true"
+                              :class="[multiEdit ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']"/>
+                        <span aria-hidden="true"
+                              :class="[multiEdit ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none absolute left-0 inline-block h-5 w-5 transform rounded-full border border-gray-200 bg-white shadow ring-0 transition-transform duration-200 ease-in-out']"/>
+                    </Switch>
+                    <SwitchLabel as="span" class="ml-3 text-sm">
+                        <span class="font-medium text-gray-900">Multiedit</span>
+                    </SwitchLabel>
+                </SwitchGroup>
+            </div>
+           
         </div>
 
 
@@ -136,17 +153,21 @@ export default {
         ZoomInIcon,
         ZoomOutIcon
     },
-    props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor','project'],
-    emits: ['changeAtAGlance', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
+    props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor'],
+    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
     data() {
         return {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
+            multiEdit: false,
         }
     },
     methods: {
         changeAtAGlance() {
             this.$emit('changeAtAGlance')
+        },
+        changeMultiEdit(multiEdit) {
+            this.$emit('changeMultiEdit', !multiEdit)
         },
         enterFullscreenMode() {
             this.$emit('enterFullscreenMode')

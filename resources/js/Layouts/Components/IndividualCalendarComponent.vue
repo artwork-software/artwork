@@ -3,6 +3,7 @@
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
+                                 @change-multi-edit="changeMultiEdit"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
                  @click="openEventsWithoutRoomComponent()"
@@ -34,12 +35,15 @@
                         <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
                             <SingleCalendarEvent :project="project" :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
+
+
                         </div>
                     </td>
                 </tr>
                 </tbody>
             </table>
         </div>
+
     </div>
 
     <event-component
@@ -65,6 +69,13 @@
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
+    <div v-show="multiEdit" class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben" @click="openMultiEditModal"/>
+        <AddButton mode="modal" class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none" text="Termine löschen"/>
+    </div>
+
+    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms" @closed="closeMultiEditModal" />
+
 </template>
 
 <script>
@@ -75,11 +86,15 @@ import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomCo
 import {ExclamationIcon} from "@heroicons/vue/outline";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
+import AddButton from "@/Layouts/Components/AddButton.vue";
+import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     components: {
+        MultiEditModal,
+        AddButton,
         CalendarFunctionBar,
         SingleCalendarEvent,
         IndividualCalendarFilterComponent,
@@ -96,7 +111,10 @@ export default {
             wantedRoom: null,
             roomCollisions: [],
             isFullscreen: false,
-            zoomFactor: 1
+            zoomFactor: 1,
+            multiEdit: false,
+            editEvents: [],
+            showMultiEditModal: false,
         }
     },
     props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project'],
@@ -115,8 +133,11 @@ export default {
         },
     },
     methods: {
-        changeAtAGlance() {
-            this.$emit('changeAtAGlance')
+        changeMultiEdit(multiEdit){
+            this.multiEdit = multiEdit;
+        },
+        changeAtAGlance(atAGlance) {
+            this.$emit('changeAtAGlance', atAGlance)
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
@@ -160,7 +181,28 @@ export default {
             Inertia.reload();
         },
 
+        openMultiEditModal(){
+            this.getCheckedEvents();
 
+
+            this.showMultiEditModal = true;
+        },
+        getCheckedEvents(){
+            const eventArray = [];
+            this.days.forEach((day) => {
+                this.calendarData.forEach((room) => {
+                    room[day].data.forEach((event) => {
+                        if(event.clicked){
+                            eventArray.push(event.id)
+                        }
+                    })
+                })
+            })
+            this.editEvents = eventArray
+        },
+        closeMultiEditModal(){
+            this.showMultiEditModal = false;
+        },
         /* View in fullscreen */
         openFullscreen() {
             let elem = document.getElementById("myCalendar");

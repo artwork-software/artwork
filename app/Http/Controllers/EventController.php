@@ -55,6 +55,10 @@ class EventController extends Controller
         $this->history = new NewHistoryService('App\Models\Event');
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function viewEventIndex(Request $request): Response
     {
 
@@ -92,6 +96,10 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function showDashboardPage(Request $request): Response
     {
         $calendar = new CalendarController();
@@ -141,6 +149,10 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function viewRequestIndex(Request $request): Response
     {
         // Todo: filter room for visible for authenticated user
@@ -154,6 +166,10 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @param EventStoreRequest $request
+     * @return CalendarEventResource
+     */
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         // Adjoining Room / Event check
@@ -183,6 +199,11 @@ class EventController extends Controller
         return new CalendarEventResource($event);
     }
 
+    /**
+     * @param EventStoreRequest $request
+     * @return void
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     private function adjoiningRoomsCheck(EventStoreRequest $request) {
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
         foreach ($joiningEvents as $joiningEvent){
@@ -211,6 +232,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param $conflict
+     * @param User $user
+     * @return void
+     */
     private function createAdjoiningAudienceNotification($conflict, User $user) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
@@ -224,6 +250,11 @@ class EventController extends Controller
         $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param $conflict
+     * @param User $user
+     * @return void
+     */
     private function createAdjoiningLoudNotification($conflict, User $user) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Lauter Termin im Nebenraum';
@@ -237,6 +268,10 @@ class EventController extends Controller
         $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param $collision
+     * @return void
+     */
     private function createConflictNotification($collision) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
         $this->notificationData->title = 'Terminkonflikt';
@@ -252,6 +287,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param $request
+     * @param $event
+     * @return void
+     */
     private function associateProject($request, $event) {
         $project = Project::create(['name' => $request->get('projectName')]);
         $project->users()->save(Auth::user(), ['access_budget' => true]);
@@ -261,6 +301,11 @@ class EventController extends Controller
         $event->save();
     }
 
+    /**
+     * @param $request
+     * @param $event
+     * @return void
+     */
     private function createRequestNotification($request, $event) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->title = 'Neue Raumanfrage';
@@ -384,6 +429,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param EventAcceptionRequest $request
+     * @param Event $event
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
         DatabaseNotification::query()
@@ -424,6 +474,10 @@ class EventController extends Controller
         return Redirect::back();
     }
 
+    /**
+     * @param Request $request
+     * @return int
+     */
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -436,6 +490,10 @@ class EventController extends Controller
             ->count();
     }
 
+    /**
+     * @param EventIndexRequest $request
+     * @return CalendarEventCollectionResource[]
+     */
     public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));
@@ -498,6 +556,9 @@ class EventController extends Controller
         ];
     }
 
+    /**
+     * @return Response|\Inertia\ResponseFactory
+     */
     public function getTrashed(): Response|\Inertia\ResponseFactory
     {
         return inertia('Trash/Events', [
@@ -546,6 +607,11 @@ class EventController extends Controller
         $this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -556,6 +622,10 @@ class EventController extends Controller
         return Redirect::route('events.trashed')->with('success', 'Event deleted');
     }
 
+    /**
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function restore(int $id): \Illuminate\Http\RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -667,9 +737,108 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param int $eventId
+     * @param $isLoudOld
+     * @param $isLoudNew
+     * @param $audienceOld
+     * @param $audienceNew
+     * @return void
+     */
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew){
         if($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew){
             $this->history->createHistory($eventId, 'Termineigenschaft geändert');
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return void
+     */
+    public function updateMultiEdit(Request $request){
+        $eventIds = $request->events;
+
+        foreach ($eventIds as $eventId){
+            $event = Event::find($eventId);
+            if($request->newRoomId !== null){
+                $event->room_id = $request->newRoomId;
+            }
+            if($request->date === null){
+                if($request->value !== 0){
+                    $endDate = Carbon::parse($event->end_time);
+                    $startDate = Carbon::parse($event->start_time);
+
+                    // plus
+                    if($request->calculationType === 1){
+                        // stunden
+                        if($request->type === 1){
+                            $event->start_time = $startDate->addHours($request->value);
+                            $event->end_time = $endDate->addHours($request->value);
+                        }
+                        // Tage
+                        if($request->type === 2){
+                            $event->start_time = $startDate->addDays($request->value);
+                            $event->end_time = $endDate->addDays($request->value);
+                        }
+                        // Wochen
+                        if($request->type === 3){
+                            $event->start_time = $startDate->addWeeks($request->value);
+                            $event->end_time = $endDate->addWeeks($request->value);
+                        }
+                        // Monate
+                        if($request->type === 4){
+                            $event->start_time = $startDate->addMonths($request->value);
+                            $event->end_time = $endDate->addMonths($request->value);
+                        }
+                        // Jahre
+                        if($request->type === 5){
+                            $event->start_time = $startDate->addYears($request->value);
+                            $event->end_time = $endDate->addYears($request->value);
+                        }
+                    }
+
+                    // plus
+                    if($request->calculationType === 2){
+                        // stunden
+                        if($request->type === 1){
+                            $event->start_time = $startDate->subHours($request->value);
+                            $event->end_time = $endDate->subHours($request->value);
+                        }
+                        // Tage
+                        if($request->type === 2){
+                            $event->start_time = $startDate->subDays($request->value);
+                            $event->end_time = $endDate->subDays($request->value);
+                        }
+                        // Wochen
+                        if($request->type === 3){
+                            $event->start_time = $startDate->subWeeks($request->value);
+                            $event->end_time = $endDate->subWeeks($request->value);
+                        }
+                        // Monate
+                        if($request->type === 4){
+                            $event->start_time = $startDate->subMonths($request->value);
+                            $event->end_time = $endDate->subMonths($request->value);
+                        }
+                        // Jahre
+                        if($request->type === 5){
+                            $event->start_time = $startDate->subYears($request->value);
+                            $event->end_time = $endDate->subYears($request->value);
+                        }
+                    }
+                }
+            } else {
+                $endTime = Carbon::parse($event->end_time)->format('H:i:s');
+                $startTime = Carbon::parse($event->start_time)->format('H:i:s');
+
+                $date = Carbon::parse($request->date)->format('Y-m-d');
+
+                $event->start_time = $date . ' '. $startTime;
+                $event->end_time = $date . ' '. $endTime;
+            }
+
+
+            $event->save();
         }
     }
 

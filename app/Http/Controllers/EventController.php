@@ -302,6 +302,8 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
             ->orWhereJsonContains("data->type", "ROOM_REQUEST")
@@ -372,6 +374,21 @@ class EventController extends Controller
         $this->checkEventOptionChanges($event->id, $oldIsLoud, $newIsLoud, $oldAudience, $newAudience);
 
         $this->createEventScheduleNotification($event);
+
+        // get time diff
+        $oldEventStartDateDays = Carbon::create($oldEventStartDate);
+        $oldEventEndDate = Carbon::create($oldEventEndDate);
+
+        $newEventStartDateDays = Carbon::parse($newEventStartDate);
+        $newEventEndDate = Carbon::parse($newEventEndDate);
+
+        $diffStartDays = $oldEventStartDateDays->diffInDays($newEventStartDateDays, false);
+        $diffEndDays = $oldEventEndDate->diffInDays($newEventEndDate, false);
+
+        $diffStartMinutes = $oldEventStartDateDays->diffInRealMinutes($newEventStartDate, false);
+        $diffEndMinutes = $oldEventStartDateDays->diffInMinutes($newEventStartDate, false);
+
+
         if($request->allSeriesEvents){
             if($event->is_series){
                 $seriesEvents = Event::where('series_id', $event->series_id)->get();
@@ -386,6 +403,8 @@ class EventController extends Controller
                         'event_type_id' => $event->event_type_id,
                         'room_id' => $event->room_id,
                         'project_id' => $event->project_id,
+                        'start_time' => Carbon::parse($seriesEvent->start_time)->addDays($diffStartDays)->addMinutes($diffStartMinutes),
+                        'end_time' => Carbon::parse($seriesEvent->end_time)->addDays($diffEndDays)->addMinutes($diffEndMinutes),
                     ]);
                 }
             }

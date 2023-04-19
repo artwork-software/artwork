@@ -349,8 +349,6 @@
                 v-model:active-view="currentView"
                 @event-drag-create="openEventComponent($event)"
                 @event-focus="openEventComponent($event)"
-                @event-mouse-enter="addHoverToEvent($event)"
-                @event-mouse-leave="removeHoverToEvent($event)"
                 @ready="fetchEvents"
                 @view-change="fetchEvents($event)"
             >

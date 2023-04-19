@@ -65,7 +65,7 @@ export default {
             this.$emit('single', bool)
         },
         allElement(bool){
-            //this.$emit('all', bool)
+            this.$emit('all', bool)
             setTimeout(() => {
                 this.clickedAll = true
             }, 5000)

@@ -183,7 +183,7 @@ export default {
 
         openMultiEditModal(){
             this.getCheckedEvents();
-
+            console.log(this.calendarData)
 
             this.showMultiEditModal = true;
         },
@@ -191,7 +191,7 @@ export default {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
-                    room[day].data.forEach((event) => {
+                    room[day.day].data.forEach((event) => {
                         if(event.clicked){
                             eventArray.push(event.id)
                         }

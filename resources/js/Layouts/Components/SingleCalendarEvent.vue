@@ -36,6 +36,13 @@
                     </svg>
                 </button>
             </div>
+            <div v-else class="flex justify-center items-center h-full gap-2">
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input v-model="event.clicked" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600" />
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="px-1 py-0.5 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"

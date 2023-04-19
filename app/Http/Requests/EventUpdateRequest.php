@@ -28,7 +28,7 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'is_series' => $this->get('is_series'),
             'frequency' => $this->get('seriesFrequency'),
             'seriesEnd' => $this->get('seriesEndDate'),
-            'allSeriesEvents' => $this->get('allSeriesEvents')
+            'allSeriesEvents' => $this->get('allSeriesEvents'),
             'adminComment' => $this->get('adminComment'),
             'optionString' => $this->get('optionString')
         ];

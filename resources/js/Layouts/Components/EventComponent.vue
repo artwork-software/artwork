@@ -13,7 +13,7 @@
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
                             {{
-                                this.event?.id ? this.event.occupancy_option ? 'Belegung ändern & zusagen' : 'Termin' : 'Neue Raumbelegung'
+                                this.event?.id ? this.event?.occupancy_option ? 'Belegung ändern & zusagen' : 'Termin' : 'Neue Raumbelegung'
                             }}
                         </div>
                         <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option))">
@@ -424,7 +424,7 @@
                     <div v-else-if="this.description" class="mt-4 xsDark">
                         {{ this.description }}
                     </div>
-                    <div v-if="this.event.occupancy_option && canEdit">
+                    <div v-if="this.event?.occupancy_option && canEdit">
                         <textarea v-if="canEdit" placeholder="Kommentar zur Belegung (Anfragende*r wird benachrichtigt)"
                                   id="adminComment"
                                   :disabled="!canEdit"
@@ -432,7 +432,7 @@
                                   rows="4"
                                   class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
-                    <div v-if="this.event.occupancy_option && canEdit" class="flex py-2 items-center">
+                    <div v-if="this.event?.occupancy_option && canEdit" class="flex py-2 items-center">
                         <label for="accept-toggle" class="inline-flex relative items-center cursor-pointer">
                             <input type="checkbox"
                                    v-model="accept"
@@ -493,7 +493,7 @@
                     </div>
                 </div>
                 <!-- Serien Termin -->
-                <div>
+                <div v-if="!this.event">
                     <SwitchGroup as="div" class="flex items-center">
                         <Switch v-model="series" :class="[series ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-3 w-8 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-1 focus:ring-indigo-600 focus:ring-offset-2']">
                             <span aria-hidden="true" :class="[series ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
@@ -552,7 +552,7 @@
                                 :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent()">
-                            {{ this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : 'Speichern'}}
+                            {{ this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : 'Speichern' : 'Speichern'}}
                         </button>
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>

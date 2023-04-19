@@ -1,20 +1,29 @@
 <template>
-    <div>
+    <div v-if="!project">
         <div class="flex items-center">
             <CalendarIcon class="w-5 h-5 mr-2" @click="this.showDateRangePicker = !this.showDateRangePicker"/>
-            <input v-model="dateValue[0]"
+            <input v-model="dateValueArray[0]"
+                   @change="this.updateTimes"
                    id="startDate"
                    type="date"
+                   :disabled="!!project"
                    placeholder="Start"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
-            <input v-model="dateValue[1]"
+            <input v-model="dateValueArray[1]"
+                   @change="this.updateTimes"
+                   :disabled="!!project"
                    id="endDate"
                    type="date"
                    class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
         </div>
-        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker" no-input :shortcuts="customShortcuts"
-                                 :placeholder="dateValue[0] - dateValue[1]" separator=" - " :formatter="formatter"
-                                 :options="this.datePickerOptions" i18n="de" v-model="dateValue"/>
+        <vue-tailwind-datepicker class="absolute z-50" v-if="this.showDateRangePicker && dateValuePicker" no-input
+                                 :shortcuts="customShortcuts"
+                                 :placeholder="dateValuePicker[0] - dateValuePicker[1]" separator=" - " :formatter="formatter"
+                                 :options="this.datePickerOptions" @update:modelValue="dateValueArray = $event" i18n="de"
+                                 v-model="dateValuePicker"/>
+    </div>
+    <div class="font-medium text-gray-900" v-else>
+        Projektzeitraum: {{new Date(dateValueArray[0]).format("DD.MM.YYYY")}} - {{new Date(dateValueArray[1]).format("DD.MM.YYYY")}}
     </div>
 </template>
 
@@ -26,6 +35,7 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
+
 
 const datePickerOptions = ref({
     shortcuts: {
@@ -73,32 +83,41 @@ const customShortcuts = () => {
 export default {
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
-    props: ['dateValueArray'],
+    props: ['dateValueArray','project'],
     data() {
         return {
             dateValue: this.dateValueArray ? this.dateValueArray : [],
             datePickerOptions: datePickerOptions,
+            dateValuePicker: this.dateValueArray ? this.dateValueArray: [],
             formatter: formatter,
             showDateRangePicker: false,
-            refreshKey: 1,
+            refreshPage: false,
             customShortcuts: customShortcuts,
         }
-
     },
     watch: {
-        dateValue: {
+        dateValuePicker: {
             handler() {
                 this.showDateRangePicker = false;
-                    Inertia.reload({
-                        data: {
-                            startDate: this.dateValue[0],
-                            endDate: this.dateValue[1],
-                        }
-                    })
-            },
-            deep: true
+                Inertia.reload({
+                    data: {
+                        startDate: this.dateValueArray[0],
+                        endDate: this.dateValueArray[1],
+                    }
+                })
+            }
         }
     },
+    methods: {
+        updateTimes() {
+            Inertia.reload({
+                data: {
+                    startDate: this.dateValueArray[0],
+                    endDate: this.dateValueArray[1],
+                }
+            })
+        },
+    }
 }
 </script>
 

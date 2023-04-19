@@ -1,17 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Support\Services;
 
 use Antonrom\ModelChangesHistory\Models\Change;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
-class HistoryController extends Controller
+class NewHistoryService
 {
-    public function __construct(protected string $modelObject)
-    {
-
-    }
+    public function __construct(protected string $modelObject){}
 
     public function createHistory(int $modelId, string $historyText, string $type = 'project'): void
     {

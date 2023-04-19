@@ -463,5 +463,8 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/sub-event/add', [\App\Http\Controllers\SubEventsController::class, 'store'])->name('subEvent.add');
     Route::delete('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'destroy'])->name('subEvent.delete');
     Route::patch('/sub-event/{subEvents}', [\App\Http\Controllers\SubEventsController::class, 'update'])->name('subEvent.update');
+
+    // MultiEdit
+    Route::patch('/multi-edit', [\App\Http\Controllers\EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
 });
 

@@ -1099,7 +1099,6 @@ export default {
             this.editingChecklist = true;
         },
         createTemplateFromChecklist(checklist) {
-            console.log('HEHE');
             this.templateForm.checklist_id = checklist.id;
             this.templateForm.post(route('checklist_templates.store'));
         },

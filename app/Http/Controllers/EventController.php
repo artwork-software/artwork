@@ -25,6 +25,8 @@ use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
 use App\Support\Services\HistoryService;
+use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,32 +41,70 @@ use Inertia\Response;
 class EventController extends Controller
 {
 
-    protected ?NotificationController $notificationController = null;
+    protected ?NotificationService $notificationService = null;
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
-    protected ?HistoryController $history = null;
+    protected ?NewHistoryService $history = null;
 
     public function __construct()
     {
         $this->collisionService = new CollisionService();
-        $this->notificationController = new NotificationController();
+        $this->notificationService = new NotificationService();
         $this->notificationData = new \stdClass();
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-        $this->history = new HistoryController('App\Models\Event');
+        $this->history = new NewHistoryService('App\Models\Event');
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function viewEventIndex(Request $request): Response
     {
+
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData();
+
+        $eventsAtAGlance = [];
+
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        if(\request('atAGlance') === 'true') {
+            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room', 'project', 'creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        }
+
         return inertia('Events/EventManagement', [
-            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve()
+            'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'dateValue'=> $showCalendar['dateValue'],
+            'calendarType' => $showCalendar['calendarType'],
+            'selectedDate' => $showCalendar['selectedDate'],
+            'eventsAtAGlance' => $eventsAtAGlance,
+            'rooms' => Room::all(),
+
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function showDashboardPage(Request $request): Response
     {
         $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData();
+        $showCalendar = $calendar->createCalendarData('dashboard');
 
         $projects = Project::query()->with( ['managerUsers'])->get();
 
@@ -77,18 +117,42 @@ class EventController extends Controller
             )
             ->get();
 
+        $eventsAtAGlance = [];
+
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        if(\request('atAGlance') === 'true') {
+            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->whereBetween('end_time', [$startDate, $endDate])
+                ->with(['room', 'project', 'creator'])
+                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        }
+
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
             'eventTypes' => EventTypeResource::collection(EventType::all())->resolve(),
             'calendar' => $showCalendar['roomsWithEvents'],
             'days' => $showCalendar['days'],
-            'dateValue'=>$showCalendar['dateValue'],
+            'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
+            'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => Room::all(),
+            'eventsAtAGlance' => $eventsAtAGlance,
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return Response
+     */
     public function viewRequestIndex(Request $request): Response
     {
         // Todo: filter room for visible for authenticated user
@@ -102,6 +166,10 @@ class EventController extends Controller
         ]);
     }
 
+    /**
+     * @param EventStoreRequest $request
+     * @return CalendarEventResource
+     */
     public function storeEvent(EventStoreRequest $request): CalendarEventResource
     {
         // Adjoining Room / Event check
@@ -154,7 +222,7 @@ class EventController extends Controller
         if(!empty($firstEvent->project()->get())){
             $eventProject = $firstEvent->project()->first();
             if($eventProject){
-                $projectHistory = new HistoryController('App\Models\Project');
+                $projectHistory = new NewHistoryService('App\Models\Project');
                 $projectHistory->createHistory($eventProject->id, 'Ablaufplan hinzugefügt');
             }
         }
@@ -190,6 +258,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param EventStoreRequest $request
+     * @return void
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     private function adjoiningRoomsCheck(EventStoreRequest $request) {
         $joiningEvents = $this->collisionService->adjoiningCollision($request);
         foreach ($joiningEvents as $joiningEvent){
@@ -218,6 +291,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param $conflict
+     * @param User $user
+     * @return void
+     */
     private function createAdjoiningAudienceNotification($conflict, User $user) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Termin mit Publikum im Nebenraum';
@@ -228,9 +306,14 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param $conflict
+     * @param User $user
+     * @return void
+     */
     private function createAdjoiningLoudNotification($conflict, User $user) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT;
         $this->notificationData->title = 'Lauter Termin im Nebenraum';
@@ -241,12 +324,14 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param $collision
+     * @return void
+     */
     private function createConflictNotification($collision) {
-        // TODO:: FIX NOTIFICATION -> [2023-02-08 09:43:28] staging.ERROR: Call to a member function notificationSettings() on null {"userId":1,"exception":"[object] (Error(code: 0): Call to a member function notificationSettings() on null at /home/ploi/artwork.caldero-systems.de/app/Notifications/ConflictNotification.php:37)
-        //[stacktrace]
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_CONFLICT;
         $this->notificationData->title = 'Terminkonflikt';
         $this->notificationData->conflict = $collision;
@@ -257,10 +342,15 @@ class EventController extends Controller
             'message' => $this->notificationData->title
         ];
         if(!empty($collision['created_by'])){
-            $this->notificationController->create($collision['created_by'], $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($collision['created_by'], $this->notificationData, $broadcastMessage);
         }
     }
 
+    /**
+     * @param $request
+     * @param $event
+     * @return void
+     */
     private function associateProject($request, $event) {
         $project = Project::create(['name' => $request->get('projectName')]);
         $project->users()->save(Auth::user(), ['access_budget' => true]);
@@ -270,6 +360,11 @@ class EventController extends Controller
         $event->save();
     }
 
+    /**
+     * @param $request
+     * @param $event
+     * @return void
+     */
     private function createRequestNotification($request, $event) {
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $this->notificationData->title = 'Neue Raumanfrage';
@@ -285,11 +380,11 @@ class EventController extends Controller
         $admins = $room->room_admins()->get();
         if(!empty($admins)){
             foreach ($admins as $admin){
-                $this->notificationController->create($admin, $this->notificationData, $broadcastMessage);
+                $this->notificationService->create($admin, $this->notificationData, $broadcastMessage);
             }
         } else {
             $user = User::find($room->user_id);
-            $this->notificationController->create($user, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
     }
 
@@ -319,7 +414,7 @@ class EventController extends Controller
                 'type' => 'success',
                 'message' => $this->notificationData->title
             ];
-            $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
+            $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
         }
 
         $this->authorize('update', $event);
@@ -347,7 +442,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan geändert');
         }
 
@@ -436,6 +531,11 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param EventAcceptionRequest $request
+     * @param Event $event
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
         DatabaseNotification::query()
@@ -471,11 +571,15 @@ class EventController extends Controller
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST;
         $this->notificationData->event = $event;
         $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $this->notificationController->create($event->creator, $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
     }
 
+    /**
+     * @param Request $request
+     * @return int
+     */
     public function getCollisionCount(Request $request): int
     {
         $start = Carbon::parse($request->query('start'))->setTimezone(config('app.timezone'));
@@ -488,6 +592,10 @@ class EventController extends Controller
             ->count();
     }
 
+    /**
+     * @param EventIndexRequest $request
+     * @return CalendarEventCollectionResource[]
+     */
     public function eventIndex(EventIndexRequest $request): array
     {
         $calendarFilters = json_decode($request->input('calendarFilters'));
@@ -550,6 +658,9 @@ class EventController extends Controller
         ];
     }
 
+    /**
+     * @return Response|\Inertia\ResponseFactory
+     */
     public function getTrashed(): Response|\Inertia\ResponseFactory
     {
         return inertia('Trash/Events', [
@@ -577,7 +688,7 @@ class EventController extends Controller
 
         if(!empty($event->project_id)){
             $eventProject = $event->project()->first();
-            $projectHistory = new HistoryController('App\Models\Project');
+            $projectHistory = new NewHistoryService('App\Models\Project');
             $projectHistory->createHistory($eventProject->id, 'Ablaufplan gelöscht');
         }
 
@@ -595,9 +706,14 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $this->notificationData->title
         ];
-        $this->notificationController->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
+        $this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
     }
 
+    /**
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
     public function forceDelete(int $id): \Illuminate\Http\RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -608,6 +724,10 @@ class EventController extends Controller
         return Redirect::route('events.trashed')->with('success', 'Event deleted');
     }
 
+    /**
+     * @param int $id
+     * @return \Illuminate\Http\RedirectResponse
+     */
     public function restore(int $id): \Illuminate\Http\RedirectResponse
     {
         $event = Event::onlyTrashed()->findOrFail($id);
@@ -719,9 +839,108 @@ class EventController extends Controller
         }
     }
 
+    /**
+     * @param int $eventId
+     * @param $isLoudOld
+     * @param $isLoudNew
+     * @param $audienceOld
+     * @param $audienceNew
+     * @return void
+     */
     private function checkEventOptionChanges(int $eventId, $isLoudOld, $isLoudNew, $audienceOld, $audienceNew){
         if($isLoudOld !== $isLoudNew || $audienceOld !== $audienceNew){
             $this->history->createHistory($eventId, 'Termineigenschaft geändert');
+        }
+    }
+
+
+    /**
+     * @param Request $request
+     * @return void
+     */
+    public function updateMultiEdit(Request $request){
+        $eventIds = $request->events;
+
+        foreach ($eventIds as $eventId){
+            $event = Event::find($eventId);
+            if($request->newRoomId !== null){
+                $event->room_id = $request->newRoomId;
+            }
+            if($request->date === null){
+                if($request->value !== 0){
+                    $endDate = Carbon::parse($event->end_time);
+                    $startDate = Carbon::parse($event->start_time);
+
+                    // plus
+                    if($request->calculationType === 1){
+                        // stunden
+                        if($request->type === 1){
+                            $event->start_time = $startDate->addHours($request->value);
+                            $event->end_time = $endDate->addHours($request->value);
+                        }
+                        // Tage
+                        if($request->type === 2){
+                            $event->start_time = $startDate->addDays($request->value);
+                            $event->end_time = $endDate->addDays($request->value);
+                        }
+                        // Wochen
+                        if($request->type === 3){
+                            $event->start_time = $startDate->addWeeks($request->value);
+                            $event->end_time = $endDate->addWeeks($request->value);
+                        }
+                        // Monate
+                        if($request->type === 4){
+                            $event->start_time = $startDate->addMonths($request->value);
+                            $event->end_time = $endDate->addMonths($request->value);
+                        }
+                        // Jahre
+                        if($request->type === 5){
+                            $event->start_time = $startDate->addYears($request->value);
+                            $event->end_time = $endDate->addYears($request->value);
+                        }
+                    }
+
+                    // plus
+                    if($request->calculationType === 2){
+                        // stunden
+                        if($request->type === 1){
+                            $event->start_time = $startDate->subHours($request->value);
+                            $event->end_time = $endDate->subHours($request->value);
+                        }
+                        // Tage
+                        if($request->type === 2){
+                            $event->start_time = $startDate->subDays($request->value);
+                            $event->end_time = $endDate->subDays($request->value);
+                        }
+                        // Wochen
+                        if($request->type === 3){
+                            $event->start_time = $startDate->subWeeks($request->value);
+                            $event->end_time = $endDate->subWeeks($request->value);
+                        }
+                        // Monate
+                        if($request->type === 4){
+                            $event->start_time = $startDate->subMonths($request->value);
+                            $event->end_time = $endDate->subMonths($request->value);
+                        }
+                        // Jahre
+                        if($request->type === 5){
+                            $event->start_time = $startDate->subYears($request->value);
+                            $event->end_time = $endDate->subYears($request->value);
+                        }
+                    }
+                }
+            } else {
+                $endTime = Carbon::parse($event->end_time)->format('H:i:s');
+                $startTime = Carbon::parse($event->start_time)->format('H:i:s');
+
+                $date = Carbon::parse($request->date)->format('Y-m-d');
+
+                $event->start_time = $date . ' '. $startTime;
+                $event->end_time = $date . ' '. $endTime;
+            }
+
+
+            $event->save();
         }
     }
 

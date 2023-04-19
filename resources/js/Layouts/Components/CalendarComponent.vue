@@ -2,7 +2,7 @@
 
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
         <div class="bg-white">
-        <CalendarFunctionBar @enterFullscreenMode="openFullscreen" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <CalendarFunctionBar @open-event-component="openEventComponent" @nextDay="nextDay" @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
         <!-- <div class="inline-flex mb-5">
             <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
                 <div>
@@ -588,9 +588,9 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent";
 import BaseFilter from "@/Layouts/Components/BaseFilter";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: 'CalendarComponent',
@@ -641,17 +641,18 @@ export default {
         EventsWithoutRoomComponent,
         UserTooltip,
     },
-    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue'],
+    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue','selectedDate'],
     emits:['changeAtAGlance'],
     data() {
         return {
             displayDate: '',
             filters: [],
-            dateValue: this.dateValue ? this.dateValue : [],
+            dateValueArray: this.dateValue ? this.dateValue : [],
             filterIds: {},
             filterName: '',
             wantedSplit: null,
-            selectedDate: null,
+            eventsSinceDateValue: null,
+            eventsUntilDateValue: null,
             calendarFilters: {
                 rooms: [],
                 areas: [],
@@ -730,6 +731,12 @@ export default {
 
         }
     },
+    created() {
+        Echo.private('events')
+            .listen('OccupancyUpdated', () => {
+                this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+            });
+    },
     methods: {
         applyFilter(filter) {
             this.calendarFilters = filter;
@@ -754,8 +761,8 @@ export default {
                 endDate: this.eventsUntil,
             });
         },
-        changeAtAGlance(atAGlance){
-            this.$emit('changeAtAGlance', atAGlance)
+        changeAtAGlance(){
+            this.$emit('changeAtAGlance')
         },
         changeChecked(array, filterName) {
             array.forEach(object => {
@@ -1024,7 +1031,6 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
-
         /**
          * Fetch the events from server
          * initialise possible rooms, types and projects
@@ -1142,10 +1148,7 @@ export default {
         },
         setDisplayDate(view, startDate) {
 
-            if (view === 'day') {
-                const options = {weekday: 'long', year: 'numeric', month: 'short', day: 'numeric'};
-                this.displayDate = startDate.toLocaleDateString('de-DE', options)
-            } else if (view === 'week') {
+           if (view === 'week') {
                 let beginOfYear = new Date(startDate.getFullYear(), 0, 1);
                 let days = Math.floor((startDate - beginOfYear) /
                     (24 * 60 * 60 * 1000));
@@ -1167,7 +1170,16 @@ export default {
             } else if (elem.msRequestFullscreen) { /* IE11 */
                 elem.msRequestFullscreen();
             }
-        }
+        },
+        nextDay(){
+            this.$refs.vuecal.next();
+        },
+        previousDay(){
+            this.$refs.vuecal.previous();
+        },
+        formatDate(date){
+            return new Date((new Date(date)).getTime() - ((new Date(date)).getTimezoneOffset() * 60000)).toISOString().slice(0,10);
+        },
     }
 }
 </script>

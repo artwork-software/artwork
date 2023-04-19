@@ -145,7 +145,7 @@
                             <div class="flex">
                                 <span class="-ml-1" v-for="(user,index) in task.money_source_task_users">
                                     <NewUserToolTip :height="7" :width="7" v-if="user"
-                                                    :user="user" :id="index"/>
+                                                    :user="user" :id="index" :class="index === 1  ? '-ml-3' : ''"/>
                                 </span>
                             </div>
                         </div>

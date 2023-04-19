@@ -33,6 +33,8 @@ class EventStoreOrUpdateRequest extends FormRequest
             'projectId' => ['required_if:projectIdMandatory,true', 'nullable', 'exists:projects,id'],
             'projectName' => ['required_unless:creatingProject,false', 'nullable', 'string'],
             'eventTypeId' => ['required', 'exists:event_types,id'],
+            'adminComment' => ['sometimes','nullable','string'],
+            'optionString' => ['sometimes','nullable','string'],
         ];
     }
 }

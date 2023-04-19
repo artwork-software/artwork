@@ -16,11 +16,18 @@
                 <div>
                     <div v-if="calendarType && calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                            <CalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                            <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
                         </div>
                     </div>
                     <div v-else>
-                    <IndividualCalendarComponent :dateValue="dateValue" :eventTypes=this.eventTypes :calendarData="calendar" :rooms="rooms" :days="days" />
+                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
+                                                             @change-at-a-glance="changeAtAGlance"
+                                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                                             :rooms="rooms"
+                                                             :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
+                        <IndividualCalendarComponent :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
+                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
+                                                     :calendarData="calendar" :rooms="rooms" :days="days"/>
                     </div>
                 </div>
             </div>
@@ -103,10 +110,12 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
+import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType'],
+    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType','selectedDate','eventsAtAGlance'],
     components: {
+        IndividualCalendarAtGlanceComponent,
         AppLayout,
         CalendarIcon,
         ChevronRightIcon,
@@ -124,9 +133,10 @@ export default defineComponent({
         IndividualCalendarComponent
     },
     created() {
+        console.log("Dashboard")
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
-                Inertia.reload({only: ['rooms']})
+                Inertia.reload({only: ['rooms', 'calendar', 'days']})
             });
     },
     computed: {
@@ -156,6 +166,9 @@ export default defineComponent({
             this.doneTaskForm.done = task.done;
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         },
+        changeAtAGlance() {
+            this.atAGlance = !this.atAGlance;
+        }
     },
     data() {
         return {
@@ -163,6 +176,19 @@ export default defineComponent({
                 done: false
             }),
             showIndividualCalendar: true,
+            atAGlance: this.eventsAtAGlance.length > 0,
+        }
+    },
+    watch: {
+        atAGlance: {
+            handler() {
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                    }
+                })
+            },
+            deep: true
         }
     },
 

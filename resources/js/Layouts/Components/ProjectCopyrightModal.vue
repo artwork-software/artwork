@@ -166,8 +166,6 @@ export default {
     },
     methods: {
         updateCollectingSociety(society) {
-            console.log("collectingSociety")
-            console.log(society)
             //this.collectingSociety = collectingSociety
         },
         updateData() {
@@ -176,7 +174,6 @@ export default {
             if(this.costCenter === null || this.costCenter.id === null){
                 this.costCenterForm.post(route('costCenter.store'));
             }else{
-                console.log('wahaha');
                 this.costCenterForm.patch(this.route('costCenter.update', this.costCenter?.id));
             }
 

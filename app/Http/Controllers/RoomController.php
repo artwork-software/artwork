@@ -132,6 +132,9 @@ class RoomController extends Controller
         $room->load('creator');
         $projects = Project::query()->with(['access_budget', 'managerUsers'])->get();
 
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarData('',null,$room);
+
         return inertia('Rooms/Show', [
             'room' => new RoomCalendarResource($room),
             'is_room_admin' => $room->users()->wherePivot('is_admin', true)->get()->contains(Auth::id()),
@@ -149,6 +152,11 @@ class RoomController extends Controller
             'available_rooms' => Room::where('id', '!=', $room->id)->get(),
             'adjoiningRoomIds' => $room->adjoining_rooms()->pluck('adjoining_room_id'),
             'adjoiningRooms' => AdjoiningRoomIndexResource::collection($room->adjoining_rooms),
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'dateValue'=> $showCalendar['dateValue'],
+            'calendarType' => $showCalendar['calendarType'],
+            'selectedDate' => $showCalendar['selectedDate'],
         ]);
     }
 

@@ -1,8 +1,10 @@
 <template>
     <jet-dialog-modal :show="true" @close="closeModal()">
         <template #content>
-            <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg" class="-ml-6 -mt-8 mb-4"/>
-            <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg" class="-ml-6 -mt-8 mb-4"/>
+            <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg"
+                 class="-ml-6 -mt-8 mb-4"/>
+            <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg"
+                 class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
@@ -10,14 +12,17 @@
                 <div v-if="canEdit">
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
-                            {{ this.event?.id ? 'Termin' : 'Neue Raumbelegung' }}
+                            {{
+                                this.event?.id ? this.event.occupancy_option ? 'Belegung ändern & zusagen' : 'Termin' : 'Neue Raumbelegung'
+                            }}
                         </div>
                         <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option))">
                             <MenuButton class="m-4">
                                 <DotsVerticalIcon class="h-6 w-6 text-gray-600" aria-hidden="true"/>
                             </MenuButton>
 
-                            <MenuItems class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                            <MenuItems
+                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <MenuItem v-if="event?.canAccept && event?.occupancy_option"
                                           @click="approveRequest(this.event)"
                                           class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
@@ -44,15 +49,19 @@
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
-                        <div v-else-if="event?.canDelete" class="flex mt-2 mr-2 cursor-pointer" @click="deleteComponentVisible = true">
-                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full" src="/Svgs/IconSvgs/icon_trash_white.svg"/>
+                        <div v-else-if="event?.canDelete" class="flex mt-2 mr-2 cursor-pointer"
+                             @click="deleteComponentVisible = true">
+                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full"
+                                 src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                         </div>
                     </h1>
                     <h2 v-if="!this.event?.id" class="xsLight mb-2">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
                     </h2>
                     <div v-else class="flex items-center">
-                        erstellt von <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
+                        erstellt von <img v-if="this.event.created_by" :data-tooltip-target="this.event.created_by.id"
+                                          :src="this.event.created_by.profile_photo_url"
+                                          :alt="this.event.created_by.last_name"
                                           class="ml-2 my-auto ring-white ring-2 rounded-full h-7 w-7 object-cover"/>
                         <div class="xsLight ml-3" v-else>
                             gelöschte Nutzer:in
@@ -69,12 +78,13 @@
                     <div class="w-1/2">
                         <div class=" w-full flex cursor-pointer truncate" v-if="!canEdit">
                             <EventTypeIconCollection :height="40" :width="40"
-                                                     :iconName="selectedEventType?.svg_name"/><p class="ml-2 flex items-center text-lg font-lexend font-semibold">
-                            {{ selectedEventType?.name }}
-                        </p>
+                                                     :iconName="selectedEventType?.svg_name"/>
+                            <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
+                                {{ selectedEventType?.name }}
+                            </p>
                         </div>
                         <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit"
-                                  id="eventType">
+                                 id="eventType">
                             <ListboxButton
                                 class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                 <div class="flex items-center my-auto">
@@ -101,10 +111,10 @@
                                                    v-slot="{ active, selected }">
                                         <li :class="[active ? ' text-white' : 'text-secondary', 'group hover:border-l-4 hover:border-l-success cursor-pointer flex justify-between items-center py-2 pl-3 pr-9 text-sm subpixel-antialiased']">
                                             <div class="flex">
-                                            <EventTypeIconCollection :height="12" :width="12"
-                                                                     :iconName="eventType?.svg_name"/>
-                                            <span
-                                                :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
+                                                <EventTypeIconCollection :height="12" :width="12"
+                                                                         :iconName="eventType?.svg_name"/>
+                                                <span
+                                                    :class="[selected ? 'xsWhiteBold' : 'font-normal', 'ml-4 block truncate']">
                                                         {{ eventType.name }}
                                                     </span>
                                             </div>
@@ -129,10 +139,11 @@
                                :disabled="!canEdit"
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">{{ error?.eventName?.join('. ') }}</p>
+                        <p v-if="selectedEventType?.individual_name" class="text-xs text-red-800">
+                            {{ error?.eventName?.join('. ') }}</p>
                     </div>
                     <div v-else class="flex w-1/2 ml-12 items-center">
-                        {{ this.eventName}}
+                        {{ this.eventName }}
                     </div>
                 </div>
                 <!-- Attribute Menu -->
@@ -142,9 +153,10 @@
                             class="h-12 inputMain w-full bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white "
                         >
 
-                            <span class="float-left flex xsLight subpixel-antialiased"><img src="/Svgs/IconSvgs/icon_adjustments.svg"
-                                                                                            class="mr-2"
-                                                                                            alt="attributeIcon"/>Termineigenschaften wählen</span>
+                            <span class="float-left flex xsLight subpixel-antialiased"><img
+                                src="/Svgs/IconSvgs/icon_adjustments.svg"
+                                class="mr-2"
+                                alt="attributeIcon"/>Termineigenschaften wählen</span>
                             <ChevronDownIcon
                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                 aria-hidden="true"
@@ -188,42 +200,57 @@
                 </Menu>
                 <div v-if="!canEdit" class="flex w-full">
                     <div class="w-1/2 flex items-center my-auto" v-if="this.selectedProject?.id">
-                    Zugeordnet zu: <a
-                                      :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
-                                      class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
-                    {{ this.selectedProject?.name }}
+                        Zugeordnet zu: <a
+                        :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                        class="ml-3 mt-1 text-sm items-center flex font-bold font-lexend text-primary">
+                        {{ this.selectedProject?.name }}
                     </a>
                     </div>
                     <div class="flex items-center w-1/2">
                         <p class="truncate xsLight subpixel-antialiased max-w-60">
-                        erstellt von {{this.event.created_by.first_name}} {{this.event.created_by.last_name}}</p> <img :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url" :alt="this.event.created_by.last_name"
-                                                                                                                   class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
+                            erstellt von {{ this.event.created_by.first_name }}
+                            {{ this.event.created_by.last_name }}</p> <img
+                        :data-tooltip-target="this.event.created_by.id" :src="this.event.created_by.profile_photo_url"
+                        :alt="this.event.created_by.last_name"
+                        class="ml-4 ring-white ring-2 rounded-full h-9 w-9 object-cover"/>
                     </div>
                 </div>
                 <div v-if="!canEdit" class="my-2">
                     <div v-if="this.startDate === this.endDate">
-                        {{ this.selectedRoom?.name}}, {{this.startDate.toString().substring(10, 8)}}.{{this.startDate.toString().substring(7, 5)}}.{{this.startDate.toString().substring(4, 0)}}, {{this.startTime}} - {{this.endTime}}
+                        {{ this.selectedRoom?.name }},
+                        {{ this.startDate.toString().substring(10, 8) }}.{{
+                            this.startDate.toString().substring(7, 5)
+                        }}.{{ this.startDate.toString().substring(4, 0) }},
+                        {{ this.startTime }} - {{ this.endTime }}
                     </div>
                     <div v-else>
-                        {{ this.selectedRoom?.name}}, {{this.startDate.toString().substring(10, 8)}}.{{this.startDate.toString().substring(7, 5)}}.{{this.startDate.toString().substring(4, 0)}}, {{this.startTime}} - {{this.endDate.toString().substring(10, 8)}}.{{this.endDate.toString().substring(7, 5)}}.{{this.endDate.toString().substring(4, 0)}}, {{this.endTime}}
+                        {{ this.selectedRoom?.name }},
+                        {{ this.startDate.toString().substring(10, 8) }}.{{
+                            this.startDate.toString().substring(7, 5)
+                        }}.{{ this.startDate.toString().substring(4, 0) }},
+                        {{ this.startTime }} -
+                        {{ this.endDate.toString().substring(10, 8) }}.{{
+                            this.endDate.toString().substring(7, 5)
+                        }}.{{ this.endDate.toString().substring(4, 0) }},
+                        {{ this.endTime }}
                     </div>
                 </div>
                 <!--    Properties    -->
                 <div class="flex py-2">
                     <div v-if="audience">
-                        <TagComponent icon="audience"   displayed-text="Mit Publikum" hideX="true"></TagComponent>
+                        <TagComponent icon="audience" displayed-text="Mit Publikum" hideX="true"></TagComponent>
                     </div>
-                   <div v-if="isLoud">
-                       <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
-                   </div>
+                    <div v-if="isLoud">
+                        <TagComponent displayed-text="es wird laut" hideX="true"></TagComponent>
+                    </div>
                 </div>
                 <!--    Project    -->
                 <div v-if="canEdit">
                     <div class="xsLight flex" v-if="!this.creatingProject">
                         Aktuell zugeordnet zu:
                         <a v-if="this.selectedProject?.id"
-                            :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
-                            class="ml-3 flex xsDark">
+                           :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
+                           class="ml-3 flex xsDark">
                             {{ this.selectedProject?.name }}
                         </a>
                         <div v-else class="xsDark ml-2">
@@ -256,7 +283,7 @@
                                     <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
                                     </div>
                                 </label>
                                 <span class="ml-4 text-sm"
@@ -272,7 +299,6 @@
                             </div>
 
                         </div>
-
                         <input type="text"
                                :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
                                v-model="projectName"
@@ -357,7 +383,9 @@
                                            :value="room"
                                            v-slot="{ active, selected }">
                                 <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
-                                    {{ room.name }}   <img v-if="this.roomCollisions[room.id] > 0" src="/Svgs/IconSvgs/icon_warning_white.svg" class="h-4 w-4 mx-2" alt="conflictIcon"/>
+                                    {{ room.name }} <img v-if="this.roomCollisions[room.id] > 0"
+                                                         src="/Svgs/IconSvgs/icon_warning_white.svg"
+                                                         class="h-4 w-4 mx-2" alt="conflictIcon"/>
                                 </div>
                                 <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
                             </ListboxOption>
@@ -394,10 +422,76 @@
                               rows="4"
                               class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     <div v-else-if="this.description" class="mt-4 xsDark">
-                        {{this.description}}
+                        {{ this.description }}
+                    </div>
+                    <div v-if="this.event.occupancy_option && canEdit">
+                        <textarea v-if="canEdit" placeholder="Kommentar zur Belegung (Anfragende*r wird benachrichtigt)"
+                                  id="adminComment"
+                                  :disabled="!canEdit"
+                                  v-model="adminComment"
+                                  rows="4"
+                                  class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                    </div>
+                    <div v-if="this.event.occupancy_option && canEdit" class="flex py-2 items-center">
+                        <label for="accept-toggle" class="inline-flex relative items-center cursor-pointer">
+                            <input type="checkbox"
+                                   v-model="accept"
+                                   :disabled="!canEdit"
+                                   id="accept-toggle"
+                                   class="sr-only peer">
+                            <div class="w-9 h-5 bg-gray-200 rounded-full
+                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                            </div>
+                        </label>
+                        <span class="ml-2 text-sm"
+                              :class="[accept ? 'xsDark' : 'xsLight']">
+                                Zusagen
+                        </span>
+                        <div class="ml-12 flex items-center">
+                            <label for="optionAccept-toggle" class="inline-flex relative items-center cursor-pointer">
+                                <input type="checkbox"
+                                       v-model="optionAccept"
+                                       :disabled="!canEdit"
+                                       @change="toggleAccept"
+                                       id="optionAccept-toggle"
+                                       class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 rounded-full
+                            peer-checked:after:translate-x-full peer-checked:after:border-white
+                            after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                                </div>
+                            </label>
+                            <span class="ml-2 text-sm"
+                                  :class="[optionAccept ? 'xsDark' : 'xsLight']">
+                                Optional zusagen
+                        </span>
+                        </div>
+                    </div>
+                    <div class="py-2 w-full" v-if="optionAccept">
+                        <Listbox as="div" v-model="optionString" id="room">
+                            <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
+                                <div class="flex-grow flex text-left xsDark">
+                                    {{ optionString }}
+                                </div>
+                                <ChevronDownIcon class="h-5 w-5 text-primary" aria-hidden="true"/>
+                            </ListboxButton>
+                            <ListboxOptions class="w-5/6 bg-primary max-h-32 overflow-y-auto text-sm absolute">
+                                <ListboxOption v-for="option in options"
+                                               class="hover:bg-indigo-800 text-secondary cursor-pointer p-2 flex justify-between "
+                                               :key="option.name"
+                                               :value="option.name"
+                                               v-slot="{ active, selected }">
+                                    <div :class="[selected ? 'xsWhiteBold' : 'xsLight', 'flex']">
+                                        {{ option.name }}
+                                    </div>
+                                    <CheckIcon v-if="selected" class="h-5 w-5 text-success" aria-hidden="true"/>
+                                </ListboxOption>
+                            </ListboxOptions>
+                        </Listbox>
                     </div>
                 </div>
-
                 <!-- Serien Termin -->
                 <div>
                     <SwitchGroup as="div" class="flex items-center">
@@ -451,7 +545,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects|| roomAdminIds.includes(this.$page.props.user.id))">
@@ -459,7 +552,7 @@
                                 :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent()">
-                            Belegen
+                            {{ this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : 'Speichern'}}
                         </button>
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
@@ -491,7 +584,25 @@
     />
 </template>
 
+
 <script>
+
+import {ref} from "vue";
+
+const options = [
+    {
+        name: 'Option 1',
+    },
+    {
+        name: 'Option 2',
+    },
+    {
+        name: 'Option 3',
+    },
+    {
+        name: 'Option 4',
+    },
+];
 
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {ChevronDownIcon, DotsVerticalIcon, PencilAltIcon, XCircleIcon, XIcon} from '@heroicons/vue/outline';
@@ -548,6 +659,11 @@ export default {
         TagComponent,
         InputComponent,
     },
+    setup() {
+        return {
+            options,
+        }
+    },
 
     data() {
         return {
@@ -597,9 +713,14 @@ export default {
             projectSearchResults: [],
             collisionCount: 0,
             description: null,
-            canEdit: false,
+            canEdit: null,
             declinedRoomId: null,
             deleteComponentVisible: false,
+            adminComment: '',
+            optionString: null,
+            accept: true,
+            optionAccept: false,
+            selectedOption: options[0].name,
             answerRequestForm: useForm({
                 accepted: false,
             }),
@@ -612,7 +733,7 @@ export default {
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event','project','wantedRoomId', 'roomCollisions'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions'],
 
     emits: ['closed'],
 
@@ -636,8 +757,8 @@ export default {
             },
         },
     },
-    computed:{
-        roomAdminIds(){
+    computed: {
+        roomAdminIds() {
             let adminIds = []
             this.selectedRoom?.room_admins?.forEach(admin => {
                 adminIds.push(admin.id);
@@ -649,8 +770,8 @@ export default {
     methods: {
         openModal() {
             this.canEdit = (!this.event?.id) || this.event?.canEdit || this.$page.props.can.create_and_edit_projects;
-            if (!this.event){
-                if(this.project){
+            if (!this.event) {
+                if (this.project) {
                     this.selectedProject = {id: this.project.id, name: this.project.name};
                 }
                 return;
@@ -667,9 +788,9 @@ export default {
             this.audience = this.event.audience
             this.title = this.event.title
             this.eventName = this.event.eventName
-            if(!this.event.eventTypeId){
+            if (!this.event.eventTypeId) {
                 this.selectedEventType = this.eventTypes[0];
-            }else{
+            } else {
                 this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
             }
             this.series = this.event.is_series
@@ -682,9 +803,9 @@ export default {
                 }
             })
             this.selectedProject = {id: this.event.projectId, name: this.event.projectName}
-            if(this.wantedRoomId){
+            if (this.wantedRoomId) {
                 this.selectedRoom = this.rooms.find(room => room.id === this.wantedRoomId)
-            }else if(this.event){
+            } else if (this.event) {
                 this.selectedRoom = this.rooms.find(type => type.id === this.event.roomId)
             }
 
@@ -716,15 +837,15 @@ export default {
             return (new Date(date + ' ' + time)).toISOString()
         },
 
-        checkChanges(){
+        checkChanges() {
             this.updateTimes(this.event);
 
-            if(this.event?.start && this.event?.end){
+            if (this.event?.start && this.event?.end) {
 
                 axios.post('/collision/room', {
                     params: {
                         start: this.event?.start,
-                        end:  this.event?.end,
+                        end: this.event?.end,
                     }
                 })
                     .then(response => this.roomCollisions = response.data);
@@ -732,7 +853,7 @@ export default {
 
 
         },
-        checkTypeChange(){
+        checkTypeChange() {
 
         },
 
@@ -782,7 +903,6 @@ export default {
             }
 
 
-
             this.validateStartBeforeEndTime();
 
             this.checkCollisions();
@@ -793,24 +913,29 @@ export default {
 
             this.error = null;
             if (this.startDate && this.endDate && this.startTime && this.endTime) {
-                this.setCombinedTimeString(this.startDate,this.startTime,'start');
-                this.setCombinedTimeString(this.endDate,this.endTime,'end');
+                this.setCombinedTimeString(this.startDate, this.startTime, 'start');
+                this.setCombinedTimeString(this.endDate, this.endTime, 'end');
                 return await axios
                     .post('/events', {start: this.startFull, end: this.endFull}, {headers: {'X-Dry-Run': true}})
                     .catch(error => this.error = error.response.data.errors);
             }
 
         },
-        checkEventTimeLength(){
+        checkEventTimeLength() {
             // check if event min 30min
-            if(this.startFull && this.endFull){
-                const minimumEnd = new Date(this.startFull).addMinutes(30);
-                if(minimumEnd <= this.endFull){
+            if (this.startFull && this.endFull) {
+                const date = new Date(this.startFull);
+                const minimumEnd = this.addMinutes(date, 30);
+                if (minimumEnd <= new Date(this.endFull)) {
                     this.helpTextLength = '';
                 } else {
                     this.helpTextLength = 'Der Termin darf nicht kürzer als 30 Minuten sein';
                 }
             }
+        },
+        addMinutes(date, minutes) {
+            date.setMinutes(date.getMinutes() + minutes);
+            return date;
         },
         setCombinedTimeString(date, time, target) {
             let combinedDateString = (date.toString() + ' ' + time);
@@ -894,9 +1019,15 @@ export default {
             this.answerRequestForm.put(route('events.accept', {event: event}));
             this.closeModal()
         },
-        chooseProject(project){
+        chooseProject(project) {
             this.selectedProject = project;
             this.projectName = '';
+        },
+        toggleAccept() {
+            if (this.optionAccept) {
+                this.accept = false;
+                this.optionString = options[0].name;
+            }
         },
 
         eventData() {
@@ -909,18 +1040,20 @@ export default {
                 description: this.description,
                 audience: this.audience,
                 isLoud: this.isLoud,
-                isOption:this.isOption,
+                isOption: this.isOption,
                 eventNameMandatory: this.selectedEventType?.individual_name,
                 projectId: this.selectedProject?.id,
                 projectName: this.creatingProject ? this.projectName : '',
                 eventTypeId: this.selectedEventType?.id,
-                projectIdMandatory:this.selectedEventType?.project_mandatory && !this.creatingProject,
+                projectIdMandatory: this.selectedEventType?.project_mandatory && !this.creatingProject,
                 creatingProject: this.creatingProject,
                 declinedRoomId: this.declinedRoomId,
                 is_series: this.series,
                 seriesFrequency: this.selectedFrequency.id,
                 seriesEndDate: this.seriesEndDate,
                 allSeriesEvents: this.allSeriesEvents,
+                adminComment: this.adminComment,
+                optionString: this.optionAccept ? this.optionString : null
             };
         },
     },

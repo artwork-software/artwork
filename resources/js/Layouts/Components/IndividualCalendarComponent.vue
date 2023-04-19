@@ -26,11 +26,11 @@
                 </tr>
                 </thead>
                 <tbody class="flex w-full pt-3 flex-wrap">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
-                    <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{ day.day }}
+                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
+                    <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
+                        {{day.day_string}} {{ day.day }}
                     </th>
-                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" v-for="room in calendarData">
+                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="room in calendarData">
                         <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
                             <SingleCalendarEvent :project="project" :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>

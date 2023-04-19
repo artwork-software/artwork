@@ -25,6 +25,8 @@ class EventUpdateRequest extends EventStoreOrUpdateRequest
             'project_id' => $this->get('projectId'),
             'event_type_id' => $this->get('eventTypeId'),
             'occupancy_option' => $this->get('isOption'),
+            'adminComment' => $this->get('adminComment'),
+            'optionString' => $this->get('optionString')
         ];
     }
 }

@@ -92,8 +92,8 @@ class EventController extends Controller
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
             'eventsAtAGlance' => $eventsAtAGlance,
-            'rooms' => Room::all(),
-
+            'rooms' => $calendar->filterRooms(),
+            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay())
         ]);
     }
 
@@ -103,8 +103,8 @@ class EventController extends Controller
      */
     public function showDashboardPage(Request $request): Response
     {
-        $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData('dashboard');
+        $calendarController = new CalendarController();
+        $showCalendar = $calendarController->createCalendarData('dashboard');
 
         $projects = Project::query()->with( ['managerUsers'])->get();
 
@@ -135,19 +135,8 @@ class EventController extends Controller
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
 
-        $rooms = Room::query()
-            ->unless(is_null(request('roomIds')),
-                fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
-            ->unless(is_null(request('roomAttributeIds')),
-                fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
-                    $query->whereIn('room_attributes.id', request('roomAttributeIds'));
-                }))
-            ->unless(is_null(request('roomCategoryIds')),
-                fn (Builder $builder) => $builder->whereHas('categories', function($query) {
-                    $query->whereIn('room_categories.id', request('roomCategoryIds'));
-                }))
-            ->get();
-
+        $rooms = $calendarController->filterRooms();
+        Debugbar::info("room stuff in Eventcontroller");
         Debugbar::info(request('roomIds'));
         Debugbar::info($rooms->toArray());
 
@@ -162,6 +151,7 @@ class EventController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $rooms,
             'eventsAtAGlance' => $eventsAtAGlance,
+            'events' => new CalendarEventCollectionResource($calendarController->getEventsOfDay())
         ]);
     }
 

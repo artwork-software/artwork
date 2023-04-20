@@ -12,7 +12,14 @@
         <div>
             <div v-if="calendarType && calendarType === 'daily'">
                 <div class="mr-4">
-                    <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                    <CalendarComponent
+                        :selected-date="selectedDate"
+                        :dateValue="dateValue"
+                        :eventTypes=this.eventTypes
+                        initial-view="day"
+                        :rooms="rooms"
+                        :events="this.events.events"
+                    />
                 </div>
             </div>
             <div v-else>
@@ -46,7 +53,7 @@ export default defineComponent({
         CalendarComponent,
         AppLayout
     },
-    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','days','eventsAtAGlance'],
+    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','events', 'days','eventsAtAGlance'],
     methods: {
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;

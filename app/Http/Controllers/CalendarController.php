@@ -13,6 +13,7 @@ use App\Models\RoomAttribute;
 use App\Models\RoomCategory;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
+use Barryvdh\Debugbar\Facades\Debugbar;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -179,6 +180,15 @@ class CalendarController extends Controller
         ];
     }
 
+    public function getEventsOfDay() {
+        $all_events = Event::query();
+        //->whereOccursBetween(Carbon::parse(request('start')), Carbon::parse(request('end')));
+        $filteredEvents = $this->filterEvents($all_events, null ,null);
+        $array = $filteredEvents->get();
+        DebugBar::info($array);
+        return $array;
+    }
+
     private function filterEvents($query, ?Room $room, ?Project $project) {
         $isLoud = request('isLoud');
         $isNotLoud = request('isNotLoud');
@@ -192,7 +202,7 @@ class CalendarController extends Controller
         $roomCategoryIds = request('roomCategoryIds');
 
 
-        $query
+        return $query
             ->when($project, fn (EventBuilder $builder) => $builder->where('project_id', $project->id))
             ->when($room, fn (EventBuilder $builder) => $builder->where('room_id', $room->id))
             ->unless(empty($roomIds) && empty($areaIds) && empty($roomAttributeIds) && empty($roomCategoryIds), fn (EventBuilder $builder) => $builder
@@ -213,6 +223,21 @@ class CalendarController extends Controller
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
             ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null));
+    }
+
+    public function filterRooms() {
+        return Room::query()
+            ->unless(is_null(request('roomIds')),
+                fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
+            ->unless(is_null(request('roomAttributeIds')),
+                fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
+                    $query->whereIn('room_attributes.id', request('roomAttributeIds'));
+                }))
+            ->unless(is_null(request('roomCategoryIds')),
+                fn (Builder $builder) => $builder->whereHas('categories', function($query) {
+                    $query->whereIn('room_categories.id', request('roomCategoryIds'));
+                }))
+            ->get();
     }
 
     private function setDefaultDates(){

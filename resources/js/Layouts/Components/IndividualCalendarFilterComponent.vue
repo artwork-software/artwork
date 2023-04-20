@@ -298,15 +298,18 @@
 
 <script>
 import {
-    Disclosure, DisclosureButton, DisclosurePanel,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Menu,
     MenuButton,
-    MenuItems, Switch, SwitchGroup, SwitchLabel,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel,
 } from "@headlessui/vue";
 
-import {
-    ChevronDownIcon, DocumentTextIcon,
-} from '@heroicons/vue/outline';
+import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
@@ -409,7 +412,6 @@ export default {
             array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
-
             this.filterArray.rooms.forEach(room => room.checked = false)
             this.filterArray.areas.forEach(area => area.checked = false)
             this.filterArray.roomAttributes.forEach(attribute => attribute.checked = false)
@@ -443,7 +445,6 @@ export default {
             return elementsToChange
         },
         applyFilter(filter) {
-
             this.filterArray.rooms = this.changeChecked(this.filterArray.rooms, filter.rooms)
             this.filterArray.areas = this.changeChecked(this.filterArray.areas, filter.areas)
             this.filterArray.roomAttributes = this.changeChecked(this.filterArray.roomAttributes, filter.roomAttributes)
@@ -470,13 +471,13 @@ export default {
             return variable
         },
         arrayToIds(array) {
-            array = array.filter(item => item.checked === true)
+            const filteredArray = array.filter(item => item.checked === true)
 
-            if (array.length === 0) {
+            if (filteredArray.length === 0) {
                 return null
             }
 
-            return array.map(elem => elem.id);
+            return filteredArray.map(elem => elem.id)
         },
         getFilterFields() {
             return {
@@ -500,7 +501,22 @@ export default {
         filterArray: {
             handler() {
                 Inertia.reload({
-                    data: this.getFilterFields()
+                    data: {
+                        isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
+                        isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
+                        adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
+                        adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                        hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
+                        hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
+                        showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
+                        allDayFree: this.filterArray.roomFilters.allDayFree,
+                        roomIds: this.arrayToIds(this.filterArray.rooms),
+                        areaIds: this.arrayToIds(this.filterArray.areas),
+                        eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
+                        roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
+                        roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
+                    },
+                    preserveState: true
                 })
             },
             deep: true

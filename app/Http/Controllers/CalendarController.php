@@ -211,7 +211,7 @@ class CalendarController extends Controller
             ->unless(empty($eventTypeIds), fn (EventBuilder $builder) => $builder->whereIn('event_type_id', $eventTypeIds))
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', true))
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
-            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', $isLoud))
+            ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null));
     }
 

@@ -135,8 +135,21 @@ class EventController extends Controller
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
 
-        $rooms = Room::query()->unless(is_null(request('roomIds')),
-                fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))->get();
+        $rooms = Room::query()
+            ->unless(is_null(request('roomIds')),
+                fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
+            ->unless(is_null(request('roomAttributeIds')),
+                fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
+                    $query->whereIn('room_attributes.id', request('roomAttributeIds'));
+                }))
+            ->unless(is_null(request('roomCategoryIds')),
+                fn (Builder $builder) => $builder->whereHas('categories', function($query) {
+                    $query->whereIn('room_categories.id', request('roomCategoryIds'));
+                }))
+            ->get();
+
+        Debugbar::info(request('roomIds'));
+        Debugbar::info($rooms->toArray());
 
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),

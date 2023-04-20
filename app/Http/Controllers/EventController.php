@@ -377,7 +377,7 @@ class EventController extends Controller
         ];
         $this->notificationData->created_by = Auth::user();
         $room = Room::find($request->roomId);
-        $admins = $room->room_admins()->get();
+        $admins = $room->users()->wherePivot('is_admin', true)->get();
         if(!empty($admins)){
             foreach ($admins as $admin){
                 $this->notificationService->create($admin, $this->notificationData, $broadcastMessage);

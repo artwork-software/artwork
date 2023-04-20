@@ -147,7 +147,13 @@
                 <!-- Calendar Tab -->
                 <div v-if="isScheduleTab" class="px-5 mt-6 max-w-screen-2xl bg-lightBackgroundGray">
                     <div v-if="calendarType && calendarType === 'daily'">
-                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                        <CalendarComponent
+                            :selected-date="selectedDate"
+                            :dateValue="dateValue"
+                            :eventTypes=this.eventTypes initial-view="day"
+                            :events="this.events.events"
+                            :rooms="this.rooms"
+                        />
                     </div>
 
                     <div v-else>
@@ -553,7 +559,44 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 
 export default {
     name: "ProjectShow",
-    props: ['projectMoneySources', 'RoomsWithAudience', 'firstEventInProject', 'lastEventInProject', 'eventTypes', 'opened_checklists', 'project_users', 'project', 'openTab', 'users', 'categories', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds', 'projectCategories', 'projectGenres', 'projectSectors', 'genres', 'sectors', 'checklist_templates', 'isMemberOfADepartment', 'budget', 'moneySources', 'projectGroups', 'currentGroup', 'groupProjects', 'states','projectState', 'eventsAtAGlance', 'calendar', 'days', 'rooms', 'dateValue', 'selectedDate', 'calendarType'],
+    props: [
+        'events',
+        'projectMoneySources',
+        'RoomsWithAudience',
+        'firstEventInProject',
+        'lastEventInProject',
+        'eventTypes',
+        'opened_checklists',
+        'project_users',
+        'project',
+        'openTab',
+        'users',
+        'categories',
+        'projectCategoryIds',
+        'projectGenreIds',
+        'projectSectorIds',
+        'projectCategories',
+        'projectGenres',
+        'projectSectors',
+        'genres',
+        'sectors',
+        'checklist_templates',
+        'isMemberOfADepartment',
+        'budget',
+        'moneySources',
+        'projectGroups',
+        'currentGroup',
+        'groupProjects',
+        'states',
+        'projectState',
+        'eventsAtAGlance',
+        'calendar',
+        'days',
+        'rooms',
+        'dateValue',
+        'selectedDate',
+        'calendarType'
+    ],
     components: {
         ProjectSecondSidenav,
         ChecklistComponent,

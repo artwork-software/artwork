@@ -9,6 +9,7 @@ use App\Enums\RoleNameEnum;
 use App\Http\Requests\SearchRequest;
 use App\Http\Requests\StoreProjectRequest;
 use App\Http\Requests\UpdateProjectRequest;
+use App\Http\Resources\CalendarEventCollectionResource;
 use App\Http\Resources\CalendarEventResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectEditResource;
@@ -1375,7 +1376,8 @@ class ProjectController extends Controller
             'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => Room::all(),
+            'rooms' => $calendar->filterRooms(),
+            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
 
             'budget' => [
                 'columns' => $outputColumns,

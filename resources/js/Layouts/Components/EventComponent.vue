@@ -759,11 +759,13 @@ export default {
     },
     computed: {
         roomAdminIds() {
-            let adminIds = []
+            let adminIds = [];
             this.selectedRoom?.room_admins?.forEach(admin => {
                 adminIds.push(admin.id);
             })
             return adminIds;
+
+
         },
     },
 

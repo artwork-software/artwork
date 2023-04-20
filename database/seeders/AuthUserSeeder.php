@@ -65,7 +65,7 @@ class AuthUserSeeder extends Seeder
         $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
         $user->assignRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value);
 
-        User::create([
+        $user = User::create([
             'first_name' => 'Lisa',
             'last_name' => 'Müller',
             'email' => 'lisa.musterfrau@deichtorhallen.de',
@@ -79,6 +79,7 @@ class AuthUserSeeder extends Seeder
             'opened_areas' => [],
             'profile_photo_path' => '/profile-photos/jimmy-fermin-bqe0J0b26RQ-unsplash.jpg'
         ]);
+        $user->calendar_settings()->create();
 
         $user = User::create([
             'first_name' => 'Anna',

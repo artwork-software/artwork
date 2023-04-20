@@ -27,7 +27,7 @@ class FilterController extends Controller
                 'id' => $room->id,
                 'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
-                'room_admins' => $room->room_admins
+                'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
             ]),
             'areas' => $filter->areas,
             'roomCategories' => $filter->room_categories,

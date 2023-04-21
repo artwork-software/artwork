@@ -3,325 +3,6 @@
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
         <div class="bg-white">
         <CalendarFunctionBar @open-event-component="openEventComponent" @nextDay="nextDay" @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
-        <!-- <div class="inline-flex mb-5">
-            <Menu v-slot="{ open }" as="div" class="relative inline-block text-left w-auto">
-                <div>
-                    <MenuButton id="menuButton"
-                                class="-mt-1 w-72 border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white align-middle"
-                    >
-                        <CalendarIcon class="w-5 h-5 float-left mr-2"/>
-                        <span class="float-left xsDark">{{ this.displayDate }}</span>
-                        <ChevronDownIcon
-                            class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
-                            aria-hidden="true"
-                        />
-                    </MenuButton>
-                </div>
-                <transition
-                    enter-active-class="transition duration-50 ease-out"
-                    enter-from-class="transform scale-100 opacity-100"
-                    enter-to-class="transform scale-100 opacity-100"
-                    leave-active-class="transition duration-75 ease-in"
-                    leave-from-class="transform scale-100 opacity-100"
-                    leave-to-class="transform scale-95 opacity-0"
-                >
-                    <MenuItems
-                        class="absolute left mt-2 w-52 origin-top-right rounded-sm bg-primary ring-1 ring-black py-2 text-white opacity-100 z-50">
-                        <button @click="$refs.vuecal.switchView('day', new Date()); this.selectedDate = new Date();"
-                                class="w-full mt-2 text-left pl-2"
-                                :class="currentView === 'day' ? 'text-white font-bold border-l-2 border-success' : 'text-secondary border-none'">
-                            <label class="text-sm">
-                                Heute
-                            </label>
-                        </button>
-
-                    </MenuItems>
-                </transition>
-            </Menu>
-            <button class="ml-2 -mt-2 text-black" @click="$refs.vuecal.previous()">
-                <ChevronLeftIcon class="h-5 w-5 text-primary"/>
-            </button>
-            <button class="ml-2 -mt-2 text-black" @click="$refs.vuecal.next()">
-                <ChevronRightIcon class="h-5 w-5 text-primary"/>
-            </button>
-
-
-        </div>
-
-        <div class=" inline-flex mb-5 justify-end">
-
-            // Calendar Filter
-            <BaseFilter>
-                <div class="inline-flex border-none justify-end w-full">
-                    <button class="flex" @click="resetCalendarFilter">
-                        <XIcon class="w-3 mr-1 mt-0.5"/>
-                        <label class="text-xs">Zurücksetzen</label>
-                    </button>
-                    <button class="flex ml-4" @click="saving = !saving">
-                        <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                        <label class="text-xs">Speichern</label>
-                    </button>
-                </div>
-                <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-
-                     // Save Filter Section
-                    <Disclosure v-slot="{ open }" default-open>
-                        <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                        >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
-                            <ChevronDownIcon
-                                :class="open ? 'rotate-180 transform' : ''"
-                                class="h-4 w-4 mt-0.5 text-white"
-                            />
-                        </DisclosureButton>
-                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="saving">
-                                <div class="flex">
-                                    <input id="saveFilter" v-model="filterName" type="text"
-                                           class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
-                                           placeholder="Name des Filters"/>
-                                    <button
-                                        class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1 ml-2">
-                                        <label @click="saveFilter"
-                                               class="cursor-pointer text-white text-xs">Speichern</label>
-                                    </button>
-
-                                </div>
-                                <hr class="border-gray-500 mt-4 mb-4">
-                            </div>
-                            <button
-                                class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
-                                v-for="filter of filters">
-                                <label @click="applyFilter(filter)"
-                                       class="cursor-pointer text-white">{{ filter.name }}</label>
-                                <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
-                            </button>
-                            <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter
-                                gespeichert</p>
-                        </DisclosurePanel>
-                        <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-                    </Disclosure>
-
-                    // Room Filter Section
-                    <Disclosure v-slot="{ open }">
-                        <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                        >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
-                            <ChevronDownIcon
-                                :class="open ? 'rotate-180 transform' : ''"
-                                class="h-4 w-4 mt-0.5 text-white"
-                            />
-                        </DisclosureButton>
-                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="currentView !== 'month' && currentView !== 'year'">
-                                <SwitchGroup>
-                                    <div class="flex items-center">
-                                        <Switch v-model="roomFilters.showAdjoiningRooms"
-                                                @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.changeDisplayedRooms()"
-                                                :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
-                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                        </Switch>
-                                        <SwitchLabel class="ml-4 text-xs"
-                                                     :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
-                                            Nebenräume anzeigen
-                                        </SwitchLabel>
-                                    </div>
-                                </SwitchGroup>
-                                <SwitchGroup v-if="currentView === 'day'">
-                                    <div class="flex items-center mt-2">
-                                        <Switch v-model="roomFilters.allDayFree"
-                                                @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree);"
-                                                :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
-                                                class="relative inline-flex h-3 w-7 items-center rounded-full">
-                                            <span
-                                                :class="roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
-                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
-                                        </Switch>
-                                        <SwitchLabel class="ml-4 text-xs"
-                                                     :class="roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
-                                            ganztägig frei
-                                        </SwitchLabel>
-                                    </div>
-                                </SwitchGroup>
-
-
-                            </div>
-
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="category.checked"
-                                               @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ category.name }}</p>
-                                    </div>
-                                    <div v-else class="text-secondary">Noch keine Kategorien angelegt</div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Areale</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="area.checked"
-                                               @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ area.label || area.name }}</p>
-                                    </div>
-                                    <div v-else class="text-secondary">Keine Areale angelegt</div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="attribute.checked"
-                                               @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ attribute.name }}</p>
-                                    </div>
-                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt
-                                    </div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span
-                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Räume</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-if="rooms.length > 0" v-for="room in rooms"
-                                         class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="room.checked"
-                                               @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ room.label }}</p>
-                                    </div>
-                                    <div v-else class="text-secondary">Noch keine Räume angelegt</div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                        </DisclosurePanel>
-                    </Disclosure>
-
-                    <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
-
-                    // Event Filter Section
-                    <Disclosure v-slot="{ open }">
-                        <DisclosureButton
-                            class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
-                        >
-                                <span
-                                    :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termine</span>
-                            <ChevronDownIcon
-                                :class="open ? 'rotate-180 transform' : ''"
-                                class="h-4 w-4 mt-0.5 text-white"
-                            />
-                        </DisclosureButton>
-                        <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termintyp</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-for="eventType in types" class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="eventType.checked"
-                                               @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ eventType.name }}</p>
-                                    </div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                            <hr class="border-gray-500 mt-2 mb-2">
-                            <Disclosure v-slot="{ open }">
-                                <DisclosureButton
-                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm focus:outline-none focus-visible:ring-purple-500"
-                                >
-                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Termineigenschaften</span>
-                                    <ChevronDownIcon
-                                        :class="open ? 'rotate-180 transform' : ''"
-                                        class="h-4 w-4 mt-0.5 text-white"
-                                    />
-                                </DisclosureButton>
-                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                                    <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
-                                        <input type="checkbox" v-model="eventAttribute.checked"
-                                               @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
-                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                        <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                            {{ eventAttribute.name }}</p>
-                                    </div>
-                                </DisclosurePanel>
-                            </Disclosure>
-                        </DisclosurePanel>
-                    </Disclosure>
-
-                </div>
-            </BaseFilter>
-            <AddButton class="bg-primary hover:bg-secondary text-white resize-none"
-                       @click="openEventComponent()" text="Neue Belegung"/>
-        </div>
-        -->
 
         <!--  Calendar  -->
         <div class="pl-3 overflow-x-scroll">
@@ -349,8 +30,8 @@
                 v-model:active-view="currentView"
                 @event-drag-create="openEventComponent($event)"
                 @event-focus="openEventComponent($event)"
-                @ready="fetchEvents"
-                @view-change="fetchEvents($event)"
+                @ready="initializeCalendar"
+                @view-change="initializeCalendar($event)"
             >
                 <template #title="{ title, view }" class="group">
                     <div :class="currentView === 'year' ? 'ml-24' : ''" class="mb-6">
@@ -377,7 +58,7 @@
                 </template>
                 <template #split-label="{ split, view }">
                     <Link class="text-base font-bold" :href="route('rooms.show',{room: split.id})">
-                        {{ split.label }}
+                        {{ split.name }}
                     </Link>
                 </template>
                 <template #event="{ event, view}">
@@ -499,7 +180,6 @@
         </div>
         </div>
 
-
     </div>
     <div class="ml-12">
         <CalendarFilterTagComponent
@@ -511,8 +191,6 @@
             :events-until="eventsUntil"
         />
     </div>
-
-
 
     <!-- Termin erstellen Modal-->
     <event-component
@@ -581,7 +259,6 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import EventComponent from "@/Layouts/Components/EventComponent";
-import CalendarFilterComponent from "@/Layouts/Components/CalendarFilterComponent";
 import CalendarFilterTagComponent from "@/Layouts/Components/CalendarFilterTagComponent";
 import Button from "@/Jetstream/Button";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
@@ -603,7 +280,6 @@ export default {
         ExclamationIcon,
         Button,
         CalendarFilterTagComponent,
-        CalendarFilterComponent,
         CalendarIcon,
         FilterIcon,
         SwitchLabel,
@@ -641,7 +317,17 @@ export default {
         EventsWithoutRoomComponent,
         UserTooltip,
     },
-    props: ['project', 'room', 'initialView', 'eventTypes','atAGlance','dateValue','selectedDate'],
+    props: [
+        'project',
+        'room',
+        'initialView',
+        'eventTypes',
+        'atAGlance',
+        'dateValue',
+        'selectedDate',
+        'events',
+        'rooms'
+    ],
     emits:['changeAtAGlance'],
     data() {
         return {
@@ -709,10 +395,8 @@ export default {
             showFreeRooms: false,
             showAdjoiningRooms: false,
             myRooms: [],
-            events: [],
             eventsWithoutRoom: [],
             displayedEvents: [],
-            rooms: [],
             areas: [],
             displayedRooms: [],
             projects: [],
@@ -737,146 +421,35 @@ export default {
                 this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
             });
     },
+    watch: {
+        events: {
+            handler() {
+                this.initializeCalendar({view: null, startDate: null, endDate: null})
+            },
+        },
+        rooms: {
+            handler() {
+                this.initializeCalendar({view: null, startDate: null, endDate: null})
+            },
+        }
+    },
     methods: {
-        applyFilter(filter) {
-            this.calendarFilters = filter;
-            this.changeChecked(this.rooms, 'rooms')
-            this.changeChecked(this.areas, 'areas')
-            this.changeChecked(this.roomCategories, 'roomCategories')
-            this.changeChecked(this.roomAttributes, 'roomAttributes')
-            this.changeChecked(this.types, 'eventTypes')
+        initializeCalendar({view = null, startDate = null, endDate = null}) {
+            this.currentView = 'day';
 
-            Object.entries(this.eventAttributes).forEach(entry => {
-                Object.entries(this.calendarFilters).forEach(filterEntry => {
-                    if (entry[1].value === filterEntry) {
-                        entry[1].checked = true
-                    }
-                })
-            })
+            this.scrollToNine();
 
-            this.changeDisplayedRooms();
+            this.eventsSince = startDate ?? this.eventsSince;
+            this.eventsUntil = endDate ?? this.eventsUntil;
 
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
+            this.events.map(event => event.start = new Date(event.start))
+            this.events.map(event => event.end = new Date(event.end))
+
+            this.displayedEvents = this.events
+            this.displayedRooms = this.rooms
         },
         changeAtAGlance(){
             this.$emit('changeAtAGlance')
-        },
-        changeChecked(array, filterName) {
-            array.forEach(object => {
-                if (this.calendarFilters[`${filterName}`].some(filterObj => filterObj.id === object.id)) {
-                    object.checked = true
-                }
-            })
-        },
-        async saveFilter() {
-            const filterIds = this.getFilterIds();
-            await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds}).then(() => {
-                this.filterName = ""
-            })
-            await axios.get('/filters')
-                .then(response => {
-                    this.filters = response.data;
-                })
-        },
-        async deleteFilter(id) {
-            await axios.delete(`/filters/${id}`)
-            this.resetCalendarFilter();
-            await axios.get('/filters')
-                .then(response => {
-                    this.filters = response.data
-                })
-        },
-        async changeFilterElements(filterArray, arrayName, element) {
-
-            if (element.checked) {
-                filterArray.push(element)
-            } else {
-                // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
-                Object.entries(this.calendarFilters).forEach(entry => {
-                    if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
-                        if (arrayName === 'rooms') {
-                            const room = this.rooms.filter(room => element?.id === room.id)
-                            if (room) {
-                                room[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'areas') {
-                            const area = this.areas.filter(area => element?.id === area.id)
-                            if (area) {
-                                area[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'roomCategories') {
-                            const category = this.roomCategories.filter(category => element?.id === category.id)
-                            if (category) {
-                                category[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'roomAttributes') {
-                            const attribute = this.roomAttributes.filter(room => element?.id === room.id)
-                            if (attribute) {
-                                attribute[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'eventTypes') {
-                            const eventType = this.eventTypes.filter(type => element?.id === type.id)
-                            if (eventType) {
-                                eventType[0].checked = false
-                            }
-                        }
-
-                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element?.id !== elem.id)
-                    }
-                })
-            }
-            await this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-            await this.changeDisplayedRooms()
-        },
-        async changeFilterBoolean(filter, variable) {
-            this.calendarFilters[`${filter}`] = variable
-            await this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-            await this.changeDisplayedRooms()
-        },
-        async changeDisplayedRooms() {
-
-            let allRooms = this.rooms;
-            if (this.calendarFilters.allDayFree === true) {
-                allRooms = await this.getAllDayFreeRooms();
-            }
-
-            //decides for every room if it should be displayed in the calendar
-            this.displayedRooms = allRooms.filter(room => {
-                let include = false;
-
-                this.areas.forEach(area => {
-                    //if the current area is checked
-                    if (area.checked) {
-                        if (room.area.name === area.name) {
-                            include = this.filterRooms(room)
-                        }
-                        //checks if no area is checked
-                    } else if (this.zeroObjectsChecked(this.areas)) {
-                        include = this.filterRooms(room)
-                        //at least one area is checked, but not the current one
-                    } else {
-                        if (room.area.name === area.name) {
-                            include = false;
-                        }
-                    }
-                })
-                return include
-            });
-            this.viewAdjoiningRooms()
-
         },
         async getAllDayFreeRooms() {
             let rooms = []
@@ -889,104 +462,6 @@ export default {
                 rooms = response.data.rooms;
             })
             return rooms
-        },
-        filterRooms(room) {
-            let include = false;
-            if (!this.zeroObjectsChecked(this.rooms)) {
-                if (room.checked) {
-                    include = this.filterCategories(room);
-                }
-            } else {
-                include = this.filterCategories(room)
-            }
-            return include
-        },
-        filterCategories(room) {
-            let include = false;
-            if (!this.zeroObjectsChecked(this.roomCategories)) {
-                this.roomCategories.forEach(roomCategory => {
-                    if (roomCategory.checked) {
-                        const sameCategory = room.categories.filter(category => category.name === roomCategory.name)
-                        if (sameCategory.length > 0) {
-                            include = this.filterAttributes(room);
-                        }
-                    }
-                })
-            } else {
-                include = this.filterAttributes(room);
-            }
-            return include
-        },
-        filterAttributes(room) {
-            let include = false
-            if (!this.zeroObjectsChecked(this.roomAttributes)) {
-                this.roomAttributes.forEach(roomAttribute => {
-                    if (roomAttribute.checked) {
-                        const sameAttribute = room.attributes.filter(attribute => attribute.name === roomAttribute.name)
-                        if (sameAttribute.length > 0) {
-                            include = true;
-                        }
-                    }
-                })
-            } else {
-                include = true;
-            }
-            return include
-        },
-        zeroObjectsChecked(array) {
-            let zeroChecked = true;
-            array.forEach(object => {
-                if (object.checked === true) {
-                    zeroChecked = false;
-                }
-            })
-            return zeroChecked;
-        },
-        viewAdjoiningRooms() {
-            let adjoiningRooms = [];
-
-            if (this.roomFilters.showAdjoiningRooms) {
-                this.displayedRooms.forEach(room => {
-                    adjoiningRooms.push(...room.main_rooms)
-                    adjoiningRooms.push(...room.adjoining_rooms)
-                })
-
-                for (const room of adjoiningRooms) {
-                    if (this.displayedRooms.filter(r => r.name === room.label).length === 0) {
-                        room.adjoining = true;
-                        this.calendarFilters.rooms.push(room)
-                        this.displayedRooms.push(room);
-                    }
-                }
-            } else {
-                this.calendarFilters.rooms = this.calendarFilters.rooms.filter(r => !r.adjoining)
-                this.displayedRooms = this.displayedRooms.filter(r => !r.adjoining)
-            }
-        },
-        resetCalendarFilter() {
-            this.addFilterableVariable(this.rooms, false);
-            this.addFilterableVariable(this.areas, false);
-            this.addFilterableVariable(this.roomCategories, false);
-            this.addFilterableVariable(this.roomAttributes, false);
-            this.addFilterableVariable(this.types, false);
-            Object.entries(this.calendarFilters).forEach(entry => {
-                if (Array.isArray(entry[1])) {
-                    entry[1].length = 0;
-                } else {
-                    this.calendarFilters[entry[0]] = null;
-                }
-            })
-
-            Object.entries(this.eventAttributes).forEach(entry => {
-                entry[1].checked = null;
-            })
-
-            this.displayedRooms = this.rooms
-
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil
-            });
         },
         openEventComponent(event = null) {
 
@@ -1025,88 +500,18 @@ export default {
 
         onEventComponentClose() {
             this.createEventComponentIsVisible = false;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
-        },
-        /**
-         * Fetch the events from server
-         * initialise possible rooms, types and projects
-         *
-         * @param view
-         * @param {Date} startDate
-         * @param {Date} endDate
-         * @returns {Promise<void>}
-         */
-        async fetchEvents({view = null, startDate = null, endDate = null}) {
-            this.currentView = view ?? this.currentView ?? 'week';
-            let vuecal = document.querySelector('#vuecal .vuecal__bg');
-
-            this.setDisplayDate(this.currentView, startDate)
-            this.scrollToNine();
-
-            this.eventsSince = startDate ?? this.eventsSince;
-            this.eventsUntil = endDate ?? this.eventsUntil;
-
-            const filters = this.getFilterIds();
-
-            await axios
-                .get('/events/', {
-                    params: {
-                        calendarFilters: filters,
-                        start: this.eventsSince,
-                        end: this.eventsUntil,
-                        projectId: this.project?.id,
-                        roomId: this.roomId,
-                    }
-                })
-                .then(response => {
-                    this.events = response.data.events.events
-                    this.projects = response.data.events.projects
-                    this.filters = response.data.events.calendarFilters
-                    console.log(response.data.events.events);
-                    this.eventsWithoutRoom = response.data.eventsWithoutRoom.events;
-
-                    if (this.rooms.length === 0) {
-                        this.rooms = response.data.events.rooms
-                        this.displayedRooms = this.rooms;
-                        this.addFilterableVariable(this.rooms, false)
-                    }
-                    if (this.areas.length === 0) {
-                        this.areas = response.data.events.areas
-                        this.addFilterableVariable(this.areas, false)
-                    }
-                    if (this.roomCategories.length === 0) {
-                        this.roomCategories = response.data.events.roomCategories
-                        this.addFilterableVariable(this.roomCategories, false)
-                    }
-                    if (this.roomAttributes.length === 0) {
-                        this.roomAttributes = response.data.events.roomAttributes
-                        this.addFilterableVariable(this.roomAttributes, false)
-                    }
-                    if (this.types.length === 0) {
-                        this.types = this.eventTypes
-                        this.addFilterableVariable(this.types, false)
-                    }
-
-                    // color coding of rooms
-                    //this.events.map(event => event.class = colors[event.split % colors.length])
-
-                    // fix timezone to current local
-                    this.events.map(event => event.start = new Date(event.start))
-                    this.events.map(event => event.end = new Date(event.end))
-                    console.log(this.events);
-                    this.displayedEvents = this.events;
-                });
         },
         scrollToNine() {
             if (this.currentView === 'month') {
                 return;
             }
             const calendar = document.querySelector('#vuecal .vuecal__bg')
-            calendar?.scrollTo({top: 9 * 120, behavior: 'smooth'})
+            if(calendar?.scrollTop < 326.1111145019531) {
+                calendar?.scrollTo({top: 9 * 120, behavior: 'smooth'})
+            }
 
         },
         areChecked(array) {
@@ -1118,34 +523,7 @@ export default {
             })
             return count
         },
-        getFilterIds() {
-            this.filterIds = {};
-            this.filterIds.roomCategoryIds = this.calendarFilters.roomCategories.map(elem => elem.id);
-            this.filterIds.roomAttributeIds = this.calendarFilters.roomAttributes.map(elem => elem.id);
-            this.filterIds.roomIds = this.calendarFilters.rooms.map(elem => elem.id);
-            this.filterIds.areaIds = this.calendarFilters.areas.map(elem => elem.id);
-            this.filterIds.eventTypeIds = this.calendarFilters.eventTypes.map(elem => elem.id);
-            this.setFilterId("isLoud");
-            this.setFilterId("isNotLoud");
-            this.setFilterId("hasAudience");
-            this.setFilterId("hasNoAudience");
-            this.setFilterId("adjoiningNoAudience");
-            this.setFilterId("adjoiningNotLoud");
-            this.setFilterId("allDayFree");
-            this.setFilterId("showAdjoiningRooms");
-
-            return this.filterIds;
-        },
-        setFilterId(field) {
-            if (this.calendarFilters[field] === false || this.calendarFilters[field] === null) {
-                this.filterIds[field] = null
-            } else {
-                this.filterIds[field] = true;
-            }
-        },
-        addFilterableVariable(dataArray, boolean) {
-            dataArray.forEach(element => element.checked = boolean);
-        },
+        // Currently not used
         setDisplayDate(view, startDate) {
 
            if (view === 'week') {

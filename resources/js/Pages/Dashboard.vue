@@ -16,18 +16,36 @@
                 <div>
                     <div v-if="calendarType && calendarType === 'daily'">
                         <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                            <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.eventTypes initial-view="day"/>
+                            <CalendarComponent
+                                :selected-date="selectedDate"
+                                :dateValue="dateValue"
+                                :eventTypes=this.eventTypes
+                                :events="this.events.events"
+                                :rooms="this.rooms"
+                                initial-view="day"/>
                         </div>
                     </div>
                     <div v-else>
-                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
-                                                             @change-at-a-glance="changeAtAGlance"
-                                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                                             :rooms="rooms"
-                                                             :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                        <IndividualCalendarComponent :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
-                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                                     :calendarData="calendar" :rooms="rooms" :days="days"/>
+                        <IndividualCalendarAtGlanceComponent
+                            v-if="atAGlance"
+                            :dateValue="dateValue"
+                            @change-at-a-glance="changeAtAGlance"
+                            :atAGlance="this.atAGlance"
+                            :eventTypes=this.eventTypes
+                            :rooms="rooms"
+                            :eventsAtAGlance="eventsAtAGlance">
+                        </IndividualCalendarAtGlanceComponent>
+
+                        <IndividualCalendarComponent
+                            v-else
+                            :dateValue="dateValue"
+                            :atAGlance="this.atAGlance"
+                            :eventTypes=this.eventTypes
+                            :calendarData="calendar"
+                            :rooms="rooms"
+                            :days="days"
+                            @change-at-a-glance="changeAtAGlance"
+                        />
                     </div>
                 </div>
             </div>
@@ -113,7 +131,19 @@ import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendar
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 
 export default defineComponent({
-    props: ['tasks', 'projects','eventTypes', 'calendar', 'rooms','days', 'dateValue','calendarType','selectedDate','eventsAtAGlance'],
+    props: [
+        'events',
+        'tasks',
+        'projects',
+        'eventTypes',
+        'calendar',
+        'rooms',
+        'days',
+        'dateValue',
+        'calendarType',
+        'selectedDate',
+        'eventsAtAGlance'
+    ],
     components: {
         IndividualCalendarAtGlanceComponent,
         AppLayout,

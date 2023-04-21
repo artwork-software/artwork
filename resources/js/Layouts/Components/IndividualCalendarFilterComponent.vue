@@ -17,7 +17,8 @@
                 <DisclosureButton
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
-                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
+                    <span
+                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Gespeicherte Filter</span>
                     <ChevronDownIcon
                         :class="open ? 'rotate-180 transform' : ''"
                         class="h-4 w-4 mt-0.5 text-white"
@@ -41,7 +42,7 @@
                     </div>
                     <button
                         class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
-                        v-for="filter of filters">
+                        v-for="filter in filters">
                         <label @click="applyFilter(filter)"
                                class="cursor-pointer text-white">{{ filter.name }}</label>
                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
@@ -68,38 +69,37 @@
                     <div>
                         <SwitchGroup>
                             <div class="flex items-center">
-                                <Switch v-model="roomFilters.showAdjoiningRooms"
-                                        @click="this.changeFilterBoolean('showAdjoiningRooms', roomFilters.showAdjoiningRooms); this.changeDisplayedRooms()"
-                                        :class="roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
+                                <Switch v-model="filterArray.roomFilters.showAdjoiningRooms"
+                                        :class="filterArray.roomFilters.showAdjoiningRooms ? 'bg-white' : 'bg-darkGray'"
                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="filterArray.roomFilters.showAdjoiningRooms ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                 </Switch>
                                 <SwitchLabel class="ml-4 text-xs"
-                                             :class="roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
+                                             :class="filterArray.roomFilters.showAdjoiningRooms ? 'text-white' : 'text-secondary'">
                                     Nebenräume anzeigen
                                 </SwitchLabel>
                             </div>
                         </SwitchGroup>
                         <SwitchGroup v-if="currentView === 'day'">
                             <div class="flex items-center mt-2">
-                                <Switch v-model="roomFilters.allDayFree"
-                                        @click="this.changeFilterBoolean('allDayFree', roomFilters.allDayFree);"
-                                        :class="roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
+                                <Switch v-model="filterArray.roomFilters.allDayFree"
+                                        :class="filterArray.roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
                                         class="relative inline-flex h-3 w-7 items-center rounded-full">
                                             <span
-                                                :class="roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                :class="filterArray.roomFilters.allDayFree ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
                                                 class="inline-block h-2 w-2 transform rounded-full transition"/>
                                 </Switch>
                                 <SwitchLabel class="ml-4 text-xs"
-                                             :class="roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
+                                             :class="filterArray.roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
                                     ganztägig frei
                                 </SwitchLabel>
                             </div>
                         </SwitchGroup>
 
-                        <!--
+                        <!-- temporarily not included
+
                         <Menu as="div" v-if="calendarFilters.allDayFree">
                             <div>
                                 <MenuButton
@@ -136,17 +136,18 @@
                         <DisclosureButton
                             class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                         >
-                            <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                            <span
+                                :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
                             <ChevronDownIcon
                                 :class="open ? 'rotate-180 transform' : ''"
                                 class="h-4 w-4 mt-0.5 text-white"
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="roomCategories.length > 0" v-for="category in roomCategories"
+                            <div v-if="filterArray.roomCategories.length > 0"
+                                 v-for="category in filterArray.roomCategories"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="category.checked"
-                                       @change="this.changeFilterElements(calendarFilters.roomCategories, 'roomCategories', category)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[category.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -168,9 +169,9 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="areas.length > 0" v-for="area in areas" class="flex w-full mb-2">
+                            <div v-if="filterArray.areas.length > 0" v-for="area in filterArray.areas"
+                                 class="flex w-full mb-2">
                                 <input type="checkbox" v-model="area.checked"
-                                       @change="this.changeFilterElements(calendarFilters.areas,'areas', area);"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[area.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -191,10 +192,10 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="roomAttributes.length > 0" v-for="attribute in roomAttributes"
+                            <div v-if="filterArray.roomAttributes.length > 0"
+                                 v-for="attribute in filterArray.roomAttributes"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="attribute.checked"
-                                       @change="this.changeFilterElements(calendarFilters.roomAttributes,'roomAttributes', attribute);"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[attribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -217,10 +218,9 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-if="rooms.length > 0" v-for="room in rooms"
+                            <div v-if="filterArray.rooms.length > 0" v-for="room in filterArray.rooms"
                                  class="flex w-full mb-2">
                                 <input type="checkbox" v-model="room.checked"
-                                       @change="this.changeFilterElements(calendarFilters.rooms,'rooms', room)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[room.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -259,9 +259,8 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-for="eventType in types" class="flex w-full mb-2">
+                            <div v-for="eventType in filterArray.eventTypes" class="flex w-full mb-2">
                                 <input type="checkbox" v-model="eventType.checked"
-                                       @change="this.changeFilterElements(calendarFilters.eventTypes,'eventTypes', eventType)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[eventType.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -281,9 +280,8 @@
                             />
                         </DisclosureButton>
                         <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-                            <div v-for="eventAttribute in eventAttributes" class="flex w-full mb-2">
+                            <div v-for="eventAttribute in filterArray.eventAttributes" class="flex w-full mb-2">
                                 <input type="checkbox" v-model="eventAttribute.checked"
-                                       @change="this.changeFilterBoolean(eventAttribute.value, eventAttribute.checked)"
                                        class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                 <p :class="[eventAttribute.checked ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
                                    class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
@@ -300,17 +298,21 @@
 
 <script>
 import {
-    Disclosure, DisclosureButton, DisclosurePanel,
+    Disclosure,
+    DisclosureButton,
+    DisclosurePanel,
     Menu,
     MenuButton,
-    MenuItems, Switch, SwitchGroup, SwitchLabel,
+    MenuItems,
+    Switch,
+    SwitchGroup,
+    SwitchLabel,
 } from "@headlessui/vue";
 
-import {
-    ChevronDownIcon, DocumentTextIcon,
-} from '@heroicons/vue/outline';
+import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
+import {Inertia} from "@inertiajs/inertia";
 
 export default {
     name: "IndividualCalendarFilterComponent",
@@ -330,152 +332,100 @@ export default {
         DocumentTextIcon
 
     },
+    props: ['useIcon'],
+    mounted() {
+        axios.get('/calendars/filters').then(response => {
+            const filters = response.data
+            this.filterArray.rooms = filters.rooms
+            this.filterArray.areas = filters.areas
+            this.filterArray.roomCategories = filters.roomCategories
+            this.filterArray.roomAttributes = filters.roomAttributes
+            this.filterArray.eventTypes = filters.eventTypes
+            this.setCheckedFalse(this.filterArray.rooms)
+            this.setCheckedFalse(this.filterArray.areas)
+            this.setCheckedFalse(this.filterArray.roomCategories)
+            this.setCheckedFalse(this.filterArray.roomAttributes)
+            this.setCheckedFalse(this.filterArray.eventTypes)
+        })
+        axios.get('/filters').then(response => {
+            this.filters = response.data;
+        })
+    },
     data() {
         return {
-            displayDate: '',
             filters: [],
-            filterIds: {},
             filterName: '',
-            wantedSplit: null,
-            selectedDate: null,
-            calendarFilters: {
+            eventsSince: null,
+            eventsUntil: null,
+            deletingEvent: false,
+            eventComponentIsVisible: false,
+            createEventComponentIsVisible: false,
+            filterArray: {
                 rooms: [],
                 areas: [],
                 eventTypes: [],
                 roomAttributes: [],
                 roomCategories: [],
-                isLoud: null,
-                isNotLoud: null,
-                hasAudience: null,
-                hasNoAudience: null,
-                adjoiningNoAudience: null,
-                adjoiningNotLoud: null,
-                allDayFree: null,
-                showAdjoiningRooms: null
+                showFreeRooms: false,
+                roomFilters: {
+                    showAdjoiningRooms: false,
+                    allDayFree: false
+                },
+                eventAttributes: {
+                    isLoud: {
+                        name: 'laut',
+                        value: 'isLoud',
+                        checked: false
+                    },
+                    isNotLoud: {
+                        name: 'nicht laut',
+                        value: 'isNotLoud',
+                        checked: false
+                    },
+                    adjoiningNotLoud: {
+                        name: 'ohne laute Nebenveranstaltung',
+                        value: 'adjoiningNotLoud',
+                        checked: false
+                    },
+                    hasAudience: {
+                        name: 'Mit Publikum',
+                        value: 'hasAudience',
+                        checked: false
+                    },
+                    hasNoAudience: {
+                        name: 'ohne Publikum',
+                        value: 'hasNoAudience',
+                        checked: false
+                    },
+                    adjoiningNoAudience: {
+                        name: 'ohne Nebenveranstaltung mit Publikum',
+                        value: 'adjoiningNoAudience',
+                        checked: false
+                    },
+                },
             },
             saving: false,
-            roomFilters: {
-                showAdjoiningRooms: false,
-                allDayFree: false
-            },
-            eventAttributes: {
-                isLoud: {
-                    name: 'laut',
-                    value: 'isLoud',
-                    checked: false
-                },
-                isNotLoud: {
-                    name: 'nicht laut',
-                    value: 'isNotLoud',
-                    checked: false
-                },
-                adjoiningNotLoud: {
-                    name: 'ohne laute Nebenveranstaltung',
-                    value: 'adjoiningNotLoud',
-                    checked: false
-                },
-                hasAudience: {
-                    name: 'Mit Publikum',
-                    value: 'hasAudience',
-                    checked: false
-                },
-                hasNoAudience: {
-                    name: 'ohne Publikum',
-                    value: 'hasNoAudience',
-                    checked: false
-                },
-                adjoiningNoAudience: {
-                    name: 'ohne Nebenveranstaltung mit Publikum',
-                    value: 'adjoiningNoAudience',
-                    checked: false
-                },
-            },
-            types: [],
-            showFreeRooms: false,
-            showAdjoiningRooms: false,
-            myRooms: [],
-            events: [],
-            eventsWithoutRoom: [],
-            displayedEvents: [],
-            rooms: [],
-            areas: [],
-            displayedRooms: [],
-            projects: [],
-            selectedEvent: null,
-            collision: 0,
-            eventsSince: null,
-            eventsUntil: null,
-            deletingEvent: false,
-            currentView: this.initialView ?? 'week',
-            roomCategories: [],
-            roomAttributes: [],
-            eventComponentIsVisible: false,
-            createEventComponentIsVisible: false,
-            showEventsWithoutRoomComponent: false,
-            roomCollisions: [],
-
         }
     },
-    props:['useIcon'],
     methods: {
-        openEventComponent(event = null) {
-
-            this.wantedSplit = event?.split;
-            if (event === null) {
-                this.selectedEvent = null;
-                this.createEventComponentIsVisible = true;
-                return;
-            }
-
-            if (!event.id) {
-                event = {
-                    start: event?.start,
-                    end: event?.end,
-                    projectId: this.project?.id,
-                    projectName: this.project?.name,
-                    roomId: event.roomId,
-                }
-            }
-
-            if (event?.start && event?.end) {
-                axios.post('/collision/room', {
-                    params: {
-                        start: event?.start,
-                        end: event?.end,
-                    }
-                })
-                    .then(response => this.roomCollisions = response.data);
-            }
-            this.selectedEvent = event;
-            this.createEventComponentIsVisible = true;
+        setCheckedFalse(array) {
+            array.forEach(item => item.checked = false)
         },
         resetCalendarFilter() {
-            this.addFilterableVariable(this.rooms, false);
-            this.addFilterableVariable(this.areas, false);
-            this.addFilterableVariable(this.roomCategories, false);
-            this.addFilterableVariable(this.roomAttributes, false);
-            this.addFilterableVariable(this.types, false);
-            Object.entries(this.calendarFilters).forEach(entry => {
-                if (Array.isArray(entry[1])) {
-                    entry[1].length = 0;
-                } else {
-                    this.calendarFilters[entry[0]] = null;
-                }
-            })
-
-            Object.entries(this.eventAttributes).forEach(entry => {
-                entry[1].checked = null;
-            })
-
-            this.displayedRooms = this.rooms
-
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil
-            });
+            this.filterArray.rooms.forEach(room => room.checked = false)
+            this.filterArray.areas.forEach(area => area.checked = false)
+            this.filterArray.roomAttributes.forEach(attribute => attribute.checked = false)
+            this.filterArray.roomCategories.forEach(category => category.checked = false)
+            this.filterArray.eventTypes.forEach(eventType => eventType.checked = false)
+            this.filterArray.eventAttributes.isLoud.checked = false
+            this.filterArray.eventAttributes.isNotLoud.checked = false
+            this.filterArray.eventAttributes.hasAudience.checked = false
+            this.filterArray.eventAttributes.hasNoAudience.checked = false
+            this.filterArray.eventAttributes.adjoiningNotLoud.checked = false
+            this.filterArray.eventAttributes.adjoiningNoAudience.checked = false
         },
         async saveFilter() {
-            const filterIds = this.getFilterIds();
+            const filterIds = this.getFilterFields();
             await axios.post('/filters', {name: this.filterName, calendarFilters: filterIds}).then(() => {
                 this.filterName = ""
             })
@@ -484,125 +434,93 @@ export default {
                     this.filters = response.data;
                 })
         },
-        applyFilter(filter) {
-            this.calendarFilters = filter;
-            this.changeChecked(this.rooms, 'rooms')
-            this.changeChecked(this.areas, 'areas')
-            this.changeChecked(this.roomCategories, 'roomCategories')
-            this.changeChecked(this.roomAttributes, 'roomAttributes')
-            this.changeChecked(this.types, 'eventTypes')
-
-            Object.entries(this.eventAttributes).forEach(entry => {
-                Object.entries(this.calendarFilters).forEach(filterEntry => {
-                    if (entry[1].value === filterEntry) {
-                        entry[1].checked = true
+        changeChecked(elementsToChange, checkedElements) {
+            elementsToChange.forEach(item => {
+                checkedElements.forEach(checkedItem => {
+                    if (item.id === checkedItem.id) {
+                        item.checked = true
                     }
                 })
             })
-
-            this.changeDisplayedRooms();
-
-            this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
+            return elementsToChange
+        },
+        applyFilter(filter) {
+            this.filterArray.rooms = this.changeChecked(this.filterArray.rooms, filter.rooms)
+            this.filterArray.areas = this.changeChecked(this.filterArray.areas, filter.areas)
+            this.filterArray.roomAttributes = this.changeChecked(this.filterArray.roomAttributes, filter.roomAttributes)
+            this.filterArray.roomCategories = this.changeChecked(this.filterArray.roomCategories, filter.roomCategories)
+            this.filterArray.eventTypes = this.changeChecked(this.filterArray.eventTypes, filter.eventTypes)
+            this.filterArray.eventAttributes.isLoud.checked = filter.isLoud
+            this.filterArray.eventAttributes.isNotLoud.checked = filter.isNotLoud
+            this.filterArray.eventAttributes.hasAudience.checked = filter.hasAudience
+            this.filterArray.eventAttributes.hasNoAudience.checked = filter.hasNoAudience
+            this.filterArray.eventAttributes.adjoiningNotLoud.checked = filter.adjoiningNotLoud
+            this.filterArray.eventAttributes.adjoiningNoAudience.checked = filter.adjoiningNoAudience
         },
         async deleteFilter(id) {
             await axios.delete(`/filters/${id}`)
-            this.resetCalendarFilter();
             await axios.get('/filters')
                 .then(response => {
                     this.filters = response.data
                 })
         },
-        async changeFilterBoolean(filter, variable) {
-            this.calendarFilters[`${filter}`] = variable
-            await this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-            await this.changeDisplayedRooms()
+        returnNullIfFalse(variable) {
+            if (!variable) {
+                return null
+            }
+            return variable
         },
-        async changeDisplayedRooms() {
+        arrayToIds(array) {
+            const filteredArray = array.filter(item => item.checked === true)
 
-            let allRooms = this.rooms;
-            if (this.calendarFilters.allDayFree === true) {
-                allRooms = await this.getAllDayFreeRooms();
+            if (filteredArray.length === 0) {
+                return null
             }
 
-            //decides for every room if it should be displayed in the calendar
-            this.displayedRooms = allRooms.filter(room => {
-                let include = false;
-
-                this.areas.forEach(area => {
-                    //if the current area is checked
-                    if (area.checked) {
-                        if (room.area.name === area.name) {
-                            include = this.filterRooms(room)
-                        }
-                        //checks if no area is checked
-                    } else if (this.zeroObjectsChecked(this.areas)) {
-                        include = this.filterRooms(room)
-                        //at least one area is checked, but not the current one
-                    } else {
-                        if (room.area.name === area.name) {
-                            include = false;
-                        }
-                    }
-                })
-                return include
-            });
-            this.viewAdjoiningRooms()
+            return filteredArray.map(elem => elem.id)
         },
-        async changeFilterElements(filterArray, arrayName, element) {
-
-            if (element.checked) {
-                filterArray.push(element)
-            } else {
-                // entry[0] is the key, e.g. room_categories. entry[1] is the array corresponding to the key.
-                Object.entries(this.calendarFilters).forEach(entry => {
-                    if (Array.isArray(entry[1]) && entry[1].length > 0 && arrayName === entry[0]) {
-                        if (arrayName === 'rooms') {
-                            const room = this.rooms.filter(room => element?.id === room.id)
-                            if (room) {
-                                room[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'areas') {
-                            const area = this.areas.filter(area => element?.id === area.id)
-                            if (area) {
-                                area[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'roomCategories') {
-                            const category = this.roomCategories.filter(category => element?.id === category.id)
-                            if (category) {
-                                category[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'roomAttributes') {
-                            const attribute = this.roomAttributes.filter(room => element?.id === room.id)
-                            if (attribute) {
-                                attribute[0].checked = false
-                            }
-                        }
-                        if (arrayName === 'eventTypes') {
-                            const eventType = this.eventTypes.filter(type => element?.id === type.id)
-                            if (eventType) {
-                                eventType[0].checked = false
-                            }
-                        }
-
-                        this.calendarFilters[entry[0]] = filterArray.filter(elem => element?.id !== elem.id)
-                    }
-                })
+        getFilterFields() {
+            return {
+                isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
+                isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
+                adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
+                adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
+                hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
+                showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
+                allDayFree: this.filterArray.roomFilters.allDayFree,
+                roomIds: this.arrayToIds(this.filterArray.rooms),
+                areaIds: this.arrayToIds(this.filterArray.areas),
+                eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
+                roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
+                roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
             }
-            await this.fetchEvents({
-                startDate: this.eventsSince,
-                endDate: this.eventsUntil,
-            });
-            await this.changeDisplayedRooms()
-        },
+        }
+    },
+    watch: {
+        filterArray: {
+            handler() {
+                Inertia.reload({
+                    data: {
+                        isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
+                        isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
+                        adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
+                        adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                        hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
+                        hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
+                        showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
+                        allDayFree: this.filterArray.roomFilters.allDayFree,
+                        roomIds: this.arrayToIds(this.filterArray.rooms),
+                        areaIds: this.arrayToIds(this.filterArray.areas),
+                        eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
+                        roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
+                        roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
+                    },
+                    preserveState: true
+                })
+            },
+            deep: true
+        }
     }
 }
 </script>

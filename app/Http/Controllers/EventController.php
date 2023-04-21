@@ -93,8 +93,8 @@ class EventController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
-            'rooms' => Room::all(),
-
+            'rooms' => $calendar->filterRooms(),
+            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay())
         ]);
     }
 
@@ -104,8 +104,8 @@ class EventController extends Controller
      */
     public function showDashboardPage(Request $request): Response
     {
-        $calendar = new CalendarController();
-        $showCalendar = $calendar->createCalendarData('dashboard');
+        $calendarController = new CalendarController();
+        $showCalendar = $calendarController->createCalendarData('dashboard');
 
         $projects = Project::query()->with( ['managerUsers'])->get();
 
@@ -136,6 +136,11 @@ class EventController extends Controller
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
 
+        $rooms = $calendarController->filterRooms();
+        Debugbar::info("room stuff in Eventcontroller");
+        Debugbar::info(request('roomIds'));
+        Debugbar::info($rooms->toArray());
+
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
             'tasks' => TaskIndexResource::collection($tasks)->resolve(),
@@ -145,9 +150,10 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'rooms' => $rooms,
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
-            'rooms' => Room::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
+            'events' => new CalendarEventCollectionResource($calendarController->getEventsOfDay())
         ]);
     }
 

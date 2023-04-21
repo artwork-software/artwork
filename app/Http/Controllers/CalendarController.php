@@ -88,20 +88,24 @@ class CalendarController extends Controller
             ];
         }
 
+        $eventsWithoutRooms = [];
+
         if(!empty($room)){
             $better = collect($calendarPeriod)
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
         }else{
-            $better = Room::with(['events.room', 'events.project', 'events.creator'])
+            $better = Room::with(['events.room', 'events.project', 'events.creator', 'events.comments'])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
                     ->mapWithKeys(fn($date) => [
                         $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
+
+            $eventsWithoutRooms = CalendarEventResource::collection(Event::where('room_id', null)->get())->resolve();
         }
-       
+
         return [
             'days' => $periodArray,
             'dateValue' => [$this->startDate->format('Y-m-d'),$this->endDate->format('Y-m-d')],
@@ -109,7 +113,8 @@ class CalendarController extends Controller
             'calendarType' => $calendarType,
             // Selected Date is needed for change from individual Calendar to VueCal-Daily, so that vuecal knows which date to load
             'selectedDate' => $selectedDate,
-            'roomsWithEvents' => $better
+            'roomsWithEvents' => $better,
+            'eventsWithoutRoom' => $eventsWithoutRooms,
         ];
     }
 

@@ -91,6 +91,7 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
             'rooms' => Room::all(),
 
@@ -144,6 +145,7 @@ class EventController extends Controller
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'rooms' => Room::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
         ]);
@@ -397,6 +399,28 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        if($request->accept || $request->optionAccept){
+            $event->update(['occupancy_option' => false]);
+
+            if(!empty($request->adminComment)){
+                $event->comments()->create([
+                    'user_id' => Auth::id(),
+                    'comment' => $request->adminComment,
+                    'is_admin_comment' => true
+                ]);
+            }
+
+            if($request->accept){
+                $event->update(['accepted' => true]);
+            }
+
+            if($request->optionAccept){
+                $event->update(['accepted' => true, 'option_string' => $request->optionString]);
+            }
+
+        }
+
+
         DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
             ->orWhereJsonContains("data->type", "ROOM_REQUEST")
@@ -574,6 +598,32 @@ class EventController extends Controller
         $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
+    }
+
+
+    public function declineEvent(Request $request, Event $event){
+        $roomId = $event->room_id;
+        $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+        if(!empty($request->comment)){
+            $event->comments()->create([
+                'user_id' => Auth::id(),
+                'comment' => $request->comment,
+                'is_admin_comment' => true
+            ]);
+        }
+        $this->notificationData->title = 'Raumanfrage abgesagt';
+        $this->history->createHistory($event->id, 'Raum abgelehnt');
+        $this->notificationData->accepted = false;
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'error',
+            'message' => $this->notificationData->title
+        ];
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST;
+        $this->notificationData->event = $event;
+        $this->notificationData->created_by = User::where('id', Auth::id())->first();
+        $this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
+
     }
 
     /**

@@ -219,7 +219,7 @@ const navigation = [
     },
     {
         name: 'Raumbelegung',
-        href: route('events.view.index'),
+        href: route('events'),
         route: ['/events/view'],
         svgSrc: '/Svgs/Sidebar/icon_calendar.svg',
         svgSrc_active: '/Svgs/Sidebar/icon_calendar_active.svg',

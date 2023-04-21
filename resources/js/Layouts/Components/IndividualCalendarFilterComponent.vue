@@ -495,12 +495,23 @@ export default {
                 roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
                 roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
             }
+        },
+        getRoute(pathName) {
+            switch (pathName) {
+                case 'dashboard':
+                    return route('dashboard')
+                case 'events':
+                    return route('events')
+                case 'projects':
+                    return route('projects.show', { project: window.location.pathname.split('/')[2]})
+            }
         }
     },
     watch: {
         filterArray: {
             handler() {
-                Inertia.reload({
+                const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
+                Inertia.visit(pageRoute, {
                     data: {
                         isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
                         isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),

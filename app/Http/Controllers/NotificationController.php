@@ -246,14 +246,17 @@ class NotificationController extends Controller
             case NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT:
                 $project = $notificationData->project->id;
                 $historyArray = [];
-                $historyComplete = Project::find($project)->historyChanges()->all();
-                foreach ($historyComplete as $history){
-                    $historyArray[] = [
-                        'changes' => json_decode($history->changes),
-                        'created_at' => $history->created_at->diffInHours() < 24
-                            ? $history->created_at->diffForHumans()
-                            : $history->created_at->format('d.m.Y, H:i'),
-                    ];
+                $projectFind = Project::find($project);
+                if(!empty($projectFind)){
+                    $historyComplete = $projectFind->historyChanges()->all();
+                    foreach ($historyComplete as $history){
+                        $historyArray[] = [
+                            'changes' => json_decode($history->changes),
+                            'created_at' => $history->created_at->diffInHours() < 24
+                                ? $history->created_at->diffForHumans()
+                                : $history->created_at->format('d.m.Y, H:i'),
+                        ];
+                    }
                 }
                 $notificationBody = [
                     'groupType' => 'PROJECTS',

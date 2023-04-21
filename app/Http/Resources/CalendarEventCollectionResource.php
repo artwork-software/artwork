@@ -52,7 +52,7 @@ class CalendarEventCollectionResource extends ResourceCollection
                     'id' => $room->id,
                     'everyone_can_book' => $room->everyone_can_book,
                     'label' => $room->name,
-                    'room_admins' => $room->room_admins
+                    'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
                 ]),
                 'areas' => $filter->areas,
                 'roomCategories' => $filter->room_categories,
@@ -76,7 +76,7 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'id' => $room->id,
                 'name' => $room->name,
                 'area' => $room->area,
-                'room_admins' => $room->room_admins,
+                'room_admins' => $room->users()->wherePivot('is_admin', true)->get(),
                 'everyone_can_book' => $room->everyone_can_book,
                 'label' => $room->name,
                 'adjoining_rooms' => $room->adjoining_rooms->map(fn(Room $adjoining_room) => [

@@ -20,7 +20,7 @@
                               d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </button>
-                <button type="button"
+                <button type="button" @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -100,7 +100,7 @@
             <!-- Time -->
             <div class="flex" :style="textStyle"
                  :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
-                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project"
+                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
                       class="items-center">{{
                         new Date(event.start).formatTime("HH:mm")
                     }} - {{ new Date(event.end).formatTime("HH:mm") }}
@@ -293,6 +293,13 @@
         @delete="deleteEvent"
     />
 
+    <DeclineEventModal
+        :request-to-decline="event"
+        :event-types="eventTypes"
+        @closed="showDeclineEventModal = false"
+        v-if="showDeclineEventModal"
+    />
+
 
 </template>
 
@@ -308,11 +315,13 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 
 
 export default {
     name: "SingleCalendarEvent",
     components: {
+        DeclineEventModal,
         AddButton,
         EventComponent,
         ConfirmDeleteModal,
@@ -320,7 +329,7 @@ export default {
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip,
         Link
     },
-    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit'],
+    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit','atAGlance'],
     emits: ['openEditEventModal'],
     computed: {
         textStyle() {
@@ -345,6 +354,7 @@ export default {
     },
     data() {
         return {
+            showDeclineEventModal: false,
             showAddSubEventModal: false,
             deleteComponentVisible: false,
             eventToDelete: null,

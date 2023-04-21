@@ -63,8 +63,12 @@ class Event extends Model
         'user_id',
         'project_id',
         'series_id',
-        'is_series'
+        'is_series',
+        'accepted',
+        'option_string',
+        'declined_room_id'
     ];
+
 
     protected $guarded = [
         'id',
@@ -76,13 +80,18 @@ class Event extends Model
         'occupancy_option' => 'boolean',
         'start_time' => 'datetime:d. M Y H:i',
         'end_time' => 'datetime:d. M Y H:i',
-        'is_series' => 'boolean'
+        'is_series' => 'boolean',
+        'accepted' => 'boolean'
     ];
 
     protected $appends = [
         'days_of_event',
     ];
 
+    public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(EventComments::class);
+    }
 
     public function getDaysOfEventAttribute(): array
     {

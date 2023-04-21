@@ -11,7 +11,7 @@
                 </button>
             </div>
             <div v-else class="flex items-center">
-              <SwitchGroup as="div" class="flex items-center ml-2">
+              <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">
                 <Switch v-model="atAGlance" @click="changeAtAGlance()"
                         class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
                     <span class="sr-only">Use setting</span>
@@ -25,7 +25,7 @@
                     <span class="font-medium text-gray-900">Auf einen Blick</span>
                 </SwitchLabel>
             </SwitchGroup>
-                <SwitchGroup as="div" class="flex items-center ml-3">
+                <SwitchGroup v-if="!roomMode"  as="div" class="flex items-center ml-3">
                     <Switch v-model="multiEdit" @click="changeMultiEdit(multiEdit)"
                             class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
                         <span class="sr-only">Use setting</span>
@@ -153,7 +153,7 @@ export default {
         ZoomInIcon,
         ZoomOutIcon
     },
-    props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor'],
+    props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor','project','roomMode',],
     emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
     data() {
         return {

@@ -23,7 +23,7 @@ class EventPolicy
             return true;
         }
 
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() || $event->creator?->id === $user->id ?? false;
+        return $event->room?->users()->wherePivot('is_admin', true)->where('user_id', $user->id)->get() || $event->creator?->id === $user->id ?? false;
     }
 
     public function delete(User $user, Event $event)
@@ -31,6 +31,6 @@ class EventPolicy
         if ($user->canAny([PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value, PermissionNameEnum::PROJECT_MANAGEMENT->value])) {
             return true;
         }
-        return $event->room?->room_admins->where('id', $user->id)->isNotEmpty() || $event->creator?->id === $user->id ?? false;
+        return $event->room?->users()->wherePivot('is_admin', true)->where('user_id', $user->id)->get() || $event->creator?->id === $user->id ?? false;
     }
 }

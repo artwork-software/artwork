@@ -1378,7 +1378,7 @@ class ProjectController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms(),
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
-
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'budget' => [
                 'columns' => $outputColumns,
                 'table' => $project->table()

@@ -30,12 +30,12 @@
                     <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
                         {{day.day_string}} {{ day.day }}
                     </th>
-                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell overflow-y-auto border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="room in calendarData">
+                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="room in calendarData">
                         <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
-                            <SingleCalendarEvent :project="project" :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
+                            <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
+                            <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
-
-
+                            <!-- </CalendarEventTooltip> -->
                         </div>
                     </td>
                 </tr>
@@ -87,11 +87,13 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
+import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     components: {
+        CalendarEventTooltip,
         MultiEditModal,
         AddButton,
         CalendarFunctionBar,

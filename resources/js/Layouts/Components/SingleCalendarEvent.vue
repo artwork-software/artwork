@@ -100,7 +100,7 @@
             <!-- Time -->
             <div class="flex" :style="textStyle"
                  :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
-                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project"
+                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
                       class="items-center">{{
                         new Date(event.start).formatTime("HH:mm")
                     }} - {{ new Date(event.end).formatTime("HH:mm") }}
@@ -329,7 +329,7 @@ export default {
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip,
         Link
     },
-    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit'],
+    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit','atAGlance'],
     emits: ['openEditEventModal'],
     computed: {
         textStyle() {

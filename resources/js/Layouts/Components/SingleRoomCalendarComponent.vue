@@ -1,7 +1,7 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+            <CalendarFunctionBar :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
@@ -20,12 +20,12 @@
             <table class="w-full flex flex-wrap bg-white">
                 <tbody class="flex w-full flex-wrap">
                 <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" v-for="day in days">
-                    <th class="w-16 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{ day }}
+                    <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
+                        {{day.day_string}} {{ day.day }}
                     </th>
                     <td :style="{ height: zoomFactor * 115 + 'px'}" class="cell flex-row w-full  flex overflow-y-auto border-t-2 border-dashed">
                         <div class="py-0.5 pr-2" v-for="event in calendarData[day.day].data">
-                            <SingleCalendarEvent :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
+                            <SingleCalendarEvent :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
                         </div>
                     </td>

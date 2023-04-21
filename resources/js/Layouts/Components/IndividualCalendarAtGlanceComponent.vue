@@ -13,7 +13,7 @@
 
                 </div>
                 <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleCalendarEvent :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
+                    <SingleCalendarEvent :atAGlance="true" :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
                                          @open-edit-event-modal="openEditEventModal"></SingleCalendarEvent>
                 </div>
             </div>

@@ -49,11 +49,6 @@
                                 </MenuItem>
                             </MenuItems>
                         </Menu>
-                        <div v-else-if="event?.canDelete" class="flex mt-2 mr-2 cursor-pointer"
-                             @click="deleteComponentVisible = true">
-                            <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full"
-                                 src="/Svgs/IconSvgs/icon_trash_white.svg"/>
-                        </div>
                     </h1>
                     <h2 v-if="!this.event?.id" class="xsLight mb-2">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
@@ -986,13 +981,11 @@ export default {
                     .then(() => { this.closeModal(); this.closeSeriesEditModal() })
                     .catch(error => this.error = error.response.data.errors);
             }
-
-
-
             if(this.eventData().is_series){
                 this.showSeriesEdit = true;
                 this.$emit('closed', true);
             }
+
             /**/
         },
         async singleSaveEvent(){

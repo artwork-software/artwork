@@ -1375,6 +1375,7 @@ class ProjectController extends Controller
             'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'rooms' => Room::all(),
 
             'budget' => [

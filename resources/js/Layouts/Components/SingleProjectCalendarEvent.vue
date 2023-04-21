@@ -31,6 +31,9 @@
             </span>
             <span class="flex w-full" v-else>
                 <span class="items-center eventTime">
+                    <span class="text-error">
+                        {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''}}
+                        </span>
                     {{ new Date(event.start).format("DD.MM., HH:mm") }} - {{
                         new Date(event.end).format("DD.MM. HH:mm")
                     }}

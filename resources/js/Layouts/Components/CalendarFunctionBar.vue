@@ -29,7 +29,7 @@
                     <Switch v-model="multiEdit" @click="changeMultiEdit(multiEdit)"
                             class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
                         <span class="sr-only">Use setting</span>
-                        <span aria-hidden="true" class="pointer-events-none absolute h-full w-full rounded-md bg-white"/>
+                        <span aria-hidden="true" :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'" class="pointer-events-none absolute h-full w-full rounded-md"/>
                         <span aria-hidden="true"
                               :class="[multiEdit ? 'bg-indigo-600' : 'bg-gray-200', 'pointer-events-none absolute mx-auto h-4 w-9 rounded-full transition-colors duration-200 ease-in-out']"/>
                         <span aria-hidden="true"

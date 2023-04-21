@@ -107,6 +107,9 @@
                 </span>
                 <span class="flex w-full" v-else>
                     <span class="items-center">
+                        <span class="text-error">
+                        {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''}}
+                        </span>
                         {{
                             new Date(event.start).format("DD.MM. HH:mm")
                         }} - {{ new Date(event.end).format("DD.MM. HH:mm") }}
@@ -396,7 +399,6 @@ export default {
             this.deleteComponentVisible = true;
         },
         deleteEvent() {
-            console.log(this.eventToDelete)
             if (this.type === 'main') {
                 this.$inertia.delete(route('events.delete', this.eventToDelete), {
                     preserveScroll: true,

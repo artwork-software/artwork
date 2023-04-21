@@ -511,7 +511,7 @@ export default {
         filterArray: {
             handler() {
                 const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
-                Inertia.visit(pageRoute, {
+                Inertia.reload( {
                     data: {
                         isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
                         isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),

@@ -37,7 +37,8 @@
 
                                     <div v-if="event?.canDelete"
                                          class="flex  justify-end">
-                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="openDeleteEventModal(event)">
+                                        <!-- openDeleteEventModal(event) on CLick for this button to open Modal (but right now modal in modal doesnt work -> direct delete) -->
+                                        <div class="flex mt-1 mr-2 cursor-pointer" @click="deleteEvent(event)">
                                             <img class="bg-buttonBlue hover:bg-buttonHover h-8 w-8 p-1 rounded-full" src="/Svgs/IconSvgs/icon_trash_white.svg"/>
                                         </div>
                                     </div>
@@ -683,6 +684,11 @@ export default {
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
+                .then(() => this.closeModal());
+        },
+        async deleteEvent(eventToDelete){
+            return await axios
+                .delete(`/events/${eventToDelete.id}`)
                 .then(() => this.closeModal());
         },
 

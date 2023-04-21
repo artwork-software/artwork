@@ -153,6 +153,7 @@
                             :eventTypes=this.eventTypes initial-view="day"
                             :events="this.events.events"
                             :rooms="this.rooms"
+                            :events-without-room="eventsWithoutRoom"
                         />
                     </div>
 
@@ -162,7 +163,7 @@
                                                              :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                                              :rooms="rooms"
                                                              :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                        <IndividualCalendarComponent :project="project" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
+                        <IndividualCalendarComponent :events-without-room="eventsWithoutRoom" :project="project" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
                                                      :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                                      :calendarData="calendar" :rooms="rooms" :days="days"/>
                     </div>
@@ -595,7 +596,8 @@ export default {
         'rooms',
         'dateValue',
         'selectedDate',
-        'calendarType'
+        'calendarType',
+        'eventsWithoutRoom'
     ],
     components: {
         ProjectSecondSidenav,

@@ -1,24 +1,32 @@
 <template>
     <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
+        <div class="flex justify-center w-full bg-white">
+            <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
+                 @click="openEventsWithoutRoomComponent()"
+                 v-if="eventsWithoutRoom?.length > 0">
+                <ExclamationIcon class="h-6  mr-2"/>
+                {{
+                    eventsWithoutRoom?.length
+                }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+            </div>
+        </div>
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
+                                 @increment-zoom-factor="incrementZoomFactor"
+                                 @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
+                                 :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
+                                 :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  @change-multi-edit="changeMultiEdit"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
-            <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
-                 @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom.length > 0">
-
-                <ExclamationIcon class="h-6  mr-2"/>
-                {{ eventsWithoutRoom.length }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-            </div>
             <!-- Calendar -->
             <table class="w-full flex flex-wrap bg-white">
                 <thead class="w-full">
                 <tr class=" w-full flex bg-userBg">
                     <th class="w-16">
                     </th>
-                    <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"  class="py-3 border-r-4 border-secondaryHover">
+                    <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
+                        class="py-3 border-r-4 border-secondaryHover">
                         <div :style="textStyle" class="flex font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>
@@ -26,14 +34,19 @@
                 </tr>
                 </thead>
                 <tbody class="flex w-full pt-3 flex-wrap">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
+                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex"
+                    :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
                     <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{day.day_string}} {{ day.day }}
+                        {{ day.day_string }} {{ day.day }}
                     </th>
-                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}" class="cell border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="room in calendarData">
+                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
+                        class="cell border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'"
+                        v-for="room in calendarData">
                         <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
                             <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
-                            <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit" :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event" :event-types="eventTypes"
+                            <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
+                                                 :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event"
+                                                 :event-types="eventTypes"
                                                  @open-edit-event-modal="openEditEventModal"/>
                             <!-- </CalendarEventTooltip> -->
                         </div>
@@ -68,12 +81,17 @@
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
-    <div v-show="multiEdit" class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben" @click="openMultiEditModal"/>
-        <AddButton mode="modal" class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none" text="Termine löschen"/>
+    <div v-show="multiEdit"
+         class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
+                   @click="openMultiEditModal"/>
+        <AddButton mode="modal"
+                   class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
+                   text="Termine löschen"/>
     </div>
 
-    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms" @closed="closeMultiEditModal" />
+    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+                    @closed="closeMultiEditModal"/>
 
 </template>
 
@@ -106,7 +124,6 @@ export default {
     data() {
         return {
             showEventsWithoutRoomComponent: false,
-            eventsWithoutRoom: [],
             selectedEvent: null,
             createEventComponentIsVisible: false,
             wantedRoom: null,
@@ -118,9 +135,9 @@ export default {
             showMultiEditModal: false,
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue', 'project', 'eventsWithoutRoom'],
     emits: ['changeAtAGlance'],
-    mounted(){
+    mounted() {
         window.addEventListener('resize', this.listenToFullscreen);
     },
     computed: {
@@ -134,15 +151,11 @@ export default {
         },
     },
     methods: {
-        changeMultiEdit(multiEdit){
+        changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;
         },
         changeAtAGlance(atAGlance) {
             this.$emit('changeAtAGlance', atAGlance)
-        },
-        onEventsWithoutRoomComponentClose() {
-            this.showEventsWithoutRoomComponent = false;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
         },
         openEditEventModal(event = null) {
 
@@ -182,18 +195,18 @@ export default {
             Inertia.reload();
         },
 
-        openMultiEditModal(){
+        openMultiEditModal() {
             this.getCheckedEvents();
             console.log(this.calendarData)
 
             this.showMultiEditModal = true;
         },
-        getCheckedEvents(){
+        getCheckedEvents() {
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {
                     room[day.day].data.forEach((event) => {
-                        if(event.clicked){
+                        if (event.clicked) {
                             eventArray.push(event.id)
                         }
                     })
@@ -201,7 +214,7 @@ export default {
             })
             this.editEvents = eventArray
         },
-        closeMultiEditModal(){
+        closeMultiEditModal() {
             this.showMultiEditModal = false;
         },
         /* View in fullscreen */
@@ -233,6 +246,13 @@ export default {
             if (this.zoomFactor > 0.2) {
                 this.zoomFactor = Math.round((this.zoomFactor - 0.2) * 10) / 10;
             }
+        },
+        openEventsWithoutRoomComponent() {
+            this.showEventsWithoutRoomComponent = true;
+        },
+        onEventsWithoutRoomComponentClose() {
+            this.showEventsWithoutRoomComponent = false;
+            Inertia.reload();
         },
     }
 }

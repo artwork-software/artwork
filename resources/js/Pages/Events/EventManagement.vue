@@ -19,6 +19,7 @@
                         initial-view="day"
                         :rooms="rooms"
                         :events="this.events.events"
+                        :events-without-room="eventsWithoutRoom"
                     />
                 </div>
             </div>
@@ -28,7 +29,7 @@
                                                      :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                                      :rooms="rooms"
                                                      :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                <IndividualCalendarComponent :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
+                <IndividualCalendarComponent :events-without-room="eventsWithoutRoom" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
                                              :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
                                              :calendarData="calendar" :rooms="rooms" :days="days"/>
             </div>
@@ -53,7 +54,7 @@ export default defineComponent({
         CalendarComponent,
         AppLayout
     },
-    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','events', 'days','eventsAtAGlance'],
+    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','events', 'days','eventsAtAGlance','eventsWithoutRoom'],
     methods: {
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;

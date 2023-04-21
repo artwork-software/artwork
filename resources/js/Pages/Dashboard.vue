@@ -22,6 +22,7 @@
                                 :eventTypes=this.eventTypes
                                 :events="this.events.events"
                                 :rooms="this.rooms"
+                                :events-without-room="eventsWithoutRoom"
                                 initial-view="day"/>
                         </div>
                     </div>
@@ -44,6 +45,7 @@
                             :calendarData="calendar"
                             :rooms="rooms"
                             :days="days"
+                            :events-without-room="eventsWithoutRoom"
                             @change-at-a-glance="changeAtAGlance"
                         />
                     </div>
@@ -143,7 +145,7 @@ export default defineComponent({
         'calendarType',
         'selectedDate',
         'eventsAtAGlance'
-    ],
+    ,'eventsWithoutRoom'],
     components: {
         IndividualCalendarAtGlanceComponent,
         AppLayout,

@@ -142,7 +142,7 @@
                 </div>
                 <div class="w-full items-center text-center">
                     <AddButton @click="editProjectTeam" text="Speichern" mode="modal"
-                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
+                               class=" inline-flex mt-8 items-center px-12 py-3 border bg-buttonBlue hover:bg-buttonHover focus:outline-none border-transparent text-base font-bold tracking-wider text-lg shadow-sm text-secondaryHover"
                     />
                 </div>
             </div>

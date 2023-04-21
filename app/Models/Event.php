@@ -65,7 +65,8 @@ class Event extends Model
         'series_id',
         'is_series',
         'accepted',
-        'option_string'
+        'option_string',
+        'declined_room_id'
     ];
 
 

@@ -598,6 +598,21 @@ class EventController extends Controller
         return Redirect::back();
     }
 
+
+    public function declineEvent(Request $request, Event $event){
+        $roomId = $event->room_id;
+        $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+        if(!empty($request->comment)){
+            $event->comments()->create([
+                'user_id' => Auth::id(),
+                'comment' => $request->comment,
+                'is_admin_comment' => true
+            ]);
+        }
+
+
+    }
+
     /**
      * @param Request $request
      * @return int

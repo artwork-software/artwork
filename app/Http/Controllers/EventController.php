@@ -261,9 +261,6 @@ class EventController extends Controller
             'is_series' => true,
             'series_id' => $series->id,
         ]);
-        if ($request->get('projectName')) {
-            $this->associateProject($request, $event);
-        }
     }
 
     /**

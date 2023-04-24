@@ -468,6 +468,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // MultiEdit
     Route::patch('/multi-edit', [\App\Http\Controllers\EventController::class, 'updateMultiEdit'])->name('multi-edit.save');
+    Route::post('/multi-edit', [\App\Http\Controllers\EventController::class, 'deleteMultiEdit'])->name('multi-edit.delete');
 
     // Calendar
     Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');

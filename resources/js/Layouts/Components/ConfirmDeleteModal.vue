@@ -8,7 +8,7 @@
             <div class="fixed inset-0 z-30 overflow-y-auto">
                 <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                     <TransitionChild as="template" enter="ease-out duration-300" enter-from="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" enter-to="opacity-100 translate-y-0 sm:scale-100" leave="ease-in duration-200" leave-from="opacity-100 translate-y-0 sm:scale-100" leave-to="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
-                        <DialogPanel class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+                        <DialogPanel class="relative transform overflow-hidden bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-2xl sm:p-6">
                             <img src="/Svgs/Overlays/illu_warning.svg" class="-ml-6 -mt-8 mb-4"/>
                             <div class="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
                                 <button type="button" class="rounded-md bg-white text-gray-400 hover:text-gray-500" @click="closeModal">
@@ -23,9 +23,9 @@
                                 <p class="text-error subpixel-antialiased">{{ description }}</p>
                             </div>
                             <div class="flex justify-between mt-5">
-                                <button type="button" class="inline-flex justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500" @click="deleteElement(true)">
-                                    Ja, Löschen
-                                </button>
+                                <AddButton mode="modal" @click="deleteElement(true)"
+                                           class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
+                                           text="Löschen"/>
                                 <p class="cursor-pointer text-sm" @click="closeModal">Nein, doch nicht</p>
                             </div>
                         </DialogPanel>
@@ -39,10 +39,12 @@
 <script>
 import { Dialog, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
+import AddButton from "@/Layouts/Components/AddButton.vue";
 
 export default {
     name: "ConfirmDeleteModal",
     components: {
+        AddButton,
         Dialog,
         DialogTitle,
         TransitionChild,

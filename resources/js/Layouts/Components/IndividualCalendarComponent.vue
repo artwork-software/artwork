@@ -1,6 +1,7 @@
 <template>
-    <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
-        <div class="flex justify-center w-full bg-white">
+    <div id="myCalendar" class="bg-white overflow-y-auto">
+    <div  class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" >
+        <div  class="flex justify-center w-full bg-white">
             <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                  @click="openEventsWithoutRoomComponent()"
                  v-if="eventsWithoutRoom?.length > 0">
@@ -55,21 +56,23 @@
                 </tbody>
             </table>
         </div>
+        <event-component
+            v-if="createEventComponentIsVisible"
+            @closed="onEventComponentClose()"
+            :showHints="$page.props?.can?.show_hints"
+            :eventTypes="eventTypes"
+            :rooms="rooms"
+            :project="project"
+            :event="selectedEvent"
+            :wantedRoomId="wantedRoom"
+            :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+            :roomCollisions="roomCollisions"
+        />
 
     </div>
 
-    <event-component
-        v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
-        :showHints="$page.props?.can?.show_hints"
-        :eventTypes="eventTypes"
-        :rooms="rooms"
-        :project="project"
-        :event="selectedEvent"
-        :wantedRoomId="wantedRoom"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
-        :roomCollisions="roomCollisions"
-    />
+
+
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
@@ -99,6 +102,8 @@
         @delete="deleteSelectedEvents"
         title="Belegungen löschen"
         description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht." />
+
+    </div>
 </template>
 
 <script>
@@ -237,7 +242,7 @@ export default {
         },
         /* View in fullscreen */
         openFullscreen() {
-            let elem = document.getElementById("myCalendar");
+            let elem = document.getElementById('myCalendar');
             if (elem.requestFullscreen) {
                 elem.requestFullscreen();
                 this.isFullscreen = true;

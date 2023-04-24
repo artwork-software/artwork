@@ -219,6 +219,7 @@ export default {
             this.showMultiEditModal = true;
         },
         getCheckedEvents() {
+            this.editEvents = [];
             const eventArray = [];
             this.days.forEach((day) => {
                 this.calendarData.forEach((room) => {

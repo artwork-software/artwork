@@ -85,7 +85,7 @@
          class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
         <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
                    @click="openMultiEditModal"/>
-        <AddButton mode="modal"
+        <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
                    class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
                    text="Termine löschen"/>
     </div>
@@ -93,6 +93,12 @@
     <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
                     @closed="closeMultiEditModal"/>
 
+    <ConfirmDeleteModal
+        v-if="openDeleteSelectedEventsModal"
+        @closed="openDeleteSelectedEventsModal = false"
+        @delete="deleteSelectedEvents"
+        title="Belegungen löschen"
+        description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht." />
 </template>
 
 <script>
@@ -106,11 +112,13 @@ import {Inertia} from "@inertiajs/inertia";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
     components: {
+        ConfirmDeleteModal,
         CalendarEventTooltip,
         MultiEditModal,
         AddButton,
@@ -133,6 +141,7 @@ export default {
             multiEdit: false,
             editEvents: [],
             showMultiEditModal: false,
+            openDeleteSelectedEventsModal: false
         }
     },
     props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue', 'project', 'eventsWithoutRoom'],
@@ -194,10 +203,18 @@ export default {
             this.createEventComponentIsVisible = false;
             Inertia.reload();
         },
-
+        deleteSelectedEvents(){
+            this.getCheckedEvents();
+            Inertia.post(route('multi-edit.delete'), {
+                events: this.editEvents
+            }, {
+                onSuccess: () => {
+                    this.openDeleteSelectedEventsModal = false
+                }
+            })
+        },
         openMultiEditModal() {
             this.getCheckedEvents();
-            console.log(this.calendarData)
 
             this.showMultiEditModal = true;
         },

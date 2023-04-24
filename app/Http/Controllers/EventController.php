@@ -907,12 +907,21 @@ class EventController extends Controller
     }
 
 
+    public function deleteMultiEdit(Request $request){
+        $eventIds = $request->events;
+        foreach ($eventIds as $eventId) {
+            $event = Event::find($eventId);
+            $event->delete();
+        }
+    }
+
+
     /**
      * @param Request $request
      * @return void
      */
     public function updateMultiEdit(Request $request){
-        $eventIds = $request->events;
+
 
         foreach ($eventIds as $eventId){
             $event = Event::find($eventId);

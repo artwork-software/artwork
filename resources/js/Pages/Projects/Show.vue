@@ -780,19 +780,6 @@ export default {
             atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
-    watch: {
-        atAGlance: {
-            handler() {
-                Inertia.reload({
-                    data: {
-                        atAGlance: this.atAGlance,
-                        openTab: 'calendar'
-                    }
-                })
-            },
-            deep: true
-        }
-    },
     mounted() {
         this.show = true;
         setTimeout(() => {
@@ -998,6 +985,13 @@ export default {
         },
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
+            if(this.atAGlance){
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                    }
+                })
+            }
         }
     },
 }

@@ -109,7 +109,11 @@ class NotificationController extends Controller
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
 
                 $historyArray = [];
-                $historyComplete = $notificationData->event->historyChanges()->all();
+                $historyComplete = [];
+                if($notificationData->event){
+                    $historyComplete = $notificationData->event->historyChanges()->all();
+                }
+
 
                 foreach ($historyComplete as $history){
                     $historyArray[] = [

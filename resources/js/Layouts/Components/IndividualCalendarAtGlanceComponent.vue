@@ -130,7 +130,7 @@ export default {
         },
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
-            this.fetchEvents({startDate: this.eventsSince, endDate: this.eventsUntil});
+            Inertia.reload();
         },
     }
 }

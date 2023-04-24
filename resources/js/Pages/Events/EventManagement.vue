@@ -58,23 +58,18 @@ export default defineComponent({
     methods: {
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
-        }
-    },
-    data() {
-        return {
-            atAGlance: this.eventsAtAGlance.length > 0,
-        }
-    },
-    watch: {
-        atAGlance: {
-            handler() {
+            if(this.atAGlance){
                 Inertia.reload({
                     data: {
                         atAGlance: this.atAGlance,
                     }
                 })
-            },
-            deep: true
+            }
+        }
+    },
+    data() {
+        return {
+            atAGlance: this.eventsAtAGlance.length > 0,
         }
     },
 })

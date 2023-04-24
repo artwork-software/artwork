@@ -46,12 +46,14 @@
         </div>
         <div class="px-1 py-0.5 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
-                 class="flex justify-between">
+                 class="flex justify-between ">
                 <div class="flex items-center">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
                         {{ event.eventTypeAbbreviation }}:
                     </div>
+                    <div :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
                     {{ event.title }}
+                    </div>
                     <div v-if="$page.props.user.calendar_settings.project_status">
                         <div v-if="event.project?.state?.color"
                              :class="[event.project.state.color,zoomFactor <= 0.8 ? 'border-2' : 'border-4']"

@@ -200,6 +200,13 @@ export default defineComponent({
         },
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;
+            if(this.atAGlance){
+                Inertia.reload({
+                    data: {
+                        atAGlance: this.atAGlance,
+                    }
+                })
+            }
         }
     },
     data() {
@@ -209,18 +216,6 @@ export default defineComponent({
             }),
             showIndividualCalendar: true,
             atAGlance: this.eventsAtAGlance.length > 0,
-        }
-    },
-    watch: {
-        atAGlance: {
-            handler() {
-                Inertia.reload({
-                    data: {
-                        atAGlance: this.atAGlance,
-                    }
-                })
-            },
-            deep: true
         }
     },
 

@@ -165,7 +165,6 @@ export default defineComponent({
         IndividualCalendarComponent
     },
     created() {
-        console.log("Dashboard")
         Echo.private('events')
             .listen('OccupancyUpdated', () => {
                 Inertia.reload({only: ['rooms', 'calendar', 'days']})
@@ -204,7 +203,8 @@ export default defineComponent({
                 Inertia.reload({
                     data: {
                         atAGlance: this.atAGlance,
-                    }
+                    },
+                    only: ['calendar']
                 })
             }
         }

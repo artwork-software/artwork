@@ -989,7 +989,8 @@ export default {
                 Inertia.reload({
                     data: {
                         atAGlance: this.atAGlance,
-                    }
+                    },
+                    only: ['calendar']
                 })
             }
         }

@@ -54,7 +54,6 @@
 <script>
 
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
-import SingleProjectCalendarEvent from "@/Layouts/Components/SingleProjectCalendarEvent.vue";
 import {Inertia} from "@inertiajs/inertia";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
@@ -67,7 +66,6 @@ export default {
     components: {
         SingleCalendarEvent,
         CalendarFunctionBar,
-        SingleProjectCalendarEvent,
         EventComponent,
         EventsWithoutRoomComponent,
 

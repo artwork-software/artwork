@@ -57,6 +57,7 @@ class CalendarEventResource extends JsonResource
             'collisionCount'=> $this->collision_count,
             'is_series'=> $this->is_series,
             'series_id'=> $this->series_id,
+            'option_string'=>$this->option_string,
             'series' => $this->series()->first(),
             // to display rooms as split
             'split' => $this->room_id,

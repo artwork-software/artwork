@@ -98,7 +98,7 @@
             <div class="flex items-center text-secondary">
                 <SvgCollection svgName="arrowTopLeft" class="m-3"/>
 
-                <div class="font-nanum w-full">
+                <div class="hind w-full">
                     Das Passwort muss mind. 10 Zeichen lang sein, mind. 1 Ziffer, Groß- und Kleinbuchstaben und
                     Sonderzeichen beinhalten.
                 </div>

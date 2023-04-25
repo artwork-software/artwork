@@ -201,7 +201,7 @@
                                             <div v-if="$page.props.can.show_hints" class="flex">
                                                 <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                                 <span
-                                                    class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
+                                                    class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Räume an</span>
                                             </div>
                                         </div>
                                         <div class="mt-6 mb-12" v-if="this.opened_areas.includes(area.id)">

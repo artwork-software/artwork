@@ -64,7 +64,7 @@
                                     </div>
                                     <div class="flex" v-if="index === 1">
                                         <span
-                                            class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Termintypen</span>
+                                            class="hind ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Termintypen</span>
                                     </div>
                                 </div>
                             </div>

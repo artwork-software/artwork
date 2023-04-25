@@ -227,7 +227,7 @@
                             </span>
                                 <div v-if="showHints" class="ml-3 flex">
                                     <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                    <div class="font-nanum text-secondary ml-1 my-auto text-sm">
+                                    <div class="hind text-secondary ml-1 my-auto text-sm">
                                         Lege gleichzeitig ein neues Projekt an
                                     </div>
                                 </div>

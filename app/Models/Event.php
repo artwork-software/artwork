@@ -19,6 +19,7 @@ use Illuminate\Support\Collection;
  * @property ?string $name
  * @property ?string $eventName
  * @property ?string $description
+ * @property ?string $option_string
  * @property ?Carbon $start_time
  * @property ?Carbon $end_time
  * @property ?bool $occupancy_option

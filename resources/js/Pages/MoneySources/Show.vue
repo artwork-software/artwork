@@ -18,7 +18,7 @@
                                     <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
                                 </div>
                                 <div class="flex">
-                                    <span class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Basisdaten</span>
+                                    <span class="hind ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite die Basisdaten</span>
                                 </div>
                             </div>
                         </div>

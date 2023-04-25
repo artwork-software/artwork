@@ -153,7 +153,7 @@
                                     <div v-if="$page.props.can.show_hints" class="flex">
                                         <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                         <span
-                                            class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                            class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
                                     </div>
                                 </div>
                             </div>
@@ -366,7 +366,7 @@
                                 <div v-if="$page.props.can.show_hints" class="flex">
                                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
                                     <span
-                                        class="font-nanum text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                        class="hind text-secondary tracking-tight ml-1 tracking-tight text-xl">Lege neue Aufgaben an</span>
                                 </div>
                             </div>
                             <div class="mt-6 mb-12"
@@ -816,7 +816,7 @@
                         <div v-if="$page.props.can.show_hints" class="flex mt-1">
                             <SvgCollection svgName="arrowLeft" class="ml-2 mr-1 mt-1"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
+                                class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Private Liste - nur du kannst sie sehen</span>
                         </div>
                     </div>
 

@@ -64,6 +64,9 @@
                                                         class="text-sm flex items-center my-auto text-primary font-semibold focus:outline-none transition">
                                                     <img src="/Svgs/IconSvgs/icon_settings.svg" class="h-6 w-6 mx-2"/>
                                                 </button>
+                                                <span v-if="$page.props.user.calendar_settings.project_status || $page.props.user.calendar_settings.options || $page.props.user.calendar_settings.project_management || $page.props.user.calendar_settings.repeating_events || $page.props.user.calendar_settings.work_shifts"
+                                                      class="rounded-full border-2 border-error w-2 h-2 bg-error absolute ml-6 ring-white ring-1">
+                                                </span>
                                             </span>
                     </template>
 

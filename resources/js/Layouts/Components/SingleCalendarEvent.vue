@@ -47,7 +47,7 @@
         <div class="px-1 py-0.5 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
-                <div class="flex items-center">
+                <div v-if="!project" class="flex items-center">
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
                         {{ event.eventTypeAbbreviation }}:
                     </div>
@@ -60,7 +60,11 @@
                              class="rounded-full">
                         </div>
                     </div>
-
+                </div>
+                <div v-else>
+                    <div :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
+                        {{event.eventTypeName}}
+                    </div>
                 </div>
                 <!-- Icon -->
                 <div v-if="event.audience"
@@ -99,6 +103,7 @@
                     </svg>
                 </div>
             </div>
+            <div class="flex">
             <!-- Time -->
             <div class="flex" :style="textStyle"
                  :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
@@ -118,9 +123,19 @@
                     </span>
                 </span>
             </div>
+                <div v-if="event.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
+                    <div v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()" class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
+                        , {{event.option_string}}
+                    </div>
+                    <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
+                        ({{event.option_string.charAt(7)}})
+                    </div>
+                </div>
+
+            </div>
             <!-- repeating Event -->
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventText' : '', 'font-semibold']"
-                 v-if="$page.props.user.calendar_settings.repeating_events"
+                 v-if="$page.props.user.calendar_settings.repeating_events && event.is_series"
                  class="uppercase flex items-center">
                 <svg class="mx-1" xmlns="http://www.w3.org/2000/svg" width="8.664" height="10.838"
                      viewBox="0 0 8.664 10.838">

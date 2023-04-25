@@ -102,7 +102,7 @@
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-2">Bearbeite einen Nutzer</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -217,7 +217,7 @@
                                                 </div>
                                                 <div class="flex">
                                                     <span
-                                                        class="font-nanum ml-2 text-secondary tracking-tight tracking-tight text-lg">Bearbeite einen Nutzer</span>
+                                                        class="hind ml-2 text-secondary tracking-tight text-lg">Bearbeite einen Nutzer</span>
                                                 </div>
                                             </div>
                                         </div>

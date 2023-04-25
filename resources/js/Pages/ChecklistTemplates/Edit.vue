@@ -48,7 +48,7 @@
                         <div v-if="$page.props.can.show_hints" class="flex">
                             <SvgCollection svgName="arrowLeft" class="ml-2"/>
                             <span
-                                class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
+                                class="hind text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Lege neue Aufgaben an</span>
                         </div>
                     </div>
                 </div>

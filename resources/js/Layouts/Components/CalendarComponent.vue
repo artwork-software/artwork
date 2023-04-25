@@ -142,6 +142,9 @@
                             }}
                         </span>
                         <span class="flex w-full eventTime" v-else>
+                            <span class="text-error mr-1">
+                        !
+                        </span>
                             <span class="items-center eventTime">
                                 {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
                                     event.end.format("DD.MM.YYYY HH:mm")

@@ -193,7 +193,7 @@
                         <div class="absolute bottom-0 right-0 flex bg-white">
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <span
-                                    class="font-nanum text-secondary tracking-tight ml-1 my-auto tracking-tight text-xl">Information veröffentlichen</span>
+                                    class="hind text-secondary tracking-tight ml-1 my-auto text-xl">Information veröffentlichen</span>
                                 <SvgCollection svgName="smallArrowRight" class="ml-2 mt-1"/>
                             </div>
                             <button

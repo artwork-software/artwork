@@ -155,7 +155,7 @@
         font: normal normal 12px/18px Inter;
     }
     .eventHeader{
-        font: normal normal 12px/20px Inter;
+        font: normal normal bold 12px/20px Inter;
     }
     .eventBorder{
         border: 1px solid #D8D7DE;

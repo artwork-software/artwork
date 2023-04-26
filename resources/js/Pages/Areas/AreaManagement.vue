@@ -436,7 +436,7 @@
 
                     <div class="w-full items-center text-center">
                         <AddButton :class="[newAreaForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                    class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addArea"
@@ -541,7 +541,7 @@
 
                     <div class="w-full items-center text-center">
                         <AddButton :class="[newRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                    class="mt-4 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="addRoom"
@@ -771,7 +771,7 @@
 
                     <div class="w-full items-center text-center">
                         <AddButton :class="[editRoomForm.name.length === 0 ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                    class="mt-8 inline-flex items-center px-24 py-3 border border-transparent
                             text-base font-bold shadow-sm text-secondaryHover"
                                    @click="editRoom"

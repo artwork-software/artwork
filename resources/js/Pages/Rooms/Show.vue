@@ -1,6 +1,6 @@
 <template>
     <app-layout>
-        <div class="max-w-screen-xl my-12 ml-14 mr-10">
+        <div class="max-w-screen-xl my-12 ml-14">
             <div class="flex-wrap">
                 <div class="flex">
                     <h2 class="headline1">{{ room.name }}</h2>
@@ -87,7 +87,7 @@
                 <div v-if="room.temporary === 1" class="font-lexend my-4 font-semibold">
                     {{ room.start_date }} - {{ room.end_date }}
                 </div>
-                <div class="grid grid-cols-7 mt-6">
+                <div class="w-[95%] grid grid-cols-7 mt-6">
                     <div class="col-span-5 mr-14">
                         <span class="xsLight">
                             {{ room.area.name }}
@@ -149,14 +149,10 @@
                     </div>
                     <div class="col-span-2">
                         <span class="headline2 w-full">Raumadmin</span>
-                        <button @click="openChangeRoomAdminsModal()"
-                                v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-                            <PencilAltIcon class="my-auto ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                        </button>
                         <div class="mt-4" v-if="roomForm.room_admins.length === 0">
                             <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
                         </div>
-                        <div v-else class="flex">
+                        <div v-else class="flex w-[95%]">
                         <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
                             <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
                                  :src="user.profile_photo_url"
@@ -419,7 +415,7 @@
         </div>
 
         <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-            <div class="flex w-full mt-6 items-center mb-2 ml-14">
+            <div class="flex mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> Raumbelegung </h3>
             </div>
             <div>
@@ -429,7 +425,7 @@
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types :calendarData="calendar" :days="days" />
+                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types :calendarData="calendar" :days="days" :rooms="rooms" />
                 </div>
             </div>
         </div>
@@ -833,6 +829,7 @@ export default {
     name: "Show",
     props: [
         'room',
+        'rooms',
         'event_types',
         'projects',
         'is_room_admin',

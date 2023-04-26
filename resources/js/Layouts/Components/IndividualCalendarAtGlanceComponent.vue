@@ -5,7 +5,7 @@
 
         <!-- Calendar -->
         <div class="flex">
-            <div v-if="eventsAtAGlance" class="first:pl-16" v-for="roomEvents in eventsAtAGlance">
+            <div v-if="eventsAtAGlance" class="first:pl-11" v-for="roomEvents in eventsAtAGlance">
                 <div class="w-52 py-3 border-r-4 border-secondaryHover bg-userBg">
                     <div class="flex calendarRoomHeader font-semibold items-center ml-4">
                         {{roomEvents[0].roomName}}

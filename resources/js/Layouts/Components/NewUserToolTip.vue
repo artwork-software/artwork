@@ -6,7 +6,7 @@
                     <div class="mr-1 cursor-pointer">
                         <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + this.height, 'w-' + this.width]" @mouseover="showTooltip(id)" @mouseout="hideTooltip(id)">
                     </div>
-                    <div :id="'tooltip' + id" role="tooltip" class="w-96 hidden z-20 -mt-40 -ml-40 absolute transition duration-150 ease-in-out left-0 ml-8 shadow-lg p-4 rounded text-secondary bg-primary">
+                    <div :id="'tooltip' + id" role="tooltip" class="w-96 hidden z-20 -mt-40 absolute transition duration-150 ease-in-out left-0 ml-8 shadow-lg p-4 rounded text-secondary bg-primary">
                         <div class="grid grid-cols-4 gap-x-2 flex items-center">
                             <div class="col-span-1 shrink-0 flex">
                                 <img class="mx-auto shrink-0 flex  h-14 w-14 mt-2 object-cover rounded-full"

@@ -1,5 +1,4 @@
 <template>
-
     <div class="mt-10 items-center w-[95%] relative bg-secondaryHover" id="myCalendar">
         <div class="flex justify-center">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
@@ -75,8 +74,11 @@
                     </template>
                     <template #event="{ event, view}">
                         <div class="text-left centered mt-3 cursor-pointer">
-                            <div class="flex w-full">
-                                <div v-if="!project" class="eventHeader truncate mx-1">
+                            <div class="flex w-full justify-between items-center">
+                                <div v-if="!project" class="flex eventHeader truncate mx-1">
+                                    <div v-if="event.eventTypeAbbreviation" class="mr-1">
+                                        {{ event.eventTypeAbbreviation }}:
+                                    </div>
                                     {{ event.title }}
                                 </div>
                                 <div v-else class="truncate mx-1">
@@ -129,10 +131,10 @@
 
                             <div v-if="currentView !== 'month'" class="mx-1">
                                 <div v-if="!project">
-                        <span class="truncate xxsLight truncate"
+                        <span class="truncate"
                               v-if="event.eventName && event.eventName !== event.title"> {{ event.eventName }}</span>
                                 </div>
-                                <div v-else class="truncate xxsLight truncate">
+                                <div v-else class="truncate">
                                     {{ event.eventName }}
                                 </div>
                                 <span class="flex w-full eventTime">
@@ -142,12 +144,12 @@
                             }}
                         </span>
                         <span class="flex w-full eventTime" v-else>
-                            <span class="text-error mr-1">
+                            <span class="text-error mx-1">
                         !
                         </span>
                             <span class="items-center eventTime">
-                                {{ event.start.format("DD.MM.YYYY HH:mm") }} - {{
-                                    event.end.format("DD.MM.YYYY HH:mm")
+                                {{ event.start.format("DD.MM. HH:mm") }} - {{
+                                    event.end.format("DD.MM. HH:mm")
                                 }}
                             </span>
 

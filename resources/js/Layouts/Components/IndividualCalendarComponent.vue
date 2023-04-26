@@ -1,6 +1,6 @@
 <template>
-    <div id="myCalendar" class="bg-white overflow-y-auto">
-    <div  class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" >
+    <div id="myCalendar" class="bg-white w-[98%]">
+    <div  class="w-full flex flex-wrap bg-secondaryHover" >
         <div  class="flex justify-center w-full bg-white">
             <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                  @click="openEventsWithoutRoomComponent()"
@@ -11,33 +11,33 @@
                 }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
         </div>
+        <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
+                             @increment-zoom-factor="incrementZoomFactor"
+                             @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
+                             :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
+                             :dateValue="dateValue"
+                             @change-at-a-glance="changeAtAGlance"
+                             @change-multi-edit="changeMultiEdit"
+                             :at-a-glance="atAGlance"></CalendarFunctionBar>
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
-                                 @increment-zoom-factor="incrementZoomFactor"
-                                 @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
-                                 :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
-                                 :dateValue="dateValue"
-                                 @change-at-a-glance="changeAtAGlance"
-                                 @change-multi-edit="changeMultiEdit"
-                                 :at-a-glance="atAGlance"></CalendarFunctionBar>
+
             <!-- Calendar -->
-            <table class="w-full flex flex-wrap bg-white">
-                <thead class="w-full">
-                <tr class=" w-full flex bg-userBg">
-                    <th class="w-16">
+            <table class="w-full bg-white relative">
+                <tr class="flex w-full bg-userBg stickyHeader">
+                    <th class="w-20">
+
                     </th>
                     <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
-                        class="py-3 border-r-4 border-secondaryHover">
+                        class="py-3  border-r-4 border-secondaryHover">
                         <div :style="textStyle" class="flex font-semibold items-center ml-4">
                             {{ room.name }}
                         </div>
                     </th>
                 </tr>
-                </thead>
-                <tbody class="flex w-full pt-3 flex-wrap">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex"
+                <tbody class="w-full pt-3 ">
+                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
                     :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
-                    <th class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
+                    <th :style="{height: zoomFactor * 115 + 'px'}" class="w-20 eventTime text-secondary stickyDays text-right -mt-2 pr-1">
                         {{ day.day_string }} {{ day.day }}
                     </th>
                     <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
@@ -306,4 +306,19 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
 }
+.stickyHeader {
+    position: sticky;
+    align-self: flex-start;
+    top: 0;
+    z-index: 31;
+    background-color: #EDEDEC;
+}
+.stickyDays {
+    position: sticky;
+    align-self: flex-start;
+    left: 0;
+    z-index: 31;
+    background-color: #EDEDEC;
+}
+
 </style>

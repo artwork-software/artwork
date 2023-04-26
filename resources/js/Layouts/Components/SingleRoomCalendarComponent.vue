@@ -1,5 +1,5 @@
 <template>
-    <div class="w-full flex flex-wrap bg-secondaryHover overflow-y-auto" id="myCalendar">
+    <div class="w-full bg-secondaryHover overflow-y-auto" id="myCalendar">
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
             <CalendarFunctionBar :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"

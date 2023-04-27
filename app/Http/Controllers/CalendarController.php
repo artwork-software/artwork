@@ -164,6 +164,16 @@ class CalendarController extends Controller
             $better = Room::query()
                 ->unless(is_null(request('roomIds')),
                     fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
+                ->unless(is_null(request('areaIds')),
+                    fn (Builder $builder) => $builder->whereIn('area_id', request('areaIds')))
+                ->unless(is_null(request('roomAttributeIds')),
+                    fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
+                        $query->whereIn('room_attributes.id', request('roomAttributeIds'));
+                    }))
+                ->unless(is_null(request('roomCategoryIds')),
+                    fn (Builder $builder) => $builder->whereHas('categories', function($query) {
+                        $query->whereIn('room_categories.id', request('roomCategoryIds'));
+                    }))
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function($query) use($project, $room) {
                     $this->filterEvents($query, $room, $project);
             }])
@@ -257,6 +267,8 @@ class CalendarController extends Controller
                 fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
                     $query->whereIn('room_attributes.id', request('roomAttributeIds'));
                 }))
+            ->unless(is_null(request('areaIds')),
+                fn (Builder $builder) => $builder->whereIn('area_id', request('areaIds')))
             ->unless(is_null(request('roomCategoryIds')),
                 fn (Builder $builder) => $builder->whereHas('categories', function($query) {
                     $query->whereIn('room_categories.id', request('roomCategoryIds'));

@@ -153,18 +153,40 @@
                             :events="this.events.events"
                             :rooms="this.rooms"
                             :events-without-room="eventsWithoutRoom"
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
                         />
                     </div>
 
                     <div v-else>
-                        <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance" :project="project"
-                                                             @change-at-a-glance="changeAtAGlance"
-                                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                                             :rooms="rooms"
-                                                             :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                        <IndividualCalendarComponent :events-without-room="eventsWithoutRoom" :project="project" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
-                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                                     :calendarData="calendar" :rooms="rooms" :days="days"/>
+                        <IndividualCalendarAtGlanceComponent
+                            :dateValue="dateValue"
+                            v-if="atAGlance"
+                            :project="project"
+                            @change-at-a-glance="changeAtAGlance"
+                            :atAGlance="this.atAGlance"
+                            :eventTypes=this.eventTypes
+                            :rooms="rooms"
+                            :eventsAtAGlance="eventsAtAGlance"
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
+                        >
+                        </IndividualCalendarAtGlanceComponent>
+
+                        <IndividualCalendarComponent
+                            :events-without-room="eventsWithoutRoom"
+                            :project="project"
+                            :dateValue="dateValue"
+                            v-else
+                            @change-at-a-glance="changeAtAGlance"
+                            :atAGlance="this.atAGlance"
+                            :eventTypes=this.eventTypes
+                            :calendarData="calendar"
+                            :rooms="rooms"
+                            :days="days"
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
+                        />
                     </div>
                 </div>
                 <!-- Checklist Tab -->
@@ -596,7 +618,9 @@ export default {
         'dateValue',
         'selectedDate',
         'calendarType',
-        'eventsWithoutRoom'
+        'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters'
     ],
     components: {
         ProjectSecondSidenav,

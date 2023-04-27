@@ -43,7 +43,6 @@
 
         </div>
 
-
         <div class="flex items-center">
             <div class="flex items-center">
                 <ZoomInIcon @click="incrementZoomFactor" :disabled="zoomFactor <= 0.2" v-if="!atAGlance && isFullscreen"
@@ -52,7 +51,12 @@
                              v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
                 <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IndividualCalendarFilterComponent class="mt-1"/>
+                <IndividualCalendarFilterComponent
+                    class="mt-1"
+                    :filter-options="filterOptions"
+                    :personal-filters="personalFilters"
+                    :at-a-glance="atAGlance"
+                />
 
                 <!-- Calendar Settings Dropdown -->
                 <Dropdown :hide-chevron="true" :open="calendarSettingsOpen" align="right" content-classes="" width="64"
@@ -156,7 +160,16 @@ export default {
         ZoomInIcon,
         ZoomOutIcon
     },
-    props: ['atAGlance', 'dateValue', 'isFullscreen', 'zoomFactor','project','roomMode',],
+    props: [
+        'atAGlance',
+        'dateValue',
+        'isFullscreen',
+        'zoomFactor',
+        'project',
+        'roomMode',
+        'filterOptions',
+        'personalFilters'
+    ],
     emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
     data() {
         return {

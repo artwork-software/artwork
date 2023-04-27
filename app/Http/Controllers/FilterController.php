@@ -11,13 +11,13 @@ use App\Models\RoomCategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use phpDocumentor\Reflection\Types\Collection;
 
 class FilterController extends Controller
 {
 
     /**
      * Get all filters of the current user
-     * @return void
      */
     public function index() {
         return Filter::where('user_id', Auth::id())->get()->map(fn (Filter $filter) => [

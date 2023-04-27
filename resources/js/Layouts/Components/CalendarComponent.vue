@@ -11,9 +11,17 @@
         </div>
 
         <div class="bg-white">
-            <CalendarFunctionBar @open-event-component="openEventComponent" @nextDay="nextDay"
-                                 @previousDay="previousDay" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
-                                 @change-at-a-glance="changeAtAGlance" :at-a-glance="atAGlance"></CalendarFunctionBar>
+            <CalendarFunctionBar
+                @open-event-component="openEventComponent"
+                @nextDay="nextDay"
+                @previousDay="previousDay"
+                @enterFullscreenMode="openFullscreen"
+                :dateValue="dateValue"
+                @change-at-a-glance="changeAtAGlance"
+                :at-a-glance="atAGlance"
+                :filter-options="filterOptions"
+                :personal-filters="personalFilters"
+            />
 
             <!--  Calendar  -->
             <div class="pl-3 overflow-x-scroll">
@@ -371,6 +379,8 @@ export default {
         'events',
         'rooms',
         'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters'
     ],
     emits: ['changeAtAGlance'],
     data() {

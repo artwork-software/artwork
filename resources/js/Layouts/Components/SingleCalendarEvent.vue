@@ -51,7 +51,7 @@
                     <div v-if="event.eventTypeAbbreviation" class="mr-1">
                         {{ event.eventTypeAbbreviation }}:
                     </div>
-                    <div :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
+                    <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
                     {{ event.title }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status">
@@ -69,8 +69,8 @@
                 <!-- Icon -->
                 <div v-if="event.audience"
                      class="flex">
-                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" :width="22.37 * zoomFactor"
-                         :height="11.23 * zoomFactor"
+                    <svg :class="event.class" xmlns="http://www.w3.org/2000/svg" :width="22 * zoomFactor"
+                         :height="11 * zoomFactor"
                          viewBox="0 0 19.182 10.124">
                         <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
                             <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">
@@ -240,8 +240,8 @@
                         <!-- Icons -->
                         <div v-if="subEvent.audience"
                              class="flex">
-                            <svg :class="subEvent.class" xmlns="http://www.w3.org/2000/svg" :width="22.37 * zoomFactor"
-                                 :height="11.23 * zoomFactor"
+                            <svg :class="subEvent.class" xmlns="http://www.w3.org/2000/svg" :width="22 * zoomFactor"
+                                 :height="11 * zoomFactor"
                                  viewBox="0 0 19.182 10.124">
                                 <g id="Gruppe_555" data-name="Gruppe 555" transform="translate(0.128 0.128)">
                                     <g id="Gruppe_549" data-name="Gruppe 549" transform="translate(0.372 0.372)">

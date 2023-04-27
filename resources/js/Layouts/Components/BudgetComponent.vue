@@ -986,6 +986,7 @@ export default {
                 data: {
                     useTemplates: true
                 },
+                only: ['selectedSumDetail','table','selectedCell','selectedRow','templates', 'budgetAccess'],
                 onSuccess: () => {
                     this.showUseTemplateModal = true;
                 }
@@ -1136,6 +1137,7 @@ export default {
                 data: {
                     selectedRow: row.id,
                 },
+                only: ['selectedSumDetail','table','selectedCell','selectedRow','templates', 'budgetAccess'],
                 onSuccess: () => {
                     this.showRowDetailModal = true;
                 }

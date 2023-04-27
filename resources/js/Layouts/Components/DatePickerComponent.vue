@@ -70,11 +70,51 @@ const customShortcuts = () => {
         {
             label: 'Aktuelle Woche',
             atClick: () => {
-                const date = new Date();
-                return [
-                    new Date(date.setFullYear(date.getFullYear() - 1)),
-                    new Date()
-                ];
+                const today = new Date();
+                const firstDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1)));
+                const lastDayOfWeek = new Date(today.setDate(today.getDate() - today.getDay() + (today.getDay() === 0 ? -6 : 1) + 6));
+
+                return [firstDayOfWeek, lastDayOfWeek];
+            }
+        },
+        {
+            label: 'Aktueller Monat',
+            atClick: () => {
+                const today = new Date();
+                const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+                const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+
+                return [firstDayOfMonth, lastDayOfMonth];
+            }
+        },
+        {
+            label: 'Aktuelles Jahr',
+            atClick: () => {
+                const today = new Date();
+                const firstDayOfYear = new Date(today.getFullYear(), 0, 1);
+                const lastDayOfYear = new Date(today.getFullYear(), 11, 31);
+
+                return [firstDayOfYear, lastDayOfYear];
+            }
+        },
+        {
+            label: 'Nächste 30 Tage',
+            atClick: () => {
+                const today = new Date();
+                const next30DaysStart = new Date(today.setDate(today.getDate() + 1));
+                const next30DaysEnd = new Date(today.setDate(today.getDate() + 29));
+
+                return [next30DaysStart, next30DaysEnd];
+            }
+        },
+        {
+            label: 'Nächste 90 Tage',
+            atClick: () => {
+                const today = new Date();
+                const next90DaysStart = new Date(today.setDate(today.getDate() + 1));
+                const next90DaysEnd = new Date(today.setDate(today.getDate() + 89));
+
+                return [next90DaysStart, next90DaysEnd];
             }
         }
     ]

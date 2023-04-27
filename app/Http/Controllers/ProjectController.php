@@ -1354,7 +1354,7 @@ class ProjectController extends Controller
         $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
 
         $events = $project->events()->get();
-        $RoomsWithAudience = [];
+        $RoomsWithAudience = null;
         foreach ($events as $event){
             if(!$event->audience){
                 continue;

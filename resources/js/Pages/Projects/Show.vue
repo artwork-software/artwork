@@ -118,9 +118,8 @@
                         v-if="firstEventInProject?.start_time">Uhr -</span> {{ lastEventInProject?.end_time }} <span
                         v-if="lastEventInProject?.end_time">Uhr</span>
                     </div>
-                    <div>
-                        Termine mit Publikum in: <span
-                        v-for="(RoomWithAudience, index) in RoomsWithAudience">{{ RoomWithAudience }}, </span>
+                    <div v-if="RoomsWithAudience">
+                        Termine mit Publikum in: <span>{{ locationString }}</span>
                     </div>
                     <div v-if="!RoomsWithAudience && !(firstEventInProject && lastEventInProject)">
                         Noch keine Termine innerhalb dieses Projektes
@@ -747,6 +746,9 @@ export default {
             )
             return canWriteArray;
         },
+        locationString() {
+            return Object.values(this.RoomsWithAudience).join(", ");
+        }
     },
     data() {
         return {

@@ -26,7 +26,7 @@
                                 initial-view="day"/>
                         </div>
                     </div>
-                    <div v-else>
+                    <div v-else class="overflow-x-auto">
                         <IndividualCalendarAtGlanceComponent
                             v-if="atAGlance"
                             :dateValue="dateValue"
@@ -39,6 +39,7 @@
 
                         <IndividualCalendarComponent
                             v-else
+                            is-dashboard="true"
                             :dateValue="dateValue"
                             :atAGlance="this.atAGlance"
                             :eventTypes=this.eventTypes

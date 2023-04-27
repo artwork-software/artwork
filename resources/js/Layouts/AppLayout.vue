@@ -1,7 +1,7 @@
 <template>
     <!-- Static sidebar for desktop -->
     <div class="my-auto w-full">
-        <div class="sidebar fixed z-30 top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
+        <div class="sidebar fixed z-50 top-0 bottom-0 p-2 w-full sm:w-16 bg-primary hidden sm:block">
             <div class="w-full py-2 mt-3 flex flex-col items-center">
                 <div class="text-2xl font-bold text-secondaryHover">
                     <img src="/Svgs/Logos/artwork_logo_small.svg" class="h-16 w-16 mb-8" alt="artwork-logo"/>
@@ -44,7 +44,7 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="z-[999999999999999] max-h-60 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
+                                class="z-50 max-h-60 overflow-y-auto opacity-100 relative origin-top-left ml-14 -mt-12 w-36 shadow-lg py-1 bg-primary ring-1 ring-black focus:outline-none">
                                 <div class="z-50" v-for="item in managementNavigation" :key="item.name">
                                     <MenuItem v-if="item.has_permission" v-slot="{ active }">
                                         <Link :href="item.href"
@@ -69,7 +69,7 @@
 
         <!--   Top Menu     -->
         <div class="sm:pl-16 flex flex-col">
-            <div class="sticky top-0 z-20 flex-shrink-0 flex h-16">
+            <div class="sticky top-0 z-40 flex-shrink-0 flex h-16">
                 <button type="button"
                         class="px-4 border-r border-primaryText text-primaryText focus:outline-none sm:hidden"
                         @click="openSideBarOnMobile">

@@ -222,6 +222,9 @@
                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
                     <div class="w-full flex w-5/12">
+                        <label for="deadlineDate" class="flex items-center xsLight mr-3">
+                            Ablaufdatum:
+                        </label>
                         <input v-model="this.globalNotificationForm.notificationDeadlineDate"
                                id="deadlineDate"
                                type="date"
@@ -432,6 +435,7 @@ export default defineComponent({
         createGlobalNotification(){
             this.globalNotificationForm.post(route('global_notification.store'));
             this.showSuccessModal = true;
+            setTimeout(() => this.showSuccessModal = false, 2000)
         },
         deleteGlobalNotification(globalNotificationId){
             this.$inertia.delete(route('global_notification.destroy',globalNotificationId));

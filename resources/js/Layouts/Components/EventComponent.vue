@@ -71,14 +71,14 @@
                 <!--    Type and Title    -->
                 <div class="flex py-2">
                     <div class="w-1/2">
-                        <div class=" w-full flex cursor-pointer truncate" v-if="!canEdit">
+                        <div class=" w-full flex cursor-pointer truncate" v-if="!canEdit || this.disableEventTypeSelector">
                             <EventTypeIconCollection :height="40" :width="40"
                                                      :iconName="selectedEventType?.svg_name"/>
                             <p class="ml-2 flex items-center text-lg font-lexend font-semibold">
                                 {{ selectedEventType?.name }}
                             </p>
                         </div>
-                        <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit"
+                        <Listbox as="div" class="flex h-12 mr-2" v-model="selectedEventType" v-if="canEdit && !this.disableEventTypeSelector"
                                  id="eventType">
                             <ListboxButton
                                 class="pl-3 h-12 inputMain w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
@@ -715,6 +715,7 @@ export default {
             optionString: null,
             accept: true,
             optionAccept: false,
+            disableEventTypeSelector: false,
             selectedOption: options[0].name,
             answerRequestForm: useForm({
                 accepted: false,
@@ -789,6 +790,9 @@ export default {
                 this.selectedEventType = this.eventTypes[0];
             } else {
                 this.selectedEventType = this.eventTypes.find(type => type.id === this.event.eventTypeId);
+                if(this.selectedEventType.id === 1){
+                    this.disableEventTypeSelector = true;
+                }
             }
             this.series = this.event.is_series
             if(this.series){

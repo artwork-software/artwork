@@ -1,5 +1,5 @@
 <template>
-    <div id="myCalendar" class="bg-white w-[98%]">
+    <div id="myCalendar" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
     <div  class="w-full flex flex-wrap bg-secondaryHover" >
         <div  class="flex justify-center w-full bg-white">
             <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
@@ -23,21 +23,23 @@
 
             <!-- Calendar -->
             <table class="w-full bg-white relative">
+                <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                <div>
                 <tr class="flex w-full bg-userBg stickyHeader">
                     <th class="w-20">
 
                     </th>
                     <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
                         class="py-3  border-r-4 border-secondaryHover">
-                        <div :style="textStyle" class="flex font-semibold items-center ml-4">
+                        <Link :style="textStyle" class="flex font-semibold items-center ml-4" :href="route('rooms.show',{room: room.id})">
                             {{ room.name }}
-                        </div>
+                        </Link>
                     </th>
                 </tr>
                 <tbody class="w-full pt-3 ">
                 <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
                     :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
-                    <th :style="{height: zoomFactor * 115 + 'px'}" class="w-20 eventTime text-secondary stickyDays text-right -mt-2 pr-1">
+                    <th :style="{height: zoomFactor * 115 + 'px'}" :class="isDashboard? 'stickyDaysDashboard' : 'stickyDays'" class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
                         {{ day.day_string }} {{ day.day }}
                     </th>
                     <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
@@ -54,6 +56,7 @@
                     </td>
                 </tr>
                 </tbody>
+                </div>
             </table>
         </div>
         <event-component
@@ -118,11 +121,13 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import {Link} from "@inertiajs/inertia-vue3";
 
 
 export default {
     name: "IndividualCalendarComponent",
     components: {
+        Link,
         ConfirmDeleteModal,
         CalendarEventTooltip,
         MultiEditModal,
@@ -149,15 +154,15 @@ export default {
             openDeleteSelectedEventsModal: false
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue', 'project', 'eventsWithoutRoom'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue', 'project', 'eventsWithoutRoom','isDashboard'],
     emits: ['changeAtAGlance'],
     mounted() {
         window.addEventListener('resize', this.listenToFullscreen);
     },
     computed: {
         textStyle() {
-            const fontSize = `calc(${this.zoomFactor} * 0.875rem)`;
-            const lineHeight = `calc(${this.zoomFactor} * 1.25rem)`;
+            const fontSize = `max(calc(${this.zoomFactor} * 0.875rem), 12px)`;
+            const lineHeight = `max(calc(${this.zoomFactor} * 1.25rem), 1.3)`;
             return {
                 fontSize,
                 lineHeight,
@@ -309,15 +314,26 @@ export default {
 .stickyHeader {
     position: sticky;
     align-self: flex-start;
-    top: 0;
-    z-index: 31;
+    position: -webkit-sticky;
+    display: block;
+    top: 60px;
+    z-index: 21;
     background-color: #EDEDEC;
 }
 .stickyDays {
     position: sticky;
     align-self: flex-start;
+    position: -webkit-sticky;
+    left: 60px;
+    z-index: 21;
+    background-color: #EDEDEC;
+}
+.stickyDaysDashboard {
+    position: sticky;
+    align-self: flex-start;
+    position: -webkit-sticky;
     left: 0;
-    z-index: 31;
+    z-index: 21;
     background-color: #EDEDEC;
 }
 

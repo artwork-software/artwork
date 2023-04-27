@@ -17,7 +17,10 @@
                     </h2>
                     <div class="flex items-center w-full mr-2">
                         <div class="w-full">
-                            <inputComponent v-model="this.templateName" placeholder="Name der Vorlage?*"/>
+                            <input type="text"
+                                   placeholder="Name der Vorlage?*"
+                                   v-model="this.templateName"
+                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                     </div>
                     <div class="flex justify-center">
@@ -43,11 +46,13 @@ import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
+import Input from "@/Layouts/Components/InputComponent.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
 
     components: {
+        Input,
         AddButton,
         JetDialogModal,
         XIcon,

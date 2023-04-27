@@ -68,8 +68,8 @@ class MainPosition extends Model
             ->mapWithKeys(fn ($cells, $column_id) => [
                     $column_id => [
                         'sum' => $cells->sum('value'),
-                        'hasComments' => $sumDetails[$column_id]->comments_count > 0,
-                        'hasMoneySource' => $sumDetails[$column_id]->sum_money_source_count > 0,
+                        'hasComments' => @$sumDetails[$column_id]->comments_count > 0,
+                        'hasMoneySource' => @$sumDetails[$column_id]->sum_money_source_count > 0,
                     ]
                 ]
             );

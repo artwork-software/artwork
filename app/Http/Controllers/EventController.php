@@ -21,6 +21,7 @@ use App\Models\Project;
 use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\SeriesEvents;
+use App\Models\SubEvents;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
@@ -678,7 +679,7 @@ class EventController extends Controller
         $events = Event::query()
             // eager loading
             ->withCollisionCount()
-            ->with(['room', 'subEvents'])
+            ->with(['room'])
             // filter for different pages
             ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
             ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
@@ -705,6 +706,11 @@ class EventController extends Controller
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null))
             ->get();
+
+        /*
+         *
+         * 
+         */
 
         return [
             'events' => new CalendarEventCollectionResource($events),

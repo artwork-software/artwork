@@ -1373,11 +1373,14 @@ class ProjectController extends Controller
             'moneySources' => MoneySource::all(),
             'eventsAtAGlance' => $eventsAtAGlance,
             'calendar' => $showCalendar['roomsWithEvents'],
+
             'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
             'rooms' => $calendar->filterRooms(),
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'filterOptions' => $showCalendar["filterOptions"],
+            'personalFilters' => $showCalendar['personalFilters'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'budget' => [
                 'columns' => $outputColumns,

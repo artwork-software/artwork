@@ -7,6 +7,7 @@ use App\Http\Resources\CalendarEventResource;
 use App\Models\Area;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Filter;
 use App\Models\Project;
 use App\Models\Room;
 use App\Models\RoomAttribute;
@@ -108,6 +109,8 @@ class CalendarController extends Controller
         $selectedDate = null;
         $this->startDate = Carbon::now()->startOfDay();
 
+        $filterController = new FilterController();
+
         if($type === 'dashboard'){
             $this->endDate = Carbon::now()->endOfDay();
         }else{
@@ -161,6 +164,16 @@ class CalendarController extends Controller
             $better = Room::query()
                 ->unless(is_null(request('roomIds')),
                     fn (Builder $builder) => $builder->whereIn('id', request('roomIds')))
+                ->unless(is_null(request('areaIds')),
+                    fn (Builder $builder) => $builder->whereIn('area_id', request('areaIds')))
+                ->unless(is_null(request('roomAttributeIds')),
+                    fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
+                        $query->whereIn('room_attributes.id', request('roomAttributeIds'));
+                    }))
+                ->unless(is_null(request('roomCategoryIds')),
+                    fn (Builder $builder) => $builder->whereHas('categories', function($query) {
+                        $query->whereIn('room_categories.id', request('roomCategoryIds'));
+                    }))
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function($query) use($project, $room) {
                     $this->filterEvents($query, $room, $project);
             }])
@@ -182,6 +195,8 @@ class CalendarController extends Controller
             'selectedDate' => $selectedDate,
             'roomsWithEvents' => $better,
             'eventsWithoutRoom' => $eventsWithoutRooms,
+            'filterOptions' => $this->getFilters(),
+            'personalFilters' => $filterController->index()
         ];
     }
 
@@ -190,8 +205,22 @@ class CalendarController extends Controller
         //->whereOccursBetween(Carbon::parse(request('start')), Carbon::parse(request('end')));
         $filteredEvents = $this->filterEvents($all_events, null ,null);
         $array = $filteredEvents->get();
-        DebugBar::info($array);
         return $array;
+    }
+
+    public function getEventsAtAGlance($startDate, $endDate): \Illuminate\Support\Collection
+    {
+        $initialEventQuery = Event::query()
+            ->whereBetween('start_time', [$startDate, $endDate])
+            ->whereBetween('end_time', [$startDate, $endDate]);
+
+        $filteredEventsQuery = $this->filterEvents($initialEventQuery, null, null);
+
+        $eventsByRoom = $filteredEventsQuery
+            ->with(['room', 'project', 'creator'])
+            ->orderBy('start_time', 'ASC')->get();
+
+        return CalendarEventResource::collection($eventsByRoom)->collection->groupBy('room.id');
     }
 
     private function filterEvents($query, ?Room $room, ?Project $project) {
@@ -238,6 +267,8 @@ class CalendarController extends Controller
                 fn (Builder $builder) => $builder->whereHas('attributes', function($query) {
                     $query->whereIn('room_attributes.id', request('roomAttributeIds'));
                 }))
+            ->unless(is_null(request('areaIds')),
+                fn (Builder $builder) => $builder->whereIn('area_id', request('areaIds')))
             ->unless(is_null(request('roomCategoryIds')),
                 fn (Builder $builder) => $builder->whereHas('categories', function($query) {
                     $query->whereIn('room_categories.id', request('roomCategoryIds'));

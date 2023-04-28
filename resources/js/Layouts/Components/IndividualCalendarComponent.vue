@@ -18,7 +18,10 @@
                              :dateValue="dateValue"
                              @change-at-a-glance="changeAtAGlance"
                              @change-multi-edit="changeMultiEdit"
-                             :at-a-glance="atAGlance"></CalendarFunctionBar>
+                             :at-a-glance="atAGlance"
+                             :filter-options="filterOptions"
+                             :personal-filters="personalFilters"
+        />
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
 
             <!-- Calendar -->
@@ -154,7 +157,19 @@ export default {
             openDeleteSelectedEventsModal: false
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue', 'project', 'eventsWithoutRoom','isDashboard'],
+    props: [
+        'calendarData',
+        'rooms',
+        'days',
+        'atAGlance',
+        'eventTypes',
+        'dateValue',
+        'project',
+        'eventsWithoutRoom',
+        'isDashboard',
+        'filterOptions',
+        'personalFilters'
+    ],
     emits: ['changeAtAGlance'],
     mounted() {
         window.addEventListener('resize', this.listenToFullscreen);

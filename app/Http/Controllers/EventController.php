@@ -94,7 +94,9 @@ class EventController extends Controller
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
             'rooms' => $calendar->filterRooms(),
-            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay())
+            'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
+            'filterOptions' => $showCalendar["filterOptions"],
+            'personalFilters' => $showCalendar['personalFilters']
         ]);
     }
 
@@ -120,6 +122,8 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
+        Debugbar::info(request('atAGlance'));
+
         if(\request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -128,18 +132,13 @@ class EventController extends Controller
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
 
-        if(\request('atAGlance') === 'true') {
-            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room', 'project', 'creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+        if(request('atAGlance') === 'true') {
+            $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
 
         $rooms = $calendarController->filterRooms();
-        Debugbar::info("room stuff in Eventcontroller");
-        Debugbar::info(request('roomIds'));
-        Debugbar::info($rooms->toArray());
+        Debugbar::info("EventsAtAGlance");
+        Debugbar::info($eventsAtAGlance);
 
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
@@ -153,7 +152,9 @@ class EventController extends Controller
             'rooms' => $rooms,
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
-            'events' => new CalendarEventCollectionResource($calendarController->getEventsOfDay())
+            'events' => new CalendarEventCollectionResource($calendarController->getEventsOfDay()),
+            'filterOptions' => $showCalendar["filterOptions"],
+            'personalFilters' => $showCalendar['personalFilters']
         ]);
     }
 

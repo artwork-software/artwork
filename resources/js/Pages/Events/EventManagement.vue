@@ -20,18 +20,38 @@
                         :rooms="rooms"
                         :events="this.events.events"
                         :events-without-room="eventsWithoutRoom"
+                        :filter-options="filterOptions"
+                        :personal-filters="personalFilters"
                     />
                 </div>
             </div>
             <div v-else>
-                <IndividualCalendarAtGlanceComponent :dateValue="dateValue" v-if="atAGlance"
-                                                     @change-at-a-glance="changeAtAGlance"
-                                                     :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                                     :rooms="rooms"
-                                                     :eventsAtAGlance="eventsAtAGlance"></IndividualCalendarAtGlanceComponent>
-                <IndividualCalendarComponent :events-without-room="eventsWithoutRoom" :dateValue="dateValue" v-else @change-at-a-glance="changeAtAGlance"
-                                             :atAGlance="this.atAGlance" :eventTypes=this.eventTypes
-                                             :calendarData="calendar" :rooms="rooms" :days="days"/>
+                <IndividualCalendarAtGlanceComponent
+                    :dateValue="dateValue"
+                    v-if="atAGlance"
+                    @change-at-a-glance="changeAtAGlance"
+                    :atAGlance="this.atAGlance"
+                    :eventTypes=this.eventTypes
+                    :rooms="rooms"
+                    :eventsAtAGlance="eventsAtAGlance"
+                    :filter-options="filterOptions"
+                    :personal-filters="personalFilters"
+                >
+                </IndividualCalendarAtGlanceComponent>
+
+                <IndividualCalendarComponent
+                    :events-without-room="eventsWithoutRoom"
+                    :dateValue="dateValue"
+                    v-else
+                    @change-at-a-glance="changeAtAGlance"
+                    :atAGlance="this.atAGlance"
+                    :eventTypes=this.eventTypes
+                    :calendarData="calendar"
+                    :rooms="rooms"
+                    :days="days"
+                    :filter-options="filterOptions"
+                    :personal-filters="personalFilters"
+                />
             </div>
         </div>
     </app-layout>
@@ -54,7 +74,20 @@ export default defineComponent({
         CalendarComponent,
         AppLayout
     },
-    props: ['eventTypes','calendarType','selectedDate','dateValue','calendar','rooms','events', 'days','eventsAtAGlance','eventsWithoutRoom'],
+    props: [
+        'eventTypes',
+        'calendarType',
+        'selectedDate',
+        'dateValue',
+        'calendar',
+        'rooms',
+        'events',
+        'days',
+        'eventsAtAGlance',
+        'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters'
+    ],
     methods: {
         changeAtAGlance() {
             this.atAGlance = !this.atAGlance;

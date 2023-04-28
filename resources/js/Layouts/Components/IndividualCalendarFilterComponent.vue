@@ -3,11 +3,11 @@
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetCalendarFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs">Zurücksetzen</label>
+                <label class="text-xs cursor-pointer">Zurücksetzen</label>
             </button>
             <button class="flex ml-4" @click="saving = !saving">
                 <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs">Speichern</label>
+                <label class="text-xs cursor-pointer">Speichern</label>
             </button>
         </div>
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
@@ -27,7 +27,7 @@
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div v-if="saving">
                         <div class="flex">
-                            <input id="saveFilter" v-model="filterName" type="text"
+                            <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                    placeholder="Name des Filters"/>
                             <button
@@ -42,12 +42,12 @@
                     </div>
                     <button
                         class="rounded-full bg-buttonBlue cursor-pointer px-5 py-2 align-middle flex mb-1"
-                        v-for="filter in filters">
+                        v-for="filter in localPersonalFilters">
                         <label @click="applyFilter(filter)"
                                class="cursor-pointer text-white">{{ filter.name }}</label>
                         <XIcon @click="deleteFilter(filter.id)" class="h-3 w-3 text-white ml-1 mt-1"/>
                     </button>
-                    <p v-if="filters.length === 0" class="text-secondary py-1">Noch keine Filter
+                    <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">Noch keine Filter
                         gespeichert</p>
                 </DisclosurePanel>
                 <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
@@ -332,28 +332,27 @@ export default {
         DocumentTextIcon
 
     },
-    props: ['useIcon'],
+    props: [
+        'useIcon',
+        'filterOptions',
+        'personalFilters',
+        'atAGlance'
+    ],
     mounted() {
-        axios.get('/calendars/filters').then(response => {
-            const filters = response.data
-            this.filterArray.rooms = filters.rooms
-            this.filterArray.areas = filters.areas
-            this.filterArray.roomCategories = filters.roomCategories
-            this.filterArray.roomAttributes = filters.roomAttributes
-            this.filterArray.eventTypes = filters.eventTypes
+            this.filterArray.rooms = this.filterOptions.rooms
+            this.filterArray.areas = this.filterOptions.areas
+            this.filterArray.roomCategories = this.filterOptions.roomCategories
+            this.filterArray.roomAttributes = this.filterOptions.roomAttributes
+            this.filterArray.eventTypes = this.filterOptions.eventTypes
             this.setCheckedFalse(this.filterArray.rooms)
             this.setCheckedFalse(this.filterArray.areas)
             this.setCheckedFalse(this.filterArray.roomCategories)
             this.setCheckedFalse(this.filterArray.roomAttributes)
             this.setCheckedFalse(this.filterArray.eventTypes)
-        })
-        axios.get('/filters').then(response => {
-            this.filters = response.data;
-        })
     },
     data() {
         return {
-            filters: [],
+            localPersonalFilters: this.personalFilters,
             filterName: '',
             eventsSince: null,
             eventsUntil: null,
@@ -431,7 +430,7 @@ export default {
             })
             await axios.get('/filters')
                 .then(response => {
-                    this.filters = response.data;
+                    this.localPersonalFilters = response.data;
                 })
         },
         changeChecked(elementsToChange, checkedElements) {
@@ -461,7 +460,7 @@ export default {
             await axios.delete(`/filters/${id}`)
             await axios.get('/filters')
                 .then(response => {
-                    this.filters = response.data
+                    this.localPersonalFilters = response.data
                 })
         },
         returnNullIfFalse(variable) {
@@ -505,32 +504,43 @@ export default {
                 case 'projects':
                     return route('projects.show', { project: window.location.pathname.split('/')[2]})
             }
+        },
+        reloadChanges() {
+            const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
+            console.log("reloading in filter")
+            console.log(this.atAGlance)
+            Inertia.reload( {
+                data: {
+                    isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
+                    isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
+                    adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
+                    adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
+                    hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
+                    hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
+                    showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
+                    allDayFree: this.filterArray.roomFilters.allDayFree,
+                    roomIds: this.arrayToIds(this.filterArray.rooms),
+                    areaIds: this.arrayToIds(this.filterArray.areas),
+                    eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
+                    roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
+                    roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories),
+                    atAGlance: this.atAGlance
+                },
+                preserveState: true
+            })
         }
     },
     watch: {
         filterArray: {
             handler() {
-                const pageRoute = this.getRoute(window.location.pathname.split('/')[1])
-                Inertia.reload( {
-                    data: {
-                        isLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isLoud.checked),
-                        isNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.isNotLoud.checked),
-                        adjoiningNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNoAudience.checked),
-                        adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
-                        hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
-                        hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                        showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
-                        allDayFree: this.filterArray.roomFilters.allDayFree,
-                        roomIds: this.arrayToIds(this.filterArray.rooms),
-                        areaIds: this.arrayToIds(this.filterArray.areas),
-                        eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
-                        roomAttributeIds: this.arrayToIds(this.filterArray.roomAttributes),
-                        roomCategoryIds: this.arrayToIds(this.filterArray.roomCategories)
-                    },
-                    preserveState: true
-                })
+                this.reloadChanges()
             },
             deep: true
+        },
+        atAGlance: {
+            handler() {
+                this.reloadChanges()
+            }
         }
     }
 }

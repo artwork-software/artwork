@@ -23,7 +23,10 @@
                                 :events="this.events.events"
                                 :rooms="this.rooms"
                                 :events-without-room="eventsWithoutRoom"
-                                initial-view="day"/>
+                                initial-view="day"
+                                :filter-options="filterOptions"
+                                :personal-filters="personalFilters"
+                            />
                         </div>
                     </div>
                     <div v-else class="overflow-x-auto">
@@ -34,7 +37,10 @@
                             :atAGlance="this.atAGlance"
                             :eventTypes=this.eventTypes
                             :rooms="rooms"
-                            :eventsAtAGlance="eventsAtAGlance">
+                            :eventsAtAGlance="eventsAtAGlance"
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
+                        >
                         </IndividualCalendarAtGlanceComponent>
 
                         <IndividualCalendarComponent
@@ -48,6 +54,8 @@
                             :days="days"
                             :events-without-room="eventsWithoutRoom"
                             @change-at-a-glance="changeAtAGlance"
+                            :filter-options="filterOptions"
+                            :personal-filters="personalFilters"
                         />
                     </div>
                 </div>
@@ -145,7 +153,9 @@ export default defineComponent({
         'dateValue',
         'calendarType',
         'selectedDate',
-        'eventsAtAGlance'
+        'eventsAtAGlance',
+        'filterOptions',
+        'personalFilters'
     ,'eventsWithoutRoom'],
     components: {
         IndividualCalendarAtGlanceComponent,
@@ -199,15 +209,7 @@ export default defineComponent({
             this.doneTaskForm.patch(route('tasks.update', {task: task.id}));
         },
         changeAtAGlance() {
-            this.atAGlance = !this.atAGlance;
-            if(this.atAGlance){
-                Inertia.reload({
-                    data: {
-                        atAGlance: this.atAGlance,
-                    },
-                    only: ['calendar']
-                })
-            }
+           this.atAGlance = !this.atAGlance;
         }
     },
     data() {

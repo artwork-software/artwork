@@ -1,7 +1,14 @@
 <template>
     <div class="w-full flex flex-wrap">
-        <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal" :dateValue="dateValue" @change-at-a-glance="changeAtAGlance"
-                             :at-a-glance="atAGlance"></CalendarFunctionBar>
+        <CalendarFunctionBar
+            :project="project"
+            @open-event-component="openEditEventModal"
+            :dateValue="dateValue"
+            @change-at-a-glance="changeAtAGlance"
+            :at-a-glance="atAGlance"
+            :filter-options="filterOptions"
+            :personal-filters="personalFilters"
+        />
 
         <!-- Calendar -->
         <div class="flex">
@@ -83,7 +90,16 @@ export default {
           zoomFactor: 1
       }
     },
-    props: ['eventsAtAGlance','atAGlance','dateValue','eventTypes','rooms','project'],
+    props: [
+        'eventsAtAGlance',
+        'atAGlance',
+        'dateValue',
+        'eventTypes',
+        'rooms',
+        'project',
+        'filterOptions',
+        'personalFilters'
+    ],
     emits:['changeAtAGlance'],
     methods: {
         changeAtAGlance(){

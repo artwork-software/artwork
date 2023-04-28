@@ -159,7 +159,7 @@ class Event extends Model
 
     public function subEvents()
     {
-        return $this->hasMany(SubEvents::class);
+        return $this->hasMany(SubEvents::class)->orderBy('start_time', 'ASC');
     }
 
     /**

@@ -77,8 +77,6 @@
 
     </div>
 
-
-
     <!-- Termine ohne Raum Modal -->
     <events-without-room-component
         v-if="showEventsWithoutRoomComponent"
@@ -250,7 +248,9 @@ export default {
                 this.calendarData.forEach((room) => {
                     room[day.day].data.forEach((event) => {
                         if (event.clicked) {
-                            eventArray.push(event.id)
+                            if(!eventArray.includes(event.id)){
+                                eventArray.push(event.id)
+                            }
                         }
                     })
                 })

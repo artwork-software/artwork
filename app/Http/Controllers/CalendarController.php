@@ -18,6 +18,7 @@ use Barryvdh\Debugbar\Facades\Debugbar;
 use Doctrine\DBAL\Query\QueryBuilder;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CalendarController extends Controller
 {
@@ -175,7 +176,7 @@ class CalendarController extends Controller
                         $query->whereIn('room_categories.id', request('roomCategoryIds'));
                     }))
                 ->with(['events.room', 'events.project', 'events.creator', 'events' => function($query) use($project, $room) {
-                    $this->filterEvents($query, $room, $project);
+                    $this->filterEvents($query, $room, $project)->orderBy('start_time', 'ASC');
             }])
                 ->get()
                 ->map(fn($room) => collect($calendarPeriod)
@@ -183,7 +184,9 @@ class CalendarController extends Controller
                         $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                     ]));
 
-            $eventsWithoutRooms = CalendarEventResource::collection(Event::where('room_id', null)->get())->resolve();
+            $events = Event::where('room_id', null)->get();
+
+            $eventsWithoutRooms = CalendarEventResource::collection($events)->resolve();
         }
 
         return [
@@ -212,7 +215,7 @@ class CalendarController extends Controller
     {
         $initialEventQuery = Event::query()
             ->whereBetween('start_time', [$startDate, $endDate])
-            ->whereBetween('end_time', [$startDate, $endDate]);
+            ->orWhereBetween('end_time', [$startDate, $endDate]);
 
         $filteredEventsQuery = $this->filterEvents($initialEventQuery, null, null);
 

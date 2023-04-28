@@ -110,6 +110,7 @@ class CalendarEventCollectionResource extends ResourceCollection
                 'id' => $area->id,
                 'name' => $area->name,
             ]),
+            'subEvents' => $this->subEvents()->get()
         ];
     }
 }

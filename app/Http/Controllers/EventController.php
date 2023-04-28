@@ -21,6 +21,7 @@ use App\Models\Project;
 use App\Models\Room;
 use App\Models\Scheduling;
 use App\Models\SeriesEvents;
+use App\Models\SubEvents;
 use App\Models\Task;
 use App\Models\User;
 use App\Support\Services\CollisionService;
@@ -194,33 +195,33 @@ class EventController extends Controller
                 'end_date' => $request->seriesEndDate
             ]);
             $firstEvent->update(['is_series' => true, 'series_id' => $series->id]);
-            $endSeriesDate = Carbon::parse($request->seriesEndDate);
+            $endSeriesDate = Carbon::parse($request->seriesEndDate)->addDay();
             $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
             $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
             $whileEndDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
             if($request->seriesFrequency === 1){
-                while ($whileEndDate->addDay() <= $endSeriesDate) {
+                while ($whileEndDate->addDay() < $endSeriesDate) {
                     $startDate = $startDate->addDay();
                     $endDate = $endDate->addDay();
                     $this->createSeriesEvent($startDate, $endDate, $request, $series);
                 }
             }
             if($request->seriesFrequency === 2){
-                while ($whileEndDate->addWeek() <= $endSeriesDate) {
+                while ($whileEndDate->addWeek() < $endSeriesDate) {
                     $startDate = $startDate->addWeek();
                     $endDate = $endDate->addWeek();
                     $this->createSeriesEvent($startDate, $endDate, $request, $series);
                 }
             }
             if($request->seriesFrequency === 3){
-                while ($whileEndDate->addWeeks(2) <= $endSeriesDate) {
+                while ($whileEndDate->addWeeks(2) < $endSeriesDate) {
                     $startDate = $startDate->addWeeks(2);
                     $endDate = $endDate->addWeeks(2);
                     $this->createSeriesEvent($startDate, $endDate, $request, $series);
                 }
             }
             if($request->seriesFrequency === 4){
-                while ($whileEndDate->addMonth() <= $endSeriesDate) {
+                while ($whileEndDate->addMonth() < $endSeriesDate) {
                     $startDate = $startDate->addMonth();
                     $endDate = $endDate->addMonth();
                     $this->createSeriesEvent($startDate, $endDate, $request, $series);
@@ -678,7 +679,7 @@ class EventController extends Controller
         $events = Event::query()
             // eager loading
             ->withCollisionCount()
-            ->with('room')
+            ->with(['room'])
             // filter for different pages
             ->whereOccursBetween(Carbon::parse($request->get('start')), Carbon::parse($request->get('end')))
             ->when($projectId, fn (EventBuilder $builder) => $builder->where('project_id', $projectId))
@@ -705,6 +706,11 @@ class EventController extends Controller
             ->unless(is_null($hasAudience), fn (EventBuilder $builder) => $builder->where('audience', $hasAudience))
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null))
             ->get();
+
+        /*
+         *
+         * 
+         */
 
         return [
             'events' => new CalendarEventCollectionResource($events),
@@ -922,7 +928,7 @@ class EventController extends Controller
      * @return void
      */
     public function updateMultiEdit(Request $request){
-
+        $eventIds = $request->events;
 
         foreach ($eventIds as $eventId){
             $event = Event::find($eventId);

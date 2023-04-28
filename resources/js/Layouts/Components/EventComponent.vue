@@ -542,17 +542,17 @@
                 </div>
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
-                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects|| roomAdminIds.includes(this.$page.props.user.id))">
-                        <button :disabled="this.selectedRoom === null"
-                                :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id))">
+                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate"
+                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent()">
                             {{ this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : 'Speichern' : 'Speichern'}}
                         </button>
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
-                        <button :disabled="this.selectedRoom === null"
-                                :class="this.selectedRoom === null || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate"
+                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent(true)">
                             Belegung anfragen
@@ -766,6 +766,17 @@ export default {
     },
 
     methods: {
+        checkButtonDisabled(){
+            if(this.series){
+                if(this.seriesEndDate){
+                    const eventEndDate = new Date(this.endFull);
+                    const endDateSeries = new Date(this.seriesEndDate);
+                    return endDateSeries < eventEndDate;
+                }
+                return true;
+            }
+            return false;
+        },
         openModal() {
             this.canEdit = (!this.event?.id) || this.event?.canEdit || this.$page.props.can.create_and_edit_projects;
             if (!this.event) {

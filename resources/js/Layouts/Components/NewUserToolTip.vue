@@ -14,7 +14,7 @@
                                      alt=""/>
                             </div>
                             <div class="col-span-3">
-                                <div class=" font-black font-lexend text-white text-lg">
+                                <div class="font-black font-lexend text-white text-lg">
                                     {{ user.first_name }} {{ user.last_name }}
                                 </div>
                                 <div class="-mt-1">

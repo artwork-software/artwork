@@ -3,11 +3,11 @@
         <div class="inline-flex border-none justify-end w-full">
             <button class="flex" @click="resetCalendarFilter">
                 <XIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs">Zurücksetzen</label>
+                <label class="text-xs cursor-pointer">Zurücksetzen</label>
             </button>
             <button class="flex ml-4" @click="saving = !saving">
                 <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                <label class="text-xs">Speichern</label>
+                <label class="text-xs cursor-pointer">Speichern</label>
             </button>
         </div>
         <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
@@ -27,7 +27,7 @@
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div v-if="saving">
                         <div class="flex">
-                            <input id="saveFilter" v-model="filterName" type="text"
+                            <input id="saveFilter" autocomplete="off" v-model="filterName" type="text"
                                    class="shadow-sm placeholder-darkInputText bg-darkInputBg focus:outline-none focus:ring-0 border-secondary focus:border-1 text-sm"
                                    placeholder="Name des Filters"/>
                             <button

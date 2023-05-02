@@ -2,11 +2,26 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
+use App\Models\Event;
 use App\Models\SubEvents;
+use App\Support\Services\NotificationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class SubEventsController extends Controller
 {
+    protected ?NotificationService $notificationService = null;
+    protected ?\stdClass $notificationData = null;
+
+
+    public function __construct()
+    {
+        $this->notificationService = new NotificationService();
+        $this->notificationData = new \stdClass();
+        $this->notificationData->event = new \stdClass();
+    }
+
     /**
      * Display a listing of the resource.
      *
@@ -44,8 +59,23 @@ class SubEventsController extends Controller
             'event_type_id',
             'user_id',
             'audience',
-            'is_loud'
+            'is_loud',
         ]));
+
+        // Send Notification to Room Admins
+        $event = Event::find($request->event_id);
+        $room = $event->room()->first();
+        $roomAdmins = $room->users()->wherePivot('is_admin', true)->get();
+        foreach ($roomAdmins as $roomAdmin){
+            $notificationTitle = 'Lauter Termin im Nebenraum';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'error',
+                'message' => $notificationTitle
+            ];
+            $this->notificationService->createNotification($roomAdmin, $notificationTitle, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', [], false, '', null, $broadcastMessage, null, $event);
+            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+        }
     }
 
     /**

@@ -8,11 +8,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use stdClass;
 
 class BudgetVerified extends Notification
 {
     use Queueable;
-    protected array $notificationData = [];
+    protected ?stdClass $notificationData = null;
     protected array $broadcastMessage = [];
 
     public function __construct($notificationData, $broadcastMessage = [])
@@ -33,7 +34,7 @@ class BudgetVerified extends Notification
         $channels = ['database'];
 
         $typeSettings = $user->notificationSettings()
-            ->where('type', $this->notificationData['type'])
+            ->where('type', $this->notificationData->type)
             ->first();
 
         if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
@@ -56,7 +57,7 @@ class BudgetVerified extends Notification
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject($this->notificationData['title'])
+            ->subject($this->notificationData->title)
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
@@ -64,7 +65,7 @@ class BudgetVerified extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
+     * @return stdClass
      */
     public function toArray($notifiable)
     {

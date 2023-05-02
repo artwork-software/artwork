@@ -91,7 +91,7 @@ class Event extends Model
 
     public function comments(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(EventComments::class);
+        return $this->hasMany(EventComments::class)->orderBy('id', 'DESC');
     }
 
     public function getDaysOfEventAttribute(): array

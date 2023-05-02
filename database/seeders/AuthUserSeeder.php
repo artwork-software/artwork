@@ -81,6 +81,20 @@ class AuthUserSeeder extends Seeder
         ]);
         $user->calendar_settings()->create();
 
+
+        foreach (NotificationConstEnum::cases() as $notificationType) {
+
+            $user->notificationSettings()->create([
+                'group_type' => $notificationType->groupType(),
+                'type' => $notificationType->value,
+                'title' => $notificationType->title(),
+                'description' => $notificationType->description()
+            ]);
+
+        }
+        $user->assignRole(RoleNameEnum::USER->value);
+
+
         $user = User::create([
             'first_name' => 'Anna',
             'last_name' => 'Admin',

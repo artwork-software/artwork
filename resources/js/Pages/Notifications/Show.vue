@@ -7,6 +7,7 @@
                     <h2 class="headline1 flex mb-4">Benachrichtungen</h2>
                 </div>
             </div>
+
         </div>
         <div class="ml-12 mt-8">
             <div class="mb-4 border-gray-200 dark:border-gray-700">

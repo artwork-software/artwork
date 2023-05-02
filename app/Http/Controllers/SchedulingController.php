@@ -142,24 +142,24 @@ class SchedulingController extends Controller
                     $user = User::find($checklist->user_id);
                     $deadline = new DateTime($privateChecklistTask->deadline);
                     if ($deadline <= Carbon::now()->addDay() && $deadline >= Carbon::now()) {
-                        $this->notificationData->title = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
-                        $this->notificationData->task = $privateChecklistTask;
+                        $notificationTitle = 'Deadline von ' . $privateChecklistTask->name . ' ist morgen erreicht';
                         $broadcastMessage = [
                             'id' => rand(1, 1000000),
                             'type' => 'error',
-                            'message' => $this->notificationData->title
+                            'message' => $notificationTitle
                         ];
-                        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $privateChecklistTask);
+                        //$$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                     }
                     if ($deadline <= now()) {
-                        $this->notificationData->title = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
-                        $this->notificationData->task = $privateChecklistTask;
+                        $notificationTitle = $privateChecklistTask->name . ' hat ihre Deadline überschritten';
                         $broadcastMessage = [
                             'id' => rand(1, 1000000),
                             'type' => 'error',
-                            'message' => $this->notificationData->title
+                            'message' => $notificationTitle
                         ];
-                        $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                        $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $privateChecklistTask);
+                        //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                     }
                 }
                 continue;
@@ -198,24 +198,24 @@ class SchedulingController extends Controller
             foreach ($userForNotify[$taskDeadline['id']] as $userToNotify) {
                 $user = User::find($userToNotify);
                 if ($taskDeadline['type'] === 'DEADLINE_REACHED') {
-                    $this->notificationData->title = $taskDeadline['title'] . ' hat die Deadline überschritten';
-                    $this->notificationData->task = $task;
+                    $notificationTitle = $taskDeadline['title'] . ' hat die Deadline überschritten';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
-                    $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $task);
+                    //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 }
                 if ($taskDeadline['type'] === 'DEADLINE_NOT_REACHED') {
-                    $this->notificationData->title = 'Deadline von ' . $task->name . ' ist morgen erreicht';
-                    $this->notificationData->task = $task;
+                    $notificationTitle = 'Deadline von ' . $task->name . ' ist morgen erreicht';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'error',
                         'message' => $this->notificationData->title
                     ];
-                    $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_TASK_REMINDER, 'red', [], false, '', null, $broadcastMessage, null, null, null, null, $task);
+                    //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
                 }
             }
         }
@@ -229,80 +229,66 @@ class SchedulingController extends Controller
             $user = User::find($schedule->user_id);
             switch ($schedule->type) {
                 case 'TASK_ADDED':
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_NEW_TASK;
-                    $this->notificationData->title = $schedule->count . ' neue Aufgaben für dich';
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = $schedule->count . ' neue Aufgaben für dich';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_NEW_TASK, 'green', [], false, '', null, $broadcastMessage);
                     break;
                 case 'PROJECT_CHANGES':
                     $project = Project::find($schedule->model_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PROJECT;
-                    $this->notificationData->title = 'Es gab Änderungen an ' . $project->name;
-                    $this->notificationData->project->id = $project->id;
-                    $this->notificationData->project->title = $project->name;
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = 'Es gab Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'green', [], false, '', null, $broadcastMessage, null, null, $project);
                     break;
                 case 'TASK_CHANGES':
                     $task = Task::find($schedule->model_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TASK_CHANGED;
-                    $this->notificationData->title = 'Änderungen an ' . @$task->name;
-                    $this->notificationData->task->title = @$task->name;
-                    $this->notificationData->task->deadline = @$task->deadline;
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = 'Änderungen an ' . @$task->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_TASK_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, null, null, $task);
                     break;
                 case 'ROOM_CHANGES':
                     $room = Room::find($schedule->model_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_CHANGED;
-                    $this->notificationData->title = 'Änderungen an ' . @$room->name;
-                    $this->notificationData->room = $room;
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = 'Änderungen an ' . @$room->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage, $room);
                     break;
                 case 'EVENT_CHANGES':
                     $event = Event::find($schedule->model_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
-                    $this->notificationData->title = 'Termin geändert';
-                    $this->notificationData->event = $event;
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = 'Termin geändert';
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_EVENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, $event);
                     break;
                 case 'PUBLIC_CHANGES':
                     $project = Project::find($schedule->model_id);
-                    $this->notificationData->type = NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT;
-                    $this->notificationData->title = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
-                    $this->notificationData->project->id = $project->id;
-                    $this->notificationData->project->title = $project->name;
-                    $this->notificationData->created_by = null;
+                    $notificationTitle = 'Es gab öffentlichkeitsarbeitsrelevante Änderungen an ' . $project->name;
                     $broadcastMessage = [
                         'id' => rand(1, 1000000),
                         'type' => 'success',
-                        'message' => $this->notificationData->title
+                        'message' => $notificationTitle
                     ];
+                    $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PUBLIC_RELEVANT, 'green', [], false, '', null, $broadcastMessage, null, null, $project);
                     break;
             }
-            $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             $schedule->delete();
         }
     }

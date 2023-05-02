@@ -1745,9 +1745,6 @@ class ProjectController extends Controller
     private function createNotificationProjectMemberChanges(Project $project, $projectManagerBefore, $projectUsers, $projectUsersAfter, $projectManagerAfter, $projectBudgetAccessBefore, $projectBudgetAccessAfter): void
     {
 
-        $this->notificationData->project->id = $project->id;
-        $this->notificationData->project->title = $project->name;
-        $this->notificationData->created_by = Auth::user();
 
         $userIdsBefore = [];
         $managerIdsBefore = [];
@@ -1780,13 +1777,14 @@ class ProjectController extends Controller
             $managerIdsAfter[$managerAfter->id] = $managerAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($managerAfter->id, $managerIdsBefore)) {
-                $this->notificationData->title = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
+                $notificationTitle = 'Du wurdest zum Projektmanager von ' . $project->name . ' ernannt';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($managerAfter, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($managerAfter, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
+                //$this->notificationService->create($managerAfter, $this->notificationData, $broadcastMessage);
             }
             if (in_array($managerAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$managerAfter->id]);
@@ -1797,13 +1795,14 @@ class ProjectController extends Controller
             $budgetIdsAfter[$budgetAfter->id] = $budgetAfter->id;
             // if added a new project manager, send notification to this user
             if (!in_array($budgetAfter->id, $budgetIdsBefore)) {
-                $this->notificationData->title = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
+                $notificationTitle = 'Du hast Budgetzugriff in ' . $project->name . ' erhalten';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($budgetAfter, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($budgetAfter, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
+                //$this->notificationService->create($budgetAfter, $this->notificationData, $broadcastMessage);
             }
             if (in_array($budgetAfter->id, $userIdsAfter)) {
                 unset($userIdsAfter[$budgetAfter->id]);
@@ -1813,49 +1812,52 @@ class ProjectController extends Controller
         foreach ($managerIdsBefore as $managerBefore) {
             if (!in_array($managerBefore, $managerIdsAfter)) {
                 $user = User::find($managerBefore);
-                $this->notificationData->title = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
+                $notificationTitle = 'Du wurdest als Projektmanager von ' . $project->name . ' gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
             }
         }
         foreach ($budgetIdsBefore as $budgetBefore) {
             if (!in_array($budgetBefore, $budgetIdsAfter)) {
                 $user = User::find($budgetBefore);
-                $this->notificationData->title = 'Dein Budgetzugriff in ' . $project->name . ' wurde gelöscht';
+                $notificationTitle = 'Dein Budgetzugriff in ' . $project->name . ' wurde gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'error',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
+                //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsAfter as $userIdAfter) {
             if (!in_array($userIdAfter, $userIdsBefore)) {
                 $user = User::find($userIdAfter);
-                $this->notificationData->title = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
+                $notificationTitle = 'Du wurdest zu ' . $project->name . ' hinzugefügt';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
+                //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
         foreach ($userIdsBefore as $userIdBefore) {
             if (!in_array($userIdBefore, $userIdsAfter)) {
                 $user = User::find($userIdBefore);
-                $this->notificationData->title = 'Du wurdest aus ' . $project->name . ' gelöscht';
+                $notificationTitle = 'Du wurdest aus ' . $project->name . ' gelöscht';
                 $broadcastMessage = [
                     'id' => rand(1, 1000000),
                     'type' => 'success',
-                    'message' => $this->notificationData->title
+                    'message' => $notificationTitle
                 ];
-                $this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+                $this->notificationService->createNotification($user, $notificationTitle, NotificationConstEnum::NOTIFICATION_PROJECT, 'red', [], false, '', null, $broadcastMessage, null, null, $project);
+                //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
             }
         }
     }

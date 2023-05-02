@@ -7,12 +7,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use stdClass;
 
 class GlobalUserNotification extends Notification
 {
     use Queueable;
 
-    protected array $notificationData = [];
+    protected ?stdClass $notificationData = null;
     /**
      * Create a new notification instance.
      *
@@ -34,7 +35,7 @@ class GlobalUserNotification extends Notification
         $channels = ['database'];
 
         $typeSettings = $user->notificationSettings()
-            ->where('type', $this->notificationData['type'])
+            ->where('type', $this->notificationData->type)
             ->first();
 
         if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
@@ -53,7 +54,7 @@ class GlobalUserNotification extends Notification
     public function toMail(mixed $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject($this->notificationData['title'])
+            ->subject($this->notificationData->title)
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
@@ -61,9 +62,9 @@ class GlobalUserNotification extends Notification
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
+     * @return stdClass
      */
-    public function toArray(mixed $notifiable): array
+    public function toArray(mixed $notifiable): stdClass
     {
         return $this->notificationData;
     }

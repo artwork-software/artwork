@@ -1,17 +1,14 @@
 <template>
     <div class="flex w-full mb-5">
-        <button class="bg-buttonBlue flex relative w-6"
-                @click="showSection = !showSection">
-            <ChevronUpIcon v-if="showSection"
-                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-            <ChevronDownIcon v-else
-                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+        <button class="bg-buttonBlue flex relative w-6" @click="showSection = !showSection">
+            <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
         </button>
-        <div class="flex flex-wrap w-11/12 border border-2 border-gray-300">
-            <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full ml-12">
+        <div class="border border-2 border-gray-300 px-10 w-full">
+            <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex headline2 ">
                     {{ name }}
-                    <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? 'px-2' : ''"
+                    <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? '' : ''"
                          class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
                         {{ notifications.length }}
                     </div>
@@ -24,10 +21,14 @@
                 </div>
             </div>
             <div v-if="showSection" @mouseover="notification.hovered = true" @mouseleave="notification.hovered = false"
-                 :class="index !== 0 && showSection ? 'border-t-2' : ''"
-                 class="flex flex-wrap justify-between mx-12 w-full py-6"
+                 :class="index !== 0 && showSection ? 'border-t-2 mb-2 mt-3' : ''"
+                 class=""
                  v-for="(notification,index) in notifications">
-                <div class="flex flex-wrap w-full justify-between">
+                <NotificationBlock
+                    :notification="notification"
+                    :event-types="eventTypes"
+                />
+                <div class="flex flex-wrap w-full justify-between hidden" v-if="false">
                     <div class="flex">
                         <!-- Notification Icon -->
                         <TeamIconCollection
@@ -336,11 +337,13 @@ import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
+import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 
 export default  {
     name: 'NotificationSectionComponent',
 
     components: {
+        NotificationBlock,
         NotificationPublicChangesInfo,
         NotificationBudgetRequest,
         TeamIconCollection,

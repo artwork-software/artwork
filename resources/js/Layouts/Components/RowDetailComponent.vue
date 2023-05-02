@@ -129,7 +129,7 @@ export default {
             hoveredBorder: false,
             cellComment: null,
             commentHovered: null,
-            isExcluded: this.row.commented,
+            isExcluded: this.row?.commented,
             commentForm: useForm({
                 description: '',
                 rowId: this.row.id

@@ -21,6 +21,7 @@
                 :at-a-glance="atAGlance"
                 :filter-options="filterOptions"
                 :personal-filters="personalFilters"
+                :is-fullscreen="isFullscreen"
             />
 
             <!--  Calendar  -->
@@ -383,6 +384,9 @@ export default {
         'personalFilters'
     ],
     emits: ['changeAtAGlance'],
+    mounted() {
+        window.addEventListener('resize', this.listenToFullscreen);
+    },
     data() {
         return {
             displayDate: '',
@@ -465,6 +469,7 @@ export default {
             createEventComponentIsVisible: false,
             showEventsWithoutRoomComponent: false,
             roomCollisions: [],
+            isFullscreen: false,
 
         }
     },
@@ -521,6 +526,11 @@ export default {
             this.wantedSplit = event?.split;
             if (event === null) {
                 this.selectedEvent = null;
+                if(this.isFullscreen){
+                    document.exitFullscreen();
+                    this.isFullscreen = false;
+                }
+
                 this.createEventComponentIsVisible = true;
                 return;
             }
@@ -545,6 +555,10 @@ export default {
                     .then(response => this.roomCollisions = response.data);
             }
             this.selectedEvent = event;
+            if(this.isFullscreen){
+                document.exitFullscreen();
+                this.isFullscreen = false;
+            }
             this.createEventComponentIsVisible = true;
         },
         openEventsWithoutRoomComponent() {
@@ -632,7 +646,15 @@ export default {
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
             return `${year}-${month}-${day}`;
-        }
+        },
+        listenToFullscreen() {
+            if (window.innerHeight === screen.height) {
+                this.isFullscreen = true;
+            } else {
+                this.isFullscreen = false;
+                this.zoomFactor = 1;
+            }
+        },
     }
 }
 </script>

@@ -457,14 +457,6 @@ export default defineComponent({
         },
         closeAddUserModal(bool) {
             this.addingUser = false;
-            this.emailInput = "";
-            this.form.user_emails = [];
-            this.form.permissions = [];
-            this.form.departments = [];
-            this.form.role = '';
-            this.departments.forEach((team) => {
-                team.checked = false;
-            })
             if(bool){
                 this.openSuccessModal();
             }

@@ -1,111 +1,118 @@
 <template>
     <div id="myCalendar" class="bg-white w-[98%]" :class="isFullscreen ? 'overflow-y-auto' : ''">
-    <div  class="w-full flex flex-wrap bg-secondaryHover" >
-        <div  class="flex justify-center w-full bg-white">
-            <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
-                 @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom?.length > 0">
-                <ExclamationIcon class="h-6  mr-2"/>
-                {{
-                    eventsWithoutRoom?.length
-                }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
-            </div>
-        </div>
-        <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
-                             @increment-zoom-factor="incrementZoomFactor"
-                             @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
-                             :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
-                             :dateValue="dateValue"
-                             @change-at-a-glance="changeAtAGlance"
-                             @change-multi-edit="changeMultiEdit"
-                             :at-a-glance="atAGlance"
-                             :filter-options="filterOptions"
-                             :personal-filters="personalFilters"
-        />
-        <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-
-            <!-- Calendar -->
-            <table class="w-full bg-white relative">
-                <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
-                <div>
-                <tr class="flex w-full bg-userBg stickyHeader">
-                    <th class="w-20">
-
-                    </th>
-                    <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
-                        class="py-3  border-r-4 border-secondaryHover">
-                        <Link :style="textStyle" class="flex font-semibold items-center ml-4" :href="route('rooms.show',{room: room.id})">
-                            {{ room.name }}
-                        </Link>
-                    </th>
-                </tr>
-                <tbody class="w-full pt-3 ">
-                <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
-                    :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
-                    <th :style="{height: zoomFactor * 115 + 'px'}" :class="isDashboard? 'stickyDaysDashboard' : 'stickyDays'" class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                        {{ day.day_string }} {{ day.day }}
-                    </th>
-                    <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
-                        class="cell border-t-2 border-dashed" :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'"
-                        v-for="room in calendarData">
-                        <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
-                            <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
-                            <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
-                                                 :zoom-factor="zoomFactor" :width="zoomFactor * 204" :event="event"
-                                                 :event-types="eventTypes"
-                                                 @open-edit-event-modal="openEditEventModal"/>
-                            <!-- </CalendarEventTooltip> -->
-                        </div>
-                    </td>
-                </tr>
-                </tbody>
+        <div class="w-full flex flex-wrap bg-secondaryHover">
+            <div class="flex justify-center w-full bg-white">
+                <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
+                     @click="openEventsWithoutRoomComponent()"
+                     v-if="eventsWithoutRoom?.length > 0">
+                    <ExclamationIcon class="h-6  mr-2"/>
+                    {{
+                        eventsWithoutRoom?.length
+                    }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
                 </div>
-            </table>
+            </div>
+            <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
+                                 @increment-zoom-factor="incrementZoomFactor"
+                                 @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
+                                 :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen"
+                                 :dateValue="dateValue"
+                                 @change-at-a-glance="changeAtAGlance"
+                                 @change-multi-edit="changeMultiEdit"
+                                 @previousTimeRange="previousTimeRange"
+                                 @next-time-range="nextTimeRange"
+                                 :at-a-glance="atAGlance"
+                                 :filter-options="filterOptions"
+                                 :personal-filters="personalFilters"
+            />
+            <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
+
+                <!-- Calendar -->
+                <table class="w-full bg-white relative">
+                    <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
+                    <div>
+                        <tr class="flex w-full bg-userBg stickyHeader">
+                            <th class="w-20">
+
+                            </th>
+                            <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
+                                class="py-3  border-r-4 border-secondaryHover">
+                                <Link :style="textStyle" class="flex font-semibold items-center ml-4"
+                                      :href="route('rooms.show',{room: room.id})">
+                                    {{ room.name }}
+                                </Link>
+                            </th>
+                        </tr>
+                        <tbody class="w-full pt-3 ">
+                        <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
+                            :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
+                            <th :style="{height: zoomFactor * 115 + 'px'}"
+                                :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
+                                class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
+                                {{ day.day_string }} {{ day.day }}
+                            </th>
+                            <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
+                                class="cell border-t-2 border-dashed"
+                                :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'"
+                                v-for="room in calendarData">
+                                <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
+                                    <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
+                                    <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
+                                                         :zoom-factor="zoomFactor" :width="zoomFactor * 204"
+                                                         :event="event"
+                                                         :event-types="eventTypes"
+                                                         @open-edit-event-modal="openEditEventModal"/>
+                                    <!-- </CalendarEventTooltip> -->
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </div>
+                </table>
+            </div>
+            <event-component
+                v-if="createEventComponentIsVisible"
+                @closed="onEventComponentClose()"
+                :showHints="$page.props?.can?.show_hints"
+                :eventTypes="eventTypes"
+                :rooms="rooms"
+                :project="project"
+                :event="selectedEvent"
+                :wantedRoomId="wantedRoom"
+                :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+                :roomCollisions="roomCollisions"
+            />
+
         </div>
-        <event-component
-            v-if="createEventComponentIsVisible"
-            @closed="onEventComponentClose()"
+
+        <!-- Termine ohne Raum Modal -->
+        <events-without-room-component
+            v-if="showEventsWithoutRoomComponent"
+            @closed="onEventsWithoutRoomComponentClose()"
             :showHints="$page.props?.can?.show_hints"
             :eventTypes="eventTypes"
             :rooms="rooms"
-            :project="project"
-            :event="selectedEvent"
-            :wantedRoomId="wantedRoom"
+            :eventsWithoutRoom="this.eventsWithoutRoom"
             :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
-            :roomCollisions="roomCollisions"
         />
 
-    </div>
+        <div v-show="multiEdit"
+             class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+            <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
+                       @click="openMultiEditModal"/>
+            <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
+                       class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
+                       text="Termine löschen"/>
+        </div>
 
-    <!-- Termine ohne Raum Modal -->
-    <events-without-room-component
-        v-if="showEventsWithoutRoomComponent"
-        @closed="onEventsWithoutRoomComponentClose()"
-        :showHints="$page.props?.can?.show_hints"
-        :eventTypes="eventTypes"
-        :rooms="rooms"
-        :eventsWithoutRoom="this.eventsWithoutRoom"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
-    />
+        <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+                        @closed="closeMultiEditModal"/>
 
-    <div v-show="multiEdit"
-         class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
-        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
-                   @click="openMultiEditModal"/>
-        <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
-                   class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
-                   text="Termine löschen"/>
-    </div>
-
-    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
-                    @closed="closeMultiEditModal"/>
-
-    <ConfirmDeleteModal
-        v-if="openDeleteSelectedEventsModal"
-        @closed="openDeleteSelectedEventsModal = false"
-        @delete="deleteSelectedEvents"
-        title="Belegungen löschen"
-        description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht." />
+        <ConfirmDeleteModal
+            v-if="openDeleteSelectedEventsModal"
+            @closed="openDeleteSelectedEventsModal = false"
+            @delete="deleteSelectedEvents"
+            title="Belegungen löschen"
+            description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."/>
 
     </div>
 </template>
@@ -195,6 +202,10 @@ export default {
 
             if (event === null) {
                 this.selectedEvent = null;
+                if (this.isFullscreen) {
+                    document.exitFullscreen();
+                    this.isFullscreen = false;
+                }
                 this.createEventComponentIsVisible = true;
                 return;
             }
@@ -219,6 +230,10 @@ export default {
                 }).then(response => this.roomCollisions = response.data);
             }
             this.selectedEvent = event;
+            if (this.isFullscreen) {
+                document.exitFullscreen();
+                this.isFullscreen = false;
+            }
             this.createEventComponentIsVisible = true;
 
         },
@@ -226,7 +241,7 @@ export default {
             this.createEventComponentIsVisible = false;
             Inertia.reload();
         },
-        deleteSelectedEvents(){
+        deleteSelectedEvents() {
             this.getCheckedEvents();
             Inertia.post(route('multi-edit.delete'), {
                 events: this.editEvents
@@ -248,7 +263,7 @@ export default {
                 this.calendarData.forEach((room) => {
                     room[day.day].data.forEach((event) => {
                         if (event.clicked) {
-                            if(!eventArray.includes(event.id)){
+                            if (!eventArray.includes(event.id)) {
                                 eventArray.push(event.id)
                             }
                         }
@@ -297,6 +312,52 @@ export default {
             this.showEventsWithoutRoomComponent = false;
             Inertia.reload();
         },
+        calculateDateDifference() {
+            const date1 = new Date(this.dateValue[0]);
+            const date2 = new Date(this.dateValue[1]);
+            const timeDifference = date2.getTime() - date1.getTime();
+            return timeDifference / (1000 * 3600 * 24);
+        },
+        previousTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValue[1] = this.getPreviousDay(this.dateValue[0]);
+            const newDate = new Date(this.dateValue[1]);
+            newDate.setDate(newDate.getDate() - dayDifference);
+            this.dateValue[0] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        nextTimeRange() {
+            const dayDifference = this.calculateDateDifference();
+            this.dateValue[0] = this.getNextDay(this.dateValue[1]);
+            const newDate = new Date(this.dateValue[1]);
+            newDate.setDate(newDate.getDate() + dayDifference + 1);
+            this.dateValue[1] = newDate.toISOString().slice(0, 10);
+            this.updateTimes();
+        },
+        getNextDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() + 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        getPreviousDay(dateString) {
+            const date = new Date(dateString);
+            date.setDate(date.getDate() - 1);
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        },
+        updateTimes() {
+            Inertia.reload({
+                data: {
+                    startDate: this.dateValue[0],
+                    endDate: this.dateValue[1],
+                }
+            })
+        },
     }
 }
 </script>
@@ -326,6 +387,7 @@ export default {
 ::-webkit-scrollbar-thumb:hover {
     background-color: #a8bbbf;
 }
+
 .stickyHeader {
     position: sticky;
     align-self: flex-start;
@@ -335,6 +397,7 @@ export default {
     z-index: 21;
     background-color: #EDEDEC;
 }
+
 .stickyDays {
     position: sticky;
     align-self: flex-start;
@@ -343,7 +406,8 @@ export default {
     z-index: 21;
     background-color: #EDEDEC;
 }
-.stickyDaysDashboard {
+
+.stickyDaysNoMarginleft {
     position: sticky;
     align-self: flex-start;
     position: -webkit-sticky;

@@ -2,13 +2,24 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue"></date-picker-component>
-            <div v-if="dateValue && dateValue[0] === dateValue[1] && !project">
-                <button class="ml-2 -mt-2 text-black" @click="previousDay">
-                    <ChevronLeftIcon class="h-5 w-5 text-primary"/>
-                </button>
-                <button class="ml-2 -mt-2 text-black" @click="nextDay">
-                    <ChevronRightIcon class="h-5 w-5 text-primary"/>
-                </button>
+            <div v-if="!project">
+                <div v-if="dateValue && dateValue[0] === dateValue[1]">
+                    <button  class="ml-2 -mt-2 text-black" @click="previousDay">
+                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                    <button class="ml-2 -mt-2 text-black" @click="nextDay">
+                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                </div>
+                <div v-else>
+                    <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
+                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                    <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
+                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                </div>
+
             </div>
             <div v-else class="flex items-center">
               <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">
@@ -51,7 +62,7 @@
                              v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
                 <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IndividualCalendarFilterComponent
+                <IndividualCalendarFilterComponent v-if="!roomMode"
                     class="mt-1"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
@@ -170,7 +181,7 @@ export default {
         'filterOptions',
         'personalFilters'
     ],
-    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
+    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {
         return {
             atAGlance: this.atAGlance,
@@ -217,7 +228,13 @@ export default {
         },
         openEventComponent(){
             this.$emit('openEventComponent')
-        }
+        },
+        previousTimeRange(){
+            this.$emit('previousTimeRange')
+        },
+        nextTimeRange(){
+            this.$emit('nextTimeRange')
+        },
 
     },
 }

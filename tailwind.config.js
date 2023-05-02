@@ -9,7 +9,6 @@ module.exports = {
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
         './resources/js/**/*.vue',
-        "./node_modules/flowbite/**/*.js",
         "./index.html",
         "./src/**/*.{vue,js,ts,jsx,tsx}",
         "./node_modules/vue-tailwind-datepicker/**/*.js"
@@ -61,12 +60,14 @@ module.exports = {
             },
             flex: {
                 'tags': '1 1 30%'
+            },
+            zIndex: {
+                '100': '100',
             }
         },
     },
     plugins: [
         require('@tailwindcss/forms'),
-        require('@tailwindcss/typography'),
-        require('flowbite/plugin')
+        require('@tailwindcss/typography')
     ],
 };

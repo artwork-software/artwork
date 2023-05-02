@@ -707,11 +707,6 @@ class EventController extends Controller
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null))
             ->get();
 
-        /*
-         *
-         * 
-         */
-
         return [
             'events' => new CalendarEventCollectionResource($events),
             'eventsWithoutRoom' => new CalendarEventCollectionResource($eventsWithoutRoom),

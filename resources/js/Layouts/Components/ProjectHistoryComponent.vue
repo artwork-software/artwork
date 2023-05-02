@@ -30,14 +30,14 @@
                     </div>
                 </div>
 
-                <div class="flex  w-full flex-wrap mt-4 max-h-96 overflow-y-auto" v-if="showProjectHistoryTab">
+                <div class="flex  w-full flex-wrap mt-4" v-if="showProjectHistoryTab">
                     <div v-for="(historyItem,index) in project_history">
                         <div class="flex w-full my-1" v-if="historyItem?.changes !== null && historyItem.changes[0]?.type === 'project' || historyItem.changes[0]?.type === 'public_changes'">
                             <div class="flex w-full">
                                     <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">
                                         {{ historyItem.created_at }}:
                                     </span>
-                                <NewUserToolTip :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
+                                <NewUserToolTip class="absolute" :height="7" :width="7" v-if="historyItem.changes[0].changed_by"
                                                 :user="historyItem.changes[0].changed_by" :id="index"/>
                                 <div v-else class="xsLight ml-3">
                                     gelöschte Nutzer:in
@@ -50,7 +50,7 @@
                     </div>
                 </div>
 
-                <div class="flex w-full flex-wrap mt-4 overflow-y-auto max-h-96" v-if="showBudgetHistoryTab">
+                <div class="flex w-full flex-wrap mt-4 max-h-96" v-if="showBudgetHistoryTab">
                     <div class="flex w-full my-1" v-for="historyItem in project_history">
                         <div v-if="historyItem.changes[0].type === 'budget'" class="flex w-full ">
                             <span class="w-40 text-secondary my-auto text-sm subpixel-antialiased">

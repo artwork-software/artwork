@@ -191,8 +191,8 @@
                                 <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
                             <div class="flex items-top mx-4">
-                                <div class="-mr-3 shrink-0" v-for="(user,index) in project.project_managers">
-                                    <NewUserToolTip :user="user" :id="project.id + index" height="8" width="8"/>
+                                <div class="-mr-3 " v-for="(user) in project.project_managers">
+                                    <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
                                 </div>
                             </div>
                             <div class="flex w-1/12 ml-4">

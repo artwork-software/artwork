@@ -24,7 +24,7 @@
                         id="file"
                         type="file"
                     />
-                    <div @click="selectNewFiles" @dragover.prevent
+                    <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
                         <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
@@ -118,7 +118,7 @@ export default {
         updateRequest(file) {
             this.moneySourceFileForm.file = file
             this.moneySourceFileForm.comment = this.comment
-            this.moneySourceFileForm.post(this.route('money_sources_files.update', this.file.id))
+            this.moneySourceFileForm.post(this.route('money_sources_files.update', {money_source_file: this.file}))
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";

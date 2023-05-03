@@ -31,7 +31,7 @@
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
                         <tr class="flex w-full bg-userBg stickyHeader">
-                            <th class="w-20">
+                            <th :style="{width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
 
                             </th>
                             <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
@@ -45,10 +45,12 @@
                         <tbody class="w-full pt-3 ">
                         <tr :style="{height: zoomFactor * 115 + 'px'}" class="w-full flex "
                             :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'" v-for="day in days">
-                            <th :style="{height: zoomFactor * 115 + 'px'}"
+                            <th :style="{height: zoomFactor * 115 + 'px',width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}"
                                 :class="isDashboard || isFullscreen? 'stickyDaysNoMarginLeft bg-userBg' : 'stickyDays'"
-                                class="w-20 eventTime text-secondary text-right -mt-2 pr-1">
-                                {{ day.day_string }} {{ day.day }}
+                                class="text-secondary text-right -mt-2 pr-1">
+                                <div :style="textStyle">
+                                    {{ zoomFactor > 0.4 ? day.day_string : '' }} {{ day.day }}
+                                </div>
                             </th>
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="cell border-t-2 border-dashed"

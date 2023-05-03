@@ -78,7 +78,7 @@ class MoneySourceFileController extends Controller
      * @param MoneySourceFile $moneySourceFile
      * @return RedirectResponse
      */
-    public function update(Request $request, MoneySource $moneySource, MoneySourceFile $moneySourceFile): RedirectResponse
+    public function update(Request $request, MoneySourceFile $moneySourceFile): RedirectResponse
     {
         if($request->file('file')) {
             Storage::delete('money_source_files/'. $moneySourceFile->basename);

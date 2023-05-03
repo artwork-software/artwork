@@ -62,7 +62,8 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.room_history[0]" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div v-if="room.room_history[0]"
+                     class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         zuletzt geändert:
                     </div>
@@ -153,17 +154,18 @@
                             <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
                         </div>
                         <div v-else class="flex w-[95%]">
-                        <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
-                            <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
-                                 :src="user.profile_photo_url"
-                                 alt=""/>
-                            <UserTooltip :user="user"/>
-                        </div>
+                            <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
+                                <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                <UserTooltip :user="user"/>
+                            </div>
                         </div>
                         <div class="mt-10">
                             <span class="headline2 w-full">Eigenschaften</span>
                             <Menu as="span" class="relative">
-                                <MenuButton @click="attributesOpened = true" v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
+                                <MenuButton @click="attributesOpened = true"
+                                            v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
                                     <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
                                 </MenuButton>
 
@@ -194,7 +196,8 @@
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
+                                                    <span
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
@@ -217,7 +220,9 @@
                                                             {{ category.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
+                                                    <div v-else class="text-secondary">Noch keine Raumkategorien
+                                                        angelegt
+                                                    </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
 
@@ -225,7 +230,8 @@
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
+                                                    <span
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
@@ -258,7 +264,8 @@
                                                 <DisclosureButton
                                                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                                                 >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
+                                                    <span
+                                                        :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
                                                     <ChevronDownIcon
                                                         :class="open ? 'rotate-180 transform' : ''"
                                                         class="h-4 w-4 mt-0.5 text-white"
@@ -281,7 +288,9 @@
                                                             {{ attribute.name }}
                                                         </p>
                                                     </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt</div>
+                                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften
+                                                        angelegt
+                                                    </div>
                                                 </DisclosurePanel>
                                             </Disclosure>
                                         </div>
@@ -325,7 +334,8 @@
                 </div>
 
                 <div class="flex flex-wrap">
-                    <span class="mt-12 headline2 w-full" v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
+                    <span class="mt-12 headline2 w-full"
+                          v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
                     Offene Belegungsanfragen
                     </span>
                     <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
@@ -370,8 +380,9 @@
                                 <div v-if="eventRequest.project" class="w-64">
                                     <div class="xsLight flex items-center">
                                         Zugeordnet zu
-                                        <Link :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
-                                              class="xsDark ml-2">
+                                        <Link
+                                            :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
+                                            class="xsDark ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
                                     </div>
@@ -421,11 +432,13 @@
             <div>
                 <div v-if="calendarType && calendarType === 'daily'">
                     <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.event_types initial-view="day"/>
+                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue"
+                                           :eventTypes=this.event_types initial-view="day"/>
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types :calendarData="calendar" :days="days" :rooms="rooms" />
+                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types
+                                                 :calendarData="calendar" :days="days" :rooms="rooms"/>
                 </div>
             </div>
         </div>
@@ -500,7 +513,7 @@
                                        :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                        :disabled="editRoomForm.name.length === 0"
-                                       class="mt-8 px-24 py-3" />
+                                       class="mt-8 px-24 py-3"/>
                         </div>
 
                     </div>
@@ -723,8 +736,9 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
-                                                              :user="requestToDecline.created_by" :id="1"/>
+                                    angefragt:
+                                    <NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
+                                                    :user="requestToDecline.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
@@ -800,7 +814,14 @@ import {
     PlusIcon,
     MinusIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon, ChevronRightIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PlusSmIcon,
+    XCircleIcon,
+    ChevronRightIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -902,7 +923,7 @@ export default {
         },
         requestsToShow: function () {
             let requestsToShow;
-            if(this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin){
+            if (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin) {
                 requestsToShow = this.room.event_requests
             }
             return requestsToShow
@@ -1082,7 +1103,13 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.uploadDocumentToRoom(file)
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    } else {
+                        this.uploadDocumentToRoom(file)
+                    }
+
                 }
             }
         },

@@ -25,20 +25,19 @@
                                  :personal-filters="personalFilters"
             />
             <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-
                 <!-- Calendar -->
                 <table class="w-full bg-white relative">
                     <!-- Outer Div is needed for Safari to apply Stickyness to Header -->
                     <div>
                         <tr class="flex w-full bg-userBg stickyHeader">
-                            <th :style="{width: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
+                            <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
 
                             </th>
-                            <th v-for="room in rooms" :style="{ width: zoomFactor * 212 + 'px'}"
-                                class="py-3  border-r-4 border-secondaryHover">
+                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}"
+                                class="py-3  border-r-4 border-secondaryHover truncate">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
-                                    {{ room.name }}
+                                        {{ room.name }}
                                 </Link>
                             </th>
                         </tr>
@@ -53,10 +52,10 @@
                                 </div>
                             </th>
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
-                                class="cell border-t-2 border-dashed"
-                                :class="day.is_weekend ? 'bg-backgroundGray' : 'bg-white'"
+                                class="border-t-2 border-dashed"
+                                :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
-                                <div class="py-0.5 pr-2" v-for="event in room[day.day].data">
+                                <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].data">
                                     <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
                                     <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
                                                          :zoom-factor="zoomFactor" :width="zoomFactor * 204"
@@ -303,7 +302,7 @@ export default {
             }
         },
         decrementZoomFactor() {
-            if (this.zoomFactor > 0.2) {
+            if (this.zoomFactor > 0.4) {
                 this.zoomFactor = Math.round((this.zoomFactor - 0.2) * 10) / 10;
             }
         },
@@ -405,7 +404,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 60px;
-    z-index: 21;
+    z-index: 22;
     background-color: #EDEDEC;
 }
 
@@ -414,7 +413,7 @@ export default {
     align-self: flex-start;
     position: -webkit-sticky;
     left: 0;
-    z-index: 21;
+    z-index: 22;
     background-color: #EDEDEC;
 }
 

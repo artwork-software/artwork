@@ -1,7 +1,7 @@
 <template>
     <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
          class="px-1 py-0.5 rounded-lg relative group">
-        <div class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
+        <div v-if="zoomFactor > 0.4" class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <button type="button" @click="openEditEventModal(event)"

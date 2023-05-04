@@ -81,18 +81,15 @@
                     <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadRoomFile(roomFile)"/>
                         <div>{{ roomFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
-
-                        <FileDeleteModal
-                            :show="showFileDeleteModal"
-                            :close-modal="closeFileDeleteModal"
-                            :file="roomFile"
-                            type="room"
-                        />
-
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(roomFile)"/>
                     </div>
-
                 </div>
+                <FileDeleteModal
+                    :show="showFileDeleteModal"
+                    :close-modal="closeFileDeleteModal"
+                    :file="roomFileToDelete"
+                    type="room"
+                />
             </div>
             <div v-else>
                 <div class="text-secondary text-sm mt-4">Keine Dokumente vorhanden</div>
@@ -151,6 +148,7 @@ const showFileEditModal = ref(false);
 const showFileDeleteModal = ref(false);
 const showRoomFiles = ref(false);
 const roomFiles = ref(props.room.room_files)
+const roomFileToDelete = ref(null)
 
 const openRoomAccessModal = () => {
     showRoomAccessModal.value = true
@@ -183,7 +181,8 @@ const closeFileUploadModal = () => {
     showFileUploadModal.value = false
 }
 
-const openFileDeleteModal = () => {
+const openFileDeleteModal = (roomFile) => {
+    roomFileToDelete.value = roomFile
     showFileDeleteModal.value = true
 }
 

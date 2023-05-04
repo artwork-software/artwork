@@ -123,8 +123,6 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        Debugbar::info(request('atAGlance'));
-
         if(\request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -138,8 +136,6 @@ class EventController extends Controller
         }
 
         $rooms = $calendarController->filterRooms();
-        Debugbar::info("EventsAtAGlance");
-        Debugbar::info($eventsAtAGlance);
 
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),

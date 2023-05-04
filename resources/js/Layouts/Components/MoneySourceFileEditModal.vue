@@ -24,7 +24,7 @@
                         id="file"
                         type="file"
                     />
-                    <div @click="selectNewFiles" @dragover.prevent
+                    <div @click="selectNewFile" @dragover.prevent
                          @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
                         border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
                         <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
@@ -68,7 +68,7 @@
 
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/DialogModal.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon, DownloadIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -118,7 +118,7 @@ export default {
         updateRequest(file) {
             this.moneySourceFileForm.file = file
             this.moneySourceFileForm.comment = this.comment
-            this.moneySourceFileForm.post(this.route('money_sources_files.update', this.file.id))
+            this.moneySourceFileForm.post(this.route('money_sources_files.update', {money_source_file: this.file}))
         },
         validateType(files) {
             this.uploadDocumentFeedback = "";
@@ -130,7 +130,12 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.files.push(file)
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    } else {
+                        this.files.push(file)
+                    }
                 }
             }
         },

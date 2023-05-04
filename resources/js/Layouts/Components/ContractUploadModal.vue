@@ -259,7 +259,7 @@
                                     <div class="border-gray-200">
                                         <div v-for="(user, index) in user_search_results" :key="index"
                                              class="flex items-center cursor-pointer">
-                                            <div class="flex-1 text-sm py-4"  v-if="budgetAccess.includes(user.id)">
+                                            <div class="flex-1 text-sm py-4" v-if="budgetAccess.includes(user.id)">
                                                 <p @click="addUserToContractUserArray(user)"
                                                    class="font-bold px-4 text-white hover:border-l-4 hover:border-l-success">
                                                     {{ user.first_name }} {{ user.last_name }}
@@ -323,7 +323,10 @@
                                     <p class="text-sm">{{ tasks.length === 0 ? 'Neue Aufgabe' : 'Weitere Aufgabe' }}</p>
                                 </button>
 
-                                <button class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none" v-if="creatingNewTask" @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
+                                <button
+                                    class="flex text-sm py-3 px-8 mt-1 items-center border border-2 mt-6 border-success bg-backgroundGray hover:bg-green-50 rounded-full shadow-sm text-success hover:shadow-blueButton focus:outline-none"
+                                    v-if="creatingNewTask"
+                                    @click="$refs.task_form.saveTask(); this.errorText === null ? creatingNewTask = false : null">
                                     Aufgabe im Vertrag speichern
                                 </button>
                             </div>
@@ -332,10 +335,14 @@
                 </div>
 
                 <div class="justify-center flex w-full my-6">
-                    <button class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none" :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'" :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
-                               @click="storeContract">Vertrag hochladen</button>
+                    <button
+                        class="flex p-2 px-8 mt-1 items-center border border-transparent rounded-full shadow-sm  focus:outline-none"
+                        :class="(this.file === null || this.contractAmount === '' || this.contractPartner === '')? 'bg-secondary text-white' : 'text-white bg-buttonBlue hover:shadow-blueButton hover:bg-buttonHover'"
+                        :disabled="this.file === null || this.contractAmount === '' || this.contractPartner === ''"
+                        @click="storeContract">Vertrag hochladen
+                    </button>
                 </div>
-                </div>
+            </div>
 
         </template>
 
@@ -344,7 +351,7 @@
 
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/DialogModal.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
@@ -407,7 +414,7 @@ export default {
             contractPartner: '',
             selectedLegalForm: null,
             selectedContractType: null,
-            selectedCurrency: {id:1, name: '€'},
+            selectedCurrency: {id: 1, name: '€'},
             user_search_results: [],
             user_query: '',
             usersWithAccess: [],
@@ -446,8 +453,8 @@ export default {
         })
     },
     methods: {
-        showError(){
-          this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
+        showError() {
+            this.errorText = 'Du musst die Aufgabe einer Person mit Dokumentenzugriff zuweisen'
         },
         addTask(task) {
             this.tasks.push(task)
@@ -481,13 +488,19 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.file = file
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    } else {
+                        this.file = file
+                    }
                 }
             }
         },
         clearTaskForm() {
             this.$refs.task_form.clearForm();
-        },
+        }
+        ,
         resetValues() {
             this.contractForm.file = null;
             this.contractForm.contract_partner = null;
@@ -507,7 +520,7 @@ export default {
             this.contractPartner = '';
             this.selectedLegalForm = null;
             this.selectedContractType = null;
-            this.selectedCurrency = {id:1, name: '€'};
+            this.selectedCurrency = {id: 1, name: '€'};
             this.user_search_results = [];
             this.user_query = '';
             this.usersWithAccess = [];
@@ -517,7 +530,8 @@ export default {
             this.isFreed = false;
             this.tasks = [];
             this.contractAmount = '';
-        },
+        }
+        ,
         storeContract() {
             this.contractForm.file = this.file;
             this.contractForm.contract_partner = this.contractPartner;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FileUpload;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\ProjectFile;
@@ -13,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -29,8 +31,9 @@ class ProjectFileController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function store(Request $request, Project $project): \Illuminate\Http\RedirectResponse
+    public function store(FileUpload $request, Project $project): \Illuminate\Http\RedirectResponse
     {
+
         $this->authorize('view', $project);
 
         if (!Storage::exists("project_files")) {

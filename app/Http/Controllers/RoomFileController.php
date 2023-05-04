@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\FileUpload;
 use App\Models\Project;
 use App\Models\ProjectFile;
 use App\Models\Room;
@@ -29,7 +30,7 @@ class RoomFileController extends Controller
     /**
      * @throws AuthorizationException
      */
-    public function store(Request $request, Room $room): \Illuminate\Http\RedirectResponse
+    public function store(FileUpload $request, Room $room): \Illuminate\Http\RedirectResponse
     {
         $this->authorize('view', $room->area);
 

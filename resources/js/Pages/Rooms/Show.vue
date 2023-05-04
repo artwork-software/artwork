@@ -62,7 +62,8 @@
                         </transition>
                     </Menu>
                 </div>
-                <div v-if="room.room_history[0]" class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
+                <div v-if="room.room_history[0]"
+                     class="mt-2 subpixel-antialiased text-secondary text-xs flex items-center">
                     <div>
                         zuletzt geändert:
                     </div>
@@ -99,233 +100,12 @@
                         <span class="flex mt-6 xsLight subpixel-antialiased">
                             {{ room.description }}
                         </span>
-                        <div class="flex w-full mt-6 items-center mb-4">
-                            <h3 class="headline2"> Dokumente </h3>
-                        </div>
-                        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
-                            <input
-                                @change="uploadChosenDocuments"
-                                class="hidden"
-                                ref="room_files"
-                                id="file"
-                                type="file"
-                                multiple
-                            />
-                            <div @click="selectNewFiles" @dragover.prevent
-                                 @drop.stop.prevent="uploadDraggedDocuments($event)" class="mb-4 w-full flex justify-center items-center
-                        border-buttonBlue border-dotted border-2 h-32 bg-colorOfAction p-2 cursor-pointer">
-                                <p class="text-buttonBlue font-bold text-center">Dokument zum Upload hierher ziehen
-                                    <br>oder ins Feld klicken
-                                </p>
-                            </div>
-                            <jet-input-error :message="uploadDocumentFeedback"/>
-                        </div>
-                        <div class="space-y-1">
-                            <div v-for="room_file in room.room_files"
-                                 class="cursor-pointer group flex items-center">
-                                <DocumentTextIcon class="h-5 w-5 flex-shrink-0" aria-hidden="true"/>
-                                <p :data-tooltip-target="room_file.name" @click="downloadFile(room_file)"
-                                   class="ml-2 truncate hover:font-bold">
-                                    {{
-                                        room_file.name
-                                    }}</p>
-                                <XCircleIcon
-                                    v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin"
-                                    @click="removeFile(room_file)"
-                                    class="ml-2 hidden group-hover:block h-5 w-5 text-error flex-shrink-0"
-                                    aria-hidden="true"/>
-                                <div>
-                                    <div :id="room_file.name" role="tooltip"
-                                         class="max-w-md inline-block flex flex-wrap absolute invisible z-10 py-3 px-3 text-sm font-medium text-secondary bg-primary shadow-sm opacity-0 transition-opacity duration-300 tooltip">
-                                        <div class="flex flex-wrap">
-                                            Um die Datei herunterzuladen, klicke auf den Dateinamen
-                                        </div>
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-span-2">
-                        <span class="headline2 w-full">Raumadmin</span>
-                        <div class="mt-4" v-if="roomForm.room_admins.length === 0">
-                            <span class="xsLight cursor-pointer">Noch keine Raumadmins festgelegt</span>
-                        </div>
-                        <div v-else class="flex w-[95%]">
-                        <div class="mt-4 -mr-3 flex" v-for="user in room.room_admins">
-                            <img :data-tooltip-target="user.id" class="h-9 w-9 rounded-full"
-                                 :src="user.profile_photo_url"
-                                 alt=""/>
-                            <UserTooltip :user="user"/>
-                        </div>
-                        </div>
-                        <div class="mt-10">
-                            <span class="headline2 w-full">Eigenschaften</span>
-                            <Menu as="span" class="relative">
-                                <MenuButton @click="attributesOpened = true" v-if="this.$page.props.is_admin || this.$page.props.can.change_attributes || this.is_room_admin">
-                                    <PencilAltIcon class="mt-2 ml-6 h-6 w-6 p-1 rounded-full bg-buttonBlue text-white"/>
-                                </MenuButton>
-
-                                <transition
-                                    enter-active-class="transition duration-50 ease-out"
-                                    enter-from-class="transform scale-100 opacity-100"
-                                    enter-to-class="transform scale-100 opacity-100"
-                                    leave-active-class="transition duration-75 ease-in"
-                                    leave-from-class="transform scale-100 opacity-100"
-                                    leave-to-class="transform scale-95 opacity-0"
-                                >
-                                    <MenuItems
-                                        v-show="attributesOpened"
-                                        static
-                                        class="absolute right-0 mt-2 w-80 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                        <div class="inline-flex border-none w-1/5">
-
-                                        </div>
-                                        <div class="inline-flex border-none justify-end w-4/5">
-                                            <button @click="saveRoomAttributes" class="flex ml-4">
-                                                <DocumentTextIcon class="w-3 mr-1 mt-0.5"/>
-                                                <div class="text-xs">Speichern</div>
-                                            </button>
-                                        </div>
-                                        <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
-                                            <!-- Room Categories Section -->
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumkategorien</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_categories.length > 0"
-                                                         v-for="category in available_categories"
-                                                         :key="category.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.room_categories"
-                                                               :value="category.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.room_categories.includes(category.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ category.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumkategorien angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Nebenräume</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_rooms.length > 0"
-                                                         v-for="room in available_rooms"
-                                                         :key="room.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.adjoining_rooms"
-                                                               :value="room.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.adjoining_rooms.includes(room.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ room.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Räume angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-
-
-                                            <!-- Room Attributes Section -->
-                                            <Disclosure v-slot="{ open }">
-                                                <DisclosureButton
-                                                    class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
-                                                >
-                                                    <span :class="open ? 'font-bold text-white' : 'font-medium text-secondary'">Raumeigenschaften</span>
-                                                    <ChevronDownIcon
-                                                        :class="open ? 'rotate-180 transform' : ''"
-                                                        class="h-4 w-4 mt-0.5 text-white"
-                                                    />
-                                                </DisclosureButton>
-
-                                                <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
-
-                                                    <div v-if="available_attributes.length > 0"
-                                                         v-for="attribute in available_attributes"
-                                                         :key="attribute.id"
-                                                         class="flex w-full mb-2">
-                                                        <input type="checkbox"
-                                                               v-model="roomForm.room_attributes"
-                                                               :value="attribute.id"
-                                                               class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                        <p :class="[roomForm.room_attributes.includes(attribute.id)
-                                                        ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                           class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
-                                                            {{ attribute.name }}
-                                                        </p>
-                                                    </div>
-                                                    <div v-else class="text-secondary">Noch keine Raumeigenschaften angelegt</div>
-                                                </DisclosurePanel>
-                                            </Disclosure>
-                                        </div>
-                                    </MenuItems>
-                                </transition>
-
-                            </Menu>
-                            <div>
-                                <div class="mt-2 flex flex-wrap">
-                                    <span v-for="(category, index) in roomCategories.data"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ category.name }}
-                                        <button @click="removeCategoryFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-                                    <span v-for="(attribute, index) in roomAttributes.data"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        {{ attribute.name }}
-                                        <button @click="removeAttributeFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-                                    <span v-for="(room, index) in adjoiningRooms.data"
-                                          class="flex rounded-full items-center font-medium text-tagText
-                                         border bg-tagBg border-tag px-2 py-1 mt-1 text-sm mr-1 mb-1">
-                                        Nebenraum von {{ room.name }}
-                                        <button @click="removeAdjoiningRoomFromRoom(index)" type="button">
-                                            <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
-                                        </button>
-                                    </span>
-
-                                </div>
-
-                            </div>
-                        </div>
                     </div>
                 </div>
 
                 <div class="flex flex-wrap">
-                    <span class="mt-12 headline2 w-full" v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
+                    <span class="mt-12 headline2 w-full"
+                          v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
                     Offene Belegungsanfragen
                     </span>
                     <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
@@ -370,8 +150,9 @@
                                 <div v-if="eventRequest.project" class="w-64">
                                     <div class="xsLight flex items-center">
                                         Zugeordnet zu
-                                        <Link :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
-                                              class="xsDark ml-2">
+                                        <Link
+                                            :href="route('projects.show',{project: eventRequest.project.id, openTab:'calendar'})"
+                                            class="xsDark ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
                                     </div>
@@ -421,11 +202,13 @@
             <div>
                 <div v-if="calendarType && calendarType === 'daily'">
                     <div class="min-w-[50%] mt-5 overflow-x-auto px-2">
-                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue" :eventTypes=this.event_types initial-view="day"/>
+                        <CalendarComponent :selected-date="selectedDate" :dateValue="dateValue"
+                                           :eventTypes=this.event_types initial-view="day"/>
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types :calendarData="calendar" :days="days" :rooms="rooms" />
+                    <SingleRoomCalendarComponent :dateValue="dateValue" :eventTypes=this.event_types
+                                                 :calendarData="calendar" :days="days" :rooms="rooms"/>
                 </div>
             </div>
         </div>
@@ -500,7 +283,7 @@
                                        :class="[editRoomForm.name.length === 0 ?
                     'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
                                        :disabled="editRoomForm.name.length === 0"
-                                       class="mt-8 px-24 py-3" />
+                                       class="mt-8 px-24 py-3"/>
                         </div>
 
                     </div>
@@ -723,8 +506,9 @@
                                     Keinem Projekt zugeordnet
                                 </div>
                                 <div class="flex xsLight items-center">
-                                    angefragt:<NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
-                                                              :user="requestToDecline.created_by" :id="1"/>
+                                    angefragt:
+                                    <NewUserToolTip :height="7" :width="7" v-if="requestToDecline.created_by"
+                                                    :user="requestToDecline.created_by" :id="1"/>
                                     <span class="ml-2 xsLight"> {{ requestToDecline.created_at }}</span>
                                 </div>
                                 <div>
@@ -800,7 +584,14 @@ import {
     PlusIcon,
     MinusIcon
 } from "@heroicons/vue/outline";
-import {CheckIcon, ChevronDownIcon, DotsVerticalIcon, PlusSmIcon, XCircleIcon, ChevronRightIcon} from "@heroicons/vue/solid";
+import {
+    CheckIcon,
+    ChevronDownIcon,
+    DotsVerticalIcon,
+    PlusSmIcon,
+    XCircleIcon,
+    ChevronRightIcon
+} from "@heroicons/vue/solid";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetButton from "@/Jetstream/Button";
 import JetDialogModal from "@/Jetstream/DialogModal";
@@ -902,7 +693,7 @@ export default {
         },
         requestsToShow: function () {
             let requestsToShow;
-            if(this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin){
+            if (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin) {
                 requestsToShow = this.room.event_requests
             }
             return requestsToShow
@@ -1082,7 +873,13 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.uploadDocumentToRoom(file)
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    } else {
+                        this.uploadDocumentToRoom(file)
+                    }
+
                 }
             }
         },

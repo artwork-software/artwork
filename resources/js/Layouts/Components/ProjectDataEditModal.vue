@@ -103,7 +103,7 @@
 
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal";
-import JetInputError from "@/Jetstream/DialogModal";
+import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";

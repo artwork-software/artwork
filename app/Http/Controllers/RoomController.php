@@ -155,6 +155,7 @@ class RoomController extends Controller
             'adjoiningRooms' => AdjoiningRoomIndexResource::collection($room->adjoining_rooms),
             'calendar' => $showCalendar['roomsWithEvents'],
             'days' => $showCalendar['days'],
+            'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'dateValue'=> $showCalendar['dateValue'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],

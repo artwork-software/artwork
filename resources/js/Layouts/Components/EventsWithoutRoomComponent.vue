@@ -17,7 +17,6 @@
                         sie in einen anderen Raum.
                     </h2>
                 </div>
-
                 <!--    Form    -->
                 <div class="flex my-8 " v-for="event in this.computedEventsWithoutRoom">
                     <div class="flex w-full border border-2 border-gray-300">
@@ -549,7 +548,6 @@ export default {
     },
     computed: {
         computedEventsWithoutRoom: function () {
-
             this.eventsWithoutRoom.forEach((event) => {
                 event.startDate = new Date(event.start).format('YYYY-MM-DD');
                 event.startTime = new Date(event.start).format('HH:mm');

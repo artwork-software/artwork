@@ -3,10 +3,10 @@
         <div class="flex justify-center">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom?.length > 0">
+                 v-if="filteredEvents?.length > 0">
 
                 <ExclamationIcon class="h-6  mr-2"/>
-                {{ eventsWithoutRoom?.length }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                {{ filteredEvents?.length }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
         </div>
 
@@ -264,7 +264,7 @@
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="this.eventsWithoutRoom"
+        :eventsWithoutRoom="this.filteredEvents"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 </template>
@@ -489,6 +489,19 @@ export default {
             handler() {
                 this.initializeCalendar({view: null, startDate: null, endDate: null})
             },
+        }
+    },
+    computed: {
+        filteredEvents() {
+            return this.eventsWithoutRoom.filter((event) => {
+                let createdBy = event.created_by;
+                let projectLeaders = event.projectLeaders;
+
+                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                    return true;
+                }
+                return false;
+            });
         }
     },
     methods: {

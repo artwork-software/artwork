@@ -78,11 +78,7 @@ class EventController extends Controller
         }
 
         if(\request('atAGlance') === 'true') {
-            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room', 'project', 'creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+            $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
         }
 
         return inertia('Events/EventManagement', [

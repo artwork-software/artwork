@@ -180,8 +180,7 @@
                                              class="ml-2.5 flex flex-wrap ">
                                             <div class="-mr-3 flex flex-wrap flex-row"
                                                  v-for="user in event.projectLeaders?.slice(0,3)">
-                                                <NewUserToolTip :height="6" :width="6" v-if="user"
-                                                                :user="user" :id="user.id"></NewUserToolTip>
+                                                <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                             <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                                 <Menu as="div" class="relative">
@@ -226,9 +225,7 @@
                                         <div v-else-if="event.created_by"
                                              class="mt-1 ml-3 flex flex-wrap w-full">
                                             <div class="-mr-3 flex flex-wrap flex-row">
-                                                <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
-                                                                :user="event.created_by"
-                                                                :id="event.created_by.id + event.id"></NewUserToolTip>
+                                                <img :src="event.created_by.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                         </div>
 

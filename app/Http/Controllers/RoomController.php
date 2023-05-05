@@ -156,7 +156,9 @@ class RoomController extends Controller
             'calendar' => $showCalendar['roomsWithEvents'],
             'days' => $showCalendar['days'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
+            'filterOptions' => $showCalendar['filterOptions'],
             'dateValue'=> $showCalendar['dateValue'],
+            'personalFilters' => $showCalendar['personalFilters'],
             'calendarType' => $showCalendar['calendarType'],
             'selectedDate' => $showCalendar['selectedDate'],
         ]);

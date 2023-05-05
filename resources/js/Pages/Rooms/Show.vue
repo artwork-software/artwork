@@ -207,7 +207,7 @@
                     </div>
                 </div>
                 <div v-else>
-                    <SingleRoomCalendarComponent :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
+                    <SingleRoomCalendarComponent :personal-filters="personalFilters" :filter-options="filterOptions" :eventsWithoutRoom="eventsWithoutRoom" :dateValue="dateValue" :eventTypes=this.event_types
                                                  :calendarData="calendar" :days="days" :rooms="rooms"/>
                 </div>
             </div>
@@ -638,7 +638,9 @@ export default {
         'dateValue',
         'calendar',
         'days',
-        'eventsWithoutRoom'
+        'eventsWithoutRoom',
+        'filterOptions',
+        'personalFilters'
     ],
     components: {
         IndividualCalendarComponent,

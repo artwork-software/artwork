@@ -27,6 +27,12 @@
                 <NotificationBlock
                     :notification="notification"
                     :event-types="eventTypes"
+                    :history-objects="historyObjects"
+                    :event="event"
+                    :rooms="rooms"
+                    :room-collisions="roomCollisions"
+                    :project="project"
+                    :wanted-split="wantedSplit"
                 />
                 <div class="flex flex-wrap w-full justify-between hidden" v-if="false">
                     <div class="flex">
@@ -390,7 +396,7 @@ export default  {
             })
         }
     },
-    props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name'],
+    props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name', 'historyObjects', 'event', 'project', 'wantedSplit', 'roomCollisions'],
     methods: {
         formatDate(isoDate) {
             if(isoDate?.split('T').length > 1){

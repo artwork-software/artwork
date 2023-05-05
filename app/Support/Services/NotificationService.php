@@ -19,6 +19,7 @@ use App\Notifications\RoomNotification;
 use App\Notifications\RoomRequestNotification;
 use App\Notifications\TaskNotification;
 use App\Notifications\TeamNotification;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Notification;
@@ -26,10 +27,43 @@ use Ramsey\Uuid\Type\Integer;
 
 class NotificationService
 {
+
+    protected array $description = [];
+
+
     /**
-     * Show the form for creating a new resource.
+     * set notification description
+     * @return array
+     */
+    public function getDescription(): array
+    {
+        return $this->description;
+    }
+
+    /**
+     * set notification description
+     * @param array $description
+     */
+    public function setDescription(array $description): void
+    {
+        $this->description[] = $description;
+    }
+
+    /**
+     * function to clear notification Description
+     */
+    public function clearDescription(): void
+    {
+        $this->description = [];
+    }
+
+    /**
+     * show the form for creating a new resource.
      *
-     * @return \Illuminate\Http\Response
+     * @param $user
+     * @param object $notificationData
+     * @param array|null $broadcastMessage
+     * @return void
      */
     public function create($user, object $notificationData, ?array $broadcastMessage = []): void
     {
@@ -220,74 +254,62 @@ class NotificationService
         */
     }
 
-
     /**
-     * This function creates room notifications
+     * this function creates room notifications
      * @param User $notificationTo
      * @param String $title
+     * @param array|null $description
      * @param NotificationConstEnum|null $notificationConstEnum
      * @param String $icon
      * @param array $buttons
      * @param bool $showHistory
      * @param String $historyType
-     * @param Integer|null $modelId
+     * @param int|null $modelId
      * @param array|null $broadcastMessage
-     * @param Room|null $room
-     * @param Event|null $event
-     * @param Project|null $project
-     * @param Department|null $department
-     * @param Task|null $task
+     * @param int|null $roomId
+     * @param int|null $eventId
+     * @param int|null $projectId
+     * @param int|null $departmentId
+     * @param int|null $taskId
      * @return void
      */
     public function createNotification(
         User $notificationTo,
         String $title,
+        ?Array $description = [],
         ?NotificationConstEnum $notificationConstEnum = null,
         String $icon = 'green',
         Array $buttons = [],
         bool $showHistory = false,
         String $historyType = '',
-        Integer $modelId = null,
-        ?Array $broadcastMessage,
-        ?Room $room = null,
-        ?Event $event = null,
-        ?Project $project = null,
-        ?Department $department = null,
-        ?Task $task = null,
+        int $modelId = null,
+        ?Array $broadcastMessage = [],
+        int $roomId = null,
+        int $eventId = null,
+        int $projectId = null,
+        int $departmentId = null,
+        int $taskId = null,
+        object $budgetData = null
     ): void
     {
         $body = new \stdClass();
         $body->icon = $icon;
-        $body->groupType = 'ROOMS';
+        $body->groupType = $notificationConstEnum->groupType();
         $body->type = $notificationConstEnum;
+        $body->description = $description;
         $body->title = $title;
-        if(!empty($room)){
-            $body->room = $room->withoutRelations();
-        }
-        if(!empty($event)){
-            $body->event = $event->withoutRelations();
-            $body->eventComments = $event->comments()->orderBy('created_at', 'DESC')->get();
-        }
-        if(!empty($project)){
-            $body->project = $project->withoutRelations();
-        }
-        if(!empty($department)){
-            $body->department = $department->withoutRelations();
-        }
-        if(!empty($department)){
-            $body->task = $task->withoutRelations();
-        }
-        $creator = User::find(Auth::id());
-        if(!empty($creator)){
-            $body->created_by = $creator->withoutRelations();
-        }
-
-
         $body->buttons = $buttons;
         $body->showHistory = $showHistory;
         $body->historyType = $historyType;
         $body->modelId = $modelId;
+        $body->roomId = $roomId;
+        $body->eventId = $eventId;
+        $body->projectId = $projectId;
+        $body->departmentId = $departmentId;
+        $body->taskId = $taskId;
+        $body->created_by = Auth::user() ? Auth::user()->withoutRelations() : null;
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
+        $body->budgetData = $budgetData;
         switch ($notificationConstEnum) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
@@ -334,6 +356,10 @@ class NotificationService
                 throw new \Exception('To be implemented');
                 */
         }
+    }
+
+    public function deleteBudgetNotification(){
+
     }
 
 

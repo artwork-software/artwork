@@ -73,7 +73,7 @@ class SubEventsController extends Controller
                 'type' => 'error',
                 'message' => $notificationTitle
             ];
-            $this->notificationService->createNotification($roomAdmin, $notificationTitle, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', [], false, '', null, $broadcastMessage, null, $event);
+            $this->notificationService->createNotification($roomAdmin, $notificationTitle, [], NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', [], false, '', null, $broadcastMessage, null, $event->id);
             //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
         }
     }

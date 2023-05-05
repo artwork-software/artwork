@@ -40,25 +40,50 @@
                                                       name="Raumbelegungen & Termine" :rooms="rooms"
                                                       :projects="projects"
                                                       :event-types="eventTypes"
-                                                      :notifications="notifications['EVENTS']"></NotificationSectionComponent>
+                                                      :notifications="notifications['EVENTS']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                         <!-- Räume und Raumbelegungsanfragen -->
                         <NotificationSectionComponent :readNotifications="readNotifications['ROOMS']"
                                                       name="Räume & Raumbelegungsanfragen" :rooms="rooms"
                                                       :projects="projects" :event-types="eventTypes"
-                                                      :notifications="notifications['ROOMS']"></NotificationSectionComponent>
+                                                      :notifications="notifications['ROOMS']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                         <!-- Aufgaben -->
                         <NotificationSectionComponent :readNotifications="readNotifications['TASKS']" name="Aufgaben"
                                                       :rooms="rooms" :projects="projects" :event-types="eventTypes"
-                                                      :notifications="notifications['TASKS']"></NotificationSectionComponent>
+                                                      :notifications="notifications['TASKS']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                         <!-- Projekte & Teams -->
                         <NotificationSectionComponent :readNotifications="readNotifications['PROJECTS']"
                                                       name="Projekte & Teams" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
-                                                      :notifications="notifications['PROJECTS']"></NotificationSectionComponent>
+                                                      :notifications="notifications['PROJECTS']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                         <NotificationSectionComponent :readNotifications="readNotifications['BUDGET']"
                                                       name="Projektbudgets & Finanzierungsquellen" :rooms="rooms" :projects="projects"
                                                       :event-types="eventTypes"
-                                                      :notifications="notifications['BUDGET']"></NotificationSectionComponent>
+                                                      :notifications="notifications['BUDGET']"
+                                                      :history-objects="historyObjects"
+                                                      :event="event"
+                                                      :wanted-split="wantedSplit"
+                                                      :project="project"
+                                                      :room-collisions="roomCollisions"/>
                     </div>
                     <div v-if="this.$page.props.globalNotification.image_url || this.$page.props.globalNotification.title" class="col-span-4 pr-4">
                         <div class="bg-backgroundGray">
@@ -200,7 +225,7 @@ export default defineComponent({
         AnswerEventRequestComponent,
 
     },
-    props: ['notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes'],
+    props: ['historyObjects','notifications', 'rooms', 'eventTypes', 'projects', 'readNotifications', 'notificationSettings', 'notificationFrequencies', 'groupTypes', 'event', 'project', 'wantedSplit', 'roomCollisions'],
     created() {
 
     },

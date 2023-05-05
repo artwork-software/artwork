@@ -102,7 +102,7 @@ class DepartmentController extends Controller
         ];
         $users = $department->users()->get();
         foreach ($users as $user){
-            $this->notificationService->createNotification($user, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, Auth::user(), null, null, null, $department);
+            $this->notificationService->createNotification($user, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
         }
         //$this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
@@ -178,7 +178,7 @@ class DepartmentController extends Controller
                     'type' => 'success',
                     'message' => 'Du wurdest zu Team "' . $department->name . '" hinzugefügt'
                 ];
-                $this->notificationService->createNotification($memberAfter, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, Auth::user(), null, null, null, $department);
+                $this->notificationService->createNotification($memberAfter, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
 
                 //$this->notificationService->create($memberAfter, $this->notificationData, $broadcastMesssage);
             }
@@ -193,7 +193,7 @@ class DepartmentController extends Controller
                     'type' => 'error',
                     'message' => 'Du wurdest aus Team "' . $department->name . '" gelöscht'
                 ];
-                $this->notificationService->createNotification($user, 'Du wurdest aus Team ' . $department->name . ' gelöscht', NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, Auth::user(), null, null, null, $department);
+                $this->notificationService->createNotification($user, 'Du wurdest aus Team ' . $department->name . ' gelöscht', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
 
                 //$this->notificationService->create($user, $this->notificationData, $broadcastMesssage);
             }
@@ -220,7 +220,7 @@ class DepartmentController extends Controller
         ];
         $users = $department->users()->get();
         foreach ($users as $user){
-            $this->notificationService->createNotification($user, 'Team "' . $department->name . '" wurde gelöscht', NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, Auth::user(), null, null, null, $department);
+            $this->notificationService->createNotification($user, 'Team "' . $department->name . '" wurde gelöscht', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id );
         }
         //$this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 

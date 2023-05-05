@@ -188,7 +188,7 @@ class RoomService
                     'type' => 'success',
                     'message' => 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt'
                 ];
-                $this->notificationService->createNotification($user, 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt', NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage);
+                $this->notificationService->createNotification($user, 'Du wurdest zum Raumadmin von "' . $room->name . '" ernannt', [], NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin hinzugefügt');
             }
         }
@@ -202,7 +202,7 @@ class RoomService
                     'type' => 'error',
                     'message' => 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht'
                 ];
-                $this->notificationService->createNotification($user, 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht', NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'red', [], false, '', null, $broadcastMessage);
+                $this->notificationService->createNotification($user, 'Du wurdest als Raumadmin von "' . $room->name . '" gelöscht', [],NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'red', [], false, '', null, $broadcastMessage);
                 $this->history->createHistory($room->id, $user->first_name . ' als Raumadmin entfernt');
             }
         }

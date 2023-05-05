@@ -67,6 +67,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
+                    @filters-changed="filtersChanged"
                 />
 
                 <!-- Calendar Settings Dropdown -->
@@ -138,6 +139,9 @@
             </button>
         </div>
     </div>
+    <div class="mb-1 ml-4 flex items-center w-full">
+        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+    </div>
 </template>
 
 <script>
@@ -148,11 +152,13 @@ import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     components: {
+        BaseFilterTag,
         Dropdown,
         Menu,
         MenuItems,
@@ -187,6 +193,7 @@ export default {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
+            activeFilters: []
         }
     },
     methods: {
@@ -235,6 +242,9 @@ export default {
         nextTimeRange(){
             this.$emit('nextTimeRange')
         },
+        filtersChanged(activeFilters) {
+            this.activeFilters = activeFilters
+        }
 
     },
 }

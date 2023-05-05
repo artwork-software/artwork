@@ -172,7 +172,20 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table"></SubPositionComponent>
+                <SubPositionComponent
+                    @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
+                    @openRowDetailModal="openRowDetailModal"
+                    @openVerifiedModal="openVerifiedModal"
+                    @openCellDetailModal="openCellDetailModal"
+                    @open-error-modal="openErrorModal"
+                    @openDeleteModal="openDeleteModal"
+                    :main-position="mainPosition"
+                    :sub-position="subPosition"
+                    :columns="table.columns"
+                    :project="project"
+                    :table="table">
+
+                </SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -256,7 +269,7 @@ export default {
         ConfirmationComponent
     },
     props: ['mainPosition','table','project'],
-    emits:['openDeleteModal','openErrorModal'],
+    emits:['openDeleteModal','openErrorModal','openVerifiedModal','openRowDetailModal','openSubPositionSumDetailModal', 'openMainPositionSumDetailModal','openCellDetailModal'],
     data(){
       return{
           showMenu: null,
@@ -297,7 +310,6 @@ export default {
 
       }
     },
-    emit:['openDeleteModal','openVerifiedModal','openRowDetailModal','openErrorModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -386,7 +398,7 @@ export default {
             });
         },
         openRowDetailModal(row){
-            this.$emit('openRowDetailModal',row)
+            this.$emit('openRowDetailModal', row)
         },
         openSubPositionSumDetailModal(subPosition, column) {
             this.$emit('openSubPositionSumDetailModal', subPosition, column)

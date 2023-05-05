@@ -1318,11 +1318,7 @@ class ProjectController extends Controller
                 $endDate = Carbon::create(\request('endDate'))->endOfDay();
             }
 
-            $eventsAtAGlance = CalendarEventResource::collection($project->events()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room','project','creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+            $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
         }
 
         $selectedSumDetail = null;

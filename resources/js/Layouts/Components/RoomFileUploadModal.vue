@@ -78,6 +78,8 @@ const upload = (event) => {
 const storeFile = (file) => {
     roomFileForm.file = file
     roomFileForm.post(route('room_files.store', props.roomId))
+    roomFileForm.file = null
+    files.value = []
 }
 
 const validateType = (newFiles) => {

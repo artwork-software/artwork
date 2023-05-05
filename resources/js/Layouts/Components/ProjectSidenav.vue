@@ -44,24 +44,23 @@
                         class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
                     >
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadProjectFile(projectFile)"/>
-                        <div @click="openFileEditModal">{{ projectFile.name }}</div>
-                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal"/>
-
-                        <ProjectFileEditModal
-                            :show="showFileEditModal"
-                            :close-modal="closeFileEditModal"
-                            :file="projectFile"
-                        />
-
-                        <FileDeleteModal
-                            :show="showFileDeleteModal"
-                            :close-modal="closeFileDeleteModal"
-                            :file="projectFile"
-                            type="project"
-                        />
+                        <div @click="openFileEditModal(projectFile)">{{ projectFile.name }}</div>
+                        <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(projectFile)"/>
                     </div>
-
                 </div>
+
+                <ProjectFileEditModal
+                    :show="showFileEditModal"
+                    :close-modal="closeFileEditModal"
+                    :file="projectFileToEdit"
+                />
+
+                <FileDeleteModal
+                    :show="showFileDeleteModal"
+                    :close-modal="closeFileDeleteModal"
+                    :file="projectFileToDelete"
+                    type="project"
+                />
             </div>
             <div v-else>
                 <div class="text-secondary text-sm mt-2">Keine Dokumente vorhanden</div>
@@ -191,6 +190,8 @@ export default {
             showFileEditModal: false,
             showContractEditModal: false,
             showCopyrightModal: false,
+            projectFileToEdit: null,
+            projectFileToDelete: null
 
         }
     },
@@ -213,13 +214,15 @@ export default {
         closeCopyrightModal() {
             this.showCopyrightModal = false
         },
-        openFileEditModal() {
+        openFileEditModal(projectFile) {
+            this.projectFileToEdit = projectFile
             this.showFileEditModal = true
         },
         openContractEditModal(contract) {
             this.showContractEditModal = contract.id
         },
         closeFileEditModal() {
+            this.projectFileToEdit = null
             this.showFileEditModal = false
         },
         closeContractEditModal() {
@@ -231,10 +234,12 @@ export default {
         closeFileUploadModal() {
             this.showFileUploadModal = false
         },
-        openFileDeleteModal() {
+        openFileDeleteModal(projectFile) {
+            this.projectFileToDelete = projectFile
             this.showFileDeleteModal = true
         },
         closeFileDeleteModal() {
+            this.projectFileToDelete = null
             this.showFileDeleteModal = false
         },
         openContractUploadModal() {

@@ -78,11 +78,7 @@ class EventController extends Controller
         }
 
         if(\request('atAGlance') === 'true') {
-            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room', 'project', 'creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+            $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
         }
 
         return inertia('Events/EventManagement', [
@@ -123,8 +119,6 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        Debugbar::info(request('atAGlance'));
-
         if(\request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -138,8 +132,6 @@ class EventController extends Controller
         }
 
         $rooms = $calendarController->filterRooms();
-        Debugbar::info("EventsAtAGlance");
-        Debugbar::info($eventsAtAGlance);
 
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
@@ -672,9 +664,6 @@ class EventController extends Controller
         }else{
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('user_id',Auth::id())->get();
         }
-
-        Debugbar::info($roomAttributeIds);
-        Debugbar::info($roomCategoryIds);
 
         $events = Event::query()
             // eager loading

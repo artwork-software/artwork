@@ -136,6 +136,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
+                                <div>
+                                    Untertermine:
+                                </div>
+                                <div v-for="subEvent in event.subEvents">
+                                    {{subEvent.eventType.abbreviation}}:
+                                    {{subEvent.title}}
+                                </div>
+
+                            </div>
 
 
                             <div v-if="currentView !== 'month'" class="mx-1">

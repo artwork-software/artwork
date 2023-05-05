@@ -131,6 +131,8 @@
                             <TagComponent displayed-text="es wird laut" hideX="true" />
                         </div>
                     </div>
+                    {{this.event.start}}
+                    {{this.event.end}}
 
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
@@ -252,8 +254,10 @@ export default {
                 this.helpText = '';
                 this.submit = true;
             }
-            const start = Date.parse(this.event.start);
-            const end = Date.parse(this.event.end);
+            const timezoneOffset = new Date(this.event.start).getTimezoneOffset()* 60000
+            const start = Date.parse(this.event.start) + timezoneOffset;
+            const end = Date.parse(this.event.end) + timezoneOffset;
+
             if(this.subEvent.start_time){
                 const subEventStart = Date.parse(this.subEvent.start_time);
                 if(start > subEventStart || end < subEventStart){

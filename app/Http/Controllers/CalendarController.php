@@ -213,7 +213,6 @@ class CalendarController extends Controller
     {
         $initialEventQuery = Event::query();
 
-        Debugbar::info("filtering eventsAtAGlance");
         $filteredEventsQuery = $this->filterEvents($initialEventQuery,$startDate, $endDate, null, null);
 
         $eventsByRoom = $filteredEventsQuery
@@ -234,12 +233,6 @@ class CalendarController extends Controller
         $areaIds = request('areaIds');
         $roomAttributeIds = request('roomAttributeIds');
         $roomCategoryIds = request('roomCategoryIds');
-
-        Debugbar::info("in filterEvents method");
-        Debugbar::info("EventTypeIds:");
-        Debugbar::info($eventTypeIds);
-        Debugbar::info("unfiltered:");
-        Debugbar::info($query->get());
 
         $filteredEvents = $query
             ->when($startDate, fn (EventBuilder $builder) => $builder->whereBetween('start_time', [$startDate, $endDate]))
@@ -264,9 +257,6 @@ class CalendarController extends Controller
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
             ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null));
-
-        Debugbar::info("filtered:");
-        Debugbar::info($filteredEvents->get());
 
         return $filteredEvents;
     }

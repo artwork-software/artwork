@@ -665,9 +665,6 @@ class EventController extends Controller
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('user_id',Auth::id())->get();
         }
 
-        Debugbar::info($roomAttributeIds);
-        Debugbar::info($roomCategoryIds);
-
         $events = Event::query()
             // eager loading
             ->withCollisionCount()

@@ -131,9 +131,6 @@
                             <TagComponent displayed-text="es wird laut" hideX="true" />
                         </div>
                     </div>
-                    {{this.event.start}}
-                    {{this.event.end}}
-
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
                             <label for="startDate" class="xxsLight">Start</label>

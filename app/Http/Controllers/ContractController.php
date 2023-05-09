@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\NotificationConstEnum;
 use App\Http\Requests\ContractUpdateRequest;
 use App\Http\Resources\ContractModuleResource;
 use App\Http\Resources\ContractResource;
@@ -11,6 +12,7 @@ use App\Models\ContractModule;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
+use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -28,9 +30,12 @@ use function Pest\Laravel\json;
 
 class ContractController extends Controller
 {
+    protected ?NotificationService $notificationService = null;
+
     public function __construct()
     {
         $this->authorizeResource(Contract::class);
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -132,8 +137,34 @@ class ContractController extends Controller
         $this->store_contract_tasks_and_comment($request, $contract);
 
         $contract->accessing_users()->sync(collect($request->accessibleUsers));
+        if(!in_array(Auth::id(), $request->accessibleUsers)) {
+            $contract->accessing_users()->save(Auth::user());
+        }
 
-        $contract->accessing_users()->save(Auth::user());
+
+        $contractUsers =  $contract->accessing_users()->get();
+        $notificationTitle = 'Ein Vertrag wurde für dich freigegeben';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'danger',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $original_name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project ? $project->name : '',
+                'href' => $project ? route('projects.show', $project->id) : null,
+            ]
+        ];
+
+        foreach ($contractUsers as $contractUser){
+            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
 
         $contract->save();
 
@@ -162,7 +193,7 @@ class ContractController extends Controller
      */
     public function update(Contract $contract, ContractUpdateRequest $request)
     {
-
+        $original_name = '';
         if ($request->get('accessibleUsers')) {
             $contract->accessing_users()->sync(collect($request->accessibleUsers));
         }
@@ -185,6 +216,30 @@ class ContractController extends Controller
 
         $contract->save();
 
+        $project = $contract->project()->first();
+        $contractUsers =  $contract->accessing_users()->get();
+        $notificationTitle = 'Ein Vertrag wurde geändert';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'danger',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $original_name === '' ? $contract->name : $original_name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project ? $project->name : '',
+                'href' => $project ? route('projects.show', $project->id) : null,
+            ]
+        ];
+
+        foreach ($contractUsers as $contractUser){
+            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
         return Redirect::back();
 
 
@@ -218,6 +273,35 @@ class ContractController extends Controller
      */
     public function destroy(Contract $contract)
     {
+        $project = $contract->project()->first();
+        $contractUsers =  $contract->accessing_users()->get();
+        $notificationTitle = 'Ein Vertrag wurde gelöscht';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'danger',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $contract->name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project ? $project->name : '',
+                'href' => $project ? route('projects.show', $project->id) : null,
+            ],
+            3 => [
+                'type' => 'string',
+                'title' => $contract->contract_partner ? $contract->contract_partner : '',
+                'href' => null
+            ],
+        ];
+
+        foreach ($contractUsers as $contractUser){
+            $this->notificationService->createNotification($contractUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
         $contract->delete();
         Redirect::back();
     }

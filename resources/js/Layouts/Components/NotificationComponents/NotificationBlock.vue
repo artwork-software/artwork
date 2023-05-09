@@ -37,11 +37,12 @@
                         </span>
                     </div>
                 </div>
-                <NotificationButtons
+                <NotificationButtons v-if="!isArchive"
                     :buttons="notification.data.buttons"
                     @openDeclineModal="loadEventDataForDecline"
                     @openEventEditAccept="loadEventDataForEditAndAccept"
                     @deleteEvent="showDeleteConfirmModal = true"
+                    @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
                 />
             </div>
         </div>
@@ -116,7 +117,7 @@ export default {
         DeclineEventModal,
         NotificationButtons, ChevronRightIcon
     },
-    props: ['notification', 'eventTypes', 'historyObjects', 'event', 'rooms', 'project', 'wantedSplit', 'roomCollisions'],
+    props: ['notification', 'eventTypes', 'historyObjects', 'event', 'rooms', 'project', 'wantedSplit', 'roomCollisions', 'isArchive'],
     data(){
         return {
             showDeclineModal: false,
@@ -186,6 +187,9 @@ export default {
             this.setOnRead();
             this.showDeleteConfirmModal = false;
         },
+        openProjectBudget(projectId){
+            window.location.href = route('projects.show', projectId) + '?openTab=budget';
+        }
     }
 }
 </script>

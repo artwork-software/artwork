@@ -399,12 +399,14 @@ export default {
         },
         fixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.fix.main-position'), {
-                mainPositionId: mainPositionId
+                mainPositionId: mainPositionId,
+                project_id: this.project?.id
             })
         },
         unfixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.unfix.main-position'), {
-                mainPositionId: mainPositionId
+                mainPositionId: mainPositionId,
+                project_id: this.project?.id
             })
         },
         openErrorModal(title, description) {

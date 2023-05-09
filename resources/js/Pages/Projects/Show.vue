@@ -1,7 +1,7 @@
 <template>
     <app-layout>
         <div class="my-12 pl-10 pr-10">
-            <div class="flex flex-col">
+            <div class="flex flex-col" v-if="isProjectMember(project.id)">
                 <div v-if="currentGroup" class="bg-secondaryHover -mb-6 z-20 w-fit pr-6 pb-0.5">
                     <div class="flex items-center">
                         <span v-if="!project.is_group">
@@ -578,6 +578,7 @@ import {nextTick} from "vue";
 import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
+import {isProjectMember} from "@/Helper/PermissionHelper";
 
 export default {
     name: "ProjectShow",
@@ -817,6 +818,7 @@ export default {
     },
 
     methods: {
+        isProjectMember,
         downloadKeyVisual() {
             let link = document.createElement('a');
             link.href = route('project.download.keyVisual', this.project.id);

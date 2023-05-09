@@ -30,6 +30,16 @@
                 Antworten
             </button>
         </div>
+        <div v-if="buttons?.includes('calculation_check')">
+            <button @click="$emit('openProjectCalculation', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Kalkulation prüfen
+            </button>
+        </div>
+        <div v-if="buttons?.includes('delete_request')">
+            <button @click="$emit('deleteVerificationRequest', true)" type="button" class="rounded-full bg-transparent px-3.5 py-1.5 text-sm font-semibold text-indigo-600 hover:text-white ring-2 ring-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Anfrage löschen
+            </button>
+        </div>
     </div>
 
 </template>
@@ -42,9 +52,11 @@ import {emit} from "../../../../../public/js/app";
 
 export default {
     name: "NotificationButtons",
-    methods: {emit},
+    methods: {
+
+    },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent'],
+    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest'],
     components: {
         DeclineEventModal,
         PencilAltIcon, XIcon

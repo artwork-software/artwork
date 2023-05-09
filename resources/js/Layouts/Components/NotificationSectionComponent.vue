@@ -33,6 +33,7 @@
                     :room-collisions="roomCollisions"
                     :project="project"
                     :wanted-split="wantedSplit"
+                    :isArchive="false"
                 />
                 <div class="flex flex-wrap w-full justify-between hidden" v-if="false">
                     <div class="flex">
@@ -189,9 +190,20 @@
             </div>
             <div v-if="showReadSection" @mouseover="notification.hovered = true"
                  @mouseleave="notification.hovered = false" :class="index !== 0 && showSection ? 'border-t-2' : ''"
-                 class="flex flex-wrap justify-between mx-12 w-full py-6"
+                 class=" w-full"
                  v-for="(notification,index) in readNotifications">
-                <div class="flex flex-wrap">
+                <NotificationBlock
+                    :notification="notification"
+                    :event-types="eventTypes"
+                    :history-objects="historyObjects"
+                    :event="event"
+                    :rooms="rooms"
+                    :room-collisions="roomCollisions"
+                    :project="project"
+                    :wanted-split="wantedSplit"
+                    :isArchive="true"
+                />
+                <div class="flex flex-wrap hidden">
                     <div class="flex">
                         <!-- Notification Icon -->
                         <TeamIconCollection v-if="notification.data.team" class="h-12 w-12 mr-5"
@@ -422,7 +434,6 @@ export default  {
             const threeDaysInMillis = 1000 * 60 * 60 * 24 * 3;
             const threeDaysFromNow = Date.now() + threeDaysInMillis;
             return dateTemp < threeDaysFromNow;
-
         },
         openRoomHistoryModal(history){
             this.wantedHistory = history;

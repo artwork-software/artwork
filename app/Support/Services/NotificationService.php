@@ -340,9 +340,11 @@ class NotificationService
                 Notification::send($notificationTo, new DeadlineNotification($body, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED:
+            case NotificationConstEnum::NOTIFICATION_BUDGET_MONEY_SOURCE_CHANGED:
                 Notification::send($notificationTo, new MoneySourceNotification($body, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_BUDGET_STATE_CHANGED:
+            case NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED:
                 Notification::send($notificationTo, new BudgetVerified($body, $broadcastMessage));
                 break;
                 /*

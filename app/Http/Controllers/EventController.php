@@ -189,6 +189,9 @@ class EventController extends Controller
             $this->associateProject($request, $firstEvent);
         }
 
+
+        $projectFirstEvent = $firstEvent->project()->first();
+        //dd($projectFirstEvent);
         if($request->is_series){
             $series = SeriesEvents::create([
                 'frequency_id' => $request->seriesFrequency,
@@ -203,28 +206,28 @@ class EventController extends Controller
                 while ($whileEndDate->addDay() < $endSeriesDate) {
                     $startDate = $startDate->addDay();
                     $endDate = $endDate->addDay();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 2){
                 while ($whileEndDate->addWeek() < $endSeriesDate) {
                     $startDate = $startDate->addWeek();
                     $endDate = $endDate->addWeek();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 3){
                 while ($whileEndDate->addWeeks(2) < $endSeriesDate) {
                     $startDate = $startDate->addWeeks(2);
                     $endDate = $endDate->addWeeks(2);
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 4){
                 while ($whileEndDate->addMonth() < $endSeriesDate) {
                     $startDate = $startDate->addMonth();
                     $endDate = $endDate->addMonth();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
         }
@@ -246,7 +249,7 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    private function createSeriesEvent($startDate,$endDate, $request, $series){
+    private function createSeriesEvent($startDate,$endDate, $request, $series, $projectId){
         $event = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
@@ -259,7 +262,7 @@ class EventController extends Controller
             'event_type_id' => $request->eventTypeId,
             'room_id' => $request->roomId,
             'user_id' => Auth::id(),
-            'project_id' => $request->projectId,
+            'project_id' => $projectId ? $projectId : null,
             'is_series' => true,
             'series_id' => $series->id,
         ]);

@@ -50,11 +50,11 @@
                     <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">Noch keine Filter
                         gespeichert</p>
                 </DisclosurePanel>
-                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
             </Disclosure>
 
             <!-- Room Filter Section -->
-            <Disclosure v-slot="{ open }">
+            <Disclosure v-slot="{ open }" v-if="showRoomFilters">
+                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                 <DisclosureButton
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
@@ -336,7 +336,7 @@ export default {
         'useIcon',
         'filterOptions',
         'personalFilters',
-        'atAGlance'
+        'atAGlance',
     ],
     mounted() {
             this.filterArray.rooms = this.filterOptions.rooms
@@ -531,6 +531,11 @@ export default {
         }
     },
     computed: {
+        showRoomFilters: function() {
+            const pathName = window.location.pathname.split('/')[1]
+
+            return pathName !== "rooms";
+        },
         activeFilters: function() {
             let activeFiltersArray = []
 

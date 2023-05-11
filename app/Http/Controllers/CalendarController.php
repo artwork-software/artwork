@@ -89,7 +89,11 @@ class CalendarController extends Controller
         $eventsToday = [];
         $today = $date_of_day->format('d.m.Y');
 
-        foreach ($room->events as $event) {
+        $room_query = Room::query()->where('id', $room->id)->with('events', function($query) use($room) {
+            $this->filterEvents($query, null, null, $room, null)->orderBy('start_time', 'ASC');
+        })->first();
+
+        foreach ($room_query->events as $event) {
             if(in_array($today, $event->days_of_event)) {
                 if(!empty($projectId)){
                     if($event->project_id === $projectId ){
@@ -161,6 +165,8 @@ class CalendarController extends Controller
                 ->mapWithKeys(fn($date) => [
                     $date->format('d.m.') => CalendarEventResource::collection($this->get_events_of_day($date, $room, @$project->id))
                 ]);
+
+            Debugbar::info($better);
         }else{
             $better = Room::query()
                 ->unless(is_null(request('roomIds')),
@@ -234,7 +240,7 @@ class CalendarController extends Controller
         $roomAttributeIds = request('roomAttributeIds');
         $roomCategoryIds = request('roomCategoryIds');
 
-        $filteredEvents = $query
+        return $query
             ->when($startDate, fn (EventBuilder $builder) => $builder->whereBetween('start_time', [$startDate, $endDate]))
             ->when($endDate, fn (EventBuilder $builder) => $builder->whereBetween('end_time', [$startDate, $endDate]))
             ->when($project, fn (EventBuilder $builder) => $builder->where('project_id', $project->id))
@@ -257,8 +263,6 @@ class CalendarController extends Controller
             ->unless(is_null($hasNoAudience), fn (EventBuilder $builder) => $builder->where('audience', null)->orWhere('audience', false))
             ->unless(is_null($isLoud), fn (EventBuilder $builder) => $builder->where('is_loud', true))
             ->unless(is_null($isNotLoud), fn (EventBuilder $builder) => $builder->where('is_loud', false)->orWhere('is_loud', null));
-
-        return $filteredEvents;
     }
 
     public function filterRooms() {

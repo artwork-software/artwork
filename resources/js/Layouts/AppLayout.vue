@@ -171,6 +171,7 @@
 
             <!--     Main       -->
             <main class="main">
+                <p v-if="isAdmin">Admin</p>
                 <!--
                 <p class="text-xs ml-2 cursor-pointer uppercase" @click="showPermissions = !showPermissions">Open
                     Permissions</p>
@@ -201,6 +202,7 @@ import {BellIcon, ChevronDownIcon, ChevronUpIcon, MenuAlt2Icon, TrashIcon, XIcon
 import {SearchIcon} from '@heroicons/vue/solid'
 import {Link, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import {isAdmin} from "@/Helper/PermissionHelper";
 
 const navigation = [
     {
@@ -346,6 +348,7 @@ export default {
         }
     },
     methods: {
+        isAdmin,
         checkPermissionGlobalMessageAndToolSettings() {
             if (this.$page.props.can.edit_settings || this.$page.props.can.global_notifiaction) {
                 return true;

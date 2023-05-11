@@ -6,21 +6,25 @@
                 <div class="flex items-center gap-4">
                     <h4 class="sDark">{{ notification.data.title }}</h4>
                     <div class="flex items-center gap-2 xxsLight" v-if="notification.data?.description[0]">
-                        {{notification.data?.description[0].text}}
+                        {{ notification.data?.description[0].text }}
                         von
-                        <NewUserToolTip :id="notification?.id" :user="notification.data?.description[0]?.created_by" height="5" width="5"/>
+                        <NewUserToolTip :id="notification?.id" :user="notification.data?.description[0]?.created_by"
+                                        height="5" width="5"/>
                     </div>
                     <div class="flex items-center gap-2 xxsLight" v-else-if="notification.data.created_by">
                         {{ notification.data.created_at }}
                         von
-                        <NewUserToolTip :id="notification?.id" :user="notification.data?.created_by" height="5" width="5"/>
+                        <NewUserToolTip :id="notification?.id" :user="notification.data?.created_by" height="5"
+                                        width="5"/>
                     </div>
                 </div>
-                <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description" >
+                <div class="xxsLight mt-2 flex gap-1 items-center" v-if="notification.data?.description">
                     <div v-for="(description, index) in notification.data?.description">
                         <p v-if="description.type !== 'comment'">
-                            <span v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">Betrifft: </span>
-                            <a :href="description.href" v-if="description.type === 'link'" class="text-indigo-800">{{ description.title }}</a>
+                            <span
+                                v-if="notification.data.type === 'NOTIFICATION_CONFLICT' && index === '1'">Betrifft: </span>
+                            <a :href="description.href" v-if="description.type === 'link'"
+                               class="text-indigo-800">{{ description.title }}</a>
                             <span v-else>{{ description.title }}</span>
                             <span v-if="description.title && index < 4"> |</span>
                         </p>
@@ -31,18 +35,19 @@
                 </p>
                 <div class="" v-if="notification.data.showHistory">
                     <div @click="openHistory" class="xxsLight cursor-pointer items-center flex text-buttonBlue">
-                        <ChevronRightIcon class="h-3 w-3" />
+                        <ChevronRightIcon class="h-3 w-3"/>
                         <span>
                              Verlauf ansehen
                         </span>
                     </div>
                 </div>
                 <NotificationButtons v-if="!isArchive"
-                    :buttons="notification.data.buttons"
-                    @openDeclineModal="loadEventDataForDecline"
-                    @openEventEditAccept="loadEventDataForEditAndAccept"
-                    @deleteEvent="showDeleteConfirmModal = true"
-                    @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
+                                     :buttons="notification.data.buttons"
+                                     @openDeclineModal="loadEventDataForDecline"
+                                     @openEventEditAccept="loadEventDataForEditAndAccept"
+                                     @deleteEvent="showDeleteConfirmModal = true"
+                                     @openProjectCalculation="openProjectBudget(notification.data?.projectId)"
+                                     @open-event-without-room-modal="loadEventDataForEventWithoutRoom"
                 />
             </div>
         </div>
@@ -83,6 +88,17 @@
         :roomCollisions="roomCollisions"
     />
 
+    <event-without-room-new-request-component
+        v-if="showEventWithoutRoomComponent"
+        @closed="onEventWithoutRoomComponentClose()"
+        :showHints="$page.props?.can?.show_hints"
+        :eventTypes="eventTypes"
+        :rooms="rooms"
+        :project="project"
+        :event="event"
+        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+    />
+
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
         @delete="deleteEvent"
@@ -90,7 +106,6 @@
         description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."
         v-if="showDeleteConfirmModal"
     />
-
 
 
 </template>
@@ -106,10 +121,12 @@ import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHi
 import {useForm} from "@inertiajs/inertia-vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
+import EventWithoutRoomNewRequestComponent from "@/Layouts/Components/EventWithoutRoomNewRequestComponent.vue";
 
 export default {
     name: "NotificationBlock",
     components: {
+        EventWithoutRoomNewRequestComponent,
         ConfirmDeleteModal,
         EventComponent,
         ProjectHistoryWithoutBudgetComponent,
@@ -118,7 +135,7 @@ export default {
         NotificationButtons, ChevronRightIcon
     },
     props: ['notification', 'eventTypes', 'historyObjects', 'event', 'rooms', 'project', 'wantedSplit', 'roomCollisions', 'isArchive'],
-    data(){
+    data() {
         return {
             showDeclineModal: false,
             showProjectHistory: false,
@@ -127,16 +144,16 @@ export default {
                 notificationId: this.notification.id
             }),
             createEventComponentIsVisible: false,
-            showDeleteConfirmModal: false
+            showDeleteConfirmModal: false,
+            showEventWithoutRoomComponent: false,
         }
     },
-    computed: {
-    },
+    computed: {},
     methods: {
         setOnRead() {
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
-        openHistory(){
+        openHistory() {
             Inertia.reload({
                 data: {
                     showHistory: true,
@@ -144,13 +161,13 @@ export default {
                     modelId: this.notification.data?.modelId,
                 },
                 onFinish: () => {
-                    if(this.notification.data?.historyType === 'project'){
+                    if (this.notification.data?.historyType === 'project') {
                         this.showProjectHistory = true;
                     }
                 }
             })
         },
-        loadEventDataForDecline(){
+        loadEventDataForDecline() {
             Inertia.reload({
                 data: {
                     openDeclineEvent: true,
@@ -161,10 +178,10 @@ export default {
                 }
             })
         },
-        closeDeclineEventModal(){
+        closeDeclineEventModal() {
             this.showDeclineEventModal = false;
         },
-        loadEventDataForEditAndAccept(){
+        loadEventDataForEditAndAccept() {
             Inertia.reload({
                 data: {
                     openEditEvent: true,
@@ -174,10 +191,25 @@ export default {
                     this.createEventComponentIsVisible = true
                 }
             })
-            console.log(this.event);
         },
-        onEventComponentClose(){
-
+        loadEventDataForEventWithoutRoom(){
+            Inertia.reload({
+                data: {
+                    openEditEvent: true,
+                    eventId: this.notification.data?.eventId
+                },
+                onFinish: () => {
+                    this.showEventWithoutRoomComponent = true
+                }
+            })
+        },
+        onEventComponentClose() {
+            this.createEventComponentIsVisible = false;
+            // hier noch delete von der Notification oder im then vom Axios
+        },
+        onEventWithoutRoomComponentClose(){
+          this.showEventWithoutRoomComponent = false;
+            // hier noch delete von der Notification oder im then vom Axios
         },
         deleteEvent() {
             this.$inertia.delete(route('events.delete', this.notification.data?.eventId), {
@@ -187,7 +219,7 @@ export default {
             this.setOnRead();
             this.showDeleteConfirmModal = false;
         },
-        openProjectBudget(projectId){
+        openProjectBudget(projectId) {
             window.location.href = route('projects.show', projectId) + '?openTab=budget';
         }
     }

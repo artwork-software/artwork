@@ -432,6 +432,7 @@
                             <input type="checkbox"
                                    v-model="accept"
                                    :disabled="!canEdit"
+                                   @change="toggleAccept('accept')"
                                    id="accept-toggle"
                                    class="sr-only peer">
                             <div class="w-9 h-5 bg-gray-200 rounded-full
@@ -449,7 +450,7 @@
                                 <input type="checkbox"
                                        v-model="optionAccept"
                                        :disabled="!canEdit"
-                                       @change="toggleAccept"
+                                       @change="toggleAccept('option')"
                                        id="optionAccept-toggle"
                                        class="sr-only peer">
                                 <div class="w-9 h-5 bg-gray-200 rounded-full
@@ -543,11 +544,11 @@
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id))">
-                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate"
-                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
+                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent()">
-                            {{ this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : 'Speichern' : 'Speichern'}}
+                            {{ this.event?.occupancy_option ? this.accept ? 'Zusagen' : this.optionAccept ? 'Optional zusagen' : this.adminComment !== '' ? 'Nachricht senden' : 'Speichern' : 'Speichern'}}
                         </button>
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
@@ -991,15 +992,22 @@ export default {
                     .then(() => this.closeModal())
                     .catch(error => this.error = error.response.data.errors);
             } else {
-                return await axios
-                    .put('/events/' + this.event?.id, this.eventData())
-                    .then(() => { this.closeModal(); this.closeSeriesEditModal() })
-                    .catch(error => this.error = error.response.data.errors);
+                if(this.eventData().is_series){
+                    return await axios
+                        .put('/events/' + this.event?.id, this.eventData())
+                        .then(() => { this.closeModal(); this.closeSeriesEditModal();this.showSeriesEdit = true;
+                            this.$emit('closed', true); })
+                        .catch(error => this.error = error.response.data.errors);
+                }else{
+                    return await axios
+                        .put('/events/' + this.event?.id, this.eventData())
+                        .then(() => { this.closeModal(); this.closeSeriesEditModal();})
+                        .catch(error => this.error = error.response.data.errors);
+                }
+
+
             }
-            if(this.eventData().is_series){
-                this.showSeriesEdit = true;
-                this.$emit('closed', true);
-            }
+
 
             /**/
         },
@@ -1041,10 +1049,17 @@ export default {
             this.selectedProject = project;
             this.projectName = '';
         },
-        toggleAccept() {
-            if (this.optionAccept) {
-                this.accept = false;
-                this.optionString = options[0].name;
+        toggleAccept(type) {
+            if(type === 'option'){
+                if (this.optionAccept) {
+                    this.accept = false;
+                    this.optionString = options[0].name;
+                }
+            }else{
+                if(this.accept){
+                    this.optionAccept = false;
+                    this.optionString = null;
+                }
             }
         },
 

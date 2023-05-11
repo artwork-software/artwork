@@ -4,9 +4,6 @@
             <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
             <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
-            <div class="hidden">
-                {{computedEvent }}
-            </div>
             <div class="mx-4">
                 <!--    Heading    -->
                 <div>
@@ -34,7 +31,7 @@
                         ihn in einen anderen Raum.
                     </h2>
                 </div>
-                <div class="flex items-center mb-1 my-4">
+                <div v-if="event.creator" class="flex items-center mb-1 my-4">
                     <div class="truncate flex xxsDark max-w-60 ">
                         Erstellt von
                         <div class="xxsDarkBold ml-1"> {{ event.creator.first_name }}
@@ -51,16 +48,16 @@
                     <!--    Type and Title    -->
                     <div class="flex py-2">
                         <div class="w-1/2">
-                            <Listbox as="div" class="flex h-12 mr-2" v-model="event.event_type_id"
+                            <Listbox as="div" class="flex h-12 mr-2" v-model="event.eventTypeId"
                                      :onchange="checkCollisions(event)" id="eventType">
                                 <ListboxButton
                                     class="pl-3 border-2 border-gray-300 w-full bg-white relative font-semibold py-2 text-left cursor-pointer focus:outline-none sm:text-sm">
                                     <div class="flex items-center my-auto">
                                         <EventTypeIconCollection :height="20" :width="20"
-                                                                 :iconName="this.eventTypes.find(type => type.id === event.event_type_id)?.svg_name"/>
+                                                                 :iconName="this.eventTypes.find(type => type.id === event.eventTypeId)?.svg_name"/>
                                         <span class="block truncate items-center ml-3 flex">
                                             <span>{{
-                                                    this.eventTypes.find(type => type.id === event.event_type_id)?.name
+                                                    this.eventTypes.find(type => type.id === event.eventTypeId)?.name
                                                 }}</span>
                                 </span>
                                         <span
@@ -183,77 +180,75 @@
                     </div>
                     <!--    Project    -->
                     <div>
-                        <div class="xsLight flex" v-if="!event.creatingProject">
+                        <div class="xsLight flex" v-if="!this.creatingProject">
                             Aktuell zugeordnet zu:
-                            <a v-if="event.project_id"
-                               :href="route('projects.show', {project: event.project_id, openTab: 'calendar'})"
+                            <a v-if="this.selectedProject?.id"
+                               :href="route('projects.show', {project: selectedProject.id, openTab: 'calendar'})"
                                class="ml-3 flex xsDark">
-                                {{ this.projects.find(project => project.id === event.project_id)?.name }}
+                                {{ this.selectedProject?.name }}
                             </a>
                             <div v-else class="xsDark ml-2">
-                                {{ this.projects.find(project => project.id === event.project_id)?.name ?? 'Keinem Projekt' }}
+                                {{ this.selectedProject?.name ?? 'Keinem Projekt' }}
                             </div>
-                            <div v-if="event.project_id" class="flex items-center my-auto">
+                            <div v-if="this.selectedProject?.id" class="flex items-center my-auto">
                                 <button type="button"
-                                        @click="this.deleteProject(event)">
+                                        @click="selectedProject = null">
                                     <XCircleIcon class="pl-2 h-6 w-6 hover:text-error text-primary"/>
                                 </button>
                             </div>
                         </div>
-                        <div class="xsLight" v-if="event.creatingProject">
+                        <div class="xsLight" v-if="this.creatingProject">
                             Das Projekt wird beim Abspeichern erstellt.
                         </div>
+
                         <div class="my-2">
                             <div class="flex pb-2">
-                            <span class="mr-4 text-sm"
-                                  :class="[!event.creatingProject ? 'xsDark' : 'xsLight', '']">
+                            <span class="mr-4 "
+                                  :class="[!creatingProject ? 'xsDark' : 'xsLight',]">
                                 Bestehendes Projekt
                             </span>
-                                <label for="project-toggle"
-                                       class="inline-flex relative items-center cursor-pointer">
-                                    <input type="checkbox"
-                                           v-model="event.creatingProject"
-                                           id="project-toggle"
-                                           class="sr-only peer">
-                                    <div class="w-9 h-5 bg-gray-200 rounded-full
+                                <div class="flex">
+                                    <label for="project-toggle" class="inline-flex relative items-center cursor-pointer">
+                                        <input type="checkbox"
+                                               v-model="creatingProject"
+                                               id="project-toggle"
+                                               class="sr-only peer">
+                                        <div class="w-9 h-5 bg-gray-200 rounded-full
                             peer-checked:after:translate-x-full peer-checked:after:border-white
                             after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300
-                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
-                                    </div>
-                                </label>
-                                <span class="ml-4 text-sm"
-                                      :class="[event.creatingProject ? 'xsDark' : 'xsLight', '']">
+                            after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-buttonBlue">
+                                        </div>
+                                    </label>
+                                    <span class="ml-4 text-sm"
+                                          :class="[creatingProject ? 'xsDark' : 'xsLight']">
                                 Neues Projekt
                             </span>
-                                <div v-if="showHints" class="ml-3 flex">
-                                    <SvgCollection svgName="arrowLeft" class="mt-1"/>
-                                    <div class="hind text-secondary ml-1 my-auto text-sm">
-                                        Lege gleichzeitig ein neues Projekt an
+                                    <div v-if="showHints" class="ml-3 flex">
+                                        <SvgCollection svgName="arrowLeft" class="mt-1"/>
+                                        <div class=" ml-1 my-auto hind">
+                                            Lege gleichzeitig ein neues Projekt an
+                                        </div>
                                     </div>
                                 </div>
+
                             </div>
                             <input type="text"
-                                   id="projectName"
-                                   @focusin="event.showProjectSearchResults = true"
-                                   @change="this.projectName = event.projectName"
-                                   @focusout="this.projectName = '';"
-                                   v-model="event.projectName"
-                                   autocomplete="off"
                                    :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                                   class="h-10 border-2 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                                   v-model="projectName"
+                                   class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
 
-                            <div
-                                v-if="projectSearchResults.length > 0 && !event.creatingProject && event.showProjectSearchResults"
-                                class="absolute bg-primary truncate sm:text-sm w-10/12">
+                            <div v-if="projectSearchResults.length > 0 && !creatingProject"
+                                 class="absolute bg-primary truncate sm:text-sm w-10/12">
                                 <div v-for="(project, index) in projectSearchResults"
                                      :key="index"
-                                     @click="event.projectId = project.id; event.project = project; event.projectName = ''; this.projectName = ''; event.showProjectSearchResults = false; this.projectSearchResults = [];"
-                                     class="p-4 text-white border-l-4 hover:border-l-success border-l-primary cursor-pointer">
+                                     @click="chooseProject(project)"
+                                     class="p-4 xsWhiteBold border-l-4 hover:border-l-success border-l-primary cursor-pointer">
                                     {{ project.name }}
                                 </div>
                             </div>
-                            <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
-                            <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
+
+                            <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
+                            <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
                         </div>
                     </div>
 
@@ -417,10 +412,11 @@ export default {
             deleteComponentVisible: false,
             eventToDelete: null,
             isOption: false,
+            selectedProject: null,
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'event', 'projects', 'isAdmin'],
+    props: ['showHints', 'eventTypes', 'rooms', 'event', 'project', 'isAdmin'],
 
     emits: ['closed'],
 
@@ -447,13 +443,10 @@ export default {
     computed: {
         computedEvent: function () {
             let eventToShow = this.event;
-
-            if(this.event.start_time && this.event.end_time){
-                eventToShow.startDate = this.getDateOfDate(this.event.start_time);
-                eventToShow.startTime = this.getTimeOfDate(this.event.start_time);
-                eventToShow.endDate = this.getDateOfDate(this.event.end_time);
-                eventToShow.endTime = this.getTimeOfDate(this.event.end_time);
-            }
+            eventToShow.startDate = new Date(this.event.start).format('YYYY-MM-DD');
+            eventToShow.startTime = new Date(this.event.start).format('HH:mm');
+            eventToShow.endDate = new Date(this.event.end).format('YYYY-MM-DD');
+            eventToShow.endTime = new Date(this.event.end).format('HH:mm');
 
 
             //eventToShow.startDate = (new Date(this.event.start)).format('YYYY-MM-DD');
@@ -467,7 +460,13 @@ export default {
 
     methods: {
         openModal() {
-
+            if (this.project) {
+                this.selectedProject = {id: this.project.id, name: this.project.name};
+            }
+            this.event.startDate = new Date(this.event.start).format('YYYY-MM-DD');
+            this.event.startTime = new Date(this.event.start).format('HH:mm');
+            this.event.endDate = new Date(this.event.end).format('YYYY-MM-DD');
+            this.event.endTime = new Date(this.event.end).format('HH:mm');
         },
 
         closeModal(bool) {
@@ -607,18 +606,18 @@ export default {
             return {
                 title: event.name,
                 eventName: event.eventName,
-                start: event.start_time,
-                end: event.end_time,
+                start: this.formatDate(event.startDate, event.startTime),
+                end: this.formatDate(event.endDate, event.endTime),
                 roomId: event.room_id,
                 description: event.description,
                 audience: event.audience,
                 isLoud: event.is_loud,
                 isOption:this.isOption,
-                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.event_type_id)?.individual_name,
+                eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
                 projectId: event.project_id,
                 projectName: event.creatingProject ? event.projectName : '',
-                eventTypeId: event.event_type_id,
-                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.event_type_id)?.project_mandatory && !this.creatingProject,
+                eventTypeId: event.eventTypeId,
+                projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
                 creatingProject: event.creatingProject,
             };
         },

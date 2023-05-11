@@ -16,7 +16,7 @@
             </button>
         </div>
         <div v-if="buttons?.includes('change_request')">
-            <button @click="$emit('openEventEditAccept', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <button @click="$emit('openEventWithoutRoomModal', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 Anfrage ändern
             </button>
         </div>
@@ -26,7 +26,7 @@
             </button>
         </div>
         <div v-if="buttons?.includes('answer')">
-            <button @click="$emit('deleteEvent', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+            <button @click="$emit('openEventEditAccept', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 Antworten
             </button>
         </div>
@@ -55,7 +55,7 @@ export default {
 
     },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest'],
+    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal'],
     components: {
         DeclineEventModal,
         PencilAltIcon, XIcon

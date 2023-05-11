@@ -5,7 +5,7 @@ import { createInertiaApp } from '@inertiajs/inertia-vue3';
 import { InertiaProgress } from '@inertiajs/progress';
 import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import '@vuepic/vue-datepicker/dist/main.css'
-import LaravelPermissionToVueJS from 'laravel-permission-to-vuejs'
+import Permissions from './mixins/Permissions';
 
 const svgColors = {
     eventType0:'#A7A6B1',
@@ -29,9 +29,9 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route } })
+            .mixin(Permissions)
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
-        app.use(LaravelPermissionToVueJS)
         app.mount(el);
     },
 });

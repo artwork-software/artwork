@@ -42,6 +42,7 @@ class ProjectIndexShowResource extends JsonResource
             'access_budget' => $this->access_budget,
             'project_managers' => $this->managerUsers,
             'write_auth' => $this->writeUsers,
+            'delete_permission_users' => $this->delete_permission_users,
             'curr_user_is_related' => $this->users->contains(Auth::id()),
             'key_visual' => $this->key_visual_path,
             'cost_center' => $this->cost_center,

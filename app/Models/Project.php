@@ -94,13 +94,18 @@ class Project extends Model
             ->wherePivot('access_budget', true);
     }
 
-    public function writeUsers()
+    public function writeUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('can_write', true);
     }
+    public function delete_permission_users(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_user', 'project_id')
+            ->wherePivot('delete_permission', true);
+    }
 
-    public function managerUsers()
+    public function managerUsers(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
     {
         return $this->belongsToMany(User::class, 'project_user', 'project_id')
             ->wherePivot('is_manager', true);

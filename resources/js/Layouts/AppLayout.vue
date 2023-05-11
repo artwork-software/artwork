@@ -171,23 +171,6 @@
 
             <!--     Main       -->
             <main class="main">
-                <p v-if="isAdmin">Admin</p>
-                <!--
-                <p class="text-xs ml-2 cursor-pointer uppercase" @click="showPermissions = !showPermissions">Open
-                    Permissions</p>
-                <div v-if="showPermissions">
-                <pre class="ml-2">
-    {{ $page.props.user.calendar_settings }}
-    {{ $page.props.can }}
-    Admin: {{ $page.props.is_admin }}
-    Budget: {{ $page.props.is_budget_admin }}
-    Contracts: {{ $page.props.is_contract_admin }}
-    MoneySource: {{ $page.props.is_money_source_admin }}
-                    {{$page.props.myMoneySources}}
-                </pre>
-                </div>
-                -->
-
                 <slot></slot>
             </main>
         </div>

@@ -72,7 +72,7 @@
                                 class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem
-                                        v-if="this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || this.$page.props.can.edit_projects"
+                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $can('write projects')"
                                         v-slot="{ active }">
                                         <a @click="openEditProjectModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -92,7 +92,10 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem
-                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.delete_projects || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="
+                                            projectDeletePermissionUsers.includes(this.$page.props.user.id) ||
+                                            $role('artwork admin')
+                                        "
                                         v-slot="{ active }">
                                         <a @click="openDeleteProjectModal(this.project)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -205,7 +208,7 @@
                 <div v-if="isCommentTab"
                      class="mx-5 mt-6 p-5 max-w-screen-xl bg-lightBackgroundGray">
                     <div
-                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                        v-if="$role('artwork admin') || $can('write projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                         class="relative border-2 hover:border-gray-400 w-full bg-white border border-gray-300">
                         <textarea
                             placeholder="Was sollten die anderen Projektmitglieder über das Projekt wissen?"
@@ -288,7 +291,7 @@
                             </div>
                         </div>
                         <div
-                            v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
+                            v-if="$can('write projects') || $role('artwork admin') || $can('admin projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || isMemberOfADepartment"
                             class="col-span-2">
                             <div class="ml-10 group">
                                 <label class="block my-4 sDark">
@@ -344,7 +347,7 @@
                                     <h3 class="sDark"> Dokumente </h3>
                                 </div>
                                 <div
-                                    v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id)">
+                                    v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id)">
                                     <input
                                         @change="uploadChosenDocuments"
                                         class="hidden"
@@ -365,7 +368,7 @@
                                 </div>
                                 <div>
                                     <div class="space-y-1"
-                                         v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                         v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                                         <div v-for="project_file in project.project_files"
                                              class="cursor-pointer group flex items-center">
                                             <div :data-tooltip-target="project_file.name" class="flex truncate">
@@ -374,7 +377,7 @@
                                                     {{ project_file.name }}</p>
 
                                                 <XCircleIcon
-                                                    v-if="this.$page.props.is_admin || access_budget.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                    v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                                     @click="openConfirmDeleteModal(project_file)"
                                                     class="ml-2 my-auto hidden group-hover:block h-5 w-5 flex-shrink-0 text-error"
                                                     aria-hidden="true"/>
@@ -501,6 +504,7 @@
                 v-else
                 :project="project"
                 :project-members="projectMembers"
+                :project-members-write-access="projectCanWriteIds"
                 :project-categories="projectCategories"
                 :project-genres="projectGenres"
                 :project-sectors="projectSectors"
@@ -579,6 +583,7 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
+import {write} from "../../../../public/js/app";
 
 export default {
     name: "ProjectShow",
@@ -681,6 +686,9 @@ export default {
         IndividualCalendarComponent
     },
     computed: {
+        write() {
+            return write
+        },
         errors() {
             return this.$page.props.errors;
         },
@@ -728,6 +736,9 @@ export default {
                 if (this.project.write_auth.findIndex((writeAuth) => writeAuth.id === user.id) !== -1) {
                     user.can_write = true;
                 }
+                if (this.project.delete_permission_users.findIndex((delete_permission) => delete_permission.id === user.id) !== -1) {
+                    user.delete_permission = true;
+                }
             })
             return projectMembers;
         },
@@ -773,6 +784,14 @@ export default {
                 }
             )
             return canWriteArray;
+        },
+        projectDeletePermissionUsers(){
+            let canDeleteArray = [];
+            this.project.delete_permission_users.forEach(deletePermission => {
+                    canDeleteArray.push(deletePermission.id)
+                }
+            )
+            return canDeleteArray;
         },
         locationString() {
             return Object.values(this.RoomsWithAudience).join(", ");

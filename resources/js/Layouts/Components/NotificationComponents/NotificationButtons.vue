@@ -48,7 +48,6 @@
 import {PencilAltIcon} from "@heroicons/vue/outline";
 import {XIcon} from "@heroicons/vue/solid";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
-import {emit} from "../../../../../public/js/app";
 
 export default {
     name: "NotificationButtons",

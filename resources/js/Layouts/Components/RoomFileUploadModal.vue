@@ -44,7 +44,7 @@
 
 <script setup>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/DialogModal.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import {useForm} from "@inertiajs/inertia-vue3";
@@ -78,6 +78,8 @@ const upload = (event) => {
 const storeFile = (file) => {
     roomFileForm.file = file
     roomFileForm.post(route('room_files.store', props.roomId))
+    roomFileForm.file = null
+    files.value = []
 }
 
 const validateType = (newFiles) => {
@@ -90,7 +92,12 @@ const validateType = (newFiles) => {
         if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
             uploadDocumentFeedback.value = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
         } else {
-            files.value.push(file)
+            const fileSize = file.size;
+            if (fileSize > 2097152) {
+                uploadDocumentFeedback.value = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+            } else {
+                files.value.push(file)
+            }
         }
     }
 }

@@ -5,7 +5,7 @@
             <button
                 @click="$emit('removeFilter')"
                 type="button">
-                <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
+                <XIcon v-if="type !== 'calendar'" class="ml-1 h-4 w-4 hover:text-error "/>
             </button>
     </span>
 </template>
@@ -19,10 +19,13 @@ export default {
     name: "BaseFilterTag",
     props: {
         filter: String,
+        type: {
+            String
+        }
     },
     components: {
         XIcon
-    }
+    },
 }
 </script>
 

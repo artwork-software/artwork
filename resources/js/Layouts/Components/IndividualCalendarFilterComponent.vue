@@ -530,10 +530,59 @@ export default {
             })
         }
     },
+    computed: {
+        activeFilters: function() {
+            let activeFiltersArray = []
+
+            this.filterArray.rooms.forEach(room => {
+                if(room.checked) activeFiltersArray.push(room)
+            })
+
+            this.filterArray.areas.forEach(area => {
+                if(area.checked) activeFiltersArray.push(area)
+            })
+
+            this.filterArray.eventTypes.forEach(eventType => {
+                if(eventType.checked) activeFiltersArray.push(eventType)
+            })
+
+            this.filterArray.roomCategories.forEach(category => {
+                if(category.checked) activeFiltersArray.push(category)
+            })
+
+            this.filterArray.roomAttributes.forEach(attribute => {
+                if(attribute.checked) activeFiltersArray.push(attribute)
+            })
+
+            if(this.filterArray.eventAttributes.isLoud.checked)
+                activeFiltersArray.push({name: "Laute Termine"})
+
+            if(this.filterArray.eventAttributes.isNotLoud.checked)
+                activeFiltersArray.push({name: "Ohne laute Termine"})
+
+            if(this.filterArray.eventAttributes.adjoiningNoAudience.checked)
+                activeFiltersArray.push({name: "Nebenräume ohne Publikum"})
+
+            if(this.filterArray.eventAttributes.adjoiningNotLoud.checked)
+                activeFiltersArray.push({name: "Nebenräume ohne laute Termine"})
+
+            if(this.filterArray.eventAttributes.hasAudience.checked)
+                activeFiltersArray.push({name: "Mit Publikum"})
+
+            if(this.filterArray.eventAttributes.hasNoAudience.checked)
+                activeFiltersArray.push({name: "Ohne Publikum"})
+
+            if(this.filterArray.roomFilters.showAdjoiningRooms)
+                activeFiltersArray.push({name: "Nebenräume anzeigen"})
+
+            return activeFiltersArray
+        }
+    },
     watch: {
         filterArray: {
             handler() {
                 this.reloadChanges()
+                this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true
         },

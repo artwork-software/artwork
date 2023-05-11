@@ -2,15 +2,26 @@
     <div class="w-[98%] flex justify-between items-center mt-4 mb-2 ml-4">
         <div class="inline-flex items-center">
             <date-picker-component v-if="dateValue" :project="project" :dateValueArray="dateValue"></date-picker-component>
-            <div v-if="dateValue && dateValue[0] === dateValue[1] && !project">
-                <button class="ml-2 -mt-2 text-black" @click="previousDay">
-                    <ChevronLeftIcon class="h-5 w-5 text-primary"/>
-                </button>
-                <button class="ml-2 -mt-2 text-black" @click="nextDay">
-                    <ChevronRightIcon class="h-5 w-5 text-primary"/>
-                </button>
+            <div v-if="!project">
+                <div v-if="dateValue && dateValue[0] === dateValue[1]">
+                    <button  class="ml-2 -mt-2 text-black" @click="previousDay">
+                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                    <button class="ml-2 -mt-2 text-black" @click="nextDay">
+                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                </div>
+                <div v-else>
+                    <button  class="ml-2 -mt-2 text-black" @click="previousTimeRange">
+                        <ChevronLeftIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                    <button class="ml-2 -mt-2 text-black" @click="nextTimeRange">
+                        <ChevronRightIcon class="h-5 w-5 text-primary"/>
+                    </button>
+                </div>
+
             </div>
-            <div v-else class="flex items-center">
+            <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
               <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">
                 <Switch v-model="atAGlance" @click="changeAtAGlance()"
                         class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
@@ -56,6 +67,7 @@
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
+                    @filters-changed="filtersChanged"
                 />
 
                 <!-- Calendar Settings Dropdown -->
@@ -127,6 +139,9 @@
             </button>
         </div>
     </div>
+    <div class="mb-1 ml-4 flex items-center w-full">
+        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+    </div>
 </template>
 
 <script>
@@ -137,11 +152,13 @@ import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     components: {
+        BaseFilterTag,
         Dropdown,
         Menu,
         MenuItems,
@@ -170,12 +187,13 @@ export default {
         'filterOptions',
         'personalFilters'
     ],
-    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent'],
+    emits: ['changeAtAGlance', 'changeMultiEdit', 'enterFullscreenMode', 'incrementZoomFactor', 'decrementZoomFactor','nextDay','previousDay','openEventComponent','previousTimeRange','nextTimeRange'],
     data() {
         return {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
+            activeFilters: []
         }
     },
     methods: {
@@ -217,6 +235,15 @@ export default {
         },
         openEventComponent(){
             this.$emit('openEventComponent')
+        },
+        previousTimeRange(){
+            this.$emit('previousTimeRange')
+        },
+        nextTimeRange(){
+            this.$emit('nextTimeRange')
+        },
+        filtersChanged(activeFilters) {
+            this.activeFilters = activeFilters
         }
 
     },

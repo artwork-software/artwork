@@ -1,21 +1,18 @@
 <template>
     <div class="w-full bg-secondaryHover overflow-y-auto" id="myCalendar">
         <div :class="this.project ? 'bg-lightBackgroundGray' : 'bg-white'">
-            <CalendarFunctionBar :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
+            <CalendarFunctionBar :personal-filters="personalFilters" :filter-options="filterOptions" :roomMode="true" :project="project" @open-event-component="openEditEventModal" @increment-zoom-factor="incrementZoomFactor" @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor" :is-fullscreen="isFullscreen" @enterFullscreenMode="openFullscreen" :dateValue="dateValue"
                                  @change-at-a-glance="changeAtAGlance"
                                  :at-a-glance="atAGlance"></CalendarFunctionBar>
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 w-48"
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom.length > 0">
+                 v-if="filteredEvents?.length > 0">
 
                 <ExclamationIcon class="h-6  mr-2"/>
                 {{
-                    eventsWithoutRoom.length
-                }}{{ eventsWithoutRoom.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                    filteredEvents?.length
+                }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
-            <pre>
-
-                </pre>
             <!-- Calendar -->
             <table class="w-full flex flex-wrap bg-white">
                 <tbody class="flex w-full flex-wrap">
@@ -53,7 +50,7 @@
         @closed="onEventsWithoutRoomComponentClose()"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
-        :eventsWithoutRoom="this.eventsWithoutRoom"
+        :eventsWithoutRoom="this.filteredEvents"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
@@ -91,7 +88,7 @@ export default {
             zoomFactor: 1
         }
     },
-    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project'],
+    props: ['calendarData', 'rooms', 'days', 'atAGlance', 'eventTypes', 'dateValue','project','eventsWithoutRoom','filterOptions','personalFilters'],
     emits: ['changeAtAGlance'],
     mounted(){
         window.addEventListener('resize', this.listenToFullscreen);
@@ -105,6 +102,17 @@ export default {
                 lineHeight,
             };
         },
+        filteredEvents() {
+            return this.eventsWithoutRoom.filter((event) => {
+                let createdBy = event.created_by;
+                let projectLeaders = event.projectLeaders;
+
+                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                    return true;
+                }
+                return false;
+            });
+        }
     },
     methods: {
         changeAtAGlance() {
@@ -182,6 +190,9 @@ export default {
             if (this.zoomFactor > 0.2) {
                 this.zoomFactor = Math.round((this.zoomFactor - 0.2) * 10) / 10;
             }
+        },
+        openEventsWithoutRoomComponent() {
+            this.showEventsWithoutRoomComponent = true;
         },
     }
 }

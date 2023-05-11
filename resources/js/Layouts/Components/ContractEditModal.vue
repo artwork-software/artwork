@@ -358,7 +358,7 @@
 
 <script>
 import JetDialogModal from "@/Jetstream/DialogModal.vue";
-import JetInputError from "@/Jetstream/DialogModal.vue";
+import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {PlusCircleIcon, XIcon} from "@heroicons/vue/outline";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
@@ -459,8 +459,12 @@ export default {
             if (forbiddenTypes.includes(file[0].type) || file[0].type.match('video.*') || file[0].type === "") {
                 this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
             } else {
-                this.file = file[0];
-
+                const fileSize = file[0].size;
+                if (fileSize > 2097152) {
+                    this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                } else {
+                    this.file = file[0];
+                }
             }
         },
         storeFiles() {

@@ -54,7 +54,7 @@
 
 <script>
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
-import JetInputError from '@/Jetstream/DialogModal.vue'
+import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 
@@ -107,7 +107,13 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.files.push(file)
+                    const fileSize = file.size;
+                    if (fileSize > 2097152) {
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    } else {
+                        this.files.push(file)
+                    }
+
                 }
             }
         },

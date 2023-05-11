@@ -428,7 +428,8 @@
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
-                                                       @open-error-modal="openErrorModal" :table="table"
+                                                       @open-error-modal="openErrorModal"
+                                                       :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"></MainPositionComponent>
                             </tr>
@@ -927,7 +928,7 @@ export default {
         getSumOfTable(tableType, columnId, isCommented) {
             let sum = 0;
             this.tablesToShow[tableType].forEach((mainPosition) => {
-                sum += mainPosition.columnSums[columnId].sum;
+                sum += mainPosition.columnSums[columnId]?.sum;
             })
             if(isNaN(sum)){
                 return 0;
@@ -1133,15 +1134,17 @@ export default {
             })
         },
         openRowDetailModal(row) {
-            Inertia.reload({
-                data: {
-                    selectedRow: row.id,
-                },
-                only: ['selectedSumDetail','table','selectedCell','selectedRow','templates', 'budgetAccess'],
+            Inertia.visit(route('projects.show', {
+                project: this.project.id,
+                selectedRow: row.id
+            }), {
+                only: ['budget'],
                 onSuccess: () => {
                     this.showRowDetailModal = true;
-                }
-            })
+                },
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

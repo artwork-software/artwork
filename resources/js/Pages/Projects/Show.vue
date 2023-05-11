@@ -680,6 +680,9 @@ export default {
         IndividualCalendarComponent
     },
     computed: {
+        errors() {
+            return this.$page.props.errors;
+        },
         tabs() {
             if (this.$page.props.is_admin || this.access_budget.includes(this.$page.props.user.id) || this.projectManagerIds.includes(this.$page.props.user.id)) {
                 return [
@@ -812,6 +815,7 @@ export default {
             this.show = false;
         }, 1000)
     },
+
     methods: {
         downloadKeyVisual() {
             let link = document.createElement('a');
@@ -923,7 +927,13 @@ export default {
                 if (forbiddenTypes.includes(file.type) || file.type.match('video.*') || file.type === "") {
                     this.uploadDocumentFeedback = "Videos, .exe und .dmg Dateien werden nicht unterstützt"
                 } else {
-                    this.uploadDocumentToProject(file)
+                    const fileSize = file.size;
+                    if(fileSize > 2097152){
+                        this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                    }else{
+                        this.uploadDocumentToProject(file)
+                    }
+
                 }
             }
         },

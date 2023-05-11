@@ -1,7 +1,7 @@
 <template>
     <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
          class="px-1 py-0.5 rounded-lg relative group">
-        <div class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
+        <div v-if="zoomFactor > 0.4" class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <button type="button" @click="openEditEventModal(event)"
@@ -158,8 +158,7 @@
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
                          v-for="user in event.projectLeaders?.slice(0,3)">
-                        <NewUserToolTip :height="5 * zoomFactor" :width="5 * zoomFactor" v-if="user"
-                                        :user="user" :id="user.id + event.id"/>
+                        <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 5 * zoomFactor, 'w-' + 5 * zoomFactor]">
                     </div>
                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">

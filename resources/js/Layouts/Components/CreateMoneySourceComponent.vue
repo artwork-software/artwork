@@ -158,7 +158,8 @@
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="flex justify-center mt-2">
-                                <AddButton mode="modal" class="bg-primary text-white resize-none"
+                                <AddButton :disabled="!isFormComplete()" mode="modal"
+                                           class="text-white resize-none"
                                            @click="createSingleSource()" text="Finanzierungsquelle anlegen"/>
                             </div>
                         </div>
@@ -273,7 +274,7 @@
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                         </div>
                         <div class="flex justify-center mt-2">
-                            <AddButton mode="modal" class="bg-primary text-white resize-none"
+                            <AddButton :disabled="!isGroupFormComplete()" mode="modal" class="text-white resize-none"
                                        @click="createMoneySourceGroup()" text="Finanzierungsquellengruppe anlegen"/>
                         </div>
                     </div>
@@ -417,12 +418,12 @@ export default {
 
     methods: {
         addUserToMoneySourceUserArray(user) {
-            if(!this.usersToAdd.find(userToAdd => userToAdd.id === user.id)){
+            if (!this.usersToAdd.find(userToAdd => userToAdd.id === user.id)) {
                 this.usersToAdd.push(user);
             }
             this.user_query = '';
         },
-        addMoneySourceToGroup(moneySource){
+        addMoneySourceToGroup(moneySource) {
             this.subMoneySources.push(moneySource);
             this.moneySource_query = '';
         },
@@ -430,7 +431,7 @@ export default {
             this.usersToAdd.splice(index, 1);
         },
         deleteSubMoneySourceFromGroup(index) {
-            this.subMoneySources.splice(index,1);
+            this.subMoneySources.splice(index, 1);
         },
         createSingleSource() {
             this.createSingleSourceForm.users = {}
@@ -448,7 +449,7 @@ export default {
             this.createSingleSourceForm.post(route('money_sources.store'));
             this.closeModal(true);
         },
-        createMoneySourceGroup(){
+        createMoneySourceGroup() {
             this.createSourceGroupForm.users = {}
             this.usersToAdd.forEach((userToAdd) => {
                 this.createSourceGroupForm.users[userToAdd.id] = {
@@ -479,6 +480,14 @@ export default {
         closeModal(bool) {
             this.$emit('closed', bool);
         },
+        isFormComplete() {
+            const form = this.createSingleSourceForm;
+            return form.name && form.amount;
+        },
+        isGroupFormComplete() {
+            const form = this.createSourceGroupForm;
+            return form.name;
+        }
     },
 }
 </script>

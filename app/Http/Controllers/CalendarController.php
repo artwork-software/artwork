@@ -267,16 +267,7 @@ class CalendarController extends Controller
     public function filterRooms($startDate, $endDate)
     {
 
-        # if ($startDate) {
-        #     Debugbar::info("Test");
-        #     $test = Event::query()->where('room_id', 1)->selectRaw('COUNT(DISTINCT DATE(start_time)) as num_event_days')
-        #         ->whereRaw("(DATE(start_time) BETWEEN '$startDate' AND '$endDate' OR DATE(end_time) BETWEEN '$startDate' AND '$endDate')")
-        #         ->groupByRaw('DATE(start_time)')
-        #         ->havingRaw('COUNT(DISTINCT DATE(start_time)) < DATEDIFF(?, ?) + 1', [$endDate, $startDate])
-        #         ->exists();
-
-        #     Debugbar::info($test);
-        # }
+        Debugbar::info($this->checkIfDayWithoutEventsExists($startDate, $endDate));
 
         return Room::query()
             ->unless(is_null(request('roomIds')),
@@ -304,15 +295,16 @@ class CalendarController extends Controller
                     })
                     ->orWhereDoesntHave('adjoining_rooms')
             );
-            // ->unless(is_null(request('allDayFree')), fn(Builder $builder) => $builder
-            //     ->whereRelation('events', function ($event_query) use ($startDate, $endDate) {
-            //         $event_query->selectRaw('COUNT(DISTINCT DATE(start_time)) as num_event_days')
-            //             ->whereRaw("(DATE(start_time) BETWEEN '$startDate' AND '$endDate' OR DATE(end_time) BETWEEN '$startDate' AND '$endDate')")
-            //             ->groupByRaw('DATE(start_time)')
-            //             ->havingRaw('COUNT(DISTINCT DATE(start_time)) < DATEDIFF(?, ?) + 1', [$endDate, $startDate]);
-            //     })
-            //     ->orWhereDoesntHave('events')
-            // );
+    }
+
+    private function checkIfDayWithoutEventsExists($startDate, $endDate)
+    {
+        return Event::query()->selectRaw('COUNT(DISTINCT DATE(start_time)) as num_event_days')
+            ->where('room_id', 1)
+            ->whereRaw("(DATE(start_time) BETWEEN ? AND ? OR DATE(end_time) BETWEEN ? AND ?)", [$startDate, $endDate, $startDate, $endDate])
+            ->groupByRaw('DATE(start_time)')
+            ->havingRaw('COUNT(DISTINCT DATE(start_time)) = 0')
+            ->get();
     }
 
     private function setDefaultDates()

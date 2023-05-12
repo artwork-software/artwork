@@ -25,7 +25,7 @@ class CollisionService
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
 
-        $events =  Event::query()
+        return Event::query()
             ->whereBetween('start_time', [$startDate, $endDate])
             ->where('room_id', $request->roomId)
             ->orWhere(function($query) use ($request, $endDate, $startDate) {
@@ -42,8 +42,6 @@ class CollisionService
                     ->where('end_time', '>=', $endDate)
                     ->where('room_id', $request->roomId);
             });
-
-        return $events;
     }
 
 

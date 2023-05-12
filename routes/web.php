@@ -314,6 +314,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])->name('notifications.settings');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
+    Route::post('/notifications/{notificationKey}', [EventController::class, 'deleteOldNotifications'])->name('event.notification.delete');
 
     //globalNotification
     Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');

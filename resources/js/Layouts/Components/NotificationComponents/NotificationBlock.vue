@@ -60,6 +60,10 @@
         </div>
     </div>
 
+    <pre>
+        {{ notification.data }}
+    </pre>
+
 
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
@@ -71,7 +75,7 @@
         :request-to-decline="event"
         :event-types="eventTypes"
         @closed="closeDeclineEventModal"
-        @declined="setOnRead"
+        @declined="finishDeclineEvent"
         v-if="showDeclineEventModal"
     />
 
@@ -204,24 +208,44 @@ export default {
             })
         },
         onEventComponentClose(bool) {
+            console.log(bool)
             this.createEventComponentIsVisible = false;
             if(bool){
-                Inertia.delete(route('notifications.delete', this.notification.id))
+                Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                    notificationKey: this.notification.data?.notificationKey
+                }, {
+                    preserveScroll: true,
+                    preserveState: true
+                })
             }
-
         },
         onEventWithoutRoomComponentClose(bool){
+            console.log(bool)
             this.showEventWithoutRoomComponent = false;
             if(bool){
-                Inertia.delete(route('notifications.delete', this.notification.id))
+                Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                    notificationKey: this.notification.data?.notificationKey
+                }, {
+                    preserveScroll: true,
+                    preserveState: true
+                })
             }
+        },
+        finishDeclineEvent(){
+            console.log(this.notification);
+            Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
+                notificationKey: this.notification.data?.notificationKey
+            }, {
+                preserveScroll: true,
+                preserveState: true
+            })
         },
         deleteEvent() {
             this.$inertia.delete(route('events.delete', this.notification.data?.eventId), {
                 preserveScroll: true,
                 preserveState: true
             })
-            this.setOnRead();
+            //this.setOnRead();
             this.showDeleteConfirmModal = false;
         },
         openProjectBudget(projectId) {

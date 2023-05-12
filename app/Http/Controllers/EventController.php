@@ -37,6 +37,7 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Response;
 
 class EventController extends Controller
@@ -46,6 +47,7 @@ class EventController extends Controller
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
     protected ?NewHistoryService $history = null;
+    protected ?string $notificationKey = '';
 
     public function __construct()
     {
@@ -55,6 +57,9 @@ class EventController extends Controller
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
         $this->history = new NewHistoryService('App\Models\Event');
+
+        $this->notificationKey = Str::random(15);
+
     }
 
     /**
@@ -336,6 +341,7 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setNotificationKey($this->notificationKey);
         $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
         //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
@@ -378,6 +384,7 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        $this->notificationService->setNotificationKey($this->notificationKey);
         $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
         //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
@@ -449,16 +456,13 @@ class EventController extends Controller
      * @return void
      */
     private function createRequestNotification($request, Event $event) {
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
+        $this->notificationService->setNotificationKey($this->notificationKey);
         $notificationTitle = 'Neue Raumanfrage';
-        $this->notificationData->event = $event;
-        $this->notificationData->accepted = false;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
             'message' => $notificationTitle
         ];
-        $this->notificationData->created_by = Auth::user();
         $room = Room::find($request->roomId);
         $admins = $room->users()->wherePivot('is_admin', true)->get();
         $notificationDescription = [
@@ -504,6 +508,7 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        $this->notificationService->setNotificationKey($this->notificationKey);
         $room = $event->room()->first();
         $project = $event->project()->first();
         $projectManagers = $project->managerUsers()->get();
@@ -612,8 +617,10 @@ class EventController extends Controller
                     if($projectManager->id === $event->creator){
                         continue;
                     }
+                    $this->notificationService->setNotificationKey($this->notificationKey);
                     $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
                 }
+                $this->notificationService->setNotificationKey($this->notificationKey);
                 $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
         }
 
@@ -778,10 +785,8 @@ class EventController extends Controller
     }
 
     public function answerOnEvent(Event $event, Request $request){
-        DatabaseNotification::query()
-            ->whereJsonContains("data->type", "NOTIFICATION_ROOM_ANSWER")
-            ->whereJsonContains("data->eventId", $event->id)
-            ->delete();
+        // Löschen aller Benachrichtigungen
+        $this->deleteOldNotifications($request->notificationKey);
         $event->comments()->create([
             'user_id' => Auth::id(),
             'comment' => $request->comment,
@@ -789,18 +794,25 @@ class EventController extends Controller
         ]);
     }
 
+
+    public function deleteOldNotifications(Request $request): void
+    {
+        $notifications = DatabaseNotification::query()
+            ->whereJsonContains("data->notificationKey", $request->notificationKey)
+            ->get();
+
+        foreach ($notifications as $notification){
+            $notification->delete();
+        }
+    }
+
     /**
-     * @param EventAcceptionRequest $request
+     * @param Request $request
      * @param Event $event
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
+    public function acceptEvent(Request $request, Event $event): \Illuminate\Http\RedirectResponse
     {
-        DatabaseNotification::query()
-            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
-            ->whereJsonContains("data->eventId", $event->id)
-            ->delete();
-
         $event->occupancy_option = false;
         $notificationTitle = 'Raumanfrage bestätigt';
         $this->history->createHistory($event->id, 'Raum bestätigt');
@@ -849,20 +861,23 @@ class EventController extends Controller
             $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
         }
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
-        //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
     }
 
 
     public function declineEvent(Request $request, Event $event){
+        $projectManagers = [];
         $roomId = $event->room_id;
         $room = $event->room()->first();
         $project = $event->project()->first();
-        $projectManagers = $project->managerUsers()->get();
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
 
         if(!empty($request->comment)){
+
             $event->comments()->create([
                 'user_id' => Auth::id(),
                 'comment' => $request->comment,
@@ -908,8 +923,10 @@ class EventController extends Controller
                 if($projectManager->id === $event->creator){
                     continue;
                 }
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
             }
+            $this->notificationService->setNotificationKey($this->notificationKey);
             $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
 
         }
@@ -952,9 +969,9 @@ class EventController extends Controller
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage,$room->id, $event->id, $project->id);
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
         }
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
+        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
         //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
     }
@@ -1115,7 +1132,7 @@ class EventController extends Controller
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
         }
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_EVENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, $event->id);
         //$this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);

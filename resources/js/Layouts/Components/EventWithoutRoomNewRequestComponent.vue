@@ -2,7 +2,7 @@
     <jet-dialog-modal :show="true" @close="closeModal(false)">
         <template #content>
             <img alt="Terminkonflikt" src="/Svgs/Overlays/illu_appointment_warning.svg" class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <XIcon @click="closeModal(false)" class="h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--    Heading    -->
@@ -587,7 +587,7 @@ export default {
 
             return await axios
                 .put('/events/' + event?.id, this.eventData(event))
-                .then(() => this.closeModal())
+                .then(() => this.closeModal(true))
                 .catch(error => event.error = error.response.data.errors);
         },
         openDeleteEventModal(event) {
@@ -599,7 +599,7 @@ export default {
 
             return await axios
                 .delete(`/events/${this.eventToDelete.id}`)
-                .then(() => this.closeModal());
+                .then(() => this.closeModal(true));
         },
 
         eventData(event) {

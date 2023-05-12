@@ -288,7 +288,7 @@ class EventController extends Controller
         $this->authorize('create', Event::class);
 
         // TODO: Collision check rebuild
-        if($this->collisionService->getCollision($request)->count() > 0){
+        if($this->collisionService->getCollision($request, $event)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
                 foreach ($collisions as $collision){
@@ -558,7 +558,7 @@ class EventController extends Controller
                 if($projectManager->id === $event->creator){
                     continue;
                 }
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
             }
             $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
 
@@ -658,9 +658,9 @@ class EventController extends Controller
                 if($projectManager->id === $event->creator){
                     continue;
                 }
-                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
             }
-            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
         }
 
         $this->authorize('update', $event);
@@ -796,11 +796,10 @@ class EventController extends Controller
      */
     public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
     {
-        /*DatabaseNotification::query()
+        DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
-            ->orWhereJsonContains("data->type", "ROOM_REQUEST")
-            ->whereJsonContains("data->event->id", $event->id)
-            ->delete();*/
+            ->whereJsonContains("data->eventId", $event->id)
+            ->delete();
 
         $event->occupancy_option = false;
         $notificationTitle = 'Raumanfrage bestätigt';
@@ -847,7 +846,7 @@ class EventController extends Controller
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
         }
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
         //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
@@ -911,7 +910,7 @@ class EventController extends Controller
                 }
                 $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
             }
-            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
+            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
 
         }
         $notificationTitle = 'Raumanfrage abgesagt';
@@ -953,9 +952,9 @@ class EventController extends Controller
             if($projectManager->id === $event->creator){
                 continue;
             }
-            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage,$room->id, $event->id, $project->id);
         }
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$event->project_id);
+        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
         //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
     }

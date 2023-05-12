@@ -19,29 +19,51 @@ class CollisionService
      * @param $request
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function getCollision($request): \Illuminate\Database\Eloquent\Builder
+    public function getCollision($request, ?Event $event = null): \Illuminate\Database\Eloquent\Builder
     {
-
         $startDate = Carbon::parse($request->start)->setTimezone(config('app.timezone'));
         $endDate = Carbon::parse($request->end)->setTimezone(config('app.timezone'));
 
-        return Event::query()
-            ->whereBetween('start_time', [$startDate, $endDate])
-            ->where('room_id', $request->roomId)
-            ->orWhere(function($query) use ($request, $endDate, $startDate) {
-                $query->whereBetween('end_time', [$startDate, $endDate])
-                    ->where('room_id', $request->roomId);
-            })
-            ->orWhere(function($query) use ($request, $endDate, $startDate) {
-                $query->where('start_time', '>=', $startDate)
+
+        if(empty($event)){
+            return Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->where('room_id', $request->roomId)
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->whereBetween('end_time', [$startDate, $endDate])
+                        ->where('room_id', $request->roomId);
+                })
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->where('start_time', '>=', $startDate)
                         ->where('end_time', '<=', $endDate)
-                    ->where('room_id', $request->roomId);
-            })
-            ->orWhere(function($query) use ($request, $endDate, $startDate) {
-                $query->where('start_time', '<=', $startDate)
-                    ->where('end_time', '>=', $endDate)
-                    ->where('room_id', $request->roomId);
-            });
+                        ->where('room_id', $request->roomId);
+                })
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->where('start_time', '<=', $startDate)
+                        ->where('end_time', '>=', $endDate)
+                        ->where('room_id', $request->roomId);
+                });
+        } else {
+            return Event::query()
+                ->whereBetween('start_time', [$startDate, $endDate])
+                ->where('room_id', $request->roomId)
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->whereBetween('end_time', [$startDate, $endDate])
+                        ->where('room_id', $request->roomId);
+                })
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->where('start_time', '>=', $startDate)
+                        ->where('end_time', '<=', $endDate)
+                        ->where('room_id', $request->roomId);
+                })
+                ->orWhere(function($query) use ($request, $endDate, $startDate) {
+                    $query->where('start_time', '<=', $startDate)
+                        ->where('end_time', '>=', $endDate)
+                        ->where('room_id', $request->roomId);
+                })
+                ->whereNot('id', $event->id);
+        }
+
     }
 
 

@@ -60,10 +60,6 @@
         </div>
     </div>
 
-    <pre>
-        {{ notification.data }}
-    </pre>
-
 
     <ProjectHistoryWithoutBudgetComponent
         v-if="showProjectHistory"
@@ -120,7 +116,6 @@ import {ChevronRightIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
-import NotificationDeclineEvent from "@/Layouts/Components/NotificationComponents/NotificationDeclineEvent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
@@ -208,7 +203,6 @@ export default {
             })
         },
         onEventComponentClose(bool) {
-            console.log(bool)
             this.createEventComponentIsVisible = false;
             if(bool){
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
@@ -220,7 +214,6 @@ export default {
             }
         },
         onEventWithoutRoomComponentClose(bool){
-            console.log(bool)
             this.showEventWithoutRoomComponent = false;
             if(bool){
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
@@ -232,7 +225,6 @@ export default {
             }
         },
         finishDeclineEvent(){
-            console.log(this.notification);
             Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                 notificationKey: this.notification.data?.notificationKey
             }, {

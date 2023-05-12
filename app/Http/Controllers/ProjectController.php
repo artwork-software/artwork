@@ -1297,7 +1297,7 @@ class ProjectController extends Controller
         $eventsAtAGlance = [];
 
         if(\request('atAGlance') === 'true'){
-            
+
             $eventsAtAGlance = CalendarEventResource::collection($project->events()
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
@@ -1343,6 +1343,14 @@ class ProjectController extends Controller
             }
         }
 
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -1355,7 +1363,7 @@ class ProjectController extends Controller
             'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => $calendar->filterRooms(),
+            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],

@@ -30,6 +30,11 @@
                 Antworten
             </button>
         </div>
+        <div v-if="buttons?.includes('answerDialog')">
+            <button @click="$emit('openDialogModal', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                Antworten
+            </button>
+        </div>
         <div v-if="buttons?.includes('calculation_check')">
             <button @click="$emit('openProjectCalculation', true)" type="button" class="rounded-full bg-indigo-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                 Kalkulation prüfen
@@ -55,7 +60,7 @@ export default {
 
     },
     props: ['buttons'],
-    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal'],
+    emits: ['openDeclineModal', 'openEventEditAccept', 'deleteEvent', 'openProjectCalculation', 'deleteVerificationRequest','openEventWithoutRoomModal','openDialogModal'],
     components: {
         DeclineEventModal,
         PencilAltIcon, XIcon

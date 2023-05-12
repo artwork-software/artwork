@@ -203,13 +203,18 @@ export default {
                 }
             })
         },
-        onEventComponentClose() {
+        onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
-            // hier noch delete von der Notification oder im then vom Axios
+            if(bool){
+                Inertia.delete(route('notifications.delete', this.notification.id))
+            }
+
         },
-        onEventWithoutRoomComponentClose(){
-          this.showEventWithoutRoomComponent = false;
-            // hier noch delete von der Notification oder im then vom Axios
+        onEventWithoutRoomComponentClose(bool){
+            this.showEventWithoutRoomComponent = false;
+            if(bool){
+                Inertia.delete(route('notifications.delete', this.notification.id))
+            }
         },
         deleteEvent() {
             this.$inertia.delete(route('events.delete', this.notification.data?.eventId), {

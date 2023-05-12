@@ -1,11 +1,11 @@
 <template>
-    <jet-dialog-modal :show="true" @close="closeModal()">
+    <jet-dialog-modal :show="true" @close="closeModal(false)">
         <template #content>
             <img v-if="!this.event?.id" alt="Neuer Termin" src="/Svgs/Overlays/illu_appointment_new.svg"
                  class="-ml-6 -mt-8 mb-4"/>
             <img v-else alt="Termin bearbeiten" src="/Svgs/Overlays/illu_appointment_edit.svg"
                  class="-ml-6 -mt-8 mb-4"/>
-            <XIcon @click="closeModal()" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
+            <XIcon @click="closeModal(false)" class="text-secondary h-5 w-5 right-0 top-0 mt-8 mr-5 absolute cursor-pointer"
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
@@ -989,19 +989,19 @@ export default {
             if (!this.event?.id) {
                 return await axios
                     .post('/events', this.eventData())
-                    .then(() => this.closeModal())
+                    .then(() => this.closeModal(true))
                     .catch(error => this.error = error.response.data.errors);
             } else {
                 if(this.eventData().is_series){
                     return await axios
                         .put('/events/' + this.event?.id, this.eventData())
-                        .then(() => { this.closeModal(); this.closeSeriesEditModal();this.showSeriesEdit = true;
+                        .then(() => { this.closeModal(true); this.closeSeriesEditModal();this.showSeriesEdit = true;
                             this.$emit('closed', true); })
                         .catch(error => this.error = error.response.data.errors);
                 }else{
                     return await axios
                         .put('/events/' + this.event?.id, this.eventData())
-                        .then(() => { this.closeModal(); this.closeSeriesEditModal();})
+                        .then(() => { this.closeModal(true); this.closeSeriesEditModal();})
                         .catch(error => this.error = error.response.data.errors);
                 }
 
@@ -1014,14 +1014,14 @@ export default {
         async singleSaveEvent(){
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
-                .then(() => { this.closeModal(); this.closeSeriesEditModal() })
+                .then(() => { this.closeModal(true); this.closeSeriesEditModal() })
                 .catch(error => this.error = error.response.data.errors);
         },
         async saveAllSeriesEvents(){
             this.allSeriesEvents = true;
             return await axios
                 .put('/events/' + this.event?.id, this.eventData())
-                .then(() => { this.closeModal(); this.closeSeriesEditModal() })
+                .then(() => { this.closeModal(true); this.closeSeriesEditModal() })
                 .catch(error => this.error = error.response.data.errors);
         },
         closeSeriesEditModal(){
@@ -1033,17 +1033,17 @@ export default {
 
             return await axios
                 .delete(`/events/${this.event.id}`)
-                .then(() => this.closeModal());
+                .then(() => this.closeModal(true));
         },
         async approveRequest(event) {
             this.answerRequestForm.accepted = true;
             this.answerRequestForm.put(route('events.accept', {event: event.id}));
-            this.closeModal()
+            this.closeModal(true)
         },
         async declineRequest(event) {
             this.answerRequestForm.accepted = false;
             this.answerRequestForm.put(route('events.accept', {event: event}));
-            this.closeModal()
+            this.closeModal(true)
         },
         chooseProject(project) {
             this.selectedProject = project;

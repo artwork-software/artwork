@@ -545,11 +545,16 @@ class EventController extends Controller
                     'type' => 'string',
                     'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
                     'href' => null
+                ],
+                5 => [
+                    'type' => 'comment',
+                    'title' => $request->adminComment,
+                    'href' => null
                 ]
             ];
             $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
 
-        }elseif(!empty($request->adminComment)){
+        } elseif(!empty($request->adminComment)) {
                 $event->comments()->create([
                     'user_id' => Auth::id(),
                     'comment' => $request->adminComment,
@@ -810,6 +815,11 @@ class EventController extends Controller
             4 => [
                 'type' => 'string',
                 'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                'href' => null
+            ],
+            5 => [
+                'type' => 'comment',
+                'title' => $request->adminComment,
                 'href' => null
             ]
         ];

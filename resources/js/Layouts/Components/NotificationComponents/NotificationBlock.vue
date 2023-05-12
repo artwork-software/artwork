@@ -53,7 +53,7 @@
         </div>
         <div class="">
             <img @click="setOnRead" v-show="notification.hovered"
-                 v-if="notification.data?.changeType !== 'BUDGET_VERIFICATION_REQUEST'"
+                 v-if="notification.data?.changeType !== 'BUDGET_VERIFICATION_REQUEST' && !isArchive"
                  src="/Svgs/IconSvgs/icon_archive_white.svg"
                  class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-buttonBlue rounded-full"
                  aria-hidden="true" alt=""/>

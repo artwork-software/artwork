@@ -77,10 +77,11 @@
 
     <event-component
         v-if="createEventComponentIsVisible"
-        @closed="onEventComponentClose()"
+        @closed="onEventComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
+        show-comments="true"
         :project="project"
         :event="event"
         :wantedRoomId="wantedSplit"
@@ -90,7 +91,7 @@
 
     <event-without-room-new-request-component
         v-if="showEventWithoutRoomComponent"
-        @closed="onEventWithoutRoomComponentClose()"
+        @closed="onEventWithoutRoomComponentClose"
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
@@ -150,7 +151,6 @@ export default {
     computed: {},
     methods: {
         setOnRead() {
-            //TODO: HIER NOTIFICATION LÖSCHEN ANSTATT AUF READ SETZEN
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
         openHistory() {

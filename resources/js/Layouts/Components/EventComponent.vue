@@ -541,7 +541,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="my-6" v-for="comment in this.event.comments">
+                <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
                     <div class="flex justify-between">
                         <div class="flex items-center">
                             <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
@@ -636,6 +636,7 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import dayjs from "dayjs";
 
 export default {
     name: 'EventComponent',
@@ -746,7 +747,7 @@ export default {
         }
     },
 
-    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions'],
+    props: ['showHints', 'eventTypes', 'rooms', 'isAdmin', 'event', 'project', 'wantedRoomId', 'roomCollisions','showComments'],
 
     emits: ['closed'],
 
@@ -802,8 +803,11 @@ export default {
                 }
                 return;
             }
-            const start = new Date(this.event.start);
-            const end = new Date(this.event.end);
+
+            console.log(this.event)
+            const start = dayjs(this.event.start);
+            const end = dayjs(this.event.end);
+            console.log(start);
 
             this.startDate = start?.format('YYYY-MM-DD');
             this.startTime = start?.format('HH:mm');
@@ -1000,6 +1004,10 @@ export default {
          */
         async updateOrCreateEvent(isOption = false) {
             this.isOption = isOption;
+
+            if(this.accept === false && this.optionAccept === false){
+               this.isOption = true;
+            }
 
             if (!this.event?.id) {
                 return await axios

@@ -330,6 +330,7 @@ class NotificationService
         switch ($notificationConstEnum) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
+            case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
                 Notification::send($notificationTo, new RoomRequestNotification($body, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:

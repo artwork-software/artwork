@@ -571,6 +571,12 @@ class EventController extends Controller
 
         } else {
             if (!empty($request->adminComment)) {
+                $projectManagers = [];
+                $this->notificationService->setNotificationKey($this->notificationKey);
+                $project = $event->project()->first();
+                if(!empty($project)){
+                    $projectManagers = $project->managerUsers()->get();
+                }
                 $event->comments()->create([
                     'user_id' => Auth::id(),
                     'comment' => $request->adminComment,
@@ -584,11 +590,6 @@ class EventController extends Controller
                 ];
 
                 $event->save();
-
-                $projectId = null;
-                if ($project) {
-                    $projectId = $project->id;
-                }
                 $notificationDescription = [
                     1 => [
                         'type' => 'link',
@@ -621,10 +622,10 @@ class EventController extends Controller
                         continue;
                     }
                     $this->notificationService->setNotificationKey($this->notificationKey);
-                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id, $projectId);
+                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
                 }
                 $this->notificationService->setNotificationKey($this->notificationKey);
-                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id, $projectId);
+                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
             }
         }
 

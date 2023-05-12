@@ -292,7 +292,6 @@ class EventController extends Controller
         }
         $this->authorize('create', Event::class);
 
-        // TODO: Collision check rebuild
         if($this->collisionService->getCollision($request, $event)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
@@ -508,10 +507,13 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        $projectManagers = [];
         $this->notificationService->setNotificationKey($this->notificationKey);
         $room = $event->room()->first();
         $project = $event->project()->first();
-        $projectManagers = $project->managerUsers()->get();
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         if($request->accept || $request->optionAccept){
             $event->update(['occupancy_option' => false]);
 
@@ -567,7 +569,8 @@ class EventController extends Controller
             }
             $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
 
-        } elseif(!empty($request->adminComment)) {
+        } else {
+            if (!empty($request->adminComment)) {
                 $event->comments()->create([
                     'user_id' => Auth::id(),
                     'comment' => $request->adminComment,
@@ -583,7 +586,7 @@ class EventController extends Controller
                 $event->save();
 
                 $projectId = null;
-                if($project){
+                if ($project) {
                     $projectId = $project->id;
                 }
                 $notificationDescription = [
@@ -613,15 +616,16 @@ class EventController extends Controller
                         'href' => null
                     ]
                 ];
-                foreach ($projectManagers as $projectManager){
-                    if($projectManager->id === $event->creator){
+                foreach ($projectManagers as $projectManager) {
+                    if ($projectManager->id === $event->creator) {
                         continue;
                     }
                     $this->notificationService->setNotificationKey($this->notificationKey);
-                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id, $projectId);
                 }
                 $this->notificationService->setNotificationKey($this->notificationKey);
-                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $projectId);
+                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, $event->room_id, $event->id, $projectId);
+            }
         }
 
         if($request->roomChange){
@@ -825,7 +829,10 @@ class EventController extends Controller
         $event->save();
         $room = $event->room()->first();
         $project = $event->project()->first();
-        $projectManagers = $project->managerUsers()->get();
+        $projectManagers = [];
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         $notificationDescription = [
             1 => [
                 'type' => 'link',

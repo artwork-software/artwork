@@ -329,6 +329,20 @@
                                       rows="4"
                                       class="border-gray-300 border-2 resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
+                    <div class="my-6" v-for="comment in this.event.comments">
+                        <div class="flex justify-between">
+                            <div class="flex items-center">
+                                <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
+                                                :width="8"></NewUserToolTip>
+                                <div class="ml-2 text-secondary">
+                                    {{ comment.created_at }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 mr-14 subpixel-antialiased text-primary">
+                            {{ comment.comment }}
+                        </div>
+                    </div>
                     <div class="flex justify-center w-full py-4">
                         <button class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent(event)">
@@ -372,11 +386,13 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: 'EventWithoutRoomComponent',
 
     components: {
+        NewUserToolTip,
         Input,
         JetDialogModal,
         XIcon,
@@ -618,7 +634,7 @@ export default {
                 projectName: event.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: event.creatingProject,
+                creatingProject: event.creatingProject ? event.creatingProject : false,
             };
         },
     },

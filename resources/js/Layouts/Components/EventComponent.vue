@@ -541,6 +541,20 @@
                         </div>
                     </div>
                 </div>
+                <div class="my-6" v-for="comment in this.event.comments">
+                    <div class="flex justify-between">
+                        <div class="flex items-center">
+                            <NewUserToolTip :id="comment.id" :user="comment.user" :height="8"
+                                            :width="8"></NewUserToolTip>
+                            <div class="ml-2 text-secondary">
+                                {{ comment.created_at }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2 mr-14 subpixel-antialiased text-primary">
+                        {{ comment.comment }}
+                    </div>
+                </div>
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
                          v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id))">
@@ -621,11 +635,13 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
+import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 
 export default {
     name: 'EventComponent',
 
     components: {
+        NewUserToolTip,
         ChangeAllSubmitModal,
         ListboxLabel,
         SwitchLabel,
@@ -786,7 +802,6 @@ export default {
                 }
                 return;
             }
-
             const start = new Date(this.event.start);
             const end = new Date(this.event.end);
 

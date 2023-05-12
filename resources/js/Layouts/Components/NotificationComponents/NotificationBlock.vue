@@ -150,6 +150,7 @@ export default {
     computed: {},
     methods: {
         setOnRead() {
+            //TODO: HIER NOTIFICATION LÖSCHEN ANSTATT AUF READ SETZEN
             this.setOnReadForm.patch(route('notifications.setReadAt'));
         },
         openHistory() {

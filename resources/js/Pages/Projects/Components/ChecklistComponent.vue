@@ -3,7 +3,7 @@
         <div class="flex w-full items-center mb-8 ">
             <h2 class="text-xl leading-6 font-bold font-lexend text-primary"> Checklisten </h2>
             <div class="flex items-center"
-                 v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                 v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
                 <AddButton @click="openAddChecklistModal" text="Neue Checkliste" mode="page"/>
                 <div v-if="$page.props.can.show_hints" class="flex ml-2">
                     <SvgCollection svgName="arrowLeft" class="ml-2"/>
@@ -48,7 +48,7 @@
                                              alt=""/>
                                     </div>
                                     <Menu
-                                        v-if="$can('create and edit own project') || $role('artwork admin') || $can('management projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="$role('artwork admin') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         as="div" class="my-auto relative">
                                         <div class="flex">
                                             <MenuButton
@@ -107,7 +107,6 @@
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem
-                                                        v-if="this.$page.props.is_admin || this.$page.props.admin_checklistTemplates"
                                                         v-slot="{ active }">
                                                         <a @click="createTemplateFromChecklist(checklist)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -145,7 +144,7 @@
                             <div class="flex w-full mt-6"
                                  v-if="this.opened_checklists.includes(checklist.id)">
                                 <div class="flex"
-                                     v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)">
+                                     v-if="projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $role('artwork admin')">
                                     <div>
                                         <AddButton @click="openAddTaskModal(checklist)"
                                                    text="Neue Aufgabe" mode="page"/>
@@ -208,7 +207,7 @@
                                                     </span>
                                                     </span>
                                                     <Menu
-                                                        v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin  || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                                        v-if="projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id) || $role('artwork admin')"
                                                         as="div" class="my-auto relative"
                                                         v-show="showMenu === element.id">
                                                         <div class="flex">

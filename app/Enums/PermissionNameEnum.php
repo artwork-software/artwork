@@ -21,7 +21,7 @@ enum PermissionNameEnum : string
     // ROOM
     case EVENT_REQUEST = 'request room occupancy';
     case ROOM_REQUEST_READING_DETAILS = 'read details room request';
-    case ROOM_REQUEST_CONFIRM = 'confirm prioritize edit room requests';
+    //case ROOM_REQUEST_CONFIRM = 'confirm prioritize edit room requests';
     case ROOM_UPDATE = 'create, delete and update rooms';
 
     // Docs & Budget
@@ -35,7 +35,7 @@ enum PermissionNameEnum : string
     case CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
     case TEAM_UPDATE = 'teammanagement';
     case DEPARTMENT_UPDATE = 'update departments';
-    case ROOM_ADMIN = 'admin rooms';
+    //case ROOM_ADMIN = 'admin rooms';
     case SETTINGS_UPDATE = 'change tool settings';
     case PROJECT_SETTINGS_UPDATE = 'change project settings';
     case EVENT_SETTINGS_UPDATE = 'change event settings';
@@ -44,13 +44,13 @@ enum PermissionNameEnum : string
 
     // deleted
     //case PROJECT_DELETE = 'delete projects';
-    case EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
-    case PROJECT_ADMIN = 'admin projects';
+    //case EVENT_TYPE_SETTINGS_ADMIN = 'admin eventTypeSettings';
+    //case PROJECT_ADMIN = 'admin projects';
     case CHECKLIST_UPDATE = 'update checklists';
 
-    case CHECKLIST_VIEW = 'view checklists';
-    case PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
-    case CHECKLIST_DELETE = 'delete checklists';
-    case GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
+    //case CHECKLIST_VIEW = 'view checklists';
+    //case PROJECT_SETTINGS_ADMIN = 'admin projectSettings';
+    //case CHECKLIST_DELETE = 'delete checklists';
+    //case GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
     case PROJECT_UPDATE = 'create and edit projects';
 }

@@ -6,7 +6,7 @@
                     <h2 class="headline1">{{ room.name }}</h2>
                     <Menu as="div" class="my-auto relative">
                         <div class="flex"
-                             v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+                             v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
                             <MenuButton
                                 class="flex ml-6">
                                 <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
@@ -105,7 +105,7 @@
 
                 <div class="flex flex-wrap">
                     <span class="mt-12 headline2 w-full"
-                          v-if="requestsToShow?.length !== 0 && (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin)">
+                          v-if="requestsToShow?.length !== 0 && ($role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin)">
                     Offene Belegungsanfragen
                     </span>
                     <div v-for="eventRequest in requestsToShow" class="flex flex-wrap w-full items-center">
@@ -195,7 +195,7 @@
             </div>
         </div>
 
-        <div v-if="this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin">
+        <div v-if="$role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin">
             <div class="flex mt-6 items-center mb-2 ml-14">
                 <h3 class="headline2"> Raumbelegung </h3>
             </div>

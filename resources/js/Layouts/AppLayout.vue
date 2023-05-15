@@ -16,16 +16,18 @@
                              :class="[isCurrent(item.route) ? ' text-secondaryHover' : 'xxsLight group-hover:text-secondaryHover', 'mb-1']"
                              aria-hidden="true"/>
                     </a>
-                    <Menu as="div" class="my-auto" v-if="this.$page.props.can.edit_settings ||
-                this.$page.props.can.add_user ||
-                this.$page.props.can.edit_teams ||
-                this.$page.props.can.edit_project_settings ||
-                this.$page.props.can.edit_event_settings ||
-                this.$page.props.can.edit_checklist_settings ||
-                this.$page.props.can.global_notifiaction ||
-                this.$page.props.can.read_room_request_details ||
-                this.$page.props.can.edit_rooms ||
-                this.$page.props.is_admin">
+                    <Menu as="div" class="my-auto" v-if="
+                        $canAny([
+                            'usermanagement',
+                            'admin checklistTemplates',
+                            'teammanagement',
+                            'update departments',
+                            'change tool settings',
+                            'change project settings',
+                            'change event settings',
+                            'change system notification'
+                        ]) || hasAdminRole()
+                        ">
                         <div class="flex">
                             <MenuButton
                             >
@@ -95,7 +97,7 @@
                         <div class="ml-4 flex items-center md:ml-6">
                             <div class="flex items-center">
 
-                                <Link v-if="this.$page.props.is_admin || this.$page.props.is_room_admin"
+                                <Link v-if="hasAdminRole()"
                                       class="inset-y-0 mr-5"
                                       :href="getTrashRoute()">
                                     <TrashIcon class="h-5 w-5" aria-hidden="true"/>
@@ -274,56 +276,56 @@ export default {
                     route: ['/tool/settings']
                 },
                 {
-                    has_permission: this.$page.props.can.add_user,
+                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
                     name: 'Nutzer*innen',
                     href: route('users'),
                     route: ['/users']
                 },
                 {
                     name: 'Teams',
-                    has_permission: this.$page.props.can.edit_teams,
+                    has_permission: this.$canAny(['teammanagement', 'update departments']) || this.hasAdminRole(),
                     href: route('departments'),
                     route: ['/departments']
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$page.props.can.edit_rooms,
+                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$page.props.can.read_room_request_details,
+                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
                 {
                     name: 'Projekte',
-                    has_permission: this.$page.props.can.edit_project_settings,
+                    has_permission: this.$can('change project settings') || this.hasAdminRole(),
                     href: route('project.settings'),
                     route: ['/settings/projects']
                 },
                 {
                     name: 'Termine',
-                    has_permission: this.$page.props.can.edit_event_settings,
+                    has_permission: this.$can('change event settings') || this.hasAdminRole(),
                     href: route('event_types.management'),
                     route: ['/event_types']
                 },
                 {
                     name: 'Checklisten',
-                    has_permission: this.$page.props.can.edit_checklist_settings,
+                    has_permission: this.$can('admin checklistTemplates') || this.hasAdminRole(),
                     href: route('checklist_templates.management'),
                     route: ['/checklist_templates']
                 },
                 {
                     name: 'Verträge',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: !!this.hasAdminRole(),
                     href: route('contracts.view.index'),
                     route: ['/contracts/view']
                 },
                 {
                     name: 'Budget Vorlagen',
-                    has_permission: this.$page.props.is_admin,
+                    has_permission: this.hasAdminRole(),
                     href: route('templates.view.index'),
                     route: ['/templates/index']
                 },
@@ -331,16 +333,13 @@ export default {
         }
     },
     methods: {
-        isAdmin,
         checkPermissionGlobalMessageAndToolSettings() {
-            if (this.$page.props.can.edit_settings || this.$page.props.can.global_notifiaction) {
-                return true;
-            }
-            return false
+            return this.$canAny(['change tool settings', 'change system notification'] || this.hasAdminRole());
+
         },
         checkPermission(item) {
             if (item.has_permission === 'is_money_source_admin') {
-                if (this.$page.props.is_money_source_admin ||this.$page.props.myMoneySources.length > 0 || this.$page.props.can.money_source_edit_add) {
+                if (this.$page.props.myMoneySources.length > 0 || this.$canAny(['can edit and delete money sources', 'view edit add money_sources'])) {
                     return true;
                 }
             }
@@ -399,7 +398,7 @@ export default {
     },
     data() {
         return {
-            showSystemSettings: this.$page.props.is_admin,
+            showSystemSettings: false,
             showUserMenu: false,
             pushNotifications: [],
             showPermissions: false

@@ -15,6 +15,7 @@ export default {
             return this.cache[permissionName];
         },
         $role(roleName) {
+            if(!roleName){ return false;}
             if (!this.cache.hasOwnProperty(roleName)) {
                 this.cache[roleName] = this.roles.has(roleName);
             }
@@ -37,7 +38,7 @@ export default {
             return false;
         },
         hasAdminRole(){
-            this.$role('artwork admin');
+            return this.$role('artwork admin');
         }
     }
 };

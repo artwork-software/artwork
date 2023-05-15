@@ -48,7 +48,7 @@
                                              alt=""/>
                                     </div>
                                     <Menu
-                                        v-if="this.$page.props.can.create_and_edit_projects || this.$page.props.is_admin || this.$page.props.can.admin_projects || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
+                                        v-if="$can('create and edit own project') || $role('artwork admin') || $can('management projects') || projectCanWriteIds.includes(this.$page.props.user.id) || projectManagerIds.includes(this.$page.props.user.id)"
                                         as="div" class="my-auto relative">
                                         <div class="flex">
                                             <MenuButton

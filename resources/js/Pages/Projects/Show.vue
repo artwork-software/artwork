@@ -54,7 +54,7 @@
                         </span>
                     </h2>
                     <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="this.$page.props.can.edit_projects || this.$page.props.is_admin || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
+                          v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex ml-6">

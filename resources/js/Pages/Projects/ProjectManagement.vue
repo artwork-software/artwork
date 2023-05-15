@@ -185,7 +185,7 @@
                                         </div>
                                     </div>
                                     <div
-                                        v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects"
+                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')"
                                         class="text-secondary flex flex-nowrap items-center ">
                                         <div v-if="project.project_history.length" class="flex items-center">
                                         <span class=" xxsLight">

@@ -218,7 +218,7 @@
                         <div class="mt-8">
                             <div class="flex">
                                 <AddButton @click="editUser"
-                                           class=" inline-flex items-center px-12 py-3 border bg-primary hover:bg-primaryHover focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                           class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
                                            text="Einstellungen ändern" mode="modal"/>
                             </div>
                         </div>

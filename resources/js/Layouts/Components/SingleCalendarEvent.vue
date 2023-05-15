@@ -1,7 +1,8 @@
 <template>
     <div :class="[event.class, textStyle]" :style="{ width: width + 'px', height: totalHeight * zoomFactor + 'px' }"
          class="px-1 py-0.5 rounded-lg relative group">
-        <div v-if="zoomFactor > 0.4" class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
+        <div v-if="zoomFactor > 0.4"
+             class="absolute w-full h-full rounded-lg group-hover:block flex justify-center align-middle items-center"
              :class="event.clicked ? 'block bg-green-200/50' : 'hidden bg-indigo-500/50'">
             <div class="flex justify-center items-center h-full gap-2" v-if="!multiEdit">
                 <button type="button" @click="openEditEventModal(event)"
@@ -12,7 +13,7 @@
                               d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                     </svg>
                 </button>
-                <button @click="openAddSubEventModal" v-show="event.eventTypeId === 1" type="button"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openAddSubEventModal" v-show="event.eventTypeId === 1" type="button"
                         class="rounded-full bg-indigo-600 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-6 h-6">
@@ -20,14 +21,14 @@
                               d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
                 </button>
-                <button type="button" @click="showDeclineEventModal = true"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button" @click="showDeclineEventModal = true"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
-                <button @click="openConfirmModal(event.id, 'main')" type="button"
+                <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openConfirmModal(event.id, 'main')" type="button"
                         class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                          stroke="currentColor" class="w-4 h-4">
@@ -39,11 +40,14 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked" id="candidates" aria-describedby="candidates-description" name="candidates" type="checkbox" class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600" />
+                        <input v-model="event.clicked" id="candidates" aria-describedby="candidates-description"
+                               name="candidates" type="checkbox"
+                               class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
                     </div>
                 </div>
             </div>
         </div>
+
         <div class="px-1 py-0.5 ">
             <div :style="textStyle" :class="[zoomFactor === 1 ? 'eventHeader' : '', 'font-bold']"
                  class="flex justify-between ">
@@ -52,7 +56,7 @@
                         {{ event.eventTypeAbbreviation }}:
                     </div>
                     <div :style="{ width: width - (64 * zoomFactor) + 'px'}" class=" truncate">
-                    {{ event.title }}
+                        {{ event.title }}
                     </div>
                     <div v-if="$page.props.user.calendar_settings.project_status">
                         <div v-if="event.project?.state?.color"
@@ -63,7 +67,7 @@
                 </div>
                 <div v-else>
                     <div :style="{ width: width - (55 * zoomFactor) + 'px'}" class=" truncate">
-                        {{event.eventTypeName}}
+                        {{ event.eventTypeName }}
                     </div>
                 </div>
                 <!-- Icon -->
@@ -103,32 +107,36 @@
                     </svg>
                 </div>
             </div>
+            {{ room }}
             <div class="flex">
-            <!-- Time -->
-            <div class="flex" :style="textStyle"
-                 :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
-                <span v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
-                      class="items-center">{{
+                <!-- Time -->
+                <div class="flex" :style="textStyle"
+                     :class="[zoomFactor === 1 ? 'eventTime' : '', 'font-medium subpixel-antialiased']">
+                <span
+                    v-if="new Date(event.start).toDateString() === new Date(event.end).toDateString() && !project && !atAGlance"
+                    class="items-center">{{
                         new Date(event.start).formatTime("HH:mm")
                     }} - {{ new Date(event.end).formatTime("HH:mm") }}
                 </span>
-                <span class="flex w-full" v-else>
+                    <span class="flex w-full" v-else>
                     <span class="items-center">
                         <span class="text-error">
-                        {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : ''}}
+                        {{ new Date(event.start).toDateString() !== new Date(event.end).toDateString() ? '!' : '' }}
                         </span>
                         {{
                             new Date(event.start).format("DD.MM. HH:mm")
                         }} - {{ new Date(event.end).format("DD.MM. HH:mm") }}
                     </span>
                 </span>
-            </div>
+                </div>
                 <div v-if="event.option_string && $page.props.user.calendar_settings.options" class="flex items-center">
-                    <div v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()" class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
-                        , {{event.option_string}}
+                    <div
+                        v-if="!atAGlance && new Date(event.start).toDateString() === new Date(event.end).toDateString()"
+                        class="flex eventTime font-medium subpixel-antialiased" :style="textStyle">
+                        , {{ event.option_string }}
                     </div>
                     <div class="flex eventTime font-medium subpixel-antialiased ml-0.5" v-else>
-                        ({{event.option_string.charAt(7)}})
+                        ({{ event.option_string.charAt(7) }})
                     </div>
                 </div>
 
@@ -158,7 +166,9 @@
                      class="mt-1 ml-5 flex flex-wrap">
                     <div class="flex flex-wrap flex-row -ml-1.5"
                          v-for="user in event.projectLeaders?.slice(0,3)">
-                        <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 5 * zoomFactor, 'w-' + 5 * zoomFactor]">
+                        <img :src="user.profile_photo_url" alt=""
+                             class="mx-auto shrink-0 flex object-cover rounded-full"
+                             :class="['h-' + 5 * zoomFactor, 'w-' + 5 * zoomFactor]">
                     </div>
                     <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                         <Menu as="div" class="relative">
@@ -213,14 +223,14 @@
                                       d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"/>
                             </svg>
                         </button>
-                        <button type="button"
+                        <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                             </svg>
                         </button>
-                        <button @click="openConfirmModal(subEvent.id, 'sub')" type="button"
+                        <button v-if="isRoomAdmin || isCreator || this.hasAdminRole()" @click="openConfirmModal(subEvent.id, 'sub')" type="button"
                                 class="rounded-full bg-red-600 p-1 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                  stroke="currentColor" class="w-4 h-4">
@@ -348,7 +358,7 @@ export default {
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip,
         Link
     },
-    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit','atAGlance'],
+    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit', 'atAGlance', 'rooms'],
     emits: ['openEditEventModal'],
     computed: {
         textStyle() {
@@ -370,6 +380,16 @@ export default {
             if (this.$page.props.user.calendar_settings.work_shifts) height += 18;
             return height;
         },
+        isRoomAdmin() {
+            return this.rooms?.find(room => room.id === this.event.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
+        },
+        isCreator(){
+            return this.event?.created_by.id === this.$page.props.user.id
+        },
+        roomCanBeBookedByEveryone(){
+            return this.rooms?.find(room => room.id === this.event.roomId).everyone_can_book
+        }
+
     },
     data() {
         return {
@@ -382,7 +402,6 @@ export default {
             deleteDescription: '',
             createEventComponentIsVisible: false,
             selectedEvent: null,
-            rooms: [],
             wantedSplit: null,
             subEventToEdit: null
         }

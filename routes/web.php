@@ -292,7 +292,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     Route::put('/event/requests/{event}',[EventController::class, 'acceptEvent'])->name('events.accept');
     Route::put('/event/requests/{event}',[EventController::class, 'declineEvent'])->name('events.decline');
-
+    Route::post('/event/answer/{event}', [EventController::class, 'answerOnEvent'])->name('event.answer');
     //Trash
     Route::delete('/events/{id}/force', [EventController::class, 'forceDelete'])->name('events.force');
     Route::patch('/events/{id}/restore', [EventController::class, 'restore'])->name('events.restore');
@@ -314,6 +314,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::patch('/user/settings/group', [NotificationController::class, 'toggleGroup'])->name('notifications.group');
     Route::patch('/user/settings/{setting}', [NotificationController::class, 'updateSetting'])->name('notifications.settings');
     Route::delete('/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.delete');
+    Route::post('/notifications/{notificationKey}', [EventController::class, 'deleteOldNotifications'])->name('event.notification.delete');
 
     //globalNotification
     Route::get('/globalNotification', [GlobalNotificationController::class, 'show'])->name('global_notification.show');

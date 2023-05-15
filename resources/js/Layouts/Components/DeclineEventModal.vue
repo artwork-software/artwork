@@ -16,14 +16,14 @@
                             <div class="flex items-center w-full">
                                 <div class="flex w-1/2">
                                     <EventTypeIconCollection :height="26" :width="26"
-                                                             :iconName="eventTypes[requestToDecline.eventTypeId]?.svg_name"/>
+                                                             :iconName="eventTypes[requestToDecline?.eventTypeId]?.svg_name"/>
                                     <div
                                         class="whitespace-nowrap ml-2 text-lg flex leading-6 font-bold font-lexend text-gray-900">
-                                        {{ requestToDecline.eventTypeName }}
-                                        <span class="mx-2" v-if="requestToDecline.eventName">
+                                        {{ requestToDecline?.eventTypeName }}
+                                        <span class="mx-2" v-if="requestToDecline?.eventName">
                                          -
                                         </span>
-                                        {{ requestToDecline.eventName }}
+                                        {{ requestToDecline?.eventName }}
                                         <AdjustmentsIcon v-if="requestToDecline.occupancy_option"
                                                          class="h-5 w-5 ml-2 my-auto"/>
                                         <img src="/Svgs/IconSvgs/icon_public.svg" v-if="requestToDecline.audience"
@@ -61,7 +61,7 @@
                             </div>
                         </div>
                         <div class="mb-3 xsDark">
-                            {{ requestToDecline.roomName }} - {{ requestToDecline.start }} {{ requestToDecline.end }}
+                            {{ requestToDecline.roomName }} - {{ dayjs(requestToDecline.start).format('DD.MM.YYYY HH:mm') }} - {{ dayjs(requestToDecline.end).format('DD.MM.YYYY HH:mm') }}
                         </div>
                         <div class="mb-3 xsDark">
                             Termininfo {{ requestToDecline.description }}
@@ -101,11 +101,17 @@ import {AdjustmentsIcon} from "@heroicons/vue/outline";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import dayjs from "dayjs";
 
 export default {
     name: "DeclineEventModal",
+    computed: {
+        dayjs() {
+            return dayjs
+        }
+    },
     components: {NewUserToolTip, EventTypeIconCollection, AdjustmentsIcon, Button, UserTooltip, JetDialogModal, XIcon},
-    emits: ['closed'],
+    emits: ['closed', 'declined'],
     props: ['requestToDecline', 'eventTypes'],
     data(){
         return {
@@ -120,10 +126,12 @@ export default {
             this.$emit('closed', bool)
         },
         declineRequest(){
+
             this.declineEvent.put(route('events.decline', this.requestToDecline.id), {
                 preserveScroll: true,
                 onSuccess: () => {
                     this.closeDeclineRequestModal();
+                    this.$emit('declined', true);
                 }
             })
         }

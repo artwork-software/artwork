@@ -1,17 +1,14 @@
 <template>
     <div class="flex w-full mb-5">
-        <button class="bg-buttonBlue flex relative w-6"
-                @click="showSection = !showSection">
-            <ChevronUpIcon v-if="showSection"
-                           class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
-            <ChevronDownIcon v-else
-                             class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
+        <button class="bg-buttonBlue flex relative w-6" @click="showSection = !showSection">
+            <ChevronUpIcon v-if="showSection" class="h-6 w-6 text-white my-auto"></ChevronUpIcon>
+            <ChevronDownIcon v-else class="h-6 w-6 text-white my-auto"></ChevronDownIcon>
         </button>
-        <div class="flex flex-wrap w-11/12 border border-2 border-gray-300">
-            <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full ml-12">
+        <div class="border border-2 border-gray-300 px-10 w-full">
+            <div :class="showSection ? 'mt-10 mb-5': 'my-10'" class="flex justify-between w-full">
                 <div class="flex headline2 ">
                     {{ name }}
-                    <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? 'px-2' : ''"
+                    <div v-if="notifications && !showSection" :class="notifications.length <= 9 ? '' : ''"
                          class="ml-4 flex font-semibold items-center p-1 border-tagText border text-tagText bg-backgroundBlue xxsLight rounded-lg">
                         {{ notifications.length }}
                     </div>
@@ -24,146 +21,20 @@
                 </div>
             </div>
             <div v-if="showSection" @mouseover="notification.hovered = true" @mouseleave="notification.hovered = false"
-                 :class="index !== 0 && showSection ? 'border-t-2' : ''"
-                 class="flex flex-wrap justify-between mx-12 w-full py-6"
+                 :class="index !== 0 && showSection ? 'border-t-2 mb-2 mt-3' : ''"
+                 class=""
                  v-for="(notification,index) in notifications">
-                <div class="flex flex-wrap w-full justify-between">
-                    <div class="flex">
-                        <!-- Notification Icon -->
-                        <TeamIconCollection
-                            v-if="notification.data.team" class="h-12 w-12 mr-5"
-                            :iconName=notification.data.team.svg_name
-                            alt="TeamIcon"
-                        />
-                        <img alt="Notification" v-else-if="!isErrorType(notification.type,notification)"
-                             class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
-                        <img alt="Notification" v-else class="h-12 w-12 mr-5"
-                             src="/Svgs/IconSvgs/icon_notification_red.svg"/>
-                        <!-- Div with Content -->
-                        <div class="flex-col flex my-auto w-full">
-                            <!-- 1st Row of Notification -->
-                            <div class="flex w-full">
-                                <div class="sDark" v-if="isErrorType(notification.type,notification) && notification.data.title.indexOf('Neue Raumanfrage') !== -1">
-                                    Erinnerung: {{ notification.data.title }}
-                                </div>
-                                <div class="sDark" v-else>
-                                    {{ notification.data.title }}
-                                </div>
-                                <div v-if="notification.data.title === 'Termin geändert'"
-                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue" @click="openEventHistoryModal(notification.data.eventHistory)">
-                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                    Verlauf ansehen
-                                </div>
-                                <div class="ml-6 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
-                                    {{ this.formatDate(notification.created_at) }}
-                                    von
-                                    <NotificationUserIcon
-                                        :user="notification.data.created_by"
-                                    />
-                                </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.data.title === 'Terminkonflikt'">
-                                    Konflikttermin belegt:
-                                    {{ this.formatDate(notification.data.conflict.event.created_at) }} von
-                                    <NotificationUserIcon
-                                        v-if="notification.data.conflict.created_by"
-                                        :user="notification.data.conflict.created_by"
-                                    />
-
-                                </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'">
-                                    Termin belegt: {{ this.formatDate(notification.data.conflict.created_at) }} von
-                                    <NotificationUserIcon
-                                        v-if="notification.data.created_by"
-                                        :user="notification.data.created_by"
-                                    />
-
-                                </div>
-
-                            </div>
-                            <!-- 2nd Row of Notification-->
-                            <NotificationEventInfoRow
-                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.type.indexOf('RoomRequestNotification') !== -1 || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
-                                :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
-                                :projects="projects"
-                                :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
-                                :rooms="this.rooms"
-                                :eventTypes="this.eventTypes"
-                            />
-
-                            <NotificationBudgetRequest
-                                v-if="notification.type === 'App\\Notifications\\BudgetVerified'"
-                                :budget="notification.data"
-                            />
-
-                            <NotificationPublicChangesInfo
-                                v-if="notification.data.type === 'NOTIFICATION_PUBLIC_RELEVANT'"
-                                :notification="notification.data"
-                            />
-
-                            <div class="flex">
-                                <div class="mt-1.5 flex xxsLight my-auto"
-                                     v-if="notification.type === 'App\\Notifications\\DeadlineNotification'">
-                                    {{ this.formatDate(notification.data.task.deadline) }}
-                                </div>
-                                <Link :href="route('tasks.own')"
-                                      v-if="notification.data.title.indexOf('neue Aufgaben') !== -1 || notification.type === 'App\\Notifications\\DeadlineNotification'"
-                                      :class="notification.type === 'App\\Notifications\\DeadlineNotification' ? 'ml-4' : ''"
-                                      class="xxsLight mt-1.5 cursor-pointer items-center flex text-buttonBlue">
-                                    in Aufgaben ansehen
-                                </Link>
-                            </div>
-                            <div class="mt-1.5 flex xxsLight my-auto"
-                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED' || notification.data.type === 'NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED'" >
-                                <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
-                                     class="xxsLight cursor-pointer items-center flex text-buttonBlue">
-                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                    Verlauf ansehen
-                                </div>
-                                <div class="flex" v-else>
-                                    {{ this.formatDate(notification.created_at) }}
-                                    von
-                                    <NotificationUserIcon v-if="notification.data.created_by"
-                                                          :user="notification.data.created_by"></NotificationUserIcon>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        v-if="notification.type.indexOf('RoomRequestNotification') !== -1"
-                        class="flex w-full ml-16 mt-1">
-                        <div class="flex" v-if="notification.data.title.indexOf('Neue Raumanfrage') !== -1">
-                            <AddButton
-                                @click="openAnswerEventRequestModal(notification, notification.data.event,'accept')"
-                                class="flex px-12"
-                                text="Anfrage bestätigen" mode="modal"/>
-                            <AddButton
-                                @click="openAnswerEventRequestModal(notification, notification.data.event,'decline')"
-                                type="secondary"
-                                text="Anfrage ablehnen"></AddButton>
-                            <AddButton
-                                @click="openAnswerRequestWithRoomChangeModal(notification, notification.data.event, notification.data.created_by)"
-                                type="secondary"
-                                text="Raum ändern"></AddButton>
-                        </div>
-                        <div class="flex" v-else-if="notification.data.title.indexOf('Raumanfrage mit Raumänderung bestätigt') === -1">
-                            <AddButton @click="openEventWithoutRoomComponent(notification.data.event, notification)"
-                                       class="flex px-12"
-                                       text="Anfrage ändern" mode="modal"/>
-                            <AddButton @click="openDeleteEventModal(notification.data.event, notification)" type="secondary"
-                                       text="Termin löschen"></AddButton>
-                        </div>
-                    </div>
-
-                    <!-- Archive Button -->
-                    <img v-else @click="setOnRead(notification.id)" v-show="notification.hovered"
-                         v-if="notification.data?.changeType !== 'BUDGET_VERIFICATION_REQUEST'"
-                         src="/Svgs/IconSvgs/icon_archive_white.svg"
-                         class="h-6 w-6 p-1 ml-1 flex cursor-pointer bg-buttonBlue rounded-full"
-                         aria-hidden="true"/>
-                </div>
+                <NotificationBlock
+                    :notification="notification"
+                    :event-types="eventTypes"
+                    :history-objects="historyObjects"
+                    :event="event"
+                    :rooms="rooms"
+                    :room-collisions="roomCollisions"
+                    :project="project"
+                    :wanted-split="wantedSplit"
+                    :isArchive="false"
+                />
             </div>
             <div @click="showReadSection = true" v-if="showSection && !showReadSection"
                  class="ml-12 my-6 linkText cursor-pointer">
@@ -182,90 +53,19 @@
             </div>
             <div v-if="showReadSection" @mouseover="notification.hovered = true"
                  @mouseleave="notification.hovered = false" :class="index !== 0 && showSection ? 'border-t-2' : ''"
-                 class="flex flex-wrap justify-between mx-12 w-full py-6"
+                 class=" w-full"
                  v-for="(notification,index) in readNotifications">
-                <div class="flex flex-wrap">
-                    <div class="flex">
-                        <!-- Notification Icon -->
-                        <TeamIconCollection v-if="notification.data.team" class="h-12 w-12 mr-5"
-                                            :iconName=notification.data.team.svg_name
-                                            alt="TeamIcon"/>
-                        <img alt="Notification" v-else-if="!isErrorType(notification.type,notification)"
-                             class="h-12 w-12 mr-5" src="/Svgs/IconSvgs/icon_notification_green.svg"/>
-                        <img alt="Notification" v-else class="h-12 w-12 mr-5"
-                             src="/Svgs/IconSvgs/icon_notification_red.svg"/>
-                        <!-- Div with Content -->
-                        <div class="flex-col flex my-auto w-full">
-                            <!-- 1st Row of Notification -->
-                            <div class="flex w-full">
-                                <div class="sDark">
-                                    {{ notification.data.title }}
-                                </div>
-                                <div v-if="notification.data.title === 'Termin geändert'"
-                                     class="xxsLight ml-4 cursor-pointer items-center flex text-buttonBlue" @click="openEventHistoryModal(notification.data.eventHistory)">
-                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                    Verlauf ansehen
-                                </div>
-                                <div class="ml-6 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.type === 'App\\Notifications\\RoomRequestNotification' || notification.data.title === 'Termin abgesagt'">
-                                    {{ this.formatDate(notification.created_at) }}
-                                    von
-                                    <NotificationUserIcon
-                                        :user="notification.data.created_by"></NotificationUserIcon>
-                                </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.data.title === 'Terminkonflikt'">
-                                    Konflikttermin belegt:
-                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
-                                    <NotificationUserIcon v-if="notification.data.conflict.created_by"
-                                                          :user="notification.data.conflict.created_by"></NotificationUserIcon>
-                                </div>
-                                <div class="ml-4 mt-1 flex xxsLight my-auto"
-                                     v-if="notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'">
-                                    Termin belegt:
-                                    {{ this.formatDate(notification.data.conflict.created_at) }} von
-                                    <NotificationUserIcon v-if="notification.data.created_by"
-                                                          :user="notification.data.created_by"></NotificationUserIcon>
-                                </div>
-
-                            </div>
-                            <!-- 2nd Row of Notification-->
-                            <NotificationEventInfoRow
-                                v-if="notification.type === 'App\\Notifications\\EventNotification' || notification.type.indexOf('RoomRequestNotification') !== -1 || notification.data.type === 'NOTIFICATION_CONFLICT'|| notification.data.type === 'NOTIFICATION_LOUD_ADJOINING_EVENT'"
-                                :declinedRoomId="notification.data.accepted ? null : notification.data.event?.declined_room_id"
-                                :projects="projects"
-                                :event="notification.data.conflict?.event ? notification.data.conflict.event : notification.data.conflict ? notification.data.conflict : notification.data.event"
-                                :rooms="this.rooms"
-                                :eventTypes="this.eventTypes"></NotificationEventInfoRow>
-                            <div class="flex">
-                                <div class="mt-1.5 flex xxsLight my-auto"
-                                     v-if="notification.type === 'App\\Notifications\\DeadlineNotification'">
-                                    {{ this.formatDate(notification.data.task.deadline) }}
-                                </div>
-                                <Link :href="route('tasks.own')"
-                                      v-if="notification.data.title.indexOf('neue Aufgaben') !== -1 || notification.type === 'App\\Notifications\\DeadlineNotification'"
-                                      :class="notification.type === 'App\\Notifications\\DeadlineNotification' ? 'ml-4' : ''"
-                                      class="xxsLight mt-1.5 cursor-pointer items-center flex text-buttonBlue">
-                                    in Aufgaben ansehen
-                                </Link>
-                            </div>
-                            <div class="mt-1.5 flex xxsLight my-auto"
-                                 v-if="notification.data.type === 'NOTIFICATION_TEAM' || notification.data.type === 'NOTIFICATION_PROJECT' || notification.data.type === 'NOTIFICATION_ROOM_CHANGED' || notification.data.type === 'NOTIFICATION_BUDGET_MONEY_SOURCE_AUTH_CHANGED'">
-                                <div v-if="notification.data.type === 'NOTIFICATION_ROOM_CHANGED'" @click="openRoomHistoryModal(notification.data.history)"
-                                     class="xxsLight cursor-pointer items-center flex text-buttonBlue">
-                                    <ChevronRightIcon class="h-5 w-4 -mr-0.5"/>
-                                    Verlauf ansehen
-                                </div>
-                                <div class="flex" v-else>
-                                    {{ this.formatDate(notification.created_at) }}
-                                    von
-                                    <NotificationUserIcon v-if="notification.data.created_by"
-                                                          :user="notification.data.created_by"></NotificationUserIcon>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <NotificationBlock
+                    :notification="notification"
+                    :event-types="eventTypes"
+                    :history-objects="historyObjects"
+                    :event="event"
+                    :rooms="rooms"
+                    :room-collisions="roomCollisions"
+                    :project="project"
+                    :wanted-split="wantedSplit"
+                    :isArchive="true"
+                />
             </div>
         </div>
     </div>
@@ -336,11 +136,13 @@ import RoomHistoryComponent from "@/Layouts/Components/RoomHistoryComponent";
 import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
+import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
 
 export default  {
     name: 'NotificationSectionComponent',
 
     components: {
+        NotificationBlock,
         NotificationPublicChangesInfo,
         NotificationBudgetRequest,
         TeamIconCollection,
@@ -387,7 +189,7 @@ export default  {
             })
         }
     },
-    props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name'],
+    props: ['eventTypes', 'rooms', 'notifications', 'readNotifications', 'projects', 'name', 'historyObjects', 'event', 'project', 'wantedSplit', 'roomCollisions'],
     methods: {
         formatDate(isoDate) {
             if(isoDate?.split('T').length > 1){
@@ -413,7 +215,6 @@ export default  {
             const threeDaysInMillis = 1000 * 60 * 60 * 24 * 3;
             const threeDaysFromNow = Date.now() + threeDaysInMillis;
             return dateTemp < threeDaysFromNow;
-
         },
         openRoomHistoryModal(history){
             this.wantedHistory = history;

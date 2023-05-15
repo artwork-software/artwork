@@ -9,11 +9,12 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use stdClass;
 
 class EventNotification extends Notification implements ShouldBroadcast
 {
     use Queueable;
-    protected array $notificationData = [];
+    protected ?stdClass $notificationData = null;
     protected array $broadcastMessage = [];
 
     public function __construct($notificationData, $broadcastMessage = [])
@@ -40,7 +41,7 @@ class EventNotification extends Notification implements ShouldBroadcast
         $channels = ['database'];
 
         $typeSettings = $user->notificationSettings()
-            ->where('type', $this->notificationData['type'])
+            ->where('type', $this->notificationData->type)
             ->first();
 
         if($typeSettings?->enabled_email && $typeSettings?->frequency === NotificationFrequency::IMMEDIATELY) {
@@ -64,7 +65,7 @@ class EventNotification extends Notification implements ShouldBroadcast
     public function toMail($notifiable)
     {
         return (new MailMessage)
-            ->subject($this->notificationData['title'])
+            ->subject($this->notificationData->title)
             ->markdown('emails.simple-mail', ['notification' => $this->notificationData]);
     }
 
@@ -72,7 +73,7 @@ class EventNotification extends Notification implements ShouldBroadcast
      * Get the array representation of the notification.
      *
      * @param  mixed  $notifiable
-     * @return array
+     * @return stdClass
      */
     public function toArray($notifiable)
     {

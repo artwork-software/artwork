@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\BudgetTypesEnum;
+use App\Enums\NotificationConstEnum;
 use App\Http\Requests\FileUpload;
 use App\Models\Comment;
 use App\Models\Project;
 use App\Models\ProjectFile;
+use App\Models\User;
 use App\Support\Services\NewHistoryService;
+use App\Support\Services\NotificationService;
 use Barryvdh\Debugbar\Facades\Debugbar;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\RedirectResponse;
@@ -22,10 +26,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class ProjectFileController extends Controller
 {
     protected ?NewHistoryService $history = null;
+    protected ?NotificationService $notificationService = null;
 
     public function __construct()
     {
         $this->history = new NewHistoryService('App\Models\Project');
+        $this->notificationService = new NotificationService();
     }
 
     /**
@@ -53,7 +59,9 @@ class ProjectFileController extends Controller
 
         $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
 
-        $projectFile->accessing_users()->save(Auth::user());
+        if(!in_array(Auth::id(), $request->accessibleUsers)) {
+            $projectFile->accessing_users()->save(Auth::user());
+        }
 
         if($request->comment){
             $comment = Comment::create([
@@ -68,6 +76,30 @@ class ProjectFileController extends Controller
         $this->history->createHistory($project->id, 'Datei ' . $original_name . ' hinzugefügt', 'public_changes');
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
+
+        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $notificationTitle = 'Ein Dokument wurde für dich freigegeben';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $original_name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project->name,
+                'href' => route('projects.show', $project->id),
+            ]
+        ];
+
+        foreach ($projectFileUsers as $projectFileUser){
+            $this->notificationService->createNotification($projectFileUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
         return Redirect::back();
     }
 
@@ -94,6 +126,7 @@ class ProjectFileController extends Controller
      */
     public function update(Request $request, ProjectFile $projectFile): RedirectResponse
     {
+        $original_name = '';
 
         if ($request->get('accessibleUsers')) {
             $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
@@ -122,6 +155,30 @@ class ProjectFileController extends Controller
 
         $projectFile->save();
 
+        $project = $projectFile->project()->first();
+        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $notificationTitle = 'Ein Dokument wurde geändert';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $original_name === '' ? $projectFile->name : $original_name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project ? $project->name : '',
+                'href' => $project ? route('projects.show', $project->id) : null,
+            ]
+        ];
+
+        foreach ($projectFileUsers as $projectFileUser){
+            $this->notificationService->createNotification($projectFileUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'green', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
         return Redirect::back();
 
 
@@ -141,6 +198,30 @@ class ProjectFileController extends Controller
         $this->history->createHistory($project->id, 'Datei ' . $projectFile->name . ' gelöscht', 'public_changes');
         $projectController = new ProjectController();
         $projectController->setPublicChangesNotification($project->id);
+
+        $projectFileUsers =  $projectFile->accessing_users()->get();
+        $notificationTitle = 'Ein Dokument wurde gelöscht';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'danger',
+            'message' => $notificationTitle
+        ];
+        $notificationDescription = [
+            1 => [
+                'type' => 'string',
+                'title' => $projectFile->name,
+                'href' => null
+            ],
+            2 => [
+                'type' => 'link',
+                'title' =>  $project ? $project->name : '',
+                'href' => $project ? route('projects.show', $project->id) : null,
+            ]
+        ];
+
+        foreach ($projectFileUsers as $projectFileUser){
+            $this->notificationService->createNotification($projectFileUser, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_CONTRACTS_DOCUMENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, null, $project->id, null, null, null);
+        }
         $projectFile->delete();
         return Redirect::back();
     }

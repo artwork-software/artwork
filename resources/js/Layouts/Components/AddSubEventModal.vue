@@ -131,7 +131,6 @@
                             <TagComponent displayed-text="es wird laut" hideX="true" />
                         </div>
                     </div>
-
                     <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1">
                         <div class="sm:w-1/2">
                             <label for="startDate" class="xxsLight">Start</label>
@@ -217,8 +216,8 @@ export default {
                 event_id: this.event.id,
                 eventName: this.subEventToEdit?.title ? this.subEventToEdit?.title : '',
                 selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[0],
-                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : '',
-                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : '',
+                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : this.event.start.slice(0,16),
+                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : this.event.end.slice(0,16),
                 is_loud: this.subEventToEdit?.is_loud ? this.subEventToEdit?.is_loud : false,
                 audience: this.subEventToEdit?.audience ? this.subEventToEdit?.audience : false,
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
@@ -252,8 +251,10 @@ export default {
                 this.helpText = '';
                 this.submit = true;
             }
-            const start = Date.parse(this.event.start);
-            const end = Date.parse(this.event.end);
+            const timezoneOffset = new Date(this.event.start).getTimezoneOffset()* 60000
+            const start = Date.parse(this.event.start) + timezoneOffset;
+            const end = Date.parse(this.event.end) + timezoneOffset;
+
             if(this.subEvent.start_time){
                 const subEventStart = Date.parse(this.subEvent.start_time);
                 if(start > subEventStart || end < subEventStart){

@@ -3,10 +3,10 @@
         <div class="flex justify-center">
             <div class="ml-5 flex errorText items-center cursor-pointer mb-5 "
                  @click="openEventsWithoutRoomComponent()"
-                 v-if="eventsWithoutRoom?.length > 0">
+                 v-if="filteredEvents?.length > 0">
 
                 <ExclamationIcon class="h-6  mr-2"/>
-                {{ eventsWithoutRoom?.length }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                {{ filteredEvents?.length }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
             </div>
         </div>
 
@@ -136,6 +136,16 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="eventTime mx-1" v-if="event.subEvents?.length > 0">
+                                <div>
+                                    Untertermine:
+                                </div>
+                                <div v-for="subEvent in event.subEvents">
+                                    {{subEvent.eventType.abbreviation}}:
+                                    {{subEvent.title}}
+                                </div>
+
+                            </div>
 
 
                             <div v-if="currentView !== 'month'" class="mx-1">
@@ -170,8 +180,7 @@
                                              class="ml-2.5 flex flex-wrap ">
                                             <div class="-mr-3 flex flex-wrap flex-row"
                                                  v-for="user in event.projectLeaders?.slice(0,3)">
-                                                <NewUserToolTip :height="6" :width="6" v-if="user"
-                                                                :user="user" :id="user.id"></NewUserToolTip>
+                                                <img :src="user.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                             <div v-if="event.projectLeaders.length >= 4" class="my-auto">
                                                 <Menu as="div" class="relative">
@@ -216,9 +225,7 @@
                                         <div v-else-if="event.created_by"
                                              class="mt-1 ml-3 flex flex-wrap w-full">
                                             <div class="-mr-3 flex flex-wrap flex-row">
-                                                <NewUserToolTip :height="6" :width="6" v-if="event.created_by"
-                                                                :user="event.created_by"
-                                                                :id="event.created_by.id + event.id"></NewUserToolTip>
+                                                <img :src="event.created_by.profile_photo_url" alt="" class="mx-auto shrink-0 flex object-cover rounded-full" :class="['h-' + 6, 'w-' + 6]">
                                             </div>
                                         </div>
 
@@ -264,7 +271,7 @@
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :rooms="rooms"
-        :eventsWithoutRoom="this.eventsWithoutRoom"
+        :eventsWithoutRoom="this.filteredEvents"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 </template>
@@ -489,6 +496,19 @@ export default {
             handler() {
                 this.initializeCalendar({view: null, startDate: null, endDate: null})
             },
+        }
+    },
+    computed: {
+        filteredEvents() {
+            return this.eventsWithoutRoom.filter((event) => {
+                let createdBy = event.created_by;
+                let projectLeaders = event.projectLeaders;
+
+                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                    return true;
+                }
+                return false;
+            });
         }
     },
     methods: {

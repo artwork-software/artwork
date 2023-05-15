@@ -4,13 +4,15 @@
             <div class="flex justify-center w-full bg-white">
                 <div class="mt-4 flex errorText items-center cursor-pointer mb-2"
                      @click="openEventsWithoutRoomComponent()"
-                     v-if="eventsWithoutRoom?.length > 0">
+                     v-if="filteredEvents?.length > 0">
                     <ExclamationIcon class="h-6  mr-2"/>
                     {{
-                        eventsWithoutRoom?.length
-                    }}{{ eventsWithoutRoom?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
+                        filteredEvents?.length
+                    }}{{ filteredEvents?.length === 1 ? ' Termin ohne Raum!' : ' Termine ohne Raum!' }}
                 </div>
             </div>
+
+
             <CalendarFunctionBar :project="project" @open-event-component="openEditEventModal"
                                  @increment-zoom-factor="incrementZoomFactor"
                                  @decrement-zoom-factor="decrementZoomFactor" :zoom-factor="zoomFactor"
@@ -33,11 +35,12 @@
                             <th :style="{minWidth: zoomFactor === 0.2 ? 40 + 'px' : zoomFactor * 80 + 'px'}">
 
                             </th>
-                            <th v-for="room in rooms" :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}"
+                            <th v-for="room in rooms"
+                                :style="{ minWidth: zoomFactor * 212 + 'px',maxWidth:zoomFactor * 212 + 'px'}"
                                 class="py-3  border-r-4 border-secondaryHover truncate">
                                 <Link :style="textStyle" class="flex font-semibold items-center ml-4"
                                       :href="route('rooms.show',{room: room.id})">
-                                        {{ room.name }}
+                                    {{ room.name }}
                                 </Link>
                             </th>
                         </tr>
@@ -92,7 +95,7 @@
             :showHints="$page.props?.can?.show_hints"
             :eventTypes="eventTypes"
             :rooms="rooms"
-            :eventsWithoutRoom="this.eventsWithoutRoom"
+            :eventsWithoutRoom="this.filteredEvents"
             :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
         />
 
@@ -189,6 +192,17 @@ export default {
                 lineHeight,
             };
         },
+        filteredEvents() {
+            return this.eventsWithoutRoom.filter((event) => {
+                let createdBy = event.created_by;
+                let projectLeaders = event.projectLeaders;
+
+                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                    return true;
+                }
+                return false;
+            });
+        }
     },
     methods: {
         changeMultiEdit(multiEdit) {

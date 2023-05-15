@@ -297,7 +297,6 @@ export default {
 
       }
     },
-    emit:['openDeleteModal','openVerifiedModal','openRowDetailModal','openErrorModal'],
     methods: {
         afterConfirm(bool) {
             if (!bool) return this.showDeleteModal = false;
@@ -395,7 +394,7 @@ export default {
             });
         },
         openRowDetailModal(row){
-            this.$emit('openRowDetailModal',row)
+            this.$emit('openRowDetailModal', row)
         },
         openSubPositionSumDetailModal(subPosition, column) {
             this.$emit('openSubPositionSumDetailModal', subPosition, column)

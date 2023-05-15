@@ -78,6 +78,8 @@ const upload = (event) => {
 const storeFile = (file) => {
     roomFileForm.file = file
     roomFileForm.post(route('room_files.store', props.roomId))
+    roomFileForm.file = null
+    files.value = []
 }
 
 const validateType = (newFiles) => {
@@ -92,7 +94,7 @@ const validateType = (newFiles) => {
         } else {
             const fileSize = file.size;
             if (fileSize > 2097152) {
-                this.uploadDocumentFeedback = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
+                uploadDocumentFeedback.value = "Dateien, welche größer als 2MB sind, können nicht hochgeladen werden."
             } else {
                 files.value.push(file)
             }

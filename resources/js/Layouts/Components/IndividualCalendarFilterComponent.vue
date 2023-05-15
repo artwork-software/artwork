@@ -50,11 +50,11 @@
                     <p v-if="localPersonalFilters.length === 0" class="text-secondary py-1">Noch keine Filter
                         gespeichert</p>
                 </DisclosurePanel>
-                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
             </Disclosure>
 
             <!-- Room Filter Section -->
-            <Disclosure v-slot="{ open }">
+            <Disclosure v-slot="{ open }" v-if="showRoomFilters">
+                <hr class="border-secondary rounded-full border-2 mt-2 mb-2">
                 <DisclosureButton
                     class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
                 >
@@ -67,6 +67,7 @@
                 </DisclosureButton>
                 <DisclosurePanel class="pt-2 pb-2 text-sm text-white">
                     <div>
+                        <!-- TODO: STILL NEEDS TO BE IMPLEMENTED IN THE BACKEND
                         <SwitchGroup>
                             <div class="flex items-center">
                                 <Switch v-model="filterArray.roomFilters.showAdjoiningRooms"
@@ -81,8 +82,8 @@
                                     Nebenräume anzeigen
                                 </SwitchLabel>
                             </div>
-                        </SwitchGroup>
-                        <SwitchGroup v-if="currentView === 'day'">
+                        </SwitchGroup> -->
+                        <SwitchGroup class="mb-1">
                             <div class="flex items-center mt-2">
                                 <Switch v-model="filterArray.roomFilters.allDayFree"
                                         :class="filterArray.roomFilters.allDayFree ? 'bg-white' : 'bg-darkGray'"
@@ -94,6 +95,37 @@
                                 <SwitchLabel class="ml-4 text-xs"
                                              :class="filterArray.roomFilters.allDayFree ? 'text-white' : 'text-secondary'">
                                     ganztägig frei
+                                </SwitchLabel>
+                            </div>
+                        </SwitchGroup>
+                        <SwitchGroup class="mb-1">
+                            <div class="flex items-center">
+                                <Switch v-model="filterArray.eventAttributes.adjoiningNotLoud.checked"
+                                        :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'bg-white' : 'bg-darkGray'"
+                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span
+                                                :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
+                                </Switch>
+                                <SwitchLabel class="ml-4 text-xs"
+                                             :class="filterArray.eventAttributes.adjoiningNotLoud.checked ? 'text-white' : 'text-secondary'">
+                                    Ohne laute Nebenveranstaltung
+                                </SwitchLabel>
+                            </div>
+                        </SwitchGroup>
+
+                        <SwitchGroup>
+                            <div class="flex items-center">
+                                <Switch v-model="filterArray.eventAttributes.adjoiningNoAudience.checked"
+                                        :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'bg-white' : 'bg-darkGray'"
+                                        class="relative inline-flex h-3 w-7 items-center rounded-full">
+                                            <span
+                                                :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'translate-x-[18px] bg-secondary' : 'translate-x-1/3 bg-white'"
+                                                class="inline-block h-2 w-2 transform rounded-full transition"/>
+                                </Switch>
+                                <SwitchLabel class="ml-4 text-xs"
+                                             :class="filterArray.eventAttributes.adjoiningNoAudience.checked ? 'text-white' : 'text-secondary'">
+                                    Ohne Nebenveranstaltung mit Publikum
                                 </SwitchLabel>
                             </div>
                         </SwitchGroup>
@@ -336,7 +368,7 @@ export default {
         'useIcon',
         'filterOptions',
         'personalFilters',
-        'atAGlance'
+        'atAGlance',
     ],
     mounted() {
             this.filterArray.rooms = this.filterOptions.rooms
@@ -486,8 +518,8 @@ export default {
                 adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
                 hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
                 hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
-                allDayFree: this.filterArray.roomFilters.allDayFree,
+                showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
+                allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
                 roomIds: this.arrayToIds(this.filterArray.rooms),
                 areaIds: this.arrayToIds(this.filterArray.areas),
                 eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
@@ -517,8 +549,8 @@ export default {
                     adjoiningNotLoud: this.returnNullIfFalse(this.filterArray.eventAttributes.adjoiningNotLoud.checked),
                     hasAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasAudience.checked),
                     hasNoAudience: this.returnNullIfFalse(this.filterArray.eventAttributes.hasNoAudience.checked),
-                    showAdjoiningRooms: this.filterArray.roomFilters.showAdjoiningRooms,
-                    allDayFree: this.filterArray.roomFilters.allDayFree,
+                    showAdjoiningRooms: this.returnNullIfFalse(this.filterArray.roomFilters.showAdjoiningRooms),
+                    allDayFree: this.returnNullIfFalse(this.filterArray.roomFilters.allDayFree),
                     roomIds: this.arrayToIds(this.filterArray.rooms),
                     areaIds: this.arrayToIds(this.filterArray.areas),
                     eventTypeIds: this.arrayToIds(this.filterArray.eventTypes),
@@ -530,10 +562,64 @@ export default {
             })
         }
     },
+    computed: {
+        showRoomFilters: function() {
+            const pathName = window.location.pathname.split('/')[1]
+
+            return pathName !== "rooms";
+        },
+        activeFilters: function() {
+            let activeFiltersArray = []
+
+            this.filterArray.rooms.forEach(room => {
+                if(room.checked) activeFiltersArray.push(room)
+            })
+
+            this.filterArray.areas.forEach(area => {
+                if(area.checked) activeFiltersArray.push(area)
+            })
+
+            this.filterArray.eventTypes.forEach(eventType => {
+                if(eventType.checked) activeFiltersArray.push(eventType)
+            })
+
+            this.filterArray.roomCategories.forEach(category => {
+                if(category.checked) activeFiltersArray.push(category)
+            })
+
+            this.filterArray.roomAttributes.forEach(attribute => {
+                if(attribute.checked) activeFiltersArray.push(attribute)
+            })
+
+            if(this.filterArray.eventAttributes.isLoud.checked)
+                activeFiltersArray.push({name: "Laute Termine"})
+
+            if(this.filterArray.eventAttributes.isNotLoud.checked)
+                activeFiltersArray.push({name: "Ohne laute Termine"})
+
+            if(this.filterArray.eventAttributes.adjoiningNoAudience.checked)
+                activeFiltersArray.push({name: "Ohne Nebenveranstaltung mit Publikum"})
+
+            if(this.filterArray.eventAttributes.adjoiningNotLoud.checked)
+                activeFiltersArray.push({name: "Ohne laute Nebenveranstaltung"})
+
+            if(this.filterArray.eventAttributes.hasAudience.checked)
+                activeFiltersArray.push({name: "Mit Publikum"})
+
+            if(this.filterArray.eventAttributes.hasNoAudience.checked)
+                activeFiltersArray.push({name: "Ohne Publikum"})
+
+            if(this.filterArray.roomFilters.showAdjoiningRooms)
+                activeFiltersArray.push({name: "Nebenräume anzeigen"})
+
+            return activeFiltersArray
+        }
+    },
     watch: {
         filterArray: {
             handler() {
                 this.reloadChanges()
+                this.$emit('filtersChanged', this.activeFilters)
             },
             deep: true
         },

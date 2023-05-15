@@ -428,7 +428,8 @@
                                                        @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
                                                        @openMainPositionSumDetailModal="openMainPositionSumDetailModal"
                                                        @openDeleteModal="openDeleteModal"
-                                                       @open-error-modal="openErrorModal" :table="table"
+                                                       @open-error-modal="openErrorModal"
+                                                       :table="table"
                                                        :project="project"
                                                        :main-position="mainPosition"
                                                         :project-managers="projectManager"></MainPositionComponent>
@@ -1134,16 +1135,17 @@ export default {
             })
         },
         openRowDetailModal(row) {
-            console.log(row);
-            Inertia.reload({
-                data: {
-                    selectedRow: row.id,
-                },
-                only: ['selectedSumDetail','table','selectedCell','selectedRow','templates', 'budgetAccess'],
+            Inertia.visit(route('projects.show', {
+                project: this.project.id,
+                selectedRow: row.id
+            }), {
+                only: ['budget'],
                 onSuccess: () => {
                     this.showRowDetailModal = true;
-                }
-            })
+                },
+                preserveState: true,
+                preserveScroll: true
+            });
         },
         closeCellDetailModal() {
             this.showCellDetailModal = false;

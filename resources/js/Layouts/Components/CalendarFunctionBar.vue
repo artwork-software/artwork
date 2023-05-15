@@ -21,7 +21,7 @@
                 </div>
 
             </div>
-            <div v-else class="flex items-center">
+            <div v-if="dateValue[0] !== dateValue[1]" class="flex items-center">
               <SwitchGroup v-if="!roomMode" as="div" class="flex items-center ml-2">
                 <Switch v-model="atAGlance" @click="changeAtAGlance()"
                         class="group relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none">
@@ -62,11 +62,12 @@
                              v-if="!atAGlance && isFullscreen" class="h-7 w-7 mx-2 cursor-pointer"></ZoomOutIcon>
                 <img v-if="!atAGlance && !isFullscreen" @click="enterFullscreenMode"
                      src="/Svgs/IconSvgs/icon_zoom_out.svg" class="h-6 w-6 mx-2 cursor-pointer"/>
-                <IndividualCalendarFilterComponent v-if="!roomMode"
+                <IndividualCalendarFilterComponent
                     class="mt-1"
                     :filter-options="filterOptions"
                     :personal-filters="personalFilters"
                     :at-a-glance="atAGlance"
+                    @filters-changed="filtersChanged"
                 />
 
                 <!-- Calendar Settings Dropdown -->
@@ -138,6 +139,9 @@
             </button>
         </div>
     </div>
+    <div class="mb-1 ml-4 flex items-center w-full">
+        <BaseFilterTag type="calendar" v-for="activeFilter in activeFilters" :filter="activeFilter.name" />
+    </div>
 </template>
 
 <script>
@@ -148,11 +152,13 @@ import {ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon} from "@heroicons/vue
 import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCalendarFilterComponent.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
     components: {
+        BaseFilterTag,
         Dropdown,
         Menu,
         MenuItems,
@@ -187,6 +193,7 @@ export default {
             atAGlance: this.atAGlance,
             calendarSettingsOpen: false,
             multiEdit: false,
+            activeFilters: []
         }
     },
     methods: {
@@ -235,6 +242,9 @@ export default {
         nextTimeRange(){
             this.$emit('nextTimeRange')
         },
+        filtersChanged(activeFilters) {
+            this.activeFilters = activeFilters
+        }
 
     },
 }

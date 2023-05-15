@@ -373,7 +373,14 @@ export default {
         Link
     },
     props: ['subPosition', 'mainPosition', 'columns', 'project', 'table', 'projectManagers'],
-    emits: ['openDeleteModal', 'openVerifiedModal','openRowDetailModal','openErrorModal'],
+    emits: [
+        'openDeleteModal',
+        'openVerifiedModal',
+        'openRowDetailModal',
+        'openErrorModal',
+        'openCellDetailModal',
+        'openSubPositionSumDetailModal'
+    ],
     data() {
         return {
             showMenu: null,

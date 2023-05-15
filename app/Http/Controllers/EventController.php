@@ -78,11 +78,7 @@ class EventController extends Controller
         }
 
         if(\request('atAGlance') === 'true') {
-            $eventsAtAGlance = CalendarEventResource::collection(Event::query()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
-                ->with(['room', 'project', 'creator'])
-                ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
+            $eventsAtAGlance = $calendar->getEventsAtAGlance($startDate, $endDate);
         }
 
         return inertia('Events/EventManagement', [
@@ -94,7 +90,7 @@ class EventController extends Controller
             'selectedDate' => $showCalendar['selectedDate'],
             'eventsWithoutRoom' => $showCalendar['eventsWithoutRoom'],
             'eventsAtAGlance' => $eventsAtAGlance,
-            'rooms' => $calendar->filterRooms(),
+            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters']
@@ -123,8 +119,6 @@ class EventController extends Controller
 
         $eventsAtAGlance = [];
 
-        Debugbar::info(request('atAGlance'));
-
         if(\request('startDate') && \request('endDate')){
             $startDate = Carbon::create(\request('startDate'))->startOfDay();
             $endDate = Carbon::create(\request('endDate'))->endOfDay();
@@ -137,9 +131,7 @@ class EventController extends Controller
             $eventsAtAGlance = $calendarController->getEventsAtAGlance($startDate, $endDate);
         }
 
-        $rooms = $calendarController->filterRooms();
-        Debugbar::info("EventsAtAGlance");
-        Debugbar::info($eventsAtAGlance);
+        $rooms = $calendarController->filterRooms($startDate, $endDate)->get();
 
         return inertia('Dashboard', [
             'projects' => ProjectIndexAdminResource::collection($projects)->resolve(),
@@ -188,6 +180,9 @@ class EventController extends Controller
             $this->associateProject($request, $firstEvent);
         }
 
+
+        $projectFirstEvent = $firstEvent->project()->first();
+        //dd($projectFirstEvent);
         if($request->is_series){
             $series = SeriesEvents::create([
                 'frequency_id' => $request->seriesFrequency,
@@ -202,28 +197,28 @@ class EventController extends Controller
                 while ($whileEndDate->addDay() < $endSeriesDate) {
                     $startDate = $startDate->addDay();
                     $endDate = $endDate->addDay();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 2){
                 while ($whileEndDate->addWeek() < $endSeriesDate) {
                     $startDate = $startDate->addWeek();
                     $endDate = $endDate->addWeek();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 3){
                 while ($whileEndDate->addWeeks(2) < $endSeriesDate) {
                     $startDate = $startDate->addWeeks(2);
                     $endDate = $endDate->addWeeks(2);
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 4){
                 while ($whileEndDate->addMonth() < $endSeriesDate) {
                     $startDate = $startDate->addMonth();
                     $endDate = $endDate->addMonth();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
                 }
             }
         }
@@ -245,7 +240,7 @@ class EventController extends Controller
         return new CalendarEventResource($firstEvent);
     }
 
-    private function createSeriesEvent($startDate,$endDate, $request, $series){
+    private function createSeriesEvent($startDate,$endDate, $request, $series, $projectId){
         $event = Event::create([
             'name' => $request->title,
             'eventName' => $request->eventName,
@@ -258,7 +253,7 @@ class EventController extends Controller
             'event_type_id' => $request->eventTypeId,
             'room_id' => $request->roomId,
             'user_id' => Auth::id(),
-            'project_id' => $request->projectId,
+            'project_id' => $projectId ? $projectId : null,
             'is_series' => true,
             'series_id' => $series->id,
         ]);
@@ -832,9 +827,6 @@ class EventController extends Controller
         }else{
             $eventsWithoutRoom = Event::query()->whereNull('room_id')->where('user_id',Auth::id())->get();
         }
-
-        Debugbar::info($roomAttributeIds);
-        Debugbar::info($roomCategoryIds);
 
         $events = Event::query()
             // eager loading

@@ -1427,30 +1427,8 @@ class ProjectController extends Controller
         $eventsAtAGlance = [];
 
         if(\request('atAGlance') === 'true'){
-            $firstEventInProject = $project->events()->orderBy('start_time', 'ASC')->first();
-            $lastEventInProject = $project->events()->orderBy('end_time', 'DESC')->first();
-
-
-
-            if(!empty($firstEventInProject) && !empty($lastEventInProject)) {
-                $startDate = Carbon::create($firstEventInProject->start_time)->startOfDay();
-                $endDate = Carbon::create($lastEventInProject->end_time)->endOfDay();
-            }else{
-                $startDate = Carbon::now()->startOfDay();
-                $endDate = Carbon::now()->addWeeks()->endOfDay();
-            }
-
-            if(\request('startDate')){
-                $startDate = Carbon::create(\request('startDate'))->startOfDay();
-            }
-
-            if(\request('endDate')){
-                $endDate = Carbon::create(\request('endDate'))->endOfDay();
-            }
 
             $eventsAtAGlance = CalendarEventResource::collection($project->events()
-                ->whereBetween('start_time', [$startDate, $endDate])
-                ->whereBetween('end_time', [$startDate, $endDate])
                 ->with(['room','project','creator'])
                 ->orderBy('start_time', 'ASC')->get())->collection->groupBy('room.id');
         }
@@ -1495,6 +1473,14 @@ class ProjectController extends Controller
             }
         }
 
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
             'firstEventInProject' => $firstEventInProject,
@@ -1507,7 +1493,7 @@ class ProjectController extends Controller
             'dateValue'=>$showCalendar['dateValue'],
             'days' => $showCalendar['days'],
             'selectedDate' => $showCalendar['selectedDate'],
-            'rooms' => $calendar->filterRooms(),
+            'rooms' => $calendar->filterRooms($startDate, $endDate)->get(),
             'events' => new CalendarEventCollectionResource($calendar->getEventsOfDay()),
             'filterOptions' => $showCalendar["filterOptions"],
             'personalFilters' => $showCalendar['personalFilters'],

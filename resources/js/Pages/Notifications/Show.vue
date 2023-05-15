@@ -124,7 +124,7 @@
             :rooms="rooms"
             :event="this.eventToEdit"
             :projects="this.projects"
-            :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+            :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         />
     </app-layout>
 </template>

@@ -79,7 +79,7 @@
         :project="project"
         :event="event"
         :wantedRoomId="wantedSplit"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
     />
 

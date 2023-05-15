@@ -67,7 +67,7 @@
             </div>
         </div>
         <div
-            v-if="this.$page.props.can.contract_upload_edit || this.project.access_budget.includes(this.$page.props.user.id)">
+            v-if="$can('view edit upload contracts') || this.project.access_budget.includes(this.$page.props.user.id)">
             <hr class="my-10 border-darkGray">
 
             <div class="w-full flex items-center mb-4">
@@ -107,7 +107,7 @@
             </div>
 
             <div
-                v-if="this.$page.props.can.money_source_edit_add || this.project.access_budget.includes(this.$page.props.user.id)">
+                v-if="$can('view edit add money_sources') || this.project.access_budget.includes(this.$page.props.user.id)">
                 <hr class="my-10 border-darkGray">
 
                 <div class="w-full flex items-center mb-4">

@@ -155,7 +155,7 @@ class MoneySourceController extends Controller
      * @param \App\Models\MoneySource $moneySource
      * @return \Inertia\Response|\Inertia\ResponseFactory
      */
-    public function show(MoneySource $moneySource)
+    public function show(MoneySource $moneySource): \Inertia\Response|\Inertia\ResponseFactory
     {
         $moneySource->load([
             'money_source_files'
@@ -403,11 +403,10 @@ class MoneySourceController extends Controller
      * Show the form for editing the specified resource.
      *
      * @param \App\Models\MoneySource $moneySource
-     * @return \Illuminate\Http\Response
      */
     public function edit(MoneySource $moneySource)
     {
-        //
+
     }
 
     /**
@@ -415,7 +414,6 @@ class MoneySourceController extends Controller
      *
      * @param \Illuminate\Http\Request $request
      * @param \App\Models\MoneySource $moneySource
-     * @return \Illuminate\Http\Response
      */
     public function update(Request $request, MoneySource $moneySource)
     {
@@ -473,10 +471,6 @@ class MoneySourceController extends Controller
             }
         }
 
-
-        // Tasks Add Users
-
-
     }
 
     public function updateUsers(Request $request, MoneySource $moneySource)
@@ -484,7 +478,7 @@ class MoneySourceController extends Controller
         $moneySource->users()->sync(collect($request->users));
         $tasks = $moneySource->money_source_tasks()->get();
         foreach ($tasks as $task){
-            $task->money_source_task_users()->sync($moneySource->users()->get());
+            $task->money_source_task_users()->sync($moneySource->competent()->get());
         }
     }
 

@@ -43,58 +43,56 @@
                     </div>
                 </div>
                 <div class="mt-4">
-                        <span v-for="user in assignedUsers"
-                              class="flex justify-between mt-4 mr-1 items-center font-bold text-primary border-1 border-b pb-3">
-                            <div class="flex items-center w-64">
-                                <div class="flex items-center">
-                                    <img class="flex h-11 w-11 rounded-full"
-                                         :src="user.profile_photo_url"
-                                         alt=""/>
-                                    <span class="flex ml-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-5 gap-4 w-full border-1 border-b pb-3 mt-4" v-for="user in assignedUsers">
+                        <div class="flex col-span-2">
+                            <div class="flex items-center">
+                                <img class="flex h-11 w-11 rounded-full"
+                                     :src="user.profile_photo_url"
+                                     alt=""/>
+                                <span class="flex ml-4">
                                         {{ user.first_name }} {{ user.last_name }}
                                     </span>
-                                </div>
-                                <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
-                                    <span class="sr-only">User aus Team entfernen</span>
-                                    <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
-                                </button>
                             </div>
-
-                            <div class="flex justify-between items-center my-1.5 h-5 w-80">
-                                <div class="flex items-center justify-between" v-if="user.pivot">
-                                   <div class="flex">
-                                        <input v-model="user.pivot.competent"
-                                               type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                            <button type="button" @click="deleteUserFromMoneySourceUserArray(user)">
+                                <span class="sr-only">User aus Team entfernen</span>
+                                <XCircleIcon class="ml-3 text-buttonBlue h-5 w-5 hover:text-error "/>
+                            </button>
+                        </div>
+                        <div class="col-span-3 flex">
+                            <div class="flex items-center justify-between" v-if="user.pivot">
+                                <div class="flex">
+                                    <input v-model="user.pivot.competent"
+                                           type="checkbox"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
                                     <p :class="[user.pivot.competent ? 'text-primary font-black' : 'text-secondary']"
                                        class="ml-4 my-auto text-sm">Zuständig</p>
-                                   </div>
-                                    <div class="flex ml-8">
-                                        <input v-model="user.pivot.write_access"
-                                               type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Zugriff</p>
-                                   </div>
                                 </div>
-                                <div class="flex items-center justify-between" v-else>
-                                   <div class="flex">
-                                        <input v-model="user.competent"
-                                               type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Zuständig</p>
-                                   </div>
-                                    <div class="flex ml-8">
-                                        <input v-model="user.write_access"
-                                               type="checkbox"
-                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
-                                       class="ml-4 my-auto text-sm">Zugriff</p>
-                                   </div>
+                                <div class="flex ml-8">
+                                    <input v-model="user.pivot.write_access"
+                                           type="checkbox"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.pivot.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Schreib- und Löschrecht</p>
                                 </div>
                             </div>
-                        </span>
+                            <div class="flex items-center justify-between" v-else>
+                                <div class="flex">
+                                    <input v-model="user.competent"
+                                           type="checkbox"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.competent ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Zuständig</p>
+                                </div>
+                                <div class="flex ml-8">
+                                    <input v-model="user.write_access"
+                                           type="checkbox"
+                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                    <p :class="[user.write_access ? 'text-primary font-black' : 'text-secondary']"
+                                       class="ml-4 my-auto text-sm">Schreib- und Löschrecht</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="w-full items-center text-center">
                     <AddButton @click="editMoneySourceUsers" text="Speichern" mode="modal"

@@ -45,7 +45,7 @@ class MoneySourceTaskController extends Controller
             'creator' => 1
         ]);
 
-        $task->money_source_task_users()->sync($moneySource->users()->get());
+        $task->money_source_task_users()->sync($moneySource->competent()->get());
     }
 
     /**

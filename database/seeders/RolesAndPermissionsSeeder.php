@@ -205,21 +205,21 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "Standard-Nutzer*in",
         ]);
 
-        $user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::EVENT_REQUEST->value]);
+        //$user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::EVENT_REQUEST->value]);
 
         $roomAdmin = Role::create([
             'name' => RoleNameEnum::ROOM_ADMIN->value,
             'name_de' => "Disponent*in",
         ]);
 
-        $roomAdmin->syncPermissions([PermissionNameEnum::ROOM_UPDATE->value]);
+        //$roomAdmin->syncPermissions([PermissionNameEnum::ROOM_UPDATE->value]);
 
         $budgetAdmin = Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
             'name_de' => "Budgetadmin",
         ]);
 
-        $budgetAdmin->syncPermissions([PermissionNameEnum::PROJECT_BUDGET_ADMIN->value, PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value]);
+        //$budgetAdmin->syncPermissions([PermissionNameEnum::PROJECT_BUDGET_ADMIN->value, PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value]);
 
 
         $contractAdmin = Role::create([
@@ -227,14 +227,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "Vertragsadmin",
         ]);
 
-        $contractAdmin->syncPermissions([PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value, PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value]);
+        //$contractAdmin->syncPermissions([PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value, PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value]);
 
         $moneySourceAdmin = Role::create([
             'name' => RoleNameEnum::MONEY_SOURCE_ADMIN->value,
             'name_de' => "Finanzierungsquellenadmin",
         ]);
 
-        $moneySourceAdmin->syncPermissions([PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value]);
+        //$moneySourceAdmin->syncPermissions([PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value]);
 
 
         // Gibt es nicht mehr

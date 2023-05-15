@@ -232,7 +232,7 @@
                                 </div>
                                 <div class="flex w-1/12 ml-4">
                                     <Menu
-                                        v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
+                                        v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin')"
                                         as="div" class="relative">
                                         <div class="flex bg-tagBg p-0.5 rounded-full">
                                             <div v-if="$page.props.can.show_hints && index === 0"
@@ -262,7 +262,7 @@
                                                 class="origin-top-right z-50 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                                 <div class="py-1">
                                                     <MenuItem v-slot="{ active }"
-                                                              v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
+                                                              v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
                                                         <a :href="getEditHref(project)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <PencilAltIcon
@@ -272,7 +272,7 @@
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
-                                                              v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
+                                                              v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
                                                         <a href="#" @click="duplicateProject(project)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <DuplicateIcon
@@ -282,7 +282,7 @@
                                                         </a>
                                                     </MenuItem>
                                                     <MenuItem v-slot="{ active }"
-                                                              v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'delete')">
+                                                              v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
                                                         <a href="#" @click="openDeleteProjectModal(project)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <TrashIcon
@@ -302,7 +302,7 @@
                             <div class="flex w-1/2">
                                 <div class="mr-6">
                                     <Link
-                                        v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') "
+                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')"
                                         :href="getEditHref(project)"
                                         class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">

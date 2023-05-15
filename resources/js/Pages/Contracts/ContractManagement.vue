@@ -24,7 +24,7 @@
                                         <BaseFilterTag :filter="filter" @remove-filter="removeFilter(filter)" />
                                     </div>
                                 </div>
-                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="this.$page.props.is_contract_admin && contractsCopy.data.length !== 0">
+                                <div v-for="contract in contractsCopy.data" class="mt-6 w-full" v-if="hasAdminRole() || $canAny(['view edit upload contracts', 'can see and download contract modules']) && contractsCopy.data.length !== 0">
                                     <ContractListItem :contract="contract" class="mb-6"></ContractListItem>
                                     <hr class="text-secondary">
                                 </div>

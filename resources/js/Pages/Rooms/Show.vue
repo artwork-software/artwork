@@ -696,7 +696,7 @@ export default {
         },
         requestsToShow: function () {
             let requestsToShow;
-            if (this.$page.props.is_admin || this.$page.props.can.admin_rooms || this.is_room_admin) {
+            if (hasAdminRole() || this.is_room_admin || $canAny(['create, delete and update rooms'])) {
                 requestsToShow = this.room.event_requests
             }
             return requestsToShow

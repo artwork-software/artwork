@@ -35,6 +35,9 @@ export default {
                 }
             }
             return false;
+        },
+        hasAdminRole(){
+            this.$role('artwork admin');
         }
     }
 };

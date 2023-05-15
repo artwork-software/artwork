@@ -504,9 +504,14 @@ export default {
                 let createdBy = event.created_by;
                 let projectLeaders = event.projectLeaders;
 
-                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                if (projectLeaders && projectLeaders.length > 0) {
+                    if (createdBy.id === this.$page.props.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.user.id)) {
+                        return true;
+                    }
+                } else if (createdBy.id === this.$page.props.user.id) {
                     return true;
                 }
+
                 return false;
             });
         }

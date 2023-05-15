@@ -53,16 +53,19 @@
                                 <div :style="textStyle">
                                     {{ zoomFactor > 0.4 ? day.day_string : '' }} {{ day.day }}
                                 </div>
+
                             </th>
                             <td :style="{ width: zoomFactor * 212 + 'px', height: zoomFactor * 115 + 'px'}"
                                 class="border-t-2 border-dashed"
                                 :class="[day.is_weekend ? 'bg-backgroundGray' : 'bg-white', zoomFactor > 0.4 ? 'cell' : 'overflow-hidden']"
                                 v-for="room in calendarData">
                                 <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].data">
+
                                     <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
                                     <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
                                                          :zoom-factor="zoomFactor" :width="zoomFactor * 204"
                                                          :event="event"
+                                                         :rooms="rooms"
                                                          :event-types="eventTypes"
                                                          @open-edit-event-modal="openEditEventModal"/>
                                     <!-- </CalendarEventTooltip> -->
@@ -197,9 +200,14 @@ export default {
                 let createdBy = event.created_by;
                 let projectLeaders = event.projectLeaders;
 
-                if (createdBy.id === 1 ||projectLeaders?.some((leader) => leader.id === 1)) {
+                if (projectLeaders && projectLeaders.length > 0) {
+                    if (createdBy.id === this.$page.props.user.id || projectLeaders.some((leader) => leader.id === this.$page.props.user.id)) {
+                        return true;
+                    }
+                } else if (createdBy.id === this.$page.props.user.id) {
                     return true;
                 }
+
                 return false;
             });
         }

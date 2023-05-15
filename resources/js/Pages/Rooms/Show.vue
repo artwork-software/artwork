@@ -696,7 +696,7 @@ export default {
         },
         requestsToShow: function () {
             let requestsToShow;
-            if (hasAdminRole() || this.is_room_admin || $canAny(['create, delete and update rooms'])) {
+            if (this.hasAdminRole() || this.is_room_admin || this.$canAny(['create, delete and update rooms'])) {
                 requestsToShow = this.room.event_requests
             }
             return requestsToShow

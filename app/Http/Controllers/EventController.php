@@ -197,28 +197,28 @@ class EventController extends Controller
                 while ($whileEndDate->addDay() < $endSeriesDate) {
                     $startDate = $startDate->addDay();
                     $endDate = $endDate->addDay();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 2){
                 while ($whileEndDate->addWeek() < $endSeriesDate) {
                     $startDate = $startDate->addWeek();
                     $endDate = $endDate->addWeek();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 3){
                 while ($whileEndDate->addWeeks(2) < $endSeriesDate) {
                     $startDate = $startDate->addWeeks(2);
                     $endDate = $endDate->addWeeks(2);
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 4){
                 while ($whileEndDate->addMonth() < $endSeriesDate) {
                     $startDate = $startDate->addMonth();
                     $endDate = $endDate->addMonth();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
         }

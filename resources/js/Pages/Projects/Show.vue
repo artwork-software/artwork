@@ -583,7 +583,6 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
-import {write} from "../../../../public/js/app";
 
 export default {
     name: "ProjectShow",

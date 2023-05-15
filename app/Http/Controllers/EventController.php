@@ -792,9 +792,7 @@ class EventController extends Controller
     }
 
     public function answerOnEvent(Event $event, Request $request){
-        // Löschen aller Benachrichtigungen
-        // TODO: WIE HIER DEN NOTIFICATION KEY HINBEKOMMEN ?
-        // $this->deleteOldNotifications($request->notificationKey);
+
         $event->comments()->create([
             'user_id' => Auth::id(),
             'comment' => $request->comment,

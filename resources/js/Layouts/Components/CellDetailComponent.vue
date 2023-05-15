@@ -221,8 +221,8 @@
                         </div>
                         <div class="flex justify-center">
                             <AddButton @click="updateMoneySourceLink()" :disabled="cell.column.is_locked || selectedMoneySource === null"
-                                       class="mt-8 py-5 px-24 flex" text="Speichern"
-                                       mode="modal"></AddButton>
+                                       class="mt-8 py-5 px-24" text="Speichern"
+                            ></AddButton>
                         </div>
                     </div>
                     <div v-if="isExcludeTab">

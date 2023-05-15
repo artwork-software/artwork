@@ -5,9 +5,15 @@ namespace App\Http\Controllers;
 use App\Enums\NotificationConstEnum;
 use App\Enums\NotificationFrequency;
 use App\Enums\NotificationGroupEnum;
+use App\Http\Resources\CalendarEventCollectionResource;
+use App\Http\Resources\CalendarEventResource;
+use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
+use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\ProjectShowResource;
 use App\Http\Resources\RoomIndexWithoutEventsResource;
+use App\Http\Resources\TaskIndexResource;
+use App\Models\Event;
 use App\Models\EventType;
 use App\Models\NotificationSetting;
 use App\Models\Project;
@@ -41,6 +47,35 @@ class NotificationController extends Controller
      */
     public function index(): \Inertia\Response|\Inertia\ResponseFactory
     {
+        $historyObjects = [];
+        $event = null;
+        // reload functions
+        if(request('showHistory')){
+            if(request('historyType') === 'project'){
+                $project = Project::find(request('modelId'));
+                $historyComplete = $project->historyChanges()->all();
+                foreach ($historyComplete as $history){
+                    $historyObjects[] = [
+                        'changes' => json_decode($history->changes),
+                        'created_at' => $history->created_at->diffInHours() < 24
+                            ? $history->created_at->diffForHumans()
+                            : $history->created_at->format('d.m.Y, H:i'),
+                    ];
+                }
+            }
+        }
+
+        if(request('openDeclineEvent')){
+            $event = Event::find(request('eventId'));
+        }
+
+        if(request('openEditEvent')){
+            $event = Event::find(request('eventId'));
+        }
+
+
+
+
         /** @var User $user */
         $user = Auth::user();
         $output = [];
@@ -55,6 +90,11 @@ class NotificationController extends Controller
         }
 
         return inertia('Notifications/Show', [
+            'historyObjects' => $historyObjects,
+            'event' => $event !== null ? new CalendarEventResource($event) : null,
+            'project',
+            'wantedSplit',
+            'roomCollisions',
             'notifications' => $output,
             'readNotifications' => $outputRead,
             'rooms' => RoomIndexWithoutEventsResource::collection(Room::all())->resolve(),

@@ -95,16 +95,16 @@ class DepartmentController extends Controller
                 })
         );
 
-        // create and send notification data
-        $this->notificationData->title = 'Du wurdest zu Team ' . $department->name . ' hinzugefügt';
-        $this->notificationData->team = $department;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $broadcastMesssage = [
+        $broadcastMessage = [
             'id' => rand(10, 1000000),
             'type' => 'success',
-            'message' => $this->notificationData->title
+            'message' => 'Du wurdest zu Team ' . $department->name . ' hinzugefügt'
         ];
-        $this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
+        $users = $department->users()->get();
+        foreach ($users as $user){
+            $this->notificationService->createNotification($user, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
+        }
+        //$this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         broadcast(new DepartmentUpdated())->toOthers();
 
@@ -173,15 +173,14 @@ class DepartmentController extends Controller
             $teamIdsAfter[] = $memberAfter->id;
             // send notification to new team member
             if(!in_array($memberAfter->id, $teamIdsBefore)){
-                $this->notificationData->title = 'Du wurdest zu Team "' . $department->name . '" hinzugefügt';
-                $this->notificationData->team = $department;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $broadcastMesssage = [
+                $broadcastMessage = [
                     'id' => rand(10, 1000000),
                     'type' => 'success',
-                    'message' => $this->notificationData->title
+                    'message' => 'Du wurdest zu Team "' . $department->name . '" hinzugefügt'
                 ];
-                $this->notificationService->create($memberAfter, $this->notificationData, $broadcastMesssage);
+                $this->notificationService->createNotification($memberAfter, 'Du wurdest zu Team ' . $department->name . ' hinzugefügt', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
+
+                //$this->notificationService->create($memberAfter, $this->notificationData, $broadcastMesssage);
             }
         }
 
@@ -189,15 +188,14 @@ class DepartmentController extends Controller
             // send notification to removed team member
             if(!in_array($teamMemberBefore, $teamIdsAfter)){
                 $user = User::find($teamMemberBefore);
-                $this->notificationData->title = 'Du wurdest aus Team "' . $department->name . '" gelöscht';
-                $this->notificationData->team = $department;
-                $this->notificationData->created_by = User::where('id', Auth::id())->first();
-                $broadcastMesssage = [
+                $broadcastMessage = [
                     'id' => rand(10, 1000000),
                     'type' => 'error',
-                    'message' => $this->notificationData->title
+                    'message' => 'Du wurdest aus Team "' . $department->name . '" gelöscht'
                 ];
-                $this->notificationService->create($user, $this->notificationData, $broadcastMesssage);
+                $this->notificationService->createNotification($user, 'Du wurdest aus Team ' . $department->name . ' gelöscht', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id);
+
+                //$this->notificationService->create($user, $this->notificationData, $broadcastMesssage);
             }
         }
 
@@ -215,17 +213,16 @@ class DepartmentController extends Controller
      */
     public function destroy(Department $department)
     {
-        // create and send notification data
-        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_TEAM;
-        $this->notificationData->title = 'Team "' . $department->name . '" wurde gelöscht';
-        $this->notificationData->team = $department;
-        $this->notificationData->created_by = User::where('id', Auth::id())->first();
-        $broadcastMesssage = [
+        $broadcastMessage = [
             'id' => rand(10, 1000000),
             'type' => 'error',
-            'message' => $this->notificationData->title
+            'message' => 'Team "' . $department->name . '" wurde gelöscht'
         ];
-        $this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
+        $users = $department->users()->get();
+        foreach ($users as $user){
+            $this->notificationService->createNotification($user, 'Team "' . $department->name . '" wurde gelöscht', [], NotificationConstEnum::NOTIFICATION_TEAM, 'green', [], false, '', null, $broadcastMessage, null, null, null, $department->id );
+        }
+        //$this->notificationService->create($department->users->all(), $this->notificationData, $broadcastMesssage);
 
         $department->delete();
 

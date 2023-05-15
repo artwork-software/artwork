@@ -31,7 +31,6 @@
     "require-dev": {
         "barryvdh/laravel-debugbar": "^v3.7.0",
         "barryvdh/laravel-ide-helper": "^v2.12.3",
-        "beyondcode/laravel-query-detector": "^1.6",
         "fakerphp/faker": "^v1.20.0",
         "laravel/sail": "^v1.16.2",
         "mockery/mockery": "^1.5.1",
@@ -77,7 +76,8 @@
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
-            "pestphp/pest-plugin": true
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
         }
     },
     "minimum-stability": "dev",

@@ -601,12 +601,14 @@ export default {
         },
         fixSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.fix.sub-position'), {
-                subPositionId: subPositionId
+                subPositionId: subPositionId,
+                project_id: this.project?.id
             })
         },
         unfixSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.unfix.sub-position'), {
-                subPositionId: subPositionId
+                subPositionId: subPositionId,
+                project_id: this.project?.id
             })
         }
 

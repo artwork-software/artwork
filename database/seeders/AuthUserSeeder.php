@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\NotificationConstEnum;
+use App\Enums\PermissionNameEnum;
 use App\Enums\RoleNameEnum;
 use App\Models\Checklist;
 use App\Models\Department;
@@ -61,9 +62,6 @@ class AuthUserSeeder extends Seeder
         $user->calendar_settings()->create();
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
-        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
-        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
-        $user->assignRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value);
 
         $user = User::create([
             'first_name' => 'Lisa',
@@ -81,6 +79,7 @@ class AuthUserSeeder extends Seeder
         ]);
         $user->calendar_settings()->create();
 
+        $user->givePermissionTo([PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value]);
 
         foreach (NotificationConstEnum::cases() as $notificationType) {
 
@@ -92,7 +91,6 @@ class AuthUserSeeder extends Seeder
             ]);
 
         }
-        $user->assignRole(RoleNameEnum::USER->value);
 
 
         $user = User::create([
@@ -111,8 +109,7 @@ class AuthUserSeeder extends Seeder
         ]);
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
-        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
-        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
+
         $user->calendar_settings()->create();
         foreach (NotificationConstEnum::cases() as $notificationType) {
 
@@ -125,7 +122,6 @@ class AuthUserSeeder extends Seeder
 
         }
 
-        $user->assignRole(RoleNameEnum::USER->value);
 
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;

@@ -102,7 +102,24 @@
                         </div>
 
                     </div>
-                    <div v-if="this.form.role !== 'admin'">
+                    <div v-if="!this.form.roles.includes('artwork admin')" class="pb-5 my-2 border-gray-200 sm:pb-0">
+                        <div v-on:click="showPresets = !showPresets">
+                            <h2 class="flex headline6Light cursor-pointer mb-2">
+                                Rechte-Presets
+                                <ChevronUpIcon v-if="showPresets"
+                                               class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronUpIcon>
+                                <ChevronDownIcon v-else class=" ml-1 mr-3 flex-shrink-0 mt-1 h-4 w-4"></ChevronDownIcon>
+                            </h2>
+                        </div>
+
+                        <div class="mb-8" v-if="showPresets">
+                            <div v-for="preset in presets">
+                                <Checkbox @click="usePreset(preset)" :item="preset"></Checkbox>
+                            </div>
+                        </div>
+
+                    </div>
+                    <div v-if="!this.form.roles.includes('artwork admin')">
                         <div v-on:click="showUserPermissions = !showUserPermissions">
                             <h2 class="flex headline6Light cursor-pointer mb-2">
                                 Nutzerrechte
@@ -147,16 +164,38 @@
 </template>
 <script>
 
-const roleCheckboxes = [
-    {name: 'Standarduser', roleName: "user", tooltipText: "Hier fehlt noch info text", showIcon: true, checked: false},
+const presets = [
     {
-        name: 'Adminrechte',
-        roleName: "admin",
-        tooltipText: "Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen",
-        showIcon: true,
-        checked: false
+        name: 'Standard User',
+        name_de: 'Standard-Benutzer',
+        tooltipText: '',
+        showIcon: false
     },
-]
+    {
+        name: 'Vertrags- & Dokumentenadmin',
+        name_de: 'Vertrags- & Dokumentenadministrator',
+        tooltipText: '',
+        showIcon: false
+    },
+    {
+        name: 'Budgetadmin',
+        name_de: 'Budgetadministrator',
+        tooltipText: '',
+        showIcon: false
+    },
+    {
+        name: 'Disponent*in',
+        name_de: 'Disponent*in',
+        tooltipText: '',
+        showIcon: false
+    },
+    {
+        name: 'Finanzierungsquellenadmin',
+        name_de: 'Finanzierungsquellenadministrator',
+        tooltipText: '',
+        showIcon: false,
+    }
+];
 
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
@@ -205,6 +244,7 @@ export default {
             showSearchbar: false,
             user_query: "",
             user_search_results: [],
+            showPresets:true,
             form: useForm({
                 user_emails: [],
                 permissions: [],
@@ -227,7 +267,7 @@ export default {
             this.form.user_emails = [];
             this.form.permissions = [];
             this.form.departments = [];
-            this.form.role = '';
+            this.form.roles = [];
             this.departments.forEach((team) => {
                 team.checked = false;
             })
@@ -276,6 +316,47 @@ export default {
             }
 
         },
+        usePreset(preset) {
+            // Get the preset permissions
+            let presetPermissions = [];
+
+            switch (preset.name) {
+                case 'Standard User':
+                    presetPermissions = ['view projects', 'create and edit own project', 'request room occupancy','can see and download contract modules'];
+                    break;
+                case 'Vertrags- & Dokumentenadmin':
+                    presetPermissions = ['view edit upload contracts', 'can see, edit and delete project contracts and docs'];
+                    break;
+                case 'Budgetadmin':
+                    presetPermissions = ['access project budgets', 'can add and remove verified states'];
+                    break;
+                case 'Disponent*in':
+                    presetPermissions = ['admin rooms', 'create, delete and update rooms'];
+                    break;
+                case 'Finanzierungsquellenadmin':
+                    presetPermissions = ['view edit add money_sources', 'can edit and delete money sources'];
+                    break;
+                default:
+                    // Invalid preset name
+                    return;
+            }
+
+            // Update the permissions based on the preset
+            Object.values(this.all_permissions).forEach((permissions) => {
+                permissions.forEach((permission) => {
+                    if (presetPermissions.includes(permission.name)) {
+                            permission.checked = !preset.checked;
+                            if(permission.checked){
+                                this.form.permissions.push(permission.name);
+                            }else{
+                                if (this.form.permissions.includes(permission.name)) {
+                                    this.form.permissions = this.form.permissions.filter(permissionName => permissionName !== permission.name);
+                                }
+                            }
+                    }
+                });
+            });
+        },
         addUser() {
             if (this.emailInput.length >= 3) {
                 this.form.user_emails.push(this.emailInput);
@@ -296,7 +377,7 @@ export default {
             });
         },
         uncheckRolesAndPermissions() {
-            this.roleCheckboxes.forEach((role) => {
+            this.roles.forEach((role) => {
                 role.checked = false;
             })
             this.all_permissions.Projekte.forEach((permission) => {
@@ -313,7 +394,7 @@ export default {
     setup() {
 
         return {
-            roleCheckboxes
+            presets
         }
     }
 }

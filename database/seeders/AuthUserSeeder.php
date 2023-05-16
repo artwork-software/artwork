@@ -89,7 +89,6 @@ class AuthUserSeeder extends Seeder
             ]);
 
         }
-        $user->assignRole(RoleNameEnum::USER->value);
 
 
         $user = User::create([

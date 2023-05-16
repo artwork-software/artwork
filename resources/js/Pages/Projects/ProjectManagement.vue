@@ -7,85 +7,54 @@
                         <div>
                             <p class="items-center flex mr-2 headline1 mb-3">Projekte</p>
                             <div class="w-48">
-                                <Listbox as="div" class="flex">
-                                    <ListboxButton @click="openCloseMenu"
-                                                   class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm border border-2">
-                                        <div class="flex justify-between items-center my-auto w-44 h-6 ml-3">
-                                            Filter
-                                            <span
-                                                class="inset-y-0 flex items-center pr-2 pointer-events-none">
-                                                <ChevronDownIcon class="h-5 w-5" aria-hidden="true"/>
-                                             </span>
+                                <BaseFilter :left="true">
+                                    <div class="w-full">
+                                        <div class="flex justify-end mb-3">
+                                            <span class="xxsLight cursor-pointer text-right w-full" @click="removeFilter">Zurücksetzen</span>
                                         </div>
-                                    </ListboxButton>
-                                    <transition leave-active-class="transition ease-in duration-100"
-                                                leave-from-class="opacity-100" leave-to-class="opacity-0">
-                                        <ListboxOptions static v-show="openedMenu"
-                                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
-
-                                            <ListboxOption as="div" class="max-h-8 flex justify-end mb-3">
-                                                <span class="xxsLight cursor-pointer"
-                                                      @click="removeFilter">Zurücksetzen</span>
-                                            </ListboxOption>
-                                            <ListboxOption>
-                                                <SwitchGroup as="div" class="flex items-center">
-                                                    <Switch v-model="enabled"
-                                                            :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
-                                                        <span class="sr-only">Use setting</span>
-                                                        <span aria-hidden="true"
-                                                              :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
-                                                    </Switch>
-                                                    <SwitchLabel as="span" class="ml-3 xxsLight">
-                                                        Nur meine Projekte anzeigen
-                                                    </SwitchLabel>
-                                                </SwitchGroup>
-                                            </ListboxOption>
-                                            <ListboxOption as="div" class="max-h-8 mb-3 mt-3">
-                                                <div class="flex">
-                                                    <input v-model="showProjectGroups"
-                                                           type="checkbox"
-                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                    <p class=" ml-4 my-auto text-sm text-secondary">Projektgruppen</p>
-                                                </div>
-                                            </ListboxOption>
-                                            <ListboxOption as="div" class="max-h-8 mb-3 mt-3">
-                                                <div class="flex">
-                                                    <input v-model="showProjects"
-                                                           type="checkbox"
-                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                    <p class=" ml-4 my-auto text-sm text-secondary">Projekte</p>
-                                                </div>
-                                            </ListboxOption>
-                                            <ListboxOption as="div" class="mb-3 mt-3">
-                                                <div class="flex justify-between xsLight mb-3"
-                                                     @click="showProjectStateFilter = !showProjectStateFilter">
-                                                    Projektstatus
-                                                    <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter"
-                                                                     aria-hidden="true"/>
-                                                    <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter"
-                                                                   aria-hidden="true"/>
-                                                </div>
-                                                <div v-if="showProjectStateFilter">
-                                                    <div class="flex mb-3" v-for="state in states">
-                                                        <input v-model="state.clicked" @change="addStateToFilter(state)"
-                                                               type="checkbox"
-                                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                        <p class=" ml-4 my-auto text-sm text-secondary">{{
-                                                                state.name
-                                                            }}</p>
-                                                    </div>
-                                                </div>
-
-                                            </ListboxOption>
-
-                                            <ListboxOption as="div" class="mt-6">
-                                                <div class="xxsLight cursor-pointer" @click="openedMenu = !openedMenu">
-                                                    Filter schließen
-                                                </div>
-                                            </ListboxOption>
-                                        </ListboxOptions>
-                                    </transition>
-                                </Listbox>
+                                        <SwitchGroup as="div" class="flex items-center">
+                                            <Switch v-model="enabled"
+                                                    :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                                <span class="sr-only">Use setting</span>
+                                                <span aria-hidden="true"
+                                                      :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
+                                            </Switch>
+                                            <SwitchLabel as="span" class="ml-3 xxsLight">
+                                                Nur meine Projekte anzeigen
+                                            </SwitchLabel>
+                                        </SwitchGroup>
+                                        <div class="flex max-h-8 mb-3 mt-3">
+                                            <input v-model="showProjectGroups"
+                                                   type="checkbox"
+                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                            <p class=" ml-4 my-auto text-sm text-secondary">Projektgruppen</p>
+                                        </div>
+                                        <div class="flex max-h-8 mb-3 mt-3">
+                                            <input v-model="showProjects"
+                                                   type="checkbox"
+                                                   class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                            <p class=" ml-4 my-auto text-sm text-secondary">Projekte</p>
+                                        </div>
+                                        <div class="flex justify-between xsLight mb-3"
+                                             @click="showProjectStateFilter = !showProjectStateFilter">
+                                            Projektstatus
+                                            <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter"
+                                                             aria-hidden="true"/>
+                                            <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter"
+                                                           aria-hidden="true"/>
+                                        </div>
+                                        <div v-if="showProjectStateFilter">
+                                            <div class="flex mb-3" v-for="state in states">
+                                                <input v-model="state.clicked" @change="addStateToFilter(state)"
+                                                       type="checkbox"
+                                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                <p class=" ml-4 my-auto text-sm text-secondary">{{
+                                                        state.name
+                                                    }}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </BaseFilter>
                             </div>
 
                             <div id="selectedFilter" class="mt-3">
@@ -134,7 +103,7 @@
                         </div>
                         <!-- PERMISSION: Create Project -->
                         <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
-                            <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-20">
+                            <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-32">
                                 <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
                             </div>
@@ -963,6 +932,7 @@ import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -974,6 +944,7 @@ const number_of_participants = [
 
 export default defineComponent({
     components: {
+        BaseFilter,
         Dropdown,
         Switch,
         ProjectHistoryComponent,

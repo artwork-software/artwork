@@ -22,7 +22,10 @@
             leave-from-class="transform scale-100 opacity-100"
             leave-to-class="transform scale-95 opacity-0"
         >
-            <MenuItems class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+            <MenuItems v-if="left" class="w-80 absolute left-0 top-12 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
+                <slot></slot>
+            </MenuItems>
+            <MenuItems v-else class="w-80 absolute right-0 top-12 origin-top-right divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
                 <slot></slot>
             </MenuItems>
         </transition>
@@ -48,7 +51,7 @@ export default {
         MenuButton,
         ChevronDownIcon
     },
-    props:['onlyIcon']
+    props:['onlyIcon', 'left']
 }
 </script>
 

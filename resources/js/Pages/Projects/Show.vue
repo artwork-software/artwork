@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div class="flex z-10" v-if="this.project.key_visual_path !== null">
-                    <img :src="'/storage/keyVisual/' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
                          class="rounded-md w-full h-[200px]">
                 </div>
                 <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">

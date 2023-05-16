@@ -286,8 +286,8 @@ class EventController extends Controller
             }
         }
         $this->authorize('create', Event::class);
-
-        if($this->collisionService->getCollision($request, $event)->count() > 0){
+        $collisionsCount = $this->collisionService->getCollision($request, $event)->count();
+        if($collisionsCount > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
                 foreach ($collisions as $collision){

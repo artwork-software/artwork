@@ -8,7 +8,7 @@
                            @click="openRoomAccessModal"/>
         </div>
         <div class="text-secondary text-sm mt-4">RAUMADMIN</div>
-        <div v-if="room.room_admins.length > 0">
+        <div class="flex" v-if="room.room_admins.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.room_admins">
                 <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                      class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>
@@ -19,7 +19,7 @@
             Noch keine Raumadmins vorhanden
         </div>
         <div class="text-secondary text-sm mt-4">ANFRAGEBERECHTIGT</div>
-        <div v-if="room.requestable_by.length > 0">
+        <div class="flex" v-if="room.requestable_by.length > 0">
             <div class="flex flex-wrap mt-2 -mr-3" v-for="user in room.requestable_by">
                 <img :data-tooltip-target="user?.id" :src="user?.profile_photo_url" :alt="user?.name"
                      class="ring-white ring-2 rounded-full h-11 w-11 object-cover"/>

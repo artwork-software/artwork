@@ -1,3 +1,4 @@
+
 export function isProjectMember(projectMembers, userId){
 
     return true
@@ -103,9 +104,5 @@ export function writeAccessOnAllProjects(){
 export function canSeeEditAllBudgets(){
     return can(PROJECT_BUDGET_ADMIN)
 }
-
-
-
-
 
 

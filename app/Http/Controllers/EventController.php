@@ -37,6 +37,7 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Str;
 use Inertia\Response;
 
 class EventController extends Controller
@@ -46,6 +47,7 @@ class EventController extends Controller
     protected ?\stdClass $notificationData = null;
     protected ?CollisionService $collisionService = null;
     protected ?NewHistoryService $history = null;
+    protected ?string $notificationKey = '';
 
     public function __construct()
     {
@@ -55,6 +57,9 @@ class EventController extends Controller
         $this->notificationData->event = new \stdClass();
         $this->notificationData->type = NotificationConstEnum::NOTIFICATION_EVENT_CHANGED;
         $this->history = new NewHistoryService('App\Models\Event');
+
+        $this->notificationKey = Str::random(15);
+
     }
 
     /**
@@ -282,7 +287,7 @@ class EventController extends Controller
         }
         $this->authorize('create', Event::class);
 
-        if($this->collisionService->getCollision($request)->count() > 0){
+        if($this->collisionService->getCollision($request, $event)->count() > 0){
             $collisions = $this->collisionService->getConflictEvents($request);
             if(!empty($collisions)){
                 foreach ($collisions as $collision){
@@ -452,7 +457,6 @@ class EventController extends Controller
             'type' => 'success',
             'message' => $notificationTitle
         ];
-        $this->notificationData->created_by = Auth::user();
         $room = Room::find($request->roomId);
         $admins = $room->users()->wherePivot('is_admin', true)->get();
         $notificationDescription = [
@@ -498,16 +502,16 @@ class EventController extends Controller
      */
     public function updateEvent(EventUpdateRequest $request, Event $event): CalendarEventResource
     {
+        if(!$request->noNotifications){
+        $projectManagers = [];
+        $this->notificationService->setNotificationKey($this->notificationKey);
+        $room = $event->room()->first();
+        $project = $event->project()->first();
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         if($request->accept || $request->optionAccept){
             $event->update(['occupancy_option' => false]);
-
-            if(!empty($request->adminComment)){
-                $event->comments()->create([
-                    'user_id' => Auth::id(),
-                    'comment' => $request->adminComment,
-                    'is_admin_comment' => true
-                ]);
-            }
 
             if($request->accept){
                 $event->update(['accepted' => true]);
@@ -517,25 +521,15 @@ class EventController extends Controller
                 $event->update(['accepted' => true, 'option_string' => $request->optionString]);
             }
 
-        }
-
-
-        DatabaseNotification::query()
-            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
-            ->orWhereJsonContains("data->type", "ROOM_REQUEST")
-            ->whereJsonContains("data->event->id", $event->id)
-            ->delete();
-
-        if($request->roomChange){
-            $notificationTitle = 'Raumanfrage mit Raumänderung bestätigt';
+            $notificationTitle = 'Raumanfrage bestätigt';
+            $this->history->createHistory($event->id, 'Raum bestätigt');
             $broadcastMessage = [
                 'id' => rand(1, 1000000),
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
-            $room = Room::find($event->room_id);
-            $project = Project::find($event->project_id);
 
+            $event->save();
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
@@ -563,8 +557,120 @@ class EventController extends Controller
                     'href' => null
                 ]
             ];
-          $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
-            //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
+            foreach ($projectManagers as $projectManager){
+                if($projectManager->id === $event->creator){
+                    continue;
+                }
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
+            }
+            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage);
+
+        } else {
+            if (!empty($request->adminComment)) {
+                $projectManagers = [];
+                $this->notificationService->setNotificationKey($this->notificationKey);
+                $project = $event->project()->first();
+                if(!empty($project)){
+                    $projectManagers = $project->managerUsers()->get();
+                }
+                $event->comments()->create([
+                    'user_id' => Auth::id(),
+                    'comment' => $request->adminComment,
+                    'is_admin_comment' => true
+                ]);
+                $notificationTitle = 'Nachricht von Raumadmin';
+                $broadcastMessage = [
+                    'id' => rand(1, 1000000),
+                    'type' => 'success',
+                    'message' => $notificationTitle
+                ];
+
+                $event->save();
+                $notificationDescription = [
+                    1 => [
+                        'type' => 'link',
+                        'title' => $room->name,
+                        'href' => route('rooms.show', $room->id)
+                    ],
+                    2 => [
+                        'type' => 'string',
+                        'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                        'href' => null
+                    ],
+                    3 => [
+                        'type' => 'link',
+                        'title' => $project ? $project->name : '',
+                        'href' => $project ? route('projects.show', $project->id) : null
+                    ],
+                    4 => [
+                        'type' => 'string',
+                        'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                        'href' => null
+                    ],
+                    5 => [
+                        'type' => 'comment',
+                        'title' => $request->adminComment,
+                        'href' => null
+                    ]
+                ];
+                foreach ($projectManagers as $projectManager) {
+                    if ($projectManager->id === $event->creator) {
+                        continue;
+                    }
+                    $this->notificationService->setNotificationKey($this->notificationKey);
+                    $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answerDialog'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
+                }
+                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answerDialog'], false, '', null, $broadcastMessage, $event->room_id, $event->id);
+            }
+        }
+        }
+
+        if($request->roomChange){
+            $notificationTitle = 'Raumanfrage mit Raumänderung bestätigt';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+            $room = Room::find($event->room_id);
+            $project = Project::find($event->project_id);
+            $notificationDescription = [
+                1 => [
+                    'type' => 'link',
+                    'title' => $room->name,
+                    'href' => route('rooms.show', $room->id)
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'href' => null
+                ],
+                3 => [
+                    'type' => 'link',
+                    'title' => $project ? $project->name : '',
+                    'href' => $project ? route('projects.show', $project->id) : null
+                ],
+                4 => [
+                    'type' => 'string',
+                    'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                    'href' => null
+                ],
+                5 => [
+                    'type' => 'comment',
+                    'title' => $request->adminComment,
+                    'href' => null
+                ]
+            ];
+
+
+            foreach ($projectManagers as $projectManager){
+                if($projectManager->id === $event->creator){
+                    continue;
+                }
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
+            }
+            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_CHANGED, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id);
         }
 
         $this->authorize('update', $event);
@@ -681,12 +787,85 @@ class EventController extends Controller
         }
     }
 
+    public function answerOnEvent(Event $event, Request $request){
+
+        $event->comments()->create([
+            'user_id' => Auth::id(),
+            'comment' => $request->comment,
+            'is_admin_comment' => false
+        ]);
+
+        $this->notificationService->setNotificationKey($this->notificationKey);
+        $notificationTitle = 'Neue Nachricht zu Raumanfrage';
+        $broadcastMessage = [
+            'id' => rand(1, 1000000),
+            'type' => 'success',
+            'message' => $notificationTitle
+        ];
+        $room = Room::find($event->room_id);
+
+
+        $admins = [];
+        if(!empty($room)){
+            $admins = $room->users()->wherePivot('is_admin', true)->get();
+        }
+        $notificationDescription = [
+            1 => [
+                'type' => 'link',
+                'title' => $room->name,
+                'href' => route('rooms.show', $room->id)
+            ],
+            2 => [
+                'type' => 'string',
+                'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                'href' => null
+            ],
+            3 => [
+                'type' => 'link',
+                'title' => $event->project()->first()->name ?? '',
+                'href' => $event->project()->first() ? route('projects.show', $event->project()->first()->id) : null
+            ],
+            4 => [
+                'type' => 'string',
+                'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                'href' => null
+            ],
+            5 => [
+                'type' => 'comment',
+                'title' => $request->comment,
+                'href' => null
+            ]
+        ];
+        if(!empty($admins)){
+            foreach ($admins as $admin){
+                $this->notificationService->createNotification($admin, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
+                //$this->notificationService->create($admin, $this->notificationData, $broadcastMessage);
+            }
+        } else {
+            $user = User::find($room->user_id);
+            $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_REQUEST, 'green', ['accept', 'decline'], false, '', null, $broadcastMessage, $room->id, $event->id);
+            //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
+        }
+    }
+
+
+    public function deleteOldNotifications(Request $request): void
+    {
+        $notifications = DatabaseNotification::query()
+            ->whereJsonContains("data->notificationKey", $request->notificationKey)
+            ->get();
+
+        foreach ($notifications as $notification){
+            $notification->delete();
+        }
+    }
+
     /**
-     * @param EventAcceptionRequest $request
+     * @param Request $request
      * @param Event $event
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function acceptEvent(EventAcceptionRequest $request, Event $event): \Illuminate\Http\RedirectResponse
+    public function acceptEvent(Request $request, Event $event): \Illuminate\Http\RedirectResponse
     {
         /*DatabaseNotification::query()
             ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
@@ -706,6 +885,10 @@ class EventController extends Controller
         $event->save();
         $room = Room::find($event->room_id);
         $project = Project::find($event->project_id);
+        $projectManagers = [];
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -726,24 +909,88 @@ class EventController extends Controller
                 'type' => 'string',
                 'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
                 'href' => null
+            ],
+            5 => [
+                'type' => 'comment',
+                'title' => $request->adminComment,
+                'href' => null
             ]
         ];
+        foreach ($projectManagers as $projectManager){
+            if($projectManager->id === $event->creator){
+                continue;
+            }
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+        }
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', [], false, '', null, $broadcastMessage, $room->id, $event->id, $project->id);
-        //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
         return Redirect::back();
     }
 
 
     public function declineEvent(Request $request, Event $event){
+        $projectManagers = [];
         $roomId = $event->room_id;
+        $room = $event->room()->first();
+        $project = $event->project()->first();
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         $event->update(['accepted' => false, 'declined_room_id' => $roomId, 'room_id' => null]);
+
         if(!empty($request->comment)){
+
             $event->comments()->create([
                 'user_id' => Auth::id(),
                 'comment' => $request->comment,
                 'is_admin_comment' => true
             ]);
+            $notificationTitle = 'Nachricht von Raumadmin';
+            $broadcastMessage = [
+                'id' => rand(1, 1000000),
+                'type' => 'success',
+                'message' => $notificationTitle
+            ];
+
+            $event->save();
+
+            $notificationDescription = [
+                1 => [
+                    'type' => 'link',
+                    'title' => $room->name,
+                    'href' => route('rooms.show', $room->id)
+                ],
+                2 => [
+                    'type' => 'string',
+                    'title' => $event->event_type()->first()->name . ', ' . $event->eventName,
+                    'href' => null
+                ],
+                3 => [
+                    'type' => 'link',
+                    'title' => $project ? $project->name : '',
+                    'href' => $project ? route('projects.show', $project->id) : null
+                ],
+                4 => [
+                    'type' => 'string',
+                    'title' => Carbon::parse($event->start_time)->translatedFormat('d.m.Y H:i') . ' - ' . Carbon::parse($event->end_time)->translatedFormat('d.m.Y H:i'),
+                    'href' => null
+                ],
+                5 => [
+                    'type' => 'comment',
+                    'title' => $request->comment,
+                    'href' => null
+                ]
+            ];
+            foreach ($projectManagers as $projectManager){
+                if($projectManager->id === $event->creator){
+                    continue;
+                }
+                $this->notificationService->setNotificationKey($this->notificationKey);
+                $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+            }
+            $this->notificationService->setNotificationKey($this->notificationKey);
+            $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
+
         }
         $notificationTitle = 'Raumanfrage abgesagt';
         $this->history->createHistory($event->id, 'Raum abgelehnt');
@@ -781,7 +1028,13 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$event->project_id);
+        foreach ($projectManagers as $projectManager){
+            if($projectManager->id === $event->creator){
+                continue;
+            }
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
+        }
+        $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
         //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
     }
@@ -910,8 +1163,9 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $notificationTitle
         ];
-        $room = Room::find($event->room_id);
-        $project = Project::find($event->project_id);
+        $room = $event->room()->first();
+        $project = $event->project()->first();
+        $projectManagers = $project->managerUsers()->get();
         $notificationDescription = [
             1 => [
                 'type' => 'link',
@@ -934,6 +1188,12 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
+        foreach ($projectManagers as $projectManager){
+            if($projectManager->id === $event->creator){
+                continue;
+            }
+            $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage,$event->room_id, $event->id, $project->id);
+        }
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_EVENT_CHANGED, 'red', [], false, '', null, $broadcastMessage, null, $event->id);
         //$this->notificationService->create($event->creator()->get(), $this->notificationData, $broadcastMessage);
     }

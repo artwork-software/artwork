@@ -67,7 +67,6 @@ class ProjectFileController extends Controller
             $projectFile->accessing_users()->save(Auth::user());
         }
 
-
         if($request->comment){
             $comment = Comment::create([
                 'text' => $request->comment,

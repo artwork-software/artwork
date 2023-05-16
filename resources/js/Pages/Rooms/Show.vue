@@ -103,6 +103,7 @@
                     </div>
                 </div>
 
+                <!-- EventRequest should not be shown due to actual design
                 <div class="flex flex-wrap">
                     <span class="mt-12 headline2 w-full"
                           v-if="requestsToShow?.length !== 0 && ($role('artwork admin') || $canAny(['create, delete and update rooms']) || this.is_room_admin)">
@@ -155,7 +156,7 @@
                                             class="xsDark ml-2">
                                             {{ eventRequest.project.name }}
                                         </Link>
-                                    </div>
+                                    </div> -->
                                     <!--
                                                                         <div v-for="projectLeader in eventRequest.project.project_managers">
                                                                             <img :data-tooltip-target="projectLeader.id"
@@ -165,6 +166,7 @@
                                                                             <UserTooltip :user="projectLeader"/>
                                                                         </div>
                                     -->
+                <!--
                                 </div>
                                 <div class="xsLight w-64" v-else>
                                     Keinem Projekt zugeordnet
@@ -191,7 +193,7 @@
 
                         </div>
                     </div>
-                </div>
+                </div> -->
             </div>
         </div>
 

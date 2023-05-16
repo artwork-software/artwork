@@ -29,7 +29,24 @@ class NotificationService
 {
 
     protected array $description = [];
+  
+    protected string $notificationKey = '';
 
+    /**
+     * @return string
+     */
+    public function getNotificationKey(): string
+    {
+        return $this->notificationKey;
+    }
+
+    /**
+     * @param string $notificationKey
+     */
+    public function setNotificationKey(string $notificationKey): void
+    {
+        $this->notificationKey = $notificationKey;
+    }
 
     /**
      * set notification description
@@ -310,9 +327,11 @@ class NotificationService
         $body->created_by = Auth::user() ? Auth::user()->withoutRelations() : null;
         $body->created_at = Carbon::now()->translatedFormat('d.m.Y H:i');
         $body->budgetData = $budgetData;
+        $body->notificationKey = $this->notificationKey;
         switch ($notificationConstEnum) {
             case NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST:
             case NotificationConstEnum::NOTIFICATION_ROOM_REQUEST:
+            case NotificationConstEnum::NOTIFICATION_ROOM_ANSWER:
                 Notification::send($notificationTo, new RoomRequestNotification($body, $broadcastMessage));
                 break;
             case NotificationConstEnum::NOTIFICATION_EVENT_CHANGED:
@@ -363,6 +382,5 @@ class NotificationService
     public function deleteBudgetNotification(){
 
     }
-
 
 }

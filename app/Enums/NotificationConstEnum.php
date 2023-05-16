@@ -26,6 +26,7 @@ enum NotificationConstEnum: string
     case NOTIFICATION_UPSERT_ROOM_REQUEST = 'NOTIFICATION_UPSERT_ROOM_REQUEST';
     case NOTIFICATION_REMINDER_ROOM_REQUEST = 'NOTIFICATION_REMINDER_ROOM_REQUEST';
     case NOTIFICATION_ROOM_CHANGED = 'NOTIFICATION_ROOM_CHANGED';
+    case NOTIFICATION_ROOM_ANSWER = 'NOTIFICATION_ROOM_ANSWER';
 
     case NOTIFICATION_NEW_TASK = 'NOTIFICATION_NEW_TASK';
     case NOTIFICATION_TASK_REMINDER = 'TASK_REMINDER';
@@ -52,6 +53,7 @@ enum NotificationConstEnum: string
 
             self::NOTIFICATION_UPSERT_ROOM_REQUEST,
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_CHANGED => "ROOMS",
 
             self::NOTIFICATION_NEW_TASK,
@@ -76,6 +78,7 @@ enum NotificationConstEnum: string
             self::NOTIFICATION_LOUD_ADJOINING_EVENT => ConflictNotification::class,
 
             self::NOTIFICATION_REMINDER_ROOM_REQUEST,
+            self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_CHANGED => RoomNotification::class,
 
             self::NOTIFICATION_TASK_REMINDER => DeadlineNotification::class,
@@ -90,6 +93,7 @@ enum NotificationConstEnum: string
     public function title(): string
     {
         return match ($this) {
+            self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_REQUEST => "Raumanfragen bestätigt oder abgelehnt",
             self::NOTIFICATION_CONFLICT => "Terminkonflikte",
             self::NOTIFICATION_EVENT_CHANGED => "Terminänderung",
@@ -117,6 +121,7 @@ enum NotificationConstEnum: string
     public function description(): string
     {
         return match ($this) {
+            self::NOTIFICATION_ROOM_ANSWER,
             self::NOTIFICATION_ROOM_REQUEST => "Erfahre ob deine Raumanfragen bestätigt oder abgelehnt wurden.",
             self::NOTIFICATION_CONFLICT => "Werde benachrichtigt, sobald jemand einen Termin einstellt, welcher mit einem deiner Termine kollidiert.",
             self::NOTIFICATION_EVENT_CHANGED => "Erfahre, ob es Änderungen an deinen Terminen gibt oder ein Termin abgesagt wurde.",

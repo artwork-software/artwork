@@ -3,7 +3,7 @@ export default {
     data() {
         return {
             permissions: new Set(Permissions),
-            roles: new Set(Roles),
+            roles: new Set(RolesArray),
             cache: {}
         };
     },

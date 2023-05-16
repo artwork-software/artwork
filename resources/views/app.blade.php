@@ -15,10 +15,10 @@
         <script type="text/javascript">
             @auth
                 window.Permissions = {!! json_encode(Auth::user()->allPermissions, true) !!};
-                window.Roles = {!! json_encode(Auth::user()->allRoles, true) !!};
+                window.RolesArray = {!! json_encode(Auth::user()->allRoles, true) !!};
             @else
                 window.Permissions = [];
-                window.Roles = [];
+                window.RolesArray = [];
             @endauth
         </script>
     </head>

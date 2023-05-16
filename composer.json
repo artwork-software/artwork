@@ -13,6 +13,7 @@
         "guzzlehttp/guzzle": "^7.5.0",
         "http-interop/http-factory-guzzle": "^1.2",
         "inertiajs/inertia-laravel": "^v0.6.4",
+        "intervention/image": "^2.7",
         "laravel/framework": "^v9.40.1",
         "laravel/jetstream": "^v2.12.5",
         "laravel/sanctum": "^v2.15.1",

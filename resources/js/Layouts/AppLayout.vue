@@ -289,13 +289,13 @@ export default {
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
+                    has_permission: this.$can('admin rooms') || this.hasAdminRole() ,
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
+                    has_permission: this.$can('read details room request') || this.hasAdminRole(),
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },

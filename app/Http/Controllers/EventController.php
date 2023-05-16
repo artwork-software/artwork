@@ -1165,7 +1165,10 @@ class EventController extends Controller
         ];
         $room = $event->room()->first();
         $project = $event->project()->first();
-        $projectManagers = $project->managerUsers()->get();
+        $projectManagers = [];
+        if(!empty($project)){
+            $projectManagers = $project->managerUsers()->get();
+        }
         $notificationDescription = [
             1 => [
                 'type' => 'link',

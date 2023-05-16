@@ -44,6 +44,7 @@ class ProjectShowResource extends JsonResource
             'categories' => $this->categories,
             'genres' => $this->genres,
             'access_budget' => $this->access_budget,
+            'delete_permission_users' => $this->delete_permission_users,
             'project_managers' => $this->managerUsers,
             'write_auth' => $this->writeUsers,
             'curr_user_is_related' => $this->users->contains(Auth::id()),

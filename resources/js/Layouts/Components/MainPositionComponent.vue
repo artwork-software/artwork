@@ -36,7 +36,7 @@
                 </div>
                 <div class="text-white w-44 flex items-center text-center cursor-pointer"
                      @click="verifiedMainPosition(mainPosition.verified?.main_position_id)"
-                     v-if="mainPosition.verified?.requested === this.$page.props.user.id  && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                     v-if="mainPosition.verified?.requested === this.$page.props.user.id && mainPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
                     <p class="xxsLight">Als verifiziert markieren</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1" height="20"
                          viewBox="0 0 20 20">
@@ -100,7 +100,7 @@
                                                                                 </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }"
-                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && mainPosition.verified?.requested === this.$page.props.user.id">
+                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (mainPosition.verified?.requested === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
                                                                                 <span
                                                                                     @click="removeVerification(mainPosition, 'main')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -111,7 +111,7 @@
                                                                                 </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }"
-                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && mainPosition.verified?.requested_by === this.$page.props.user.id">
+                                                  v-if="mainPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (mainPosition.verified?.requested_by === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
                                                                                 <span
                                                                                     @click="requestRemove(mainPosition, 'main')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -172,20 +172,7 @@
         <table v-if="!mainPosition.closed" class="w-full ">
             <thead class="">
             <tr class="" v-for="(subPosition,subIndex) in mainPosition.sub_positions">
-                <SubPositionComponent
-                    @openSubPositionSumDetailModal="openSubPositionSumDetailModal"
-                    @openRowDetailModal="openRowDetailModal"
-                    @openVerifiedModal="openVerifiedModal"
-                    @openCellDetailModal="openCellDetailModal"
-                    @open-error-modal="openErrorModal"
-                    @openDeleteModal="openDeleteModal"
-                    :main-position="mainPosition"
-                    :sub-position="subPosition"
-                    :columns="table.columns"
-                    :project="project"
-                    :table="table">
-
-                </SubPositionComponent>
+                <SubPositionComponent @openSubPositionSumDetailModal="openSubPositionSumDetailModal" @openRowDetailModal="openRowDetailModal" @openVerifiedModal="openVerifiedModal" @openCellDetailModal="openCellDetailModal" @open-error-modal="openErrorModal"  @openDeleteModal="openDeleteModal" :main-position="mainPosition" :sub-position="subPosition" :columns="table.columns" :project="project" :table="table" :project-managers="projectManagers"></SubPositionComponent>
             </tr>
 
             <tr class=" xsWhiteBold flex h-10 w-full text-right"
@@ -268,8 +255,8 @@ export default {
         MenuButton,
         ConfirmationComponent
     },
-    props: ['mainPosition','table','project'],
-    emits:['openDeleteModal','openErrorModal','openVerifiedModal','openRowDetailModal','openSubPositionSumDetailModal', 'openMainPositionSumDetailModal','openCellDetailModal'],
+    props: ['mainPosition','table','project', 'projectManagers'],
+    emits:['openDeleteModal','openErrorModal'],
     data(){
       return{
           showMenu: null,
@@ -338,6 +325,9 @@ export default {
                 mainPositionId: mainPositionId,
                 project_id: this.project?.id,
                 table_id: this.table.id,
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         openVerifiedModal(is_main,is_sub,id,position) {
@@ -353,12 +343,18 @@ export default {
             this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         requestRemove(position, type){
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         openDeleteMainPositionModal(mainPosition) {
@@ -413,12 +409,18 @@ export default {
             this.$inertia.patch(this.route('project.budget.fix.main-position'), {
                 mainPositionId: mainPositionId,
                 project_id: this.project?.id
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         unfixMainPosition(mainPositionId){
             this.$inertia.patch(this.route('project.budget.unfix.main-position'), {
                 mainPositionId: mainPositionId,
                 project_id: this.project?.id
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         openErrorModal(title, description) {

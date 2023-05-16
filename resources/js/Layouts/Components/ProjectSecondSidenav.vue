@@ -4,7 +4,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projektteam</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                               @click="showTeamModal = true"/>
+                               @click="showTeamModal = true" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
             </div>
             <div class="flex w-full mt-2 flex-wrap">
                 <span
@@ -39,7 +39,7 @@
             <div class="flex items-center justify-between">
                 <h2 class="mb-3 xWhiteBold">Projekteigenschaften</h2>
                 <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                               @click="openProjectAttributeEditModal"/>
+                               @click="openProjectAttributeEditModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
             </div>
             <div class="flex mt-3">
                 <div>
@@ -58,7 +58,7 @@
         <div class="w-full flex items-center mb-4">
             <div class="xWhiteBold">Eintritt & Anmeldung</div>
             <PencilAltIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
-                           @click="openEntranceModal"/>
+                           @click="openEntranceModal" v-if="projectMembersWriteAccess.includes($page.props.user.id) || $role('artwork admin')"/>
         </div>
         <div>
             <div class="text-secondary text-sm mb-1">Gäste:
@@ -107,7 +107,7 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
 
 export default {
-    props: ['project', 'projectMembers', 'projectManagerIds', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
+    props: ['project', 'projectMembers', 'projectMembersWriteAccess', 'projectManagerIds', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
     components: {
         ProjectEditTeamModal,
         TeamTooltip,

@@ -6,7 +6,7 @@
                     <h2 class="flex font-black font-lexend text-primary tracking-wide text-3xl">
                         {{ moneySource.name }}</h2>
                     <Menu as="div" class="my-auto mt-3 relative"
-                          v-if="this.$page.props.is_admin">
+                          v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')">
                         <div class="flex items-center -mt-1">
                             <MenuButton
                                 class="flex ml-6">
@@ -29,10 +29,10 @@
                                     leave-from-class="transform opacity-100 scale-100"
                                     leave-to-class="transform opacity-0 scale-95">
                             <MenuItems
-                                class="origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                class="cursor-pointer origin-top-left absolute left-0 mr-4 mt-2 w-72 shadow-lg bg-primary ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
                                 <div class="py-1">
                                     <MenuItem
-                                        v-if="this.$page.props.is_admin"
+                                        v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                         v-slot="{ active }">
                                         <a @click="openEditMoneySourceModal"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -43,7 +43,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem v-slot="{ active }">
-                                        <a @click="duplicateMoneySource(this.moneySource)"
+                                        <a @click="duplicateMoneySource(this.moneySource) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                             <DuplicateIcon
                                                 class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
@@ -52,7 +52,7 @@
                                         </a>
                                     </MenuItem>
                                     <MenuItem
-                                        v-if="this.$page.props.is_admin"
+                                        v-if="$role('artwork admin') || access_member.includes($page.props.user.id) || competent_member.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources')"
                                         v-slot="{ active }">
                                         <a @click="openDeleteSourceModal(this.moneySource)"
                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -170,7 +170,7 @@
                                         </li>
                                     </ListboxOption>
                                     <ListboxOption as="template" class="max-h-8"
-                                                   v-for="project in this.projects"
+                                                   v-for="project in this.linkedProjects"
                                                    :key="project.id"
                                                    :value="project"
                                                    v-slot="{ active, selected }">
@@ -218,6 +218,7 @@
                 </div>
             </div>
         </div>
+
         <edit-money-source-component
             v-if="showEditMoneySourceModal"
             @closed="onEditMoneySourceModalClose()"
@@ -232,6 +233,8 @@
                 :money_source="moneySource"
                 :money-source-files="moneySource.money_source_files"
                 :linked-projects="linkedProjects"
+                :competent="competent_member"
+                :write-access="access_member"
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
@@ -327,7 +330,28 @@ export default {
                 }
             }
 
+        },
+        access_member(){
+            const accessUserIds = [];
+            this.moneySource.users.forEach((user) => {
+                if(user.pivot?.write_access){
+                    accessUserIds.push(user.id);
+                }
+
+            });
+            return accessUserIds;
+        },
+        competent_member(){
+            const competentUserIds = [];
+            this.moneySource.users.forEach((user) => {
+                if(user.pivot?.competent){
+                    competentUserIds.push(user.id);
+                }
+
+            });
+            return competentUserIds;
         }
+
     },
     data() {
         return {

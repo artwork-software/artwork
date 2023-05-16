@@ -112,6 +112,13 @@
                                                 <p
                                                     class=" ml-4 my-auto text-sm text-secondary">Budgetzugriff</p>
                                                 </div>
+                                                <div class="flex mt-4">
+                                                    <input v-model="user.delete_permission"
+                                                           type="checkbox"
+                                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                <p
+                                                    class=" ml-4 my-auto text-sm text-secondary">Löschrecht</p>
+                                                </div>
                                                 <div class="flex mt-4" v-if="user.project_management">
                                                     <input v-model="user.is_manager"
                                                            type="checkbox"
@@ -231,7 +238,8 @@ export default {
                 this.form.assigned_user_ids[user.id] = {
                     access_budget: user.access_budget,
                     is_manager: user.is_manager,
-                    can_write: user.can_write
+                    can_write: user.can_write,
+                    delete_permission: user.delete_permission
                 };
             })
             this.form.assigned_departments = [];
@@ -248,7 +256,7 @@ export default {
             if (this.$page.props.user.id === user.id && user.project_management) {
                 return true;
             }
-            if (this.$page.props.is_admin) {
+            if ($role('artwork admin')) {
                 return true;
             }
             return false;

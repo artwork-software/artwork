@@ -202,28 +202,28 @@ class EventController extends Controller
                 while ($whileEndDate->addDay() < $endSeriesDate) {
                     $startDate = $startDate->addDay();
                     $endDate = $endDate->addDay();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 2){
                 while ($whileEndDate->addWeek() < $endSeriesDate) {
                     $startDate = $startDate->addWeek();
                     $endDate = $endDate->addWeek();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 3){
                 while ($whileEndDate->addWeeks(2) < $endSeriesDate) {
                     $startDate = $startDate->addWeeks(2);
                     $endDate = $endDate->addWeeks(2);
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
             if($request->seriesFrequency === 4){
                 while ($whileEndDate->addMonth() < $endSeriesDate) {
                     $startDate = $startDate->addMonth();
                     $endDate = $endDate->addMonth();
-                    $this->createSeriesEvent($startDate, $endDate, $request, $series, $projectFirstEvent->id);
+                    $this->createSeriesEvent($startDate, $endDate, $request, $series, @$projectFirstEvent->id);
                 }
             }
         }
@@ -335,7 +335,6 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->setNotificationKey($this->notificationKey);
         $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
         //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
@@ -378,7 +377,6 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-        $this->notificationService->setNotificationKey($this->notificationKey);
         $this->notificationService->createNotification($user, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_LOUD_ADJOINING_EVENT, 'red', [], false, '', null, $broadcastMessage, null, $conflict->id);
         //$this->notificationService->create($user, $this->notificationData, $broadcastMessage);
     }
@@ -450,8 +448,10 @@ class EventController extends Controller
      * @return void
      */
     private function createRequestNotification($request, Event $event) {
-        $this->notificationService->setNotificationKey($this->notificationKey);
+        $this->notificationData->type = NotificationConstEnum::NOTIFICATION_ROOM_REQUEST;
         $notificationTitle = 'Neue Raumanfrage';
+        $this->notificationData->event = $event;
+        $this->notificationData->accepted = false;
         $broadcastMessage = [
             'id' => rand(1, 1000000),
             'type' => 'success',
@@ -633,7 +633,8 @@ class EventController extends Controller
                 'type' => 'success',
                 'message' => $notificationTitle
             ];
-
+            $room = Room::find($event->room_id);
+            $project = Project::find($event->project_id);
             $notificationDescription = [
                 1 => [
                     'type' => 'link',
@@ -866,6 +867,12 @@ class EventController extends Controller
      */
     public function acceptEvent(Request $request, Event $event): \Illuminate\Http\RedirectResponse
     {
+        /*DatabaseNotification::query()
+            ->whereJsonContains("data->type", "NOTIFICATION_UPSERT_ROOM_REQUEST")
+            ->orWhereJsonContains("data->type", "ROOM_REQUEST")
+            ->whereJsonContains("data->event->id", $event->id)
+            ->delete();*/
+
         $event->occupancy_option = false;
         $notificationTitle = 'Raumanfrage bestätigt';
         $this->history->createHistory($event->id, 'Raum bestätigt');
@@ -876,8 +883,8 @@ class EventController extends Controller
         ];
 
         $event->save();
-        $room = $event->room()->first();
-        $project = $event->project()->first();
+        $room = Room::find($event->room_id);
+        $project = Project::find($event->project_id);
         $projectManagers = [];
         if(!empty($project)){
             $projectManagers = $project->managerUsers()->get();
@@ -909,7 +916,6 @@ class EventController extends Controller
                 'href' => null
             ]
         ];
-
         foreach ($projectManagers as $projectManager){
             if($projectManager->id === $event->creator){
                 continue;
@@ -993,7 +999,8 @@ class EventController extends Controller
             'type' => 'error',
             'message' => $notificationTitle
         ];
-
+        $room = Room::find($roomId);
+        $project = Project::find($event->project_id);
         $notificationDescription = [
             1 => [
                 'type' => 'link',

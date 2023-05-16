@@ -46,6 +46,10 @@ class Room extends Model
         'everyone_can_book'
     ];
 
+    protected $with = [
+      'admins'
+    ];
+
     protected $casts = [
         'everyone_can_book' => 'boolean',
         'start_date' => 'datetime',
@@ -66,6 +70,12 @@ class Room extends Model
     {
         return $this->belongsToMany(User::class, 'room_user', 'room_id')
             ->withPivot('is_admin', 'can_request');
+    }
+
+    public function admins(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'room_user', 'room_id')
+            ->wherePivot('is_admin', true);
     }
 
     public function room_files()

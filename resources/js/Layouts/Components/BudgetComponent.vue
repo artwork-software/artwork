@@ -1,5 +1,4 @@
 <template>
-
     <div :class="table.is_template ? '' : 'bg-lightBackgroundGray'" class="mx-1 pr-10 pt-6">
         <div class="flex justify-between ">
             <div v-if="table.is_template" class="flex justify-start mb-6 headline2">
@@ -347,7 +346,8 @@
                                                        @open-error-modal="openErrorModal"
                                                        :table="table"
                                                        :project="project"
-                                                       :main-position="mainPosition"></MainPositionComponent>
+                                                       :main-position="mainPosition"
+                                :project-managers="projectManager"></MainPositionComponent>
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-28"></td>
@@ -431,7 +431,8 @@
                                                        @open-error-modal="openErrorModal"
                                                        :table="table"
                                                        :project="project"
-                                                       :main-position="mainPosition"></MainPositionComponent>
+                                                       :main-position="mainPosition"
+                                                        :project-managers="projectManager"></MainPositionComponent>
                             </tr>
                             <tr class="bg-secondaryHover xsDark flex h-10 w-full text-right">
                                 <td class="w-28"></td>

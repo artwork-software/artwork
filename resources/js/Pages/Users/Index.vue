@@ -6,7 +6,7 @@
                     <div class="flex">
                         <div class="w-full flex my-auto">
                             <h2 class="headline1">Alle Nutzer*innen</h2>
-                            <AddButton @click="openAddUserModal" text="Nutzer einladen"
+                            <AddButton v-if="hasAdminRole()" @click="openAddUserModal" text="Nutzer einladen"
                                        mode="page" class="-mt-0.5"/>
                             <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                 <SvgCollection svgName="arrowLeft" class="mt-1 ml-2"/>
@@ -33,7 +33,7 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)"
+                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
                                               class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
@@ -116,7 +116,7 @@
                                         <MenuItems
                                             class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
                                             <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="getEditHref(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
@@ -125,7 +125,7 @@
                                                         Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
@@ -148,7 +148,7 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)"
+                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
                                               class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
@@ -231,7 +231,7 @@
                                         <MenuItems
                                             class="origin-top-right absolute right-0 mr-4 mt-2 w-56 shadow-lg bg-primary focus:outline-none">
                                             <div class="py-1">
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a :href="getEditHref(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <PencilAltIcon
@@ -240,7 +240,7 @@
                                                         Profil bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="hasAdminRole()">
                                                     <a @click="openDeleteUserModal(user)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon

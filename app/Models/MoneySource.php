@@ -54,6 +54,11 @@ class MoneySource extends Model
         )->using(MoneySourceUserPivot::class);
     }
 
+    public function competent(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'money_source_users')->wherePivot('competent', true)->using(MoneySourceUserPivot::class);
+    }
+
     public function money_source_tasks(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(MoneySourceTask::class, 'money_source_id');

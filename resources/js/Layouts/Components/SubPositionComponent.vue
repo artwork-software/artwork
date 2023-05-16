@@ -70,7 +70,7 @@
                 <div
                     class="text-white w-44 flex items-center text-center cursor-pointer"
                     @click="verifiedSubPosition(subPosition.verified?.sub_position_id)"
-                    v-if="subPosition.verified?.requested === this.$page.props.user.id && subPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED'">
+                    v-if="subPosition.is_verified !== 'BUDGET_VERIFIED_TYPE_CLOSED' && subPosition.verified?.requested === this.$page.props.user.id">
                     <p class="xxsLight">Als verifiziert markieren</p>
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" class="ml-1"
                          height="20" viewBox="0 0 20 20">
@@ -136,7 +136,7 @@
                                                                                     </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }"
-                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && subPosition.verified?.requested_by === this.$page.props.user.id">
+                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_REQUESTED' && (subPosition.verified?.requested_by === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
                                                                                 <span
                                                                                     @click="requestRemove(subPosition, 'sub')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -147,7 +147,7 @@
                                                                                 </span>
                                         </MenuItem>
                                         <MenuItem v-slot="{ active }"
-                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && subPosition.verified?.requested === this.$page.props.user.id">
+                                                  v-if="subPosition.is_verified === 'BUDGET_VERIFIED_TYPE_CLOSED' && (subPosition.verified?.requested === this.$page.props.user.id || projectManagers.includes(this.$page.props.user.id))">
                                                                                 <span
                                                                                     @click="removeVerification(subPosition, 'sub')"
                                                                                     :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'cursor-pointer group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -372,7 +372,7 @@ export default {
         ConfirmationComponent,
         Link
     },
-    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table'],
+    props: ['subPosition', 'mainPosition', 'columns', 'project', 'table', 'projectManagers'],
     emits: [
         'openDeleteModal',
         'openVerifiedModal',
@@ -452,6 +452,9 @@ export default {
                 subPositionId: subPositionId,
                 project_id: this.project?.id,
                 table_id: this.table.id,
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         openVerifiedModalSub(subPosition) {
@@ -466,12 +469,18 @@ export default {
             this.$inertia.post(this.route('project.budget.take-back.verification'), {
                 position: position,
                 type: type
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         removeVerification(position, type) {
             this.$inertia.post(this.route('project.budget.remove.verification'), {
                 position: position,
                 type: type
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         checkColumnsLocked(){
@@ -603,12 +612,18 @@ export default {
             this.$inertia.patch(this.route('project.budget.fix.sub-position'), {
                 subPositionId: subPositionId,
                 project_id: this.project?.id
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         },
         unfixSubPosition(subPositionId) {
             this.$inertia.patch(this.route('project.budget.unfix.sub-position'), {
                 subPositionId: subPositionId,
                 project_id: this.project?.id
+            }, {
+                preserveScroll: true,
+                preserveState: true
             })
         }
 

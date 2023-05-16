@@ -9,7 +9,7 @@
                             <div class="w-48">
                                 <Listbox as="div" class="flex">
                                     <ListboxButton @click="openCloseMenu"
-                                        class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm border border-2">
+                                                   class="bg-white w-full relative py-2 cursor-pointer focus:outline-none sm:text-sm border border-2">
                                         <div class="flex justify-between items-center my-auto w-44 h-6 ml-3">
                                             Filter
                                             <span
@@ -21,16 +21,19 @@
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100" leave-to-class="opacity-0">
                                         <ListboxOptions static v-show="openedMenu"
-                                            class="absolute w-80 z-10 mt-12 bg-primary shadow-lg p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
+                                                        class="absolute w-80 z-10 mt-12 bg-primary shadow-lg p-3 text-base ring-1 ring-black ring-opacity-5 overflow-auto focus:outline-none sm:text-sm">
 
                                             <ListboxOption as="div" class="max-h-8 flex justify-end mb-3">
-                                                <span class="xxsLight cursor-pointer" @click="removeFilter">Zurücksetzen</span>
+                                                <span class="xxsLight cursor-pointer"
+                                                      @click="removeFilter">Zurücksetzen</span>
                                             </ListboxOption>
                                             <ListboxOption>
                                                 <SwitchGroup as="div" class="flex items-center">
-                                                    <Switch v-model="enabled" :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                                    <Switch v-model="enabled"
+                                                            :class="[enabled ? 'bg-green-400' : 'bg-gray-200', 'relative inline-flex h-3 w-6 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
                                                         <span class="sr-only">Use setting</span>
-                                                        <span aria-hidden="true" :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']" />
+                                                        <span aria-hidden="true"
+                                                              :class="[enabled ? 'translate-x-3' : 'translate-x-0', 'pointer-events-none inline-block h-2 w-2 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']"/>
                                                     </Switch>
                                                     <SwitchLabel as="span" class="ml-3 xxsLight">
                                                         Nur meine Projekte anzeigen
@@ -54,15 +57,22 @@
                                                 </div>
                                             </ListboxOption>
                                             <ListboxOption as="div" class="mb-3 mt-3">
-                                                <div class="flex justify-between xsLight mb-3" @click="showProjectStateFilter = !showProjectStateFilter">
+                                                <div class="flex justify-between xsLight mb-3"
+                                                     @click="showProjectStateFilter = !showProjectStateFilter">
                                                     Projektstatus
-                                                    <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter" aria-hidden="true"/>
-                                                    <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter" aria-hidden="true"/>
+                                                    <ChevronDownIcon class="h-5 w-5" v-if="!showProjectStateFilter"
+                                                                     aria-hidden="true"/>
+                                                    <ChevronUpIcon class="h-5 w-5" v-if="showProjectStateFilter"
+                                                                   aria-hidden="true"/>
                                                 </div>
                                                 <div v-if="showProjectStateFilter">
-                                                    <div class="flex mb-3" v-for="state in states" >
-                                                        <input v-model="state.clicked" @change="addStateToFilter(state)" type="checkbox" class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                                        <p class=" ml-4 my-auto text-sm text-secondary">{{ state.name }}</p>
+                                                    <div class="flex mb-3" v-for="state in states">
+                                                        <input v-model="state.clicked" @change="addStateToFilter(state)"
+                                                               type="checkbox"
+                                                               class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                                        <p class=" ml-4 my-auto text-sm text-secondary">{{
+                                                                state.name
+                                                            }}</p>
                                                     </div>
                                                 </div>
 
@@ -79,28 +89,33 @@
                             </div>
 
                             <div id="selectedFilter" class="mt-3">
-                                <span v-if="enabled" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                <span v-if="enabled"
+                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                     Meine Projekte
                                     <button type="button" @click="enabled = !enabled">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
-                                <span v-if="showProjectGroups" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                <span v-if="showProjectGroups"
+                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                     Projektgruppen
                                     <button type="button" @click="showProjectGroups = !showProjectGroups">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
-                                <span v-if="showProjects" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                <span v-if="showProjects"
+                                      class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                     Projekte
                                     <button type="button" @click="showProjects = !showProjects">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
                                 <span v-for="state in states">
-                                    <span v-if="state.clicked" class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
+                                    <span v-if="state.clicked"
+                                          class="rounded-full items-center font-medium text-tagText border bg-tagBg border-tag px-3 text-sm mr-1 mb-1 h-8 inline-flex">
                                     {{ state.name }}
-                                    <button type="button" @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
+                                    <button type="button"
+                                            @click="this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1); state.clicked = false">
                                         <XIcon class="ml-1 h-4 w-4 hover:text-error "/>
                                     </button>
                                 </span>
@@ -117,7 +132,8 @@
                                 <XIcon class="ml-2 cursor-pointer h-5 w-5" @click="closeSearchbar()"/>
                             </div>
                         </div>
-                        <div class="flex relative" v-if="this.$page.props.is_admin || this.$page.props.can.own_projects">
+                        <!-- PERMISSION: Create Project -->
+                        <div class="flex relative" v-if="$can('create and edit own project') || $role('artwork admin')">
                             <div v-if="$page.props.can.show_hints" class="flex mt-1 absolute w-40 right-20">
                                 <span class="hind ml-1 my-auto">Lege neue Projekte an</span>
                                 <SvgCollection svgName="smallArrowRight" class="mt-1 ml-2"/>
@@ -125,13 +141,18 @@
                             <AddButton @click="openAddProjectModal" text="Neu" mode="page"/>
                         </div>
                     </div>
-                    <div v-for="(project,index) in filteredProjects" :key="project.id" class="mt-5 border-b-2 border-gray-200 w-full">
+                    <div v-for="(project,index) in filteredProjects" :key="project.id"
+                         class="mt-5 border-b-2 border-gray-200 w-full">
                         <div class="flex mb-3">
                             <div class="w-48 flex justify-center">
-                                <div class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
-                                    <img :src="'/storage/keyVisual/' + project.key_visual" alt="" class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
-                                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5" v-else>
-                                    <div class="absolute flex items-center justify-center w-7 h-7" v-if="project.is_group">
+                                <div
+                                    class="flex justify-center items-center relative bg-gray-200 rounded-full h-12 w-12">
+                                    <img :src="'/storage/keyVisual/' + project.key_visual" alt=""
+                                         class="rounded-full h-12 w-12" v-if="project.key_visual !== null">
+                                    <img src="/Svgs/IconSvgs/placeholder.svg" alt="" class="rounded-full h-5 w-5"
+                                         v-else>
+                                    <div class="absolute flex items-center justify-center w-7 h-7"
+                                         v-if="project.is_group">
                                         <img src="Svgs/IconSvgs/icon_project_group.svg" alt="">
                                     </div>
                                 </div>
@@ -139,8 +160,16 @@
                             <div class="w-full mr-3">
                                 <div class="flex items-center mb-2">
                                     <div class="mr-6">
-                                        <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
-                                              class="flex w-full my-auto">
+                                        <Link
+                                            v-if="
+                                                $can('view projects') ||
+                                                $can('management projects') ||
+                                                $can('write projects') ||
+                                                $role('artwork admin') ||
+                                                $role('budget admin') ||
+                                                checkPermission(project, 'edit')"
+                                            :href="getEditHref(project)"
+                                            class="flex w-full my-auto">
                                             <p class="headline2 flex items-center">
                                                 {{ truncate(project.name, 30, '...') }}
                                             </p>
@@ -148,13 +177,16 @@
                                         <div v-else class="flex w-full my-auto">
                                             <p class="headline2 flex items-center">
                                             <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
+                                                     aria-hidden="true"/>
                                             </span>
                                                 {{ truncate(project.name, 80, '...') }}
                                             </p>
                                         </div>
                                     </div>
-                                    <div v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || checkPermission(project, 'edit') || this.$page.props.can.view_projects" class="text-secondary flex flex-nowrap items-center ">
+                                    <div
+                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')"
+                                        class="text-secondary flex flex-nowrap items-center ">
                                         <div v-if="project.project_history.length" class="flex items-center">
                                         <span class=" xxsLight">
                                               zuletzt geändert:
@@ -169,8 +201,9 @@
                                             <span class="ml-2 xxsLight subpixel-antialiased">
                                                 {{ project.project_history[0].created_at }}
                                             </span>
-                                            <button class="ml-4 xxsLight subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
-                                                    @click="openProjectHistoryModal(project)">
+                                            <button
+                                                class="ml-4 xxsLight subpixel-antialiased text-buttonBlue flex items-center cursor-pointer"
+                                                @click="openProjectHistoryModal(project)">
                                                 <ChevronRightIcon
                                                     class="-mr-0.5 h-4 w-4 group-hover:text-white"
                                                     aria-hidden="true"/>
@@ -187,85 +220,95 @@
                                 </div>
                             </div>
                             <div class="flex w-4/12 justify-between mr-10">
-                            <div class="mr-3 w-36">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
-                            </div>
-                            <div class="flex items-top mx-4">
-                                <div class="-mr-3 " v-for="(user) in project.project_managers">
-                                    <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
+                                <div class="mr-3 w-36">
+                                    <span
+                                        class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep"
+                                        :class="project.state?.color">{{ project.state?.name }}</span>
                                 </div>
-                            </div>
-                            <div class="flex w-1/12 ml-4">
-                                <Menu   v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || this.$page.props.can.delete_projects"
-                                        as="div" class="relative">
-                                    <div class="flex bg-tagBg p-0.5 rounded-full">
-                                        <div v-if="$page.props.can.show_hints && index === 0"
-                                             class="absolute flex w-40 right-5 bottom-5">
-                                            <div class="flex">
-                                                <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
-                                            </div>
-                                            <div>
-                                                <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
-                                            </div>
-                                        </div>
-                                        <MenuButton
-                                            class="flex">
-                                            <DotsVerticalIcon class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
-                                                              aria-hidden="true"/>
-                                        </MenuButton>
-
+                                <div class="flex items-top mx-4">
+                                    <div class="-mr-3 " v-for="(user) in project.project_managers">
+                                        <NewUserToolTip :user="user" :id="user.id" height="8" width="8"/>
                                     </div>
-                                    <transition enter-active-class="transition ease-out duration-100"
-                                                enter-from-class="transform opacity-0 scale-95"
-                                                enter-to-class="transform opacity-100 scale-100"
-                                                leave-active-class="transition ease-in duration-75"
-                                                leave-from-class="transform opacity-100 scale-100"
-                                                leave-to-class="transform opacity-0 scale-95">
-                                        <MenuItems
-                                            class="origin-top-right z-50 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                            <div class="py-1">
-                                                <MenuItem v-slot="{ active }" v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
-                                                    <a :href="getEditHref(project)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <PencilAltIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Bearbeiten
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }"  v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.checkPermission(project, 'edit')">
-                                                    <a href="#" @click="duplicateProject(project)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <DuplicateIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        Duplizieren
-                                                    </a>
-                                                </MenuItem>
-                                                <MenuItem v-slot="{ active }" v-if="this.$page.props.is_admin || this.$page.props.can.delete_projects || this.checkPermission(project, 'delete')">
-                                                    <a href="#" @click="openDeleteProjectModal(project)"
-                                                       :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                        <TrashIcon
-                                                            class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                            aria-hidden="true"/>
-                                                        In den Papierkorb legen
-                                                    </a>
-                                                </MenuItem>
+                                </div>
+                                <div class="flex w-1/12 ml-4">
+                                    <Menu
+                                        v-if="this.checkPermission(project, 'edit') || checkPermission(project, 'delete') || $role('artwork admin')"
+                                        as="div" class="relative">
+                                        <div class="flex bg-tagBg p-0.5 rounded-full">
+                                            <div v-if="$page.props.can.show_hints && index === 0"
+                                                 class="absolute flex w-40 right-5 bottom-5">
+                                                <div class="flex">
+                                                    <span class="mr-2 hind mt-1">Bearbeite die Projekte</span>
+                                                </div>
+                                                <div>
+                                                    <SvgCollection svgName="arrowUpRight" class="ml-2 rotate-45"/>
+                                                </div>
                                             </div>
-                                        </MenuItems>
-                                    </transition>
-                                </Menu>
-                            </div>
+                                            <MenuButton
+                                                class="flex">
+                                                <DotsVerticalIcon
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                                    aria-hidden="true"/>
+                                            </MenuButton>
+
+                                        </div>
+                                        <transition enter-active-class="transition ease-out duration-100"
+                                                    enter-from-class="transform opacity-0 scale-95"
+                                                    enter-to-class="transform opacity-100 scale-100"
+                                                    leave-active-class="transition ease-in duration-75"
+                                                    leave-from-class="transform opacity-100 scale-100"
+                                                    leave-to-class="transform opacity-0 scale-95">
+                                            <MenuItems
+                                                class="origin-top-right z-50 absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
+                                                <div class="py-1">
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('write projects') || this.checkPermission(project, 'edit')">
+                                                        <a :href="getEditHref(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <PencilAltIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Bearbeiten
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('write projects') || $can('management projects') || this.checkPermission(project, 'edit')">
+                                                        <a href="#" @click="duplicateProject(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <DuplicateIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            Duplizieren
+                                                        </a>
+                                                    </MenuItem>
+                                                    <MenuItem v-slot="{ active }"
+                                                              v-if="$role('artwork admin') || $can('delete projects') || this.checkPermission(project, 'delete')">
+                                                        <a href="#" @click="openDeleteProjectModal(project)"
+                                                           :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                            <TrashIcon
+                                                                class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                aria-hidden="true"/>
+                                                            In den Papierkorb legen
+                                                        </a>
+                                                    </MenuItem>
+                                                </div>
+                                            </MenuItems>
+                                        </transition>
+                                    </Menu>
+                                </div>
                             </div>
                         </div>
                         <div class="py-4 flex hidden">
                             <div class="flex w-1/2">
                                 <div class="mr-6">
-                                    <Link v-if="this.$page.props.is_admin || this.$page.props.can.edit_projects || this.$page.props.can.project_management || this.$page.props.can.view_projects || checkPermission(project, 'edit') " :href="getEditHref(project)"
-                                          class="flex w-full my-auto">
+                                    <Link
+                                        v-if="$role('artwork admin') || $can('write projects') || checkPermission(project, 'edit') || $can('view projects')"
+                                        :href="getEditHref(project)"
+                                        class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">
                                             <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
+                                                     aria-hidden="true"/>
                                             </span>
                                             {{ project.name }}
                                         </p>
@@ -273,7 +316,8 @@
                                     <div v-else class="flex w-full my-auto">
                                         <p class="headline2 flex items-center">
                                             <span v-if="project.is_group">
-                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2" aria-hidden="true"/>
+                                                <img src="/Svgs/IconSvgs/icon_group_black.svg" class="h-5 w-5 mr-2"
+                                                     aria-hidden="true"/>
                                             </span>
                                             {{ project.name }}
                                         </p>
@@ -282,7 +326,9 @@
 
                             </div>
                             <div class="w-32">
-                                <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep" :class="project.state?.color">{{ project.state?.name }}</span>
+                                <span
+                                    class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium break-keep"
+                                    :class="project.state?.color">{{ project.state?.name }}</span>
                             </div>
                             <div class="flex w-96">
                                 <div class="my-auto -mr-3 flex" v-for="user in project.users.slice(0,3)">
@@ -327,7 +373,7 @@
                                         </Menu>
                                     </div>
                                 </div>
-                                </div>
+                            </div>
                         </div>
 
                     </div>
@@ -389,7 +435,8 @@
                                     >
                                         <MenuItems
                                             class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <div
+                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
                                                 <Disclosure v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -417,7 +464,8 @@
                                                                 {{ category.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">Noch keine Kategorien angelegt
+                                                        <div v-else class="text-secondary">Noch keine Kategorien
+                                                            angelegt
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -443,13 +491,14 @@
                                                                    v-model="form.assignedGenreIds"
                                                                    :value="genre.id"
                                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
-                                                            <p  :class="[form.assignedGenreIds.includes(genre.id)
+                                                            <p :class="[form.assignedGenreIds.includes(genre.id)
                                                         ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                                class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ genre.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">Noch keine Genres angelegt</div>
+                                                        <div v-else class="text-secondary">Noch keine Genres angelegt
+                                                        </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
                                                 <hr class="border-gray-500 mt-2 mb-2">
@@ -493,15 +542,18 @@
                             <div class="flex mb-2">
                                 <div v-for="categoryId in form.assignedCategoryIds">
                                     <TagComponent hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name" :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
+                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
                                 </div>
                                 <div v-for="genreId in form.assignedGenreIds">
-                                    <TagComponent   hide-x="true"
-                                                    :displayed-text="this.genres.find(genre => genre.id === genreId).name" :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
+                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
                                 </div>
                                 <div v-for="sectorId in form.assignedSectorIds">
-                                    <TagComponent  hide-x="true"
-                                                   :displayed-text="this.sectors.find(sector => sector.id === sectorId).name" :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
+                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                                 </div>
                             </div>
                             <div class="mb-3">
@@ -510,14 +562,14 @@
                                                 v-model="form.description" rows="4"
                                                 class="resize-none placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
                             </div>
-                                <div class="flex items-center mb-2">
-                                    <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
-                                           class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
-                                    <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
-                                           class="ml-2">
-                                        Gehört zu Projektgruppe
-                                    </label>
-                                </div>
+                            <div class="flex items-center mb-2">
+                                <input id="hasGroup" type="checkbox" v-model="this.hasGroup"
+                                       class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
+                                <label for="hasGroup" :class="this.hasGroup ? 'xsDark' : 'xsLight subpixel-antialiased'"
+                                       class="ml-2">
+                                    Gehört zu Projektgruppe
+                                </label>
+                            </div>
                             <div v-if="this.hasGroup" class="mb-2">
                                 <Listbox as="div" v-model="this.selectedGroup" id="room">
                                     <ListboxButton class="inputMain w-full h-10 cursor-pointer truncate flex p-2">
@@ -567,7 +619,8 @@
                                         <MenuButton
                                             class="h-12 border border-2 sDark placeholder:xsLight border-gray-300 w-full bg-white px-3 py-2 text-sm font-medium text-black focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                                         >
-                                            <span class="float-left subpixel-antialiased xsLight">Eigenschaften wählen</span>
+                                            <span
+                                                class="float-left subpixel-antialiased xsLight">Eigenschaften wählen</span>
                                             <ChevronDownIcon
                                                 class="ml-2 -mr-1 h-5 w-5 text-primary float-right"
                                                 aria-hidden="true"
@@ -584,7 +637,8 @@
                                     >
                                         <MenuItems
                                             class="absolute overflow-y-auto h-48 mt-2 w-80 origin-top-left divide-y divide-gray-200 rounded-sm bg-primary ring-1 ring-black p-2 text-white opacity-100 z-50">
-                                            <div class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
+                                            <div
+                                                class="mx-auto w-full max-w-md rounded-2xl bg-primary border-none mt-2">
                                                 <Disclosure v-slot="{ open }">
                                                     <DisclosureButton
                                                         class="flex w-full py-2 justify-between rounded-lg bg-primary text-left text-sm font-medium focus:outline-none focus-visible:ring-purple-500"
@@ -608,11 +662,12 @@
                                                                    class="cursor-pointer h-4 w-4 text-success border-1 border-darkGray bg-darkGrayBg focus:border-none"/>
                                                             <p :class="[form.assignedCategoryIds.includes(category.id)
                                                             ? 'text-white' : 'text-secondary', 'subpixel-antialiased']"
-                                                            class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
+                                                               class="ml-1.5 text-xs subpixel-antialiased align-text-middle">
                                                                 {{ category.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">Noch keine Kategorien angelegt
+                                                        <div v-else class="text-secondary">Noch keine Kategorien
+                                                            angelegt
                                                         </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
@@ -644,7 +699,8 @@
                                                                 {{ genre.name }}
                                                             </p>
                                                         </div>
-                                                        <div v-else class="text-secondary">Noch keine Genres angelegt</div>
+                                                        <div v-else class="text-secondary">Noch keine Genres angelegt
+                                                        </div>
                                                     </DisclosurePanel>
                                                 </Disclosure>
 
@@ -689,15 +745,18 @@
                             <div class="flex mb-2">
                                 <div v-for="categoryId in form.assignedCategoryIds">
                                     <TagComponent hide-x="true"
-                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name" :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
+                                                  :displayed-text="this.categories.find(category => category.id === categoryId).name"
+                                                  :property="this.categories.find(category => category.id === categoryId)"></TagComponent>
                                 </div>
                                 <div v-for="genreId in form.assignedGenreIds">
-                                    <TagComponent   hide-x="true"
-                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name" :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.genres.find(genre => genre.id === genreId).name"
+                                                  :property="this.genres.find(genre => genre.id === genreId)"></TagComponent>
                                 </div>
                                 <div v-for="sectorId in form.assignedSectorIds">
-                                    <TagComponent  hide-x="true"
-                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name" :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
+                                    <TagComponent hide-x="true"
+                                                  :displayed-text="this.sectors.find(sector => sector.id === sectorId).name"
+                                                  :property="this.sectors.find(sector => sector.id === sectorId)"></TagComponent>
                                 </div>
                             </div>
                             <div class="mb-2">
@@ -709,19 +768,22 @@
                             <div class="mb-2">
                                 <div class="relative w-full">
                                     <div class="w-full">
-                                        <input id="userSearch" v-model="projectGroup_query" type="text" autocomplete="off"
+                                        <input id="userSearch" v-model="projectGroup_query" type="text"
+                                               autocomplete="off"
                                                placeholder="Welche Projekte gehören zu dieser Gruppe?"
                                                class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                                     </div>
                                     <transition leave-active-class="transition ease-in duration-100"
                                                 leave-from-class="opacity-100"
                                                 leave-to-class="opacity-0">
-                                        <div v-if="projectGroup_search_results.length > 0 && projectGroup_query.length > 0"
-                                             class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
+                                        <div
+                                            v-if="projectGroup_search_results.length > 0 && projectGroup_query.length > 0"
+                                            class="absolute z-10 mt-1 w-full max-h-60 bg-primary shadow-lg
                                                         text-base ring-1 ring-black ring-opacity-5
                                                         overflow-auto focus:outline-none sm:text-sm">
                                             <div class="border-gray-200">
-                                                <div v-for="(projectGroup, index) in projectGroup_search_results" :key="index"
+                                                <div v-for="(projectGroup, index) in projectGroup_search_results"
+                                                     :key="index"
                                                      class="flex items-center cursor-pointer">
                                                     <div class="flex-1 text-sm py-4">
                                                         <p @click="addProjectToGroup(projectGroup)"
@@ -979,10 +1041,10 @@ export default defineComponent({
         filteredProjects() {
             return this.projects.filter(project => {
                 if (!this.enabled) {
-                    if(this.showProjectGroups){
-                        if(project.is_group){
-                            if(this.projectStateFilter.length > 0){
-                                if(this.projectStateFilter.includes(project?.state?.id)){
+                    if (this.showProjectGroups) {
+                        if (project.is_group) {
+                            if (this.projectStateFilter.length > 0) {
+                                if (this.projectStateFilter.includes(project?.state?.id)) {
                                     return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                                 }
                             } else {
@@ -990,17 +1052,17 @@ export default defineComponent({
                             }
                         }
                     } else {
-                        if(this.projectStateFilter.length > 0){
-                            if(this.projectStateFilter.includes(project?.state?.id)){
+                        if (this.projectStateFilter.length > 0) {
+                            if (this.projectStateFilter.includes(project?.state?.id)) {
                                 return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                             }
                         } else {
                             return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                         }
                     }
-                    if(this.showProjects){
-                        if(this.projectStateFilter.length > 0){
-                            if(this.projectStateFilter.includes(project?.state?.id)){
+                    if (this.showProjects) {
+                        if (this.projectStateFilter.length > 0) {
+                            if (this.projectStateFilter.includes(project?.state?.id)) {
                                 return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                             }
                         } else {
@@ -1008,11 +1070,11 @@ export default defineComponent({
                         }
                     }
                 } else {
-                    if(project.curr_user_is_related === true){
-                        if(this.showProjectGroups){
-                            if(project.is_group){
-                                if(this.projectStateFilter.length > 0){
-                                    if(this.projectStateFilter.includes(project?.state?.id)){
+                    if (project.curr_user_is_related === true) {
+                        if (this.showProjectGroups) {
+                            if (project.is_group) {
+                                if (this.projectStateFilter.length > 0) {
+                                    if (this.projectStateFilter.includes(project?.state?.id)) {
                                         return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                                     }
                                 } else {
@@ -1020,17 +1082,17 @@ export default defineComponent({
                                 }
                             }
                         } else {
-                            if(this.projectStateFilter.length > 0){
-                                if(this.projectStateFilter.includes(project?.state?.id)){
+                            if (this.projectStateFilter.length > 0) {
+                                if (this.projectStateFilter.includes(project?.state?.id)) {
                                     return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                                 }
                             } else {
                                 return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                             }
                         }
-                        if(this.showProjects){
-                            if(this.projectStateFilter.length > 0){
-                                if(this.projectStateFilter.includes(project?.state?.id)){
+                        if (this.showProjects) {
+                            if (this.projectStateFilter.length > 0) {
+                                if (this.projectStateFilter.includes(project?.state?.id)) {
                                     return project.name.toLowerCase().includes(this.project_search.toLowerCase());
                                 }
                             } else {
@@ -1093,22 +1155,22 @@ export default defineComponent({
         }
     },
     methods: {
-        openCloseMenu(){
-            if(this.openedMenu){
+        openCloseMenu() {
+            if (this.openedMenu) {
                 this.openedMenu = false
             } else {
                 this.openedMenu = true
             }
         },
-        addStateToFilter(state){
-            if(!state.clicked){
-                this.projectStateFilter.splice(this.projectStateFilter.indexOf(state),1);
+        addStateToFilter(state) {
+            if (!state.clicked) {
+                this.projectStateFilter.splice(this.projectStateFilter.indexOf(state), 1);
             } else {
                 this.projectStateFilter.push(state.id)
 
             }
         },
-        removeFilter(){
+        removeFilter() {
             this.enabled = false;
             this.showProjectGroups = false;
             this.showProjects = false;
@@ -1228,16 +1290,17 @@ export default defineComponent({
             })
             return false;
         },
-        addProjectToGroup(project){
+        addProjectToGroup(project) {
             this.subProjects.push(project);
             this.projectGroup_query = '';
         },
-        deleteSubProjectFromGroup(index){
-            this.subProjects.splice(index,1);
+        deleteSubProjectFromGroup(index) {
+            this.subProjects.splice(index, 1);
         },
-        checkPermission(project, type){
+        checkPermission(project, type) {
             const writeAuth = [];
             const managerAuth = [];
+            const deleteAuth = [];
 
             project.project_managers.forEach((user) => {
                 managerAuth.push(user.id);
@@ -1247,10 +1310,14 @@ export default defineComponent({
                 writeAuth.push(user.id);
             });
 
-            if(writeAuth.includes(this.$page.props.user.id) && type === 'edit'){
+            project.delete_permission_users.forEach((user) => {
+                deleteAuth.push(user.id);
+            });
+
+            if (writeAuth.includes(this.$page.props.user.id) && type === 'edit') {
                 return true;
             }
-            if(managerAuth.includes(this.$page.props.user.id) && type === 'delete'){
+            if (managerAuth.includes(this.$page.props.user.id) || deleteAuth.includes(this.$page.props.user.id) && type === 'delete') {
                 return true;
             }
             return false;

@@ -86,7 +86,7 @@
         :project="project"
         :event="event"
         :wantedRoomId="wantedSplit"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
     />
 
@@ -114,7 +114,6 @@
         :event="event"
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
-
     <ConfirmDeleteModal
         @closed="showDeleteConfirmModal = false"
         @delete="deleteEvent"
@@ -122,8 +121,6 @@
         description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."
         v-if="showDeleteConfirmModal"
     />
-
-
 </template>
 
 <script>
@@ -132,6 +129,7 @@ import {ChevronRightIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import NotificationDeclineEvent from "@/Layouts/Components/NotificationComponents/NotificationDeclineEvent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";

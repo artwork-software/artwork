@@ -118,7 +118,8 @@ class ProjectController extends Controller
                 'sectors',
                 'users.departments',
                 'writeUsers',
-                'state'
+                'state',
+                'delete_permission_users'
             ])
             ->orderBy('id', 'DESC')
             ->get();
@@ -215,7 +216,7 @@ class ProjectController extends Controller
             'cost_center' => $request->cost_center,
         ]);
 
-        $project->users()->save(Auth::user(), ['access_budget' => true, 'is_manager' => false, 'can_write' => true]);
+        $project->users()->save(Auth::user(), ['access_budget' => true, 'is_manager' => false, 'can_write' => true, 'delete_permission' => true]);
 
         if ($request->isGroup) {
             $project->is_group = true;
@@ -1370,7 +1371,8 @@ class ProjectController extends Controller
             'project_histories.user',
             'sectors',
             'users.departments',
-            'state'
+            'state',
+            'delete_permission_users'
         ]);
 
         $columns = $project->table()->first()->columns()->get();

@@ -20,6 +20,7 @@ return new class extends Migration
             $table->boolean('access_budget')->default(false);
             $table->boolean('is_manager')->default(false);
             $table->boolean('can_write')->default(false);
+            $table->boolean('delete_permission')->default(false);
             $table->timestamps();
         });
     }

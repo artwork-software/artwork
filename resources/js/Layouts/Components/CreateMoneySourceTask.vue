@@ -27,14 +27,14 @@
                                 <input type="text" onfocus="(this.type='date')"
                                        v-model="this.task.end_date"
                                        id="sourceStartDate"
-                                       placeholder="Zu erledigen bis?"
+                                       placeholder="Zu erledigen bis?*"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="w-1/2">
                                 <input type="text" onfocus="(this.type='time')"
                                        v-model="this.task.end_time"
                                        id="sourceEndDate"
-                                       placeholder="hh:mm"
+                                       placeholder="hh:mm*"
                                        class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                         </div>

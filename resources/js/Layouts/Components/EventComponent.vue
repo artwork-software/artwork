@@ -9,46 +9,13 @@
                    aria-hidden="true"/>
             <div class="mx-4">
                 <!--   Heading   -->
-                <div v-if="canEdit">
+                <div v-if="this.isRoomAdmin || this.hasAdminRole()">
                     <h1 class="my-1 flex">
                         <div class="flex-grow headline1">
                             {{
                                 this.event?.id ? this.event?.occupancy_option ? 'Belegung ändern & zusagen' : 'Termin' : 'Neue Raumbelegung'
                             }}
                         </div>
-                        <Menu as="div" v-if="this.event?.id && ((event?.canAccept && event?.occupancy_option))">
-                            <MenuButton class="m-4">
-                                <DotsVerticalIcon class="h-6 w-6 text-gray-600" aria-hidden="true"/>
-                            </MenuButton>
-
-                            <MenuItems
-                                class="origin-top-right absolute right-0 mr-4 mt-2 w-72 shadow-lg bg-zinc-800 ring-1 ring-black ring-opacity-5 divide-y divide-gray-100 focus:outline-none">
-                                <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="approveRequest(this.event)"
-                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex cursor-pointer">
-                                        <CheckIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
-                                        <div> Raumbelegung zusagen</div>
-                                    </div>
-                                </MenuItem>
-                                <MenuItem v-if="event?.canAccept && event?.occupancy_option"
-                                          @click="declineRequest(this.event)"
-                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex cursor-pointer">
-                                        <XIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
-                                        <div> Raumbelegung absagen</div>
-                                    </div>
-                                </MenuItem>
-                                <MenuItem v-if="event?.canDelete"
-                                          @click="deleteComponentVisible = true"
-                                          class="group flex items-center px-4 py-2 xsWhiteBold hover:bg-primaryHover hover:text-white text-secondary">
-                                    <div class="flex cursor-pointer">
-                                        <TrashIcon class="mr-3 h-5 w-5" aria-hidden="true"/>
-                                        Termin löschen
-                                    </div>
-                                </MenuItem>
-                            </MenuItems>
-                        </Menu>
                     </h1>
                     <h2 v-if="!this.event?.id" class="xsLight mb-2">
                         Bitte beachte, dass du Vor- und Nachbereitungszeit einplanst.
@@ -66,7 +33,6 @@
                 <div v-else class="flex-grow headline1">
                     Termin
                 </div>
-
                 <!--    Form    -->
                 <!--    Type and Title    -->
                 <div class="flex py-2">
@@ -427,7 +393,7 @@
                                   rows="4"
                                   class="inputMain resize-none w-full xsDark placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                     </div>
-                    <div v-if="this.event?.occupancy_option && canEdit" class="flex py-2 items-center">
+                    <div v-if="this.event?.occupancy_option && (isRoomAdmin || this.hasAdminRole()) " class="flex py-2 items-center">
                         <label for="accept-toggle" class="inline-flex relative items-center cursor-pointer">
                             <input type="checkbox"
                                    v-model="accept"
@@ -541,6 +507,11 @@
                         </div>
                     </div>
                 </div>
+                <div v-if="!this.$can('request room occupancy')">
+                    <div class="errorText">
+                        Dir fehlt das Recht eine Raumbelegung anzufragen.
+                    </div>
+                </div>
                 <div v-if="showComments" class="my-6" v-for="comment in this.event.comments">
                     <div class="flex justify-between">
                         <div class="flex items-center">
@@ -557,7 +528,7 @@
                 </div>
                 <div v-if="canEdit">
                     <div class="flex justify-center w-full py-4"
-                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id))">
+                         v-if="(isAdmin || selectedRoom?.everyone_can_book || $page.props.can.admin_projects || roomAdminIds.includes(this.$page.props.user.id)) || this.hasAdminRole()">
                         <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || (this.accept === false && this.optionAccept === false && adminComment === '')"
                                 :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || (this.accept === false && this.optionAccept === false && adminComment === '') ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
@@ -566,8 +537,8 @@
                         </button>
                     </div>
                     <div class="flex justify-center w-full py-4" v-else>
-                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate"
-                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null ? 'bg-secondary hover:bg-secondary' : ''"
+                        <button :disabled="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || !this.$can('request room occupancy')"
+                                :class="this.selectedRoom === null || endDate > seriesEndDate || series && !seriesEndDate || this.startTime === null || this.startDate === null || this.endTime === null || this.endDate === null || !this.$can('request room occupancy') ? 'bg-secondary hover:bg-secondary' : ''"
                                 class="bg-buttonBlue hover:bg-indigo-600 py-2 px-8 rounded-full text-white"
                                 @click="updateOrCreateEvent(true)">
                             Belegung anfragen
@@ -778,8 +749,12 @@ export default {
                 adminIds.push(admin.id);
             })
             return adminIds;
-
-
+        },
+        isRoomAdmin() {
+            return this.rooms.find(room => room.id === this.event?.roomId)?.admins.some(admin => admin.id === this.$page.props.user.id) || false;
+        },
+        isCreator(){
+            return this.event ? this.event?.created_by.id === this.$page.props.user.id : false
         },
     },
 
@@ -796,7 +771,7 @@ export default {
             return false;
         },
         openModal() {
-            this.canEdit = (!this.event?.id) || this.event?.canEdit || this.$page.props.can.create_and_edit_projects;
+            this.canEdit = (!this.event?.id) || this.isCreator || this.isRoomAdmin || this.hasAdminRole();
             if (!this.event) {
                 if (this.project) {
                     this.selectedProject = {id: this.project.id, name: this.project.name};

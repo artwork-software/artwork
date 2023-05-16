@@ -71,17 +71,17 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
-        Permission::create([
-            'name' => PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value,
-            'name_de' => "Belegungs-Anfragen einsehen",
-            'group' => 'Raumbelegungen',
-            'tooltipText' => 'Nutzer*in darf sämtliche Belegungsanfragen im Kalender einsehen. Auf diese Weise können Doppel-Anfragen vermieden werden.',
-            'checked' => false
-        ]);
-
 
 
         // Dokumente & Budget
+        Permission::create([
+            'name' => PermissionNameEnum::CONTRACT_SEE_DOWNLOAD->value,
+            'name_de' => "Darf Vertragsbausteine einsehen & runterladen",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Hier fehlt der tooltip ? ',
+            'checked' => false
+        ]);
+
         Permission::create([
             'name' => PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value,
             'name_de' => "Vertragsbausteine verwalten",
@@ -98,6 +98,38 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        Permission::create([
+            'name' => PermissionNameEnum::MONEY_SOURCE_EDIT_DELETE->value,
+            'name_de' => "Hat auf alle Finanzierungsquellen Schreib- und Löschrechte",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Tooltip fehlt',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value,
+            'name_de' => "Darf alle Budget-Dokumente & Verträge von allen Projekten einsehen, bearbeiten und löschen",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Tooltip fehlt',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_BUDGET_ADMIN->value,
+            'name_de' => "Hat auf alle Projekte Budget-Zugriff",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Tooltip fehlt',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value,
+            'name_de' => "Darf zusätzlich sämtliche Verifizierungs-, oder festgeschriebene Status und gesperrte Spalten aufheben.",
+            'group' => 'Dokumente & Budget',
+            'tooltipText' => 'Tooltip fehlt',
+            'checked' => false
+        ]);
+
 
         // Systemeinstellungen
         Permission::create([
@@ -107,13 +139,17 @@ class RolesAndPermissionsSeeder extends Seeder
             'tooltipText' => 'Nutzer*in darf die Grundeinstellungen des Tools editieren und z.B. Logos austauschen, Impressum definieren etc.',
             'checked' => false
         ]);
-        Permission::create([
+
+        /*
+         * Nur noch der Artwork Admin !!!!!
+         * Permission::create([
             'name' => PermissionNameEnum::USER_UPDATE->value,
             'name_de' => "Nutzer*innenverwaltung",
             'group' => 'Systemeinstellungen',
             'tooltipText' => 'Nutzer*in darf weitere Nutzer*innen einladen, bearbeiten und löschen. Zusätzlich darf er/sie Nutzerrechte für sämtliche Nutzer*innen vergeben und editieren.',
             'checked' => false
-        ]);
+        ]);*/
+
         Permission::create([
             'name' => PermissionNameEnum::TEAM_UPDATE->value,
             'name_de' => "Teamverwaltung",
@@ -159,7 +195,6 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
-
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",
@@ -170,28 +205,36 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "Standard-Nutzer*in",
         ]);
 
-        $user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::EVENT_REQUEST->value, PermissionNameEnum::ROOM_REQUEST_READING_DETAILS->value]);
+        //$user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::EVENT_REQUEST->value]);
 
-        Role::create([
+        $roomAdmin = Role::create([
             'name' => RoleNameEnum::ROOM_ADMIN->value,
-            'name_de' => "Raumadmin für alle Räume (Dispo)",
+            'name_de' => "Disponent*in",
         ]);
 
-        Role::create([
+        //$roomAdmin->syncPermissions([PermissionNameEnum::ROOM_UPDATE->value]);
+
+        $budgetAdmin = Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
             'name_de' => "Budgetadmin",
         ]);
 
-        Role::create([
+        //$budgetAdmin->syncPermissions([PermissionNameEnum::PROJECT_BUDGET_ADMIN->value, PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value]);
+
+
+        $contractAdmin = Role::create([
             'name' => RoleNameEnum::CONTRACT_ADMIN->value,
             'name_de' => "Vertragsadmin",
         ]);
 
-        Role::create([
+        //$contractAdmin->syncPermissions([PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value, PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value]);
+
+        $moneySourceAdmin = Role::create([
             'name' => RoleNameEnum::MONEY_SOURCE_ADMIN->value,
             'name_de' => "Finanzierungsquellenadmin",
         ]);
 
+        //$moneySourceAdmin->syncPermissions([PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value]);
 
 
         // Gibt es nicht mehr

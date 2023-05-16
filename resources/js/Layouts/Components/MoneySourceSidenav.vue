@@ -3,7 +3,7 @@
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary flex justify-between text-md font-semibold">
                 Freigegeben für
-                <div
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openEditUsersModal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
@@ -25,28 +25,19 @@
                     Zuständig
                 </div>
                 <div class="ml-3 flex">
-                    <div class="-ml-3" v-for="user in users">
-                        <div v-if="user.pivot?.competent">
-                        <img
-                             :data-tooltip-target="user?.id"
-                             :src="user?.profile_photo_url"
-                             :alt="user?.name"
-                             class="mt-3 rounded-full h-10 w-10 object-cover"/>
-                        <UserTooltip v-if="user" :user="user"/>
+                    <div v-for="user in users">
+                        <div class="-ml-3"  v-if="user.pivot?.competent">
+                            <NewUserToolTip :user="user" height="10" width="10" :id="user.id"/>
                         </div>
                     </div>
                 </div>
-                <div class="flex w-full xsLight mt-1">
+                <div class="flex w-full xsLight mt-2">
                     Zugriff
                 </div>
                 <div class="ml-3 flex">
-                    <div  class="-ml-3" v-for="user in users">
-                        <div v-if="user.pivot?.write_access && !user.pivot?.competent">
-                        <img :data-tooltip-target="user?.id"
-                             :src="user?.profile_photo_url"
-                             :alt="user?.name"
-                             class="mt-3 rounded-full h-10 w-10 object-cover"/>
-                        <UserTooltip v-if="user" :user="user"/>
+                    <div  v-for="user in users">
+                        <div class="-ml-3" v-if="user.pivot?.write_access && !user.pivot?.competent">
+                            <NewUserToolTip :user="user" height="10" width="10" :id="user.id"/>
                         </div>
                     </div>
                 </div>
@@ -61,7 +52,7 @@
                                      @click="showLinkedProjects = !showLinkedProjects"/>
                 </div>
 
-                <div
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openLinkProjectsModal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
@@ -89,18 +80,19 @@
             </div>
             <ChevronDownIcon class="w-4 h-4 ml-4" :class="[ showMoneySourceFiles ? 'rotate-180' : '']"
                              @click="showMoneySourceFiles = !showMoneySourceFiles"/>
-            <UploadIcon class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
+            <UploadIcon v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)" class="ml-auto w-6 h-6 p-1 rounded-full text-white bg-darkInputBg"
                         @click="openFileUploadModal"/>
         </div>
         <div v-if="showMoneySourceFiles">
             <div v-if="moneySourceFiles?.data.length > 0">
                 <div v-for="moneySourceFile in moneySourceFiles.data">
-                    <div
-                        class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white"
-                    >
+                    <div class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
                         <DownloadIcon class="w-4 h-4 mr-2" @click="downloadMoneySourceFile(moneySourceFile)"/>
                         <div @click="openFileEditModal(moneySourceFile)">{{ moneySourceFile.name }}</div>
                         <XCircleIcon class="w-4 h-4 ml-auto" @click="openFileDeleteModal(moneySourceFile)"/>
+                    </div>
+                    <div v-else class="flex items-center w-full mb-2 cursor-pointer text-secondary hover:text-white">
+                        {{ moneySourceFile.name }}
                     </div>
                 </div>
             </div>
@@ -112,7 +104,7 @@
         <div class="w-full flex-grow items-center mb-4">
             <div class="text-secondary text-md font-semibold mb-3 flex justify-between">
                 Aufgaben
-                <div
+                <div v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)"
                     class="bg-gray-500 h-6 w-6 flex items-center justify-center rounded-full hover:bg-gray-900 cursor-pointer transition-all"
                     @click="openAddMoneySourceTask">
                     <svg xmlns="http://www.w3.org/2000/svg" width="10.918" height="10.918" viewBox="0 0 10.918 10.918">
@@ -131,7 +123,7 @@
             </div>
             <ul>
                 <li v-for="task in tasks" class="mb-4 border-b border-gray-400 pb-3 flex items-start">
-                    <div class="mr-2">
+                    <div class="mr-2" v-if="$role('artwork admin') || writeAccess.includes($page.props.user.id) || competent.includes($page.props.user.id)">
                         <input @click="updateTask(task)"
                                type="checkbox"
                                class="ring-offset-0 cursor-pointer focus:ring-0 focus:shadow-none h-6 w-6 text-success border-2 border-gray-300"/>
@@ -208,7 +200,7 @@ import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsers
 
 export default {
     name: "MoneySourceSidenav",
-    props: ['users', 'tasks', 'money_source', 'moneySourceFiles', 'linkedProjects'],
+    props: ['users', 'tasks', 'money_source', 'moneySourceFiles', 'linkedProjects', 'competent', 'writeAccess'],
     components: {
         LinkProjectsToMoneySourcesComponent,
         MoneySourceFileDeleteModal,

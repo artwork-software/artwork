@@ -59,7 +59,11 @@ class ProjectFileController extends Controller
 
         $projectFile->accessing_users()->sync(collect($request->accessibleUsers));
 
-        if(!in_array(Auth::id(), $request->accessibleUsers)) {
+        if(is_array($request->accessibleUsers)){
+            if(!in_array(Auth::id(), $request->accessibleUsers)) {
+                $projectFile->accessing_users()->save(Auth::user());
+            }
+        } else {
             $projectFile->accessing_users()->save(Auth::user());
         }
 

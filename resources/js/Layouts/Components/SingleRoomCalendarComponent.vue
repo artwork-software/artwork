@@ -41,7 +41,7 @@
         :project="project"
         :event="selectedEvent"
         :wantedRoomId="wantedRoom"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
         :roomCollisions="roomCollisions"
     />
     <!-- Termine ohne Raum Modal -->
@@ -51,7 +51,7 @@
         :showHints="$page.props?.can?.show_hints"
         :eventTypes="eventTypes"
         :eventsWithoutRoom="this.filteredEvents"
-        :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
+        :isAdmin="hasAdminRole() || $canAny(['create, delete and update rooms'])"
     />
 
 </template>

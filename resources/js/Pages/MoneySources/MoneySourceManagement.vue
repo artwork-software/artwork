@@ -48,7 +48,7 @@
                                 </div>
                             </div>
                             <div class="flex"
-                                 v-if="this.$page.props.is_admin">
+                                 v-if="$can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                 <div v-if="$page.props.can.show_hints" class="flex mt-1">
                                     <span
                                         class="hind ml-1 my-auto">Lege neue Finanzierungsquellen oder -gruppen an</span>
@@ -115,7 +115,7 @@
                                                             Bearbeiten
                                                         </a>
                                                     </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
+                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                         <a @click="duplicateMoneySource(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <DuplicateIcon
@@ -124,7 +124,7 @@
                                                             Duplizieren
                                                         </a>
                                                     </MenuItem>
-                                                    <MenuItem v-slot="{ active }">
+                                                    <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                         <a @click="openDeleteSourceModal(moneySource)"
                                                            :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                             <TrashIcon
@@ -177,7 +177,7 @@
                                                         Bearbeiten
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                     <a @click="duplicateMoneySource(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <DuplicateIcon
@@ -186,7 +186,7 @@
                                                         Duplizieren
                                                     </a>
                                                 </MenuItem>
-                                                <MenuItem v-slot="{ active }">
+                                                <MenuItem v-slot="{ active }" v-if="getMemberInMoneySource(moneySource).write_access.includes($page.props.user.id) || getMemberInMoneySource(moneySource).competent.includes($page.props.user.id) || $can('view edit add money_sources') || $can('can edit and delete money sources') || $role('artwork admin')">
                                                     <a @click="openDeleteSourceModal(moneySource)"
                                                        :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
                                                         <TrashIcon
@@ -287,6 +287,21 @@ export default defineComponent({
         },
     },
     methods: {
+        getMemberInMoneySource(moneySource){
+            const returnArray = {
+                competent: [],
+                write_access: []
+            }
+            moneySource.users.forEach((user) => {
+                if(user.pivot.competent){
+                    returnArray.competent.push(user.id);
+                }
+                if(user.pivot.write_access){
+                    returnArray.write_access.push(user.id);
+                }
+            })
+            return returnArray;
+        },
         closeSearchbar() {
             this.showSearchbar = !this.showSearchbar;
             this.moneySource_query = ''

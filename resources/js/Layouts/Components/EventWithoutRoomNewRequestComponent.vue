@@ -232,10 +232,15 @@
                                 </div>
 
                             </div>
-                            <input type="text"
+                            <input v-if="creatingProject" type="text"
                                    :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
-                                   v-model="projectName"
+                                   v-model="event.projectName"
                                    class="h-10 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+                            <input v-else
+                                   :placeholder="creatingProject ? 'Neuer Projektname' : 'Projekt suchen'"
+                                   v-model="this.projectName"
+                                   class="h-10 pl-3 inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
+
 
                             <div v-if="projectSearchResults.length > 0 && !creatingProject"
                                  class="absolute bg-primary truncate sm:text-sm w-10/12">
@@ -247,8 +252,8 @@
                                 </div>
                             </div>
 
-                            <p class="text-xs text-red-800">{{ error?.projectId?.join('. ') }}</p>
-                            <p class="text-xs text-red-800">{{ error?.projectName?.join('. ') }}</p>
+                            <p class="text-xs text-red-800">{{ event.error?.projectId?.join('. ') }}</p>
+                            <p class="text-xs text-red-800">{{ event.error?.projectName?.join('. ') }}</p>
                         </div>
                     </div>
 
@@ -387,6 +392,7 @@ import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import dayjs from "dayjs";
 
 export default {
     name: 'EventWithoutRoomComponent',
@@ -429,6 +435,7 @@ export default {
             eventToDelete: null,
             isOption: false,
             selectedProject: null,
+            projectName: ''
         }
     },
 
@@ -456,33 +463,19 @@ export default {
             },
         },
     },
-    computed: {
-        computedEvent: function () {
-            let eventToShow = this.event;
-            eventToShow.startDate = new Date(this.event.start).format('YYYY-MM-DD');
-            eventToShow.startTime = new Date(this.event.start).format('HH:mm');
-            eventToShow.endDate = new Date(this.event.end).format('YYYY-MM-DD');
-            eventToShow.endTime = new Date(this.event.end).format('HH:mm');
-
-
-            //eventToShow.startDate = (new Date(this.event.start)).format('YYYY-MM-DD');
-            //eventToShow.startTime = (new Date(this.event.start)).format('HH:mm');
-           // eventToShow.endDate = (new Date(this.event.end)).format('YYYY-MM-DD');
-            //eventToShow.endTime = (new Date(this.event.end)).format('HH:mm');
-            eventToShow.creatingProject = false;
-            return eventToShow;
-        },
-    },
-
     methods: {
         openModal() {
             if (this.project) {
                 this.selectedProject = {id: this.project.id, name: this.project.name};
             }
-            this.event.startDate = new Date(this.event.start).format('YYYY-MM-DD');
-            this.event.startTime = new Date(this.event.start).format('HH:mm');
-            this.event.endDate = new Date(this.event.end).format('YYYY-MM-DD');
-            this.event.endTime = new Date(this.event.end).format('HH:mm');
+
+            const start = dayjs(this.event.start);
+            const end = dayjs(this.event.end);
+
+            this.event.startDate = start?.format('YYYY-MM-DD');
+            this.event.startTime = start?.format('HH:mm');
+            this.event.endDate = end?.format('YYYY-MM-DD');
+            this.event.endTime = end?.format('HH:mm');
         },
 
         closeModal(bool) {
@@ -617,6 +610,10 @@ export default {
                 .delete(`/events/${this.eventToDelete.id}`)
                 .then(() => this.closeModal(true));
         },
+        chooseProject(project) {
+            this.selectedProject = project;
+            this.projectName = '';
+        },
 
         eventData(event) {
             return {
@@ -630,11 +627,11 @@ export default {
                 isLoud: event.is_loud,
                 isOption:this.isOption,
                 eventNameMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.individual_name,
-                projectId: event.project_id,
-                projectName: event.creatingProject ? event.projectName : '',
+                projectId: !this.creatingProject ? this.selectedProject?.id : null,
+                projectName: this.creatingProject ? event.projectName : '',
                 eventTypeId: event.eventTypeId,
                 projectIdMandatory: this.eventTypes.find(eventType => eventType.id === event.eventTypeId)?.project_mandatory && !this.creatingProject,
-                creatingProject: event.creatingProject ? event.creatingProject : false,
+                creatingProject: this.creatingProject
             };
         },
     },

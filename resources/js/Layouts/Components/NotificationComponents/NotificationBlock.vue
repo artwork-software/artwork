@@ -233,6 +233,7 @@ export default {
         onEventComponentClose(bool) {
             this.createEventComponentIsVisible = false;
             if(bool){
+                this.checkNotificationKey();
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -244,6 +245,7 @@ export default {
         onDialogComponentClose(bool) {
             this.showRoomRequestDialogComponent = false;
             if(bool){
+                this.checkNotificationKey();
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -254,7 +256,9 @@ export default {
         },
         onEventWithoutRoomComponentClose(bool){
             this.showEventWithoutRoomComponent = false;
+
             if(bool){
+                this.checkNotificationKey();
                 Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                     notificationKey: this.notification.data?.notificationKey
                 }, {
@@ -264,6 +268,7 @@ export default {
             }
         },
         finishDeclineEvent(){
+            this.checkNotificationKey();
             Inertia.post(route('event.notification.delete', this.notification.data?.notificationKey), {
                 notificationKey: this.notification.data?.notificationKey
             }, {
@@ -281,6 +286,10 @@ export default {
         },
         openProjectBudget(projectId) {
             window.location.href = route('projects.show', projectId) + '?openTab=budget';
+        },
+        checkNotificationKey(key){
+            return key !== null || key !== '' || key.length > 0;
+
         }
     }
 }

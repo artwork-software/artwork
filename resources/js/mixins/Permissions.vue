@@ -3,7 +3,7 @@ export default {
     data() {
         return {
             permissions: new Set(Permissions),
-            roles: new Set(Roles),
+            rolesArray: new Set(RolesArray),
             cache: {}
         };
     },
@@ -17,7 +17,7 @@ export default {
         $role(roleName) {
             if(!roleName){ return false;}
             if (!this.cache.hasOwnProperty(roleName)) {
-                this.cache[roleName] = this.roles.has(roleName);
+                this.cache[roleName] = this.rolesArray.has(roleName);
             }
             return this.cache[roleName];
         },

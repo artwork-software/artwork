@@ -200,14 +200,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'name_de' => "artwork-Admin",
         ]);
 
-        $user = Role::create([
+        /*$user = Role::create([
             'name' => RoleNameEnum::USER->value,
             'name_de' => "Standard-Nutzer*in",
-        ]);
+        ]);*/
 
         //$user->syncPermissions([PermissionNameEnum::PROJECT_VIEW->value, PermissionNameEnum::ADD_EDIT_OWN_PROJECT->value, PermissionNameEnum::EVENT_REQUEST->value]);
 
-        $roomAdmin = Role::create([
+       /* $roomAdmin = Role::create([
             'name' => RoleNameEnum::ROOM_ADMIN->value,
             'name_de' => "Disponent*in",
         ]);
@@ -217,22 +217,22 @@ class RolesAndPermissionsSeeder extends Seeder
         $budgetAdmin = Role::create([
             'name' => RoleNameEnum::BUDGET_ADMIN->value,
             'name_de' => "Budgetadmin",
-        ]);
+        ]);*/
 
         //$budgetAdmin->syncPermissions([PermissionNameEnum::PROJECT_BUDGET_ADMIN->value, PermissionNameEnum::PROJECT_BUDGET_VERIFIED_ADD_REMOVE->value]);
 
 
-        $contractAdmin = Role::create([
+        /*$contractAdmin = Role::create([
             'name' => RoleNameEnum::CONTRACT_ADMIN->value,
             'name_de' => "Vertragsadmin",
-        ]);
+        ]);*/
 
         //$contractAdmin->syncPermissions([PermissionNameEnum::CONTRACT_EDIT_UPLOAD->value, PermissionNameEnum::PROJECT_BUDGET_SEE_DOCS_CONTRACTS->value]);
 
-        $moneySourceAdmin = Role::create([
+        /*$moneySourceAdmin = Role::create([
             'name' => RoleNameEnum::MONEY_SOURCE_ADMIN->value,
             'name_de' => "Finanzierungsquellenadmin",
-        ]);
+        ]);*/
 
         //$moneySourceAdmin->syncPermissions([PermissionNameEnum::MONEY_SOURCE_EDIT_VIEW_ADD->value]);
 

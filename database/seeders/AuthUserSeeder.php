@@ -61,9 +61,6 @@ class AuthUserSeeder extends Seeder
         $user->calendar_settings()->create();
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
-        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
-        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
-        $user->assignRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value);
 
         $user = User::create([
             'first_name' => 'Lisa',
@@ -111,8 +108,7 @@ class AuthUserSeeder extends Seeder
         ]);
 
         $user->assignRole(RoleNameEnum::ARTWORK_ADMIN->value);
-        $user->assignRole(RoleNameEnum::BUDGET_ADMIN->value);
-        $user->assignRole(RoleNameEnum::CONTRACT_ADMIN->value);
+        //$user->
         $user->calendar_settings()->create();
         foreach (NotificationConstEnum::cases() as $notificationType) {
 
@@ -125,7 +121,6 @@ class AuthUserSeeder extends Seeder
 
         }
 
-        $user->assignRole(RoleNameEnum::USER->value);
 
         $settings = app(GeneralSettings::class);
         $settings->setup_finished = true;

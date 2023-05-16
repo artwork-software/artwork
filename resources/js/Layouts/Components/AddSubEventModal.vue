@@ -66,6 +66,7 @@
                         <div class="w-1/2">
                             <input type="text"
                                    v-model="subEvent.eventName"
+                                   @keyup="subEvent.eventName.length > 0 ? submit = true : submit = false"
                                    id="eventTitle"
                                    :placeholder="subEvent.selectedEventType?.individual_name ? 'Terminname*' : 'Terminname'"
                                    class="h-12 sDark inputMain placeholder:xsLight placeholder:subpixel-antialiased focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
@@ -198,9 +199,17 @@ import {
 } from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import dayjs from "dayjs";
 
 export default {
     name: "AddSubEventModal",
+    computed: {
+        dayjs() {
+            var utc = require('dayjs/plugin/utc')
+            dayjs.extend(utc)
+            return dayjs
+        }
+    },
     components: {
         TagComponent,
         JetDialogModal,
@@ -216,8 +225,8 @@ export default {
                 event_id: this.event.id,
                 eventName: this.subEventToEdit?.title ? this.subEventToEdit?.title : '',
                 selectedEventType: this.subEventToEdit?.eventType ? this.subEventToEdit?.eventType : this.eventTypes[0],
-                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : this.event.start.slice(0,16),
-                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : this.event.end.slice(0,16),
+                start_time: this.subEventToEdit?.start ? this.subEventToEdit?.start : dayjs(this.event.start).format('YYYY-MM-DD HH:mm'),
+                end_time: this.subEventToEdit?.end ? this.subEventToEdit?.end : dayjs(this.event.end).format('YYYY-MM-DD HH:mm'),
                 is_loud: this.subEventToEdit?.is_loud ? this.subEventToEdit?.is_loud : false,
                 audience: this.subEventToEdit?.audience ? this.subEventToEdit?.audience : false,
                 description: this.subEventToEdit?.description ? this.subEventToEdit?.description : '',
@@ -230,7 +239,7 @@ export default {
             helpTextEnd: '',
             helpTextLength: '',
             show: true,
-            submit: true
+            submit: false
         }
     },
     props: ['event', 'eventTypes', 'subEventToEdit'],
@@ -251,12 +260,13 @@ export default {
                 this.helpText = '';
                 this.submit = true;
             }
+
             const timezoneOffset = new Date(this.event.start).getTimezoneOffset()* 60000
-            const start = Date.parse(this.event.start) + timezoneOffset;
-            const end = Date.parse(this.event.end) + timezoneOffset;
+            const start = dayjs(this.event.start);
+            const end = dayjs(this.event.end);
 
             if(this.subEvent.start_time){
-                const subEventStart = Date.parse(this.subEvent.start_time);
+                const subEventStart = dayjs(this.subEvent.start_time);
                 if(start > subEventStart || end < subEventStart){
                     this.helpTextStart = 'Startzeit muss innerhalb Termingruppenzeitraum liegen';
                     this.submit = false;

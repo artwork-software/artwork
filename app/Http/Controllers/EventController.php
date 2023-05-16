@@ -992,6 +992,8 @@ class EventController extends Controller
             $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_ROOM_ANSWER, 'green', ['answer'], false, '', null, $broadcastMessage, null, $event->id);
 
         }
+
+        $this->notificationKey = Str::random(15);
         $notificationTitle = 'Raumanfrage abgesagt';
         $this->history->createHistory($event->id, 'Raum abgelehnt');
         $broadcastMessage = [
@@ -1032,10 +1034,11 @@ class EventController extends Controller
             if($projectManager->id === $event->creator){
                 continue;
             }
+            $this->notificationService->setNotificationKey($this->notificationKey);
             $this->notificationService->createNotification($projectManager, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'green', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
         }
+        $this->notificationService->setNotificationKey($this->notificationKey);
         $this->notificationService->createNotification($event->creator, $notificationTitle, $notificationDescription, NotificationConstEnum::NOTIFICATION_UPSERT_ROOM_REQUEST, 'red', ['change_request', 'event_delete'], false, '', null, $broadcastMessage, @$room->id, @$event->id, @$project->id);
-        //$this->notificationService->create($event->creator, $this->notificationData, $broadcastMessage);
 
     }
 

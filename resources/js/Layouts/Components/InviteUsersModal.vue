@@ -167,19 +167,19 @@
 const presets = [
     {
         name: 'Standard User',
-        name_de: 'Standard-Benutzer',
+        name_de: 'Standard-User',
         tooltipText: '',
         showIcon: false
     },
     {
         name: 'Vertrags- & Dokumentenadmin',
-        name_de: 'Vertrags- & Dokumentenadministrator',
+        name_de: 'Vertrags- & Dokumentenadmin',
         tooltipText: '',
         showIcon: false
     },
     {
         name: 'Budgetadmin',
-        name_de: 'Budgetadministrator',
+        name_de: 'Budgetadmin',
         tooltipText: '',
         showIcon: false
     },
@@ -191,7 +191,7 @@ const presets = [
     },
     {
         name: 'Finanzierungsquellenadmin',
-        name_de: 'Finanzierungsquellenadministrator',
+        name_de: 'Finanzierungsquellenadmin',
         tooltipText: '',
         showIcon: false,
     }

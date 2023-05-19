@@ -24,7 +24,7 @@ class CalendarEventResource extends JsonResource
     {
         $classString = '';
         if($this->occupancy_option){
-            $classString = $this->event_type->svg_name . ' ' . 'occupancy_option';
+            $classString = $this->event_type->svg_name . ' ' . 'occupancy_option_' . $this->event_type->svg_name;
         }else{
             $classString = $this->event_type->svg_name;
         }

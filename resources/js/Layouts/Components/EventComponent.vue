@@ -325,7 +325,10 @@
 
                 </div>
                 <div>
-                    <div class="text-red-500 text-xs">{{ helpTextLength }}</div>
+                    <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
+                </div>
+                <div>
+                    <div class="text-red-500 text-xs" v-show="helpTextLengthRoom.length > 0">{{ helpTextLengthRoom }}</div>
                 </div>
 
                 <!--    Room    -->

@@ -33,7 +33,7 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
+                                        <Link :href="getEditHref(user)" v-if="$role('artwork admin')"
                                               class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
@@ -314,7 +314,7 @@
         </jet-dialog-modal>
 
         <pre>
-            {{ serviceProviders }}
+            {{ all_permissions }}
 
         </pre>
         <pre>

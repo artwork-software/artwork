@@ -91,30 +91,28 @@
 
                             <!-- Current Profile Photo -->
                             <div v-show="! photoPreview" class="mt-2">
-                                <img :src="freelancer.profile_image" :alt="freelancer.first_name" @click="$refs.photoInput.click()" class="rounded-full h-20 w-20 object-cover cursor-pointer">
+                                <img :src="freelancer.profile_image" :alt="freelancer.first_name"  @click="selectNewPhoto" class="rounded-full h-20 w-20 object-cover cursor-pointer">
                             </div>
 
                             <!-- New Profile Photo Preview -->
-                            <div v-show="photoPreview" class="mt-2">
+                            <div v-show="photoPreview" class="mt-2" @click="selectNewPhoto">
                                 <span
                                     class="block rounded-full w-20 h-20 bg-cover bg-no-repeat bg-center"
                                     :style="'background-image: url(\'' + photoPreview + '\');'"
                                 />
                             </div>
 
-                            <img :src="freelancer.profile_image" class="rounded-full h-20 w-20 bg-gray-200 hidden">
-
                         </div>
                         <div class="col-span-3">
                             <label for="first_name" class="xxsLight">Vorname</label>
                             <div>
-                                <input type="text" v-model="freelancerData.first_name" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" placeholder="Vorname" />
+                                <input type="text" v-model="freelancerData.first_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="first_name" id="first_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Vorname" />
                             </div>
                         </div>
                         <div class="col-span-4">
                             <label for="last_name" class="xxsLight">Nachname</label>
                             <div>
-                                <input type="text" v-model="freelancerData.last_name" name="last_name" id="last_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" placeholder="Nachname" />
+                                <input type="text" v-model="freelancerData.last_name" :disabled="checkCanEdit" :readonly="checkCanEdit" name="last_name" id="last_name" class="block w-full border-b-2 border-transparent border-b-gray-200 py-1.5 text-gray-900 ring-0 ring-inset placeholder:text-gray-400 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Nachname" />
                             </div>
                         </div>
                     </div>
@@ -124,30 +122,30 @@
                             <input type="text" readonly class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8 bg-gray-200" placeholder="Freelancer" disabled value="Freelancer" />
                         </div>
                         <div class="col-span-1">
-                            <input type="text" v-model="freelancerData.position" name="position" id="position" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Position" />
+                            <input type="text" v-model="freelancerData.position" :disabled="checkCanEdit" :readonly="checkCanEdit" name="position" id="position" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Position" />
                         </div>
                         <div class="col-span-1">
-                            <input type="email" v-model="freelancerData.email" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Email" />
+                            <input type="email" v-model="freelancerData.email" :disabled="checkCanEdit" :readonly="checkCanEdit" name="email" id="email" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Email" />
                         </div>
                         <div class="col-span-1">
-                            <input type="email" v-model="freelancerData.phone_number" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Telefonnummer" />
+                            <input type="email" v-model="freelancerData.phone_number" :disabled="checkCanEdit" :readonly="checkCanEdit" name="phone_number" id="phone_number" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Telefonnummer" />
                         </div>
                         <div class="col-span-1">
-                            <input type="email" v-model="freelancerData.street" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Straße" />
+                            <input type="email" v-model="freelancerData.street" :disabled="checkCanEdit" :readonly="checkCanEdit" name="street" id="street" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Straße" />
                         </div>
                         <div class="col-span-1"></div>
                         <div class="col-span-1">
-                            <input type="email" v-model="freelancerData.zip_code" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="PLZ" />
+                            <input type="email" v-model="freelancerData.zip_code" :disabled="checkCanEdit" :readonly="checkCanEdit" name="zip_code" id="zip_code" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="PLZ" />
                         </div>
                         <div class="col-span-1">
-                            <input type="email" v-model="freelancerData.location" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" placeholder="Ort" />
+                            <input type="email" v-model="freelancerData.location" :disabled="checkCanEdit" :readonly="checkCanEdit" name="location" id="location" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-8" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Ort" />
                         </div>
                         <div class="col-span-full">
-                            <textarea rows="4" v-model="freelancerData.note" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Notiz" />
+                            <textarea rows="4" v-model="freelancerData.note" :disabled="checkCanEdit" :readonly="checkCanEdit" name="note" id="note" class="block w-full border-0 py-2.5 text-gray-900 shadow-sm ring-2 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" :class="checkCanEdit ? 'bg-gray-200' : ''" placeholder="Notiz" />
                         </div>
                     </div>
 
-                    <AddButton class="mt-5 !ml-0" text="Änderung Speichern" type="secondary" @click="saveFreelancer" />
+                    <AddButton class="mt-5 !ml-0" text="Änderung Speichern" :disabled="checkCanEdit" :readonly="checkCanEdit" type="secondary" @click="saveFreelancer" />
                 </div>
 
             </div>
@@ -166,9 +164,11 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
     name: "Show",
+    mixins: [Permissions],
     components: {
         AddButton,
         PencilAltIcon, DotsVerticalIcon, TrashIcon,
@@ -198,6 +198,12 @@ export default defineComponent({
             photoPreview: null,
         }
     },
+    computed: {
+        checkCanEdit(){
+            return !(this.$can('can manage workers') || this.hasAdminRole());
+
+        },
+    },
     methods: {
         changeTab(tabId){
             this.tabs.forEach((tab) => {
@@ -212,7 +218,9 @@ export default defineComponent({
             })
         },
         selectNewPhoto(){
-            this.$refs.photoInput.click();
+            if( this.$can('can manage workers') || this.hasAdminRole()){
+                this.$refs.photoInput.click();
+            }
         },
         updatePhotoPreview(){
             const photo = this.$refs.photoInput.files[0];

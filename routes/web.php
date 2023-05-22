@@ -483,5 +483,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service-provider.show');
     Route::patch('/service-provider/update/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'update'])->name('service-provider.update');
     Route::post('/service-provider/profile-image/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'updateProfileImage'])->name('service-provider.change.profile-image');
+
+
+    Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');
+    Route::post('/service-provider/contact/{serviceProvider}/add/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'store'])->name('service-provider.contact.store');
+    Route::patch('/service-provider/contact/{serviceProviderContacts}/update/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'update'])->name('service-provider.contact.update');
 });
 

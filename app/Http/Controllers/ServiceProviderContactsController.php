@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServiceProvider;
 use App\Models\ServiceProviderContacts;
 use Illuminate\Http\Request;
 
@@ -33,9 +34,9 @@ class ServiceProviderContactsController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, ServiceProvider $serviceProvider)
     {
-        //
+        $serviceProvider->contacts()->create();
     }
 
     /**
@@ -69,7 +70,12 @@ class ServiceProviderContactsController extends Controller
      */
     public function update(Request $request, ServiceProviderContacts $serviceProviderContacts)
     {
-        //
+        $serviceProviderContacts->update($request->only([
+            'first_name',
+            'last_name',
+            'email',
+            'phone_number'
+        ]));
     }
 
     /**
@@ -80,6 +86,6 @@ class ServiceProviderContactsController extends Controller
      */
     public function destroy(ServiceProviderContacts $serviceProviderContacts)
     {
-        //
+        $serviceProviderContacts->delete();
     }
 }

@@ -4,8 +4,8 @@ import {usePage} from "@inertiajs/inertia-vue3";
 export default {
     data() {
         return {
-            permissions: this.$page.props.permissions,
-            rolesArray: this.$page.props.roles
+            permissions: this.$page.props.permissionsArray,
+            rolesArray: this.$page.props.rolesArray
         };
     },
     methods: {
@@ -13,7 +13,6 @@ export default {
             return this.permissions.includes(permissionName);
         },
         $role(roleName) {
-            if(!roleName){ return false;}
             return this.rolesArray.includes(roleName);
         },
         $canAny(permissionNames) {

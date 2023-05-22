@@ -883,8 +883,10 @@ import CalendarComponent from "@/Layouts/Components/CalendarComponent.vue";
 import ChecklistTeamComponent from "@/Layouts/Components/ChecklistTeamComponent.vue";
 import AddChecklistUserModal from "@/Pages/Projects/Components/AddChecklistUserModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ChecklistComponent",
     props: ['project', 'opened_checklists', 'projectCanWriteIds', 'projectManagerIds', 'checklist_templates'],
     components: {

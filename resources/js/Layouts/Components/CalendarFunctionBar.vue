@@ -153,10 +153,12 @@ import IndividualCalendarFilterComponent from "@/Layouts/Components/IndividualCa
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
     name: "CalendarFunctionBar",
+    mixins: [Permissions],
     components: {
         BaseFilterTag,
         Dropdown,

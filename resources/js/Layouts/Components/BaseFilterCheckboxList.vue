@@ -12,8 +12,11 @@
 </template>
 
 <script>
+import Permissions from "@/mixins/Permissions.vue";
+
 export default {
     name: "BaseFilterCheckboxList",
+    mixins: [Permissions],
     props: {
         list: Array,
         textIfEmpty: String,

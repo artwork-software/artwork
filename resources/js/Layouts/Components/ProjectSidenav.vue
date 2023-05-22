@@ -149,8 +149,10 @@ import ProjectFileEditModal from "@/Layouts/Components/ProjectFileEditModal.vue"
 import ContractUploadModal from "@/Layouts/Components/ContractUploadModal";
 import ContractEditModal from "@/Layouts/Components/ContractEditModal.vue";
 import ProjectCopyrightModal from "@/Layouts/Components/ProjectCopyrightModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ProjectSidenav",
     components: {
         ContractEditModal,

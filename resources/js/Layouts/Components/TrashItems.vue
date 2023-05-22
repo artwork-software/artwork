@@ -56,8 +56,10 @@ import BaseFilterTag from "@/Layouts/Components/BaseFilterTag.vue";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {DotsVerticalIcon, TrashIcon} from "@heroicons/vue/outline";
 import {RefreshIcon} from "@heroicons/vue/solid";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     props: ['items', 'type', 'model'],
     components: {
         BaseFilterTag,

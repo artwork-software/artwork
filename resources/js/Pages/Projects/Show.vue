@@ -583,6 +583,7 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ProjectShow",
@@ -684,6 +685,7 @@ export default {
         IndividualCalendarAtGlanceComponent,
         IndividualCalendarComponent
     },
+    mixins: [Permissions],
     computed: {
         write() {
             return write

@@ -331,6 +331,7 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AddButton from "@/Layouts/Components/AddButton";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
     components: {
@@ -356,6 +357,7 @@ export default defineComponent({
         TeamIconCollection,
         SvgCollection
     },
+    mixins: [Permissions],
     props: ['user', 'all_departments', 'user_departments'],
     data() {
         return {

@@ -200,9 +200,11 @@ import {
 import {useForm} from "@inertiajs/inertia-vue3";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
 import dayjs from "dayjs";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "AddSubEventModal",
+    mixins: [Permissions],
     computed: {
         dayjs() {
             var utc = require('dayjs/plugin/utc')

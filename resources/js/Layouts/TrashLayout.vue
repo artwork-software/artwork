@@ -69,9 +69,11 @@
 import {Listbox, ListboxButton, ListboxOptions, ListboxOption} from "@headlessui/vue";
 import {SearchIcon, ChevronDownIcon, CheckIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "TrashLayout",
+    mixins: [Permissions],
     data() {
         return {
             selectedTrash: null

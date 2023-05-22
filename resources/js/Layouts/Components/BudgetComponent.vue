@@ -747,10 +747,11 @@ import Button from "@/Jetstream/Button.vue";
 import RenameTableComponent from "@/Layouts/Components/RenameTableComponent.vue";
 import ErrorComponent from "@/Layouts/Components/ErrorComponent.vue";
 import SumDetailComponent from "@/Layouts/Components/SumDetailComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'BudgetComponent',
-
+    mixins: [Permissions],
     components: {
         SumDetailComponent,
         Button,

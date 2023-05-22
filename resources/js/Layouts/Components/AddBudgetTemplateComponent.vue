@@ -47,10 +47,11 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import Input from "@/Layouts/Components/InputComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
-
+    mixins: [Permissions],
     components: {
         Input,
         AddButton,

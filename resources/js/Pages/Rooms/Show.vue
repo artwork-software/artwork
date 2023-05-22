@@ -611,6 +611,7 @@ import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import RoomSidenav from "@/Layouts/Components/RoomSidenav.vue";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import SingleRoomCalendarComponent from "@/Layouts/Components/SingleRoomCalendarComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 const attributeFilters = [
     {name: 'Nur Anfragen', id: 1},
@@ -619,6 +620,7 @@ const attributeFilters = [
 ]
 
 export default {
+    mixins: [Permissions],
     name: "Show",
     props: [
         'room',

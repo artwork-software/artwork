@@ -467,10 +467,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import Input from "@/Jetstream/Input";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventsWithoutRoomComponent',
-
+    mixins: [Permissions],
     components: {
         Input,
         JetDialogModal,

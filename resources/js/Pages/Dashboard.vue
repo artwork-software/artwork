@@ -140,8 +140,10 @@ import TeamTooltip from "@/Layouts/Components/TeamTooltip";
 import {Inertia} from "@inertiajs/inertia";
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     props: [
         'events',
         'tasks',

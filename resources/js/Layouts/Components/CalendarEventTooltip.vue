@@ -8,8 +8,11 @@
 </template>
 
 <script>
+import Permissions from "@/mixins/Permissions.vue";
+
 export default {
     props: ['event'],
+    mixins: [Permissions],
 }
 </script>
 

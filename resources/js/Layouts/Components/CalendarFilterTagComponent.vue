@@ -120,9 +120,11 @@
 import {
     XIcon,
 } from '@heroicons/vue/outline';
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "CalendarFilterTagComponent",
+    mixins: [Permissions],
     components: {
         XIcon
     },

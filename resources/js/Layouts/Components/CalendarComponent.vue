@@ -327,9 +327,11 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'CalendarComponent',
+    mixins: [Permissions],
     components: {
         CalendarFunctionBar,
         DatePickerComponent,

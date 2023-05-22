@@ -345,9 +345,11 @@ import {ChevronDownIcon, DocumentTextIcon,} from '@heroicons/vue/outline';
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
 import {XIcon} from "@heroicons/vue/solid";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "IndividualCalendarFilterComponent",
+    mixins: [Permissions],
     components: {
         SwitchLabel,
         Switch,

@@ -188,6 +188,7 @@ import {SearchIcon} from '@heroicons/vue/solid'
 import {Link, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
+import Permissions from "@/mixins/Permissions.vue";
 
 const navigation = [
     {
@@ -248,6 +249,7 @@ const userNavigation = [
 ]
 
 export default {
+    mixins: [Permissions],
     components: {
         SvgCollection,
         Dialog,
@@ -333,6 +335,7 @@ export default {
         }
     },
     methods: {
+        usePage,
         checkPermissionGlobalMessageAndToolSettings() {
             return this.$canAny(['change tool settings', 'change system notification'] || this.hasAdminRole());
 

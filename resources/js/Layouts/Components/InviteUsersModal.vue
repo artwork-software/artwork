@@ -164,6 +164,8 @@
 </template>
 <script>
 
+import Permissions from "@/mixins/Permissions.vue";
+
 const presets = [
     {
         name: 'Standard User',
@@ -210,6 +212,7 @@ import {useForm} from "@inertiajs/inertia-vue3";
 
 export default {
     name: "InviteUsersModal",
+    mixins: [Permissions],
     components: {
         JetDialogModal,
         AddButton,

@@ -128,8 +128,10 @@ import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure.vue";
 import {Menu, MenuButton, MenuItems} from "@headlessui/vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,

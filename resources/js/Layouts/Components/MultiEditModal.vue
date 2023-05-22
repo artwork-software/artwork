@@ -173,10 +173,11 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'MultiEditModal',
-
+    mixins: [Permissions],
     components: {
         AddButton,
         Input,

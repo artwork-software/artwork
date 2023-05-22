@@ -77,10 +77,11 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'AddChecklistUserModal',
-
+    mixins: [Permissions],
     components: {
         XIcon,
         XCircleIcon,

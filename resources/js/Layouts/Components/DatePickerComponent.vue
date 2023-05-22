@@ -35,6 +35,7 @@ import VueTailwindDatepicker from 'vue-tailwind-datepicker'
 import {ref} from "vue";
 import {Inertia} from "@inertiajs/inertia";
 import {CalendarIcon} from "@heroicons/vue/outline";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 const datePickerOptions = ref({
@@ -121,6 +122,7 @@ const customShortcuts = () => {
 }
 
 export default {
+    mixins: [Permissions],
     name: "DatePickerComponent",
     components: {VueTailwindDatepicker, CalendarIcon},
     props: ['dateValueArray','project'],

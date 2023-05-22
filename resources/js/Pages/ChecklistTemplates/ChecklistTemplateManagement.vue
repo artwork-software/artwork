@@ -262,8 +262,10 @@ import {Link} from "@inertiajs/inertia-vue3";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "Checklist Management",
     props: ['checklist_templates'],
     components: {

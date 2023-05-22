@@ -97,11 +97,13 @@ import Checkbox from "@/Layouts/Components/Checkbox";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import AddButton from "@/Layouts/Components/AddButton";
 import JetInputError from "@/Jetstream/InputError.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 const rememberCheckbox = {name: 'Angemeldet bleiben', checked: false, showIcon: false}
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         SvgCollection,
         Head,

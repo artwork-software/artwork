@@ -280,8 +280,10 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "MoneySourceShow",
     props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {

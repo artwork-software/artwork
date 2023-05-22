@@ -345,9 +345,11 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Link} from "@inertiajs/inertia-vue3";
 import DeclineEventModal from "@/Layouts/Components/DeclineEventModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
+    mixins: [Permissions],
     name: "SingleCalendarEvent",
     components: {
         DeclineEventModal,

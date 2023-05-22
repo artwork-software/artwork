@@ -443,10 +443,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventComponent',
-
+    mixins: [Permissions],
     components: {
         NewUserToolTip,
         ChangeAllSubmitModal,

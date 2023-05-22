@@ -72,10 +72,11 @@ import {XCircleIcon, XIcon} from '@heroicons/vue/outline';
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import AddButton from "@/Layouts/Components/AddButton";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'ChecklistTeamComponent',
-
+    mixins: [Permissions],
     components: {
         XIcon,
         XCircleIcon,

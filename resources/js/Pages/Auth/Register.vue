@@ -126,9 +126,11 @@ import {Head, Link} from '@inertiajs/inertia-vue3';
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import JetInputError from '@/Jetstream/InputError.vue'
 import {XIcon} from "@heroicons/vue/solid";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         Head,
         JetAuthenticationCard,

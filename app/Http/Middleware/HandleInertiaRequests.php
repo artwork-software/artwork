@@ -84,9 +84,10 @@ class HandleInertiaRequests extends Middleware
         $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
         return array_merge(parent::share($request), [
-            'roles' => Auth::guest() ? [] : Auth::user()->getRoleNames(),
-            'permissions' => Auth::guest() ? [] : Auth::user()->getPermissionNames(),
+            'roles' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
+            'permissions' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),
             'can' => [
+                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
                 // Projects
                 'view_projects' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_VIEW->value),
                 'project_management' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::PROJECT_MANAGEMENT->value),
@@ -112,13 +113,14 @@ class HandleInertiaRequests extends Middleware
                 'edit_checklist_settings' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::CHECKLIST_SETTINGS_ADMIN->value),
                 'global_nofitication' => Auth::guest() ? false : Auth::user()->can(PermissionNameEnum::SYSTEM_NOTIFICATION->value),
 
-                'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
+
             ],
             'is_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::ARTWORK_ADMIN->value),
             'is_budget_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::BUDGET_ADMIN->value),
             'is_contract_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::CONTRACT_ADMIN->value),
             'is_money_source_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::MONEY_SOURCE_ADMIN->value),
             'is_room_admin' => Auth::guest() ? false : Auth::user()->hasRole(RoleNameEnum::ROOM_ADMIN->value),
+
             'small_logo' => $this->small_logo(),
             'big_logo' => $this->big_logo(),
             'banner' => $this->banner(),
@@ -127,6 +129,7 @@ class HandleInertiaRequests extends Middleware
             'emailFooter' => app(GeneralSettings::class)->email_footer,
             'globalNotification' => $globalNotification,
             'myMoneySources' => Auth::guest() ? false : Auth::user()->accessMoneySources()->get(['money_source_id'])
+
         ]);
     }
 }

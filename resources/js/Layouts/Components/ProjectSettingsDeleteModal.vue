@@ -28,7 +28,9 @@
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from "@heroicons/vue/outline"
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import Permissions from "@/mixins/Permissions.vue";
 export default {
+    mixins: [Permissions],
     name: "ProjectSettingsDeleteModal",
     props: {
         show: Boolean,

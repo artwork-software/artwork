@@ -83,11 +83,16 @@ import {XIcon} from "@heroicons/vue/outline";
 import {ref} from "vue";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
 
 const props = defineProps({
     show: Boolean,
     closeModal: Function,
     project: Object
+})
+
+const mixins = mixin({
+    mixins: [Permissions],
 })
 
 const numOfGuests = ref(props.project.num_of_guests)
@@ -105,6 +110,7 @@ const entranceForm = useForm({
     register_by: null,
     registration_deadline: null
 })
+
 
 const updateProjectEntranceData = () => {
     if(!registrationRequired.value) {

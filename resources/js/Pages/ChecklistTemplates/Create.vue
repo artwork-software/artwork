@@ -219,8 +219,10 @@ import draggable from "vuedraggable";
 import AddButton from "@/Layouts/Components/AddButton";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Button from "@/Jetstream/Button";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "Template Create",
     props: [],
     components: {

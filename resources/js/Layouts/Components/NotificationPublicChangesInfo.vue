@@ -16,8 +16,10 @@
 import {ChevronRightIcon} from "@heroicons/vue/solid";
 import ProjectHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import ProjectHistoryWithoutBudgetComponent from "@/Layouts/Components/ProjectHistoryWithoutBudgetComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "NotificationPublicChangesInfo",
     props: ['notification'],
     components:{

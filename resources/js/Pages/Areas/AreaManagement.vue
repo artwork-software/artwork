@@ -911,8 +911,10 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import draggable from "vuedraggable";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         AddButton,
         UserTooltip,

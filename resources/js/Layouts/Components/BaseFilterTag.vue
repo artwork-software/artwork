@@ -14,9 +14,11 @@
 import {
     XIcon
 } from '@heroicons/vue/outline';
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "BaseFilterTag",
+    mixins: [Permissions],
     props: {
         filter: String,
         type: {

@@ -119,6 +119,8 @@
 
 <script>
 
+import Permissions from "@/mixins/Permissions.vue";
+
 const filters = [
     {name: 'Nach Checklisten'},
     {name: 'Nach Deadline'},
@@ -132,6 +134,7 @@ import {Link, useForm} from "@inertiajs/inertia-vue3";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 
 export default {
+    mixins: [Permissions],
     name: "OwnTasksManagement",
     props: ['tasks', 'money_source_task'],
     computed: {},

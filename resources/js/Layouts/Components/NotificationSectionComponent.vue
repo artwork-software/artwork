@@ -137,10 +137,11 @@ import EventHistoryComponent from "@/Layouts/Components/EventHistoryComponent";
 import NotificationBudgetRequest from "@/Layouts/Components/NotificationBudgetRequest.vue";
 import NotificationPublicChangesInfo from "@/Layouts/Components/NotificationPublicChangesInfo.vue";
 import NotificationBlock from "@/Layouts/Components/NotificationComponents/NotificationBlock.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default  {
     name: 'NotificationSectionComponent',
-
+    mixins: [Permissions],
     components: {
         NotificationBlock,
         NotificationPublicChangesInfo,

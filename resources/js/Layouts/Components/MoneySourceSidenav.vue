@@ -196,9 +196,11 @@ import MoneySourceFileDeleteModal from "@/Layouts/Components/MoneySourceFileDele
 import {ChevronDownIcon} from "@heroicons/vue/solid";
 import LinkProjectsToMoneySourcesComponent from "@/Layouts/Components/LinkProjectsToMoneySourcesComponent.vue";
 import EditMoneySourceUsersModal from "@/Layouts/Components/EditMoneySourceUsersModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
+    mixins: [Permissions],
     name: "MoneySourceSidenav",
     props: ['users', 'tasks', 'money_source', 'moneySourceFiles', 'linkedProjects', 'competent', 'writeAccess'],
     components: {

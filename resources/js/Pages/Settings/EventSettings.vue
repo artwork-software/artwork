@@ -335,8 +335,10 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import JetDialogModal from "@/Jetstream/DialogModal";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     computed: {
         iconMenuItems() {
             return [

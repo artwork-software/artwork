@@ -39,9 +39,11 @@
 <script>
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ChangeAllSubmitModal",
+    mixins: [Permissions],
     components: {
         DialogPanel,
         Dialog,

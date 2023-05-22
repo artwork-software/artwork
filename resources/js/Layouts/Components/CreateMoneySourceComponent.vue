@@ -308,10 +308,11 @@ import TagComponent from "@/Layouts/Components/TagComponent";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventComponent',
-
+    mixins: [Permissions],
     components: {
         Input,
         JetDialogModal,

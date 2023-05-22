@@ -65,11 +65,13 @@ import {Inertia} from "@inertiajs/inertia";
 import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 
 export default {
     name: "IndividualCalendarAtGlanceComponent",
+    mixins: [Permissions],
     components: {
         SingleCalendarEvent,
         CalendarFunctionBar,

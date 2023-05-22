@@ -341,9 +341,11 @@ import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         ListboxLabel,
         SvgCollection,

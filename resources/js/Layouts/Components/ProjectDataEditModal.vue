@@ -109,8 +109,10 @@ import {DownloadIcon, XIcon, ChevronDownIcon} from "@heroicons/vue/outline";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
 import {CheckIcon} from "@heroicons/vue/solid";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ProjectDataEditModal",
     props: {
         show: Boolean,

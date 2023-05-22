@@ -20,6 +20,7 @@
 import {InformationCircleIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import TextToolTip from "@/Layouts/Components/TextToolTip.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "Checkbox",
@@ -28,6 +29,7 @@ export default {
         InformationCircleIcon,
         SvgCollection
     },
+    mixins: [Permissions],
     props: ['item'],
     methods: {
     }

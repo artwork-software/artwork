@@ -235,8 +235,10 @@ import SubPositionComponent from "@/Layouts/Components/SubPositionComponent.vue"
 import {useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "MainPositionComponent",
     components: {
         SubPositionComponent,

@@ -289,8 +289,10 @@ import AddButton from "@/Layouts/Components/AddButton";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import {CheckIcon, XIcon} from "@heroicons/vue/solid";
 import JetDialogModal from "@/Jetstream/DialogModal";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         AddButton,
         AppLayout,

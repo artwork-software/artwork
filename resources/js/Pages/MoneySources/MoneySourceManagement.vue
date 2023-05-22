@@ -243,9 +243,11 @@ import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceCo
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         AppLayout,
         Listbox,

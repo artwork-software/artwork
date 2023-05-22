@@ -64,6 +64,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Response;
 use Inertia\ResponseFactory;
+use Intervention\Image\Facades\Image;
 use stdClass;
 
 
@@ -2160,15 +2161,20 @@ class ProjectController extends Controller
 
     public function updateKeyVisual(Request $request, Project $project)
     {
+
         $oldKeyVisual = $project->key_visual_path;
         if($request->file('keyVisual')) {
             Storage::delete('keyVisual/'. $project->key_visual_path);
             $file = $request->file('keyVisual');
+
+            $img = Image::make($file)->resize(1150, 200);
+
+
             $original_name = $file->getClientOriginalName();
             $basename = Str::random(20).$original_name;
 
             $project->key_visual_path = $basename;
-
+            $img->save(Storage::path('public/keyVisual') . '/header_' . $basename, 100, $file->clientExtension());
             Storage::putFileAs('public/keyVisual', $file, $basename);
         }
         $project->save();

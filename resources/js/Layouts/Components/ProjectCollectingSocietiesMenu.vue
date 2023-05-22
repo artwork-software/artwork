@@ -34,9 +34,11 @@ import {
     ListboxButton
 } from "@headlessui/vue";
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ProjectCollectingSocietiesMenu",
+    mixins: [Permissions],
     components: {
         BaseFilterDisclosure,
         ChevronDownIcon,

@@ -36,9 +36,11 @@
 import {
     DownloadIcon
 } from '@heroicons/vue/outline';
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ContractListItem",
+    mixins: [Permissions],
     props: {
         contract: Object
     },

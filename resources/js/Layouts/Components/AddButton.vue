@@ -18,10 +18,12 @@
 <script>
 import Button from "@/Jetstream/Button";
 import { PlusCircleIcon } from '@heroicons/vue/outline'
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
     name: "AddButton",
+    mixins: [Permissions],
     components: {Button, PlusCircleIcon},
     props: {
         text: String,

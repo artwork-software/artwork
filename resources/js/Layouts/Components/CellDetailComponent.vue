@@ -260,6 +260,7 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 const linkTypes = [
     {name: '+', type: 'EARNING'},
@@ -268,7 +269,7 @@ const linkTypes = [
 
 export default {
     name: 'CellDetailComponent',
-
+    mixins: [Permissions],
     components: {
         NewUserToolTip,
         UserTooltip,

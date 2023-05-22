@@ -19,8 +19,10 @@ import Button from "@/Jetstream/Button.vue";
 import {XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "NotificationBudgetRequest",
     components: {AddButton, Button, XIcon, Link},
     props: ['budget'],

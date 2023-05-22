@@ -50,8 +50,10 @@ import ContractListItem from "@/Layouts/Components/ContractListItem";
 import ContractModuleSidenav from "@/Layouts/Components/ContractModuleSidenav";
 import ContractFilter from "@/Layouts/Components/ContractFilter";
 import BaseFilterTag from "@/Layouts/Components/BaseFilterTag";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ContractManagement",
     components: {
         BaseFilterTag,

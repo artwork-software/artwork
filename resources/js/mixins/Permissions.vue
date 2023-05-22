@@ -1,25 +1,20 @@
 <script>
+import {usePage} from "@inertiajs/inertia-vue3";
+
 export default {
     data() {
         return {
-            permissions: new Set(Permissions),
-            rolesArray: new Set(RolesArray),
-            cache: {}
+            permissions: this.$page.props.permissions,
+            rolesArray: this.$page.props.roles
         };
     },
     methods: {
         $can(permissionName) {
-            if (!this.cache.hasOwnProperty(permissionName)) {
-                this.cache[permissionName] = this.permissions.has(permissionName);
-            }
-            return this.cache[permissionName];
+            return this.permissions.includes(permissionName);
         },
         $role(roleName) {
             if(!roleName){ return false;}
-            if (!this.cache.hasOwnProperty(roleName)) {
-                this.cache[roleName] = this.rolesArray.has(roleName);
-            }
-            return this.cache[roleName];
+            return this.rolesArray.includes(roleName);
         },
         $canAny(permissionNames) {
             for (const permission of permissionNames) {

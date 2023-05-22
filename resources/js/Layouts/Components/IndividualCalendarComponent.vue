@@ -137,10 +137,12 @@ import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
 import CalendarEventTooltip from "@/Layouts/Components/CalendarEventTooltip.vue";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Link} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
     name: "IndividualCalendarComponent",
+    mixins: [Permissions],
     components: {
         Link,
         ConfirmDeleteModal,

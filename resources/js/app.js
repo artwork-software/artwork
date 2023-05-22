@@ -29,7 +29,6 @@ createInertiaApp({
         const app = createApp({ render: () => h(inertiaApp, props) })
             .use(plugin)
             .mixin({ methods: { route } })
-            .mixin(Permissions)
         app.config.globalProperties.$svgColors = svgColors;
         app.use(VueTailwindDatepicker);
         app.mount(el);

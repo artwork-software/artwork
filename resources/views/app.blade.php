@@ -12,15 +12,7 @@
         <!-- Scripts -->
         @routes
         <script src="{{ mix('js/app.js') }}" defer></script>
-        <script type="text/javascript">
-            @auth
-                window.Permissions = {!! json_encode(Auth::user()->allPermissions, true) !!};
-                window.RolesArray = {!! json_encode(Auth::user()->allRoles, true) !!};
-            @else
-                window.Permissions = [];
-                window.RolesArray = [];
-            @endauth
-        </script>
+
     </head>
     <body class="font-sans antialiased">
         @inertia

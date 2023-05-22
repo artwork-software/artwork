@@ -37,9 +37,11 @@ import {
 import ContractModuleDeleteModal from "@/Layouts/Components/ContractModuleDeleteModal";
 import ContractModuleUploadModal from "@/Layouts/Components/ContractModuleUploadModal";
 import {usePage} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ContractModuleSidenav",
+    mixins: [Permissions],
     props: {
         contractModules: Object
     },

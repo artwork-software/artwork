@@ -165,8 +165,10 @@ import AddButton from "@/Layouts/Components/AddButton.vue";
 import {XCircleIcon, XIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ProjectEditTeamModal",
     components: {
         Dropdown,

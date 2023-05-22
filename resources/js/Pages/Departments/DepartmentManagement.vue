@@ -515,6 +515,7 @@ import {Inertia} from "@inertiajs/inertia";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import InputComponent from "@/Layouts/Components/InputComponent";
+import Permissions from "@/mixins/Permissions.vue";
 
 const iconMenuItems = [
     {iconName: 'icon_ausstellung'},
@@ -548,6 +549,7 @@ const iconMenuItems = [
 ]
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         AddButton,
         TeamIconCollection,

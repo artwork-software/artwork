@@ -114,8 +114,10 @@ import {
     ListboxOptions,
     ListboxButton
 } from "@headlessui/vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "ProjectCopyrightModal",
     props: {
         show: Boolean,

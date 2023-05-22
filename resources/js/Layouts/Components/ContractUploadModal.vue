@@ -359,9 +359,11 @@ import {CheckIcon, ChevronDownIcon, ChevronUpIcon, XCircleIcon} from "@heroicons
 import {useForm} from "@inertiajs/inertia-vue3";
 import ContractTaskForm from "@/Layouts/Components/ContractTaskForm.vue";
 import Button from "@/Jetstream/Button.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ContractUploadModal",
+    mixins: [Permissions],
     props: {
         show: Boolean,
         closeModal: Function,

@@ -161,10 +161,11 @@ const columnTypes = [
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'AddColumnComponent',
-
+    mixins: [Permissions],
     components: {
         AddButton,
         ListboxOptions,

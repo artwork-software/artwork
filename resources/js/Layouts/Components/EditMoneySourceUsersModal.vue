@@ -118,10 +118,11 @@ import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
 import {useForm} from "@inertiajs/inertia-vue3";
 import Dropdown from "@/Jetstream/Dropdown.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'AddBudgetTemplateComponent',
-
+    mixins: [Permissions],
     components: {
         Dropdown,
         AddButton,

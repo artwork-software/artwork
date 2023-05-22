@@ -42,9 +42,11 @@ import {
 import {
     ChevronDownIcon,
 } from '@heroicons/vue/outline';
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "BaseFilter",
+    mixins: [Permissions],
     components: {
         Menu,
         MenuItems,

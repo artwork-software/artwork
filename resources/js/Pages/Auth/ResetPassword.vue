@@ -37,8 +37,10 @@
     import JetInput from '@/Jetstream/Input.vue'
     import JetLabel from '@/Jetstream/Label.vue'
     import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
+    import Permissions from "@/mixins/Permissions.vue";
 
     export default defineComponent({
+        mixins: [Permissions],
         components: {
             Head,
             JetAuthenticationCard,

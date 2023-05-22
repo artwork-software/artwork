@@ -32,8 +32,10 @@
 import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "MoneySourceFileDeleteModal",
     components: {
         JetDialogModal,

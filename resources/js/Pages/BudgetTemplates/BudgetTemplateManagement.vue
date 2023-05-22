@@ -45,9 +45,11 @@ import AppLayout from "@/Layouts/AppLayout.vue";
 import BudgetComponent from "@/Layouts/Components/BudgetComponent.vue";
 import {ChevronDownIcon, ChevronUpIcon, SearchIcon, XIcon} from "@heroicons/vue/solid";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default {
+    mixins: [Permissions],
     name: "BudgetTemplateManagement",
     components: {BudgetComponent, AppLayout, ChevronUpIcon, ChevronDownIcon,InputComponent, XIcon, SearchIcon},
     props: ['budget'],

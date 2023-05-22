@@ -12,7 +12,7 @@
                     </div>
                 </div>
                 <div class="flex z-10" v-if="this.project.key_visual_path !== null">
-                    <img :src="'/storage/keyVisual/' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
+                    <img :src="'/storage/keyVisual/header_' + this.project.key_visual_path" alt="Aktuelles Key-Visual"
                          class="rounded-md w-full h-[200px]">
                 </div>
                 <div v-else class="w-full h-40 bg-gray-200 flex justify-center items-center">
@@ -583,6 +583,7 @@ import ProjectDataEditModal from "@/Layouts/Components/ProjectDataEditModal.vue"
 import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {isProjectMember} from "@/Helper/PermissionHelper";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ProjectShow",
@@ -684,6 +685,7 @@ export default {
         IndividualCalendarAtGlanceComponent,
         IndividualCalendarComponent
     },
+    mixins: [Permissions],
     computed: {
         write() {
             return write

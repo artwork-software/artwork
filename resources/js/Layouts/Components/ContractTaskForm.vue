@@ -82,9 +82,11 @@
 
 <script>
 import {XIcon} from "@heroicons/vue/outline";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ContractTaskForm",
+    mixins: [Permissions],
     components: {
         XIcon
     },

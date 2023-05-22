@@ -188,6 +188,7 @@ import {SearchIcon} from '@heroicons/vue/solid'
 import {Link, usePage} from "@inertiajs/inertia-vue3";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {isAdmin} from "@/Helper/PermissionHelper";
+import Permissions from "@/mixins/Permissions.vue";
 
 const navigation = [
     {
@@ -248,6 +249,7 @@ const userNavigation = [
 ]
 
 export default {
+    mixins: [Permissions],
     components: {
         SvgCollection,
         Dialog,
@@ -289,13 +291,13 @@ export default {
                 },
                 {
                     name: 'Räume',
-                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
+                    has_permission: this.$can('admin rooms') || this.hasAdminRole() ,
                     href: route('areas.management'),
                     route: ['/areas']
                 },
                 {
                     name: 'Anfragen',
-                    has_permission: this.$can('usermanagement') || this.hasAdminRole(),
+                    has_permission: this.$can('read details room request') || this.hasAdminRole(),
                     href: route('events.requests'),
                     route: ['/events/requests']
                 },
@@ -333,6 +335,7 @@ export default {
         }
     },
     methods: {
+        usePage,
         checkPermissionGlobalMessageAndToolSettings() {
             return this.$canAny(['change tool settings', 'change system notification'] || this.hasAdminRole());
 

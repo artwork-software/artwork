@@ -35,7 +35,7 @@ enum PermissionNameEnum : string
     case CHECKLIST_SETTINGS_ADMIN = 'admin checklistTemplates';
     case TEAM_UPDATE = 'teammanagement';
     case DEPARTMENT_UPDATE = 'update departments';
-    //case ROOM_ADMIN = 'admin rooms';
+    case ROOM_ADMIN = 'admin rooms';
     case SETTINGS_UPDATE = 'change tool settings';
     case PROJECT_SETTINGS_UPDATE = 'change project settings';
     case EVENT_SETTINGS_UPDATE = 'change event settings';

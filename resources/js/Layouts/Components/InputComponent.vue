@@ -11,9 +11,11 @@
 <script>
 import {InformationCircleIcon} from "@heroicons/vue/outline";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "Input",
+    mixins: [Permissions],
     components: {},
     props: ['modelValue', 'placeholder'],
     emits:['update:modelValue'],

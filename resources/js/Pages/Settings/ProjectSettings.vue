@@ -191,8 +191,10 @@ import ProjectSettingsItem from "@/Layouts/Components/ProjectSettingsItem.vue";
 import ProjectSettingsDeleteModal from "@/Layouts/Components/ProjectSettingsDeleteModal.vue";
 import ProjectSettingsEditModal from "@/Layouts/Components/ProjectSettingsEditModal.vue";
 import ProjectSettingState from "@/Layouts/Components/ProjectSettingState.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     components: {
         ProjectSettingsEditModal,
         ProjectSettingState,

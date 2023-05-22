@@ -327,9 +327,11 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import DatePickerComponent from "@/Layouts/Components/DatePickerComponent.vue";
 import CalendarFunctionBar from "@/Layouts/Components/CalendarFunctionBar.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'CalendarComponent',
+    mixins: [Permissions],
     components: {
         CalendarFunctionBar,
         DatePickerComponent,
@@ -893,6 +895,50 @@ export default {
     background-image: url('data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/PjwhRE9DVFlQRSBzdmcgUFVCTElDICItLy9XM0MvL0RURCBTVkcgMS4xLy9FTiIgImh0dHA6Ly93d3cudzMub3JnL0dyYXBoaWNzL1NWRy8xLjEvRFREL3N2ZzExLmR0ZCI+PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiPjxkZWZzPjxwYXR0ZXJuIGlkPSJwYXR0ZXJuX0tudFciIHBhdHRlcm5Vbml0cz0idXNlclNwYWNlT25Vc2UiIHdpZHRoPSIxNyIgaGVpZ2h0PSIxNyIgcGF0dGVyblRyYW5zZm9ybT0icm90YXRlKDQ1KSI+PGxpbmUgeDE9IjAiIHk9IjAiIHgyPSIwIiB5Mj0iMTciIHN0cm9rZT0iI0YzRjRGNiIgc3Ryb2tlLXdpZHRoPSI2Ii8+PC9wYXR0ZXJuPjwvZGVmcz4gPHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNwYXR0ZXJuX0tudFcpIiBvcGFjaXR5PSIxIi8+PC9zdmc+')
 }
 
+.occupancy_option_eventType0 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #d2d2d2 8px);
+}
+
+.occupancy_option_eventType1 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #e0abd1 8px);
+}
+
+.occupancy_option_eventType2 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #f6b9d4 8px);
+}
+
+.occupancy_option_eventType3 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, rgb(227, 185, 162) 8px);
+}
+
+.occupancy_option_eventType4 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #e5c386 8px);
+}
+
+.occupancy_option_eventType5 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #cce5ac 8px);
+}
+
+.occupancy_option_eventType6 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #b0e8c5 8px);
+}
+
+.occupancy_option_eventType7 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #a9dde1 8px);
+}
+
+.occupancy_option_eventType8 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #a0cfe5 8px);
+}
+
+.occupancy_option_eventType9 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #a6dcda 8px);
+}
+
+.occupancy_option_eventType10 {
+    background: repeating-linear-gradient(-45deg, transparent, transparent 6px, #ffffff 6px, #a2cbe0 8px);
+}
+
 .vuecal__event.eventType0 {
     background-color: #A7A6B115;
     stroke: #7F7E88;
@@ -900,61 +946,61 @@ export default {
 }
 
 .vuecal__event.eventType1 {
-    background: #641a5415;
+    background-color: #641a5415;
     stroke: #631D53;
     color: #631D53
 }
 
 .vuecal__event.eventType2 {
-    background: #da3f8715;
+    background-color: #da3f8715;
     stroke: #D84387;
     color: #D84387
 }
 
 .vuecal__event.eventType3 {
-    background: #eb7a3d15;
+    background-color: #eb7a3d15;
     stroke: #E97A45;
     color: #E97A45
 }
 
 .vuecal__event.eventType4 {
-    background: #f1b64015;
+    background-color: #f1b64015;
     stroke: #CB8913;
     color: #CB8913
 }
 
 .vuecal__event.eventType5 {
-    background: #86c55415;
+    background-color: #86c55415;
     stroke: #648928;
     color: #648928
 }
 
 .vuecal__event.eventType6 {
-    background: #2eaa6315;
+    background-color: #2eaa6315;
     stroke: #35A965;
     color: #35A965
 }
 
 .vuecal__event.eventType7 {
-    background: #3dc3cb15;
+    background-color: #3dc3cb15;
     stroke: #35ACB2;
     color: #35ACB2
 }
 
 .vuecal__event.eventType8 {
-    background: #168fc315;
+    background-color: #168fc315;
     stroke: #2290C1;
     color: #2290C1
 }
 
 .vuecal__event.eventType9 {
-    background: #4d908e15;
+    background-color: #4d908e15;
     stroke: #50908E;
     color: #50908E
 }
 
 .vuecal__event.eventType10 {
-    background: #21485C15;
+    background-color: #21485C15;
     stroke: #23485B;
     color: #23485B
 }

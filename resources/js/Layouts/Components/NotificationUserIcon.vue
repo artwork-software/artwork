@@ -12,8 +12,10 @@ import Button from "@/Jetstream/Button";
 import {XIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
 import UserTooltip from "@/Layouts/Components/UserTooltip";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "TagComponent",
     components: {Button, XIcon, Link, UserTooltip},
     props: ['user'],

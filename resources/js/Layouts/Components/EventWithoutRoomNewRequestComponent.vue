@@ -393,10 +393,11 @@ import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventWithoutRoomComponent',
-
+    mixins: [Permissions],
     components: {
         NewUserToolTip,
         Input,

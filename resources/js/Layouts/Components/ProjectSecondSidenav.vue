@@ -105,8 +105,10 @@ import UserTooltip from "@/Layouts/Components/UserTooltip.vue";
 import TeamIconCollection from "@/Layouts/Components/TeamIconCollection.vue";
 import TeamTooltip from "@/Layouts/Components/TeamTooltip.vue";
 import ProjectEditTeamModal from "@/Pages/Projects/Components/ProjectEditTeamModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     props: ['project', 'projectMembers', 'projectMembersWriteAccess', 'projectManagerIds', 'projectCategories', 'projectGenres', 'projectSectors', 'categories', 'sectors', 'genres', 'projectCategoryIds', 'projectGenreIds', 'projectSectorIds'],
     components: {
         ProjectEditTeamModal,

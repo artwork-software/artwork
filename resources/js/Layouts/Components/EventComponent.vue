@@ -327,6 +327,9 @@
                 <div>
                     <div class="text-red-500 text-xs" v-show="helpTextLength.length > 0">{{ helpTextLength }}</div>
                 </div>
+                <div>
+                    <div class="text-red-500 text-xs" v-show="helpTextLengthRoom.length > 0">{{ helpTextLengthRoom }}</div>
+                </div>
 
                 <!--    Room    -->
                 <div class="py-1" v-if="canEdit">
@@ -608,10 +611,11 @@ import {useForm} from "@inertiajs/inertia-vue3";
 import ChangeAllSubmitModal from "@/Layouts/Components/ChangeAllSubmitModal.vue";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import dayjs from "dayjs";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventComponent',
-
+    mixins: [Permissions],
     components: {
         NewUserToolTip,
         ChangeAllSubmitModal,
@@ -714,7 +718,8 @@ export default {
                 start: null,
                 end: null,
                 roomId: null
-            })
+            }),
+            helpTextLengthRoom: ''
         }
     },
 
@@ -723,6 +728,12 @@ export default {
     emits: ['closed'],
 
     watch: {
+        selectedRoom: {
+            deep: true,
+            handler(){
+                this.checkChanges()
+            }
+        },
         projectName: {
             deep: true,
             handler() {
@@ -757,7 +768,6 @@ export default {
             return this.event ? this.event?.created_by.id === this.$page.props.user.id : false
         },
     },
-
     methods: {
         checkButtonDisabled(){
             if(this.series){
@@ -843,6 +853,29 @@ export default {
         },
 
         checkChanges() {
+            if(this.selectedRoom){
+                if(this.selectedRoom.temporary){
+                    const startFull = this.formatDate(this.startDate, this.startTime);
+                    const endFull = this.formatDate(this.endDate, this.endTime);
+                    const start = dayjs(startFull);
+                    const end = dayjs(endFull);
+
+                    const roomStartTime = dayjs(this.selectedRoom.start_date);
+                    const roomEndTime = dayjs(this.selectedRoom.end_date);
+                    if(start > roomStartTime || end < roomEndTime){
+                        console.log('nicht Ok')
+                        this.helpTextLengthRoom = 'Der Termin liegt außerhalb des Zeitraumes des temporären Raumes';
+                        this.submit = false;
+                    } else {
+                        console.log('is OK')
+                        this.helpTextLengthRoom = '';
+                        this.submit = true;
+                    }
+
+                }
+            }
+
+
             this.updateTimes(this.event);
 
             if (this.event?.start && this.event?.end) {

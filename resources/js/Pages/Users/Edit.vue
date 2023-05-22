@@ -367,8 +367,10 @@ import TeamIconCollection from "@/Layouts/Components/TeamIconCollection";
 import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     name: 'Edit',
     components: {
         SvgCollection,

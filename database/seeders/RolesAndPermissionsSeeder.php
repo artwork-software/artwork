@@ -71,6 +71,14 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        Permission::create([
+            'name' => PermissionNameEnum::ROOM_ADMIN->value,
+            'name_de' => "Hat Raumadminrechte bei allen Räumen",
+            'group' => 'Raumbelegungen',
+            'tooltipText' => 'Kein Tooltip',
+            'checked' => false
+        ]);
+
 
 
         // Dokumente & Budget

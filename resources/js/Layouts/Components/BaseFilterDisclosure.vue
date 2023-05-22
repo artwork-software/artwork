@@ -25,9 +25,11 @@ import {
 import {
     ChevronDownIcon,
 } from '@heroicons/vue/outline';
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "BaseFilterDisclosure",
+    mixins: [Permissions],
     components: {
         Disclosure,
         DisclosurePanel,

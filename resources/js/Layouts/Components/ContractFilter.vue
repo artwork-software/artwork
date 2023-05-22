@@ -45,8 +45,10 @@ import {
 } from '@heroicons/vue/outline';
 import BaseFilterDisclosure from "@/Layouts/Components/BaseFilterDisclosure";
 import BaseFilterCheckboxList from "@/Layouts/Components/BaseFilterCheckboxList";
+import Permissions from "@/mixins/Permissions.vue";
 export default {
     name: "ContractFilter",
+    mixins: [Permissions],
     components: {BaseFilterCheckboxList, BaseFilterDisclosure, BaseFilter, XIcon},
     methods: {
         resetContractFilter() {

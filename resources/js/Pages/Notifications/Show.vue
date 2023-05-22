@@ -176,9 +176,11 @@ import NotificationFrequencySettings from "@/Layouts/Components/NotificationFreq
 import NotificationSectionComponent from "@/Layouts/Components/NotificationSectionComponent";
 import NotificationPushSettings from "@/Layouts/Components/NotificationPushSettings";
 import AnswerEventRequestComponent from "@/Layouts/Components/AnswerEventRequestComponent";
+import Permissions from "@/mixins/Permissions.vue";
 
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         NotificationPushSettings,
         NotificationSectionComponent,

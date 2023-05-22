@@ -105,9 +105,11 @@ import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
 import {useForm} from "@inertiajs/inertia-vue3";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ProjectFileUploadModal",
+    mixins: [Permissions],
     props: {
         show: Boolean,
         closeModal: Function,

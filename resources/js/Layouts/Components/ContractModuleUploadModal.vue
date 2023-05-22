@@ -57,9 +57,11 @@ import JetDialogModal from '@/Jetstream/DialogModal.vue'
 import JetInputError from '@/Jetstream/InputError.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import {XIcon} from "@heroicons/vue/outline";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ContractModuleUploadModal",
+    mixins: [Permissions],
     props: {
         show: Boolean,
         closeModal: Function

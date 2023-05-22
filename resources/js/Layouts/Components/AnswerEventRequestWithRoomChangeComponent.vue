@@ -107,9 +107,11 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollection";
 import TagComponent from "@/Layouts/Components/TagComponent";
 import {Listbox, ListboxButton, ListboxOption, ListboxOptions} from "@headlessui/vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'AnswerEventRequestWithRoomChangeComponent',
+    mixins: [Permissions],
     components: {
         JetDialogModal,
         XIcon,

@@ -352,8 +352,10 @@ import {Menu, MenuButton, MenuItem, MenuItems} from "@headlessui/vue";
 import {Link, useForm} from "@inertiajs/inertia-vue3";
 import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent.vue";
 import {nextTick} from "vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "SubPositionComponent",
     components: {
         PlusCircleIcon,

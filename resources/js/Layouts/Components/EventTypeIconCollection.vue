@@ -16,8 +16,11 @@
 
 <script>
 
+import Permissions from "@/mixins/Permissions.vue";
+
 export default {
     name: "CategoryIconCollection",
+    mixins: [Permissions],
     components: {
 
     },

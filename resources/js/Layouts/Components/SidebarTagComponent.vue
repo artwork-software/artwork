@@ -11,10 +11,12 @@
 <script>
 import Button from "@/Jetstream/Button";
 import {XIcon} from "@heroicons/vue/outline";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "SidebarTagComponent",
     components: {Button, XIcon},
+    mixins: [Permissions],
     props: {
         property: String,
         displayedText: String,

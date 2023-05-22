@@ -41,7 +41,10 @@
 
 
 <script>
+import Permissions from "@/mixins/Permissions.vue";
+
 export default {
+    mixins: [Permissions],
     name: "NewUserToolTip",
     props: ['user', 'id', 'height', 'width'],
     methods: {

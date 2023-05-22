@@ -226,8 +226,10 @@ import draggable from "vuedraggable";
 import {Inertia} from "@inertiajs/inertia";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
+    mixins: [Permissions],
     name: "Template Edit",
     props: ['checklist_template'],
     components: {

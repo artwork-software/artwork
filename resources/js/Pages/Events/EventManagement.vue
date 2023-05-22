@@ -66,8 +66,10 @@ import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendar
 import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         IndividualCalendarAtGlanceComponent,
         IndividualCalendarComponent,

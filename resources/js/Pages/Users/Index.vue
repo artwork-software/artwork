@@ -383,8 +383,10 @@ import {Link} from "@inertiajs/inertia-vue3";
 import FlowbiteModal from "@/Flowbite/FlowbiteModal";
 import InputComponent from "@/Layouts/Components/InputComponent";
 import InviteUsersModal from "@/Layouts/Components/InviteUsersModal.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
+    mixins: [Permissions],
     components: {
         AddButton,
         FlowbiteModal,

@@ -308,10 +308,11 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton";
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'EventComponent',
-
+    mixins: [Permissions],
     components: {
         NewUserToolTip,
         Input,

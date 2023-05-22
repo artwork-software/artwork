@@ -40,9 +40,11 @@
 import { Dialog, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "ConfirmDeleteModal",
+    mixins: [Permissions],
     components: {
         AddButton,
         Dialog,

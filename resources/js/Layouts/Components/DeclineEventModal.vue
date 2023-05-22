@@ -102,9 +102,11 @@ import EventTypeIconCollection from "@/Layouts/Components/EventTypeIconCollectio
 import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import {useForm} from "@inertiajs/inertia-vue3";
 import dayjs from "dayjs";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: "DeclineEventModal",
+    mixins: [Permissions],
     computed: {
         dayjs() {
             return dayjs

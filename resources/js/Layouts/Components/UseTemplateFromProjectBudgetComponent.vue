@@ -63,10 +63,11 @@ import {XIcon, CheckIcon, ChevronDownIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import InputComponent from "@/Layouts/Components/InputComponent.vue";
 import {XCircleIcon} from "@heroicons/vue/solid";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     name: 'UseTemplateFromProjectBudgetComponent',
-
+    mixins: [Permissions],
     components: {
         AddButton,
         JetDialogModal,

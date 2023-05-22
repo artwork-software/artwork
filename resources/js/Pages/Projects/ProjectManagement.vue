@@ -933,6 +933,7 @@ import NewUserToolTip from "@/Layouts/Components/NewUserToolTip.vue";
 import ProjectHistoryComponent from "@/Layouts/Components/ProjectHistoryComponent.vue";
 import Dropdown from "@/Jetstream/Dropdown.vue";
 import BaseFilter from "@/Layouts/Components/BaseFilter.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 const number_of_participants = [
     {number: '1-10'},
@@ -996,6 +997,7 @@ export default defineComponent({
         SwitchGroup,
     },
     props: ['projects', 'states', 'users', 'categories', 'genres', 'sectors', 'can', 'projectGroups'],
+    mixins: [Permissions],
     computed: {
         tabs() {
             return [

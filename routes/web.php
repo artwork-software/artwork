@@ -473,5 +473,15 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Calendar
     Route::get('/calendars/filters', [CalendarController::class, 'getFilters'])->name('calendar.filters');
+
+    // Freelancer
+    Route::get('/freelancer/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'show'])->name('freelancer.show');
+    Route::patch('/freelancer/update/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'update'])->name('freelancer.update');
+    Route::post('/freelancer/profile-image/{freelancer}', [\App\Http\Controllers\FreelancerController::class, 'updateProfileImage'])->name('freelancer.change.profile-image');
+
+    // Service Provider
+    Route::get('/service-provider/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'show'])->name('service-provider.show');
+    Route::patch('/service-provider/update/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'update'])->name('service-provider.update');
+    Route::post('/service-provider/profile-image/{serviceProvider}', [\App\Http\Controllers\ServiceProviderController::class, 'updateProfileImage'])->name('service-provider.change.profile-image');
 });
 

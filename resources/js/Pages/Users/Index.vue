@@ -312,6 +312,14 @@
 
             </template>
         </jet-dialog-modal>
+
+        <pre>
+            {{ serviceProviders }}
+
+        </pre>
+        <pre>
+            {{ freelancers }}
+        </pre>
     </app-layout>
 
     <!-- Nutzer*innen einladen Modal -->
@@ -415,7 +423,7 @@ export default defineComponent({
         InputComponent,
         InviteUsersModal
     },
-    props: ['users', 'departments', 'all_permissions', 'roles'],
+    props: ['users', 'departments', 'all_permissions', 'roles', 'freelancers', 'serviceProviders'],
     data() {
         return {
             showUserPermissions: true,

@@ -18,6 +18,8 @@ class DatabaseSeeder extends Seeder
             SettingsSeeder::class,
             ContentSeeder::class,
             AuthUserSeeder::class,
+            FreelanceSeeder::class,
+            ServiceProviderSeeder::class
         ]);
     }
 }

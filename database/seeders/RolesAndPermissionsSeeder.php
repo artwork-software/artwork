@@ -203,6 +203,22 @@ class RolesAndPermissionsSeeder extends Seeder
             'checked' => false
         ]);
 
+        Permission::create([
+            'name' => PermissionNameEnum::MA_MANAGER->value,
+            'name_de' => "MA-verwaltung",
+            'group' => 'MA-Einstellungen',
+            'tooltipText' => 'Darf MA Seiten anlegen aber die User nicht einladen.',
+            'checked' => false
+        ]);
+
+        Permission::create([
+            'name' => PermissionNameEnum::SHIFT_PLANNER->value,
+            'name_de' => "Schichtplaner",
+            'group' => 'MA-Einstellungen',
+            'tooltipText' => 'Darf MA Seiten nicht anlegen aber die User verplanen.',
+            'checked' => false
+        ]);
+
         Role::create([
             'name' => RoleNameEnum::ARTWORK_ADMIN->value,
             'name_de' => "artwork-Admin",

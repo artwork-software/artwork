@@ -33,7 +33,7 @@
                                      alt=""/>
                                 <div class="ml-3 my-auto w-full justify-start mr-6">
                                     <div class="flex my-auto">
-                                        <Link :href="getEditHref(user)" v-if="hasAdminRole()"
+                                        <Link :href="getEditHref(user)" v-if="$role('artwork admin')"
                                               class="mr-3 sDark">
                                             {{ user.last_name }}, {{ user.first_name }}
                                         </Link>
@@ -312,6 +312,14 @@
 
             </template>
         </jet-dialog-modal>
+
+        <pre>
+            {{ all_permissions }}
+
+        </pre>
+        <pre>
+            {{ freelancers }}
+        </pre>
     </app-layout>
 
     <!-- Nutzer*innen einladen Modal -->
@@ -417,7 +425,7 @@ export default defineComponent({
         InputComponent,
         InviteUsersModal
     },
-    props: ['users', 'departments', 'all_permissions', 'roles'],
+    props: ['users', 'departments', 'all_permissions', 'roles', 'freelancers', 'serviceProviders'],
     data() {
         return {
             showUserPermissions: true,

@@ -9,6 +9,8 @@ use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserIndexResource;
 use App\Http\Resources\UserShowResource;
 use App\Models\Department;
+use App\Models\Freelancer;
+use App\Models\ServiceProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -80,7 +82,9 @@ class UserController extends Controller
             'users' => UserIndexResource::collection(User::all())->resolve(),
             "all_permissions" => Permission::all()->groupBy('group'),
             "departments" => Department::all(),
-            "roles" => Role::all()
+            "roles" => Role::all(),
+            'freelancers' => Freelancer::all(),
+            'serviceProviders' => ServiceProvider::all()
         ]);
     }
 

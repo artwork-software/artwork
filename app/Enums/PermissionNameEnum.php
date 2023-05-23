@@ -53,4 +53,8 @@ enum PermissionNameEnum : string
     //case CHECKLIST_DELETE = 'delete checklists';
     //case GLOBAL_NOTIFICATION_ADMIN = 'admin globalNotification';
     case PROJECT_UPDATE = 'create and edit projects';
+
+    // NEW PERMISSIONS JUNE'23
+    case MA_MANAGER = 'can manage workers';
+    case SHIFT_PLANNER = 'can plan shifts';
 }

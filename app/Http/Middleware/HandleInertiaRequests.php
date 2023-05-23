@@ -84,8 +84,8 @@ class HandleInertiaRequests extends Middleware
         $globalNotification['image_url'] = $globalNotification?->image_name ? Storage::disk('public')->url($globalNotification->image_name) : null;
 
         return array_merge(parent::share($request), [
-            'roles' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
-            'permissions' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),
+            'rolesArray' => Auth::guest() ? [] : json_encode(Auth::user()->allRoles, true),
+            'permissionsArray' => Auth::guest() ? [] : json_encode(Auth::user()->allPermissions, true),
             'can' => [
                 'show_hints' => Auth::guest() ? false : Auth::user()->toggle_hints,
                 // Projects

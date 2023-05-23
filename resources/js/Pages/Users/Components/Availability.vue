@@ -2,7 +2,7 @@
 
     <div class="flex w-full">
         <div class="w-2/3">
-            <UserAvailabilityCalendar />
+            <UserAvailabilityCalendar :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>
         <div class="w-1/3">
             <UserVacations />
@@ -18,7 +18,8 @@ import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 
 export default defineComponent({
     name: "Availability",
-    components: {UserVacations, UserAvailabilityCalendar}
+    components: {UserVacations, UserAvailabilityCalendar},
+    props:['calendarData','dateToShow'],
 })
 </script>
 

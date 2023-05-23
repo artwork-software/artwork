@@ -39,7 +39,7 @@
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
-                                <Availability />
+                                <Availability :calendar-data="calendarData" :date-to-show="dateToShow" />
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
@@ -440,7 +440,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon
     },
-    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles'],
+    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow'],
     data() {
         return {
             showGlobalRoles: true,

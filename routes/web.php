@@ -491,5 +491,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
 
     // Vacation
     Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\UserVacationsController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\UserVacationsController::class, 'update'])->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\UserVacationsController::class, 'destroy'])->name('user.vacation.delete');
 });
 

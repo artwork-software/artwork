@@ -5,7 +5,7 @@
             <UserAvailabilityCalendar />
         </div>
         <div class="w-1/3">
-            <UserVacations :user="user" />
+            <UserVacations :user="user" :vacations="vacations" />
         </div>
     </div>
 
@@ -18,7 +18,7 @@ import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 
 export default defineComponent({
     name: "Availability",
-    props: ['user'],
+    props: ['user', 'vacations'],
     components: {UserVacations, UserAvailabilityCalendar}
 })
 </script>

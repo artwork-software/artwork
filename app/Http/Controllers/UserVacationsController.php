@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\UserVacations;
 use Illuminate\Http\Request;
 
@@ -30,12 +31,12 @@ class UserVacationsController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
+     * @param Request $request
+     * @param User $user
      */
-    public function store(Request $request)
+    public function store(Request $request, User $user): void
     {
-        //
+        $user->vacations()->create($request->only(['from', 'until']));
     }
 
     /**
@@ -69,7 +70,7 @@ class UserVacationsController extends Controller
      */
     public function update(Request $request, UserVacations $userVacations)
     {
-        //
+        $userVacations->update($request->only(['from', 'until']));
     }
 
     /**
@@ -80,6 +81,6 @@ class UserVacationsController extends Controller
      */
     public function destroy(UserVacations $userVacations)
     {
-        //
+        $userVacations->delete();
     }
 }

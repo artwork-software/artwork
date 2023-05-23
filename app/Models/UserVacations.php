@@ -14,7 +14,6 @@ class UserVacations extends Model
         'from',
         'until'
     ];
-
     public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class);

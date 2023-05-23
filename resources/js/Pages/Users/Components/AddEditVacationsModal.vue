@@ -24,7 +24,7 @@
                                 <div class="flex pb-1 flex-col sm:flex-row align-baseline gap-1 mt-10">
                                     <div class="sm:w-1/2">
                                         <div class="w-full flex">
-                                            <input v-model="vacation.start"
+                                            <input v-model="vacation.from"
                                                    id="startDate"
                                                    type="date"
                                                    required
@@ -33,7 +33,7 @@
                                     </div>
                                     <div class="sm:w-1/2">
                                         <div class="w-full flex">
-                                            <input v-model="vacation.end"
+                                            <input v-model="vacation.until"
                                                    id="endDate"
                                                    type="date"
                                                    required
@@ -41,9 +41,12 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div v-show="helpText.length > 0">
+                                    <span class="text-red-500 text-xs">{{ helpText }}</span>
+                                </div>
                             </div>
                             <div class="flex justify-center mt-5">
-                                <AddButton v-if="editVacation" mode="modal" class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none" text="Speichern"/>
+                                <AddButton v-if="editVacation" @click="saveOrUpdateVacation" mode="modal" class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none" text="Ändern"/>
                                 <AddButton v-else @click="saveOrUpdateVacation" mode="modal" class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none" text="Speichern"/>
                             </div>
                         </DialogPanel>
@@ -69,9 +72,11 @@ export default defineComponent({
         return {
             open: true,
             vacation: useForm({
-                start: this.editVacation ? this.editVacation.start : null,
-                end: this.editVacation ? this.editVacation.start : null
-            })
+                id: this.editVacation ? this.editVacation.id : null,
+                from: this.editVacation ? this.editVacation.from : null,
+                until: this.editVacation ? this.editVacation.until : null
+            }),
+            helpText: ''
         }
     },
     emits: ['closed'],
@@ -81,12 +86,24 @@ export default defineComponent({
             this.$emit('closed', bool)
         },
         saveOrUpdateVacation(){
-            if(this.editVacation.id !== null){
+            if(this.vacation.from === null || this.vacation.until === null){
+                this.helpText = 'Bitte wähle eine Start und/oder End Datum';
+                return;
+            }
+            if(this.vacation.id === null){
                 this.vacation.post(route('user.vacation.add', this.user.id), {
-                    preserveScroll: true, preserveState: true
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
+                })
+            } else {
+                this.vacation.patch(route('user.vacation.update', this.vacation.id), {
+                    preserveScroll: true, preserveState: true, onFinish: () => {
+                        this.closeModal(true)
+                    }
                 })
             }
-        }
+        },
     }
 })
 </script>

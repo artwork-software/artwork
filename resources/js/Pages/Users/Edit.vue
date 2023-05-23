@@ -39,7 +39,7 @@
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
-                                <Availability />
+                                <Availability :user="user_to_edit" />
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">

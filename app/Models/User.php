@@ -124,6 +124,11 @@ class User extends Authenticatable
         return $this->hasOne(UserCalendarSettings::class);
     }
 
+    public function vacations(): HasMany
+    {
+        return $this->hasMany(UserVacations::class);
+    }
+
     public function contracts()
     {
         return $this->hasMany(Contract::class);

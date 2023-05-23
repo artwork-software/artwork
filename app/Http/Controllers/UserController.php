@@ -12,6 +12,8 @@ use App\Models\Department;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -96,6 +98,7 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
+        // Carbon::now()->weekOfYear;
         return inertia('Users/Edit', [
             'user_to_edit' => new UserShowResource($user),
             "departments" => Department::all(),

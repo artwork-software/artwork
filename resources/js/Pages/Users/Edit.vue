@@ -19,213 +19,245 @@
 
                                 </div>
                             </div>
-                            <div class="pt-4">
-                                <div class="mt-6 grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                                    <div class="sm:col-span-3">
-                                        <div class="mt-1">
-                                            <input type="text" v-model="userForm.business" placeholder="Unternehmen"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
-                                        </div>
-                                    </div>
 
-                                    <div class="sm:col-span-3">
-                                        <div class="mt-1">
-                                            <input type="text" v-model="userForm.position" placeholder="Position"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
-                                        </div>
+                            <div class="my-10">
+                                <div class="hidden sm:block">
+                                    <div class="">
+                                        <nav class="-mb-px flex space-x-8 uppercase xxsDark" aria-label="Tabs">
+                                            <div v-for="tab in tabs" :key="tab.name" @click="changeTab(tab.id)" :class="[tab.current ? 'border-indigo-500 text-indigo-600 font-bold' : 'border-transparent', 'whitespace-nowrap border-b-2 py-2 px-1 cursor-pointer']" :aria-current="tab.current ? 'page' : undefined">{{ tab.name }}</div>
+                                        </nav>
                                     </div>
-                                    <div class="sm:col-span-3">
-                                        <div class="mt-1">
-                                            <input type="text" v-model="this.user_to_edit.email"
-                                                   :disabled="!$page.props.is_admin"
-                                                   :class="$page.props.is_admin ? '' : 'bg-gray-100'"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
-                                            <jet-input-error :message="userForm.errors.email" class="mt-2"/>
-                                        </div>
-                                    </div>
-                                    <div class="sm:col-span-3">
-                                        <div class="mt-1">
-                                            <input type="text" v-model="userForm.phone_number"
-                                                   placeholder="Telefonnummer"
-                                                   class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
-                                        </div>
-                                    </div>
+                                </div>
+                            </div>
 
 
-                                    <div class="sm:col-span-6">
-                                        <div class="mt-1">
+                        </div>
+
+                        <div class="">
+                            <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 1">
+
+                            </div>
+
+                            <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
+                                <Availability />
+                            </div>
+
+                            <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
+
+                            </div>
+
+                            <div class="max-w-screen-lg pl-20 pr-4" v-if="currentTab === 4">
+                                <div class="">
+                                    <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                                        <div class="sm:col-span-3">
+                                            <div class="mt-1">
+                                                <input type="text" v-model="userForm.business" placeholder="Unternehmen"
+                                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-gray-300 border-2 block w-full "/>
+                                            </div>
+                                        </div>
+
+                                        <div class="sm:col-span-3">
+                                            <div class="mt-1">
+                                                <input type="text" v-model="userForm.position" placeholder="Position"
+                                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                                            </div>
+                                        </div>
+                                        <div class="sm:col-span-3">
+                                            <div class="mt-1">
+                                                <input type="text" v-model="this.user_to_edit.email"
+                                                       :disabled="!$page.props.is_admin"
+                                                       :class="$page.props.is_admin ? '' : 'bg-gray-100'"
+                                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                                                <jet-input-error :message="userForm.errors.email" class="mt-2"/>
+                                            </div>
+                                        </div>
+                                        <div class="sm:col-span-3">
+                                            <div class="mt-1">
+                                                <input type="text" v-model="userForm.phone_number"
+                                                       placeholder="Telefonnummer"
+                                                       class="shadow-sm placeholder-secondary focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border-gray-300"/>
+                                            </div>
+                                        </div>
+
+
+                                        <div class="sm:col-span-6">
+                                            <div class="mt-1">
                                             <textarea placeholder="Was sollten die anderen artwork-User wissen?"
                                                       v-model="userForm.description" rows="5"
                                                       class="resize-none shadow-sm placeholder-secondary p-4 focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 border-2 block w-full border border-gray-300"/>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="sm:col-span-6 mt-4 flex inline-flex">
+                                        <div class="sm:col-span-6 mt-4 flex inline-flex">
                                         <span v-if="userForm.departments.length === 0"
                                               class="text-secondary subpixel-antialiased my-auto mr-4">In keinem Team</span>
-                                        <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
+                                            <span v-else class="flex -mr-3" v-for="(team,index) in userForm.departments">
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
                                         </span>
-                                        <Menu as="div" class="my-auto relative">
-                                            <div>
-                                                <MenuButton
-                                                    class="flex">
-                                                    <DotsVerticalIcon
-                                                        class="mr-3 ml-6 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                        aria-hidden="true"/>
-                                                </MenuButton>
+                                            <Menu as="div" class="my-auto relative">
+                                                <div>
+                                                    <MenuButton
+                                                        class="flex">
+                                                        <DotsVerticalIcon
+                                                            class="mr-3 ml-6 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                            aria-hidden="true"/>
+                                                    </MenuButton>
+                                                </div>
+                                                <transition enter-active-class="transition ease-out duration-100"
+                                                            enter-from-class="transform opacity-0 scale-95"
+                                                            enter-to-class="transform opacity-100 scale-100"
+                                                            leave-active-class="transition ease-in duration-75"
+                                                            leave-from-class="transform opacity-100 scale-100"
+                                                            leave-to-class="transform opacity-0 scale-95">
+                                                    <MenuItems
+                                                        class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
+                                                        <div>
+
+                                                            <MenuItem v-slot="{ active }">
+
+                                                                <a href="#" @click="openChangeTeamsModal"
+                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                    <PencilAltIcon
+                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                        aria-hidden="true"/>
+                                                                    Teamzugehörigkeit bearbeiten
+                                                                </a>
+                                                            </MenuItem>
+                                                            <MenuItem v-slot="{ active }">
+                                                                <a href="#" @click="deleteFromAllDepartments"
+                                                                   :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
+                                                                    <TrashIcon
+                                                                        class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
+                                                                        aria-hidden="true"/>
+                                                                    Nutzer*in aus allen Teams entfernen
+                                                                </a>
+                                                            </MenuItem>
+                                                        </div>
+                                                    </MenuItems>
+                                                </transition>
+                                            </Menu>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <div class="flex mt-6" v-if="$page.props.is_admin">
+                                        <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
+                                    </div>
+                                    <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
+                                        {{ password_reset_status }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="currentTab === 5">
+                                <div class="max-w-screen-lg pl-20 pr-4">
+                                    <h2 class="mb-8 headline2">Nutzerrechte</h2>
+                                </div>
+
+                                <div class="bg-userBg py-10">
+                                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                                        <div class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer" @click="showGlobalRoles = !showGlobalRoles">
+                                            globale Rollen
+                                            <div class="flex items-center ml-2">
+                                                <SvgCollection svg-name="arrowUp" v-if="showGlobalRoles"></SvgCollection>
+                                                <SvgCollection svg-name="arrowDown" v-if="!showGlobalRoles"></SvgCollection>
                                             </div>
-                                            <transition enter-active-class="transition ease-out duration-100"
-                                                        enter-from-class="transform opacity-0 scale-95"
-                                                        enter-to-class="transform opacity-100 scale-100"
-                                                        leave-active-class="transition ease-in duration-75"
-                                                        leave-from-class="transform opacity-100 scale-100"
-                                                        leave-to-class="transform opacity-0 scale-95">
-                                                <MenuItems
-                                                    class="origin-top-right absolute p-4 mr-4 mt-2 w-80 shadow-lg bg-primary focus:outline-none">
-                                                    <div>
+                                        </div>
+                                        <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
+                                            <div class="flex items-center h-7">
+                                                <input
+                                                    v-model="userForm.roles"
+                                                    :value="role.name"
+                                                    name="roles" type="checkbox"
+                                                    class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
 
-                                                        <MenuItem v-slot="{ active }">
+                                                <div class="ml-3 text-sm">
+                                                    <label for="roles"
+                                                           :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                                            role.name_de
+                                                        }}</label>
+                                                </div>
+                                            </div>
+                                            <div class="justify-end">
+                                                <div :data-tooltip-target="role.name">
+                                                    <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
+                                                                           aria-hidden="true"/>
+                                                </div>
+                                                <div :id="role.name" role="tooltip" v-if="role.name_de === 'Adminrechte'"
+                                                     class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                                    Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen
+                                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                                </div>
+                                                <div :id="role.name" role="tooltip" v-else
+                                                     class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                                    Hier fehlt noch Info Text
+                                                    <div class="tooltip-arrow" data-popper-arrow></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="max-w-screen-lg py-4 pl-20 pr-4">
+                                    <div v-if="showUserPermissions" class="flex flex-col w-full ">
+                                        <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
+                                            <div class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer" @click="permissions.show = !permissions.show">
+                                                {{ group }}
+                                                <div class="flex items-center ml-2">
+                                                    <SvgCollection svg-name="arrowUp" v-if="!permissions.show"></SvgCollection>
+                                                    <SvgCollection svg-name="arrowDown" v-if="permissions.show"></SvgCollection>
+                                                </div>
+                                            </div>
+                                            <div v-if="!permissions.show" class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
+                                                 :key=index>
+                                                <div class="flex items-center h-7">
+                                                    <input
+                                                        :key="permission.name"
+                                                        v-model="userForm.permissions"
+                                                        :value="permission.name"
+                                                        name="permissions" type="checkbox"
+                                                        class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
 
-                                                            <a href="#" @click="openChangeTeamsModal"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <PencilAltIcon
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                Teamzugehörigkeit bearbeiten
-                                                            </a>
-                                                        </MenuItem>
-                                                        <MenuItem v-slot="{ active }">
-                                                            <a href="#" @click="deleteFromAllDepartments"
-                                                               :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
-                                                                <TrashIcon
-                                                                    class="mr-3 h-5 w-5 text-primaryText group-hover:text-white"
-                                                                    aria-hidden="true"/>
-                                                                Nutzer*in aus allen Teams entfernen
-                                                            </a>
-                                                        </MenuItem>
+                                                    <div class="ml-3 text-sm">
+                                                        <label for="permissions"
+                                                               :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
+                                                                permission.name_de
+                                                            }}</label>
                                                     </div>
-                                                </MenuItems>
-                                            </transition>
-                                        </Menu>
+                                                </div>
+                                                <div class="justify-end">
+                                                    <div :data-tooltip-target="permission.name">
+                                                        <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
+                                                                               aria-hidden="true"/>
+                                                    </div>
+                                                    <div :id="permission.name" role="tooltip"
+                                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
+                                                        {{ permission.tooltipText }}
+                                                        <div class="tooltip-arrow" data-popper-arrow></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-8">
+                                        <div class="flex">
+                                            <AddButton @click="editUser"
+                                                       class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                                       text="Einstellungen ändern" mode="modal"/>
+                                        </div>
+                                    </div>
+                                    <div class="flex mt-12">
+                                        <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </form>
-                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
-                        <div class="flex mt-6" v-if="$page.props.is_admin">
-                            <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
-                        </div>
-                        <div v-if="password_reset_status" class="mb-4 font-medium text-sm text-green-600">
-                            {{ password_reset_status }}
-                        </div>
-                    </div>
 
 
                     <jet-validation-errors class="mb-4"/>
 
 
-                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
-                        <h2 class="mt-16 mb-8 headline2">Nutzerrechte</h2>
-                    </div>
 
-                    <div class="bg-userBg py-10">
-                        <div class="max-w-screen-lg py-4 pl-20 pr-4">
-                            <div class="uppercase mb-3 text-xs columnSubName flex items-center cursor-pointer" @click="showGlobalRoles = !showGlobalRoles">
-                                globale Rollen
-                                <div class="flex items-center ml-2">
-                                    <SvgCollection svg-name="arrowUp" v-if="showGlobalRoles"></SvgCollection>
-                                    <SvgCollection svg-name="arrowDown" v-if="!showGlobalRoles"></SvgCollection>
-                                </div>
-                            </div>
-                            <div class="relative justify-between flex items-center" v-if="showGlobalRoles" v-for="(role, index) in available_roles" :key=index>
-                                <div class="flex items-center h-7">
-                                    <input
-                                        v-model="userForm.roles"
-                                        :value="role.name"
-                                        name="roles" type="checkbox"
-                                        class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
-
-                                    <div class="ml-3 text-sm">
-                                        <label for="roles"
-                                               :class="[userForm.roles.indexOf(role.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                                role.name_de
-                                            }}</label>
-                                    </div>
-                                </div>
-                                <div class="justify-end">
-                                    <div :data-tooltip-target="role.name">
-                                        <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
-                                                               aria-hidden="true"/>
-                                    </div>
-                                    <div :id="role.name" role="tooltip" v-if="role.name_de === 'Adminrechte'"
-                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                        Administratoren haben im gesamten System Lese- und Schreibrechte - weitere Einstellungen entfallen
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                    </div>
-                                    <div :id="role.name" role="tooltip" v-else
-                                         class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                        Hier fehlt noch Info Text
-                                        <div class="tooltip-arrow" data-popper-arrow></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="max-w-screen-lg py-4 pl-20 pr-4">
-                        <div v-if="showUserPermissions" class="flex flex-col w-full ">
-                            <div class="w-full mb-3" v-for="(permissions, group) in all_permissions">
-                                <div class="uppercase my-3 text-xs columnSubName flex items-center cursor-pointer" @click="permissions.show = !permissions.show">
-                                    {{ group }}
-                                    <div class="flex items-center ml-2">
-                                        <SvgCollection svg-name="arrowUp" v-if="!permissions.show"></SvgCollection>
-                                        <SvgCollection svg-name="arrowDown" v-if="permissions.show"></SvgCollection>
-                                    </div>
-                                </div>
-                                <div v-if="!permissions.show" class="relative justify-between flex items-center w-full" v-for="(permission, index) in permissions"
-                                     :key=index>
-                                    <div class="flex items-center h-7">
-                                        <input
-                                            :key="permission.name"
-                                            v-model="userForm.permissions"
-                                            :value="permission.name"
-                                            name="permissions" type="checkbox"
-                                            class="focus:outline-none focus:ring-0 ring-offset-0 ring-0 appearance-none outline-0 h-6 w-6 text-success border-gray-300 border-2"/>
-
-                                        <div class="ml-3 text-sm">
-                                            <label for="permissions"
-                                                   :class="[userForm.permissions.indexOf(permission.name) > -1 ? 'xsDark' : 'xsLight']">{{
-                                                    permission.name_de
-                                                }}</label>
-                                        </div>
-                                    </div>
-                                    <div class="justify-end">
-                                        <div :data-tooltip-target="permission.name">
-                                            <InformationCircleIcon class="h-7 w-7 flex text-gray-400"
-                                                                   aria-hidden="true"/>
-                                        </div>
-                                        <div :id="permission.name" role="tooltip"
-                                             class="inline-block bg-primary absolute invisible z-10 py-2 px-3 text-sm font-medium text-secondary bg-primary rounded-lg shadow-md opacity-0 transition-opacity duration-300 tooltip">
-                                            {{ permission.tooltipText }}
-                                            <div class="tooltip-arrow" data-popper-arrow></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="mt-8">
-                            <div class="flex">
-                                <AddButton @click="editUser"
-                                           class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
-                                           text="Einstellungen ändern" mode="modal"/>
-                            </div>
-                        </div>
-                        <div class="flex mt-12">
-                            <span @click="openDeleteUserModal()" class="xsLight cursor-pointer">Nutzer*in endgültig löschen</span>
-                        </div>
-                    </div>
 
                 </div>
             </div>
@@ -368,11 +400,13 @@ import JetValidationErrors from '@/Jetstream/ValidationErrors.vue'
 import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import Availability from "@/Pages/Users/Components/Availability.vue";
 
 export default defineComponent({
     mixins: [Permissions],
     name: 'Edit',
     components: {
+        Availability,
         SvgCollection,
         AddButton,
         DotsVerticalIcon,
@@ -429,9 +463,23 @@ export default defineComponent({
             resetPasswordForm: this.$inertia.form({
                 email: this.user_to_edit.email
             }),
+            tabs: [
+                { id: 1, name: 'Einsatzplan', href: '#', current: true },
+                { id: 2, name: 'Verfügbarkeit', href: '#', current: false },
+                { id: 3, name: 'Konditionen', href: '#', current: false },
+                { id: 4, name: 'Persönliche Daten', href: '#', current: false },
+                { id: 5, name: 'Nutzerrechte', href: '#', current: false },
+            ],
+            currentTab: 1,
         }
     },
     methods: {
+        changeTab(tabId){
+            this.tabs.forEach((tab) => {
+                tab.current = tab.id === tabId;
+                this.currentTab = tabId;
+            })
+        },
         openDeleteUserModal() {
             this.deletingUser = true;
         },

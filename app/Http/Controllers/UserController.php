@@ -98,7 +98,6 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
-
         $availabilityData = $this->getAvailabilityData(request('month'));
 
         return inertia('Users/Edit', [
@@ -116,8 +115,11 @@ class UserController extends Controller
     {
         $currentMonth = Carbon::now()->startOfMonth();
 
+
+
         if ($month) {
-            $currentMonth = Carbon::createFromFormat('Y-m', $month)->startOfMonth();
+            dd($month);
+            $currentMonth = Carbon::instance($month)->startOfMonth();
         }
 
         $startDate = $currentMonth->copy()->startOfWeek();
@@ -134,7 +136,12 @@ class UserController extends Controller
                 $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
             }
 
-            $calendarData[$weekNumber]['days'][] = $day;
+            $notInMonth = !$currentDate->isSameMonth($currentMonth);
+
+            $calendarData[$weekNumber]['days'][] = [
+                'day' => $day,
+                'notInMonth' => $notInMonth,
+            ];
 
             $currentDate->addDay();
         }

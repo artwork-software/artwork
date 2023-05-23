@@ -115,11 +115,9 @@ class UserController extends Controller
     {
         $currentMonth = Carbon::now()->startOfMonth();
 
-
-
         if ($month) {
-            dd($month);
-            $currentMonth = Carbon::instance($month)->startOfMonth();
+            //dd($month);
+            $currentMonth = Carbon::parse($month)->startOfMonth();
         }
 
         $startDate = $currentMonth->copy()->startOfWeek();

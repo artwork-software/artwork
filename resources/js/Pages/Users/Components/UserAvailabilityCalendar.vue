@@ -72,10 +72,11 @@ export default defineComponent({
             })
         },
         addOneMonth(dateObj) {
-            return dayjs(dateObj).add(1, 'month').toDate();
+            const day = dayjs(dateObj)
+            return day.add(+1, 'month').format('YYYY-MM-DD');
         },
         subtractOneMonth(dateObj) {
-            return dayjs(dateObj).subtract(1, 'month').toDate();
+            return dayjs(dateObj).subtract(1, 'month').format('YYYY-MM-DD');
         }
     }
 })

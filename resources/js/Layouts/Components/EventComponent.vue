@@ -862,16 +862,18 @@ export default {
 
                     const roomStartTime = dayjs(this.selectedRoom.start_date);
                     const roomEndTime = dayjs(this.selectedRoom.end_date);
-                    if(start > roomStartTime || end < roomEndTime){
+                    if(start < roomStartTime){
                         console.log('nicht Ok')
-                        this.helpTextLengthRoom = 'Der Termin liegt außerhalb des Zeitraumes des temporären Raumes';
+                        this.helpTextLengthRoom = 'Der Terminstart liegt vor dem Beginn des temporären Raumes.';
                         this.submit = false;
-                    } else {
-                        console.log('is OK')
+                    }else if(end > roomEndTime){
+                        console.log('nicht Ok')
+                        this.helpTextLengthRoom = 'Das Terminende liegt nach dem Ende des temporären Raumes';
+                        this.submit = false;
+                    }else{
                         this.helpTextLengthRoom = '';
                         this.submit = true;
                     }
-
                 }
             }
 

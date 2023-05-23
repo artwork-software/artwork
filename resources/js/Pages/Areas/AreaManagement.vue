@@ -296,7 +296,7 @@
                                                     </div>
                                                 </template>
                                             </draggable>
-                                            <div v-show="area.rooms.filter(room => room.temporary === 1).length > 0"
+                                            <div v-show="area.rooms.filter(room => room.temporary === true).length > 0"
                                                  class="mt-12">
                                                 <h2 v-on:click="switchVisibility(area.id)"
                                                     class="pb-2 flex xxsDarkBold cursor-pointer">
@@ -1172,7 +1172,7 @@ export default defineComponent({
                 this.editRoomForm.room_attributesToDisplay.push({id:room_attribute.id, name: room_attribute.name})
             });
 
-            if (room.temporary === 1) {
+            if (room.temporary === true) {
                 this.editRoomForm.temporary = true;
             }
             this.showEditRoomModal = true;

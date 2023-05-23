@@ -54,6 +54,7 @@ class Room extends Model
         'everyone_can_book' => 'boolean',
         'start_date' => 'datetime',
         'end_date' => 'datetime',
+        'temporary' => 'boolean'
     ];
 
     public function area()

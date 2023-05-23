@@ -85,7 +85,7 @@
                         Verlauf ansehen
                     </button>
                 </div>
-                <div v-if="room.temporary === 1" class="font-lexend my-4 font-semibold">
+                <div v-if="room.temporary === true" class="font-lexend my-4 font-semibold">
                     {{ room.start_date }} - {{ room.end_date }}
                 </div>
                 <div class="w-[95%] grid grid-cols-7 mt-6">
@@ -957,7 +957,7 @@ export default {
             this.editRoomForm.end_date = room.end_date;
             this.editRoomForm.start_date_dt_local = room.start_date_dt_local;
             this.editRoomForm.end_date_dt_local = room.end_date_dt_local;
-            if (room.temporary === 1) {
+            if (room.temporary === true) {
                 this.editRoomForm.temporary = true;
             }
             this.showEditRoomModal = true;

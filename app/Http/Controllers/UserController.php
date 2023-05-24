@@ -99,7 +99,8 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
-        // Carbon::now()->weekOfYear;
+        $availabilityData = $this->getAvailabilityData(request('month'));
+
         return inertia('Users/Edit', [
             'user_to_edit' => new UserShowResource($user),
             "departments" => Department::all(),
@@ -107,7 +108,53 @@ class UserController extends Controller
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
             'vacations' => $user->vacations()->get()
+            'calendarData' => $availabilityData['calendarData'],
+            'dateToShow' => $availabilityData['dateToShow'],
         ]);
+    }
+
+    function getAvailabilityData($month = null): array
+    {
+        $currentMonth = Carbon::now()->startOfMonth();
+
+        if ($month) {
+            //dd($month);
+            $currentMonth = Carbon::parse($month)->startOfMonth();
+        }
+
+        $startDate = $currentMonth->copy()->startOfWeek();
+        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
+
+        $calendarData = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate <= $endDate) {
+            $weekNumber = $currentDate->weekOfYear;
+            $day = $currentDate->day;
+
+            if (!isset($calendarData[$weekNumber])) {
+                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
+            }
+
+            $notInMonth = !$currentDate->isSameMonth($currentMonth);
+
+            $calendarData[$weekNumber]['days'][] = [
+                'day' => $day,
+                'notInMonth' => $notInMonth,
+            ];
+
+            $currentDate->addDay();
+        }
+
+        $dateToShow = [
+            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->copy()->startOfMonth()->toDate()
+        ];
+
+        return [
+            'calendarData' => array_values($calendarData),
+            'dateToShow' => $dateToShow
+        ];
     }
 
     /**

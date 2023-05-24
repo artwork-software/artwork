@@ -3,7 +3,7 @@
         <div>
             <div>
                 <div v-if="$page.props.jetstream.canUpdateProfileInformation">
-                    <form @submit.prevent="editUser">
+                    <div>
                         <div class="max-w-screen-lg py-4 pl-20 pr-4">
                             <div class="flex">
                                 <img class="mt-6 h-16 w-16 rounded-full flex justify-start object-cover"
@@ -39,7 +39,7 @@
                             </div>
 
                             <div class="max-w-screen-3xl py-4 pl-20 pr-4" v-if="currentTab === 2">
-                                <Availability :user="user_to_edit" :vacations="vacations" />
+                                <Availability :calendar-data="calendarData" :date-to-show="dateToShow" :user="user_to_edit" :vacations="vacations" />
                             </div>
 
                             <div class="max-w-screen-lg py-4 pl-20 pr-4" v-if="currentTab === 3">
@@ -251,7 +251,7 @@
                                 </div>
                             </div>
                         </div>
-                    </form>
+                    </div>
 
 
                     <jet-validation-errors class="mb-4"/>
@@ -440,7 +440,7 @@ export default defineComponent({
         CheckIcon,
         InformationCircleIcon
     },
-    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'vacations'],
+    props: ['user_to_edit', 'permissions', 'all_permissions', 'departments', 'password_reset_status', 'available_roles', 'calendarData','dateToShow','vacations'],
     data() {
         return {
             showGlobalRoles: true,

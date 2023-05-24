@@ -7,7 +7,7 @@
         </div>
     </div>
 
-    <div>
+    <div v-if="$can('can manage workers') || hasAdminRole()">
         <PlusCircleIcon class="h-5 w-5 text-white bg-[#3017AD] rounded-full cursor-pointer" @click="showAddEditVacationsModal = true" />
     </div>
 
@@ -20,9 +20,11 @@ import {defineComponent} from 'vue'
 import {PlusCircleIcon} from "@heroicons/vue/outline";
 import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModal.vue";
 import SingleUserVacation from "@/Pages/Users/Components/SingleUserVacation.vue";
+import Permissions from "@/mixins/Permissions.vue";
 
 export default defineComponent({
     name: "UserVacations",
+    mixins: [Permissions],
     components: {
         SingleUserVacation,
         AddEditVacationsModal,

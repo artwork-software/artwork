@@ -1,5 +1,5 @@
 <template>
-    <h3 class="headline2 mb-6">Verfügbarkeit</h3>
+
     <div class="w-full">
         <div class="w-full items-center flex justify-between">
             <div class="sDark my-2">

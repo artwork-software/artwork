@@ -1,6 +1,6 @@
 <template>
     <div class="bg-secondary rounded flex text-sm group relative mb-2">
-        <div class="hidden group-hover:block">
+        <div class="hidden group-hover:block" v-if="$can('can manage workers') || hasAdminRole()">
             <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                 <button type="button" @click="showEditVacationModal = true"
                         class="rounded-full bg-indigo-600 p-1 text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
@@ -34,9 +34,11 @@ import AddEditVacationsModal from "@/Pages/Users/Components/AddEditVacationsModa
 import dayjs from "dayjs";
 import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 import {Inertia} from "@inertiajs/inertia";
+import Permissions from "@/mixins/Permissions.vue";
 require('dayjs/locale/de')
 export default defineComponent({
     name: "SingleUserVacation",
+    mixins: [Permissions],
     components: {ConfirmDeleteModal, AddEditVacationsModal, Button},
     props: ['vacation', 'user'],
     data(){

@@ -1,5 +1,5 @@
 <template>
-    <div class="bg-gray-300 rounded flex text-sm group relative mb-2">
+    <div class="bg-secondary rounded flex text-sm group relative mb-2">
         <div class="hidden group-hover:block">
             <div class="absolute w-full h-full rounded-lg flex justify-center align-middle items-center gap-2">
                 <button type="button" @click="showEditVacationModal = true"
@@ -19,12 +19,12 @@
                 </button>
             </div>
         </div>
-        <div class="py-2.5 px-3 ">
+        <div class="py-4 px-3 text-secondaryHover ">
             {{ dayjs(vacation.from).locale('de').format('dd, DD.MM.YYYY ') }} - {{ dayjs(vacation.until).locale('de').format('dd, DD.MM.YYYY ') }}
         </div>
 
         <AddEditVacationsModal :edit-vacation="vacation" :user="user" v-if="showEditVacationModal" @closed="showEditVacationModal = false" />
-        <ConfirmDeleteModal v-if="showDeleteConfirmModal" title="Urlaub Löschen?" description="Bist du sicher, dass du die ausgewählten Urlaub löschen möchtest? " @closed="showDeleteConfirmModal = false" @delete="deleteVacation" />
+        <ConfirmDeleteModal v-if="showDeleteConfirmModal" title="Urlaub Löschen?" description="Bist du sicher, dass du den ausgewählten Urlaub löschen möchtest? " @closed="showDeleteConfirmModal = false" @delete="deleteVacation" />
     </div>
 </template>
 <script>

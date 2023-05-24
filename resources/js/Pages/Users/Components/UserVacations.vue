@@ -1,5 +1,5 @@
 <template>
-    <h3 class="sDark">Nicht verfügbar</h3>
+    <h3 class="sDark mt-1">Nicht verfügbar</h3>
 
     <div class="my-5">
         <div v-for="vacation in vacations">

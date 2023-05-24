@@ -26,7 +26,7 @@
                                 <AddButton mode="modal" @click="deleteElement(true)"
                                            class="!border-2 !border-buttonBlue text-white bg-buttonHover !hover:border-transparent resize-none"
                                            text="Löschen"/>
-                                <p class="cursor-pointer text-sm" @click="closeModal">Nein, doch nicht</p>
+                                <p class="cursor-pointer text-sm mt-3 text-secondary" @click="closeModal">Nein, doch nicht</p>
                             </div>
                         </DialogPanel>
                     </TransitionChild>

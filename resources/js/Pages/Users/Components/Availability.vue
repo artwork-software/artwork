@@ -1,10 +1,13 @@
 <template>
 
-    <div class="flex w-full">
-        <div class="w-2/3">
+    <div class="grid grid-cols-12 w-full">
+        <div class="col-span-7">
             <UserAvailabilityCalendar :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>
-        <div class="w-1/3">
+        <div class="col-span-1">
+
+        </div>
+        <div class="col-span-4 mt-12">
             <UserVacations :user="user" :vacations="vacations" />
         </div>
     </div>

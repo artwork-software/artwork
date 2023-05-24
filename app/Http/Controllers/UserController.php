@@ -107,7 +107,7 @@ class UserController extends Controller
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
-            'vacations' => $user->vacations()->get()
+            'vacations' => $user->vacations()->get(),
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
         ]);

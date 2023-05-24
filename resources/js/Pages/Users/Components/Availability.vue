@@ -5,7 +5,7 @@
             <UserAvailabilityCalendar :calendar-data="calendarData" :date-to-show="dateToShow" />
         </div>
         <div class="w-1/3">
-            <UserVacations />
+            <UserVacations :user="user" :vacations="vacations" />
         </div>
     </div>
 
@@ -19,7 +19,7 @@ import UserVacations from "@/Pages/Users/Components/UserVacations.vue";
 export default defineComponent({
     name: "Availability",
     components: {UserVacations, UserAvailabilityCalendar},
-    props:['calendarData','dateToShow'],
+    props:['calendarData','dateToShow','user', 'vacations'],
 })
 </script>
 

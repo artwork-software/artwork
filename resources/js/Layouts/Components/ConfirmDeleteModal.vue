@@ -37,7 +37,7 @@
 </template>
 
 <script>
-import { Dialog, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
+import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from '@headlessui/vue'
 import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import Permissions from "@/mixins/Permissions.vue";
@@ -51,7 +51,7 @@ export default {
         DialogTitle,
         TransitionChild,
         TransitionRoot,
-        XIcon
+        XIcon, DialogPanel
     },
     data(){
         return {

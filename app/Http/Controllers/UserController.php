@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Casts\GermanTimeCast;
 use App\Enums\PermissionNameEnum;
 use App\Events\UserUpdated;
 use App\Http\Requests\SearchRequest;
@@ -106,6 +107,7 @@ class UserController extends Controller
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
+            'vacations' => $user->vacations()->get()
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
         ]);

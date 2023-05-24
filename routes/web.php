@@ -488,5 +488,10 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::delete('/service-provider/contact/{serviceProviderContacts}/delete/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'destroy'])->name('service-provider.contact.delete');
     Route::post('/service-provider/contact/{serviceProvider}/add/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'store'])->name('service-provider.contact.store');
     Route::patch('/service-provider/contact/{serviceProviderContacts}/update/', [\App\Http\Controllers\ServiceProviderContactsController::class, 'update'])->name('service-provider.contact.update');
+
+    // Vacation
+    Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\UserVacationsController::class, 'store'])->name('user.vacation.add');
+    Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\UserVacationsController::class, 'update'])->name('user.vacation.update');
+    Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\UserVacationsController::class, 'destroy'])->name('user.vacation.delete');
 });
 

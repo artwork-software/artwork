@@ -99,7 +99,7 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
-        $availabilityData = $this->getAvailabilityData(request('month'));
+        $availabilityData = $this->getAvailabilityData($user, request('month'));
 
         return inertia('Users/Edit', [
             'user_to_edit' => new UserShowResource($user),
@@ -107,18 +107,19 @@ class UserController extends Controller
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
-            'vacations' => $user->vacations()->get(),
+            'vacations' => $user->vacations()->orderBy('from', 'ASC')->get(),
             'calendarData' => $availabilityData['calendarData'],
             'dateToShow' => $availabilityData['dateToShow'],
         ]);
     }
 
-    function getAvailabilityData($month = null): array
+    function getAvailabilityData(User $user, $month = null): array
     {
+        $vacationDays = $user->vacations()->orderBy('from', 'ASC')->get();
+
         $currentMonth = Carbon::now()->startOfMonth();
 
         if ($month) {
-            //dd($month);
             $currentMonth = Carbon::parse($month)->startOfMonth();
         }
 
@@ -129,8 +130,21 @@ class UserController extends Controller
         $currentDate = $startDate->copy();
 
         while ($currentDate <= $endDate) {
+            $onVacation = false;
             $weekNumber = $currentDate->weekOfYear;
             $day = $currentDate->day;
+            foreach ($vacationDays as $vacationDay){
+                $vacationStart = Carbon::parse($vacationDay->from);
+                $vacationEnd = Carbon::parse($vacationDay->until);
+                // TODO: Check Performance
+                /*if($currentDate < $vacationStart){
+                    $onVacation = false;
+                    continue;
+                }*/
+                if($vacationStart <= $currentDate && $vacationEnd >= $currentDate){
+                    $onVacation = true;
+                }
+            }
 
             if (!isset($calendarData[$weekNumber])) {
                 $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
@@ -141,6 +155,7 @@ class UserController extends Controller
             $calendarData[$weekNumber]['days'][] = [
                 'day' => $day,
                 'notInMonth' => $notInMonth,
+                'onVacation' => $onVacation
             ];
 
             $currentDate->addDay();
@@ -219,5 +234,13 @@ class UserController extends Controller
         broadcast(new UserUpdated())->toOthers();
 
         return Redirect::route('users')->with('success', 'Benutzer gelöscht');
+    }
+
+    public function temporaryUserUpdate(User $user, Request $request){
+        $user->update($request->only([
+            'temporary',
+            'employStart',
+            'employEnd'
+        ]));
     }
 }

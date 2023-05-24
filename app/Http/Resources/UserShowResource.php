@@ -31,7 +31,10 @@ class UserShowResource extends JsonResource
             'business' => $this->business,
             'phone_number' => $this->phone_number,
             'roles' => $this->getRoleNames(),
-            'permissions' => $this->getAllPermissions()->pluck('name')
+            'permissions' => $this->getAllPermissions()->pluck('name'),
+            'temporary' => $this->temporary,
+            'employStart' => $this->employStart,
+            'employEnd' => $this->employEnd
         ];
     }
 }

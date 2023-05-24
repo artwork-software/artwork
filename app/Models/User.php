@@ -81,7 +81,10 @@ class User extends Authenticatable
         'description',
         'toggle_hints',
         'opened_checklists',
-        'opened_areas'
+        'opened_areas',
+        'temporary',
+        'employStart',
+        'employEnd'
     ];
 
     /**
@@ -93,7 +96,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'opened_checklists' => 'array',
         'opened_areas' => 'array',
-        'toggle_hints' => 'boolean'
+        'toggle_hints' => 'boolean',
+        'temporary' => 'boolean',
     ];
 
     /**

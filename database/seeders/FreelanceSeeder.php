@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Freelancer;
+use Carbon\Carbon;
 use Faker\Factory;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -32,7 +33,7 @@ class FreelanceSeeder extends Seeder
                 'street' => $fakeFreelancer->streetName . ' ' . $fakeFreelancer->buildingNumber,
                 'zip_code' => $fakeFreelancer->postcode,
                 'location' => $fakeFreelancer->city,
-                'note' => $fakeFreelancer->realText(250),
+                'note' => $fakeFreelancer->realText(250)
             ]);
         }
 

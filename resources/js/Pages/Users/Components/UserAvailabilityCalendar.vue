@@ -14,7 +14,7 @@
                 </button>
             </div>
         </div>
-        <table class="w-full">
+        <table class="w-full border-separate">
             <tr class="bg-backgroundGray sDark">
                 <th class="p-6"></th>
                 <th class="p-6">MO</th>
@@ -31,7 +31,7 @@
                         KW {{ week.weekNumber }}
                     </div>
                 </td>
-                <td class="col-span-1" v-for="day in week.days" :key="day">
+                <td class="col-span-1 " v-for="day in week.days" :key="day" :class="day.onVacation ? 'bg-backgroundGray' : ''">
                     <div :class="day.notInMonth ? 'text-secondary' : ''" class="p-6 flex justify-center">
                         {{ day.day }}
                     </div>

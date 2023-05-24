@@ -62,6 +62,7 @@ import {XIcon} from "@heroicons/vue/solid";
 import AddButton from "@/Layouts/Components/AddButton.vue";
 import {Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot} from "@headlessui/vue";
 import {useForm} from "@inertiajs/inertia-vue3";
+import dayjs from "dayjs";
 
 export default defineComponent({
     name: "AddEditVacationsModal",
@@ -87,8 +88,14 @@ export default defineComponent({
         },
         saveOrUpdateVacation(){
             if(this.vacation.from === null || this.vacation.until === null){
-                this.helpText = 'Bitte wähle eine Start und/oder End Datum';
+                this.helpText = 'Bitte wähle ein Start und/oder End Datum';
                 return;
+            }
+            if(dayjs(this.vacation.from) > dayjs(this.vacation.until)){
+                this.helpText = 'Startdatum darf nicht nach dem Enddatum liegen!'
+                return
+            } else {
+                this.helpText = '';
             }
             if(this.vacation.id === null){
                 this.vacation.post(route('user.vacation.add', this.user.id), {

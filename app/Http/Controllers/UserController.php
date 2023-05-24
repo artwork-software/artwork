@@ -12,6 +12,8 @@ use App\Models\Department;
 use App\Models\Freelancer;
 use App\Models\ServiceProvider;
 use App\Models\User;
+use Carbon\Carbon;
+use Carbon\CarbonInterval;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -96,13 +98,61 @@ class UserController extends Controller
      */
     public function edit(User $user): Response|ResponseFactory
     {
+        $availabilityData = $this->getAvailabilityData(request('month'));
+
         return inertia('Users/Edit', [
             'user_to_edit' => new UserShowResource($user),
             "departments" => Department::all(),
             "password_reset_status" => session('status'),
             'available_roles' => Role::all(),
             "all_permissions" => Permission::all()->groupBy('group'),
+            'calendarData' => $availabilityData['calendarData'],
+            'dateToShow' => $availabilityData['dateToShow'],
         ]);
+    }
+
+    function getAvailabilityData($month = null): array
+    {
+        $currentMonth = Carbon::now()->startOfMonth();
+
+        if ($month) {
+            //dd($month);
+            $currentMonth = Carbon::parse($month)->startOfMonth();
+        }
+
+        $startDate = $currentMonth->copy()->startOfWeek();
+        $endDate = $currentMonth->copy()->endOfMonth()->endOfWeek();
+
+        $calendarData = [];
+        $currentDate = $startDate->copy();
+
+        while ($currentDate <= $endDate) {
+            $weekNumber = $currentDate->weekOfYear;
+            $day = $currentDate->day;
+
+            if (!isset($calendarData[$weekNumber])) {
+                $calendarData[$weekNumber] = ['weekNumber' => $weekNumber, 'days' => []];
+            }
+
+            $notInMonth = !$currentDate->isSameMonth($currentMonth);
+
+            $calendarData[$weekNumber]['days'][] = [
+                'day' => $day,
+                'notInMonth' => $notInMonth,
+            ];
+
+            $currentDate->addDay();
+        }
+
+        $dateToShow = [
+            $currentMonth->locale('de')->isoFormat('MMMM YYYY'),
+            $currentMonth->copy()->startOfMonth()->toDate()
+        ];
+
+        return [
+            'calendarData' => array_values($calendarData),
+            'dateToShow' => $dateToShow
+        ];
     }
 
     /**

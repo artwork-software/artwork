@@ -8,6 +8,7 @@
             :at-a-glance="atAGlance"
             :filter-options="filterOptions"
             :personal-filters="personalFilters"
+            @change-multi-edit="changeMultiEdit"
         />
 
         <!-- Calendar -->
@@ -20,7 +21,7 @@
 
                 </div>
                 <div class="py-0.5 pr-1" v-for="event in roomEvents">
-                    <SingleCalendarEvent :atAGlance="true" :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
+                    <SingleCalendarEvent :atAGlance="true" :multiEdit="multiEdit" :project="project" :zoom-factor="1" :width="204" :event="event" :event-types="eventTypes"
                                          @open-edit-event-modal="openEditEventModal"></SingleCalendarEvent>
                 </div>
             </div>
@@ -56,6 +57,28 @@
         :isAdmin=" $page.props.is_admin || $page.props.can.admin_rooms"
     />
 
+    <div v-show="multiEdit"
+         class="fixed z-50 w-full bg-white/70 bottom-0 h-20 shadow border-t border-gray-100 flex items-center justify-center gap-4">
+        <AddButton mode="modal" class="bg-primary text-white resize-none" text="Termine verschieben"
+                   @click="openMultiEditModal"/>
+        <AddButton mode="modal" @click="openDeleteSelectedEventsModal = true"
+                   class="!border-2 !border-buttonBlue bg-transparent !text-buttonBlue hover:!text-white hover:!bg-buttonHover !hover:border-transparent resize-none"
+                   text="Termine löschen"/>
+    </div>
+
+    <MultiEditModal :checked-events="editEvents" v-if="showMultiEditModal" :rooms="rooms"
+                    @closed="closeMultiEditModal"/>
+
+    <ConfirmDeleteModal
+        v-if="openDeleteSelectedEventsModal"
+        @closed="openDeleteSelectedEventsModal = false"
+        @delete="deleteSelectedEvents"
+        title="Belegungen löschen"
+        description="Bist du sicher, dass du die ausgewählten Belegungen in den Papierkorb legen möchtest? Sämtliche Untertermine werden ebenfalls gelöscht."/>
+
+    <div v-for="events in eventsAtAGlance[1]">
+
+    </div>
 </template>
 
 <script>
@@ -66,6 +89,9 @@ import EventComponent from "@/Layouts/Components/EventComponent.vue";
 import EventsWithoutRoomComponent from "@/Layouts/Components/EventsWithoutRoomComponent.vue";
 import SingleCalendarEvent from "@/Layouts/Components/SingleCalendarEvent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import MultiEditModal from "@/Layouts/Components/MultiEditModal.vue";
+import AddButton from "@/Layouts/Components/AddButton.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 
 
@@ -73,11 +99,12 @@ export default {
     name: "IndividualCalendarAtGlanceComponent",
     mixins: [Permissions],
     components: {
+        ConfirmDeleteModal,
+        AddButton, MultiEditModal,
         SingleCalendarEvent,
         CalendarFunctionBar,
         EventComponent,
         EventsWithoutRoomComponent,
-
     },
     data() {
       return {
@@ -89,7 +116,12 @@ export default {
           wantedRoom: null,
           roomCollisions: [],
           isFullscreen: false,
-          zoomFactor: 1
+          zoomFactor: 1,
+          multiEdit: false,
+          editEvents: [],
+          showMultiEditModal: false,
+          openDeleteSelectedEventsModal: false,
+          allEvents: this.eventsAtAGlance,
       }
     },
     props: [
@@ -104,6 +136,9 @@ export default {
     ],
     emits:['changeAtAGlance'],
     methods: {
+        changeMultiEdit(multiEdit) {
+            this.multiEdit = multiEdit;
+        },
         changeAtAGlance(){
             this.$emit('changeAtAGlance')
         },
@@ -147,6 +182,39 @@ export default {
         onEventsWithoutRoomComponentClose() {
             this.showEventsWithoutRoomComponent = false;
             Inertia.reload();
+        },
+        openMultiEditModal() {
+            this.getCheckedEvents();
+
+            this.showMultiEditModal = true;
+        },
+        deleteSelectedEvents() {
+            this.getCheckedEvents();
+            Inertia.post(route('multi-edit.delete'), {
+                events: this.editEvents
+            }, {
+                onSuccess: () => {
+                    this.openDeleteSelectedEventsModal = false
+                }
+            })
+        },
+        getCheckedEvents() {
+            this.editEvents = [];
+            const eventArray = [];
+
+            this.rooms.forEach((room) => {
+                this.eventsAtAGlance[room.id]?.forEach((events) => {
+                    if (events.clicked) {
+                        if (!eventArray.includes(events.id)) {
+                            eventArray.push(events.id)
+                        }
+                    }
+                })
+            })
+            this.editEvents = eventArray
+        },
+        closeMultiEditModal() {
+            this.showMultiEditModal = false;
         },
     }
 }

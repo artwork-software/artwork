@@ -16,8 +16,10 @@
                            id="startDate"
                            type="date"
                            required
+                           @change="checkChanges"
                            class="border-gray-300 inputMain xsDark placeholder-secondary disabled:border-none flex-grow"/>
                 </div>
+                <div class="text-xs text-red-500" v-show="employStartText.length > 0">{{ employStartText }}</div>
             </div>
             <div>
                 <div class="w-full flex">
@@ -25,19 +27,25 @@
                            id="endDate"
                            type="date"
                            required
+                           @change="checkChanges"
                            class="border-gray-300 inputMain xsDark placeholder-secondary  disabled:border-none flex-grow"/>
                 </div>
+                <div class="text-xs text-red-500" v-show="employEndText.length > 0">{{ employEndText }}</div>
             </div>
+        </div>
+        <div v-show="helpText.length > 0" class="text-xs text-red-500">
+            {{ helpText }}
         </div>
     </div>
 
-    <AddButton text="Speichern" class="!ml-0 mt-5" @click="updateTemporaryEmploy" />
+    <AddButton :disabled="disabled" text="Speichern" class="!ml-0 mt-5" @click="updateTemporaryEmploy" />
 </template>
 <script>
 import {defineComponent} from 'vue'
 import { Switch, SwitchGroup, SwitchLabel } from '@headlessui/vue'
 import {useForm} from "@inertiajs/inertia-vue3";
 import AddButton from "@/Layouts/Components/AddButton.vue";
+import dayjs from "dayjs";
 export default defineComponent({
     name: "TemporarilyHired",
     components: {
@@ -51,7 +59,19 @@ export default defineComponent({
                 temporary: this.user.temporary,
                 employStart: this.user.employStart,
                 employEnd: this.user.employEnd
-            })
+            }),
+            employStartText: '',
+            employEndText: '',
+            helpText: '',
+            disabled: false
+        }
+    },
+    watch: {
+        userEdit: {
+            handler(){
+                this.disabled = this.userEdit.temporary;
+            },
+            deep: true
         }
     },
     methods: {
@@ -60,9 +80,40 @@ export default defineComponent({
                 this.userEdit.employEnd = null;
                 this.userEdit.employStart = null;
             }
+            if(dayjs(this.userEdit.employStart) > dayjs(this.userEdit.employEnd)){
+                this.helpText = 'Startdatum darf nicht nach dem Enddatum liegen!'
+                return
+            } else {
+                this.helpText = '';
+            }
+
+            if(this.checkChanges()){
+               return;
+            }
+
             this.userEdit.patch(route('update.user.temporary', this.user.id), {
                 preserveState: true, preserveScroll: true
             })
+        },
+        checkChanges(){
+            if(this.userEdit.temporary){
+                if(this.userEdit.employStart === null){
+                    this.employStartText = 'Bitte wähle ein Startdatum!'
+                    this.disabled = true
+                } else {
+                    this.employStartText = ''
+                    this.disabled = false
+                }
+
+                if(this.userEdit.employEnd === null){
+                    this.employEndText = 'Bitte wähle ein Enddatum!'
+                    this.disabled = true
+                } else {
+                    this.employEndText = ''
+                    this.disabled = false
+                }
+                return this.disabled;
+            }
         }
     }
 })

@@ -27,7 +27,7 @@
                 <div class="ml-3 flex">
                     <div v-for="user in users">
                         <div class="-ml-3"  v-if="user.pivot?.competent">
-                            <NewUserToolTip :user="user" height="10" width="10" :id="user.id"/>
+                            <NewUserToolTip :type="1" :user="user" height="10" width="10" :id="user.id"/>
                         </div>
                     </div>
                 </div>

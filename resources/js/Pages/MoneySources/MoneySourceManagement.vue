@@ -68,7 +68,7 @@
                             :key="moneySource.id"
                         >
                             <div class="py-5 flex justify-between border-b-2 border-gray-200 my-2"
-                                 v-if="($page.props.myMoneySources.some(source => source.money_source_id === moneySource.id) || $page.props.is_money_source_admin)">
+                                 v-if="($page.props.myMoneySources.some(source => source.money_source_id === moneySource.id) || $page.props.is_money_source_admin || $canAny('view edit add money_sources','can edit and delete money sources'))">
                                 <div class="flex w-full">
                                     <div class="flex">
                                         <img v-if="moneySource.is_group" src="/Svgs/IconSvgs/icon_group_red.svg"

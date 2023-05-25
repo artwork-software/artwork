@@ -212,12 +212,12 @@
         @closed="onCreateMoneySourceModalClose()"
         :moneySourceGroups="this.moneySourceGroups"
     />
-    <confirmation-component
+    <confirm-delete-modal
         v-if="showDeleteSourceModal"
-        confirm="Löschen"
-        titel="Finanzierungsquelle/gruppe löschen"
+        title="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
-        @closed="afterConfirm"/>
+        @closed="afterConfirm"
+        @delete="afterConfirm(true)"/>
 </template>
 
 <script>
@@ -242,13 +242,14 @@ import InputComponent from "@/Layouts/Components/InputComponent";
 import CreateMoneySourceComponent from "@/Layouts/Components/CreateMoneySourceComponent";
 import {DuplicateIcon, PencilAltIcon} from "@heroicons/vue/outline";
 import {Link} from "@inertiajs/inertia-vue3";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import Permissions from "@/mixins/Permissions.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        ConfirmDeleteModal,
         AppLayout,
         Listbox,
         ListboxButton,
@@ -271,7 +272,6 @@ export default defineComponent({
         Link,
         DuplicateIcon,
         TrashIcon,
-        ConfirmationComponent
     },
     props: ['moneySources', 'moneySourceGroups'],
     created() {

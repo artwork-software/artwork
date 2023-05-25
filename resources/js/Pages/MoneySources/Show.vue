@@ -238,12 +238,12 @@
             ></MoneySourceSidenav>
         </BaseSidenav>
     </app-layout>
-    <confirmation-component
+    <confirm-delete-modal
         v-if="showDeleteSourceModal"
-        confirm="Löschen"
-        titel="Finanzierungsquelle/gruppe löschen"
+        title="Finanzierungsquelle/gruppe löschen"
         :description="'Bist du sicher, dass du die Finanzierungsquelle/Gruppe ' + this.sourceToDelete.name + ' löschen möchtest?'"
-        @closed="afterConfirm"/>
+        @closed="afterConfirm"
+    @delete="afterConfirm(true)"/>
 
     <MoneySourceHistoryComponent
         @closed="closeMoneySourceHistoryModal"
@@ -276,17 +276,18 @@ import UserTooltip from "@/Layouts/Components/UserTooltip";
 import SvgCollection from "@/Layouts/Components/SvgCollection";
 import {Link} from "@inertiajs/inertia-vue3";
 import EditMoneySourceComponent from "@/Layouts/Components/EditMoneySourceComponent";
-import ConfirmationComponent from "@/Layouts/Components/ConfirmationComponent";
 import BaseSidenav from "@/Layouts/Components/BaseSidenav.vue";
 import MoneySourceSidenav from "@/Layouts/Components/MoneySourceSidenav.vue";
 import MoneySourceHistoryComponent from "@/Layouts/Components/MoneySourceHistoryComponent.vue";
 import Permissions from "@/mixins/Permissions.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default {
     mixins: [Permissions],
     name: "MoneySourceShow",
     props: ['moneySource', 'moneySourceGroups', 'moneySources', 'projects', 'linkedProjects'],
     components: {
+        ConfirmDeleteModal,
         MoneySourceSidenav,
         BaseSidenav,
         AppLayout,
@@ -303,7 +304,6 @@ export default {
         SvgCollection,
         Link,
         EditMoneySourceComponent,
-        ConfirmationComponent,
         Listbox,
         ListboxOption,
         ListboxOptions,

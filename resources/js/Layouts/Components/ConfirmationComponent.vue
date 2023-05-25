@@ -25,8 +25,6 @@
 </template>
 
 <script>
-
-import 'vue-cal/dist/vuecal.css'
 import JetDialogModal from "@/Jetstream/DialogModal";
 import {XIcon} from '@heroicons/vue/outline';
 import AddButton from "@/Layouts/Components/AddButton";

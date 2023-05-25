@@ -37,7 +37,7 @@ import {CheckIcon} from "@heroicons/vue/solid";
 import Permissions from "@/mixins/Permissions.vue";
 
 export default {
-    name: 'ConfirmationComponent',
+    name: 'AnswerEventRequestComponent',
     mixins: [Permissions],
     components: {
         JetDialogModal,

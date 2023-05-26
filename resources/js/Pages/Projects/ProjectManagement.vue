@@ -565,7 +565,7 @@
                             </div>
                             <div class="w-full items-center text-center">
                                 <AddButton
-                                    :class="[this.form.name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                    :class="[this.form.name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                     class="mt-8 inline-flex items-center px-20 py-3 border border-transparent text-base font-bold
                              text-xl shadow-sm text-secondaryHover"
                                     @click="addProject"

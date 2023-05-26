@@ -161,7 +161,7 @@
                                               class="border-2 placeholder-xsLight focus:xsDark resize-none w-full text-sm focus:outline-none focus:ring-0 focus:border-secondary focus:border-1 w-full border-gray-300"/>
                             </div>
                             <div class="flex justify-center mt-2">
-                                <AddButton mode="modal" class="bg-primary text-white resize-none"
+                                <AddButton mode="modal" class="text-white resize-none"
                                            @click="editSingleSource()" text="Speichern"/>
                             </div>
                         </div>

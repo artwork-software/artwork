@@ -150,7 +150,7 @@
 
                 <div class="w-full items-center text-center">
                     <AddButton :class="[form.processing || (form.user_emails.length === 0 && emailInput.length < 3) ?
-                    'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                    'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                class="mt-8 inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                @click="addUser"

@@ -182,7 +182,7 @@
                         </div>
                         <div class="mt-2 w-full items-center text-center">
                             <AddButton
-                                :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-primary hover:bg-primaryHover focus:outline-none']"
+                                :class="[this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === '' ? 'bg-secondary': 'bg-buttonBlue hover:bg-buttonHover focus:outline-none']"
                                 class="mt-8 inline-flex items-center px-20 py-3 border focus:outline-none border-transparent text-base font-bold text-xl shadow-sm text-secondaryHover"
                                 @click="addEventType"
                                 :disabled="this.eventTypeForm.name === '' || this.eventTypeForm.svg_name === ''" text="Termintyp anlegen" mode="modal" />
@@ -288,7 +288,7 @@
                         Alle Termine, die diesem Typen zugeordnet sind, werden auf "undefiniert" gesetzt.
                     </div>
                     <div class="flex justify-between mt-6">
-                        <button class="bg-primary focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
+                        <button class="bg-buttonBlue hover:bg-buttonHover focus:outline-none my-auto inline-flex items-center px-20 py-3 border border-transparent
                             text-base font-bold uppercase shadow-sm text-secondaryHover"
                                 @click="deleteEventType">
                             Löschen

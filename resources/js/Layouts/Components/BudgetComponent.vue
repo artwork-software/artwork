@@ -6,9 +6,9 @@
                 <Menu as="div" class="ml-4">
                     <div class="flex">
                         <MenuButton
-                            class="flex ">
+                            class="flex bg-tagBg p-0.5 rounded-full">
                             <DotsVerticalIcon
-                                class="flex-shrink-0 h-6 w-6 text-gray-600"
+                                class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                 aria-hidden="true"/>
                         </MenuButton>
                     </div>
@@ -175,9 +175,9 @@
                             <Menu as="div" v-show="showMenu === column.id">
                                 <div class="flex">
                                     <MenuButton
-                                        class="flex ">
+                                        class="flex bg-tagBg p-0.5 rounded-full">
                                         <DotsVerticalIcon
-                                            class="flex-shrink-0 h-5 w-5 text-gray-600"
+                                            class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                             aria-hidden="true"/>
                                     </MenuButton>
                                 </div>
@@ -260,9 +260,9 @@
                         <Menu v-if="!table.is_template" as="div" class="">
                             <div class="flex">
                                 <MenuButton
-                                    class="flex ">
+                                    class="flex bg-tagBg p-0.5 rounded-full">
                                     <DotsVerticalIcon
-                                        class="flex-shrink-0 h-6 w-6 text-gray-600"
+                                        class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                         aria-hidden="true"/>
                                 </MenuButton>
                             </div>

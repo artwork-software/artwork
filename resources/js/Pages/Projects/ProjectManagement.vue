@@ -214,7 +214,7 @@
                                                 </div>
                                             </div>
                                             <MenuButton
-                                                class="flex">
+                                                class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
                                                     class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>

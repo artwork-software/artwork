@@ -52,9 +52,10 @@
                     <Menu as="div" class="my-auto relative">
                         <div class="flex mt-3">
                             <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                class="flex bg-tagBg p-0.5 rounded-full">
+                                <DotsVerticalIcon
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    aria-hidden="true"/>
                             </MenuButton>
                             <div v-if="$page.props.can.show_hints" class="absolute flex w-48 ml-12">
                                 <div>

@@ -57,9 +57,10 @@
                           v-if="$can('write projects') || $role('artwork admin') || projectManagerIds.includes(this.$page.props.user.id) || projectCanWriteIds.includes(this.$page.props.user.id)">
                         <div class="flex items-center -mt-1">
                             <MenuButton
-                                class="flex ml-6">
-                                <DotsVerticalIcon class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
-                                                  aria-hidden="true"/>
+                                class="flex bg-tagBg p-0.5 rounded-full">
+                                <DotsVerticalIcon
+                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
+                                    aria-hidden="true"/>
                             </MenuButton>
                         </div>
                         <transition enter-active-class="transition ease-out duration-100"

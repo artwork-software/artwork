@@ -97,9 +97,9 @@
                                             <Menu as="div" class="my-auto relative">
                                                 <div>
                                                     <MenuButton
-                                                        class="flex">
+                                                        class="flex bg-tagBg p-0.5 rounded-full">
                                                         <DotsVerticalIcon
-                                                            class="mr-3 ml-6 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                            class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                             aria-hidden="true"/>
                                                     </MenuButton>
                                                 </div>

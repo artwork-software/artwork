@@ -90,9 +90,9 @@
                                     <div>
                                         <div class="flex">
                                             <MenuButton
-                                                class="flex">
+                                                class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
-                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
                                             <div v-if="$page.props.can.show_hints && index === 0"
@@ -205,9 +205,9 @@
                                     <div>
                                         <div class="flex">
                                             <MenuButton
-                                                class="flex">
+                                                class="flex bg-tagBg p-0.5 rounded-full">
                                                 <DotsVerticalIcon
-                                                    class="mr-3 flex-shrink-0 h-6 w-6 text-gray-600 my-auto"
+                                                    class=" flex-shrink-0 h-6 w-6 text-menuButtonBlue my-auto"
                                                     aria-hidden="true"/>
                                             </MenuButton>
                                             <div v-if="$page.props.can.show_hints && index === 0"

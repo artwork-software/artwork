@@ -91,9 +91,6 @@ const props = defineProps({
     project: Object
 })
 
-const mixins = mixin({
-    mixins: [Permissions],
-})
 
 const numOfGuests = ref(props.project.num_of_guests)
 const entryFee = ref(props.project.entry_fee)

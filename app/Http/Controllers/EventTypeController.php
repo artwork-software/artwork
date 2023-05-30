@@ -115,4 +115,8 @@ class EventTypeController extends Controller
             return response()->json(['error' => 'This EventType cant be deleted.'], 403);
         }
     }
+
+    public function updateRelevant(Request $request, EventType $eventType) {
+        $eventType->update(['relevant_for_shift' => $request->relevant_for_shift]);
+    }
 }

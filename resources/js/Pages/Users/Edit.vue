@@ -402,6 +402,7 @@ import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
 
+
 export default defineComponent({
     mixins: [Permissions],
     name: 'Edit',
@@ -507,7 +508,7 @@ export default defineComponent({
             this.closeDeleteUserModal()
         },
         editUser() {
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.userForm.patch(route('user.update' , this.user_to_edit.id));
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },
@@ -525,7 +526,7 @@ export default defineComponent({
             }
         },
         saveNewTeams() {
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.userForm.patch(route('user.update', this.user_to_edit.id));
             this.closeChangeTeamsModal();
             this.openSuccessModal()
         },
@@ -538,7 +539,7 @@ export default defineComponent({
         },
         deleteFromAllDepartments() {
             this.userForm.departments = [];
-            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
+            this.userForm.patch(route('user.update', this.user_to_edit.id));
             this.openSuccessModal();
         }
     },

@@ -100,7 +100,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
     Route::get('/users/money_source_search', [UserController::class, 'money_source_search'])->name('users.money_source_search');
     Route::get('/users/{user}', [UserController::class, 'edit'])->name('user.edit');
-    Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.update');
+    Route::patch('/users/{user}', [UserController::class, 'update'])->name('user.patch.update');
     Route::patch('/users/{user}/checklists', [UserController::class, 'update_checklist_status'])->name('user.checklists.update');
     Route::patch('/users/{user}/areas', [UserController::class, 'update_area_status'])->name('user.areas.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy']);
@@ -494,5 +494,12 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::post('/user/vacation/{user}/add', [\App\Http\Controllers\UserVacationsController::class, 'store'])->name('user.vacation.add');
     Route::patch('/user/vacation/{userVacations}/update', [\App\Http\Controllers\UserVacationsController::class, 'update'])->name('user.vacation.update');
     Route::delete('/user/vacation/{userVacations}/delete', [\App\Http\Controllers\UserVacationsController::class, 'destroy'])->name('user.vacation.delete');
+
+    Route::group(['prefix' => 'settings'], function (){
+        Route::get('shift', [\App\Http\Controllers\ShiftSettingsController::class, 'index'])->name('shift.settings');
+        Route::post('shift/add/craft', [\App\Http\Controllers\CraftController::class, 'store'])->name('craft.store');
+        Route::patch('shift/update/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'update'])->name('craft.update');
+        Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
+    });
 });
 

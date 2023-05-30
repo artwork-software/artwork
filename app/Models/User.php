@@ -119,9 +119,14 @@ class User extends Authenticatable
      */
     protected $appends = [
         'profile_photo_url',
+        'full_name'
     ];
 
     protected $with = ['calendar_settings'];
+
+    public function getFullNameAttribute(){
+        return $this->first_name . ' ' . $this->last_name;
+    }
 
     public function calendar_settings(): \Illuminate\Database\Eloquent\Relations\HasOne
     {

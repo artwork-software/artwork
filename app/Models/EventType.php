@@ -26,12 +26,14 @@ class EventType extends Model
         'svg_name',
         'project_mandatory',
         'individual_name',
-        'abbreviation'
+        'abbreviation',
+        'relevant_for_shift'
     ];
 
     protected $casts = [
         'project_mandatory' => 'boolean',
-        'individual_name' => 'boolean'
+        'individual_name' => 'boolean',
+        'relevant_for_shift' => 'boolean',
     ];
 
     public function events()

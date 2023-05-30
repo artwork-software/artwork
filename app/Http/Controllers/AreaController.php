@@ -110,6 +110,11 @@ class AreaController extends Controller
      */
     public function destroy(Area $area)
     {
+        $rooms = $area->rooms()->get();
+        foreach ($rooms as $room){
+            $room->delete();
+        }
+
         $area->delete();
 
         return Redirect::route('areas.management')->with('success', 'Area moved to trash');

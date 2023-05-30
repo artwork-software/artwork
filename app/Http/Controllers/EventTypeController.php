@@ -102,6 +102,12 @@ class EventTypeController extends Controller
     public function destroy(EventType $eventType)
     {
         if ($eventType->name !== 'undefiniert') {
+
+            $events = $eventType->events()->get();
+
+            foreach ($events as $event){
+                $event->update(['event_type_id' => 1]);
+            }
             $eventType->delete();
 
             return Redirect::route('event_types.management')->with('success', 'EventType deleted');

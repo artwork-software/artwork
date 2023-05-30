@@ -142,7 +142,7 @@ export default defineComponent({
                 users: [],
                 assignable_by_all: true
             }),
-            enabled: this.craftToEdit.assignable_by_all,
+            enabled: this.craftToEdit ? this.craftToEdit.assignable_by_all : true,
             users: this.craftToEdit ? this.craftToEdit.users : []
         }
     },

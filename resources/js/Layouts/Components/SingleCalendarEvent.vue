@@ -40,7 +40,7 @@
             <div v-else class="flex justify-center items-center h-full gap-2">
                 <div class="relative flex items-start">
                     <div class="flex h-6 items-center">
-                        <input v-model="event.clicked" id="candidates" aria-describedby="candidates-description"
+                        <input v-model="event.clicked" @click="$emit('checkEvent', event)" id="candidates" aria-describedby="candidates-description"
                                name="candidates" type="checkbox"
                                class="h-5 w-5 border-gray-300 text-green-400 focus:ring-green-600"/>
                     </div>
@@ -360,8 +360,20 @@ export default {
         Menu, MenuItem, MenuItems, MenuButton, UserTooltip, Button, PlusCircleIcon, AddSubEventModal, NewUserToolTip,
         Link
     },
-    props: ['event', 'eventTypes', 'height', 'width', 'zoomFactor', 'fullHeight', 'project', 'multiEdit', 'atAGlance', 'rooms'],
-    emits: ['openEditEventModal'],
+    props: [
+        'event',
+        'eventTypes',
+        'height',
+        'width',
+        'zoomFactor',
+        'fullHeight',
+        'project',
+        'multiEdit',
+        'atAGlance',
+        'rooms',
+        "checkedEvents"
+    ],
+    emits: ['openEditEventModal', 'checkEvent'],
     computed: {
         textStyle() {
             const fontSize = `calc(${this.zoomFactor} * 0.75rem)`;
@@ -462,6 +474,18 @@ export default {
                     this.event.clicked = false;
                 }
             }
+        },
+        checkedEvents: {
+            handler() {
+                console.log("checked events changed")
+                if (this.checkedEvents.includes(this.event.id)) {
+                    this.event.clicked = true;
+                }
+                if (!this.checkedEvents.includes(this.event.id)) {
+                    this.event.clicked = false;
+                }
+            },
+            deep: true
         }
     }
 }

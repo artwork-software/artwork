@@ -62,12 +62,19 @@
                                 <div class="py-0.5 pr-2 overflow-hidden" v-for="event in room[day.day].data">
 
                                     <!-- <CalendarEventTooltip :show-tooltip="event.hovered" :event="event"> -->
-                                    <SingleCalendarEvent class="relative" :project="project" :multiEdit="multiEdit"
-                                                         :zoom-factor="zoomFactor" :width="zoomFactor * 204"
-                                                         :event="event"
-                                                         :rooms="rooms"
-                                                         :event-types="eventTypes"
-                                                         @open-edit-event-modal="openEditEventModal"/>
+                                    <SingleCalendarEvent
+                                        class="relative"
+                                        :project="project"
+                                        :multiEdit="multiEdit"
+                                        :zoom-factor="zoomFactor"
+                                        :width="zoomFactor * 204"
+                                        :event="event"
+                                        :rooms="rooms"
+                                        :event-types="eventTypes"
+                                        :checked-events="checkedEvents"
+                                        @open-edit-event-modal="openEditEventModal"
+                                        @check-event="updateCheckedEvents"
+                                    />
                                     <!-- </CalendarEventTooltip> -->
                                 </div>
                             </td>
@@ -168,7 +175,8 @@ export default {
             multiEdit: false,
             editEvents: [],
             showMultiEditModal: false,
-            openDeleteSelectedEventsModal: false
+            openDeleteSelectedEventsModal: false,
+            checkedEvents: [],
         }
     },
     props: [
@@ -215,6 +223,12 @@ export default {
         }
     },
     methods: {
+        updateCheckedEvents(event) {
+            if(!this.checkedEvents.includes(event.id))
+                this.checkedEvents.push(event.id);
+            else
+                this.checkedEvents = this.checkedEvents.filter((id) => id !== event.id);
+        },
         changeMultiEdit(multiEdit) {
             this.multiEdit = multiEdit;
         },

@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             ContentSeeder::class,
             AuthUserSeeder::class,
             FreelanceSeeder::class,
-            ServiceProviderSeeder::class
+            ServiceProviderSeeder::class,
+            CraftSeed::class
         ]);
     }
 }

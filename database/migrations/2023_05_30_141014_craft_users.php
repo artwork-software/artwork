@@ -13,14 +13,10 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::create('event_types', function (Blueprint $table) {
+        Schema::create('craft_users', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
-            $table->string('svg_name');
-            $table->boolean('project_mandatory');
-            $table->boolean('individual_name');
-            $table->string('abbreviation');
-            $table->boolean('relevant_for_shift')->default(false);
+            $table->unsignedBigInteger('craft_id');
+            $table->unsignedBigInteger('user_id');
             $table->timestamps();
         });
     }
@@ -32,6 +28,6 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('event_type_migration');
+        Schema::dropIfExists('craft_users');
     }
 };

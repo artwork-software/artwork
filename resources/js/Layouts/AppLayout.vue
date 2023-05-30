@@ -284,6 +284,12 @@ export default {
                     route: ['/users']
                 },
                 {
+                    has_permission: this.hasAdminRole(),
+                    name: 'Schichteinstellungen',
+                    href: route('shift.settings'),
+                    route: ['/settings/shift']
+                },
+                {
                     name: 'Teams',
                     has_permission: this.$canAny(['teammanagement', 'update departments']) || this.hasAdminRole(),
                     href: route('departments'),

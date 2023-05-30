@@ -91,6 +91,7 @@ class CraftController extends Controller
      */
     public function destroy(Craft $craft)
     {
-        //
+        $craft->users()->detach();
+        $craft->delete();
     }
 }

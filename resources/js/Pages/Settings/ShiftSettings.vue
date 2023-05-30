@@ -66,7 +66,7 @@
                                                 Bearbeiten
                                             </a>
                                         </MenuItem>
-                                        <MenuItem
+                                        <MenuItem @click="openDeleteCraftModal(craft)"
                                             v-slot="{ active }">
                                             <a
                                                :class="[active ? 'bg-primaryHover text-white' : 'text-secondary', 'group flex items-center px-4 py-2 text-sm subpixel-antialiased']">
@@ -134,6 +134,7 @@
 
         <AddCraftsModal @closed="openAddCraftsModal = false" v-if="openAddCraftsModal" :craft-to-edit="craftToEdit" :users-with-permission="usersWithPermission" />
 
+        <ConfirmDeleteModal title="Gewerk löschen" description="Bist du sicher, dass du das ausgewählte Gewerk löschen möchtest?" @closed="closedDeleteCraftModal" @delete="submitDelete" v-if="openConfirmDeleteModal" />
     </AppLayout>
 </template>
 <script>
@@ -155,10 +156,12 @@ import {
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import AddCraftsModal from "@/Layouts/Components/AddCraftsModal.vue";
 import TagComponent from "@/Layouts/Components/TagComponent.vue";
+import ConfirmDeleteModal from "@/Layouts/Components/ConfirmDeleteModal.vue";
 
 export default defineComponent({
     name: "ShiftSettings",
     components: {
+        ConfirmDeleteModal,
         TagComponent,
         AddCraftsModal,
         ChevronDownIcon, CheckIcon, ListboxButton, ListboxOption, ListboxOptions, Listbox,
@@ -171,6 +174,8 @@ export default defineComponent({
             selectedEventType: null,
             openAddCraftsModal: false,
             craftToEdit: null,
+            openConfirmDeleteModal: false,
+            craftToDelete: null,
         }
     },
     computed: {
@@ -209,6 +214,23 @@ export default defineComponent({
         updateCraft(craft){
             this.craftToEdit = craft;
             this.openAddCraftsModal = true;
+        },
+        openDeleteCraftModal(craft){
+            this.craftToDelete = craft;
+            this.openConfirmDeleteModal = true;
+        },
+        closedDeleteCraftModal(){
+            this.openConfirmDeleteModal = false;
+            this.craftToDelete = null;
+        },
+        submitDelete(){
+            this.$inertia.delete(route('craft.delete', this.craftToDelete.id), {
+                preserveScroll: true,
+                preserveState: true,
+                onFinish: () => {
+                    this.closedDeleteCraftModal();
+                }
+            })
         }
     }
 })

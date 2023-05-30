@@ -499,6 +499,7 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
         Route::get('shift', [\App\Http\Controllers\ShiftSettingsController::class, 'index'])->name('shift.settings');
         Route::post('shift/add/craft', [\App\Http\Controllers\CraftController::class, 'store'])->name('craft.store');
         Route::patch('shift/update/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'update'])->name('craft.update');
+        Route::delete('shift/delete/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'destroy'])->name('craft.delete');
         Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
     });
 });

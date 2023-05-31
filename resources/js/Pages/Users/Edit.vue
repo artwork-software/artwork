@@ -94,7 +94,7 @@
                                             <TeamIconCollection class="h-10 w-10 rounded-full ring-2 ring-white"
                                                                 :iconName="team.svg_name"/>
                                         </span>
-                                            <Menu as="div" class="my-auto relative">
+                                            <Menu as="div" class="my-auto relative ml-5">
                                                 <div>
                                                     <MenuButton
                                                         class="flex bg-tagBg p-0.5 rounded-full">

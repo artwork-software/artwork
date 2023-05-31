@@ -175,11 +175,11 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param UpdateUserRequest $request
+     * @param Request $request
      * @param User $user
      * @return RedirectResponse
      */
-    public function update(UpdateUserRequest $request, User $user): RedirectResponse
+    public function update(Request $request, User $user): RedirectResponse
     {
         $user->update($request->only('first_name','last_name', 'phone_number', 'position', 'business', 'description'));
 

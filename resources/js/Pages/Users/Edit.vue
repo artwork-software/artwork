@@ -139,6 +139,13 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="mt-8">
+                                    <div class="flex">
+                                        <AddButton @click="editUser"
+                                                   class=" inline-flex items-center px-12 py-3 border focus:outline-none border-transparent text-base font-bold text-xl uppercase shadow-sm text-secondaryHover"
+                                                   text="Einstellungen ändern" mode="modal"/>
+                                    </div>
+                                </div>
                                 <div class="">
                                     <div class="flex mt-6" v-if="$page.props.is_admin">
                                         <span @click="resetPassword()" class="xsLight cursor-pointer">Passwort zurücksetzen</span>
@@ -148,6 +155,7 @@
                                     </div>
                                 </div>
                             </div>
+
 
                             <div v-if="currentTab === 5">
                                 <div class="max-w-screen-lg pl-20 pr-4">
@@ -401,6 +409,7 @@ import AddButton from "@/Layouts/Components/AddButton";
 import SvgCollection from "@/Layouts/Components/SvgCollection.vue";
 import Permissions from "@/mixins/Permissions.vue";
 import Availability from "@/Pages/Users/Components/Availability.vue";
+import {useForm} from "@inertiajs/inertia-vue3";
 
 
 export default defineComponent({
@@ -450,7 +459,7 @@ export default defineComponent({
             showChangeTeamsModal: false,
             teamCheckboxes: [],
             showSuccessModal: false,
-            userForm: this.$inertia.form({
+            userForm: useForm({
                 first_name: this.user_to_edit.first_name,
                 last_name: this.user_to_edit.last_name,
                 business: this.user_to_edit.business,
@@ -508,7 +517,7 @@ export default defineComponent({
             this.closeDeleteUserModal()
         },
         editUser() {
-            this.userForm.patch(route('user.update' , this.user_to_edit.id));
+            this.userForm.patch(route('user.update', {user: this.user_to_edit.id}));
             this.showSuccessModal = true;
             setTimeout(() => this.closeSuccessModal(), 2000)
         },

@@ -240,6 +240,15 @@ class EventController extends Controller
             $this->createRequestNotification($request, $firstEvent);
         }
 
+        $eventType = $firstEvent->event_type()->first();
+
+        if($eventType->relevant_for_shift){
+            $firstEvent->timeline()->create([
+                'start' => Carbon::parse($firstEvent->start_time)->format('H:i:s'),
+                'end' => Carbon::parse($firstEvent->end_time)->format('H:i:s'),
+            ]);
+        }
+
         broadcast(new OccupancyUpdated())->toOthers();
 
         return new CalendarEventResource($firstEvent);

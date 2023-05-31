@@ -45,6 +45,7 @@ use App\Models\SubPositionRow;
 use App\Models\SubpositionSumDetail;
 use App\Models\Table;
 use App\Models\Task;
+use App\Models\TimeLine;
 use App\Models\User;
 use App\Support\Services\HistoryService;
 use App\Support\Services\NewHistoryService;
@@ -1464,7 +1465,21 @@ class ProjectController extends Controller
 
         $events = $project->events()->get();
         $RoomsWithAudience = null;
+        $eventsWithRelevant = [];
+
+
+
         foreach ($events as $event){
+            $eventType = $event->event_type()->first();
+            if ($eventType->relevant_for_shift){
+                $eventsWithRelevant[$event->id] = [
+                    'event' => $event,
+                    'timeline' => $event->timeline()->get(),
+                    'shifts' => $event->shifts()->get(),
+                    'event_type' => $eventType,
+                    'room' => $event->room()->first(),
+                ];
+            }
             if(!$event->audience){
                 continue;
             }
@@ -1481,6 +1496,8 @@ class ProjectController extends Controller
             $startDate = Carbon::now()->startOfDay();
             $endDate = Carbon::now()->addWeeks()->endOfDay();
         }
+
+        rsort($eventsWithRelevant);
 
         return inertia('Projects/Show', [
             'project' => new ProjectShowResource($project),
@@ -1560,8 +1577,24 @@ class ProjectController extends Controller
             'project_id' => $project->id,
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
-            'states' => ProjectStates::all()
+            'states' => ProjectStates::all(),
+            'eventsWithRelevant' => $eventsWithRelevant
         ]);
+    }
+
+    public function addTimeLineRow(Event $event){
+        $event->timeline()->create();
+    }
+
+    public function updateTimeLines(Request $request){
+        foreach ($request->timelines as $timeline){
+            $findTimeLine = TimeLine::find($timeline['id']);
+            $findTimeLine->update([
+                'start' => $timeline['start'],
+                'end' => $timeline['end'],
+                'description' => $timeline['description']
+            ]);
+        }
     }
 
     /**

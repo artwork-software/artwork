@@ -502,5 +502,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
         Route::delete('shift/delete/craft/{craft}', [\App\Http\Controllers\CraftController::class, 'destroy'])->name('craft.delete');
         Route::patch('shift/update/relevant/event-type/{eventType}', [\App\Http\Controllers\EventTypeController::class, 'updateRelevant'])->name('event-type.update.relevant');
     });
+
+    // timeline
+    Route::post('/project/timeline/add/{event}', [ProjectController::class, 'addTimeLineRow'])->name('add.timeline.row');
+    Route::patch('/project/timelines/update', [ProjectController::class, 'updateTimeLines'])->name('update.timelines');
 });
 

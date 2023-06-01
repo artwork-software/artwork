@@ -131,6 +131,9 @@ Route::group(['middleware' => ['auth:sanctum', 'verified']], function() {
     Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::get('/projects/{project}/edit', [ProjectController::class, 'edit']);
     Route::patch('/projects/{project}', [ProjectController::class, 'update'])->name('projects.update');
+    Route::patch('/projects/{project}/shiftDescription', [ProjectController::class, 'updateShiftDescription'])->name('projects.update.shift_description');
+    Route::patch('/projects/{project}/shiftContacts', [ProjectController::class, 'updateShiftContacts'])->name('projects.update.shift_contacts');
+    Route::patch('/projects/{project}/shiftRelevantEventTypes', [ProjectController::class, 'updateShiftRelevantEventTypes'])->name('projects.update.shift_event_types');
     Route::patch('/projects/{project}/attributes', [ProjectController::class, 'updateAttributes'])->name('projects.update_attributes');
     Route::patch('/projects/{project}/team', [ProjectController::class, 'updateTeam'])->name('projects.update_team');
     Route::patch('/projects/{project}/updateDescription', [ProjectController::class, 'updateDescription'])->name('projects.update_description');

@@ -506,6 +506,11 @@
                 :traits="{'categories': categories, 'genres': genres, 'sectors': sectors}"
                 :budget-access="access_budget"
             />
+            <ProjectShiftSidenav
+                v-else-if="isShiftTab"
+                :project="project"
+                :event-types="eventTypes"
+            />
             <ProjectSecondSidenav
                 v-else
                 :project="project"
@@ -591,6 +596,7 @@ import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/Individual
 import {isProjectMember} from "@/Helper/PermissionHelper";
 import Permissions from "@/mixins/Permissions.vue";
 import ShiftTab from "@/Pages/Projects/Components/ShiftTab.vue";
+import ProjectShiftSidenav from "@/Layouts/Components/ProjectShiftSidenav.vue";
 
 export default {
     name: "ProjectShow",
@@ -637,6 +643,7 @@ export default {
         'eventsWithRelevant'
     ],
     components: {
+        ProjectShiftSidenav,
         ShiftTab,
         ProjectSecondSidenav,
         ChecklistComponent,
@@ -692,7 +699,7 @@ export default {
         ProjectDataEditModal,
         PlusIcon, SwitchGroup, SwitchLabel,
         IndividualCalendarAtGlanceComponent,
-        IndividualCalendarComponent
+        IndividualCalendarComponent,
     },
     mixins: [Permissions],
     computed: {

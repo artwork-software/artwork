@@ -242,6 +242,13 @@ class ProjectController extends Controller
 
         $this->generateBasicBudgetValues($project);
 
+        $eventRelevantEventTypes = EventType::where('relevant_for_shift', true)->get();
+        foreach ($eventRelevantEventTypes as $eventRelevantEventType ){
+            $project->shiftRelevantEventTypes()->create([
+                'event_type_id' => $eventRelevantEventType->id
+            ]);
+        }
+
         return Redirect::route('projects', $project)->with('success', 'Project created.');
     }
 
@@ -2234,5 +2241,15 @@ class ProjectController extends Controller
     public function deleteKeyVisual(Project $project){
         Storage::delete('public/keyVisual/'. $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
+    }
+    public function updateShiftDescription(Request $request, Project $project){
+        $project->shift_description = $request->shiftDescription;
+        $project->save();
+    }
+    public function updateShiftContacts(Request $request, Project $project){
+        $project->shift_contact()->sync(collect($request->contactIds));
+    }
+    public function updateShiftRelevantEventTypes(Request $request, Project $project){
+        $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
     }
 }

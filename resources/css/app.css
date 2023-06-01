@@ -77,6 +77,12 @@
         color: #27233C;
         opacity: 1;
     }
+    .sLight{
+        font: normal normal 16px/19px Inter;
+        letter-spacing: 0.14px;
+        color: #A7A6B1;
+        opacity: 1;
+    }
     .xsLighter{
         font: normal normal 14px/20px Inter;
         letter-spacing: 0.14px;

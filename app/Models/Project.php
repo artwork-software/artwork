@@ -13,6 +13,7 @@ use Laravel\Scout\Searchable;
  * @property int $id
  * @property string $name
  * @property string $description
+ * @property string $shift_description
  * @property string $key_visual_path
  * @property int $number_of_participants
  * @property string $cost_center
@@ -46,6 +47,7 @@ class Project extends Model
     protected $fillable = [
         'name',
         'description',
+        'shift_description',
         'number_of_participants',
         'cost_center_id',
         'copyright_id',
@@ -64,11 +66,21 @@ class Project extends Model
         'closed_society' => 'boolean'
     ];
 
-    protected $with = ['historyChangesMorph'];
+    protected $with = ['historyChangesMorph', 'shiftRelevantEventTypes'];
 
     public function cost_center()
     {
         return $this->hasOne(CostCenter::class);
+    }
+
+    public function shiftRelevantEventTypes(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(EventType::class, 'project_shift_relevant_event_types');
+    }
+
+    public function shift_contact(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'project_shift_contacts');
     }
 
     public function copyright()

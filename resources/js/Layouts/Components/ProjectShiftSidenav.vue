@@ -97,7 +97,7 @@
             </div>
         </div>
         <div class="mt-2">
-            <div v-if="project.shiftDescription">
+            <div class="max-h-48 overflow-y-auto" v-if="project.shiftDescription">
                 {{ project.shiftDescription }}
             </div>
             <div v-else>

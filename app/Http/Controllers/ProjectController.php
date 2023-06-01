@@ -2242,4 +2242,14 @@ class ProjectController extends Controller
         Storage::delete('public/keyVisual/'. $project->key_visual_path);
         $project->update(['key_visual_path' => null]);
     }
+    public function updateShiftDescription(Request $request, Project $project){
+        $project->shift_description = $request->shiftDescription;
+        $project->save();
+    }
+    public function updateShiftContacts(Request $request, Project $project){
+        $project->shift_contact()->sync(collect($request->contactIds));
+    }
+    public function updateShiftRelevantEventTypes(Request $request, Project $project){
+        $project->shiftRelevantEventTypes()->sync(collect($request->shiftRelevantEventTypeIds));
+    }
 }

@@ -509,6 +509,7 @@
             <ProjectShiftSidenav
                 v-else-if="isShiftTab"
                 :project="project"
+                :event-types="eventTypes"
             />
             <ProjectSecondSidenav
                 v-else

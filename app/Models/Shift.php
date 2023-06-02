@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\TimeWithoutSeconds;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -20,12 +22,47 @@ class Shift extends Model
         'description',
     ];
 
+    protected $casts = [
+        'start' => TimeWithoutSeconds::class,
+        'end' => TimeWithoutSeconds::class,
+    ];
+
+    protected $with = ['craft', 'employees', 'masters'];
+
+    protected $appends= ['break_formatted', 'employee_count', 'empty_employee_count'];
+
     public function event(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Event::class);
     }
 
-    public function craft(){
-        return $this->belongsTo(Craft::class);
+    public function craft(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(Craft::class)->without(['users']);
+    }
+
+    public function employees(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'shift_user', 'shift_id', 'user_id');
+    }
+
+    public function masters(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'shift_master', 'shift_id', 'user_id');
+    }
+
+    public function getEmptyEmployeeCountAttribute(){
+        $employeeCount = $this->employees()->count();
+        return $this->number_employees - $employeeCount;
+    }
+
+    public function getEmployeeCountAttribute(){
+        return $this->employees()->count();
+    }
+
+    public function getBreakFormattedAttribute(): string
+    {
+        $hours = intdiv($this->break_minutes, 60).':'. ($this->break_minutes % 60);
+        return Carbon::parse($hours)->format('H:i');
     }
 }

@@ -99,6 +99,10 @@ export default defineComponent({
         updateTimes(){
             this.$inertia.patch(route('update.timelines'), {
                 timelines: this.timeLine
+            }, {
+                onFinish: () => {
+                    this.closeModal(true);
+                }
             })
         },
         addTime(){

@@ -52,7 +52,7 @@
         </div>
     </div>
     <div class="mt-5">
-        <SingleShiftEvent v-for="event in eventsWithRelevant" :event="event"/>
+        <SingleShiftEvent v-for="event in eventsWithRelevant" :crafts="crafts" :event="event"/>
     </div>
 </template>
 <script>
@@ -63,7 +63,7 @@ import {DotsVerticalIcon, TrashIcon} from "@heroicons/vue/solid";
 import SingleShiftEvent from "@/Pages/Projects/Components/SingleShiftEvent.vue";
 export default defineComponent({
     name: "ShiftTab",
-    props: ['eventsWithRelevant'],
+    props: ['eventsWithRelevant', 'crafts'],
     components: {
         SingleShiftEvent,
         PencilAltIcon, TrashIcon, DuplicateIcon, DotsVerticalIcon,

@@ -8,11 +8,12 @@
             </div>
             <div>
                 // menu
+
             </div>
         </div>
 
         <div class="flex justify-start mt-3 overflow-x-scroll gap-3 h-full">
-            <SingleShift :time-line="event.timeline" :shift="event.shifts" :event="event"/>
+            <SingleShift :time-line="event.timeline" :shifts="event.shifts" :crafts="crafts" :event="event.event"/>
         </div>
     </div>
 </template>
@@ -24,7 +25,7 @@ import {PlusCircleIcon} from "@heroicons/vue/outline";
 
 export default defineComponent({
     name: "SingleShiftEvent",
-    props: ['event'],
+    props: ['event', 'crafts'],
     components: {PlusCircleIcon, SingleShift, Timeline}
 })
 </script>

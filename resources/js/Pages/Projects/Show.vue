@@ -207,7 +207,7 @@
                 </div>
 
                 <div v-if="isShiftTab" class="mx-5 mt-6 p-5  bg-lightBackgroundGray">
-                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" />
+                    <ShiftTab :eventsWithRelevant="eventsWithRelevant" :crafts="crafts" />
                 </div>
                 <!-- Comment Tab -->
                 <div v-if="isCommentTab"
@@ -634,7 +634,8 @@ export default {
         'eventsWithoutRoom',
         'filterOptions',
         'personalFilters',
-        'eventsWithRelevant'
+        'eventsWithRelevant',
+        'crafts'
     ],
     components: {
         ShiftTab,

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Event;
 use App\Models\Shift;
 use Illuminate\Http\Request;
 
@@ -33,9 +34,17 @@ class ShiftController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(Request $request, Event $event)
     {
-        //
+        $event->shifts()->create($request->only([
+            'start',
+            'end',
+            'break_minutes',
+            'craft_id',
+            'number_employees',
+            'number_masters',
+            'description',
+        ]));
     }
 
     /**
@@ -69,7 +78,7 @@ class ShiftController extends Controller
      */
     public function update(Request $request, Shift $shift)
     {
-        //
+
     }
 
     /**

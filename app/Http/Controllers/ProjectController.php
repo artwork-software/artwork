@@ -27,6 +27,7 @@ use App\Models\Column;
 use App\Models\ColumnCell;
 use App\Models\CompanyType;
 use App\Models\ContractType;
+use App\Models\Craft;
 use App\Models\Currency;
 use App\Models\Department;
 use App\Models\Event;
@@ -1468,7 +1469,6 @@ class ProjectController extends Controller
         $eventsWithRelevant = [];
 
 
-
         foreach ($events as $event){
             $eventType = $event->event_type()->first();
             if ($eventType->relevant_for_shift){
@@ -1578,7 +1578,8 @@ class ProjectController extends Controller
             'opened_checklists' => User::where('id', Auth::id())->first()->opened_checklists,
             'projectMoneySources' => $project->moneySources()->get(),
             'states' => ProjectStates::all(),
-            'eventsWithRelevant' => $eventsWithRelevant
+            'eventsWithRelevant' => $eventsWithRelevant,
+            'crafts' => Craft::all(),
         ]);
     }
 

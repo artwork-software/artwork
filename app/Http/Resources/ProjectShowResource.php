@@ -37,6 +37,7 @@ class ProjectShowResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
+            'shiftDescription' => $this->shift_description,
             'number_of_participants' => $this->number_of_participants,
             'is_group' => $this->is_group,
             'group' => $this->groups,
@@ -80,7 +81,9 @@ class ProjectShowResource extends JsonResource
                 'text' => $comment->text,
                 'created_at' => $comment->created_at->format('d.m.Y, H:i'),
                 'user' => $comment->user
-            ])
+            ]),
+            'shift_relevant_event_types' => $this->shiftRelevantEventTypes()->get(),
+            'shift_contacts' => $this->shift_contact()->get()
         ];
     }
 }

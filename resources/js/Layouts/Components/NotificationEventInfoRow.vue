@@ -48,7 +48,7 @@ import Permissions from "@/mixins/Permissions.vue";
 
 export default {
     mixins: [Permissions],
-    name: "TagComponent",
+    name: "NotificationEventInfoRow",
     components: {Button, XIcon, Link},
     props: ['event', 'rooms', 'eventTypes','projects','declinedRoomId'],
     methods: {

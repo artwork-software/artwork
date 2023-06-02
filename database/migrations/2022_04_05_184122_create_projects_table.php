@@ -17,6 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->longText('description')->nullable();
+            $table->longText('shift_description')->nullable();
             $table->string('number_of_participants')->nullable();
             $table->string('key_visual_path')->nullable();
             $table->string('num_of_guests')->nullable()->default(null);

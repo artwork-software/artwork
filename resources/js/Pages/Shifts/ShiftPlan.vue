@@ -1,7 +1,34 @@
 <template>
     <app-layout>
         <div>
-            {{events}}
+            <div v-for="event in events">
+                <div class="w-72">
+                    <div class="text-secondaryHover xsWhiteBold" :class="event.event_type.svg_name">
+                        {{ event.event_type.abbreviation }}: {{ this.findProjectById(event.project_id).name }}
+                    </div>
+                    <div class="bg-backgroundGray">
+                        <div v-for="shift in event.shifts" class="flex justify-between">
+                            <div class="flex">
+                                {{ shift.craft.abbreviation }} {{ shift.start }} - {{ shift.end }}
+                                ({{ shift.employee_count }}/{{ shift.number_employees }}
+                                <span v-if="shift.number_masters > 0">
+                                   | {{ shift.masters.length }}/{{ shift.number_masters }}
+                                </span>
+                                )
+                            </div>
+                            <div v-if="shift.empty_employee_count === 0">
+                                <CheckIcon class="h-5 w-5 flex text-success"
+                                           aria-hidden="true"/>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {{ events }}
+            <div>Y
+            </div>
+            {{calendar}}
         </div>
     </app-layout>
 </template>
@@ -9,27 +36,80 @@
 
 import {defineComponent} from 'vue'
 import AppLayout from '@/Layouts/AppLayout.vue'
-import '@vuepic/vue-datepicker/dist/main.css'
-import CalendarComponent from "@/Layouts/Components/CalendarComponent";
-import IndividualCalendarComponent from "@/Layouts/Components/IndividualCalendarComponent.vue";
-import IndividualCalendarAtGlanceComponent from "@/Layouts/Components/IndividualCalendarAtGlanceComponent.vue";
-import {useForm} from "@inertiajs/inertia-vue3";
-import {Inertia} from "@inertiajs/inertia";
 import Permissions from "@/mixins/Permissions.vue";
+import {CheckIcon} from "@heroicons/vue/outline";
 
 export default defineComponent({
     mixins: [Permissions],
     components: {
+        CheckIcon,
         AppLayout
     },
     props: [
-        'events'
+        'events',
+        'projects',
+        'calendar',
+        'days',
+        'filterOptions',
+        'dateValue',
+        'personalFilters',
+        'selectedDate'
     ],
     methods: {
-    },
-    data() {
-        return {
+        findProjectById(projectId) {
+            return this.projects.find(project => project.id === projectId);
         }
     },
+    data() {
+        return {}
+    },
 })
+
 </script>
+
+<style scoped>
+
+.eventType0 {
+    background-color: #7F7E88;
+}
+
+.eventType1 {
+    background-color: #631D53;
+}
+
+.eventType2 {
+    background-color: #D84387;
+}
+
+.eventType3 {
+    background-color: #E97A45;
+}
+
+.eventType4 {
+    background-color: #CB8913;
+}
+
+.eventType5 {
+    background-color: #648928;
+}
+
+.eventType6 {
+    background-color: #35A965;
+}
+
+.eventType7 {
+    background-color: #35ACB2;
+}
+
+.eventType8 {
+    background-color: #2290C1;
+}
+
+.eventType9 {
+    background-color: #50908E;
+}
+
+.eventType10 {
+    background-color: #23485B;
+}
+</style>

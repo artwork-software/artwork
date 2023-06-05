@@ -15,6 +15,7 @@ use App\Http\Resources\EventShowResource;
 use App\Http\Resources\EventTypeResource;
 use App\Http\Resources\ProjectIndexAdminResource;
 use App\Http\Resources\TaskIndexResource;
+use App\Models\Craft;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Project;
@@ -104,10 +105,31 @@ class EventController extends Controller
 
     public function viewShiftPlan(Request $request): Response
     {
+        $calendar = new CalendarController();
+        $showCalendar = $calendar->createCalendarDataForShiftPlan();
 
-        $events = Event::with(['shifts'])->where('event.shifts', '!=', '[]')->get();
+        if(\request('startDate') && \request('endDate')){
+            $startDate = Carbon::create(\request('startDate'))->startOfDay();
+            $endDate = Carbon::create(\request('endDate'))->endOfDay();
+        }else{
+            $startDate = Carbon::now()->startOfDay();
+            $endDate = Carbon::now()->addWeeks()->endOfDay();
+        }
+
+        $events = Event::with(['shifts','event_type'])
+            ->whereHas('shifts', function ($query) {
+                $query->whereNotNull('shifts.id');
+            })
+            ->get();
         return inertia('Shifts/ShiftPlan', [
             'events' => $events,
+            'projects' => Project::all(),
+            'calendar' => $showCalendar['roomsWithEvents'],
+            'days' => $showCalendar['days'],
+            'filterOptions' => $showCalendar['filterOptions'],
+            'dateValue'=> $showCalendar['dateValue'],
+            'personalFilters' => $showCalendar['personalFilters'],
+            'selectedDate' => $showCalendar['selectedDate'],
         ]);
     }
 
